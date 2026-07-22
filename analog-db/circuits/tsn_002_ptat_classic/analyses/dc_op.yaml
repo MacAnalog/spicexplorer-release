@@ -1,0 +1,9 @@
+# Analysis binding (plan D-4): temp_sensor dc_op — operating point, output + supply current.
+schema: spicexplorer/analysis@1
+id: dc_op
+template: dc_op
+description: "DC operating point; v_out + i_supply (power)."
+params:
+  VDD: 1.5
+flags: []
+produces: [v_out, i_supply]

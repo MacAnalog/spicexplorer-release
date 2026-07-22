@@ -1,0 +1,10 @@
+simulator lang=spectre
+global 0
+ahdl_include "cswitch.va"
+v_in (A 0) vsource dc=1
+x1 (A M) cswitch RON=1 g=1m
+r_load (M 0) resistor r=1k
+simulatorOptions options temp=27 tnom=27
+dcOp dc annotate=status
+save A M
+saveOptions options save=selected

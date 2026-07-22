@@ -1,0 +1,9 @@
+# AnalogGym analysis binding (ac_open_loop).
+schema: spicexplorer/analysis@1
+id: ac_open_loop
+template: ac_open_loop_biaswrap
+description: "Open-loop AC gain/phase via the AnalogGym bias-wrap (Lfb/Cin)."
+enabled: true
+params: {VDD: 1.8, VCM: 400m, CL: 100p, FSTART: 0.1, FSTOP: 1G, PPD: 50}
+flags: []
+produces: [dc_gain_db, ugf_hz, pm_deg]

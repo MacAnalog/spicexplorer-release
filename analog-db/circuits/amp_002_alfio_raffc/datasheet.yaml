@@ -1,0 +1,95 @@
+# Datasheet — AnalogGym single-objective benchmark specs (skill §6 / Eq. 5), extract-only.
+# Conditions (cload/vcm/ibias) read from the AnalogGym design_variables.
+schema: spicexplorer/datasheet@1
+default_conditions:
+  supply:
+    unit: V
+    typical: 1.8
+  corner:
+    typical: tt
+  temp:
+    unit: degC
+    typical: 27
+  cload:
+    unit: F
+    typical: 1.0e-10
+  vcm:
+    unit: V
+    typical: 0.3
+  ibias:
+    unit: A
+    typical: 1.9999999999999998e-05
+metrics:
+  dc_gain_db:
+    display: DC open-loop gain
+    unit: dB
+    analysis: ac_open_loop
+    extract:
+      meas: dcgain
+    spec:
+      min: 100
+      unit: dB
+  ugf_hz:
+    display: Unity-gain frequency
+    unit: Hz
+    analysis: ac_open_loop
+    extract:
+      meas: ugf
+    spec:
+      min: any
+      unit: Hz
+  pm_deg:
+    display: Phase margin
+    unit: deg
+    analysis: ac_open_loop
+    extract:
+      meas: pm
+    spec:
+      min: 45
+      max: 90
+      unit: deg
+  vn_in:
+    display: Input-referred noise
+    unit: V/sqrt(Hz)
+    analysis: noise
+    extract:
+      meas: inoise_total
+    spec:
+      max: any
+  i_supply:
+    display: Supply current
+    unit: A
+    analysis: dc_op
+    extract:
+      meas: i_supply
+    spec:
+      max: any
+  t_settle:
+    display: Settling time
+    unit: s
+    analysis: tran_step
+    extract:
+      meas: t_settle
+    spec:
+      max: 1.0e-06
+      unit: s
+  psrr_vdd_db:
+    display: Positive-supply rejection
+    description: PSRR+ in the unity-buffer config, DC-band floor (design-review 2026-07-05 rollout).
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_vdd_db
+    spec:
+      min: 20
+      unit: dB
+  cmrr_db:
+    display: Common-mode rejection
+    description: CMRR in the unity-buffer config, DC-band floor (design-review 2026-07-05 rollout).
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_db
+    spec:
+      min: 40
+      unit: dB

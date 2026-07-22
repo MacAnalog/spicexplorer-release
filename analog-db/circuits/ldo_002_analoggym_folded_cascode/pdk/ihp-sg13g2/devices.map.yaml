@@ -1,0 +1,6 @@
+# Generic device kind -> ihp-sg13g2 device name. HV mapping: this circuit's native design uses
+# a >=2 V rail with 5-6 V devices, so it binds to the sg13_hv family (cornerMOShv.lib).
+pdk: ihp-sg13g2
+devices:
+  nmos: {model: sg13_hv_nmos}
+  pmos: {model: sg13_hv_pmos}

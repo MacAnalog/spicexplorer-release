@@ -1,0 +1,14 @@
+simulator lang=spectre
+
+v_vdd (VDD 0) vsource dc=900.0m type=dc
+v_dec (DEC_NET 0) vsource dc=dec_val type=dc
+v_rst (RST_NET 0) vsource type=pulse val0=0 val1=900.0m period=1m delay=0 \
+        rise=100p fall=100p width=5n
+v_clk (CLK_NET 0) vsource type=pulse val0=0 val1=900.0m period=1n delay=0 \
+        rise=50p fall=50p width=450p
+
+x_dec (DEC_NET CFG_MAX\<3\> CFG_MAX\<2\> CFG_MAX\<1\> CFG_MAX\<0\>) \
+        dec2bin4 vh=900m
+x_counter (CLK_NET RST_NET CFG_MAX\<3\> CFG_MAX\<2\> CFG_MAX\<1\> \
+        CFG_MAX\<0\> COUNT\<3\> COUNT\<2\> COUNT\<1\> COUNT\<0\> VDD 0) \
+        counter_prog_4b

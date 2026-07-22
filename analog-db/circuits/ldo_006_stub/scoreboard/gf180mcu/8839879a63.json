@@ -1,0 +1,67 @@
+{
+  "area": {
+    "active_gate_area_um2": 25.0,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 1,
+    "r_count": 2,
+    "r_total_ohm": 200000.0
+  },
+  "circuit": "ldo_006_stub",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 7.500002e-06
+          },
+          "status": "ok"
+        },
+        "load_regulation": {
+          "measures": {
+            "load_reg": 1.233842
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-06-11T15:12:31+00:00"
+      }
+    }
+  },
+  "design_id": "8839879a63",
+  "metrics": {
+    "tt": {
+      "i_q": {
+        "spec": "pass",
+        "value": 7.500002e-06
+      },
+      "load_reg": {
+        "spec": "fail",
+        "value": 1.233842
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_xm1_l": "0.5u",
+      "r_bot": "100k",
+      "r_top": "100k",
+      "x_dut_xm1_w": "50u"
+    }
+  },
+  "pdk": "gf180mcu",
+  "ppa": {
+    "active_gate_area_um2": 25.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "load_reg": 1.233842
+    },
+    "power_w": 1.1250003e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

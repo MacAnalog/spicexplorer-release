@@ -1,0 +1,35 @@
+** AUTHORED TEMPLATE — amplifier/thd: large-signal harmonic distortion in the unity buffer.
+** A single sine at F0 (amplitude ASIG, offset VCM) drives the + input; the buffer output's
+** harmonic content IS the DUT's distortion. ngspice lane: plain tran written to the raw —
+** THD computed by the platform registry {meas: thd_pct, f0: F0} (coherent FFT, the .four
+** analogue; the `fourier` print in the log is an eyeball hint only). Spectre lane: the
+** platform composes a NATIVE pss at F0 instead (fd-PSF harmonics -> {meas: thd_pss_*}) —
+** ngspice has no PSS, so tran+FFT is the engine-neutral default and pss the closed-lane
+** upgrade. Bindings: DUT PORT_LINE VDD VCM IBIAS CL ASIG F0 TSTEP TSTOP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+.param CL=${CL}
+.param ASIG=${ASIG}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+CLoad vout 0 {CL}
+
+* unity buffer; the sine offset VCM doubles as the DC operating point
+Vinp vinp 0 sin({VCM} {ASIG} ${F0})
+Vfb  vinn vout dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP}
+  fourier ${F0} v(vout)
+  write
+  quit
+.endc
+.end

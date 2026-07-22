@@ -1,0 +1,48 @@
+// Parasitic-insensitive switched-capacitor integrator:
+// MOS transmission-gate switches + VA ideal opamp (mixed VA demo).
+// fclk = 100MHz, Cs = 100f, Cf = 400f, Vin = vcm + 50mV
+// -> output steps -Vin_diff*Cs/Cf = -12.5mV per clock cycle.
+simulator lang=spectre
+global 0
+parameters VDD=0.9 VCM=0.45 VIN_D=50m
+
+include "${PDK_ROOT}/models/spectre/toplevel_modified.scs" section=pre_simu
+include "${PDK_ROOT}/models/spectre/toplevel_modified.scs" section=top_tt
+
+subckt tgate A B CK CKB VDD VSS
+mn (A CK B VSS) nch_ulvt_mac l=30n w=2u multi=1 nf=4
+mp (A CKB B VDD) pch_ulvt_mac l=30n w=2u multi=1 nf=4
+ends tgate
+
+v_vdd (VDDA 0) vsource dc=VDD type=dc
+v_in (VIN 0) vsource dc=VCM+VIN_D type=dc
+v_cm (VCMN 0) vsource dc=VCM type=dc
+
+// phase 1: 0.5n..4.5n high, phase 2: 5.5n..9.5n high (period 10n)
+v_p1  (P1 0)  vsource type=pulse val0=0 val1=VDD delay=0.5n rise=100p fall=100p width=4n period=10n
+v_p1b (P1B 0) vsource type=pulse val0=VDD val1=0 delay=0.5n rise=100p fall=100p width=4n period=10n
+v_p2  (P2 0)  vsource type=pulse val0=0 val1=VDD delay=5.5n rise=100p fall=100p width=4n period=10n
+v_p2b (P2B 0) vsource type=pulse val0=VDD val1=0 delay=5.5n rise=100p fall=100p width=4n period=10n
+
+// phi1: sample VIN onto Cs (right plate to VCM); phi2: dump into virtual gnd
+x_s1 (VIN CSL P1 P1B VDDA 0) tgate
+x_s2 (CSR VCMN P1 P1B VDDA 0) tgate
+x_s3 (CSL VCMN P2 P2B VDDA 0) tgate
+x_s4 (CSR VX P2 P2B VDDA 0) tgate
+
+c_s (CSL CSR) capacitor c=100f
+c_f (VX VOUT) capacitor c=400f
+// weak bleed: defines the floating virtual ground at DC (all switches off
+// at t=0) so the high-gain opamp starts in its linear region
+r_init (VX VCMN) resistor r=10M
+
+x_amp (VX VOUT) va_ideal_opamp a0=2000 vcm=VCM
+
+c_load (VOUT 0) capacitor c=50f
+
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+tran tran stop=200n maxstep=20p annotate=status
+
+save VOUT VX CSL CSR P1 P2
+saveOptions options save=selected
+ahdl_include "va_ideal_opamp.va"

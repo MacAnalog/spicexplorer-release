@@ -1,0 +1,14 @@
+.subckt ldo_folded_cascode Vdd vinp Vb2 vinn Vb1 Vss Vreg
+XM10 Vreg vout1 Vdd Vdd sky130_fd_pr__pfet_01v8 L=L_M10 W=W_M10 m=M_M10
+XM1 net2 vinp net4 Vss sky130_fd_pr__nfet_01v8 L=L_M1 W=W_M1 m=M_M1
+XM2 net3 vinn net4 Vss sky130_fd_pr__nfet_01v8 L=L_M2 W=W_M2 m=M_M2
+XM4 net3 net1 Vdd Vdd sky130_fd_pr__pfet_01v8 L=L_M4 W=W_M4 m=M_M4
+XM3 net2 net1 Vdd Vdd sky130_fd_pr__pfet_01v8 L=L_M3 W=W_M3 m=M_M3
+XM9 net4 Vb1 Vss Vss sky130_fd_pr__nfet_01v8 L=L_M9 W=W_M9 m=M_M9
+XM6 vout1 Vb2 net3 Vdd sky130_fd_pr__pfet_01v8 L=L_M6 W=W_M6 m=M_M6
+XM5 net1 Vb2 net2 Vdd sky130_fd_pr__pfet_01v8 L=L_M5 W=W_M5 m=M_M5
+XM7 net1 Vb1 Vss Vss sky130_fd_pr__nfet_01v8 L=L_M7 W=W_M7 m=M_M7
+XM8 vout1 Vb1 Vss Vss sky130_fd_pr__nfet_01v8 L=L_M8 W=W_M8 m=M_M8
+XCfb net2 Vreg sky130_fd_pr__cap_mim_m3_1 W=10 L=10 MF=M_Cfb m=M_Cfb
+XRfb net2 vout1 Vss sky130_fd_pr__res_high_po_0p35 L=3 mult=M_Rfb m=M_Rfb
+.ends ldo_folded_cascode 

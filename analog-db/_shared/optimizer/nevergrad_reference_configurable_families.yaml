@@ -1,0 +1,127 @@
+# ==============================================================================
+# NEVERGRAD FAMILY CONFIGURATION REFERENCE
+# ==============================================================================
+# Use these Family Names in: optimizer_config.name
+# Use the arguments below in: optimizer_config.optimizer_kwargs
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. DIFFERENTIAL EVOLUTION
+# Name: DifferentialEvolution
+# Best for: The "Swiss Army Knife" of global search. Good for mixed types.
+# ------------------------------------------------------------------------------
+DifferentialEvolution:
+  # initialization: How the population starts.
+  # Options: "LHS" (Latin Hypercube - Recommended), "random", "gaussian", "QR"
+  initialization: "LHS"
+  
+  # crossover: How parents mix.
+  # Options: "twopoints" (Standard), "onepoint", "dimension", "random"
+  crossover: "twopoints"
+  
+  # popsize: Size of the population.
+  # Options: int (e.g. 50), "standard", "dimension", "large"
+  popsize: "standard"
+  
+  # recommendation: How to pick the final winner.
+  # Options: "pessimistic" (Safe), "optimistic" (Fast), "noisy", "mean"
+  recommendation: "pessimistic"
+  
+  # scale: Scale of the random mutation component (Default: 1.0)
+  scale: 1.0
+
+# ------------------------------------------------------------------------------
+# 2. SAMPLING & QUASI-RANDOM SEARCH
+# Name: SamplingSearch
+# Best for: Initial sweeping, finding valid regions, simple exploration.
+# ------------------------------------------------------------------------------
+SamplingSearch:
+  # sampler: The strategy for generating points.
+  # Options: "Halton", "Hammersley", "LHS", "random"
+  sampler: "Halton"
+  
+  # scrambled: Adds randomization to low-discrepancy sequences.
+  # Recommended: True (Especially for Halton/Hammersley in high dims)
+  scrambled: True
+  
+  # rescaled: Forces points to touch the min/max boundaries.
+  # Recommended: True (Ensures corner cases are tested)
+  rescaled: True
+  
+  # cauchy: Use Cauchy distribution instead of Gaussian for unbounded params.
+  cauchy: False
+
+# ------------------------------------------------------------------------------
+# 3. CMA-ES (Covariance Matrix Adaptation)
+# Name: ParametrizedCMA
+# Best for: Difficult continuous problems where gradients aren't available.
+# ------------------------------------------------------------------------------
+ParametrizedCMA:
+  # diagonal: Ignore parameter correlations?
+  # True = Faster, linear scaling (Good for >100 params)
+  # False = Standard CMA, full covariance (Good for <50 params, high precision)
+  diagonal: False
+  
+  # elitist: Keep the best parent for the next generation?
+  # True = Elitist (1+lambda). False = Standard (comma) strategy.
+  elitist: False
+  
+  # popsize: Force a specific population size.
+  # Default: None (Auto-calculated based on dimension)
+  popsize: null
+  
+  # random_init: Randomize the starting centroid?
+  # False = Start exactly at the provided initial guess.
+  random_init: False
+
+# ------------------------------------------------------------------------------
+# 4. PARTICLE SWARM OPTIMIZATION
+# Name: ConfPSO
+# Best for: Classic engineering problems.
+# ------------------------------------------------------------------------------
+ConfPSO:
+  # popsize: Number of particles in the swarm.
+  popsize: 40
+  
+  # omega: Inertia weight (How much it keeps moving in previous direction)
+  omega: 0.72
+  
+  # phip: Cognitive parameter (Attraction to personal best)
+  phip: 1.2
+  
+  # phig: Social parameter (Attraction to global best)
+  phig: 1.2
+
+# ------------------------------------------------------------------------------
+# 5. ONE PLUS ONE (Hill Climbing)
+# Name: ParametrizedOnePlusOne
+# Best for: Low budget, discrete parameters, or simple "tuning".
+# ------------------------------------------------------------------------------
+ParametrizedOnePlusOne:
+  # noise_handling: How to handle noisy fitness values.
+  # Options: null, "random", "optimistic"
+  noise_handling: "optimistic"
+  
+  # mutation: Mutation strategy.
+  # Options: "gaussian", "cauchy", "discrete", "fastga", "doublefastga"
+  mutation: "gaussian"
+  
+  # crossover: Add a genetic crossover step? (Rarely used in 1+1)
+  crossover: False
+
+# ------------------------------------------------------------------------------
+# 6. BAYESIAN OPTIMIZATION
+# Name: ParametrizedBO
+# Best for: Very expensive functions (minutes/hours per step), low dimensions.
+# ------------------------------------------------------------------------------
+ParametrizedBO:
+  # initialization: Initial sampling strategy.
+  # Options: "Hammersley", "random", "LHS"
+  initialization: "Hammersley"
+  
+  # init_budget: How many points to sample before starting the Gaussian Process.
+  init_budget: 10
+  
+  # utility_kind: The acquisition function.
+  # Options: "ucb" (Upper Confidence Bound), "ei" (Expected Improvement), "poi"
+  utility_kind: "ucb"

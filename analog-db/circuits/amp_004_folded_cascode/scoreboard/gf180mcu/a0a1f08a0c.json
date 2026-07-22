@@ -1,0 +1,104 @@
+{
+  "area": {
+    "active_gate_area_um2": 3556.0,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 14,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "amp_004_folded_cascode",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": -30.81176
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 3.564975e-05
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.0118793,
+            "onoise_total": 2.756807e-05
+          },
+          "status": "ok"
+        },
+        "tran_step": {
+          "measures": {
+            "vfinal": 0.1102069
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-06-11T15:12:30+00:00"
+      }
+    }
+  },
+  "design_id": "a0a1f08a0c",
+  "metrics": {
+    "tt": {
+      "dc_gain_db": {
+        "spec": "fail",
+        "value": -30.81176
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 3.564975e-05
+      },
+      "vn_in": {
+        "spec": "none",
+        "value": 0.0118793
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_ib": "34u",
+      "x_dut_xm1_l": "2u",
+      "x_dut_xm13_l": "2u",
+      "x_dut_xm6_l": "2.5u",
+      "x_dut_xm7_l": "2u",
+      "x_dut_xm9_l": "4.5u",
+      "x_dut_xm11_l": "3u",
+      "x_dut_xm12_l": "3u",
+      "x_dut_xm1_ng": 8,
+      "x_dut_xm13_ng": 11,
+      "x_dut_xm6_ng": 5,
+      "x_dut_xm7_ng": 8,
+      "x_dut_xm9_ng": 19,
+      "x_dut_xm11_ng": 5,
+      "x_dut_xm12_ng": 5,
+      "x_dut_vb1": 1.225,
+      "x_dut_vb2": 1.275,
+      "x_dut_xm1_w": "72u",
+      "x_dut_xm13_w": "106.5u",
+      "x_dut_xm6_w": "44u",
+      "x_dut_xm7_w": "78u",
+      "x_dut_xm9_w": "183u",
+      "x_dut_xm11_w": "50u",
+      "x_dut_xm12_w": "50u"
+    }
+  },
+  "pdk": "gf180mcu",
+  "ppa": {
+    "active_gate_area_um2": 3556.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": -30.81176
+    },
+    "power_w": 6.416955e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

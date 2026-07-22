@@ -1,0 +1,86 @@
+{
+  "components": [
+    {
+      "connections": {
+        "N": "vref",
+        "P": "vdd"
+      },
+      "device_type": "RES",
+      "id": "R1",
+      "params": {
+        "Value": "r_top"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vss",
+        "P": "vref"
+      },
+      "device_type": "RES",
+      "id": "R2",
+      "params": {
+        "Value": "r_bot"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "vdd",
+        "GATE": "vref",
+        "SOURCE": "vout"
+      },
+      "device_type": "MOS",
+      "id": "XM1",
+      "params": {
+        "l": "x_dut_xm1_l",
+        "m": "x_dut_xm1_m",
+        "w": "x_dut_xm1_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    }
+  ],
+  "meta": {
+    "circuit_name": "ldo_006_stub",
+    "component_count": 3,
+    "net_count": 4
+  },
+  "nets": [
+    {
+      "is_supply": true,
+      "name": "vdd",
+      "supply_type": "VDD"
+    },
+    {
+      "is_supply": false,
+      "name": "vout",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vref",
+      "supply_type": ""
+    },
+    {
+      "is_supply": true,
+      "name": "vss",
+      "supply_type": "VSS"
+    }
+  ]
+}

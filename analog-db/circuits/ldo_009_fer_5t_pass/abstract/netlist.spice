@@ -1,0 +1,30 @@
+** Abstract LDO: 5T OTA error amp + PMOS pass device, unity feedback.
+** AUTHORED source of truth (plan D-2). PDK-neutral model tokens (nmos/pmos + ideal R/C/V/I);
+** per-PDK device names + geometry come from circuitgraph lowering + pdk/<pdk>/ bindings.
+** Subckt port order (= circuit.yaml ports): vdd vout vss — self-contained (class convention).
+**
+** Topology (ferrosim ldo_sample): 5T OTA (NMOS pair XMIP/XMIN, PMOS mirror load, NMOS tail
+** mirror) + PMOS pass. UNITY feedback: vout drives the diode-side input XMIP directly (the
+** pass inversion makes the mirror side -> pass gate non-inverting in vout, deck comment).
+** Miller cap c_mil from vout to the pass gate; c_out = the deck's on-board 50 pF decap (kept —
+** the class benches add their own external COUT on top).
+** Internalized (promotion): the deck's va_vref behavioral bandgap -> ideal VREF + its 10 kohm
+** rout (x_rref); the external 20 uA bias -> ideal IBI into the NMOS diode.
+** Device widths stay per-finger (IHP lv MOS w <= ~10 um; PSP clips silently) — totals via m=.
+VREF ref0  vss dc {x_vref_val}
+RREF ref0  vref r=x_rref
+IBI  vdd   nbias dc {x_ibias_val}
+XMNB nbias nbias vss vss nmos w=x_dut_xmnb_w  l=x_dut_xmnb_l m=x_dut_xmnb_m
+XMNT tail  nbias vss vss nmos w=x_dut_xmnt_w  l=x_dut_xmnt_l m=x_dut_xmnt_m
+XMIP otax  vout  tail vss nmos w=x_dut_xmip_w l=x_dut_xmip_l m=x_dut_xmip_m
+XMIN otao  vref  tail vss nmos w=x_dut_xmin_w l=x_dut_xmin_l m=x_dut_xmin_m
+XMLD otax  otax  vdd vdd pmos w=x_dut_xmld_w  l=x_dut_xmld_l m=x_dut_xmld_m
+XMLM otao  otax  vdd vdd pmos w=x_dut_xmlm_w  l=x_dut_xmlm_l m=x_dut_xmlm_m
+XMP  vout  otao  vdd vdd pmos w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m
+CMIL vout  otao  c=x_cmil
+COUT vout  vss   c=x_cout
+** Promotion normalization: with unity feedback and no divider the upstream DUT has NO no-load
+** pull-down (its TB always drew >= 0.5 mA), so vout floats to vdd at Iload = 0. A light bleed
+** (~9 uA at 0.9 V) keeps the loop regulating at true no-load — standard LDO practice.
+RBLD vout  vss   r=x_rbleed
+.end

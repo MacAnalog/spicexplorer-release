@@ -1,0 +1,91 @@
+# Datasheet (plan D-3/D-5). Specs = the NEWCAS optimization targets (the legacy
+# project_setup.yaml target_specs); the `optimize` blocks carry the optimizer projection
+# fields verbatim so the generated project_setup reproduces the baseline (P3 regression gate).
+schema: spicexplorer/datasheet@1
+default_conditions:
+  supply: {unit: V, typical: 1.5}
+  cload:  {unit: fF, typical: 50}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+  vcm:    {unit: V, typical: 0.8}
+  ibias:  {unit: uA, typical: 5}
+metrics:
+  ugf_hz:
+    display: "Unity-gain frequency"
+    unit: Hz
+    analysis: ac_open_loop
+    extract: {meas: ugf}
+    spec: {min: 200.0e6, unit: Hz}
+    optimize: {spec_name: ugf, testbench: tb_ac, sim_type: ac, goal: exceed, target: 200.0e6,
+               range: 100.0e6, tolerance: 10.0e6, weight: 100.0, log_scale: false,
+               error_type: relative-absolute, reward_type: log, enable: true}
+  dc_gain_db:
+    display: "DC open-loop gain"
+    unit: dB
+    analysis: ac_open_loop
+    extract: {meas: dcgain}
+    symbolic:
+      tool: netlist2tf
+      call: open_loop_gain
+      args: {output: [vout, vss], input: [vinp, vinn], scale: db}
+    spec: {min: 40, unit: dB}
+    optimize: {spec_name: dcgain, testbench: tb_ac, sim_type: ac, goal: exceed, target: 40,
+               range: 100, tolerance: 1, weight: 100.0, error_type: relative-absolute,
+               reward_type: log, enable: true}
+  pm_deg:
+    display: "Phase margin (diagnostic — see note)"
+    unit: deg
+    analysis: ac_open_loop
+    extract: {meas: pm}
+    # DIAGNOSTIC ONLY — no min gate. The direct-drive `ac_open_loop` bench extracts a *meaningless*
+    # PM for a telescopic cascode: the diff→single-ended mirror path adds excess phase, so the
+    # single-ended open-loop phase is not the loop transmission. Sim confirms it (design-review
+    # 2026-07-05, H1): ihp-sg13g2 tt reports pm = -396.7°, physically impossible. A trustworthy PM
+    # needs a loop-gain probe (Middlebrook) — the legacy bench at
+    # pdk/ihp-sg13g2/testbenches.legacy/ota-improved_tb-loopgain.spice is the seed for a future
+    # amplifier `ac_loopgain` template; until it lands, `pm` is recorded but NOT spec-gated.
+    spec: {typ: 60, unit: deg}
+    optimize: {spec_name: pm, testbench: tb_ac, sim_type: ac, goal: exact, target: 60,
+               range: 45, tolerance: 10, weight: 100.0, error_type: relative-absolute,
+               reward_type: none, enable: true}
+  vn_in:
+    display: "Input-referred noise"
+    unit: "V/sqrt(Hz)"
+    analysis: noise
+    extract: {meas: inoise_total}
+    spec: {max: 1.2e-3, unit: "V/sqrt(Hz)"}
+    optimize: {spec_name: "v(inoise_total)", testbench: tb_noise, sim_type: noise,
+               goal: minimize, target: 1.2e-3, range: 1.0e-3, tolerance: 1.0e-6, weight: 100.0,
+               error_type: relative-absolute, reward_type: log, enable: true}
+  i_supply:
+    display: "Supply current"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 25.0e-6, unit: A}
+    optimize: {spec_name: "i(idd_total)", testbench: tb_noise, sim_type: op, goal: minimize,
+               target: 25.0e-6, range: 100.0e-6, tolerance: 1.0e-6, weight: 100.0,
+               error_type: relative-absolute, reward_type: log, enable: true}
+  t_settle:
+    display: "Settling time"
+    unit: s
+    analysis: tran_step
+    extract: {meas: t_settle}
+    spec: {max: 15.0e-6, unit: s}
+    optimize: {spec_name: tsettle, testbench: tb_tran, sim_type: tran, goal: minimize,
+               target: 15.0e-6, range: 1.0e-6, tolerance: 1.0e-8, weight: 10.0,
+               error_type: relative-absolute, reward_type: none, enable: true}
+  psrr_vdd_db:
+    display: "Positive-supply rejection"
+    description: "PSRR+ in the unity-buffer config, DC-band floor (design-review 2026-07-05 rollout)."
+    unit: dB
+    analysis: psrr_vdd
+    extract: {meas: psrr_vdd_db}
+    spec: {min: 20, unit: dB}
+  cmrr_db:
+    display: "Common-mode rejection"
+    description: "CMRR in the unity-buffer config, DC-band floor (design-review 2026-07-05 rollout)."
+    unit: dB
+    analysis: cmrr_vcm
+    extract: {meas: cmrr_db}
+    spec: {min: 40, unit: dB}

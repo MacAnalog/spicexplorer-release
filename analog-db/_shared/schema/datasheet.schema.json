@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spicexplorer/datasheet@1",
+  "title": "SpiceXplorer datasheet (cace_format 5.2 superset)",
+  "description": "Machine-readable spec/metric sheet (plan D-3/D-5/D-12). A SUPERSET of cace_format 5.2: a CACE run can consume the cace-shaped fields, while `metrics` adds the SpiceXplorer cross-check layer (sim `extract` and/or netlist2tf `symbolic`). See _shared/CACE_FORMAT.md for the O-1 field-overlap mapping.",
+  "type": "object",
+  "required": ["schema", "default_conditions", "metrics"],
+  "additionalProperties": true,
+  "properties": {
+    "schema": {"const": "spicexplorer/datasheet@1"},
+    "cace_format": {"type": "string", "description": "The cace_format version this sheet stays compatible with (e.g. 5.2)."},
+    "default_conditions": {
+      "type": "object",
+      "description": "Default PVT/condition context (mirrors cace default_conditions).",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "unit": {"type": "string"},
+          "typical": {}
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Canonical, flat metric map (the SpiceXplorer superset of cace `parameters.*.spec`).",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "display": {"type": "string"},
+          "description": {"type": "string"},
+          "unit": {"type": "string"},
+          "analysis": {"type": "string", "description": "Analysis id producing this metric (must exist in the circuit's analyses)."},
+          "extract": {
+            "type": "object",
+            "description": "Simulation extraction path (a .meas name or fn:).",
+            "additionalProperties": true
+          },
+          "symbolic": {
+            "type": "object",
+            "description": "netlist2tf symbolic cross-check (D-5).",
+            "additionalProperties": false,
+            "properties": {
+              "tool": {"const": "netlist2tf"},
+              "call": {"type": "string", "enum": ["transfer_function", "open_loop_gain", "input_impedance", "output_impedance", "common_mode_gain", "cmrr", "psrr", "loop_gain", "asymptotic_gain"]},
+              "args": {"type": "object", "additionalProperties": true}
+            },
+            "required": ["tool", "call"]
+          },
+          "formula": {"type": "string", "description": "Derived FOM expressed over other metric ids."},
+          "spec": {
+            "type": "object",
+            "description": "The oracle (Tier 4). min/typ/max; `any` means unconstrained.",
+            "additionalProperties": false,
+            "properties": {
+              "min": {},
+              "typ": {},
+              "max": {},
+              "unit": {"type": "string"}
+            }
+          },
+          "optimize": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "goal": {"type": "string", "enum": ["exceed", "exact", "minimize"]},
+              "weight": {"type": "number"},
+              "reward_type": {"type": "string"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

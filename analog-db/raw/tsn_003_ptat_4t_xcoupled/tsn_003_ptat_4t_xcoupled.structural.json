@@ -1,0 +1,60 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "tsn_003_ptat_4t_xcoupled",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 4,
+    "blocks_detected": 2,
+    "by_family": {
+      "current_mirror": 2
+    },
+    "structural_roles": {
+      "XM0": "current_mirror",
+      "XM1": "current_mirror_reference",
+      "XM3": "current_mirror_reference",
+      "XM4": "current_mirror"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.nmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XM1",
+      "output_devices": [
+        "XM0"
+      ],
+      "devices": [
+        "XM0",
+        "XM1"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "na",
+        "out": "vout"
+      }
+    },
+    {
+      "group_id": "cm.pmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XM3",
+      "output_devices": [
+        "XM4"
+      ],
+      "devices": [
+        "XM3",
+        "XM4"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "vout",
+        "out": "na"
+      }
+    }
+  ]
+}

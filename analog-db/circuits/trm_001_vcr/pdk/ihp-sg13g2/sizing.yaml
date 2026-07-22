@@ -1,0 +1,9 @@
+# Design variables for the ihp-sg13g2 binding. R0 sets the top of the divider; XM0's W/L sets the
+# on-resistance (and thus the low end of the transfer) and the code sensitivity.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_r0_value, description: "Top divider resistor (vdd -> vout)", default: 200k, min: 1k, max: 10meg, unit: ohm}
+  - {name: x_dut_xm0_w,    description: "Shunt NMOS width",                   default: 2.0u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm0_l,    description: "Shunt NMOS length",                  default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm0_m,    description: "Shunt NMOS multiplier",              default: 1, is_integer: true}

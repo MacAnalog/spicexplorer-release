@@ -1,0 +1,5 @@
+# Generic device kind -> ihp-sg13g2 device names for the LDO stub.
+pdk: ihp-sg13g2
+devices:
+  nmos: {model: sg13_lv_nmos}
+  res:  {model: rhigh}

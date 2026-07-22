@@ -1,0 +1,16 @@
+# Analysis binding (plan D-4). Validated against _shared/schema/analysis.schema.json.
+# Binds the amplifier-class ac_open_loop template to this circuit's conditions.
+schema: spicexplorer/analysis@1
+id: ac_open_loop
+template: ac_open_loop_biaswrap_ibias
+description: "Bias-wrapped open-loop AC (this amp has a designed-in systematic offset — the ratioed mirror_e sink — so an unwrapped open-loop op point rails)."
+params:
+  FSTART: 10
+  FSTOP: 100MEG
+  PPD: 101
+  CL: 10p
+  VCM: 1.2
+  VDD: 3.3
+  IBIAS: 1m
+flags: []
+produces: [dc_gain_db, ugf_hz, pm_deg]

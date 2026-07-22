@@ -1,0 +1,34 @@
+** AUTHORED TEMPLATE — amplifier/noise_diff (self-biased, differential-output noise).
+** Input-referred noise over a band for a DUT with no external ibias port and a true
+** differential output. Single-ended AC stimulus into the inverting input (Vinn grounded
+** AC), differential output noise sensed directly via ngspice's two-node `.noise` form. No
+** bias-wrap needed — see ac_open_loop_diff.spice for why a symmetric FD topology with
+** matched DC inputs doesn't need one.
+**
+** Assumes a self-biased, differential-output DUT port order:
+**   .subckt <id> vinp vinn voutp voutn vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CL FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+Vcm  vcm 0 dc {VCM}
+Vinp vinp vcm dc 0 ac 1
+Vinn vinn vcm dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  noise v(voutp,voutn) Vinp dec ${PPD} ${FSTART} ${FSTOP}
+  print inoise_total onoise_total
+  write
+  quit
+.endc
+.end

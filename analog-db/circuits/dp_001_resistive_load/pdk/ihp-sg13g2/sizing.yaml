@@ -1,0 +1,18 @@
+# Design variables for the ihp-sg13g2 binding. Validated against sizing.schema.json.
+# Input pair (x_in_*), ideal resistor loads (x_dut_rp_value), and the 1:1 mirror tail (x_tail_*/x_dut_xmr_w).
+# Geometry adapted from the ferrosim 28nm pair (MP/MN 12u/150n; loads 22k) to the IHP lv-NMOS.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xmp_w,   description: "Input-pair width",          default: 12u, min: 0.18u, max: 30u, unit: m}
+  - {name: x_dut_xmp_l,   description: "Input-pair length",         default: 0.3u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_rp_value,     description: "Load resistor (ohms)",       default: 22000, min: 1000, max: 500000, unit: ohm}
+  - {name: x_dut_xmt_w, description: "Tail mirror-out width",     default: 24u, min: 0.18u, max: 40u, unit: m}
+  - {name: x_dut_xmr_l, description: "Mirror length (tail+ref)",  default: 0.3u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xmt_m, description: "Tail multiplier",            default: 1, is_integer: true}
+  - {name: x_dut_xmr_w,  description: "Mirror-reference width",    default: 24u, min: 0.18u, max: 40u, unit: m}
+  # Frozen per-device literals (P4 atomic sweep): defaults reproduce the authored
+  # netlist literals exactly; freeze keeps them out of the search space.
+  - {name: x_dut_xmp_m, description: "XMP m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmn_m, description: "XMN m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmr_m, description: "XMR m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

@@ -1,0 +1,29 @@
+# ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
+# PROMOTED from the ferrosim_common_source reference entry: authored a device-generic abstract
+# netlist + open-PDK bindings so the cascode common-source stage is lowerable, assembled and
+# simulated. The original TSMC 28nm/65nm ferrosim decks are retained under `references`.
+schema: spicexplorer/circuit@1
+id: gs_001_cascode_cs
+class: gain_stage
+display_name: "Cascode common-source stage (self-contained PMOS/NMOS bias ladder)"
+stages: 1
+ports: [vdd, vout, vin, ibias, vss]     # ibias is SINK-referenced (class convention)
+provenance:
+  source: Arcadia-1/ferrosim (imported via netlist-crawler)
+  aliases: [common_source, ferrosim_common_source, common-source-amplifier-ptm180]
+  designer: Token Zhang
+  license: MIT
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, sky130, gf180mcu]
+analyses: [dc_op, dc_transfer, ac_gain]
+references:
+  - {tool: spectre, dir: spectre/28nm, node: 28nm}
+  - {tool: spectre, dir: spectre/65nm, node: 65nm}
+optimize:
+  budget: 500
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

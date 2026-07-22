@@ -1,0 +1,24 @@
+** AUTHORED TEMPLATE — oscillator/dc_op: DC operating point + supply current of an oscillator.
+** [SKELETON - NOT VALIDATED, 2026-07-15]: well-formed but not yet exercised against a real DUT;
+** forward scaffolding for a future open-PDK promotion of this class. Develop + validate the meas
+** blocks and add the class metric reader then. See _shared/classes/TODO_new_class_testbenches.md
+** Reports the (unstable) DC solution's supply draw as the static power estimate. Port convention:
+** vdd vout vss. Bindings: DUT PORT_LINE VDD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+
+Vdd vdd 0 dc {VDD}
+Vss vss 0 dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  print i_supply
+  write
+  quit
+.endc
+.end

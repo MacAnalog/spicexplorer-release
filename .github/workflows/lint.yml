@@ -1,0 +1,21 @@
+# Managed by the private release infra (scripts/release/repo/) — edit there,
+# not here; the next port overwrites this file.
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      # Each unit carries its own [tool.ruff] config in its pyproject.toml;
+      # ruff discovers the nearest config per file.
+      - run: ruff check analog-db

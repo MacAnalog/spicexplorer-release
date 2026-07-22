@@ -1,0 +1,9 @@
+simulator lang=spectre
+global 0
+ahdl_include "tee.va"
+v_in (A 0) vsource dc=1
+x1 (A 0) tee g=1m
+simulatorOptions options temp=27 tnom=27
+dcOp dc annotate=status
+save A x1.mid v_in:p
+saveOptions options save=selected

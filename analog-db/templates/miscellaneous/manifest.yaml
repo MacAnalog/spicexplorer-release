@@ -1,0 +1,182 @@
+# Functional-subcircuit template library — miscellaneous: differential pairs (simple + cascoded),
+# cross-coupled pairs, and the complementary CMOS inverter / push-pull stage.
+#
+# A catalogue of pre-defined functional sub-circuits that the circuitgraph subcircuit matcher
+# (`spicexplorer_circuitgraph.match`) overlays onto an input netlist via subgraph monomorphism.
+# Each template is a small, hand-authored netlist (netlisted from the sibling xschem `.sch`).
+#
+# Matching is topological: instance names, internal net names, and device sizing are ignored; only
+# device type + MOS polarity + pin-level wiring matter.
+#
+# Dependent (anchored) templates — the `CM_tail` port:
+#   A differential pair only performs its function when its shared source (tail) node is biased by a
+#   tail current source. We express that as a *dependency* rather than baking the current source into
+#   the template: the port role `CM_tail` is special — the matcher admits a differential-pair match
+#   ONLY when that port lands on a net that is the output (`out`/iout) of a current mirror detected
+#   elsewhere in the same host. This keeps the differential-pair template tiny (just the pair) while
+#   still rejecting two unrelated common-source devices that merely happen to share a node. The check
+#   runs as a layer on top of current-mirror detection — see `match.find_subcircuits`.
+#
+#   `tail_sources` (optional) narrows that dependency to an allow-list of current-mirror template ids:
+#   the pair's tail is admitted only on the output of a mirror whose id is listed (a physically-correct
+#   restriction — an NMOS pair is sunk by an NMOS mirror, a PMOS pair sourced by a PMOS one). Omit it
+#   (or leave it empty) to accept the output of ANY detected current mirror.
+#
+# Net-name convention used inside the templates (NOT matched, only for port identification):
+#   VSS / VDD = supply rail · vinp / vinn = differential inputs · CM_tail = shared tail (must be a
+#   current-mirror output) · drain_n / drain_p = the pair's output drains.
+#
+# Each template also carries `image:` — a net-colour-coded xschem render (PNG) of its `.sch` beside the
+# schematic (one colour per net), for a quick visual reference of the topology.
+schema: spicexplorer/subcircuit-template-library@1
+family: differential_pair
+display_name: "Miscellaneous functional sub-circuits (differential pairs, cross-coupled pairs, inverter)"
+provenance:
+  pdk: ihp-sg13g2   # the templates are netlisted with sg13_lv_* devices; matching ignores the model
+
+# Design rules — this group's notes, co-located under rules/ and registered here for tracking.
+# Consumed by humans + LLM agents (NOT the matcher, which reads only `templates`); the library-level
+# index lives at templates/README.md. (The inverter template has no dedicated note yet.)
+rules:
+  - path: rules/differential_pair.md
+    title: "Differential pair (+ cascoded/folded variants) & differential-stage sizing/recognition"
+    sources: ["Massier 2008", "GENIE-ASI 2025"]
+  - path: rules/cross_coupled_pair.md
+    title: "Cross-coupled pair (negative-resistance / latch core) sizing & recognition"
+    sources: ["Massier 2008", "GENIE-ASI 2025"]
+
+templates:
+  - id: dp.nmos.simple
+    display_name: "Simple NMOS differential pair (2T, tail-biased)"
+    class: differential_pair
+    polarity: nmos
+    role: differential_pair
+    netlist: simulation/diff_pair_nmos.spice
+    image: diff_pair_nmos.png
+    ports: {supply: VSS, in_p: vinp, in_n: vinn, CM_tail: CM_tail, out_n: drain_n, out_p: drain_p}
+    # an NMOS pair is tail-biased by an NMOS current sink — restrict the anchor to NMOS mirrors
+    tail_sources:
+      - cm.nmos.simple
+      - cm.nmos.cascode
+      - cm.nmos.wilson
+      - cm.nmos.improved_wilson
+      - cm.nmos.high_swing_cascode
+      - cm.nmos.improved_high_swing_cascode
+      - cm.nmos.low_voltage_cascode
+      - cm.nmos.selfbiased_high_swing_cascode
+
+  - id: dp.pmos.simple
+    display_name: "Simple PMOS differential pair (2T, tail-biased)"
+    class: differential_pair
+    polarity: pmos
+    role: differential_pair
+    netlist: simulation/diff_pair_pmos.spice
+    image: diff_pair_pmos.png
+    ports: {supply: VDD, in_p: vinp, in_n: vinn, CM_tail: CM_tail, out_n: drain_n, out_p: drain_p}
+    # a PMOS pair is tail-biased by a PMOS current source — restrict the anchor to PMOS mirrors
+    tail_sources:
+      - cm.pmos.simple
+      - cm.pmos.wilson
+
+  # --- Cascoded ("improved") differential pairs (4T: pair + a cascode per branch on VBIAS) --------
+  # A superset of the simple pair (its two input devices are the simple-pair match, subsumed during
+  # grouping). VBIAS is the (external) cascode-gate bias — declared as a port so it fans out to the
+  # host bias network; the pair is still tail-anchored via CM_tail. Detects e.g. a telescopic OTA's
+  # cascoded input stage.
+  - id: dp.nmos.cascode
+    display_name: "Cascoded NMOS differential pair (4T, tail-biased + cascodes)"
+    class: cascode_differential_pair
+    polarity: nmos
+    role: differential_pair
+    netlist: simulation/diff_pair_improved_nmos.spice
+    image: diff_pair_improved_nmos.png
+    ports: {supply: VSS, in_p: vinp, in_n: vinn, CM_tail: CM_tail, out_n: drain_n, out_p: drain_p, cascode_bias: VBIAS}
+    tail_sources:
+      - cm.nmos.simple
+      - cm.nmos.cascode
+      - cm.nmos.wilson
+      - cm.nmos.improved_wilson
+      - cm.nmos.high_swing_cascode
+      - cm.nmos.improved_high_swing_cascode
+      - cm.nmos.low_voltage_cascode
+      - cm.nmos.selfbiased_high_swing_cascode
+
+  - id: dp.pmos.cascode
+    display_name: "Cascoded PMOS differential pair (4T, tail-biased + cascodes)"
+    class: cascode_differential_pair
+    polarity: pmos
+    role: differential_pair
+    netlist: simulation/diff_pair_improved_pmos.spice
+    image: diff_pair_improved_pmos.png
+    ports: {supply: VDD, in_p: vinp, in_n: vinn, CM_tail: CM_tail, out_n: drain_n, out_p: drain_p, cascode_bias: VBIAS}
+    tail_sources:
+      - cm.pmos.simple
+      - cm.pmos.wilson
+      - cm.pmos.cascode
+      - cm.pmos.improved_wilson
+      - cm.pmos.high_swing_cascode
+      - cm.pmos.improved_high_swing_cascode
+      - cm.pmos.low_voltage_cascode
+      - cm.pmos.selfbiased_high_swing_cascode
+
+  # --- Cross-coupled pairs (negative-resistance / latch core) -------------------------------------
+  # Two same-type devices whose gates cross to the opposite drains, sharing a source. Authored with a
+  # CM_tail node, so (like a differential pair) it is admitted only when that shared source is a
+  # detected current-mirror output — i.e. an actively tail-biased cross-coupled pair, not a rail-tied
+  # load. NOTE: a cross-coupled pair is not a differential pair; its devices currently receive the
+  # `differential_pair` structural role (the matcher keys that role off the CM_tail port) — a
+  # follow-up could give it a dedicated role.
+  - id: xc.nmos.simple
+    display_name: "Cross-coupled NMOS pair (tail-biased, negative-resistance)"
+    class: cross_coupled
+    polarity: nmos
+    role: cross_coupled
+    family: cross_coupled
+    netlist: simulation/cross_coupled_nmos.spice
+    image: cross_coupled_nmos.png
+    ports: {supply: VSS, in_p: vinp, in_n: vinn, CM_tail: CM_tail}
+    tail_sources:
+      - cm.nmos.simple
+      - cm.nmos.cascode
+      - cm.nmos.wilson
+      - cm.nmos.improved_wilson
+      - cm.nmos.high_swing_cascode
+      - cm.nmos.improved_high_swing_cascode
+      - cm.nmos.low_voltage_cascode
+      - cm.nmos.selfbiased_high_swing_cascode
+
+  - id: xc.pmos.simple
+    display_name: "Cross-coupled PMOS pair (tail-biased, negative-resistance)"
+    class: cross_coupled
+    polarity: pmos
+    role: cross_coupled
+    family: cross_coupled
+    netlist: simulation/cross_coupled_pmos.spice
+    image: cross_coupled_pmos.png
+    ports: {supply: VDD, in_p: vinp, in_n: vinn, CM_tail: CM_tail}
+    tail_sources:
+      - cm.pmos.simple
+      - cm.pmos.wilson
+      - cm.pmos.cascode
+      - cm.pmos.improved_wilson
+      - cm.pmos.high_swing_cascode
+      - cm.pmos.improved_high_swing_cascode
+      - cm.pmos.low_voltage_cascode
+      - cm.pmos.selfbiased_high_swing_cascode
+
+  # --- Complementary CMOS inverter / push-pull gain stage (2T) ------------------------------------
+  # An NMOS + PMOS sharing gate (input) and drain (output), sources on opposite rails. Independent
+  # (not tail-anchored). Matches a true complementary stage only (a current-source-loaded common-
+  # source has its load gate on a bias net, not the input, so it does NOT match). The block's
+  # netlist lives under OTA-single-stage; referenced here so it joins the same detection pass.
+  # NOTE: an inverter is not a current mirror; its devices currently receive the `current_mirror`
+  # structural role (the role taxonomy has no inverter role yet) — a follow-up could add one.
+  - id: inv.cmos.stack
+    display_name: "Complementary CMOS inverter / push-pull stage (2T)"
+    class: inverter
+    polarity: complementary
+    role: gain_stage
+    family: inverter
+    netlist: ../OTA-single-stage/simulation/inverter_stack.spice
+    image: ../OTA-single-stage/inverter_stack.png
+    ports: {supply_n: VSS, supply_p: VDD, in: vin, out: vout}

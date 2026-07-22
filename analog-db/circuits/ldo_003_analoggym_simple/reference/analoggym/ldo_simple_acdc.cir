@@ -1,0 +1,172 @@
+Test ldo_simple ACDC
+
+*.OPTIONS RELTOL=.0001
+***************************************
+* Step 1: Replace circuit netlist here.
+*************************************** 
+.include  ../simulations/ldo_simple.txt
+
+.param mc_mm_switch=0
+.param mc_pr_switch=0
+.include ../mosfet_model/sky130_pdk/libs.tech/ngspice/corners/tt.spice
+.include ../mosfet_model/sky130_pdk/libs.tech/ngspice/r+c/res_typical__cap_typical.spice
+.include ../mosfet_model/sky130_pdk/libs.tech/ngspice/r+c/res_typical__cap_typical__lin.spice
+.include ../mosfet_model/sky130_pdk/libs.tech/ngspice/corners/tt/specialized_cells.spice
+
+***************************************
+* Step 2: Replace circuit param.  here.
+*************************************** 
+.include ../simulations/ldo_simple_vars.spice
+.PARAM supply_voltage = 2
+.PARAM Vref = 1.8
+.PARAM PARAM_ILOAD =10m 
+
+V1 vdd 0 'supply_voltage'
+V2 vss 0 0 
+
+Vindc vref_in 0 'Vref'
+Vin signal_in 0 dc 'Vref' ac 1 sin('Vref' 100m 500)
+
+* Circuit List:
+* ldo_simple
+
+* XLDO gnda vdda vinn vout vfb vinp Ib
+*        |  |     |     |   |    |   |
+*        |  |     |     |   |    |   bias current
+*        |  |     |     |   |    Non-inverting input 
+*        |  |     |     |   Feedback voltage 
+*        |  |     |     |   
+*        |  |     |     Output
+*        |  |     Inverting Input
+*        |  Positive Supply
+*         Negative Supply 
+
+***************************************
+* Step 3: Replace circuit name below.
+* e.g. Basic_LDO -> DFCFC_LDO
+*************************************** 
+*    ADM TB   
+x1 vdd vinp1 vref_in net1 vss Vreg1 ldo_simple
+Vb net1 0 'Vb'
+XCL Vreg1 0 sky130_fd_pr__cap_mim_m3_1 W=30 L=30 MF=M_CL m=M_CL
+Iload1 Vreg1 0 'PARAM_ILOAD' 
+Lfb vinp1 Vreg1 1T
+Cfb vinp1 signal_in 1T
+
+* PSRR   TB   
+VVDDApsrr vddpsrr 0 'supply_voltage'  AC=1
+x2 vddpsrr Vreg2 vref_in net2 vss Vreg2 ldo_simple
+Vb2 net2 0 'Vb'
+XCL2 Vreg2 0 sky130_fd_pr__cap_mim_m3_1 W=30 L=30 MF=M_CL m=M_CL
+Iload2 Vreg2 0 'PARAM_ILOAD'
+
+* DC ALL  TB  
+VVDDdc VDDdc 0 'supply_voltage' 
+x3 VDDdc Vreg3 vref_in net3 vss Vreg3 ldo_simple
+Vb3 net3 0 'Vb'
+XCL3 Vreg3 0 sky130_fd_pr__cap_mim_m3_1 W=30 L=30 MF=M_CL m=M_CL
+Iload3 Vreg3 0 'PARAM_ILOAD'
+
+.control
+* save all voltage and current
+save all
+.options savecurrents 
+set filetype=ascii
+set units=degrees
+
+* DC sweep at maxload
+alter Iload3 dc=10m
+dc VVDDdc 1 3 0.01
+plot  v(Vreg3)
+wrdata ldo_simple_Vdrop_maxload v(Vreg3)
+
+* DC sweep at minload
+alter Iload3 dc=10u
+dc VVDDdc 1 3 0.01
+plot  v(Vreg3)
+wrdata ldo_simple_Vdrop_minload v(Vreg3)
+
+* LNR at maxload
+alter Iload3 dc=10m
+dc VVDDdc 1.8 2.2 0.01
+meas dc maxval1 MAX V(Vreg3) from=1.8 to=2.2
+meas dc minval1 MIN V(Vreg3) from=1.8 to=2.2
+meas dc avgval1 AVG V(Vreg3) from=1.8 to=2.2
+meas dc ppavl1  PP V(Vreg3) from=1.8 to=2.2
+let LNR1 = ppavl1/avgval1/0.4
+print LNR1
+plot v(Vreg3)
+wrdata ldo_simple_LNR_maxload LNR1
+
+* LNR at minload
+alter Iload3 dc=10u
+dc VVDDdc 1.8 2.2 0.01
+meas dc maxval2 MAX V(Vreg3) from=1.8 to=2.2
+meas dc minval2 MIN V(Vreg3) from=1.8 to=2.2
+meas dc avgval2 AVG V(Vreg3) from=1.8 to=2.2
+meas dc ppavl2  PP V(Vreg3) from=1.8 to=2.2
+let LNR2 = ppavl2/avgval2/0.4
+print LNR2
+plot v(Vreg3)
+wrdata ldo_simple_LNR_minload LNR2
+
+dc Iload3 10u 10.001m 1u
+* LR meas   
+meas dc maxval MAX V(Vreg3) from=10u to=10m
+meas dc minval MIN V(Vreg3) from=10u to=10m
+meas dc avgval AVG V(Vreg3) from=10u to=10m
+meas dc ppavl  PP V(Vreg3) from=10u to=10m
+let LR = ppavl/avgval/9.99m
+print LR
+
+* Power meas at maxload
+meas dc Ivdd1 FIND I(VVDDDC) AT=10m
+let Power1 = -1*Ivdd1*2
+print Power1
+
+* Power meas at minload
+meas dc Ivdd2 FIND I(VVDDDC) AT=10u
+let Power2 = -1*Ivdd2*2
+print Power2
+
+*   Vos.meas at maxload
+meas dc vout_x FIND V(Vreg3) AT=10m
+let vos1 = vout_x-4*1.8
+print vos1
+
+*   Vos.meas at minload
+meas dc vout_y FIND V(Vreg3) AT=10u
+let vos2 = vout_y-4*1.8
+print vos2
+plot v(Vreg3)
+wrdata ldo_simple_LR_Power_vos LR Power1 Power2 vos1 vos2 
+
+* Loop test at maxload
+alter Iload1 dc=10m
+ac dec 10 0.1 1G
+meas ac DCPSRp1 find vdb(Vreg2) at = 0.1
+meas ac dcgain1 find vdb(Vreg1) at = 0.1
+meas ac gain_bandwidth_product1 when vdb(Vreg1)=0
+meas ac phase_margin1 find vp(Vreg1) when vdb(Vreg1)=0
+plot vdb(Vreg1) vdb(Vreg2) vp(Vreg1)
+wrdata ldo_simple_PSRR_dcgain_maxload DCPSRp1 dcgain1
+wrdata ldo_simple_GBW_PM_maxload gain_bandwidth_product1 phase_margin1
+
+* Loop test at minload
+alter Iload1 dc=10u
+ac dec 10 0.1 1G
+meas ac DCPSRp2 find vdb(Vreg2) at = 0.1
+meas ac dcgain2 find vdb(Vreg1) at = 0.1
+meas ac gain_bandwidth_product2 when vdb(Vreg1)=0
+meas ac phase_margin2 find vp(Vreg1) when vdb(Vreg1)=0
+plot vdb(Vreg1) vdb(Vreg2) vp(Vreg1)
+wrdata ldo_simple_PSRR_dcgain_minload DCPSRp2 dcgain2
+wrdata ldo_simple_GBW_PM_minload gain_bandwidth_product2 phase_margin2
+
+* OP
+op
+.include ../simulations/ldo_simple_dev_params.spice
+.endc
+
+.end
+

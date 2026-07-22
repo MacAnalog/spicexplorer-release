@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spicexplorer/circuit@1",
+  "title": "SpiceXplorer circuit (super-DSL)",
+  "description": "The canonical, tool-agnostic description of one abstract topology (plan D-3). Every consumer references this: the optimizer project_setup.yaml `extends:` it, netlist2tf reads the abstract netlist, the UI/agents read the capability flags.",
+  "type": "object",
+  "required": ["schema", "id", "class", "status"],
+  "anyOf": [
+    {"required": ["pdks", "ports"]},
+    {"required": ["references"]}
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "spicexplorer/circuit@1"},
+    "kind": {
+      "type": "string",
+      "enum": ["verifiable", "reference"],
+      "description": "Circuit kind (D-9). Omitted == 'verifiable' (open-PDK, lowered, T1-T4). 'reference' == carries only foreign/proprietary reference bindings (see `references`); the harness runs a reference-only T0 subset and skips T1-T4."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(_[a-z0-9]+)*$",
+      "description": "snake_case scheme-centric topology id (D-8), e.g. amp_001_5t, nmcnr_3stage_ota."
+    },
+    "class": {
+      "type": "string",
+      "description": "Binds the class-scoped template/metric library under _shared/classes/<class>/ (D-10).",
+      "examples": ["amplifier", "ldo", "adc", "afe", "reference", "mirror"]
+    },
+    "display_name": {"type": "string"},
+    "compensation": {"type": "string", "description": "Frequency-compensation scheme (NMCNR, Miller, ...), if applicable."},
+    "stages": {"type": "integer", "minimum": 1},
+    "ports": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1,
+      "description": "Canonical port order; matches the abstract subckt header."
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "source": {"type": "string"},
+        "aliases": {"type": "array", "items": {"type": "string"}},
+        "paper": {"type": "string"},
+        "license": {"type": "string"},
+        "designer": {"type": "string"}
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "graph": {"type": "string", "description": "path (relative to circuit dir) of the GENERATED cgraph.json"},
+        "datasheet": {"type": "string"},
+        "schematic": {"type": "string"},
+        "reference_schematic": {"type": "string", "description": "path (relative to circuit dir) of an AUTHORED upstream reference schematic figure (e.g. the original AnalogGym/paper snapshot under reference/) — informational, never generated."},
+        "abstract_netlist": {"type": "string"}
+      }
+    },
+    "pdks": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1,
+      "description": "Open-PDK ids this topology lowers to (verifiable bindings); each must have a pdk/<id>/ directory. Optional for kind: reference circuits, which bind only via `references`."
+    },
+    "references": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Foreign/proprietary reference bindings (D-9) — authored decks in a non-open PDK/simulator, NOT lowered or run by the harness. Each entry points at a binding directory under the circuit holding dut/ (+ optional tb/, runs/).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["dir"],
+        "properties": {
+          "dir": {"type": "string", "description": "Binding directory relative to the circuit (e.g. spectre/28nm); contains dut/ and optionally tb/, runs/."},
+          "tool": {"type": "string", "description": "Simulator/dialect the decks target (e.g. spectre)."},
+          "node": {"type": "string", "description": "Process node label (e.g. 28nm, 65nm)."}
+        }
+      }
+    },
+    "analyses": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Analysis ids this circuit opts into; a subset of its class's templates."
+    },
+    "optimize": {
+      "type": "object",
+      "description": "Defaults the optimizer projection (project_setup.yaml) pulls via `extends:`.",
+      "additionalProperties": true,
+      "properties": {
+        "budget": {"type": "integer", "minimum": 1},
+        "knobs_from": {"type": "string"},
+        "targets_from": {"type": "string"}
+      }
+    },
+    "status": {
+      "type": "string",
+      "description": "DERIVED by the verify harness from the highest tier cleared (plan §6). Authored value is the floor. 'reference' is terminal for kind: reference circuits (they are never lowered/simulated here).",
+      "enum": ["draft", "generated", "simulated", "validated", "incomplete", "reference"]
+    }
+  }
+}

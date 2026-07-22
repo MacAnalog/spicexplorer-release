@@ -1,0 +1,69 @@
+{
+  "components": [
+    {
+      "connections": {
+        "N": "vss",
+        "P": "vout"
+      },
+      "device_type": "CAP",
+      "id": "C0",
+      "params": {
+        "Value": "x_dut_c0_value"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "vin",
+        "GATE": "clk",
+        "SOURCE": "vout"
+      },
+      "device_type": "MOS",
+      "id": "XM0",
+      "params": {
+        "l": "x_dut_xm0_l",
+        "m": "x_dut_xm0_m",
+        "w": "x_dut_xm0_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    }
+  ],
+  "meta": {
+    "circuit_name": "smp_001_nmos_th",
+    "component_count": 2,
+    "net_count": 4
+  },
+  "nets": [
+    {
+      "is_supply": false,
+      "name": "clk",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vin",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vout",
+      "supply_type": ""
+    },
+    {
+      "is_supply": true,
+      "name": "vss",
+      "supply_type": "VSS"
+    }
+  ]
+}

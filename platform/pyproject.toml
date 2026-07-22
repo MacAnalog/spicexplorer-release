@@ -1,0 +1,19 @@
+# SpiceXplorer platform — public uv workspace root (virtual; no root package).
+#
+# Managed by the private release infra (scripts/release/repo/platform/) — edit
+# there, not here; the next port overwrites this file. This is a CURATED
+# variant of the private workspace root: only the released packages are wired.
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+spicexplorer-core = { workspace = true }
+spicexplorer = { workspace = true }
+spicexplorer-circuitgraph = { workspace = true }
+spicexplorer-netlist2xschem = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.8",
+]

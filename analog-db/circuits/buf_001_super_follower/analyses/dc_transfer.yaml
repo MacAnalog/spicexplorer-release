@@ -1,0 +1,14 @@
+# Analysis binding (plan D-4): buffer dc_transfer — transfer sweep, peak gain + level shift.
+schema: spicexplorer/analysis@1
+id: dc_transfer
+template: dc_transfer
+description: "DC transfer sweep; peak dVout/dVin (gain_dc ~1) + v_offset at VCM."
+params:
+  VDD: 1.5
+  VCM: 0.9
+  IBIAS: 10u
+  VSTART: 0
+  VSTOP: 1.5
+  VSTEP: 0.005
+flags: []
+produces: [gain_dc, v_offset, v_out_mid]

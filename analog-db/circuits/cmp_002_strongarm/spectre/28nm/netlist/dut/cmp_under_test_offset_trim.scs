@@ -1,0 +1,7 @@
+simulator lang=spectre
+
+subckt cmp_under_test CLK DCMPN DCMPP LM LP TRIM_OS\<3\> TRIM_OS\<2\> \
+        TRIM_OS\<1\> TRIM_OS\<0\> VDD VINN VINP VSS
+x_cmp_offset_trim (CLK DCMPN DCMPP LM LP TRIM_OS\<3\> TRIM_OS\<2\> \
+        TRIM_OS\<1\> TRIM_OS\<0\> VDD VINN VINP VSS) cmp_strongarm_offset_trim
+ends cmp_under_test

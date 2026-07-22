@@ -1,0 +1,20 @@
+simulator lang=spectre
+
+CLOADP (VOUTP 0) capacitor c=CL
+CLOADN (VOUTN 0) capacitor c=CL
+
+XDUT (IB VSS VCM AVDDBUF VINN VINP VOUTN VOUTP AVSSBUF) \
+    L1_INPUT_BUFFER_CASCODE
+
+VVCM (VCM 0) vsource dc=Vcm type=dc
+VVSS (VSS 0) vsource dc=0 type=dc
+VVDD (AVDDBUF 0) vsource dc=1.35 type=dc
+VVSSBUF (AVSSBUF 0) vsource dc=-450m type=dc
+
+VINP_SRC (VINP 0) vsource dc=Vcm type=sine sinedc=Vcm ampl=A freq=f
+VINN_SRC (VINN 0) vsource dc=Vcm type=sine sinedc=Vcm ampl=A \
+    sinephase=180 freq=f
+
+IBIAS (AVDDBUF IB) isource dc=IB type=dc
+
+saveOptions options save=allpub

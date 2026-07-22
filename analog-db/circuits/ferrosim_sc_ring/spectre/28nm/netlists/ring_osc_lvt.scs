@@ -1,0 +1,22 @@
+// 3-stage LVT inverter ring oscillator.
+simulator lang=spectre
+global 0
+parameters vdd=1.0
+
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=pre_simu
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=ttmacro_mos_moscap
+include "../../common/stdcell_netlist/tcbn28hpcplusbwp12t30p140lvt_170a.spi"
+
+VDD (vdd 0) vsource dc=vdd
+X0 (n3 n1 vdd 0) INVD0BWP12T30P140LVT
+X1 (n1 n2 vdd 0) INVD0BWP12T30P140LVT
+X2 (n2 n3 vdd 0) INVD0BWP12T30P140LVT
+C1 (n1 0) capacitor c=1f
+C2 (n2 0) capacitor c=1f
+C3 (n3 0) capacitor c=1f
+
+ic n1=1 n2=0 n3=0
+simulatorOptions options psfversion="1.4.0" temp=27 tnom=27 maxnotes=5 maxwarns=5
+tran tran stop=1n maxstep=2p skipdc=yes annotate=status
+save n1 n2 n3 vdd
+saveOptions options save=allpub

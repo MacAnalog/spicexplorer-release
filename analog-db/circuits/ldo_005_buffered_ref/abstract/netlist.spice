@@ -1,0 +1,65 @@
+** Abstract buffered-reference LDO — a PMOS-pass regulator with a BUFFERED + RC-FILTERED
+** internal reference feeding the error amp, inspired by the TI application-note LDO
+** architecture in external/conceptual_LDO_design/ti-ldo/ldo/ldo.sch (ref_amp + error_amp +
+** lpf_rc + PMOS pass device, GF180MCU-native source). PDK-neutral model tokens (nmos/pmos);
+** per-PDK device names + geometry come from circuitgraph lowering + pdk/<pdk>/{devices.map,
+** sizing}.yaml. Two 5T OTA stages (both hand-INLINED as flat primitives, same rationale as
+** ldo_007_pmos: the lowering pipeline emits a foreign `.subckt` instance as a dangling reference,
+** so composition is a separate hierarchical-netlist feature) — a reference-buffer amp and an
+** error amp — plus a single-pole RC filter between them, distinguishing this circuit from the
+** simpler direct-reference ldo_007_pmos.
+** Subckt port order (= circuit.yaml ports): vdd vout vss
+**
+** Signal path: vref -(buffer amp, gain=(r_ref_top+r_ref_bot)/r_ref_bot)-> v_ref_out
+**   -(RC lowpass)-> v_lpf_out -(error amp, in+=vout in-=v_lpf_out)-> egate -> Mp -> vout.
+** Loop polarity (negative feedback): vout^ -> egate^ -> Vsg(pass)=vdd-egatev -> Ipassv -> voutv.
+** Regulates to vout = v_lpf_out = v_ref_out = vref*(r_ref_top+r_ref_bot)/r_ref_bot.
+**.subckt ldo_005_buffered_ref vdd vout vss
+**
+** --- internal ideal reference (sim reference, not a silicon bandgap) ---
+** NOTE: passive value fields are single-quoted and source values are braced so ngspice
+** evaluates them as .param expressions (a bare `r_ref_top` is parsed as a model name).
+Vref      vref      vss dc {vref_val}
+Ibias_ref vdd       ebias_ref dc {i_tail_ref}
+**
+** --- Reference buffer: 5T OTA (NMOS input pair + PMOS mirror load + NMOS tail), output taken
+** at the mirror node. Configured as a non-inverting buffer/gain block via the outer R1/R2
+** feedback divider around its own output (v_ref_out -> v_ref_fb -> vss). in+=vref (mirrored
+** via M3/M4 onto the output), in-=v_ref_fb (direct output-node drain) — in+ must be the
+** MIRRORED side for negative feedback (swapping these makes the divider positive feedback).
+XM1 rd1       vref     retail    vss nmos w=x_dut_xm1_w   l=x_dut_xm1_l
+XM2 v_ref_out v_ref_fb retail    vss nmos w=x_dut_xm2_w   l=x_dut_xm2_l
+XM3 rd1       rd1      vdd       vdd pmos w=x_dut_xm3_w l=x_dut_xm3_l
+XM4 v_ref_out rd1      vdd       vdd pmos w=x_dut_xm4_w l=x_dut_xm4_l
+XM5 retail    ebias_ref vss      vss nmos w=x_dut_xm5_w l=x_dut_xm5_l
+XM6 ebias_ref ebias_ref vss      vss nmos w=x_dut_xm6_w l=x_dut_xm6_l
+**
+** --- feedback divider around the buffer: v_ref_out = vref*(r_ref_top+r_ref_bot)/r_ref_bot ---
+R1 v_ref_out v_ref_fb 'r_ref_top'
+R2 v_ref_fb  vss       'r_ref_bot'
+**
+** --- RC low-pass filter smoothing the buffered reference before the error amp sees it ---
+R_lpf v_ref_out v_lpf_out 'r_lpf'
+C_lpf v_lpf_out vss       'c_lpf'
+**
+** --- Error amplifier: 5T OTA (NMOS input pair, PMOS mirror load) comparing vout against the
+** buffered+filtered reference; out=egate, in+=vout (fb), in-=v_lpf_out (vref). ---
+Ibias_err vdd       ebias_err dc {i_tail_err}
+XM7  noutm      vout       etail     vss nmos w=x_dut_xm7_w   l=x_dut_xm7_l
+XM8  egate      v_lpf_out  etail     vss nmos w=x_dut_xm8_w   l=x_dut_xm8_l
+XM9  noutm      noutm      vdd       vdd pmos w=x_dut_xm9_w l=x_dut_xm9_l
+XM10 egate      noutm      vdd       vdd pmos w=x_dut_xm10_w l=x_dut_xm10_l
+XM11 etail      ebias_err  vss       vss nmos w=x_dut_xm11_w l=x_dut_xm11_l
+XM12 ebias_err  ebias_err  vss       vss nmos w=x_dut_xm12_w l=x_dut_xm12_l
+**
+** --- Miller compensation across the pass stage (pole split) with nulling resistor ---
+Rz egate ncz 'r_z'
+Cc ncz   vout 'c_comp'
+**
+** --- PMOS pass device: source=vdd, gate=egate, drain=vout ---
+XMP vout egate vdd vdd pmos w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m
+**
+** --- output bleeder resistor (minimum-load path, matches the source design's R3) ---
+R3 vout vss 'r_bleed'
+**.ends
+.end

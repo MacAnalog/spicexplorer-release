@@ -1,0 +1,14 @@
+// BSIM-BULK NMOS Id-Vg, DEFAULT params (RDSMOD=0), L=1u/W=10u, Vds=1, Vg 0->1.8.
+// Golden source for tests/test_bsimbulk_golden.py (open .va in both sims).
+// 5th terminal `t` is THERMAL -> own node t1; never tie to 0 (Temp(t)<+0 over
+// a 0->0 node pair is a rigid short -> Spectre fatal).
+simulator lang=spectre
+global 0
+ahdl_include "bsimbulk.va"
+parameters vgval=0
+vd (d 0) vsource dc=1.0
+vg (g 0) vsource dc=vgval
+x1 (d g 0 0 t1) bsimbulk TYPE=1 L=1e-6 W=1e-5
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+sw dc param=vgval start=0 stop=1.8 step=0.3
+save vd:p

@@ -1,0 +1,55 @@
+# amp_022_fer_two_stage — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit amp_022_fer_two_stage --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  CC: {Value: x_dut_cc_value}
+  XM0: {l: x_dut_xm0_l, m: x_dut_xm0_m, w: x_dut_xm0_w}
+  XM1: {l: x_dut_xm1_l, m: x_dut_xm1_m, w: x_dut_xm1_w}
+  XM2: {l: x_dut_xm2_l, m: x_dut_xm2_m, w: x_dut_xm2_w}
+  XM3: {l: x_dut_xm3_l, m: x_dut_xm3_m, w: x_dut_xm3_w}
+  XM4: {l: x_dut_xm4_l, m: x_dut_xm4_m, w: x_dut_xm4_w}
+  XM5: {l: x_dut_xm5_l, m: x_dut_xm5_m, w: x_dut_xm5_w}
+  XM6: {l: x_dut_xm6_l, m: x_dut_xm6_m, w: x_dut_xm6_w}
+  XM7: {l: x_dut_xm7_l, m: x_dut_xm7_m, w: x_dut_xm7_w}
+  XMBD: {l: x_dut_xmbd_l, m: x_dut_xmbd_m, w: x_dut_xmbd_w}
+  XMBS: {l: x_dut_xmbs_l, m: x_dut_xmbs_m, w: x_dut_xmbs_w}
+groups:
+- name: input_pair
+  kind: matched_pair
+  members: [XM0, XM1]
+  tie: [w, l, m]
+  description: PMOS differential input pair - full-geometry match (XM1 tracks XM0; legacy x_pair_w/x_p_l).
+- name: nmos_load_mirror
+  kind: mirror_length
+  members: [XM3, XM4]
+  tie: [w, l]
+  description: 'Stage-1 NMOS mirror load - unit-device match (diode XM3 anchors XM4; legacy x_nload_w/x_n_l).
+    Gain stays a frozen ratios: entry (m 2:2).'
+- name: stage2_load_width
+  kind: shared_geometry
+  members: [XM3, XM2]
+  tie: [w]
+  description: 'Author-opinion legacy tie (x_nload_w): the 2nd-stage CS device XM2 reuses the mirror load''s
+    per-finger width. No single structural cause - dissolve freely.'
+- name: pmos_bias_mirror
+  kind: mirror_length
+  members: [XM7, XM5, XM6]
+  tie: [w, l]
+  description: 'PMOS bias mirror rail - diode XM7 anchors tail XM5 + stage-2 source XM6 (legacy x_pbias_w/x_p_l).
+    Gains stay frozen ratios: entries (m 3:3:17).'
+- name: bias_diode_mirror
+  kind: mirror_length
+  members: [XMBD, XMBS]
+  tie: [w, l]
+  description: NMOS bias front-end - diode XMBD anchors its 1:1 sink mirror XMBS (legacy x_bdio_w/x_n_l).
+ratios:
+- {param: m, ref: XM4, of: XM3, ratio: 1, description: 'Unity mirror-load gain (legacy m=2/2), frozen.'}
+- {param: m, ref: XM5, of: XM7, ratio: 1, description: 'Tail copies the bias diode 1:1 (legacy m=3/3),
+    frozen.'}
+- {param: m, ref: XM6, of: XM7, ratio: 17/3, description: 'Stage-2 current-source gain (legacy m=17 vs
+    diode m=3), frozen.'}
+- {param: m, ref: XMBS, of: XMBD, ratio: 1, description: 'Bias front-end 1:1 sink mirror (legacy m=1/1),
+    frozen.'}

@@ -1,0 +1,47 @@
+** amp_016_song_dacfc — AnalogGym import, PDK-neutral abstract (plan Phase 5).
+** sky130 device tokens → nmos/pmos; ports gnda→vss, vdda→vdd; role-encoded
+** design-variable symbols (MOSFET_*_<role>_<type>) + their arithmetic preserved.
+** Source: CODA-Team/AnalogGym (BSD-3-Clause). Subckt port order: vss vdd vinn vinp vout.
+**.subckt amp_016_song_dacfc vss vdd vinn vinp vout
+xm69 net3 net70 vdd vdd pmos l=x_dut_xm69_l w=x_dut_xm69_w m=x_dut_xm69_m
+xm68 net2 net70 vdd vdd pmos l=x_dut_xm68_l w=x_dut_xm68_w m=x_dut_xm68_m
+xm63 net70 DM_1 net2 vdd pmos l=x_dut_xm63_l w=x_dut_xm63_w m=x_dut_xm63_m
+xm62 VOUTN DM_1 net3 vdd pmos l=x_dut_xm62_l w=x_dut_xm62_w m=x_dut_xm62_m
+xm61 net4 DM_1 net050 vdd pmos l=x_dut_xm61_l w=x_dut_xm61_w m=x_dut_xm61_m
+xm60 VOUTN DM_1 net5 vdd pmos l=x_dut_xm60_l w=x_dut_xm60_w m=x_dut_xm60_m
+xm59 net1 net013 vdd vdd pmos l=x_dut_xm59_l w=x_dut_xm59_w m=x_dut_xm59_m
+xm58 net049 VINP net1 net1 pmos l=x_dut_xm58_l w=x_dut_xm58_w m=x_dut_xm58_m
+xm57 net043 VINN net1 net1 pmos l=x_dut_xm57_l w=x_dut_xm57_w m=x_dut_xm57_m
+xm11 VOUT net4 vdd vdd pmos l=x_dut_xm11_l w=x_dut_xm11_w m=x_dut_xm11_m
+xm7 net049 VOUTN vdd vdd pmos l=x_dut_xm7_l w=x_dut_xm7_w m=x_dut_xm7_m
+xm10 net043 net4 vdd vdd pmos l=x_dut_xm10_l w=x_dut_xm10_w m=x_dut_xm10_m
+xm6 net050 VOUTN vdd vdd pmos l=x_dut_xm6_l w=x_dut_xm6_w m=x_dut_xm6_m
+xm5 net5 VOUTN vdd vdd pmos l=x_dut_xm5_l w=x_dut_xm5_w m=x_dut_xm5_m
+xm9 net063 VINP net31 net31 pmos l=x_dut_xm9_l w=x_dut_xm9_w m=x_dut_xm9_m
+xm8 DM_2 VINN net31 net31 pmos l=x_dut_xm8_l w=x_dut_xm8_w m=x_dut_xm8_m
+xm4 net31 net013 vdd vdd pmos l=x_dut_xm4_l w=x_dut_xm4_w m=x_dut_xm4_m
+xm3 VB3 net013 vdd vdd pmos l=x_dut_xm3_l w=x_dut_xm3_w m=x_dut_xm3_m
+xm2 DM_1 DM_1 vdd vdd pmos l=x_dut_xm2_l w=x_dut_xm2_w m=x_dut_xm2_m
+xm1 VB4 net013 vdd vdd pmos l=x_dut_xm1_l w=x_dut_xm1_w m=x_dut_xm1_m
+xm0 net013 net013 vdd vdd pmos l=x_dut_xm0_l w=x_dut_xm0_w m=x_dut_xm0_m
+xm71 VOUTN VB3 net85 vss nmos l=x_dut_xm71_l w=x_dut_xm71_w m=x_dut_xm71_m
+xm70 net70 VB3 net69 vss nmos l=x_dut_xm70_l w=x_dut_xm70_w m=x_dut_xm70_m
+xm65 net69 VB4 vss vss nmos l=x_dut_xm65_l w=x_dut_xm65_w m=x_dut_xm65_m
+xm64 net85 VB4 vss vss nmos l=x_dut_xm64_l w=x_dut_xm64_w m=x_dut_xm64_m
+xm23 VOUT net049 vss vss nmos l=x_dut_xm23_l w=x_dut_xm23_w m=x_dut_xm23_m
+xm22 net049 net043 vss vss nmos l=x_dut_xm22_l w=x_dut_xm22_w m=x_dut_xm22_m
+xm21 net043 net043 vss vss nmos l=x_dut_xm21_l w=x_dut_xm21_w m=x_dut_xm21_m
+xm19 DM_2 VB4 vss vss nmos l=x_dut_xm19_l w=x_dut_xm19_w m=x_dut_xm19_m
+xm15 VOUTN VB3 DM_2 vss nmos l=x_dut_xm15_l w=x_dut_xm15_w m=x_dut_xm15_m
+xm20 net063 VB4 vss vss nmos l=x_dut_xm20_l w=x_dut_xm20_w m=x_dut_xm20_m
+xm16 net4 VB3 net063 vss nmos l=x_dut_xm16_l w=x_dut_xm16_w m=x_dut_xm16_m
+xm17 net54 VB4 vss vss nmos l=x_dut_xm17_l w=x_dut_xm17_w m=x_dut_xm17_m
+xm14 VB3 VB3 vss vss nmos l=x_dut_xm14_l w=x_dut_xm14_w m=x_dut_xm14_m
+xm12 VB4 VB3 net54 vss nmos l=x_dut_xm12_l w=x_dut_xm12_w m=x_dut_xm12_m
+xm18 net56 VB4 vss vss nmos l=x_dut_xm18_l w=x_dut_xm18_w m=x_dut_xm18_m
+xm13 DM_1 VB3 net56 vss nmos l=x_dut_xm13_l w=x_dut_xm13_w m=x_dut_xm13_m
+I0 net013 vss 'CURRENT_0_BIAS'
+C2 net4 vss 'CAPACITOR_1'
+C0 VOUT net70 'CAPACITOR_0'
+**.ends Song_DACFC_Pin_3
+.end

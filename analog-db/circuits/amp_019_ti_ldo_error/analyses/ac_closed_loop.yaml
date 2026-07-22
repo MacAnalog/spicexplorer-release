@@ -1,0 +1,16 @@
+# Analysis binding (plan D-4): unity-gain buffer AC — the upstream a-c-d CACE measurement
+# (voltage-buffer-ota.yaml ac_params: gain 0.97..1.03 V/V, bw > 10 MHz).
+schema: spicexplorer/analysis@1
+id: ac_closed_loop
+template: ac_closed_loop
+description: "Unity-gain buffer gain + -3 dB bandwidth (the JKU CACE spec)."
+params:
+  VDD: 3.3
+  VCM: 1.2
+  IBIAS: 1m
+  CL: 10p
+  FSTART: 1k
+  FSTOP: 1G
+  PPD: 101
+flags: []
+produces: [gain_cl, bw_cl_hz]

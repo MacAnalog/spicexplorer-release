@@ -1,0 +1,67 @@
+# ldo_005_buffered_ref — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit ldo_005_buffered_ref --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  CC: {Value: c_comp}
+  C_LPF: {Value: c_lpf}
+  IBIAS_ERR: {Value: i_tail_err}
+  IBIAS_REF: {Value: i_tail_ref}
+  R1: {Value: r_ref_top}
+  R2: {Value: r_ref_bot}
+  R3: {Value: r_bleed}
+  RZ: {Value: r_z}
+  R_LPF: {Value: r_lpf}
+  VREF: {Value: vref_val}
+  XM1: {l: x_dut_xm1_l, w: x_dut_xm1_w}
+  XM10: {l: x_dut_xm10_l, w: x_dut_xm10_w}
+  XM11: {l: x_dut_xm11_l, w: x_dut_xm11_w}
+  XM12: {l: x_dut_xm12_l, w: x_dut_xm12_w}
+  XM2: {l: x_dut_xm2_l, w: x_dut_xm2_w}
+  XM3: {l: x_dut_xm3_l, w: x_dut_xm3_w}
+  XM4: {l: x_dut_xm4_l, w: x_dut_xm4_w}
+  XM5: {l: x_dut_xm5_l, w: x_dut_xm5_w}
+  XM6: {l: x_dut_xm6_l, w: x_dut_xm6_w}
+  XM7: {l: x_dut_xm7_l, w: x_dut_xm7_w}
+  XM8: {l: x_dut_xm8_l, w: x_dut_xm8_w}
+  XM9: {l: x_dut_xm9_l, w: x_dut_xm9_w}
+  XMP: {l: x_dut_xmp_l, m: x_dut_xmp_m, w: x_dut_xmp_w}
+groups:
+- name: pair_xm1_xm2
+  kind: matched_pair
+  members: [XM1, XM2]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_ref_in (w),
+    l_ref_in (l).'
+- name: mirror_xm3_w_l
+  kind: mirror_length
+  members: [XM3, XM4]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_ref_load (w),
+    l_ref_load (l).'
+- name: mirror_xm6_w_l
+  kind: mirror_length
+  members: [XM6, XM5]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_ref_tail (w),
+    l_ref_tail (l).'
+- name: pair_xm7_xm8
+  kind: matched_pair
+  members: [XM7, XM8]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_err_in (w),
+    l_err_in (l).'
+- name: mirror_xm9_w_l
+  kind: mirror_length
+  members: [XM9, XM10]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_err_load (w),
+    l_err_load (l).'
+- name: mirror_xm12_w_l
+  kind: mirror_length
+  members: [XM12, XM11]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_err_tail (w),
+    l_err_tail (l).'

@@ -1,0 +1,23 @@
+// NMOS switch sampling onto a capacitor: sampled noise should be kT/C,
+// independent of switch size (track-bandwidth noise frozen at turn-off).
+simulator lang=spectre
+global 0
+parameters fs=50M VDD=0.9 VCM=0.45 CS=100f WSW=2u
+
+include "${PDK_ROOT}/models/spectre/toplevel.scs" section=TOP_TT
+
+v_in  (IN 0)  vsource dc=VCM type=dc
+v_clk (CLK 0) vsource type=pulse val0=0 val1=VDD period=1/fs rise=50p fall=50p
+m_sw  (IN CLK VS 0) nch_ulvt_mac l=30n w=WSW multi=1 nf=2
+c_s   (VS 0) capacitor c=CS
+
+simulatorOptions options temp=27 tnom=27
+
+pss pss fund=fs harms=10 errpreset=conservative annotate=status
+pnoise pnoise start=0 stop=fs/2 pnoisemethod=fullspectrum \
+    noisetype=sampled measurement=[pm0] annotate=status
+pm0 jitterevent trigger=[CLK 0] triggerthresh=0.45 triggernum=1 \
+    triggerdir=fall target=[VS 0]
+
+save VS CLK IN
+saveOptions options save=selected

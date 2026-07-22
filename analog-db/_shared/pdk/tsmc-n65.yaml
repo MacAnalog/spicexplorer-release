@@ -1,0 +1,26 @@
+# PDK-level registry for TSMC N65 (CRN65, 65 nm — low-Vt core flavour).
+#
+# ⚠ NDA POSTURE — the licensed kit is NEVER vendored or path-referenced here. This registry names
+# only device/corner *identifiers* + public geometry rules (standard TSMC nomenclature, not model
+# bytes). Corner libraries stay out-of-repo: `corners.lib_file` is a NEUTRAL wrapper filename the
+# operator supplies at simulation time (a `.lib`/section indirection onto the licensed models),
+# resolved against `model_lib_root` on the Spectre path. The committed repo carries GENERIC corner
+# labels (tt/ss/ff/sf/fs); the operator wrapper maps tt->tt_lvt, ss->ss_lvt, … so no kit-specific
+# section name ever lands in git either.
+#
+# Live simulation runs **Spectre via the virtuoso-bridge** (native, licensed), NOT the open-PDK
+# ngspice path: there is deliberately no `_NATIVE_PDK` runner entry, so `analog-db verify --sim`
+# skips TSMC N65 by design (Tier 0-2 offline verification still applies).
+pdk: tsmc-n65
+sim_engine: spectre                      # native lane: licensed Spectre via virtuoso-bridge (no ngspice; see NDA note above)
+supply: {default: 1.2, unit: V}          # nominal 1.2 V core rail (CRN65 core devices)
+devices:
+  nmos: {core: nch_lvt}                   # low-Vt core flavour (pairs with the tt_lvt corner models)
+  pmos: {core: pch_lvt}
+corners:
+  lib_file: tsmc_n65_models.scs           # neutral operator-supplied wrapper (see NDA note above)
+  sections: [tt, ss, ff, sf, fs]
+geometry: {min_l: 0.06u, min_w: 0.12u, max_l: 10u, max_w: 100u}
+# gm/ID LUT characterization defaults are intentionally omitted: TSMC N65 device tables are
+# produced through the licensed Spectre kit (virtuoso-bridge), not the open-PDK ngspice
+# `analog-db gmid-extract` flow.

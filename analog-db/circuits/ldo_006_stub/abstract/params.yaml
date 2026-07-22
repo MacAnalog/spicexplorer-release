@@ -1,0 +1,10 @@
+# ldo_006_stub — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit ldo_006_stub --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  R1: {Value: r_top}
+  R2: {Value: r_bot}
+  XM1: {l: x_dut_xm1_l, m: x_dut_xm1_m, w: x_dut_xm1_w}

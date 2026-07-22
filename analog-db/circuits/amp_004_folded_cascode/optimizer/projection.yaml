@@ -1,0 +1,44 @@
+# THIN optimizer projection (plan D-3) — mirrors the legacy folded_cascode project_setup.
+# dut_params <- pdk/ihp-sg13g2/sizing.yaml; target_specs <- datasheet.yaml optimize blocks.
+extends: ../circuit.yaml
+pdk: ihp-sg13g2
+project:
+  name: FOLDED-CASCODE-OTA
+  description: Example of optimizing a folded cascode OTA using NGOpt optimizer from Nevergrad
+  simulator: ngspice
+  save_sim: false
+  ws_root: pdk/ihp-sg13g2
+  netlist: testbenches.legacy/cora_testbench.spice
+  outdir: testbenches.legacy/temp_spice_out
+  tech_spec:
+    name: ihp-sg13g2
+    constraints:
+      max_nfet_w: 200u
+      min_nfet_w: 1u
+      max_nfet_l: 5u
+      min_nfet_l: 0.5u
+      max_pfet_w: 200u
+      min_pfet_w: 1u
+      max_pfet_l: 5u
+      min_pfet_l: 0.5u
+      max_vdd: 1.8
+  testbenches:
+    - name: tb_ac
+      params:
+        - {name: CL, val: 5p}
+      netlist: testbenches.legacy/cora_testbench_ac.spice
+      enable: true
+    - name: tb_noise
+      params:
+        - {name: CL, val: 5p}
+      netlist: testbenches.legacy/cora_testbench_noise.spice
+      enable: false
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48
+    budget: 5
+    name: SamplingSearch
+    optimizer_kwargs:
+      sampler: Hammersley
+      scrambled: true
+      rescaled: true

@@ -1,0 +1,66 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# Temperature-sensor metric sheet for the 2T sub-Vt PTAT core. Specs are intentionally loose
+# open-PDK envelopes (the AnalogGym reference values are TSMC-180nm) — the promotion goal is a
+# converged, valid, non-NaN metric set on ihp-sg13g2 + sky130, not a re-optimized sensor.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  cload:  {unit: pF, typical: 0.2}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  v_out:
+    display: "DC output (sense node)"
+    description: >-
+      Sense-node voltage at the nominal condition (27 degC, nominal supply). Small (tens of mV) on
+      the open PDKs: this 2-device sub-Vt core biases at ~10 nA, so vout is one deep-sub-Vt diode
+      drop — a valid PTAT but a low-amplitude one (a cascoded/current-biased variant raises it).
+    unit: V
+    analysis: dc_op
+    extract: {meas: v_out}
+    spec: {min: 0.02, max: 1.1, unit: V}
+  i_supply:
+    display: "Supply current"
+    description: "Sub-threshold branch current from the supply (the sensor's power)."
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 1.0e-3, unit: A}
+  v_out_25c:
+    display: "Output at 25 degC"
+    unit: V
+    analysis: temp_sweep
+    extract: {meas: v_out_25c}
+    spec: {min: 0.02, max: 1.1, unit: V}
+  sens_v_per_c:
+    display: "Temperature slope"
+    description: "dVout/dT over the sweep — the PTAT resolution. Positive for a PTAT output."
+    unit: "V/degC"
+    analysis: temp_sweep
+    extract: {meas: sens_v_per_c}
+    spec: {min: 1.0e-4, unit: "V/degC"}
+  tc_box_ppm:
+    display: "Box-method spread"
+    description: "(Vmax-Vmin)/Vavg/range over the temp sweep — informational."
+    unit: "ppm/degC"
+    analysis: temp_sweep
+    extract: {meas: tc_box_ppm}
+    spec: {min: any}
+  line_sens_pct:
+    display: "Line sensitivity"
+    description: >-
+      Output %-change over the supply sweep (a supply-independence figure). ~20% on the open PDKs:
+      the top device (Vgs=0) current tracks its Vds≈supply, so an un-cascoded 2T core is inherently
+      supply-sensitive; a regulated/cascoded bias would tighten this.
+    unit: "%"
+    analysis: line_sweep
+    extract: {meas: line_sens_pct}
+    spec: {max: 35, unit: "%"}    # envelope covering both PDKs (ihp ~21%, sky130 ~34%)
+  psr_db:
+    display: "Low-frequency PSR"
+    description: "Supply→output gain at the low-frequency edge (dB, lower is better)."
+    unit: dB
+    analysis: psrr
+    extract: {meas: psr_db}
+    spec: {max: 0, unit: dB}

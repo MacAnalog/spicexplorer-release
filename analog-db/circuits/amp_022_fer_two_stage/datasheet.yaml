@@ -1,0 +1,83 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# Amplifier metric sheet (class vocabulary): open-loop AC, op point, noise, settling.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.5}
+  vcm:    {unit: V, typical: 0.6}
+  ibias:  {unit: uA, typical: 20}
+  cload:  {unit: fF, typical: 500}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  dc_gain_db:
+    display: "DC open-loop gain (bias-wrapped)"
+    unit: dB
+    analysis: ac_open_loop
+    extract: {meas: dcgain}
+    spec: {min: 40, unit: dB}
+  ugf_hz:
+    display: "Unity-gain frequency"
+    unit: Hz
+    analysis: ac_open_loop
+    extract: {meas: ugf}
+    spec: {min: 1.0e6, unit: Hz}
+  pm_deg:
+    display: "Phase margin"
+    unit: deg
+    analysis: ac_open_loop
+    extract: {meas: pm}
+    spec: {min: 45, unit: deg}
+  i_supply:
+    display: "Supply current"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 5.0e-4, unit: A}
+  vn_in:
+    display: "Input-referred noise"
+    unit: "V/sqrt(Hz)"
+    analysis: noise
+    extract: {meas: inoise_total}
+    spec: {max: 1.0e-3, unit: "V/sqrt(Hz)"}
+  t_settle:
+    display: "Unity-gain step settling time (0.2 V step)"
+    unit: s
+    analysis: tran_step
+    extract: {meas: t_settle}
+    spec: {max: 2.0e-6, unit: s}
+  cmrr_db:
+    display: "Common-mode rejection"
+    description: "CMRR in the unity-buffer config, DC-band floor (tb-validation pass 2026-07-09)."
+    unit: dB
+    analysis: cmrr_vcm
+    extract: {meas: cmrr_db}
+    spec: {min: 40, unit: dB}
+  psrr_vdd_db:
+    display: "Positive-supply rejection"
+    description: "PSRR+ in the unity-buffer config, DC-band floor (tb-validation pass 2026-07-09)."
+    unit: dB
+    analysis: psrr_vdd
+    extract: {meas: psrr_vdd_db}
+    spec: {min: 20, unit: dB}
+  thd_pct:
+    display: "Total harmonic distortion (100 mV @ 1 MHz, buffer)"
+    description: "tran+FFT on ngspice; native PSS harmonics on Spectre (tb-validation follow-on 2026-07-09)."
+    unit: "%"
+    analysis: thd
+    extract: {meas: thd_pct, f0: 1.0e6}
+    spec: {max: 2.0, unit: "%"}
+  iip3_dbv:
+    display: "Input IP3 (two-tone 0.9/1.0 MHz, 50 mV/tone, buffer)"
+    description: "Single-point IM3 extrapolation; tran+FFT on ngspice, native PSS on Spectre (2026-07-09)."
+    unit: dBV
+    analysis: iip3
+    extract: {meas: iip3_dbv, f1: 0.9e6, f2: 1.0e6, ampl_in: 0.05}
+    spec: {min: -10, unit: dBV}
+  icmr_range:
+    display: "Input common-mode range"
+    description: "Widest contiguous 20 mV tracking band of the buffer-connected DC sweep (tb-validation pass 2026-07-09)."
+    unit: V
+    analysis: linearity
+    extract: {meas: icmr_range, vin: vinp, vtrack: 0.02}
+    spec: {min: 0.3, unit: V}

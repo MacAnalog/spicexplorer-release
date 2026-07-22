@@ -1,0 +1,7 @@
+# Generic device kind -> gf180mcu device name. Passives (R/C) stay ideal (pass-through).
+# The source TI-paper design used the 6V devices (nfet_06v0/pfet_06v0); this abstraction maps
+# to the DB's established 3.3V gf180mcu convention (matches ldo_007_pmos / amp_020_two_stage_miller_cmfb).
+pdk: gf180mcu
+devices:
+  nmos: {model: nfet_03v3}
+  pmos: {model: pfet_03v3}

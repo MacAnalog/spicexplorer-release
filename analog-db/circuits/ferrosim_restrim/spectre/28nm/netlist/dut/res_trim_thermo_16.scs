@@ -1,0 +1,40 @@
+simulator lang=spectre
+
+subckt res_trim_thermo_16 BOT TOP TRIM_RES\<15\> TRIM_RES\<14\> \
+        TRIM_RES\<13\> TRIM_RES\<12\> TRIM_RES\<11\> TRIM_RES\<10\> \
+        TRIM_RES\<9\> TRIM_RES\<8\> TRIM_RES\<7\> TRIM_RES\<6\> \
+        TRIM_RES\<5\> TRIM_RES\<4\> TRIM_RES\<3\> TRIM_RES\<2\> \
+        TRIM_RES\<1\> TRIM_RES\<0\> VSS
+Runit_15 (TOP res_tap_15) rupolym l=400n w=200n m=1 multi=1
+Runit_14 (TOP res_tap_14) rupolym l=400n w=200n m=1 multi=1
+Runit_13 (TOP res_tap_13) rupolym l=400n w=200n m=1 multi=1
+Runit_12 (TOP res_tap_12) rupolym l=400n w=200n m=1 multi=1
+Runit_11 (TOP res_tap_11) rupolym l=400n w=200n m=1 multi=1
+Runit_10 (TOP res_tap_10) rupolym l=400n w=200n m=1 multi=1
+Runit_9 (TOP res_tap_9) rupolym l=400n w=200n m=1 multi=1
+Runit_8 (TOP res_tap_8) rupolym l=400n w=200n m=1 multi=1
+Runit_7 (TOP res_tap_7) rupolym l=400n w=200n m=1 multi=1
+Runit_6 (TOP res_tap_6) rupolym l=400n w=200n m=1 multi=1
+Runit_5 (TOP res_tap_5) rupolym l=400n w=200n m=1 multi=1
+Runit_4 (TOP res_tap_4) rupolym l=400n w=200n m=1 multi=1
+Runit_3 (TOP res_tap_3) rupolym l=400n w=200n m=1 multi=1
+Runit_2 (TOP res_tap_2) rupolym l=400n w=200n m=1 multi=1
+Runit_1 (TOP res_tap_1) rupolym l=400n w=200n m=1 multi=1
+Runit_0 (TOP res_tap_0) rupolym l=400n w=200n m=1 multi=1
+Mtrim_15 (res_tap_15 TRIM_RES\<15\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_14 (res_tap_14 TRIM_RES\<14\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_13 (res_tap_13 TRIM_RES\<13\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_12 (res_tap_12 TRIM_RES\<12\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_11 (res_tap_11 TRIM_RES\<11\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_10 (res_tap_10 TRIM_RES\<10\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_9 (res_tap_9 TRIM_RES\<9\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_8 (res_tap_8 TRIM_RES\<8\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_7 (res_tap_7 TRIM_RES\<7\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_6 (res_tap_6 TRIM_RES\<6\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_5 (res_tap_5 TRIM_RES\<5\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_4 (res_tap_4 TRIM_RES\<4\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_3 (res_tap_3 TRIM_RES\<3\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_2 (res_tap_2 TRIM_RES\<2\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_1 (res_tap_1 TRIM_RES\<1\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+Mtrim_0 (res_tap_0 TRIM_RES\<0\> BOT VSS) nch_ulvt_mac l=30n w=3u multi=1 nf=3
+ends res_trim_thermo_16

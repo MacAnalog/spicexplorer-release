@@ -1,0 +1,100 @@
+# amp_013_qu2017_azc — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit amp_013_qu2017_azc --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  C0: {Value: CAPACITOR_0}
+  C1: {Value: CAPACITOR_1}
+  C2: {Value: CAPACITOR_2}
+  I0: {Value: CURRENT_0_BIAS}
+  R0: {Value: RESISTOR_0}
+  R1: {Value: RESISTOR_1}
+  R2: {Value: RESISTOR_2}
+  R3: {Value: RESISTOR_3}
+  XM0: {l: x_dut_xm0_l, m: x_dut_xm0_m, w: x_dut_xm0_w}
+  XM1: {l: x_dut_xm1_l, m: x_dut_xm1_m, w: x_dut_xm1_w}
+  XM10: {l: x_dut_xm10_l, m: x_dut_xm10_m, w: x_dut_xm10_w}
+  XM11: {l: x_dut_xm11_l, m: x_dut_xm11_m, w: x_dut_xm11_w}
+  XM12: {l: x_dut_xm12_l, m: x_dut_xm12_m, w: x_dut_xm12_w}
+  XM13: {l: x_dut_xm13_l, m: x_dut_xm13_m, w: x_dut_xm13_w}
+  XM14: {l: x_dut_xm14_l, m: x_dut_xm14_m, w: x_dut_xm14_w}
+  XM15: {l: x_dut_xm15_l, m: x_dut_xm15_m, w: x_dut_xm15_w}
+  XM16: {l: x_dut_xm16_l, m: x_dut_xm16_m, w: x_dut_xm16_w}
+  XM17: {l: x_dut_xm17_l, m: x_dut_xm17_m, w: x_dut_xm17_w}
+  XM18: {l: x_dut_xm18_l, m: x_dut_xm18_m, w: x_dut_xm18_w}
+  XM19: {l: x_dut_xm19_l, m: x_dut_xm19_m, w: x_dut_xm19_w}
+  XM2: {l: x_dut_xm2_l, m: x_dut_xm2_m, w: x_dut_xm2_w}
+  XM20: {l: x_dut_xm20_l, m: x_dut_xm20_m, w: x_dut_xm20_w}
+  XM21: {l: x_dut_xm21_l, m: x_dut_xm21_m, w: x_dut_xm21_w}
+  XM22: {l: x_dut_xm22_l, m: x_dut_xm22_m, w: x_dut_xm22_w}
+  XM23: {l: x_dut_xm23_l, m: x_dut_xm23_m, w: x_dut_xm23_w}
+  XM24: {l: x_dut_xm24_l, m: x_dut_xm24_m, w: x_dut_xm24_w}
+  XM3: {l: x_dut_xm3_l, m: x_dut_xm3_m, w: x_dut_xm3_w}
+  XM4: {l: x_dut_xm4_l, m: x_dut_xm4_m, w: x_dut_xm4_w}
+  XM5: {l: x_dut_xm5_l, m: x_dut_xm5_m, w: x_dut_xm5_w}
+  XM6: {l: x_dut_xm6_l, m: x_dut_xm6_m, w: x_dut_xm6_w}
+  XM7: {l: x_dut_xm7_l, m: x_dut_xm7_m, w: x_dut_xm7_w}
+  XM8: {l: x_dut_xm8_l, m: x_dut_xm8_m, w: x_dut_xm8_w}
+  XM9: {l: x_dut_xm9_l, m: x_dut_xm9_m, w: x_dut_xm9_w}
+groups:
+- name: mirror_xm6_w_l
+  kind: mirror_length
+  members: [XM6, XM7]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): MOSFET_6_3_W_AZC2_PMOS
+    (w), MOSFET_6_3_L_AZC2_PMOS (l).'
+- name: shared_xm3_w_l
+  kind: shared_geometry
+  members: [XM3, XM8, XM5, XM4, XM2, XM1, XM0]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): MOSFET_0_14_W_BIASCM_PMOS
+    (w), MOSFET_0_14_L_BIASCM_PMOS (l).'
+- name: pair_xm10_xm9
+  kind: matched_pair
+  members: [XM10, XM9]
+  tie: [w, l, m]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): MOSFET_9_2_W_gm1_PMOS
+    (w), MOSFET_9_2_L_gm1_PMOS (l), MOSFET_9_2_M_gm1_PMOS (m).'
+- name: shared_xm24_w_l
+  kind: shared_geometry
+  members: [XM24, XM22, XM23]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): MOSFET_24_8_W_AZC3_NMOS
+    (w), MOSFET_24_8_L_AZC3_NMOS (l).'
+- name: shared_xm16_w_l_m
+  kind: shared_geometry
+  members: [XM16, XM17, XM14, XM15]
+  tie: [w, l, m]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): MOSFET_14_4_W_LOAD1_NMOS
+    (w), MOSFET_14_4_L_LOAD1_NMOS (l), MOSFET_14_4_M_LOAD1_NMOS (m).'
+- name: mirror_xm19_l_m
+  kind: mirror_length
+  members: [XM19, XM20, XM21]
+  tie: [l, m]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): MOSFET_19_16_L_BIASCM_NMOS
+    (l), MOSFET_19_16_M_BIASCM_NMOS (m).'
+ratios:
+- {param: m, ref: XM7, of: XM6, ratio: 2, description: 'Legacy MOSFET_6_3_M_AZC2_PMOS*2 vs anchor XM6
+    (*1), frozen (P4 sweep).'}
+- {param: m, ref: XM3, of: XM5, ratio: 6, description: 'Legacy MOSFET_0_14_M_BIASCM_PMOS*6 vs anchor XM5
+    (*1), frozen (P4 sweep).'}
+- {param: m, ref: XM8, of: XM5, ratio: 2, description: 'Legacy MOSFET_0_14_M_BIASCM_PMOS*2 vs anchor XM5
+    (*1), frozen (P4 sweep).'}
+- {param: m, ref: XM4, of: XM5, ratio: 1, description: 'Legacy MOSFET_0_14_M_BIASCM_PMOS*1 vs anchor XM5
+    (*1), frozen (P4 sweep).'}
+- {param: m, ref: XM2, of: XM5, ratio: 2, description: 'Legacy MOSFET_0_14_M_BIASCM_PMOS*2 vs anchor XM5
+    (*1), frozen (P4 sweep).'}
+- {param: m, ref: XM1, of: XM5, ratio: 1, description: 'Legacy MOSFET_0_14_M_BIASCM_PMOS*1 vs anchor XM5
+    (*1), frozen (P4 sweep).'}
+- {param: m, ref: XM0, of: XM5, ratio: 1, description: 'Legacy MOSFET_0_14_M_BIASCM_PMOS*1 vs anchor XM5
+    (*1), frozen (P4 sweep).'}
+- {param: m, ref: XM22, of: XM24, ratio: 4, description: 'Legacy MOSFET_24_8_M_AZC3_NMOS*4 vs anchor XM24
+    (*1), frozen (P4 sweep).'}
+- {param: m, ref: XM23, of: XM24, ratio: 3, description: 'Legacy MOSFET_24_8_M_AZC3_NMOS*3 vs anchor XM24
+    (*1), frozen (P4 sweep).'}
+- {param: w, ref: XM21, of: XM20, ratio: 1, description: 'Legacy MOSFET_19_16_W_BIASCM_NMOS*7 vs anchor
+    XM20 (*7), frozen (P4 sweep).'}
+- {param: w, ref: XM19, of: XM20, ratio: 2/7, description: 'Legacy MOSFET_19_16_W_BIASCM_NMOS*2 vs anchor
+    XM20 (*7), frozen (P4 sweep).'}

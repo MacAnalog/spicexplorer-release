@@ -1,0 +1,10 @@
+# Corner bundles for ihp-sg13g2 (plan D-6): PDK corner libs stay OUT of repo; reference by
+# lib_file + section. The DB clones/tests PDK-free; sim tiers (T3/T4) are PDK-gated.
+pdk: ihp-sg13g2
+corners:
+  tt: [{lib_file: cornerMOSlv.lib, section: mos_tt}]
+  ss: [{lib_file: cornerMOSlv.lib, section: mos_ss}]
+  ff: [{lib_file: cornerMOSlv.lib, section: mos_ff}]
+  sf: [{lib_file: cornerMOSlv.lib, section: mos_sf}]
+  fs: [{lib_file: cornerMOSlv.lib, section: mos_fs}]
+default_corner: tt

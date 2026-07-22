@@ -1,0 +1,96 @@
+{
+  "area": {
+    "active_gate_area_um2": 412.0,
+    "c_count": 1,
+    "c_total_f": 5e-12,
+    "mos_count": 24,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "amp_003_fan_smc",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 58.93125,
+            "pm": 88.77893,
+            "ugf": 2724048.0
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "status": "disabled"
+        },
+        "noise": {
+          "status": "disabled"
+        },
+        "tran_step": {
+          "status": "disabled"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-06-11T03:35:31+00:00"
+      }
+    }
+  },
+  "design_id": "6d0cc63c2b",
+  "metrics": {
+    "tt": {
+      "dc_gain_db": {
+        "spec": "fail",
+        "value": 58.93125
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 88.77893
+      },
+      "ugf_hz": {
+        "spec": "none",
+        "value": 2724048.0
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "CAPACITOR_0": "5p",
+      "CURRENT_0_BIAS": "60u",
+      "x_dut_xm7_l": "1",
+      "x_dut_xm7_m": "16",
+      "x_dut_xm7_w": "1",
+      "x_dut_xm10_l": "1",
+      "x_dut_xm10_m": "8",
+      "x_dut_xm10_w": "1",
+      "x_dut_xm11_l": "1",
+      "x_dut_xm11_m": "32",
+      "x_dut_xm11_w": "1",
+      "x_dut_xm19_l": "1",
+      "x_dut_xm14_m": "4",
+      "x_dut_xm19_w": "1",
+      "x_dut_xm21_l": "1",
+      "x_dut_xm21_m": "4",
+      "x_dut_xm21_w": "1",
+      "x_dut_xm23_l": "1",
+      "x_dut_xm23_m": "16",
+      "x_dut_xm23_w": "1",
+      "x_dut_xm9_l": "1",
+      "x_dut_xm9_m": "4",
+      "x_dut_xm9_w": "1"
+    }
+  },
+  "pdk": "sky130",
+  "ppa": {
+    "active_gate_area_um2": 412.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 58.93125,
+      "pm_deg": 88.77893,
+      "ugf_hz": 2724048.0
+    }
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

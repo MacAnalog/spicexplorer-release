@@ -1,0 +1,169 @@
+{
+  "components": [
+    {
+      "connections": {
+        "N": "voutn",
+        "P": "vdd"
+      },
+      "device_type": "RES",
+      "id": "RN",
+      "params": {
+        "Value": "x_dut_rn_value"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "voutp",
+        "P": "vdd"
+      },
+      "device_type": "RES",
+      "id": "RP",
+      "params": {
+        "Value": "x_dut_rp_value"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "voutn",
+        "GATE": "vinn",
+        "SOURCE": "tail"
+      },
+      "device_type": "MOS",
+      "id": "XMN",
+      "params": {
+        "l": "x_dut_xmn_l",
+        "m": "x_dut_xmn_m",
+        "w": "x_dut_xmn_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "voutp",
+        "GATE": "vinp",
+        "SOURCE": "tail"
+      },
+      "device_type": "MOS",
+      "id": "XMP",
+      "params": {
+        "l": "x_dut_xmp_l",
+        "m": "x_dut_xmp_m",
+        "w": "x_dut_xmp_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "ibias",
+        "GATE": "ibias",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XMR",
+      "params": {
+        "l": "x_dut_xmr_l",
+        "m": "x_dut_xmr_m",
+        "w": "x_dut_xmr_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "tail",
+        "GATE": "ibias",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XMT",
+      "params": {
+        "l": "x_dut_xmt_l",
+        "m": "x_dut_xmt_m",
+        "w": "x_dut_xmt_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    }
+  ],
+  "meta": {
+    "circuit_name": "dp_001_resistive_load",
+    "component_count": 6,
+    "net_count": 8
+  },
+  "nets": [
+    {
+      "is_supply": false,
+      "name": "ibias",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "tail",
+      "supply_type": ""
+    },
+    {
+      "is_supply": true,
+      "name": "vdd",
+      "supply_type": "VDD"
+    },
+    {
+      "is_supply": false,
+      "name": "vinn",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vinp",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "voutn",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "voutp",
+      "supply_type": ""
+    },
+    {
+      "is_supply": true,
+      "name": "vss",
+      "supply_type": "VSS"
+    }
+  ]
+}

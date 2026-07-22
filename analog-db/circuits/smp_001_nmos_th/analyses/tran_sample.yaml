@@ -1,0 +1,20 @@
+# Analysis binding (plan D-4): sampler tran_sample. TCLK=1us; timings are literals (the .control
+# block can't evaluate brace exprs): TSTEP=TCLK/500, T_TRK=TCLK/2-TCLK/40, T_HS=TCLK/2+TCLK/40,
+# T_HE=TCLK-TCLK/40, T_HOLD=TCLK/2-TCLK/20, TSTOP=TCLK (one track+hold cycle).
+schema: spicexplorer/analysis@1
+id: tran_sample
+template: tran_sample
+description: "Clocked track/hold transient; pedestal_v + droop_v_per_s."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  VCLK: 1.2
+  TCLK: 1e-6
+  TSTEP: 2e-9
+  TSTOP: 1e-6
+  T_TRK: 0.475e-6
+  T_HS: 0.525e-6
+  T_HE: 0.975e-6
+  T_HOLD: 0.45e-6
+flags: []
+produces: [pedestal_v, droop_v_per_s]

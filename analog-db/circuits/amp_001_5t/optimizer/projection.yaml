@@ -1,0 +1,56 @@
+# THIN optimizer projection (plan D-3) — mirrors the legacy 5t-ota project_setup.
+# dut_params <- pdk/ihp-sg13g2/sizing.yaml; target_specs <- datasheet.yaml optimize blocks.
+extends: ../circuit.yaml
+pdk: ihp-sg13g2
+project:
+  name: 5T-OTA
+  description: 5 Transistor OTA example sizing in the ihp-sg13g2 technology
+  simulator: ngspice
+  save_sim: false
+  ws_root: pdk/ihp-sg13g2
+  netlist: testbenches.legacy/ota-5t_tb-loopgain.spice
+  outdir: testbenches.legacy/temp_spice_out
+  tech_spec:
+    name: ihp-sg13g2
+    constraints:
+      max_nfet_w: 10u
+      min_nfet_w: 0.18u
+      max_nfet_l: 10u
+      min_nfet_l: 0.18u
+      max_pfet_w: 10u
+      min_pfet_w: 0.18u
+      max_pfet_l: 10u
+      min_pfet_l: 0.18u
+  testbenches:
+    - name: tb_ac
+      params:
+        - {name: CL, description: load capacitance, val: 50f}
+        - {name: VCM, description: input common mode voltage, val: 0.8}
+      netlist: testbenches.legacy/ota-5t_tb-loopgain.spice
+      enable: true
+      description: AC analysis for UGF, Gain, PM
+    - name: tb_noise
+      params:
+        - {name: CL, description: load capacitance, val: 50f}
+        - {name: VCM, description: input common mode voltage, val: 0.8}
+      netlist: testbenches.legacy/ota-5t_tb-noise.spice
+      enable: true
+      description: Noise analysis for input referred noise
+    - name: tb_tran
+      params:
+        - {name: CL, description: load capacitance, val: 50f}
+        - {name: VCM, description: input common mode voltage, val: 0.8}
+      netlist: testbenches.legacy/ota-5t_tb-tran.spice
+      enable: true
+      description: Transient analysis for slew rate and settling time
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48
+    budget: 5
+    name: SamplingSearch
+    optimizer_kwargs:
+      sampler: Hammersley
+      scrambled: true
+      rescaled: true
+    lin_variable_bounds: {min: 0, max: 100}
+    log_variable_bounds: {min: 1, max: 100}

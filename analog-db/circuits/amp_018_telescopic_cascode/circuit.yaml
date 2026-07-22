@@ -1,0 +1,25 @@
+# SUPER-DSL manifest (plan D-3). The NEWCAS 2026 research design (legacy examples/OTA/cascode).
+schema: spicexplorer/circuit@1
+id: amp_018_telescopic_cascode
+class: amplifier
+display_name: "Telescopic (cascode) OTA — NEWCAS 2026 design"
+compensation: none
+stages: 1
+ports: [vdd, vout, vinp, vinn, ibias, vss]
+provenance:
+  source: spicexplorer
+  aliases: [CASCODE-OTA, ota-improved, cascode, telescopic_cascode_ota]
+  paper: "NEWCAS 2026 submission (optimization traces in artifacts/newcas2026/)"
+  license: MIT
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+  schematic: abstract/schematic.svg
+pdks: [ihp-sg13g2, sky130, gf180mcu]
+analyses: [ac_open_loop, dc_op, noise, tran_step, linearity, psrr_vdd, cmrr_vcm]
+optimize:
+  budget: 2000
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

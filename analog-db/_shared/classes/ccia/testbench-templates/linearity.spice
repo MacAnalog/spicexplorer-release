@@ -1,0 +1,40 @@
+** AUTHORED TEMPLATE — amplifier/linearity (plan D-4; the cascode 5th analysis, distilled).
+** SCAFFOLD: input common-mode range (ICMR) via a buffer-connected DC sweep — the input
+** range over which the follower tracks within VTRACK. The legacy cascode TB additionally
+** gated on the tail-current plateau via an internal ammeter (v.xota.vmeas1#branch), which
+** depends on legacy-DUT internals; this distilled form is DUT-agnostic. Bind with
+** `enabled: false` until per-circuit thresholds are reviewed.
+** Bindings: DUT PORT_LINE VDD VCM IBIAS CL VTRACK VSWEEP_STEP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+CLoad vout 0 {CL}
+
+* buffer-connected: vinn shorted to vout; sweep the common-mode input
+Vinp vinp 0 dc {VCM}
+Vfb  vinn vout dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  dc Vinp 0 ${VDD} ${VSWEEP_STEP}
+  let verr = abs(v(vout) - v(vinp))
+  * In-deck HINT only: the CROSS pair misreads a DUT that already tracks at vin=0 (the
+  * first crossing is then the band EXIT). The canonical figure is the platform registry's
+  * `{meas: icmr_range}` (widest contiguous |verr|<=VTRACK band over the written sweep).
+  meas dc icmr_min FIND v(vinp) WHEN verr=${VTRACK} CROSS=1
+  meas dc icmr_max FIND v(vinp) WHEN verr=${VTRACK} CROSS=LAST
+  let icmr_range = icmr_max - icmr_min
+  print icmr_range
+  write
+  quit
+.endc
+.end

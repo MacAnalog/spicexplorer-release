@@ -1,0 +1,26 @@
+# SUPER-DSL manifest — the first REAL LDO: a PMOS-pass regulator with an inlined 5T error amp.
+# Supersedes the ldo_006_stub (NMOS source-follower) as the canonical LDO. The error amp is a 5T
+# OTA written as flat primitives in the abstract netlist (NOT a black-box sub-circuit instance):
+# the abstract->lowered pipeline emits a foreign `.subckt` instance as a DANGLING reference
+# (circuitgraph emit.py never emits the definition body), so true catalog composition needs a
+# hierarchical-netlist feature that does not exist yet. Hand-inlining is the runnable path today.
+schema: spicexplorer/circuit@1
+id: ldo_007_pmos
+class: ldo
+display_name: "PMOS-pass LDO (5T error amp, Miller-compensated)"
+compensation: Miller
+stages: 2                       # error-amp gain stage + pass-device gain stage
+ports: [vdd, vout, vss]         # reference + tail bias are generated INTERNALLY (ideal, sim reference)
+provenance:
+  aliases: [pmos_ldo]
+  source: spicexplorer
+  designer: spicexplorer
+  license: MIT
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [sky130, ihp-sg13g2, gf180mcu]
+analyses: [dc_op, load_regulation, line_regulation, psrr, dropout, tran_load_step, loop_stability, noise, tran_line_step]
+status: incomplete             # sky130 is SPICE-validated (results/sky130__tt.json) + datasheet
+                               # specs characterized to it; ihp/gf180 run but need per-PDK tuning.

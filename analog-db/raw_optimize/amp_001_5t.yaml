@@ -1,0 +1,120 @@
+# Optimize the COMMITTED raw export deck directly (plan: raw decks as optimizer testbenches).
+#
+# This project_setup.yaml points the spicexplorer optimizer straight at the self-contained
+# `raw/amp_001_5t/ihp-sg13g2/*.spice` decks that `analog-db export-raw` generates — no
+# hand-authored testbench. Each deck embeds its own analysis + `meas` block and now ends its
+# `.control` block with `quit`, which spicelib's ngspice runner needs to close the interactive
+# session and hand back the RAW so the optimizer can read the result vectors.
+#
+# Metric ↔ vector contract: each `target_specs.name` is the exact vector the deck's control
+# block writes (`meas ac dcgain/ugf/pm`, `let i_supply`), and `sim_type` selects its ngspice
+# plot (ac → "AC Analysis", op → "Operating Point"). dut_params names match the deck's
+# `.param x_dut_*` sizing knobs verbatim, so `NGSpice_Wrapper.update_params` rewrites them.
+#
+# PDK-gated: run inside the api container / base image (needs ngspice + ihp-sg13g2). See README.
+project:
+  name: RAW-amp_001_5t-5T-OTA
+  description: Size the 5T OTA by driving its committed raw/ export decks (ihp-sg13g2).
+  simulator: ngspice
+  save_sim: false
+  parallel_sim: true
+
+  # ws_root resolves against THIS file's dir → the analog-db repo root. Netlists are the
+  # committed raw decks; outdir is a disposable scratch dir OUTSIDE raw/ (the wrapper wipes it).
+  ws_root: ..
+  netlist: raw/amp_001_5t/ihp-sg13g2/dc_op.spice
+  outdir: raw_optimize/_runs/amp_001_5t
+
+  tech_spec:
+    name: ihp-sg13g2
+    constraints:
+      max_nfet_w: 50u
+      min_nfet_w: 0.18u
+      max_nfet_l: 5u
+      min_nfet_l: 0.18u
+      max_pfet_w: 50u
+      min_pfet_w: 0.18u
+      max_pfet_l: 5u
+      min_pfet_l: 0.18u
+
+  # Sizing knobs the raw deck exposes (see raw/amp_001_5t/ihp-sg13g2/_dut.spice). Bounds are a
+  # bias-preserving band around the committed defaults: the tail mirror REFERENCE (M6) + mirror
+  # length are left at their defaults (omitted → the wrapper keeps the netlist value), so the tail
+  # bias stays anchored and every sampled point biases into a working OTA. The optimizer explores
+  # from the band midpoint (parameterize() does not seed `init`), so keep the band near the default.
+  dut_params:
+    - { name: x_dut_xm1_w,  min_val: 0.3u, max_val: 4u }   # input pair W (default 0.5u) → gm/ugf
+    - { name: x_dut_xm1_l,  min_val: 0.5u, max_val: 6u }   # input pair L (default 5u)
+    - { name: x_dut_xm3_w,   min_val: 0.5u, max_val: 5u }   # active-load W (default 1.5u)
+    - { name: x_dut_xm3_l,   min_val: 1u,   max_val: 8u }   # active-load L (default 5u) → ro/gain
+    - { name: x_dut_xm5_w, min_val: 1u,   max_val: 4u }   # tail mirror W (default 2u) → i_supply
+
+  # One testbench per raw deck. No params: each deck hardcodes its own VDD/VCM/IBIAS/CL.
+  testbenches:
+    - name: ac_open_loop
+      params: []
+      netlist: raw/amp_001_5t/ihp-sg13g2/ac_open_loop.spice
+      enable: true
+      description: Open-loop AC — dcgain / ugf / pm
+    - name: dc_op
+      params: []
+      netlist: raw/amp_001_5t/ihp-sg13g2/dc_op.spice
+      enable: true
+      description: DC operating point — supply current
+
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48
+    budget: 15
+    name: NGOpt
+    lin_variable_bounds: { min: 0, max: 100 }
+    log_variable_bounds: { min: 1, max: 100 }
+
+    target_specs:
+      - name: dcgain
+        description: open-loop DC gain
+        testbench: ac_open_loop
+        sim_type: ac
+        goal: exceed
+        target: 35        # dB
+        range: 40
+        tolerance: 1
+        weight: 1.0
+        reward_type: log
+        enable: true
+      - name: ugf
+        description: unity-gain frequency
+        testbench: ac_open_loop
+        sim_type: ac
+        goal: exceed
+        target: 1e6       # Hz
+        range: 5e6
+        tolerance: 1e5
+        weight: 1.0
+        reward_type: log
+        enable: true
+      - name: pm
+        description: phase margin
+        testbench: ac_open_loop
+        sim_type: ac
+        goal: exact
+        target: 60        # degrees
+        range: 45
+        tolerance: 10
+        weight: 1.0
+        reward_type: none
+        enable: true
+      # NOTE: the deck defines this via `let i_supply = abs(i(Vdd))`; ngspice/spicelib save a
+      # current-typed `let` vector as `i(<name>)`, so the spec name is `i(i_supply)`, not
+      # `i_supply` (a `meas` result like dcgain/ugf/pm stays bare — that is why those are bare).
+      - name: i(i_supply)
+        description: quiescent supply current
+        testbench: dc_op
+        sim_type: op
+        goal: minimize
+        target: 50e-6     # A
+        range: 100e-6
+        tolerance: 1e-6
+        weight: 1.0
+        reward_type: log
+        enable: true

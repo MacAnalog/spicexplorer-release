@@ -1,0 +1,40 @@
+// 5-stage ring oscillator (TSMC28 ULVT) + Verilog-A divide-by-2 monitor.
+// A current kick on n1 breaks the metastable DC symmetry; the VA block
+// divides the ring frequency by 2 on node DIV.
+simulator lang=spectre
+global 0
+parameters VDD=0.9
+
+include "${PDK_ROOT}/models/spectre/toplevel_modified.scs" section=pre_simu
+include "${PDK_ROOT}/models/spectre/toplevel_modified.scs" section=top_tt
+
+subckt inv IN OUT VDD VSS
+mn (OUT IN VSS VSS) nch_ulvt_mac l=100n w=1u multi=1 nf=2
+mp (OUT IN VDD VDD) pch_ulvt_mac l=100n w=2u multi=1 nf=4
+ends inv
+
+v_vdd (VDDA 0) vsource dc=VDD type=dc
+
+x_i1 (n1 n2 VDDA 0) inv
+x_i2 (n2 n3 VDDA 0) inv
+x_i3 (n3 n4 VDDA 0) inv
+x_i4 (n4 n5 VDDA 0) inv
+x_i5 (n5 n1 VDDA 0) inv
+
+c1 (n1 0) capacitor c=10f
+c2 (n2 0) capacitor c=10f
+c3 (n3 0) capacitor c=10f
+c4 (n4 0) capacitor c=10f
+c5 (n5 0) capacitor c=10f
+
+// startup kick
+i_kick (0 n1) isource type=pulse val0=0 val1=50u delay=10p rise=10p fall=10p width=200p
+
+x_div (n1 DIV) va_div2 vdd=VDD vth=VDD/2
+
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+tran tran stop=20n maxstep=2p annotate=status
+
+save n1 n2 n3 DIV
+saveOptions options save=selected
+ahdl_include "va_div2.va"

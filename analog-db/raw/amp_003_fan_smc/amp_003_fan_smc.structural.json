@@ -1,0 +1,147 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "amp_003_fan_smc",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 26,
+    "blocks_detected": 5,
+    "by_family": {
+      "current_mirror": 4,
+      "differential_pair": 1
+    },
+    "structural_roles": {
+      "XM0": "current_mirror_reference",
+      "XM1": "current_mirror",
+      "XM12": "cascode_device",
+      "XM13": "cascode_device",
+      "XM14": "current_mirror_reference",
+      "XM17": "current_mirror",
+      "XM18": "current_mirror",
+      "XM2": "current_mirror",
+      "XM21": "current_mirror_reference",
+      "XM22": "current_mirror",
+      "XM3": "current_mirror",
+      "XM4": "tail_current_source",
+      "XM5": "current_mirror_reference",
+      "XM6": "current_mirror",
+      "XM7": "current_mirror",
+      "XM8": "differential_pair",
+      "XM9": "differential_pair"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.pmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XM0",
+      "output_devices": [
+        "XM1",
+        "XM2",
+        "XM3",
+        "XM4",
+        "XM7"
+      ],
+      "devices": [
+        "XM0",
+        "XM1",
+        "XM2",
+        "XM3",
+        "XM4",
+        "XM7"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "net013",
+        "out": "VB4"
+      }
+    },
+    {
+      "group_id": "cm.nmos.improved_high_swing_cascode#1",
+      "family": "current_mirror",
+      "mirror_class": "improved_high_swing_cascode",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.improved_high_swing_cascode",
+      "reference_device": "XM14",
+      "output_devices": [
+        "XM13"
+      ],
+      "devices": [
+        "XM12",
+        "XM13",
+        "XM14",
+        "XM17",
+        "XM18"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "VB4",
+        "out": "DM_1",
+        "ref_in2": "VB3"
+      }
+    },
+    {
+      "group_id": "cm.nmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XM21",
+      "output_devices": [
+        "XM22"
+      ],
+      "devices": [
+        "XM21",
+        "XM22"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "net043",
+        "out": "net049"
+      }
+    },
+    {
+      "group_id": "cm.pmos.simple#2",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XM5",
+      "output_devices": [
+        "XM6"
+      ],
+      "devices": [
+        "XM5",
+        "XM6"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "VOUTN",
+        "out": "net050"
+      }
+    },
+    {
+      "group_id": "dp.pmos.simple#1",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "pmos",
+      "template_id": "dp.pmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM8",
+        "XM9"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "in_p": "VINP",
+        "in_n": "VINN",
+        "CM_tail": "net31",
+        "out_n": "DM_2",
+        "out_p": "net063"
+      }
+    }
+  ]
+}

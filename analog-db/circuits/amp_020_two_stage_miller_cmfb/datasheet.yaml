@@ -1,0 +1,56 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# SUPERSET of cace_format 5.2. See _shared/CACE_FORMAT.md for the field-overlap mapping (O-1).
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.5}
+  cload:  {unit: fF, typical: 50}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+  vcm:    {unit: V, typical: 0.8}
+metrics:
+  dc_gain_db:
+    display: "DC open-loop differential gain"
+    description: "Differential large-signal DC gain, vdb(voutp,voutn)"
+    unit: dB
+    analysis: ac_open_loop
+    extract: {meas: dcgain}
+    spec: {min: 60, unit: dB}
+  ugf_hz:
+    display: "Unity-gain frequency"
+    unit: Hz
+    analysis: ac_open_loop
+    extract: {meas: ugf}
+    spec: {min: 5.0e6, unit: Hz}
+  pm_deg:
+    display: "Phase margin"
+    unit: deg
+    analysis: ac_open_loop
+    extract: {meas: pm}
+    spec: {min: 45, typ: 60, unit: deg}
+  vos:
+    display: "Output offset"
+    description: "voutp - voutn at matched DC inputs; the residual of the CMFB servo"
+    unit: V
+    analysis: dc_op
+    extract: {meas: vos}
+    spec: {typ: 0, max: 20e-3, unit: V}
+  i_supply:
+    display: "Supply current"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 1.0e-3, unit: A}
+  vn_in:
+    display: "Input-referred noise"
+    unit: "V/sqrt(Hz)"
+    analysis: noise
+    extract: {meas: inoise_total}
+    spec: {max: 1.2e-3, unit: "V/sqrt(Hz)"}
+  t_settle:
+    display: "Settling time"
+    description: "Unity-gain differential-follower settling (see tran_step_diff.spice)"
+    unit: s
+    analysis: tran_step
+    extract: {meas: t_settle}
+    spec: {max: 5.0e-7, unit: s}

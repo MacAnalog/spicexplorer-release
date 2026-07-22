@@ -1,0 +1,18 @@
+# ★ SUPER-DSL manifest — kind: reference (plan D-9). Validated against _shared/schema/circuit.schema.json.
+# IMPORTED reference circuit: authored proprietary-PDK Spectre decks, NOT lowered or simulated in this DB.
+# The harness runs the reference-only T0 subset (schema + provenance + deck-exists) and skips T1-T4.
+# Source credited under `provenance` (see repo NOTICE + corpora/ferrosim/PROVENANCE.md).
+schema: spicexplorer/circuit@1
+id: ferrosim_sc_counter
+kind: reference
+class: digital
+display_name: Programmable 4-bit counter (ferrosim)
+provenance:
+  source: Arcadia-1/ferrosim (imported via netlist-crawler)
+  designer: Token Zhang
+  license: MIT
+references:
+- tool: spectre
+  dir: spectre/28nm
+  node: 28nm
+status: reference

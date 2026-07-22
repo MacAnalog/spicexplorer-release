@@ -1,0 +1,121 @@
+# SKILL CALCULATOR expression table (engine-level, NDA-clean) — the ADE-calculator
+# analogue for headless OCEAN evaluation of Spectre results.
+#
+# One named expression per row: `result` is the OCEAN *result* name selected before
+# evaluation (`selectResults("<result>")` — NOT the deck's analysis name: a `dcOp dc` run
+# registers as `dc`, its oppoint info file as `dcOpInfo`, a `pss pss` run as `pss_fd` +
+# `pss_td`, an `stb stb` run as `stb`); `expr` is ONE SKILL line that must reduce to a
+# number. `{NAME}` placeholders substitute from the render context (bench params + the
+# per-bench `args:` in `_shared/classes/<class>/spectre-benches.yaml`). Signals are BARE
+# names on a headless raw (`v("vout")`, never `v("/vout")`).
+#
+# The platform renders these into its `OceanMeasurement` runner
+# (`spicexplorer.backends.spectre_templates.bench_measurements` →
+# `ocean_metrics.OceanMetricsSession.measure/measure_batch`); every submission persists
+# its exact SKILL as `<stem>.il` beside the metrics file, so any row here can be replayed
+# by hand (`ocean -nograph < file.il`).
+schema: spicexplorer/spectre-calculator@1
+description: >-
+  Named SKILL calculator expressions (AC gains/bandwidth, OP reads, PSS harmonic
+  distortion + two-tone IIP3, STB loop-gain/phase-margin) rendered per-testbench by the
+  platform's OCEAN Tier-2 metrics runner.
+expressions:
+  # -- AC (small-signal frequency sweep) --------------------------------------
+  gain_db_at:
+    result: ac
+    expr: 'value(dB20(v("{OUT}")) {FREQ})'
+    notes: passband/DC gain probe — dB20 of the transfer at one frequency.
+  gain_lin_at:
+    result: ac
+    expr: 'value(mag(v("{OUT}")) {FREQ})'
+    notes: >-
+      LINEAR gain (V/V) at one frequency — the buffer-gain spec convention (the
+      amplifier class gain_cl is V/V, e.g. 0.97..1.03, matching CACE ac_params.gain).
+  neg_gain_db_at:
+    result: ac
+    expr: '-value(dB20(v("{OUT}")) {FREQ})'
+    notes: >-
+      rejection figure of the unity-buffer disturbance benches (CMRR/PSRR): the output
+      residual IS the reciprocal rejection, so the figure is MINUS the residual gain.
+  bw_3db:
+    result: ac
+    expr: 'bandwidth(v("{OUT}") 3 "low")'
+  gbw:
+    result: ac
+    expr: 'gainBwProd(v("{OUT}"))'
+  ugf:
+    result: ac
+    expr: 'cross(dB20(v("{OUT}")) 0 1 "falling")'
+    notes: unity-gain frequency — first falling 0 dB crossing of the gain.
+  pm:
+    result: ac
+    expr: 'phaseMargin(v("{OUT}"))'
+    notes: >-
+      OPEN-LOOP waves only — OCEAN's phaseMargin refuses a closed-loop wave whose gain
+      never crosses one (expect NaN there; use the stb rows for a loop-gain PM).
+  # -- operating point ---------------------------------------------------------
+  node_v:
+    result: dc
+    expr: 'v("{NODE}")'
+    notes: op-point node voltage (a `dcOp dc` run registers as result `dc`).
+  device_op:
+    result: dcOpInfo
+    expr: 'OP("{INST}" "{PARAM}")'
+    notes: per-device OP scalar (gm, vdsat, region, cgg, …) from the oppoint info file.
+  # -- PSS (periodic steady state; fd = per-harmonic phasors, td = one period) --
+  thd_pct:
+    result: pss_fd
+    expr: >-
+      let(((s 0.0)) for(k 2 {NHARM} s = s + expt(mag(harmonic(v("{OUT}") k)) 2))
+      100.0 * sqrt(s) / mag(harmonic(v("{OUT}") 1)))
+    notes: >-
+      THD (percent) straight off the fd-PSF harmonic phasors — RSS of harmonics
+      2..NHARM over the fundamental (same definition as the platform's
+      thd_from_harmonics, so the two routes cross-check). OCEAN's own thd() wants an
+      ADE-style swept-time wave and errors on a headless pss_td raw (live-verified
+      2026-07-09), so the harmonic form is the calculator route.
+  harmonic_db:
+    result: pss_fd
+    expr: 'dB20(mag(harmonic(v("{OUT}") {N})))'
+    notes: absolute level of harmonic N (dBV) off the fd-PSF phasors.
+  hd2_db:
+    result: pss_fd
+    expr: 'dB20(mag(harmonic(v("{OUT}") 2)) / mag(harmonic(v("{OUT}") 1)))'
+  hd3_db:
+    result: pss_fd
+    expr: 'dB20(mag(harmonic(v("{OUT}") 3)) / mag(harmonic(v("{OUT}") 1)))'
+  im3_dbc:
+    result: pss_fd
+    expr: >-
+      dB20(max(mag(harmonic(v("{OUT}") {NIM3A})) mag(harmonic(v("{OUT}") {NIM3B}))) /
+      min(mag(harmonic(v("{OUT}") {N1})) mag(harmonic(v("{OUT}") {N2}))))
+    notes: >-
+      two-tone IM3 (dBc, worse side / weaker tone — matches the platform's Python
+      convention). Tones ride harmonics N1/N2 of the shared fundamental; the IM3
+      products are plain harmonics NIM3A=|2·N1-N2|, NIM3B=2·N2-N1.
+  iip3_dbv:
+    result: pss_fd
+    expr: >-
+      dB20({AMPL}) - dB20(max(mag(harmonic(v("{OUT}") {NIM3A})) mag(harmonic(v("{OUT}") {NIM3B}))) /
+      min(mag(harmonic(v("{OUT}") {N1})) mag(harmonic(v("{OUT}") {N2})))) / 2.0
+    notes: >-
+      input-referred intercept (dBV): IIP3_dBV = 20·log10(A_in) − IM3_dBc/2 (A_in =
+      per-tone input amplitude AMPL).
+  # -- STB (loop gain / stability) ---------------------------------------------
+  # Spectre computes the margins natively (`stb.margin.stb` -> result `stb_margin`,
+  # outputs phaseMargin/gainMargin/+Freq) — read THOSE, not phaseMargin(loopGain):
+  # the loopGain wave carries the -T sign convention (phase starts at ±180°), which
+  # shifts the generic wave-level phaseMargin() by -180 (live-verified 2026-07-10;
+  # the platform registry's {meas: pm_loop} is phi0-referenced and agrees to <1°).
+  pm_loop:
+    result: stb_margin
+    expr: 'getData("phaseMargin")'
+    notes: loop phase margin (deg) — Spectre's own stb margin computation.
+  gm_loop_db:
+    result: stb_margin
+    expr: 'getData("gainMargin")'
+    notes: loop gain margin (dB) — matches the registry gain_margin_db to 4 digits live.
+  loopgain_db:
+    result: stb
+    expr: 'value(dB20(getData("loopGain")) {FREQ})'
+    notes: in-band loop-gain magnitude (dB) at one frequency (== dcgain for a unity buffer).

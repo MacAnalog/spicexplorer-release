@@ -1,0 +1,109 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "amp_022_fer_two_stage",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 11,
+    "blocks_detected": 4,
+    "by_family": {
+      "current_mirror": 3,
+      "differential_pair": 1
+    },
+    "structural_roles": {
+      "XM0": "differential_pair",
+      "XM1": "differential_pair",
+      "XM3": "current_mirror_reference",
+      "XM4": "current_mirror",
+      "XM5": "tail_current_source",
+      "XM6": "current_mirror",
+      "XM7": "current_mirror_reference",
+      "XMBD": "current_mirror_reference",
+      "XMBS": "current_mirror"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.nmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XM3",
+      "output_devices": [
+        "XM4"
+      ],
+      "devices": [
+        "XM3",
+        "XM4"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "a",
+        "out": "b"
+      }
+    },
+    {
+      "group_id": "cm.pmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XM7",
+      "output_devices": [
+        "XM5",
+        "XM6"
+      ],
+      "devices": [
+        "XM5",
+        "XM6",
+        "XM7"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "pbias",
+        "out": "c"
+      }
+    },
+    {
+      "group_id": "cm.nmos.simple#2",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XMBD",
+      "output_devices": [
+        "XMBS"
+      ],
+      "devices": [
+        "XMBD",
+        "XMBS"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "ibias",
+        "out": "pbias"
+      }
+    },
+    {
+      "group_id": "dp.pmos.simple#1",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "pmos",
+      "template_id": "dp.pmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM0",
+        "XM1"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "in_p": "vinp",
+        "in_n": "vinn",
+        "CM_tail": "c",
+        "out_n": "a",
+        "out_p": "b"
+      }
+    }
+  ]
+}

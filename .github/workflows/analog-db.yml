@@ -1,0 +1,75 @@
+# Managed by the private release infra (scripts/release/repo/) — edit there,
+# not here; the next port overwrites this file.
+#
+# Per-unit CI: one workflow file per release unit, so each unit gets its own
+# README status badge. The fast test tier needs the platform packages
+# (spicexplorer-core, -circuitgraph, -netlist2xschem), which port as their own
+# release unit later — until a `platform/` tree exists in this monorepo, the
+# test job self-skips with a notice instead of failing.
+name: analog-db
+
+on:
+  push:
+    branches: [main]
+    paths: ["analog-db/**", ".github/workflows/analog-db.yml"]
+  pull_request:
+    paths: ["analog-db/**", ".github/workflows/analog-db.yml"]
+
+jobs:
+  structure:
+    # Dependency-light sanity that can run TODAY: the catalog and the YAML/JSON
+    # docs must at least parse.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pyyaml
+      - name: catalog + YAML docs parse
+        run: |
+          python - <<'EOF'
+          import json, sys
+          from pathlib import Path
+          import yaml
+          root = Path("analog-db")
+          json.loads((root / "catalog.json").read_text())
+          bad = []
+          for p in root.rglob("*.yaml"):
+              try:
+                  list(yaml.safe_load_all(p.read_text()))
+              except Exception as e:
+                  bad.append(f"{p}: {e}")
+          if bad:
+              sys.exit("unparseable YAML:\n" + "\n".join(bad))
+          print(f"catalog.json + {sum(1 for _ in root.rglob('*.yaml'))} YAML docs parse OK")
+          EOF
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: platform packages ported yet?
+        id: deps
+        run: |
+          if [ -d platform ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::spicexplorer platform packages are not in this monorepo yet — the analog-db test tier activates once they port."
+          fi
+      - uses: actions/setup-python@v5
+        if: steps.deps.outputs.ok == 'true'
+        with:
+          python-version: "3.11"
+      - name: install
+        if: steps.deps.outputs.ok == 'true'
+        run: |
+          pip install -e platform/packages/spicexplorer-core \
+                      -e platform/packages/spicexplorer-circuitgraph \
+                      -e platform/packages/spicexplorer-netlist2xschem
+          pip install -e analog-db pytest
+      - name: fast test tier (no SPICE)
+        if: steps.deps.outputs.ok == 'true'
+        working-directory: analog-db
+        run: python -m pytest tests -q -m "not slow"

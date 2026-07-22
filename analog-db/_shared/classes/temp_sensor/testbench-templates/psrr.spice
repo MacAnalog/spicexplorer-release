@@ -1,0 +1,21 @@
+** AUTHORED TEMPLATE — temp_sensor/psrr (plan D-4): low-frequency supply rejection (PSR) of a
+** PTAT sensor. Drives the supply with a 1 V AC and reports the supply→output gain at the low
+** frequency edge (dB; more-negative = better rejection).
+** Bindings: DUT PORT_LINE VDD, FSTART FSTOP PPD, PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+
+Vdd  vdd 0 dc {VDD} ac 1
+Vss  vss 0 dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  meas ac psr_db FIND vdb(vout) AT=${FSTART}
+  write
+  quit
+.endc
+.end

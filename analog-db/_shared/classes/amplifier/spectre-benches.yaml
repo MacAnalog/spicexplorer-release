@@ -1,0 +1,110 @@
+# Per-TESTBENCH Spectre engine config for the amplifier class — which analysis templates
+# each bench composes on the closed (Spectre) lane, and which SKILL calculator
+# expressions read its results (the OCEAN Tier-2 route).
+#
+# The analysis statement templates live in `_shared/engines/spectre/analyses.yaml`; the
+# calculator expression table in `_shared/engines/spectre/calculator.yaml`. This file only
+# WIRES them per bench. The deck *stimulus* (which source carries the AC unit, the sine
+# drive, the step) still rides in from the class testbench template — only the analyses
+# and result-reading expressions are configured here.
+#
+# Value syntax in `args:` — `$NAME` pulls from the render context (the bench's
+# `analyses/<tb>.yaml` params, UPPERCASE, plus the platform-computed extras below);
+# anything else is a literal. Unmapped template placeholders resolve directly from the
+# context by their own name (so the ac template needs no args: FSTART/FSTOP/PPD are bench
+# params already).
+#
+# Platform-computed context extras (see `spicexplorer.backends.analog_db._spectre_context`):
+#   RAIL                             — the per-PDK registry supply (closed-lane rail)
+#   IIP3_FUND, IIP3_HARMS,           — two-tone shared fundamental + harmonic budget and
+#   IIP3_N1, IIP3_N2,                  tone/IM3 harmonic indices, derived from F1/F2
+#   IIP3_NIM3A, IIP3_NIM3B             (f1=N1·fund, f2=N2·fund; IM3 at |2N1-N2|, 2N2-N1)
+schema: spicexplorer/spectre-benches@1
+class: amplifier
+benches:
+  ac_open_loop:
+    analyses:
+      - {template: dc_op}
+      - {template: ac}
+    calculator:
+      - {name: dcgain, expr: gain_db_at, args: {OUT: vout, FREQ: $FSTART}}
+      - {name: bw_3db, expr: bw_3db, args: {OUT: vout}}
+      - {name: gbw, expr: gbw, args: {OUT: vout}}
+      - {name: ugf, expr: ugf, args: {OUT: vout}}
+      - {name: pm, expr: pm, args: {OUT: vout}}
+  ac_closed_loop:
+    analyses:
+      - {template: dc_op}
+      - {template: ac}
+    calculator:
+      # gain_cl is LINEAR (V/V) — the class buffer-gain spec convention
+      - {name: gain_cl, expr: gain_lin_at, args: {OUT: vout, FREQ: $FSTART}}
+      - {name: bw_cl, expr: bw_3db, args: {OUT: vout}}
+  cmrr_vcm:
+    analyses:
+      - {template: dc_op}
+      - {template: ac}
+    calculator:
+      - {name: cmrr_db, expr: neg_gain_db_at, args: {OUT: vout, FREQ: $FSTART}}
+  psrr_vdd:
+    analyses:
+      - {template: dc_op}
+      - {template: ac}
+    calculator:
+      - {name: psrr_vdd_db, expr: neg_gain_db_at, args: {OUT: vout, FREQ: $FSTART}}
+  dc_op:
+    analyses:
+      - {template: dc_op}
+    calculator: []
+  noise:
+    analyses:
+      - {template: dc_op}
+      - {template: noise, args: {OUT: vout, IPROBE: VINP}}
+    calculator: []
+  tran_step:
+    analyses:
+      - {template: dc_op}
+      - {template: tran}
+    calculator: []
+  linearity:
+    # sweep-only on purpose: the dc_op sibling would leave a second `.dc` PSF
+    analyses:
+      - {template: dc_sweep, args: {DEV: VINP, START: 0, STOP: $RAIL, STEP: $VSWEEP_STEP}}
+    calculator: []
+  thd:
+    # ngspice has no PSS — the open lane runs the deck's committed tran (registry FFT);
+    # the closed lane composes this native pss at the drive fundamental instead.
+    analyses:
+      - {template: pss, args: {FUND: $F0}}
+    calculator:
+      - {name: thd_pct, expr: thd_pct, args: {OUT: vout, NHARM: $HARMS}}
+      - {name: hd2_db, expr: hd2_db, args: {OUT: vout}}
+      - {name: hd3_db, expr: hd3_db, args: {OUT: vout}}
+  iip3:
+    # both tones share IIP3_FUND (template contract), so tones AND IM3 products are plain
+    # harmonics of ONE pss — no QPSS needed; harms budget covers 2·N2 with margin.
+    analyses:
+      - {template: pss, args: {FUND: $IIP3_FUND, HARMS: $IIP3_HARMS}}
+    calculator:
+      - name: im3_dbc
+        expr: im3_dbc
+        args: {OUT: vout, N1: $IIP3_N1, N2: $IIP3_N2, NIM3A: $IIP3_NIM3A, NIM3B: $IIP3_NIM3B}
+      - name: iip3_dbv
+        expr: iip3_dbv
+        args:
+          OUT: vout
+          AMPL: $ASIG
+          N1: $IIP3_N1
+          N2: $IIP3_N2
+          NIM3A: $IIP3_NIM3A
+          NIM3B: $IIP3_NIM3B
+  stb:
+    # VIPRB is the loop-probe marker in the stb template (a 0 V source in the feedback
+    # path); the platform's Spectre emitter translates it to an `iprobe` instance.
+    analyses:
+      - {template: dc_op}
+      - {template: stb, args: {PROBE: VIPRB}}
+    calculator:
+      - {name: pm_loop, expr: pm_loop}
+      - {name: gm_loop_db, expr: gm_loop_db}
+      - {name: loopgain_db, expr: loopgain_db, args: {FREQ: $FSTART}}

@@ -1,0 +1,63 @@
+# Amplifier class — canonical metric vocabulary + owned testbench templates (plan D-10).
+# Validated against _shared/schema/class.schema.json by the verify harness (Tier 0).
+# An `ldo` class would instead declare load/line-regulation, dropout, PSRR-vs-load, Iq, ...
+schema: spicexplorer/class@1
+class: amplifier
+id_code: amp            # accession-id prefix for verifiable circuits (plan_scoreboard D-1)
+description: >-
+  Operational amplifiers / OTAs. Open- and closed-loop AC, DC operating point and
+  sweep, noise, transient (slew/settle), linearity, plus derived CMRR/PSRR.
+ppa:                      # scoreboard PPA rollup declaration (plan_scoreboard D-7)
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: dc_gain_db, better: max}
+    - {metric: ugf_hz, better: max}
+    - {metric: pm_deg, better: max}
+canonical_metrics:
+  - dc_gain_db
+  - gain_cl          # closed-loop (buffer) gain, V/V
+  - bw_cl_hz         # closed-loop -3 dB bandwidth
+  - gbw_hz
+  - ugf_hz
+  - pm_deg
+  - gm_deg          # gain margin
+  - cmrr_db
+  - psrr_vdd_db
+  - psrr_vss_db
+  - icmr_range       # input common-mode range (buffer-connected linearity sweep)
+  - icmr_min
+  - icmr_max
+  - slew_rate
+  - t_settle
+  - i_supply
+  - vn_in
+  - thd_pct
+  - iip3_dbv
+  - im3_dbc
+  - vos
+  - tc_ppm
+  - area_um2
+  - fom_s
+  - fom_l
+templates:
+  - ac_open_loop
+  - ac_open_loop_biaswrap   # open-loop gain in closed-loop bias (AnalogGym Lfb/Cin trick)
+  - ac_open_loop_biaswrap_ibias  # the same bias-wrap for ibias-port DUTs (large systematic offset)
+  - ac_open_loop_diff       # differential-output, self-biased open-loop AC (no ibias port)
+  - ac_closed_loop
+  - psrr_vdd                 # positive-supply rejection in the unity-buffer config (PSRR+)
+  - psrr_vdd_selfbias        # the same PSRR+ bench for self-biased DUTs (no ibias port)
+  - cmrr_vcm                 # common-mode rejection in the unity-buffer config
+  - cmrr_vcm_selfbias        # the same CMRR bench for self-biased DUTs (no ibias port)
+  - dc_op
+  - dc_op_diff              # differential-output, self-biased DC op point (vos/vocm)
+  - dc_sweep
+  - noise
+  - noise_biaswrap_ibias    # input-referred noise in closed-loop bias for large-offset ibias DUTs
+  - noise_diff              # differential-output, self-biased input-referred noise
+  - tran_step
+  - thd            # large-signal harmonic distortion (buffer sine; PSS on Spectre)
+  - iip3           # two-tone intercept (common-fundamental tones; PSS on Spectre)
+  - tran_step_diff          # differential-output, self-biased unity-gain step settling
+  - linearity
+  - stb            # loop-gain probe (VIPRB marker -> iprobe; stb analysis on Spectre)

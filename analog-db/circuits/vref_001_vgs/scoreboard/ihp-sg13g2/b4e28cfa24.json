@@ -1,0 +1,103 @@
+{
+  "area": {
+    "active_gate_area_um2": 7.0,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 2,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "vref_001_vgs",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 1.387339e-10,
+            "vref_v": 0.3590042
+          },
+          "status": "ok"
+        },
+        "line_sweep": {
+          "measures": {
+            "line_reg_pct": 3.413024,
+            "v_at_hi": 0.3675364,
+            "v_at_lo": 0.3552834,
+            "v_at_nom": 0.3590071
+          },
+          "status": "ok"
+        },
+        "psrr": {
+          "measures": {
+            "psrr_db": -35.4152
+          },
+          "status": "ok"
+        },
+        "temp_sweep": {
+          "measures": {
+            "tc_ppm": 25.86546,
+            "vref_25c": 0.35899
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-16T02:38:29+00:00"
+      }
+    }
+  },
+  "design_id": "b4e28cfa24",
+  "metrics": {
+    "tt": {
+      "i_supply": {
+        "spec": "pass",
+        "value": 1.387339e-10
+      },
+      "line_reg_pct": {
+        "spec": "pass",
+        "value": 3.413024
+      },
+      "psrr_db": {
+        "spec": "pass",
+        "value": -35.4152
+      },
+      "tc_ppm": {
+        "spec": "pass",
+        "value": 25.86546
+      },
+      "vref_25c": {
+        "spec": "pass",
+        "value": 0.35899
+      },
+      "vref_v": {
+        "spec": "pass",
+        "value": 0.3590042
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_xm0_l": "2.0u",
+      "x_dut_xm0_m": 1,
+      "x_dut_xm0_w": "2.5u",
+      "x_dut_xm1_l": "2.0u",
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": "1.0u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 7.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "psrr_db": -35.4152,
+      "tc_ppm": 25.86546
+    },
+    "power_w": 1.6648067999999998e-10
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

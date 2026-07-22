@@ -1,0 +1,31 @@
+** Abstract folded-cascode OTA — PMOS input pair folded into an NMOS mirror with NMOS+PMOS
+** cascodes; PMOS tail and bias mirror; ideal cascode gate-bias sources.
+** AUTHORED source of truth (plan D-2), extracted from the CORA `opamp` subckt
+** (pdk/ihp-sg13g2/testbenches.legacy/cora_testbench_ac.spice), nets renamed to canonical
+** names and models made PDK-neutral. The CORA core has NO enable network — it IS the clean core.
+** TERMINAL ORDER CANONICALIZED to true `d g s b`: the CORA netlist lists the PMOS devices
+** source-first (xschem style). ngspice's PSP model is d/s-symmetric so simulation doesn't
+** care, but netlist2tf's hybrid-pi small-signal model is direction-sensitive — the symbolic
+** cross-check caught the swap (sym −13.5 dB vs sim 44.1 dB before; agreement after).
+** Net renames: net1→tail, net7→foldp, net6→foldn, net2→nbias, net3→cascp, net5→s9, net4→s10;
+** ports vin+→vinp, vin-→vinn, ib→ibias, GND→vss.
+** Subckt port order (= circuit.yaml ports): vinn vinp vout vdd ibias vss
+**.subckt amp_004_folded_cascode vinn vinp vout vdd ibias vss
+XM4  foldn nbias vss   vss nmos w=x_dut_xm4_w l=x_dut_xm4_l ng=x_dut_xm4_ng m=x_dut_xm4_m
+XM1  foldp vinp  tail  vdd pmos w=x_dut_xm1_w l=x_dut_xm1_l ng=x_dut_xm1_ng m=x_dut_xm1_m
+XM2  foldn vinn  tail  vdd pmos w=x_dut_xm2_w l=x_dut_xm2_l ng=x_dut_xm2_ng m=x_dut_xm2_m
+XM3  foldp nbias vss   vss nmos w=x_dut_xm3_w l=x_dut_xm3_l ng=x_dut_xm3_ng m=x_dut_xm3_m
+XM11 ibias ibias vdd   vdd pmos w=x_dut_xm11_w l=x_dut_xm11_l ng=x_dut_xm11_ng m=x_dut_xm11_m
+XM0  tail  ibias vdd   vdd pmos w=x_dut_xm0_w l=x_dut_xm0_l ng=x_dut_xm0_ng m=x_dut_xm0_m
+XM6  vout  vb1   foldn vss nmos w=x_dut_xm6_w l=x_dut_xm6_l ng=x_dut_xm6_ng m=x_dut_xm6_m
+XM5  cascp vb1   foldp vss nmos w=x_dut_xm5_w l=x_dut_xm5_l ng=x_dut_xm5_ng m=x_dut_xm5_m
+XM7  cascp vb2   s9    vdd pmos w=x_dut_xm7_w l=x_dut_xm7_l ng=x_dut_xm7_ng m=x_dut_xm7_m
+XM8  vout  vb2   s10   vdd pmos w=x_dut_xm8_w l=x_dut_xm8_l ng=x_dut_xm8_ng m=x_dut_xm8_m
+XM9  s9    cascp vdd   vdd pmos w=x_dut_xm9_w l=x_dut_xm9_l ng=x_dut_xm9_ng m=x_dut_xm9_m
+XM10 s10   cascp vdd   vdd pmos w=x_dut_xm10_w l=x_dut_xm10_l ng=x_dut_xm10_ng m=x_dut_xm10_m
+XM12 nbias ibias vdd   vdd pmos w=x_dut_xm12_w l=x_dut_xm12_l ng=x_dut_xm12_ng m=x_dut_xm12_m
+XM13 nbias nbias vss   vss nmos w=x_dut_xm13_w l=x_dut_xm13_l ng=x_dut_xm13_ng m=x_dut_xm13_m
+V1 vb1 vss x_dut_vb1
+V2 vb2 vss x_dut_vb2
+**.ends
+.end

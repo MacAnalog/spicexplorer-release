@@ -1,0 +1,10 @@
+simulator lang=spectre
+global 0
+ahdl_include "sqlaw.va"
+vg (g 0) vsource dc=2.0
+vd (d 0) vsource dc=1.0
+x1 (d g 0) sqlaw k=1m
+simulatorOptions options temp=27 tnom=27
+dcOp dc annotate=status
+save d g vd:p
+saveOptions options save=selected

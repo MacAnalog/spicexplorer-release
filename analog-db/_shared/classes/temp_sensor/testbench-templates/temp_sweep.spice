@@ -1,0 +1,30 @@
+** AUTHORED TEMPLATE — temp_sensor/temp_sweep (plan D-4): temperature sweep of a PTAT sensor.
+** Sweeps the ambient temperature and extracts the output slope (dVout/dT, the sensor resolution),
+** the 25 degC output, and the box-method spread (Vmax-Vmin)/Vavg/range over the range.
+** Bindings: DUT PORT_LINE VDD, TSTART TSTOP TSTEP TLO THI, PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  dc temp ${TSTART} ${TSTOP} ${TSTEP}
+  meas dc v_out_25c FIND v(vout) AT=25
+  meas dc v_lo  FIND v(vout) AT=${TLO}
+  meas dc v_hi  FIND v(vout) AT=${THI}
+  meas dc vmax  MAX v(vout) FROM=${TSTART} TO=${TSTOP}
+  meas dc vmin  MIN v(vout) FROM=${TSTART} TO=${TSTOP}
+  meas dc vavg  AVG v(vout) FROM=${TSTART} TO=${TSTOP}
+  let sens_v_per_c = (v_hi - v_lo) / (${THI} - (${TLO}))
+  print sens_v_per_c
+  let tc_box_ppm = (vmax - vmin) / vavg / (${TSTOP} - (${TSTART})) * 1e6
+  print tc_box_ppm
+  write
+  quit
+.endc
+.end

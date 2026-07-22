@@ -1,0 +1,22 @@
+** AUTHORED TEMPLATE — ldo/dropout: sweep Vin upward at heavy load; Vin - Vout at the
+** regulation threshold. As Vin rises out of dropout, v(vout) climbs to its regulated target;
+** dropout = (Vin at which v(vout) first reaches VOUT_THRESH) - VOUT_THRESH.
+** Bindings: DUT PORT_LINE ILOAD VDD_START VDD_STOP VDD_STEP VOUT_THRESH PDK_INCLUDE.
+${PDK_INCLUDE}
+
+Vdd  vdd 0 dc ${VDD_START}
+Vss  vss 0 dc 0
+Iload vout 0 dc ${ILOAD}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  dc Vdd ${VDD_START} ${VDD_STOP} ${VDD_STEP}
+  meas dc vin_at WHEN v(vout)=${VOUT_THRESH} RISE=1
+  let v_dropout = vin_at - ${VOUT_THRESH}
+  print v_dropout
+  write
+  quit
+.endc
+.end

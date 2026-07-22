@@ -1,0 +1,28 @@
+** AUTHORED TEMPLATE — sampler/dc_op: DC operating point + supply current of a sample-and-hold.
+** [VALIDATED 2026-07-16 on ihp-sg13g2 against smp_001_nmos_th — live ngspice].
+** Holds the input at the common mode with the clock in track and reports the static supply draw
+** and the tracked output. Port convention: vdd vin clk vout vss.
+** Bindings: DUT PORT_LINE VDD VCM VCLK PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param VCLK=${VCLK}
+
+Vdd vdd 0 dc {VDD}
+Vss vss 0 dc 0
+Vin vin 0 dc {VCM}
+Vclk clk 0 dc {VCLK}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  let v_out = v(vout)
+  print i_supply v_out
+  write
+  quit
+.endc
+.end

@@ -1,0 +1,24 @@
+// 65nm port — bare nch/pch, VDD 1.2V. // Ported from circuit-bench ldo-ptm180. NMOS->nch PMOS->pch,
+// L 1u/2u->300n 180n->100n, VDD 1.0V, VREF 0.4 -> VOUT~0.8 (Rtop=Rbot).
+simulator lang=spectre
+global 0
+v_vdd (VDD 0) vsource dc=1.2 type=dc
+v_ref (VREF 0) vsource dc=0.4 type=dc
+i_bias (VDD BIAS_GATE) isource dc=20u type=dc
+i_load (VOUT 0) isource dc=100u type=dc
+MN_BIAS (BIAS_GATE BIAS_GATE 0 0) nch l=300n w=16u nf=8
+MN_TAIL (TAIL BIAS_GATE 0 0) nch l=300n w=16u nf=8 m=10
+MN_DREF (AMP_OUT VREF TAIL 0) nch l=300n w=24u nf=11 m=10
+MN_DFB  (LOAD_DIODE FB TAIL 0) nch l=300n w=24u nf=11 m=10
+MP_LDIODE (LOAD_DIODE LOAD_DIODE VDD VDD) pch l=300n w=32u nf=15 m=10
+MP_LMIR  (AMP_OUT LOAD_DIODE VDD VDD) pch l=300n w=32u nf=15 m=10
+MP_PASS (VOUT AMP_OUT VDD VDD) pch l=100n w=120u nf=54 m=100
+R_COMP (AMP_OUT COMP_ZERO) resistor r=2k
+C_COMP (COMP_ZERO VOUT) capacitor c=160p
+R_FBT (VOUT FB) resistor r=900
+R_FBB (FB 0) resistor r=900
+C_LOAD (VOUT 0) capacitor c=10p
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+op dc
+save VOUT FB AMP_OUT
+saveOptions options save=selected

@@ -1,0 +1,127 @@
+# Optimize the COMMITTED raw export deck directly — PMOS LDO (see amp_001_5t.yaml for the full
+# metric↔vector / dut_param↔.param contract this file follows).
+#
+# Non-amplifier class: this exercises the LDO testbench templates. The output target voltage is
+# set by the committed feedback divider (r_top=r_bot=100k, vref=0.6 → vout≈1.2 V), which is left
+# fixed so `vout_dc` is a meaningful "regulate-to-1.2 V" spec. We size the pass/input/load widths
+# and the tail bias current. Specs span the OP (dc_op), AC (loop_stability) and DC-sweep
+# (load/line_regulation) plots — the last became usable once spicelib learned ngspice's real
+# DC-sweep plot title ("DC transfer characteristic").
+project:
+  name: RAW-ldo_007-pmos-ldo
+  description: Size the PMOS LDO (widths + tail bias) by driving its committed raw/ decks (ihp-sg13g2).
+  simulator: ngspice
+  save_sim: false
+  parallel_sim: true
+
+  ws_root: ..
+  netlist: raw/ldo_007_pmos/ihp-sg13g2/dc_op.spice
+  outdir: raw_optimize/_runs/ldo_007_pmos
+
+  tech_spec:
+    name: ihp-sg13g2
+    constraints:
+      max_w: 100u
+      min_w: 1u
+
+  # Sizing knobs (see raw/ldo_007_pmos/ihp-sg13g2/_dut.spice). The divider (r_top/r_bot),
+  # compensation (c_comp/c_ff/r_z), lengths, m_pass and vref are left at their committed
+  # defaults so the regulation target and loop shape stay well-defined. Bands are centred on
+  # the committed defaults (parameterize() explores from the midpoint) so the loop stays biased.
+  dut_params:
+    - { name: x_dut_xmp_w, min_val: 4u,   max_val: 20u }   # pass PMOS width (× m_pass=20; default 10u)
+    - { name: x_dut_xm1_w,   min_val: 2u,   max_val: 8u }    # error-amp input pair (default 4u)
+    - { name: x_dut_xm3_w, min_val: 2u,   max_val: 8u }    # error-amp load (default 4u)
+    - { name: i_tail, min_val: 100u, max_val: 320u }  # tail bias current (default 200u)
+
+  testbenches:
+    - name: dc_op
+      params: []
+      netlist: raw/ldo_007_pmos/ihp-sg13g2/dc_op.spice
+      enable: true
+      description: DC operating point — regulated vout + quiescent current
+    - name: loop_stability
+      params: []
+      netlist: raw/ldo_007_pmos/ihp-sg13g2/loop_stability.spice
+      enable: true
+      description: Closed-loop output-impedance peaking (stability proxy)
+    - name: load_regulation
+      params: []
+      netlist: raw/ldo_007_pmos/ihp-sg13g2/load_regulation.spice
+      enable: true
+      description: DC load sweep — Δvout over the load-current range
+    - name: line_regulation
+      params: []
+      netlist: raw/ldo_007_pmos/ihp-sg13g2/line_regulation.spice
+      enable: true
+      description: DC line sweep — Δvout over the supply range
+
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48
+    budget: 15
+    name: NGOpt
+    lin_variable_bounds: { min: 0, max: 100 }
+    log_variable_bounds: { min: 1, max: 100 }
+
+    target_specs:
+      # The deck defines these via `let vout_dc = v(vout)` / `let i_supply = abs(i(Vdd))`; ngspice/
+      # spicelib save a voltage-typed `let` as `v(<name>)` and a current-typed one as `i(<name>)`, so
+      # the spec names are `v(vout_dc)` / `i(i_supply)` (a `meas` result like zout_peak_db stays bare).
+      - name: v(vout_dc)
+        description: regulated output voltage
+        testbench: dc_op
+        sim_type: op
+        goal: exact
+        target: 1.2       # V (vref 0.6 × (1 + r_top/r_bot))
+        range: 1.0
+        tolerance: 0.02
+        weight: 2.0
+        reward_type: none
+        enable: true
+      - name: i(i_supply)
+        description: quiescent supply current
+        testbench: dc_op
+        sim_type: op
+        goal: minimize
+        target: 250e-6    # A
+        range: 1e-3
+        tolerance: 1e-6
+        weight: 1.0
+        reward_type: log
+        enable: true
+      - name: zout_peak_db
+        description: output-impedance peaking (lower = more phase margin)
+        testbench: loop_stability
+        sim_type: ac
+        goal: minimize
+        target: 3         # dB of peaking above the DC value
+        range: 20
+        tolerance: 0.5
+        weight: 1.0
+        reward_type: log
+        enable: true
+      # `meas dc`/`let load_reg`/`line_reg` results are bare names in ngspice's
+      # "DC transfer characteristic" plot → sim_type: dc (works after the spicelib DC-name fix).
+      - name: load_reg
+        description: load regulation — Δvout across the load-current sweep
+        testbench: load_regulation
+        sim_type: dc
+        goal: minimize
+        target: 10e-3     # V
+        range: 50e-3
+        tolerance: 1e-4
+        weight: 1.0
+        reward_type: log
+        enable: true
+      - name: line_reg
+        description: line regulation — Δvout across the supply sweep
+        testbench: line_regulation
+        sim_type: dc
+        goal: minimize
+        target: 5e-3      # V
+        range: 50e-3
+        tolerance: 1e-4
+        weight: 1.0
+        reward_type: log
+        enable: true

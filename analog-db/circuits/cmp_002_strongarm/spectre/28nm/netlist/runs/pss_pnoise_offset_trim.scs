@@ -1,0 +1,28 @@
+// Nominal PSS/PNoise characterization using the offset-trimmable comparator.
+simulator lang=spectre
+global 0
+parameters vdd=0.95 code=7 f=1G Vcm=0.475 Vid=1m VDD=0.9
+include "${PDK_ROOT}/models/spectre/toplevel_modified.scs" section=top_tt
+include "dut/cmp_strongarm_offset_trim.scs"
+include "dut/cmp_under_test_offset_trim.scs"
+include "tb/tb_cmp_pss_pnoise.scs"
+
+simulatorOptions options psfversion="1.4.0" temp=27 tnom=27 scalem=1.0 \
+    scale=1.0 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 digits=5 cols=80 \
+    pivrel=1e-3 sensfile="../psf/sens.output" checklimitdest=psf
+pss  pss  fund=1G  harms=10  errpreset=conservative  autotstab=yes
++    saveinit=yes  annotate=status
+pnoise pnoise start=0 stop=500M pnoisemethod=fullspectrum \
+    noisetype=sampled measurement=[pm0] annotate=status
+ pm0 jitterevent trigger=[x_cmp.LP x_cmp.LM] triggerthresh=50m triggernum=1 \
+    triggerdir=rise target=[x_cmp.LP x_cmp.LM]
+
+modelParameter info what=models where=rawfile
+element info what=inst where=rawfile
+outputParameter info what=output where=rawfile
+designParamVals info what=parameters where=rawfile
+primitives info what=primitives where=rawfile
+subckts info what=subckts where=rawfile
+save DCMPN DCMPP LP LM v_vdd_supply:p
+saveOptions options save=selected
+ahdl_include "va/va_d2b_encoder_4b.va"

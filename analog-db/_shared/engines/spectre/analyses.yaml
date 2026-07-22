@@ -1,0 +1,77 @@
+# Spectre ANALYSIS-CONFIG template database (engine-level, PDK-agnostic, NDA-clean).
+#
+# One entry per Spectre analysis type the platform can compose into a closed-lane deck —
+# the data-driven source the platform's `spectre_templates.bench_analyses` renders from
+# (with a built-in fallback when this file is absent). The per-class map that says WHICH
+# templates a testbench composes lives in `_shared/classes/<class>/spectre-benches.yaml`;
+# the SKILL calculator expressions that read the results live in `calculator.yaml` beside
+# this file.
+#
+# Template syntax:
+#   {NAME}    — substituted from the render context (bench params UPPERCASE, parsed to
+#               numerics + platform-computed extras like RAIL/IIP3_FUND; missing = error).
+#   [ ... ]   — optional segment: kept only when every {NAME} inside it resolves.
+# Numerics render as plain %.10g — NEVER SPICE eng suffixes (Spectre reads `M` as mega but
+# `m` as milli; `100MEG` is a landmine).
+#
+# Statement NAMES are load-bearing (the PSF key contract): the bridge keys results off the
+# PSF file names, which come from the analysis statement names — `ac ac` -> ac.ac,
+# `dcOp dc` -> dcOp.dc (op node voltages under dc_*), `pss pss` -> pss.fd.pss/pss.td.pss,
+# `stb stb` -> stb.stb. Rename one and the platform's readers stop finding it.
+schema: spicexplorer/spectre-analyses@1
+description: >-
+  Spectre analysis statement templates (AC, DC op/sweep, noise, tran, PSS, STB) composed
+  per-testbench by the platform's closed (Spectre) lane.
+templates:
+  dc_op:
+    statement: "dcOp dc"
+    psf: dcOp.dc
+    notes: >-
+      Operating point. Composed as the first analysis of most benches; the deck-level
+      `finalTimeOP info what=oppoint` dump (added by the platform) carries the per-device
+      OP scalars that OCEAN's OP()/pv() read.
+  ac:
+    statement: "ac ac start={FSTART} stop={FSTOP} dec={PPD}"
+    psf: ac.ac
+    notes: >-
+      Small-signal frequency sweep. The bench identity (open-loop, closed-loop, CMRR,
+      PSRR) lives in the DECK stimulus (which source carries mag=1), not here.
+  dc_sweep:
+    statement: "dc dc dev={DEV} param=dc start={START} stop={STOP} step={STEP}"
+    psf: dc.dc
+    notes: >-
+      Swept-source DC transfer (the linearity/ICMR bench). Compose WITHOUT the dc_op
+      sibling — `dcOp dc` also writes a `.dc` PSF and the reader prefers the exact
+      `dc.dc` name, but two `.dc` files invite confusion.
+  noise:
+    statement: "noise ( {OUT} 0 ) noise start={FSTART} stop={FSTOP} dec={PPD}[ iprobe={IPROBE}]"
+    psf: noise.noise
+    notes: >-
+      Small-signal noise: output density across (OUT, 0); `iprobe=` names the input
+      SOURCE instance carrying the AC stimulus so Spectre also reports the
+      input-referred spectrum.
+  tran:
+    statement: "tran tran stop={TSTOP}[ step={TSTEP}] errpreset=conservative"
+    psf: tran.tran
+    notes: >-
+      Large-signal transient. `errpreset=conservative` keeps harmonic content honest (a
+      loose tolerance manufactures numerical distortion) — required when the payload is
+      a settling edge or an FFT.
+  pss:
+    statement: "pss pss fund={FUND} harms={HARMS}[ tstab={TSTAB}] errpreset=conservative"
+    defaults: {HARMS: 7}
+    psf: pss.fd.pss
+    notes: >-
+      Periodic steady state. fd-PSF = per-harmonic COMPLEX phasors (sweep freq =
+      [0, FUND, 2·FUND, …]); td-PSF = one steady-state period. THD reads the harmonics
+      directly; two-tone IIP3 rides the SAME single-fund pss when both tones share a
+      common fundamental (f1=N1·FUND, f2=N2·FUND — the IM3 products are then plain
+      harmonics; no QPSS needed).
+  stb:
+    statement: "stb stb probe={PROBE} start={FSTART} stop={FSTOP} dec={PPD}"
+    psf: stb.stb
+    notes: >-
+      Loop-gain / stability analysis. `probe=` names an `iprobe` instance in the
+      feedback path — the class templates mark it with a 0 V source named VIPRB* that
+      the platform's Spectre emitter translates to an iprobe. Results carry the
+      loopGain wave (pm_loop / gain-margin / loop-gain-vs-f).

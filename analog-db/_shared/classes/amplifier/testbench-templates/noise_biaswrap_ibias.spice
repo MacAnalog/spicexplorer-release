@@ -1,0 +1,35 @@
+** AUTHORED TEMPLATE — amplifier/noise_biaswrap_ibias: input-referred noise for DUTs on the class
+** ibias-port convention (ports vdd vout vinp vinn ibias vss) whose OPEN-LOOP op point does not sit
+** at mid-rail — an amp with a large systematic offset (e.g. amp_019's ratioed error-amp sink) rails
+** or near-rails the output under a plain (unwrapped) noise bench, so its input-referred noise is
+** taken at a non-representative bias. Same 1 TH / 1 TF bias-wrap as ac_open_loop_biaswrap_ibias:
+** Lfb DC-shorts vout back to the INVERTING input to set the high-gain operating point, while Cin
+** AC-opens that loop and injects the noise input source Vac; input-referred noise is w.r.t. Vac
+** (at the noise band Cin is a short + Lfb an open, so the small-signal input path is vinn).
+** Bindings: DUT PORT_LINE VDD VCM CL IBIAS FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+.param IBIAS=${IBIAS}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+Vcm  vinp 0 dc {VCM}          ; common-mode bias on the non-inverting input
+Vac  sigin 0 dc 0 ac 1        ; noise input source (input-referral reference)
+Lfb  vout vinn 1T             ; 1 TH: DC short (bias), AC open
+Cin  vinn sigin 1T            ; 1 TF: DC open, AC inject into the inverting node
+CLoad vout 0 {CL}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  noise v(vout) Vac dec ${PPD} ${FSTART} ${FSTOP}
+  print inoise_total onoise_total
+  write
+  quit
+.endc
+.end

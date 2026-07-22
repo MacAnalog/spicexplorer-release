@@ -1,0 +1,45 @@
+** Abstract PMOS-pass LDO — the first REAL regulator in the DB (supersedes ldo_006_stub).
+** AUTHORED source of truth. PDK-neutral model tokens (nmos/pmos); per-PDK device names +
+** geometry come from circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vdd vout vss
+**
+** Topology: a PMOS pass device (common-source gain stage) regulated by a 5-transistor OTA
+** error amp, hand-INLINED as flat primitives (XM1..XM6). True "instantiate the catalog OTA as
+** a sub-circuit" is deferred: the lowering pipeline emits a foreign `.subckt` instance as a
+** dangling reference (no definition body), so composition is a separate hierarchical-netlist
+** feature. Reference (vref) and error-amp tail bias (i_tail) are IDEAL internal sources — this is
+** a simulation reference, not a silicon bandgap; a clean vref (vs. a vdd divider) is what makes
+** line-regulation/PSRR meaningful.
+**
+** Loop polarity (negative feedback): vout^ -> fb^ -> (fb = M1 gate = non-inverting) -> egate^
+**   -> Vsg(pass)=vdd-egate v -> Ipass v -> vout v. Regulates to fb = vref => vout = vref*(R1+R2)/R2.
+**.subckt ldo_007_pmos vdd vout vss
+**
+** --- PMOS pass device: source=vdd, gate=egate, drain=vout ---
+XMP vout egate vdd vdd pmos w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m
+**
+** --- feedback divider: vout -> fb -> vss  (vout = vref*(r_top+r_bot)/r_bot) ---
+R1 vout fb  'r_top'
+R2 fb   vss 'r_bot'
+** feedforward cap across R1: phase-lead zero ~1/(2*pi*r_top*c_ff) for loop stability
+Cff vout fb 'c_ff'
+**
+** --- internal ideal reference + error-amp tail bias (sim reference) ---
+** NOTE: passive value fields are single-quoted and source values are braced so ngspice
+** evaluates them as .param expressions (a bare `r_top` is parsed as a model name).
+Vref  vref  vss   dc {vref_val}
+Ibias vdd   ebias dc {i_tail}
+**
+** --- 5T error amp (NMOS input pair, PMOS mirror load): out=egate, in+=fb, in-=vref ---
+XM1 noutm fb    etail vss nmos w=x_dut_xm1_w   l=x_dut_xm1_l
+XM2 egate vref  etail vss nmos w=x_dut_xm2_w   l=x_dut_xm2_l
+XM3 noutm noutm vdd   vdd  pmos w=x_dut_xm3_w l=x_dut_xm3_l
+XM4 egate noutm vdd   vdd  pmos w=x_dut_xm4_w l=x_dut_xm4_l
+XM5 etail ebias vss   vss  nmos w=x_dut_xm5_w l=x_dut_xm5_l
+XM6 ebias ebias vss   vss  nmos w=x_dut_xm6_w l=x_dut_xm6_l
+**
+** --- Miller compensation across the pass stage (pole split) with nulling resistor Rz ---
+Rz egate ncz 'r_z'
+Cc ncz   vout 'c_comp'
+**.ends
+.end

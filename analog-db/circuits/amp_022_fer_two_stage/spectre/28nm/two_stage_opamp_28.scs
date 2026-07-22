@@ -1,0 +1,23 @@
+// Ported from circuit-bench two-stage-opamp. NMOS->nch_mac PMOS->pch_mac,
+// L 500n->300n, VDD 1.0V, IBIAS 120u->20u, Miller CCOMP 12p->2p.
+simulator lang=spectre
+global 0
+parameters cm=0.5 vid=0
+v_vdd (VDD 0) vsource dc=1.0 type=dc
+i_bias (PBIAS 0) isource dc=20u type=dc
+v_inp (INP 0) vsource dc=cm+vid/2 type=dc
+v_inn (INN 0) vsource dc=cm-vid/2 type=dc
+M7 (PBIAS PBIAS VDD VDD) pch_mac l=300n w=120u nf=54
+M5 (C PBIAS VDD VDD) pch_mac l=300n w=120u nf=54
+M0 (A INN C VDD) pch_mac l=300n w=160u nf=72
+M1 (B INP C VDD) pch_mac l=300n w=160u nf=72
+M3 (A A 0 0) nch_mac l=300n w=60u nf=27
+M4 (B A 0 0) nch_mac l=300n w=60u nf=27
+M6 (OUT PBIAS VDD VDD) pch_mac l=300n w=680u nf=303
+M2 (OUT B 0 0) nch_mac l=300n w=720u nf=320
+CCOMP (B OUT) capacitor c=2p
+c_load (OUT 0) capacitor c=500f
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+dc dc param=vid start=-0.02 stop=0.02 step=0.0005 annotate=status
+save OUT
+saveOptions options save=selected

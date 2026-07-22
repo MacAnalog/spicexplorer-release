@@ -1,0 +1,37 @@
+# SUPER-DSL manifest — AnalogGym import (plan Phase 5).
+schema: spicexplorer/circuit@1
+id: amp_007_leung_dfcfc2
+class: amplifier
+display_name: "3-stage OTA \u2014 DFCFC2 compensation (Leung)"
+compensation: DFCFC2
+stages: 3
+ports:
+- vss
+- vdd
+- vinn
+- vinp
+- vout
+provenance:
+  source: AnalogGym
+  aliases:
+  - Leung_DFCFC2_Pin_3
+  - leung_dfcfc2_pin_3
+  paper: Leung & Mok, IEEE TCAS-I 48(9):1041-1056, 2001
+  license: BSD-3-Clause
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+  reference_schematic: reference/Leung_DFCFC2_Pin_3.png
+pdks:
+- sky130
+- ihp-sg13g2
+- gf180mcu
+analyses:
+- ac_open_loop
+- dc_op
+- noise
+- tran_step
+- psrr_vdd
+- cmrr_vcm
+status: draft

@@ -1,0 +1,15 @@
+simulator lang=spectre
+
+subckt ideal_balun d c p n
+K0 (d 0 p c) transformer n1=2
+K1 (d 0 c n) transformer n1=2
+ends ideal_balun
+
+I5 (VDD I_DOWN) isource dc=300u type=dc
+V2 (VCM 0) vsource dc=500m type=dc
+V1 (VDD 0) vsource dc=VDD type=dc
+V0 (VSS 0) vsource dc=0 type=dc
+C0 (VOUT 0) capacitor c=100f
+I9 (VSIN VCM VIP VIN) ideal_balun
+V3 (VSIN 0) vsource dc=0 mag=1 type=sine ampl=100m freq=100M
+I1 (I_DOWN VDD VIN VIP VOUT VSS) AMP_5T_D2S

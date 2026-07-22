@@ -1,0 +1,13 @@
+** Abstract MOS-triode voltage-controlled trim (analog-code attenuator). AUTHORED source of truth
+** (plan D-2). PDK-neutral model token (nmos); per-PDK name + geometry from circuitgraph lowering.
+** Subckt port order (= circuit.yaml ports): vdd vcode vout vss
+**
+** R0 pulls vout toward the supply; XM0 is an NMOS in the triode/sub-Vt region whose gate is the
+** trim control vcode, so it acts as a voltage-variable shunt resistor to ground. vout = vdd ·
+** Rds(vcode)/(R0+Rds(vcode)) sweeps monotonically from ~vdd (vcode=0, device off) toward ground as
+** vcode rises. The simplest verifiable member of the `trim` class: the code sweep's discrete steps
+** are the codes; the transfer's endpoint-line deviation is its INL. (The discrete thermometer-DAC
+** form is the class's reference member, ferrosim_restrim.)
+R0  vdd vout r=x_dut_r0_value
+XM0 vout vcode vss vss nmos w=x_dut_xm0_w l=x_dut_xm0_l m=x_dut_xm0_m
+.end

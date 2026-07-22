@@ -1,0 +1,49 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# Buffer metric sheet: near-unity transfer gain, level shift, op point, AC bandwidth, power.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.5}
+  vcm:    {unit: V, typical: 0.9}
+  ibias:  {unit: uA, typical: 10}
+  cload:  {unit: F, typical: 500e-15}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  i_supply:
+    display: "Supply current"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {min: 5.0e-6, max: 3.0e-4, unit: A}
+  v_out:
+    display: "Output level at VCM input"
+    unit: V
+    analysis: dc_op
+    extract: {meas: v_out}
+    spec: {min: 0.1, max: 1.2, unit: V}
+  v_offset:
+    display: "Level shift vout - vin at VCM"
+    unit: V
+    analysis: dc_op
+    extract: {meas: v_offset}
+    spec: {min: -0.9, max: -0.2, unit: V}
+  gain_dc:
+    display: "Peak DC transfer gain dVout/dVin"
+    description: "Max incremental gain over the sweep; ~1 for a working follower."
+    unit: "V/V"
+    analysis: dc_transfer
+    extract: {meas: gain_dc}
+    spec: {min: 0.8, max: 1.1, unit: "V/V"}
+  gain_ac_db:
+    display: "AC gain at the VCM bias point"
+    unit: dB
+    analysis: ac_gain
+    extract: {meas: gain_ac_db}
+    spec: {min: -3, max: 1, unit: dB}
+  f3db_hz:
+    display: "-3 dB bandwidth into CL"
+    unit: Hz
+    analysis: ac_gain
+    extract: {meas: f3db_hz}
+    spec: {min: 1.0e6, unit: Hz}

@@ -1,0 +1,14 @@
+// BSIM-BULK PMOS Id-Vg, DEFAULT params, L=1u/W=10u, |Vds|=1 (Vs=1.8 Vd=0.8),
+// Vg 0->1.8. TYPE=-1 set on the instance (the .va's MPIty is type="instance",
+// so both ferrosim and Spectre honor it). Drain current = vd:p.
+simulator lang=spectre
+global 0
+ahdl_include "bsimbulk.va"
+parameters vgval=0
+vs (s 0) vsource dc=1.8
+vd (d 0) vsource dc=0.8
+vg (g 0) vsource dc=vgval
+x1 (d g s s t1) bsimbulk TYPE=-1 L=1e-6 W=1e-5
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+sw dc param=vgval start=0 stop=1.8 step=0.3
+save vd:p

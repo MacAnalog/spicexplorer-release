@@ -1,0 +1,25 @@
+# ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
+# First VERIFIABLE member of the `trim` class — a worked example that validates the class benches.
+schema: spicexplorer/circuit@1
+id: trm_001_vcr
+class: trim
+display_name: "MOS-triode voltage-controlled trim (analog-code attenuator)"
+stages: 1
+ports: [vdd, vcode, vout, vss]           # supply, trim control, trimmed output, ground
+provenance:
+  source: analog-circuit-design
+  aliases: [vcr_trim, mos_variable_resistor_trim]
+  paper: "MOS-triode voltage-controlled resistor divider — textbook trim primitive"
+  license: Apache-2.0
+  designer: "SpiceXplorer (worked example for the trim class)"
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2]                        # open-PDK verifiable binding (D-1)
+analyses: [dc_op, dc_code_sweep]
+optimize:
+  budget: 300
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

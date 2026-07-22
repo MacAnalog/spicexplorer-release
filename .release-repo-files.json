@@ -1,0 +1,7 @@
+[
+  ".github/workflows/analog-db.yml",
+  ".github/workflows/lint.yml",
+  ".github/workflows/platform.yml",
+  "README.md",
+  "platform/pyproject.toml"
+]

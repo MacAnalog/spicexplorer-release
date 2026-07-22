@@ -1,0 +1,44 @@
+// LDO: 5T error amplifier + PMOS pass device + VA behavioral reference.
+// Unity feedback, Vout = Vref = 0.55V from VDD = 1.0V.
+// Analyses: dcOp, load-step transient, PSRR (ac on supply), output noise.
+simulator lang=spectre
+global 0
+parameters VDD=0.9 VREF=0.55 ILOAD=0.5m
+
+include "${PDK_ROOT}/models/spectre/toplevel_modified.scs" section=pre_simu
+include "${PDK_ROOT}/models/spectre/toplevel_modified.scs" section=top_tt
+
+v_vdd (VDDA 0) vsource dc=VDD mag=1 type=dc
+
+// behavioral bandgap reference
+x_ref (REF) va_vref vnom=VREF rout=10k
+
+// 5T OTA: nch input pair, pch mirror load, nch tail mirror
+i_bias (VDDA NBIAS) isource dc=20u
+mn_dio (NBIAS NBIAS 0 0) nch_ulvt_mac l=200n w=2u multi=1 nf=4
+mn_tail (TAIL NBIAS 0 0) nch_ulvt_mac l=200n w=4u multi=1 nf=8
+// VOUT feeds the diode side: pass device inverts gate->drain, so the
+// mirror side (OTAO -> pass gate) must be NON-inverting in VOUT
+mn_inp (OTAX VOUT TAIL 0) nch_ulvt_mac l=100n w=8u multi=1 nf=16
+mn_inn (OTAO REF TAIL 0) nch_ulvt_mac l=100n w=8u multi=1 nf=16
+mp_ld1 (OTAX OTAX VDDA VDDA) pch_ulvt_mac l=200n w=4u multi=1 nf=8
+mp_ld2 (OTAO OTAX VDDA VDDA) pch_ulvt_mac l=200n w=4u multi=1 nf=8
+
+// pass device + compensation + output cap
+mp_pass (VOUT OTAO VDDA VDDA) pch_ulvt_mac l=100n w=80u multi=1 nf=160
+c_mil (VOUT OTAO) capacitor c=2p
+c_out (VOUT 0) capacitor c=50p
+
+// load: dc + 1.5mA step at 200ns, release at 320ns
+i_dcload (VOUT 0) isource dc=ILOAD
+i_step (VOUT 0) isource type=pulse val0=0 val1=1.5m delay=200n rise=1n fall=1n width=120n
+
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+dcOp dc maxiters=150 annotate=status
+tran tran stop=450n maxstep=100p annotate=status
+ac ac start=1k stop=1G dec=20 annotate=status
+noise (VOUT 0) noise start=100 stop=100M dec=10 iprobe=v_vdd annotate=status
+
+save VOUT OTAO REF NBIAS
+saveOptions options save=selected
+ahdl_include "va_vref.va"

@@ -1,0 +1,32 @@
+# ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
+# PROMOTED from the sfe_smcnr_2stage_amp reference entry (AnalogGym "Sensing Front End"):
+# authored a device-generic abstract netlist + open-PDK bindings so the SMC+nulling-R
+# two-stage is lowerable, assembled and simulated. The original 180nm spectre/HSPICE decks are
+# retained under `references`. The upstream deck's in-subckt 100 nA bias sink is kept INTERNAL
+# (sizing knob x_ibias_val), so the entry follows the AnalogGym 5-port self-biased convention
+# (ports vss vdd vinn vinp vout — the ac_open_loop_biaswrap template order, as amp_002..017).
+schema: spicexplorer/circuit@1
+id: amp_024_smcnr
+class: amplifier
+display_name: "SMCNR two-stage: PMOS-input, single-Miller + nulling R (100 nA, sensing FE)"
+compensation: miller_nulling
+stages: 2
+ports: [vss, vdd, vinn, vinp, vout]
+provenance:
+  source: AnalogGym "Sensing Front End" (CODA-Team/AnalogGym)
+  aliases: [sfe_smcnr_2stage_amp, SMCNR_SE_2st_AMP, smcnr_se_2st_amp]
+  paper: "AnalogGym: An Open and Practical Testing Suite for Analog Circuit Synthesis"
+  license: BSD-3-Clause
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, sky130, gf180mcu]
+analyses: [ac_open_loop, dc_op, noise, tran_step]
+references:
+  - {tool: spectre, dir: spectre/180nm, node: 180nm}
+optimize:
+  budget: 2000
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

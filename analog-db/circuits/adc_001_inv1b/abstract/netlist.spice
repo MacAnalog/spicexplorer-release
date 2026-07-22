@@ -1,0 +1,11 @@
+** Abstract CMOS-inverter 1-bit quantizer (the degenerate flash-ADC slice). AUTHORED source of truth
+** (plan D-2). PDK-neutral tokens (nmos, pmos). Subckt port order (= circuit.yaml ports): vdd vin vout vss
+**
+** A CMOS inverter whose switching threshold Vth_inv (set by the XMN/XMP strength ratio) is the
+** single decision level of a 1-bit converter: vin < Vth_inv -> vout = vdd (code 1), vin > Vth_inv
+** -> vout = 0 (code 0), with rail-to-rail digital output. The simplest verifiable member of the
+** `adc` class; a full multi-bit SAR (ferrosim_sar) is the class's reference member and is where the
+** ENOB/INL/DNL/SNDR metrics apply.
+XMN vout vin vss vss nmos w=x_dut_xmn_w l=x_dut_xmn_l m=x_dut_xmn_m
+XMP vout vin vdd vdd pmos w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m
+.end

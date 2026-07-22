@@ -1,0 +1,9 @@
+# AnalogGym analysis binding (cmrr_vcm) — common-mode rejection
+# (design-review 2026-07-05 rollout; unity-buffer config; same DC op point the biaswrap AC bench proves).
+schema: spicexplorer/analysis@1
+id: cmrr_vcm
+template: cmrr_vcm_selfbias
+description: "CMRR — 1 V AC common-mode on both inputs of the unity buffer, DC-band floor."
+params: {VDD: 1.8, VCM: 300m, CL: 15n, FSTART: 1k, FSTOP: 1G, PPD: 101}
+flags: []
+produces: [cmrr_db]

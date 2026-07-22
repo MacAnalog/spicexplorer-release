@@ -1,0 +1,22 @@
+** AUTHORED TEMPLATE — ldo/line_regulation: DC Vin sweep at fixed load; delta-Vout (volts).
+** Sweep the supply above the dropout knee so line_reg reflects the in-regulation range.
+** Bindings: DUT PORT_LINE ILOAD VDD_START VDD_STOP VDD_STEP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+Vdd  vdd 0 dc ${VDD_START}
+Vss  vss 0 dc 0
+Iload vout 0 dc ${ILOAD}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  dc Vdd ${VDD_START} ${VDD_STOP} ${VDD_STEP}
+  meas dc vout_max MAX v(vout)
+  meas dc vout_min MIN v(vout)
+  let line_reg = vout_max - vout_min
+  print line_reg
+  write
+  quit
+.endc
+.end

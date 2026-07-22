@@ -1,0 +1,35 @@
+// Closed-loop (inverting, gain = -1) testbench for transient step response,
+// slew rate, settling, and CMFB recovery from a common-mode disturbance.
+//
+//   vsrc_p --Rin-- INN   OUTP --Rfb-- INN   (negative feedback)
+//   vsrc_n --Rin-- INP   OUTN --Rfb-- INP
+//
+// Differential step at t=20n (vstep applied symmetrically around VCM).
+// Common-mode current disturbance pulse into both outputs at t=250n.
+simulator lang=spectre
+
+v_vdd (VDD 0) vsource dc=VSUP type=dc
+v_vss (VSS 0) vsource dc=0 type=dc
+v_cmr (VCMR 0) vsource dc=VCM type=dc
+i_bias (VDD IBIAS) isource dc=IB type=dc
+
+v_src_p (srcp 0) vsource type=pulse val0=VCM-0.5*vstep val1=VCM+0.5*vstep \
+    delay=20n rise=200p fall=200p width=110n period=400n
+v_src_n (srcn 0) vsource type=pulse val0=VCM+0.5*vstep val1=VCM-0.5*vstep \
+    delay=20n rise=200p fall=200p width=110n period=400n
+
+r_in_p (srcp INN) resistor r=RFB
+r_in_n (srcn INP) resistor r=RFB
+r_fb_p (OUTP INN) resistor r=RFB
+r_fb_n (OUTN INP) resistor r=RFB
+
+c_load_p (OUTP 0) capacitor c=CL
+c_load_n (OUTN 0) capacitor c=CL
+
+// common-mode disturbance: pull 50uA out of both outputs for 20ns
+i_cm_dist_p (OUTP 0) isource type=pulse val0=0 val1=50u delay=250n \
+    rise=100p fall=100p width=20n period=1
+i_cm_dist_n (OUTN 0) isource type=pulse val0=0 val1=50u delay=250n \
+    rise=100p fall=100p width=20n period=1
+
+x_ota (INP INN OUTP OUTN VCMR IBIAS VDD VSS) ota_fd2s

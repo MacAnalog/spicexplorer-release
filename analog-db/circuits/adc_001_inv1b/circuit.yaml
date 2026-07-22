@@ -1,0 +1,24 @@
+# ★ SUPER-DSL manifest (plan D-3). First VERIFIABLE member of the `adc` class (1-bit slice).
+schema: spicexplorer/circuit@1
+id: adc_001_inv1b
+class: adc
+display_name: "CMOS-inverter 1-bit quantizer (degenerate flash slice)"
+stages: 1
+ports: [vdd, vin, vout, vss]
+provenance:
+  source: analog-circuit-design
+  aliases: [inverter_quantizer, one_bit_flash]
+  paper: "CMOS inverter as a 1-bit quantizer / flash comparator slice"
+  license: Apache-2.0
+  designer: "SpiceXplorer (worked example for the adc class)"
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2]
+analyses: [dc_op, dc_transfer]
+optimize:
+  budget: 300
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

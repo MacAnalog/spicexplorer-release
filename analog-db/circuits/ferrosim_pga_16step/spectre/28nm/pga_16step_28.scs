@@ -1,0 +1,57 @@
+// Ported from circuit-bench pga-16step-diff (3-stage R-loaded diff + R-2R TG feedback).
+// NMOS->nch_mac PMOS->pch_mac, L 0.18u->150n, VDD 1.0V; vbias divider re-tuned for 1.0V.
+// CTRL=0000 -> no segment bypassed -> max Rfb=64k, Rin=4k -> diff gain ~16.
+simulator lang=spectre
+global 0
+parameters vcm=0.5 vid=0
+subckt inv (in out vdd vss)
+  MP (out in vdd vdd) pch_mac w=8u nf=4 l=150n
+  MN (out in vss vss) nch_mac w=4u nf=2 l=150n
+ends inv
+subckt tg (a b en enb vdd vss)
+  MNT (a en b vss) nch_mac w=300u nf=134 l=150n
+  MPT (a enb b vdd) pch_mac w=600u nf=267 l=150n
+ends tg
+subckt fb_segment (a b en enb vdd vss)
+  parameters rval=2k
+  RSEG (a b) resistor r=rval
+  XBYP (a b en enb vdd vss) tg
+ends fb_segment
+subckt feedback_path (out in ctrl0 ctrl1 ctrl2 ctrl3 vdd vss)
+  XINV0 (ctrl0 ctrl0b vdd vss) inv
+  XINV1 (ctrl1 ctrl1b vdd vss) inv
+  XINV2 (ctrl2 ctrl2b vdd vss) inv
+  XINV3 (ctrl3 ctrl3b vdd vss) inv
+  RMIN (out n0) resistor r=4k
+  XSEG0 (n0 n1 ctrl0 ctrl0b vdd vss) fb_segment rval=4k
+  XSEG1 (n1 n2 ctrl1 ctrl1b vdd vss) fb_segment rval=8k
+  XSEG2 (n2 n3 ctrl2 ctrl2b vdd vss) fb_segment rval=16k
+  XSEG3 (n3 in ctrl3 ctrl3b vdd vss) fb_segment rval=32k
+ends feedback_path
+subckt diff_stage (inp inn vdd vss vbias outp outn)
+  MIP (outn inp tail vss) nch_mac w=120u nf=54 l=150n
+  MIN (outp inn tail vss) nch_mac w=120u nf=54 l=150n
+  RLP (vdd outp) resistor r=400
+  RLN (vdd outn) resistor r=400
+  MTAIL (tail vbias vss vss) nch_mac w=100u nf=45 l=150n
+ends diff_stage
+v_vdd (VDD 0) vsource dc=1.0 type=dc
+v_inp (INP 0) vsource dc=vcm+vid/2 type=dc
+v_inn (INN 0) vsource dc=vcm-vid/2 type=dc
+v_c0 (CTRL0 0) vsource dc=0 type=dc
+v_c1 (CTRL1 0) vsource dc=0 type=dc
+v_c2 (CTRL2 0) vsource dc=0 type=dc
+v_c3 (CTRL3 0) vsource dc=0 type=dc
+RBTOP (VDD vbias) resistor r=820k
+RBBOT (vbias 0) resistor r=1meg
+RINP (INP ep) resistor r=4k
+RINN (INN en) resistor r=4k
+XFBP (OUTN ep CTRL0 CTRL1 CTRL2 CTRL3 VDD 0) feedback_path
+XFBN (OUTP en CTRL0 CTRL1 CTRL2 CTRL3 VDD 0) feedback_path
+XG1 (ep en VDD 0 vbias n1p n1n) diff_stage
+XG2 (n1p n1n VDD 0 vbias n2p n2n) diff_stage
+XG3 (n2p n2n VDD 0 vbias OUTP OUTN) diff_stage
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+dc dc param=vid start=-0.02 stop=0.02 step=0.001 annotate=status
+save OUTP OUTN vbias
+saveOptions options save=selected

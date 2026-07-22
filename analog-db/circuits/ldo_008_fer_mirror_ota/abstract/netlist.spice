@@ -1,0 +1,28 @@
+** Abstract LDO: mirror-loaded OTA error amp + PMOS pass device.
+** AUTHORED source of truth (plan D-2). PDK-neutral model tokens (nmos/pmos + ideal R/C/V/I);
+** per-PDK device names + geometry come from circuitgraph lowering + pdk/<pdk>/ bindings.
+** Subckt port order (= circuit.yaml ports): vdd vout vss — self-contained (class convention).
+**
+** Topology (ferrosim / circuit-bench "ldo-ptm180"): NMOS diff pair (XMDR = vref side, XMDF =
+** feedback side) with PMOS mirror load; the MIRROR-DIODE side (ldiode) is the feedback leg and
+** the mirror output (egate) drives the PMOS pass gate — the pass inversion keeps the loop
+** negative. NMOS tail mirror off the internal bias. R_COMP + C_COMP place a zero from the
+** pass gate to vout; RT/RB divider senses vout (vout = vref * 2 for the 1:1 divider).
+** Internalized (promotion): upstream external VREF -> ideal source VREF (x_vref_val);
+** upstream external 20 uA bias -> ideal source IBI. Upstream TB load + 10 pF output cap are
+** dropped (the ldo class benches provide Iload/COUT).
+** Device widths stay per-finger (IHP lv MOS w <= ~10 um; PSP clips silently) — totals via m=.
+VREF vref  vss dc {x_vref_val}
+IBI  vdd   nbias dc {x_ibias_val}
+XMNB nbias  nbias vss vss nmos w=x_dut_xmnb_w  l=x_dut_xmnb_l m=x_dut_xmnb_m
+XMNT tail   nbias vss vss nmos w=x_dut_xmnt_w  l=x_dut_xmnt_l m=x_dut_xmnt_m
+XMDR egate  vref  tail vss nmos w=x_dut_xmdr_w l=x_dut_xmdr_l m=x_dut_xmdr_m
+XMDF ldiode fb    tail vss nmos w=x_dut_xmdf_w l=x_dut_xmdf_l m=x_dut_xmdf_m
+XMLD ldiode ldiode vdd vdd pmos w=x_dut_xmld_w l=x_dut_xmld_l m=x_dut_xmld_m
+XMLM egate  ldiode vdd vdd pmos w=x_dut_xmlm_w l=x_dut_xmlm_l m=x_dut_xmlm_m
+XMP  vout   egate vdd vdd pmos w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m
+RC   egate  czero r=x_rcomp
+CC   czero  vout  c=x_ccomp
+RT   vout   fb    r=x_dut_rt_value
+RB   fb     vss   r=x_dut_rb_value
+.end

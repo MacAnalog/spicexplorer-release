@@ -1,0 +1,6 @@
+# Generic device kind -> ihp-sg13g2 device names. Classic PTAT uses lv NMOS + lv PMOS; R0 is an
+# ideal resistor (the current-setting element), not a PDK poly R, so no `res` mapping is needed.
+pdk: ihp-sg13g2
+devices:
+  nmos: {model: sg13_lv_nmos}
+  pmos: {model: sg13_lv_pmos}

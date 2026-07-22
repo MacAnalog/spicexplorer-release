@@ -1,0 +1,27 @@
+// Compact DC resistance extraction for a thermometer-controlled resistor bank.
+simulator lang=spectre
+global 0
+parameters VDD=0.9 VCM=0.5 VTEST=50m TRIM_R=8
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=pre_simu
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=TTMacro_MOS_MOSCAP
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=TT_RES_BIP_DIO_DISRES
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=TT_MOM
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=TT_R_METAL
+include "dut/res_trim_thermo_16.scs"
+include "tb/tb_resistance_dc.scs"
+
+simulatorOptions options psfversion="1.4.0" temp=27 tnom=27 scalem=1.0 \
+    scale=1.0 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 digits=5 cols=80 \
+    pivrel=1e-3 sensfile="../psf/sens.output" checklimitdest=psf
+dcOp dc write="spectre.dc" maxiters=150 maxsteps=10000 annotate=status
+
+dcOpInfo info what=oppoint where=rawfile
+modelParameter info what=models where=rawfile
+element info what=inst where=rawfile
+outputParameter info what=output where=rawfile
+designParamVals info what=parameters where=rawfile
+primitives info what=primitives where=rawfile
+subckts info what=subckts where=rawfile
+save RES_TOP RES_BOT v_res_top:p
+saveOptions options save=allpub
+ahdl_include "va/va_thermo_encoder_16.va"

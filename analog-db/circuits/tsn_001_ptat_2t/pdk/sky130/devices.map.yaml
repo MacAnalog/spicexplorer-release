@@ -1,0 +1,4 @@
+# Generic device kind -> sky130 device name. The sub-Vt PTAT core uses the 1.8 V core NMOS.
+pdk: sky130
+devices:
+  nmos: {model: sky130_fd_pr__nfet_01v8}

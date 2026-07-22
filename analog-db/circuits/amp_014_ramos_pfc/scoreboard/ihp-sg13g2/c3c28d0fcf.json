@@ -1,0 +1,97 @@
+{
+  "area": {
+    "active_gate_area_um2": 2583.0,
+    "c_count": 2,
+    "c_total_f": 8.8e-11,
+    "mos_count": 24,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "amp_014_ramos_pfc",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 102.0979,
+            "pm": 65.80848,
+            "ugf": 2362986.0
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "status": "disabled"
+        },
+        "noise": {
+          "status": "disabled"
+        },
+        "tran_step": {
+          "status": "disabled"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-06-11T13:59:38+00:00"
+      }
+    }
+  },
+  "design_id": "c3c28d0fcf",
+  "metrics": {
+    "tt": {
+      "dc_gain_db": {
+        "spec": "pass",
+        "value": 102.0979
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 65.80848
+      },
+      "ugf_hz": {
+        "spec": "none",
+        "value": 2362986.0
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "CAPACITOR_0": "63p",
+      "CAPACITOR_1": "25p",
+      "CURRENT_0_BIAS": "24u",
+      "x_dut_xm7_l": "1u",
+      "x_dut_xm7_m": "71",
+      "x_dut_xm7_w": "1u",
+      "x_dut_xm10_l": "1u",
+      "x_dut_xm10_m": "81",
+      "x_dut_xm10_w": "1u",
+      "x_dut_xm11_l": "1u",
+      "x_dut_xm11_m": "400",
+      "x_dut_xm11_w": "1u",
+      "x_dut_xm19_l": "1u",
+      "x_dut_xm14_m": "20",
+      "x_dut_xm19_w": "1u",
+      "x_dut_xm21_l": "1u",
+      "x_dut_xm21_m": "1",
+      "x_dut_xm21_w": "1u",
+      "x_dut_xm23_l": "1u",
+      "x_dut_xm23_m": "203",
+      "x_dut_xm23_w": "1u",
+      "x_dut_xm9_l": "1u",
+      "x_dut_xm9_m": "148",
+      "x_dut_xm9_w": "1u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 2583.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 102.0979,
+      "pm_deg": 65.80848,
+      "ugf_hz": 2362986.0
+    }
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

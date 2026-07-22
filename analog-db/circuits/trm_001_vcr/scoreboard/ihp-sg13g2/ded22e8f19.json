@@ -1,0 +1,87 @@
+{
+  "area": {
+    "active_gate_area_um2": 1.0,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 1,
+    "r_count": 1,
+    "r_total_ohm": 200000.0
+  },
+  "circuit": "trm_001_vcr",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_code_sweep": {
+          "measures": {
+            "full_range": 1.194923,
+            "inl_lsb": 14.96398,
+            "lsb_step": 0.04978844,
+            "monotonic": 1.0
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 5.808065e-10,
+            "v_out": 1.199884
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-16T04:19:17+00:00"
+      }
+    }
+  },
+  "design_id": "ded22e8f19",
+  "metrics": {
+    "tt": {
+      "full_range": {
+        "spec": "pass",
+        "value": 1.194923
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 5.808065e-10
+      },
+      "inl_lsb": {
+        "spec": "none",
+        "value": 14.96398
+      },
+      "lsb_step": {
+        "spec": "none",
+        "value": 0.04978844
+      },
+      "monotonic": {
+        "spec": "pass",
+        "value": 1.0
+      },
+      "v_out": {
+        "spec": "pass",
+        "value": 1.199884
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_r0_value": "200k",
+      "x_dut_xm0_l": "0.5u",
+      "x_dut_xm0_m": 1,
+      "x_dut_xm0_w": "2.0u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 1.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "inl_lsb": 14.96398
+    },
+    "power_w": 6.969677999999999e-10
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

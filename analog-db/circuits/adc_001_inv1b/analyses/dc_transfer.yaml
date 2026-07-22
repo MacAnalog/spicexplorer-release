@@ -1,0 +1,12 @@
+schema: spicexplorer/analysis@1
+id: dc_transfer
+template: dc_transfer
+description: "Input sweep; v_out_high, v_out_low, threshold_v (1-bit decision level)."
+params:
+  VDD: 1.2
+  VIN_LO: 0
+  VIN_HI: 1.2
+  VIN_STEP: 0.01
+  VMID: 0.6
+flags: []
+produces: [v_out_high, v_out_low, threshold_v]

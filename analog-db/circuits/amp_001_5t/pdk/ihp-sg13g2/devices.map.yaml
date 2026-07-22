@@ -1,0 +1,7 @@
+# Generic device kind -> ihp-sg13g2 device name (plan §3 tree; loader lands in Phase 1).
+# Overrides circuitgraph's built-in IHP_SG13G2 table on a per-topology basis when needed.
+# For the 5T core the built-in default device per polarity is exactly right.
+pdk: ihp-sg13g2
+devices:
+  nmos: {model: sg13_lv_nmos}
+  pmos: {model: sg13_lv_pmos}

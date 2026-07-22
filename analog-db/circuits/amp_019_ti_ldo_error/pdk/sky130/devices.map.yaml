@@ -1,0 +1,5 @@
+# Generic device kind -> sky130 device name. HV mapping: 5 V g5v0d10v5 family (3.3 V rail).
+pdk: sky130
+devices:
+  nmos: {model: sky130_fd_pr__nfet_g5v0d10v5}
+  pmos: {model: sky130_fd_pr__pfet_g5v0d10v5}

@@ -1,0 +1,37 @@
+# SUPER-DSL manifest — AnalogGym import (plan Phase 5).
+schema: spicexplorer/circuit@1
+id: amp_017_tan_clia
+class: amplifier
+display_name: "3-stage OTA \u2014 CLIA compensation (Tan)"
+compensation: CLIA
+stages: 3
+ports:
+- vss
+- vdd
+- vinn
+- vinp
+- vout
+provenance:
+  source: AnalogGym
+  aliases:
+  - Tan_CLIA_Pin_3
+  - tan_clia_pin_3
+  paper: M. Tan & W.-H. Ki, IEEE JSSC 50(2):440-449, 2015
+  license: BSD-3-Clause
+  note: "ngspice load error (model resolution) \u2014 under investigation"
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+  reference_schematic: reference/Tan_CLIA_Pin_3.png
+pdks:
+- sky130
+- gf180mcu
+analyses:
+- ac_open_loop
+- dc_op
+- noise
+- tran_step
+- psrr_vdd
+- cmrr_vcm
+status: incomplete

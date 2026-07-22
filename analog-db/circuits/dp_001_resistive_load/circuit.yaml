@@ -1,0 +1,30 @@
+# ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
+# PROMOTED from the ferrosim_differential_pair reference entry: authored a device-generic abstract
+# netlist + open-PDK bindings. The upstream deck uses a resistor tail; the promoted core swaps in an
+# NMOS current-mirror tail so the pair is mirror-anchored (both the diff pair AND its mirror are
+# detected by find_subcircuits). The original TSMC-28/65nm decks are kept under `references`.
+schema: spicexplorer/circuit@1
+id: dp_001_resistive_load
+class: diff_pair
+display_name: "Resistively-loaded NMOS differential pair (current-mirror tail)"
+stages: 1
+ports: [vdd, voutp, voutn, vinp, vinn, ibias, vss]
+provenance:
+  source: Arcadia-1/ferrosim (imported via netlist-crawler)
+  aliases: [differential_pair, ferrosim_differential_pair]
+  designer: "Token Zhang (upstream ferrosim); mirror-tail adaptation for open-PDK promotion"
+  license: MIT
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, sky130, gf180mcu]
+analyses: [dc_op, gain_dc]
+references:
+  - {tool: spectre, dir: spectre/28nm, node: 28nm}
+  - {tool: spectre, dir: spectre/65nm, node: 65nm}
+optimize:
+  budget: 500
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

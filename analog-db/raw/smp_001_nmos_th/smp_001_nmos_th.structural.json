@@ -1,0 +1,12 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "smp_001_nmos_th",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 2,
+    "blocks_detected": 0,
+    "by_family": {},
+    "structural_roles": {}
+  },
+  "groups": []
+}

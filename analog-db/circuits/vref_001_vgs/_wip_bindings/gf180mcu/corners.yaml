@@ -1,0 +1,12 @@
+# Corner bundles for gf180mcu (D-6): PDK libs stay out-of-repo, referenced by lib_file (+ section).
+# The ΔVth ref instances a 3.3V (nfet_03v3) + a 6V IO (nfet_06v0) NMOS; tt pulls both device model
+# sections + fets_mm (device subckts). Both families are in design.ngspice's stat set.
+pdk: gf180mcu
+corners:
+  tt:
+    - {lib_file: design.ngspice}
+    - {lib_file: sm141064.ngspice, section: noise_corner}
+    - {lib_file: sm141064.ngspice, section: nfet_03v3_t}
+    - {lib_file: sm141064.ngspice, section: nfet_06v0_t}
+    - {lib_file: sm141064.ngspice, section: fets_mm}
+default_corner: tt

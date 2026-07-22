@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spicexplorer/scoreboard-entry@1",
+  "title": "SpiceXplorer scoreboard entry (one design point)",
+  "description": "One recorded design point of a verifiable circuit on one PDK (plan_scoreboard D-5/D-6): the full sizing vector actually simulated, the measured analyses per corner, the datasheet-mapped metric values with spec verdicts, and the PPA rollup. Recorded (timestamped) — NOT byte-drift-guarded; the generated scoreboard.json index is.",
+  "type": "object",
+  "required": ["schema", "circuit", "pdk", "design_id", "parameters", "area", "corners", "metrics", "ppa"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "spicexplorer/scoreboard-entry@1"},
+    "circuit": {"type": "string"},
+    "pdk": {"type": "string"},
+    "design_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{10}$",
+      "description": "First 10 hex of sha256 over the canonical (circuit, pdk, sizing vector) — one entry per design point; re-runs at new corners upsert into it."
+    },
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sizing"],
+      "properties": {
+        "sizing": {
+          "type": "object",
+          "additionalProperties": {"type": ["string", "number"]},
+          "description": "The sizing.yaml variable defaults in force at run time (verbatim strings)."
+        },
+        "analysis_params": {
+          "type": "object",
+          "additionalProperties": {"type": ["string", "number"]},
+          "description": "Per-PDK testbench overrides (sizing.yaml analysis_params) — conditions, not design; excluded from the design_id hash."
+        }
+      }
+    },
+    "area": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["active_gate_area_um2", "mos_count"],
+      "properties": {
+        "active_gate_area_um2": {"type": "number"},
+        "mos_count": {"type": "integer"},
+        "c_total_f": {"type": "number"},
+        "c_count": {"type": "integer"},
+        "r_total_ohm": {"type": "number"},
+        "r_count": {"type": "integer"}
+      }
+    },
+    "corners": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["analyses"],
+        "additionalProperties": false,
+        "properties": {
+          "analyses": {"type": "object"},
+          "provenance": {"type": "object"},
+          "symbolic_crosscheck": {"type": "object", "description": "netlist2tf sym-vs-sim report (run --crosscheck), preserved verbatim"}
+        }
+      },
+      "description": "The recorded runs, keyed by corner (tt/ss/ff/...)."
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "required": ["value", "spec"],
+          "additionalProperties": false,
+          "properties": {
+            "value": {"type": "number"},
+            "spec": {"enum": ["pass", "fail", "none"]}
+          }
+        }
+      },
+      "description": "Per-corner canonical datasheet metrics with spec verdicts (the T4-conformance data path, D-10)."
+    },
+    "ppa": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["performance", "corners_run"],
+      "properties": {
+        "power_w": {"type": ["number", "null"]},
+        "active_gate_area_um2": {"type": ["number", "null"]},
+        "performance": {"type": "object", "additionalProperties": {"type": "number"}},
+        "corners_run": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

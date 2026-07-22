@@ -1,0 +1,9 @@
+# AnalogGym analysis binding (dc_op).
+schema: spicexplorer/analysis@1
+id: dc_op
+template: dc_op
+description: "DC operating point (bias-aware variant deferred)."
+enabled: false
+params: {VDD: 1.8, VCM: 300m}
+flags: []
+produces: [i_supply]

@@ -1,0 +1,31 @@
+** Abstract AnalogGym "ldo_simple" — the 5T-OTA + PMOS-pass LDO from the AnalogGym LDO suite.
+** The netlist itself was never published in CODA-Team/AnalogGym (only its testbench/variable
+** shells); the actual subckt comes from the companion repo the AnalogGym RL example is built on,
+** ChrisZonghaoLi/sky130_ldo_rl (Apache-2.0): python/simulations/ldo_tb.spice, subckts
+** `ldo` + `diff_pair`. sky130-native with 5 V (g5v0d10v5) devices at a 2.0 V rail.
+** Topology: NMOS diff pair (XM1 in+ = feedback, mirrored side; XM2 in- = reference, direct
+** drain), PMOS mirror load, voltage-biased NMOS tail, PMOS pass device, and an Rz+Cc Miller
+** network from the pass gate to vout (upstream XRfb res_high_po + XCfb mim cap).
+** 3-port wrap per the LDO class: upstream runs UNITY feedback (TB ties Vfb to Vreg through a
+** 1T inductor) -> XM1's gate connects straight to vout; Vref/Vb fold in as internal ideal
+** sources. vout regulates to vref_val directly (no divider).
+**.subckt ldo_003_analoggym_simple vdd vout vss
+** 5T error amp (upstream diff_pair: XM1 g=Vfb mirrored/non-inverting, XM2 g=Vref direct/inverting)
+XM1 ndiode vout  ntail vss nmos w=x_dut_xm1_w   l=x_dut_xm1_l
+XM2 ngate  vref  ntail vss nmos w=x_dut_xm2_w   l=x_dut_xm2_l
+XM4 ndiode ndiode vdd  vdd pmos w=x_dut_xm4_w l=x_dut_xm4_l
+XM3 ngate  ndiode vdd  vdd pmos w=x_dut_xm3_w l=x_dut_xm3_l
+XM5 ntail  vb     vss  vss nmos w=x_dut_xm5_w l=x_dut_xm5_l
+** pass device + Miller Rz/Cc (upstream XM6 + XRfb/XCfb)
+XMP vout ngate vdd vdd pmos w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m
+Rz ncz ngate 'r_z'
+Cc ncz vout  'c_comp'
+** minimum-load bleed: upstream never runs below ~10 uA load (the TB always applies Iload);
+** with unity feedback and no divider there is NO internal DC path, so a no-load dc_op rails
+** vout to vdd. r_bleed internalizes the upstream minimum-load condition.
+R_bleed vout vss 'r_bleed'
+** internal ideal reference + tail bias (3-port fold of upstream Vref / Vb pins)
+Vref vref vss dc {vref_val}
+Vb   vb   vss dc {vb_val}
+**.ends
+.end

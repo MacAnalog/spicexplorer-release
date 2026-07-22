@@ -1,0 +1,21 @@
+# Corner bundles for gf180mcu (D-6): PDK libs stay out-of-repo, referenced by lib_file (+ section).
+# This circuit uses the 6 V device family (nfet_06v0/pfet_06v0, the source design's native flavor).
+# The lib has per-family sections only for 03v3; 06v0 corner deltas live in the UMBRELLA sections
+# (typical/ff/ss/fs/sf), which also pull in noise_corner + fets_mm.
+pdk: gf180mcu
+corners:
+  tt:
+    - {lib_file: design.ngspice}
+    - {lib_file: sm141064.ngspice, section: typical}
+  ff:
+    - {lib_file: design.ngspice}
+    - {lib_file: sm141064.ngspice, section: ff}
+  ss:
+    - {lib_file: design.ngspice}
+    - {lib_file: sm141064.ngspice, section: ss}
+  fs:
+    - {lib_file: design.ngspice}
+    - {lib_file: sm141064.ngspice, section: fs}
+  sf:
+    - {lib_file: design.ngspice}
+    - {lib_file: sm141064.ngspice, section: sf}

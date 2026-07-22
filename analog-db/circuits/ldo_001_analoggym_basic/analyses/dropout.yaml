@@ -1,0 +1,12 @@
+schema: spicexplorer/analysis@1
+id: dropout
+template: dropout
+description: "Vin swept 1.0 -> 1.8 at nominal load; dropout = Vin - Vout at VOUT_THRESH (0.98*target)."
+params:
+  ILOAD: 5m
+  VDD_START: 1.0
+  VDD_STOP: 1.8
+  VDD_STEP: 0.01
+  VOUT_THRESH: 1.568
+flags: []
+produces: [v_dropout]

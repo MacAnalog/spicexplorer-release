@@ -1,0 +1,50 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# Amplifier sheet for a 100 nA sensing-front-end opamp: modest UGF, high gain, low power.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.5}
+  vcm:    {unit: V, typical: 0.5}
+  # ibias in AMPS (the dc_op/noise/tran_step universal templates bind ${IBIAS} raw from this
+  # value): 0 because the DUT is fully self-biased — its 100 nA sink is internal (x_ibias_val).
+  ibias:  {unit: A, typical: 0}
+  cload:  {unit: pF, typical: 10}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  dc_gain_db:
+    display: "DC open-loop gain (bias-wrapped)"
+    unit: dB
+    analysis: ac_open_loop
+    extract: {meas: dcgain}
+    spec: {min: 40, unit: dB}
+  ugf_hz:
+    display: "Unity-gain frequency (100 nA into 10 pF)"
+    unit: Hz
+    analysis: ac_open_loop
+    extract: {meas: ugf}
+    spec: {min: 3.0e3, unit: Hz}
+  pm_deg:
+    display: "Phase margin"
+    unit: deg
+    analysis: ac_open_loop
+    extract: {meas: pm}
+    spec: {min: 45, unit: deg}
+  i_supply:
+    display: "Supply current"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 5.0e-6, unit: A}
+  vn_in:
+    display: "Input-referred noise"
+    unit: "V/sqrt(Hz)"
+    analysis: noise
+    extract: {meas: inoise_total}
+    spec: {max: 1.0e-2, unit: "V/sqrt(Hz)"}
+  t_settle:
+    display: "Unity-gain step settling time (0.2 V step)"
+    unit: s
+    analysis: tran_step
+    extract: {meas: t_settle}
+    spec: {max: 5.0e-4, unit: s}

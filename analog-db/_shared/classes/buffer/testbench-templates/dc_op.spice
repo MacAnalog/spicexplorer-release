@@ -1,0 +1,28 @@
+** AUTHORED TEMPLATE — buffer/dc_op: DC operating point + supply current.
+** Class port convention: vdd vout vin ibias vss; `ibias` is SOURCE-referenced (the DUT holds an
+** NMOS diode at ibias, the bench pushes IBIAS into it from vdd). The input sits at VCM.
+** Bindings: DUT PORT_LINE VDD VCM IBIAS PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+Vin  vin 0 dc {VCM}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  let v_out = v(vout)
+  let v_offset = v(vout) - v(vin)
+  print i_supply v_out v_offset
+  write
+  quit
+.endc
+.end

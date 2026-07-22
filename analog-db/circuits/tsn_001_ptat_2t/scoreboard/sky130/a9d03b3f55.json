@@ -1,0 +1,111 @@
+{
+  "area": {
+    "active_gate_area_um2": 44.8,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 2,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "tsn_001_ptat_2t",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 1.655297e-11,
+            "v_out": 0.05316842
+          },
+          "status": "ok"
+        },
+        "line_sweep": {
+          "measures": {
+            "line_sens_pct": 33.94213,
+            "v_at_hi": 0.06229718,
+            "v_at_lo": 0.04425069,
+            "v_at_nom": 0.05316841
+          },
+          "status": "ok"
+        },
+        "psrr": {
+          "measures": {
+            "psr_db": -30.35009
+          },
+          "status": "ok"
+        },
+        "temp_sweep": {
+          "measures": {
+            "sens_v_per_c": 0.0004835771,
+            "tc_box_ppm": 8758.177,
+            "v_hi": 0.07657976,
+            "v_lo": 0.00887896,
+            "v_out_25c": 0.05225285
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-05T15:49:07+00:00"
+      }
+    }
+  },
+  "design_id": "a9d03b3f55",
+  "metrics": {
+    "tt": {
+      "i_supply": {
+        "spec": "pass",
+        "value": 1.655297e-11
+      },
+      "line_sens_pct": {
+        "spec": "pass",
+        "value": 33.94213
+      },
+      "psr_db": {
+        "spec": "pass",
+        "value": -30.35009
+      },
+      "sens_v_per_c": {
+        "spec": "pass",
+        "value": 0.0004835771
+      },
+      "tc_box_ppm": {
+        "spec": "none",
+        "value": 8758.177
+      },
+      "v_out": {
+        "spec": "pass",
+        "value": 0.05316842
+      },
+      "v_out_25c": {
+        "spec": "pass",
+        "value": 0.05225285
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_xm0_l": 0.2,
+      "x_dut_xm0_m": 8,
+      "x_dut_xm0_w": 8,
+      "x_dut_xm1_l": 1,
+      "x_dut_xm1_m": 8,
+      "x_dut_xm1_w": 4
+    }
+  },
+  "pdk": "sky130",
+  "ppa": {
+    "active_gate_area_um2": 44.8,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "line_sens_pct": 33.94213,
+      "psr_db": -30.35009,
+      "sens_v_per_c": 0.0004835771
+    },
+    "power_w": 1.9863564e-11
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

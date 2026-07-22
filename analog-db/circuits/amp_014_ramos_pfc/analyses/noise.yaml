@@ -1,0 +1,9 @@
+# AnalogGym analysis binding (noise).
+schema: spicexplorer/analysis@1
+id: noise
+template: noise
+description: "Input-referred noise (bias-aware variant deferred)."
+enabled: false
+params: {VDD: 1.8, VCM: 400m, CL: 100p, FSTART: 1k, FSTOP: 1G, PPD: 50}
+flags: []
+produces: [vn_in]

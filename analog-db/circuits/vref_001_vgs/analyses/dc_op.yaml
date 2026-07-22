@@ -1,0 +1,9 @@
+# Analysis binding (plan D-4): voltage_reference dc_op — reference level + supply current.
+schema: spicexplorer/analysis@1
+id: dc_op
+template: dc_op
+description: "DC operating point; vref_v + i_supply (power)."
+params:
+  VDD: 1.2
+flags: []
+produces: [vref_v, i_supply]

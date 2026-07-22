@@ -1,0 +1,107 @@
+{
+  "area": {
+    "active_gate_area_um2": 2744.974,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 10,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "amp_018_telescopic_cascode",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 49.30463,
+            "pm": 69.0,
+            "ugf": 527704000.0
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 2.06496769538219e-05
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.001023842202489902
+          },
+          "status": "ok"
+        },
+        "tran_step": {
+          "measures": {
+            "tsettle_raw": -1.0497122467e-06
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "distilled from artifacts/newcas2026/CASCODE-OTA_LhsDE_2026-02-07_10-54-54_sigmoid-loss.csv (best point.score over all three full traces)",
+        "note": "measures are the optimizer's fit_summary curr_vals at the best point, run against the LEGACY testbenches (pdk/ihp-sg13g2/testbenches.legacy/); these sizing values are the sizing.yaml defaults",
+        "point_score": 48.34397194824278,
+        "run_at": "2026-02-07"
+      }
+    }
+  },
+  "design_id": "d35babe5f9",
+  "metrics": {
+    "tt": {
+      "dc_gain_db": {
+        "spec": "pass",
+        "value": 49.30463
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 2.06496769538219e-05
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 69.0
+      },
+      "ugf_hz": {
+        "spec": "pass",
+        "value": 527704000.0
+      },
+      "vn_in": {
+        "spec": "pass",
+        "value": 0.001023842202489902
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_xm1c_l": 5.27374326670879e-06,
+      "x_dut_xm1c_w": 4.814810755662226e-05,
+      "x_dut_xm1_l": 2.460466552388057e-07,
+      "x_dut_xm1_w": 2.7240810986826254e-05,
+      "x_dut_xm3c_l": 4.58924042466262e-06,
+      "x_dut_xm3c_w": 7.843209157663337e-05,
+      "x_dut_xm3_l": 1.3905652366498483e-06,
+      "x_dut_xm3_w": 9.914477601642495e-05,
+      "x_dut_xm5_l": 5.054280401930598e-07,
+      "x_dut_xm5_ng": 2,
+      "x_dut_xm5_w": 0.0001700824884829192,
+      "x_dut_xm6_l": 9.666493068871092e-06,
+      "x_dut_xm6_w": 0.00011816139569301207,
+      "x_dut_v_bias_1": 0.5093671212585398,
+      "x_dut_v_bias_2": 1.0317383868194585
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 2744.974,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 49.30463,
+      "pm_deg": 69.0,
+      "ugf_hz": 527704000.0
+    },
+    "power_w": 3.097451543073285e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

@@ -1,0 +1,26 @@
+# Design variables for the ihp-sg13g2 binding. Validated against sizing.schema.json.
+# 28nm geometry re-noted to 130nm lv devices, per-finger widths with the upstream m-ratios
+# (bias:tail:stage2-load = 3:3:17, mirror:CS = 2:24, pair m=5) preserved so the current split
+# (stage1 ~20uA, stage2 ~115uA at IBIAS = 20uA) matches the source design.
+# Keyed on the FREE atomic symbols after default tying (abstract/params.yaml, plan D-4): tied
+# members (XM1<-XM0, XM4/XM2-w<-XM3, XM5/XM6<-XM7, XMBS<-XMBD + the frozen m ratios) come from
+# the generated tie block. Defaults reproduce the pre-atomic knobs exactly: the legacy x_n_l
+# is now THREE independent L knobs (xm3/xm2/xmbd) and x_p_l TWO (xm7/xm0), all still 0.4u.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xmbd_w, description: "NMOS bias diode/mirror width (XMBD; XMBS tied)", default: 4u, min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xm7_w,  description: "PMOS bias/tail/load width per finger (XM7; XM5/XM6 tied)", default: 8u, min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xm0_w,  description: "PMOS input pair width per finger (XM0; XM1 tied, m=5)", default: 8u, min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xm3_w,  description: "NMOS mirror/CS width per finger (XM3; XM4/XM2 tied)", default: 6u, min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xm7_l,  description: "PMOS bias-mirror length (XM7; XM5/XM6 tied; legacy x_p_l)", default: 0.4u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm0_l,  description: "PMOS input pair length (XM0; XM1 tied; legacy x_p_l)", default: 0.4u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm3_l,  description: "NMOS load-mirror length (XM3; XM4 tied; legacy x_n_l)", default: 0.4u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm2_l,  description: "NMOS 2nd-stage CS length (legacy x_n_l, now free)", default: 0.4u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xmbd_l, description: "NMOS bias-diode length (XMBD; XMBS tied; legacy x_n_l)", default: 0.4u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_cc_value, description: "Miller compensation cap (F)", default: 2e-12, min: 2e-13, max: 1e-11, unit: F}
+  - {name: x_dut_xm0_m,  description: "Input pair fingers (frozen; XM1 tied)", default: 5, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm3_m,  description: "Load-mirror unit fingers (frozen; XM4 via 1:1 ratio)", default: 2, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm2_m,  description: "2nd-stage CS fingers (frozen; legacy m=24)", default: 24, min: 1, max: 32, freeze: true, is_integer: true}
+  - {name: x_dut_xm7_m,  description: "Bias-diode fingers (frozen; XM5 1:1, XM6 17/3 ratios)", default: 3, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmbd_m, description: "Bias front-end fingers (frozen; XMBS via 1:1 ratio)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

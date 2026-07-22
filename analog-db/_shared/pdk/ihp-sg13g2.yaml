@@ -1,0 +1,54 @@
+# PDK-level registry for ihp-sg13g2 (plan Phase 1). Corner-lib catalog, device-class map,
+# nominal supply + geometry rules. Consumed by analyses (PDK includes) + sizing bounds.
+pdk: ihp-sg13g2
+sim_engine: ngspice                      # native lane: open-PDK ngspice (in-library router marker)
+supply: {default: 1.5, unit: V}          # nominal lv rail (amplifier-skill gotcha 1)
+devices:
+  nmos: {lv: sg13_lv_nmos, hv: sg13_hv_nmos}
+  pmos: {lv: sg13_lv_pmos, hv: sg13_hv_pmos}
+  res:  [rhigh, rsil, rppd]
+  cap:  [cap_cmim, cap_rfcmim]
+corners:
+  lib_file: cornerMOSlv.lib
+  sections: [mos_tt, mos_ss, mos_ff, mos_sf, mos_fs]
+# PDK passive (R/C) models — corner-lib resolution + measured tt constants for sizing.
+# `libs` lines are ADDITIVE: `add-binding` appends them to every corner bundle so a netlist that
+# instances a PDK resistor/cap resolves its models. IHP keeps R and C in their own corner libs
+# (typ/wcs/bcs = typical/worst/best); the MOS sf/fs cross corners map to the passive typical.
+passives:
+  libs:
+    res: {lib_file: cornerRES.lib,
+          per_corner: {tt: [res_typ], ss: [res_wcs], ff: [res_bcs], sf: [res_typ], fs: [res_typ]}}
+    cap: {lib_file: cornerCAP.lib,
+          per_corner: {tt: [cap_typ], ss: [cap_wcs], ff: [cap_bcs], sf: [cap_typ], fs: [cap_typ]}}
+  # tt constants measured via ngspice .op/.ac on the EDA base image (R: W=1µ/L=10µ, incl. end
+  # effects; C: 10×10 µm). sheet_res in Ω/□, area_cap in F/µm². 3-terminal R subckts (sig sig bulk).
+  models:
+    rhigh:    {kind: res, sheet_res: 1515}
+    rppd:     {kind: res, sheet_res: 265}
+    rsil:     {kind: res, sheet_res: 7.8}
+    cap_cmim: {kind: cap, area_cap: 1.52e-15}
+geometry: {min_l: 0.13u, min_w: 0.18u, max_l: 10u, max_w: 10u}
+# MOS devices are .subckt wrappers around an OSDI PSP instance named N<model>; after .op the
+# small-signal params are readable as @n.<inst-path>.n<model>[gm|gds] (the symbolic cross-check).
+op_probe: {inner_prefix: n, params: [gm, gds]}
+# gm/ID LUT characterization defaults (Phase 6; `analog-db gmid-extract`). family=psp → the op-probe
+# is the inner OSDI/PSP device `@n.xm1.n<model>[...]`, fingers are `ng`, and noise PSDs (sid/sfl) come
+# straight from the operating point (no .noise needed). All knobs overridable on the CLI.
+gmid:
+  family: psp
+  device: sg13_lv_nmos                   # default device (the lv nmos); --device sg13_hv_nmos etc.
+  corners: [tt, ss, ff]                  # `--corner all` extracts each into its own __<corner>.pkl
+  probe: "n.xm1.n{device}"
+  width_um: 5                            # single characterization width (µm); the LUT is per-unit-W
+  nfing: 1
+  temp_k: 300
+  sweep:
+    vgs: [0, 0.05, 1.5]                  # (start, step, stop) V — lv rail
+    vds: [0, 0.2, 1.5]   # coarse VDS (the gm/ID method needs few VDS); --vds for finer
+    vsb: [0, -0.4, -0.4]                # 2 body-bias points (0, 0.4 V); --vsb for more
+    length_um: [0.13, 0.15, 0.2, 0.5, 1, 2]
+  info: "IHP sg13g2, 1.5 V lv, PSP/OSDI"
+  variants:                               # corner override per device variant (matched on device name)
+    - match: "_hv_"                       # the HV MOS keep their models in a separate corner lib
+      corners: {lib_file: cornerMOShv.lib}  #   (same mos_<corner> sections). e.g. --device sg13_hv_nmos

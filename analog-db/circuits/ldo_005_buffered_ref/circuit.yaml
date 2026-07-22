@@ -1,0 +1,26 @@
+# SUPER-DSL manifest — a buffered/filtered-reference LDO, inspired by the TI application-note
+# architecture in external/conceptual_LDO_design/ti-ldo/ldo/ldo.sch (GF180MCU-native source:
+# ref_amp + error_amp + lpf_rc + PMOS pass device). Distinguishes itself from ldo_007_pmos by
+# buffering+gaining the internal reference through its own 5T OTA (with an outer feedback
+# divider) and RC-filtering it before the error amp compares it against vout — reducing the
+# error amp's sensitivity to reference noise/ripple, at the cost of an extra gain stage's own
+# pole to compensate for.
+schema: spicexplorer/circuit@1
+id: ldo_005_buffered_ref
+class: ldo
+display_name: "Buffered-reference LDO (ref-buffer + RC filter + error amp, Miller-compensated)"
+compensation: Miller
+stages: 3                       # ref-buffer amp + error-amp gain stage + pass-device gain stage
+ports: [vdd, vout, vss]         # reference + both tail biases are generated INTERNALLY (ideal)
+provenance:
+  source: external/conceptual_LDO_design/ti-ldo/ldo/ldo.sch    # vendored verbatim at reference/ti-ldo/
+  aliases: [ldo, ldo_two_r, buffered_ref_ldo]
+  designer: "Danial Noori Zadeh"
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+  reference_schematic: reference/ti-ldo/pictures/TI_LDO_system_architecture.png
+pdks: [gf180mcu, ihp-sg13g2, sky130]
+analyses: [dc_op, load_regulation, line_regulation, psrr, dropout, tran_load_step, loop_stability, noise, tran_line_step]
+status: draft

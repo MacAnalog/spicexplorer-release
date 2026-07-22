@@ -1,0 +1,31 @@
+// Standard-cell programmable 4-bit counter transient.
+simulator lang=spectre
+global 0
+parameters dec_val=7
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=pre_simu
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=ttmacro_mos_moscap
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=tt_res_bip_dio_disres
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=tt_mom
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=tt_ind_jvar
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=tt_r_metal
+include "../../../common/stdcell_netlist/tcbn28hpcplusbwp12t30p140_170a.spi"
+include "dut/counter_prog_4b.scs"
+include "tb/tb_counter_prog_4b.scs"
+
+simulatorOptions options psfversion="1.4.0" temp=27 tnom=27 scalem=1.0 \
+    scale=1.0 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 digits=5 cols=80 \
+    pivrel=1e-3 sensfile="../psf/sens.output" checklimitdest=psf
+tran tran stop=200n write="spectre.ic" writefinal="spectre.fc" \
+    savetime=[600] savefile="spectre.tran.save" annotate=status \
+    flushtime=30
+
+finalTimeOP info what=oppoint where=rawfile
+modelParameter info what=models where=rawfile
+element info what=inst where=rawfile
+outputParameter info what=output where=rawfile
+designParamVals info what=parameters where=rawfile
+primitives info what=primitives where=rawfile
+subckts info what=subckts where=rawfile
+save CLK_NET COUNT\<0\> COUNT\<1\> COUNT\<2\> COUNT\<3\>
+saveOptions options save=allpub
+ahdl_include "va/dec2bin4.va"

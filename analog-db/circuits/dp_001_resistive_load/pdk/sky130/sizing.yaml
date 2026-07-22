@@ -1,0 +1,19 @@
+# Sizing for the sky130 binding — geometry re-noted to sky130's bare-µm convention + bin-clamped
+# (min_w 0.42, min_l 0.15). Same topology/ratios as ihp; the shared analyses supply (1.5 V) keeps
+# the tail mirror in saturation on both PDKs. (A per-PDK `analysis_params` override is unavailable:
+# sizing.schema.json is additionalProperties:false, so the supply is set in the analyses instead.)
+schema: spicexplorer/sizing@1
+pdk: sky130
+variables:
+  - {name: x_dut_xmp_w,   description: "Input-pair width",          default: 12, min: 0.42, max: 30, unit: m}
+  - {name: x_dut_xmp_l,   description: "Input-pair length",         default: 0.3, min: 0.15, max: 20, unit: m}
+  - {name: x_dut_rp_value,     description: "Load resistor (ohms)",       default: 22000, min: 1000, max: 500000, unit: ohm}
+  - {name: x_dut_xmt_w, description: "Tail mirror-out width",     default: 24, min: 0.42, max: 40, unit: m}
+  - {name: x_dut_xmr_l, description: "Mirror length (tail+ref)",  default: 0.3, min: 0.15, max: 20, unit: m}
+  - {name: x_dut_xmt_m, description: "Tail multiplier",            default: 1, is_integer: true}
+  - {name: x_dut_xmr_w,  description: "Mirror-reference width",    default: 24, min: 0.42, max: 40, unit: m}
+  # Frozen per-device literals (P4 atomic sweep): defaults reproduce the authored
+  # netlist literals exactly; freeze keeps them out of the search space.
+  - {name: x_dut_xmp_m, description: "XMP m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmn_m, description: "XMN m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmr_m, description: "XMR m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

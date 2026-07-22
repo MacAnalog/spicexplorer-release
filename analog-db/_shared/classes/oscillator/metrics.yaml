@@ -1,0 +1,33 @@
+# Oscillator class — canonical metric vocabulary + owned testbench templates (plan D-10).
+# Validated against _shared/schema/class.schema.json by the verify harness (Tier 0).
+# NEW class added 2026-07-15 (class-registry completion) for the reference-only `ferrosim_ring5`
+# and `ferrosim_sc_ring` (ring oscillators). No verifiable (open-PDK) member yet — FORWARD
+# SCAFFOLDING for a future promoted oscillator/VCO. Reference-only circuits skip the class xref
+# checks (verify.py `_tier0_reference_circuit`); this library completes the registry.
+#
+# Port convention (illustrative): vdd vout vss (free-running ring) or vdd vctrl vout vss (VCO).
+schema: spicexplorer/class@1
+class: oscillator
+id_code: osc            # accession-id prefix -> osc_001_<slug> (plan_scoreboard D-1)
+description: >-
+  Ring and relaxation oscillators / VCOs. A steady-state transient extracts the oscillation
+  frequency, period and duty cycle; a control-voltage sweep gives the tuning range and gain
+  (Kvco); phase noise / jitter and the DC supply current complete the vocabulary.
+ppa:                      # scoreboard PPA rollup declaration (plan_scoreboard D-7)
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: f_osc_hz, better: max}
+    - {metric: phase_noise_dbc, better: min}
+canonical_metrics:
+  - f_osc_hz          # free-running oscillation frequency (Hz)
+  - period_s          # oscillation period (s)
+  - duty_cycle_pct    # output duty cycle (%)
+  - phase_noise_dbc   # phase noise at a stated offset (dBc/Hz) — more negative is better
+  - period_jitter_s   # cycle-to-cycle period jitter (s)
+  - tuning_range_hz   # VCO tuning range over the control sweep (Hz)
+  - kvco_hz_per_v     # VCO gain dFosc/dVctrl (Hz/V)
+  - i_supply          # supply current (A)
+  - area_um2
+templates:
+  - tran_oscillation  # steady-state transient -> Fosc, period, duty
+  - dc_op

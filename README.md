@@ -26,3 +26,9 @@ Each component keeps its own `README.md`, `LICENSE`, and `pyproject.toml`; a
 The `analog-db` test tier in CI runs the dependency-light checks today and
 activates the full fast test suite automatically once the platform packages
 join the monorepo.
+
+## Recommended Installs
+
+- [uv](https://docs.astral.sh/uv/) for package management.
+- Docker for running the containerized environment without having to worry about installing open-source PDKs.
+- Our forked schematic viewer for VS Code: [NooriDan/vscode-xschem-viewer-configurable](https://github.com/NooriDan/vscode-xschem-viewer-configurable).

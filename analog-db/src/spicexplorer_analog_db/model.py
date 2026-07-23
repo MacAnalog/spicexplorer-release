@@ -16,11 +16,43 @@ import yaml
 
 from . import paths
 
-# Verifiable-circuit accession id (plan_scoreboard D-1): <class id_code>_<nnn>_<slug>, where the
+# Verifiable-circuit accession id: <class id_code>_<nnn>_<slug>, where the
 # number is append-only (allocated max+1, never renumbered or reused). Reference circuits instead
-# keep corpus-scoped ids (D-2), e.g. ferrosim_<name>.
+# keep corpus-scoped ids, e.g. ferrosim_<name>.
 ACCESSION_RE = re.compile(r"^(?P<code>[a-z]+)_(?P<num>[0-9]{3})_(?P<slug>[a-z0-9][a-z0-9_]*)$")
 REFERENCE_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_]*$")
+
+# A CLOCKED circuit exposes a chopper / switched-capacitor clock as a port (clk_*/phi*). Its
+# switches toggle, so a FROZEN-operating-point small-signal analysis (.ac / .noise) does not
+# represent it — the correct in-operation benches are transient (native ngspice) or PSS/PAC/
+# pnoise (Spectre). Enforced by the assemble() guard + the verify Tier-0 xref check.
+_CLOCK_PORT_RE = re.compile(r"^(clk|phi)([_0-9]|$)", re.IGNORECASE)
+
+# Frozen-OP small-signal analysis ids: the ``.ac``-based family (``ac_*`` + cmrr/psrr/stb) and
+# the ``.noise``-based family (``noise*``). These are the analyses that are INVALID on a clocked
+# circuit. PSS/PAC ids (``pac_*``, ``pnoise_*``) are the periodic replacements and are allowed.
+_FROZEN_SS_ANALYSIS_NAMES = frozenset(
+    {
+        "cmrr_vcm",
+        "cmrr_vcm_selfbias",
+        "psrr",
+        "psrr_vdd",
+        "psrr_vdd_selfbias",
+        "psrr_vss",
+        "stb",
+        "noise",
+        "noise_diff",
+        "noise_biaswrap_ibias",
+    }
+)
+
+
+def is_frozen_smallsignal_analysis(analysis_id: str) -> bool:
+    """True iff ``analysis_id`` names a frozen-operating-point small-signal analysis (``.ac`` /
+    ``.noise`` family). Such an analysis is physically invalid on a clocked (chopper /
+    switched-cap) circuit — use a transient bench or PSS/PAC/pnoise instead."""
+    a = str(analysis_id)
+    return a.startswith("ac_") or a in _FROZEN_SS_ANALYSIS_NAMES
 
 
 def parse_accession(circuit_id: str) -> tuple[str, int, str] | None:
@@ -77,12 +109,24 @@ class Circuit:
         return list(self.manifest.get("analyses", []))
 
     @property
+    def ports(self) -> list[str]:
+        return [str(p) for p in (self.manifest.get("ports", []) or [])]
+
+    @property
+    def is_clocked(self) -> bool:
+        """True iff any port is a chopper / switched-cap clock (``clk_*`` / ``phi*``). A clocked
+        circuit's switches toggle, so a frozen-operating-point small-signal analysis (``.ac`` /
+        ``.noise``) is invalid on it — see :func:`is_frozen_smallsignal_analysis`. This is the
+        predicate the assemble() guard and the verify Tier-0 check key on."""
+        return any(_CLOCK_PORT_RE.match(p) for p in self.ports)
+
+    @property
     def status(self) -> str:
         return self.manifest.get("status", "draft")
 
     @property
     def references(self) -> list[dict[str, Any]]:
-        """Reference bindings (D-9): foreign/proprietary decks, not lowered or run here."""
+        """Reference bindings: foreign/proprietary decks, not lowered or run here."""
         return list(self.manifest.get("references", []))
 
     @property
@@ -184,7 +228,7 @@ def class_templates(class_id: str) -> list[str]:
 
 
 def resolve_template(class_id: str, template_id: str) -> Path | None:
-    """Resolve a template id: class-scoped first (D-4), then the universal set."""
+    """Resolve a template id: class-scoped first, then the universal set."""
     candidates = [
         paths.classes_root() / class_id / "testbench-templates" / f"{template_id}.spice",
         paths.shared_templates_root() / f"{template_id}.spice",

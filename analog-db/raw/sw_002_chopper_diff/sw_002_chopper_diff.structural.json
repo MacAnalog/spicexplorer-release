@@ -1,0 +1,100 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "sw_002_chopper_diff",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 8,
+    "blocks_detected": 4,
+    "by_family": {
+      "transmission_gate": 4
+    },
+    "structural_roles": {
+      "XM1": "analog_switch",
+      "XM2": "analog_switch",
+      "XM3": "analog_switch",
+      "XM4": "analog_switch",
+      "XM5": "analog_switch",
+      "XM6": "analog_switch",
+      "XM7": "analog_switch",
+      "XM8": "analog_switch"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#1",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM1",
+        "XM2"
+      ],
+      "ports": {
+        "a": "va_p",
+        "b": "vb_p",
+        "ctl_n": "vctl",
+        "ctl_p": "vctl_not"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#2",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM3",
+        "XM4"
+      ],
+      "ports": {
+        "a": "va_n",
+        "b": "vb_n",
+        "ctl_n": "vctl",
+        "ctl_p": "vctl_not"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#3",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM5",
+        "XM6"
+      ],
+      "ports": {
+        "a": "va_p",
+        "b": "vb_n",
+        "ctl_n": "vctl_not",
+        "ctl_p": "vctl"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#4",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM7",
+        "XM8"
+      ],
+      "ports": {
+        "a": "va_n",
+        "b": "vb_p",
+        "ctl_n": "vctl_not",
+        "ctl_p": "vctl"
+      }
+    }
+  ]
+}

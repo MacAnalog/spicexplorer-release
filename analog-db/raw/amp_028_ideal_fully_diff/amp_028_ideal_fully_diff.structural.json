@@ -1,0 +1,12 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "amp_028_ideal_fully_diff",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 5,
+    "blocks_detected": 0,
+    "by_family": {},
+    "structural_roles": {}
+  },
+  "groups": []
+}

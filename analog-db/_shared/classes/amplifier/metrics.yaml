@@ -39,25 +39,45 @@ canonical_metrics:
   - area_um2
   - fom_s
   - fom_l
+  - cm_interior_pts  # dc_cm_bias_sweep: # of sampled internal-bias points with vocm inside VCM+/-VBAND (0 = no interior operating point)
+  - zcm_lf_ohm       # ac_cm_reg: low-frequency closed-loop CM output impedance (servo stiffness)
+  - zcm_peak_ohm     # ac_cm_reg: sweep-maximum CM output impedance
+  - cm_peaking_db    # ac_cm_reg: 20log10(peak/lf) — large peaking flags an underdamped CM loop
+  - cm_kick_v        # tran_cm_kick: settled vocm displacement under the CM current kick
+  - cm_resid_v       # tran_cm_kick: post-release residual (nonzero flags CM latch-up)
+  - t_cm_settle      # tran_cm_kick: recovery time after the kick releases
+  - cm_plant_delta   # dc_cmfb_plant_sign: vocm(hi)-vocm(lo) of the open-loop actuation sweep; SIGN = plant parity (- inverting -> canonical servo, + non-inverting -> -inv servo)
+  - vcmfb_bal        # dc_cmfb_plant_sign: actuation voltage where vocm crosses the CM ref (must be in-rail)
+  - vocm_lim_min     # dc_cmfb_plant_sign: achievable output-CM window floor (ref below it can never regulate)
+  - vocm_lim_max     # dc_cmfb_plant_sign: achievable output-CM window ceiling
 templates:
+  - dc_cmfb_plant_sign       # open-loop CMFB actuation sweep: plant parity (which servo polarity), in-rail balance, achievable-CM window
+  - dc_cm_bias_sweep         # output-CM sensitivity to one internal bias knob (alterparam 5-point sweep)
+  - ac_cm_reg                # closed-loop CM output impedance vs f (CM-loop health, freq domain)
+  - tran_cm_kick             # CM disturbance recovery (CM-loop health, time domain)
   - ac_open_loop
   - ac_open_loop_biaswrap   # open-loop gain in closed-loop bias (AnalogGym Lfb/Cin trick)
   - ac_open_loop_biaswrap_ibias  # the same bias-wrap for ibias-port DUTs (large systematic offset)
   - ac_open_loop_diff       # differential-output, self-biased open-loop AC (no ibias port)
   - ac_closed_loop
+  - ac_closed_loop_selfbias  # the same buffer gain/BW bench for self-biased DUTs (no ibias port)
   - psrr_vdd                 # positive-supply rejection in the unity-buffer config (PSRR+)
   - psrr_vdd_selfbias        # the same PSRR+ bench for self-biased DUTs (no ibias port)
   - cmrr_vcm                 # common-mode rejection in the unity-buffer config
   - cmrr_vcm_selfbias        # the same CMRR bench for self-biased DUTs (no ibias port)
   - dc_op
+  - dc_op_biaswrap          # self-biased single-ended DC op point + i_supply (Lfb DC-feedback bias)
   - dc_op_diff              # differential-output, self-biased DC op point (vos/vocm)
   - dc_sweep
   - noise
+  - noise_biaswrap          # self-biased single-ended input-referred noise (Lfb/Cin bias-wrap)
   - noise_biaswrap_ibias    # input-referred noise in closed-loop bias for large-offset ibias DUTs
   - noise_diff              # differential-output, self-biased input-referred noise
   - tran_step
+  - tran_step_biaswrap      # self-biased single-ended unity-gain step settling (follower)
   - thd            # large-signal harmonic distortion (buffer sine; PSS on Spectre)
   - iip3           # two-tone intercept (common-fundamental tones; PSS on Spectre)
   - tran_step_diff          # differential-output, self-biased unity-gain step settling
   - linearity
+  - linearity_selfbias      # the same ICMR sweep for self-biased DUTs (no ibias port)
   - stb            # loop-gain probe (VIPRB marker -> iprobe; stb analysis on Spectre)

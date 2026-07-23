@@ -6,91 +6,91 @@ pdk: gf180mcu
 variables:
 - name: x_dut_xm1_w
   description: Input pair W
-  default: 27.241u
+  default: 23.3u
   min: 0.22u
   max: 200u
   unit: m
 - name: x_dut_xm1_l
   description: Input pair L
-  default: 0.28u
+  default: 1.0u
   min: 0.28u
   max: 10u
   unit: m
 - name: x_dut_xm1c_w
   description: NMOS cascode W
-  default: 48.148u
+  default: 5.7u
   min: 0.22u
   max: 200u
   unit: m
 - name: x_dut_xm1c_l
   description: NMOS cascode L
-  default: 5.274u
+  default: 0.5u
   min: 0.28u
   max: 10u
   unit: m
 - name: x_dut_xm3_w
   description: PMOS load W
-  default: 99.145u
+  default: 4.7u
   min: 0.22u
   max: 200u
   unit: m
 - name: x_dut_xm3_l
   description: PMOS load L
-  default: 1.391u
+  default: 0.5u
   min: 0.28u
   max: 10u
   unit: m
 - name: x_dut_xm3c_w
   description: PMOS cascode W
-  default: 78.432u
+  default: 7.2u
   min: 0.22u
   max: 200u
   unit: m
 - name: x_dut_xm3c_l
   description: PMOS cascode L
-  default: 4.589u
+  default: 0.5u
   min: 0.28u
   max: 10u
   unit: m
 - name: x_dut_xm5_w
   description: Tail W
-  default: 170.082u
+  default: 4.95u
   min: 0.22u
   max: 200u
   unit: m
 - name: x_dut_xm5_l
   description: Tail L
-  default: 0.505u
+  default: 0.5u
   min: 0.28u
   max: 10u
   unit: m
 - name: x_dut_xm5_ng
   description: Tail fingers
-  default: 2
+  default: 1
   min: 1
   max: 5
   is_integer: true
 - name: x_dut_xm6_w
   description: Mirror ref W
-  default: 118.161u
+  default: 8.3u
   min: 0.22u
   max: 200u
   unit: m
 - name: x_dut_xm6_l
   description: Mirror ref L
-  default: 9.666u
+  default: 0.5u
   min: 0.28u
   max: 10u
   unit: m
 - name: x_dut_v_bias_1
   description: NMOS cascode bias
-  default: 0.509
+  default: 0.917
   min: 0
   max: 1.2
   unit: V
 - name: x_dut_v_bias_2
   description: PMOS cascode bias
-  default: 1.032
+  default: 1.143
   min: 0
   max: 1.2
   unit: V

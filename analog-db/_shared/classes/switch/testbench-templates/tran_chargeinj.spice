@@ -1,0 +1,38 @@
+** AUTHORED TEMPLATE — switch/tran_chargeinj (plan_hierarchical_composition P3).
+** Charge-injection pedestal: with the switch ON, the hold cap on port_b tracks the
+** source VCM on port_a; at TOFF the switch opens (1 ns edges) and the channel charge +
+** clock feedthrough leave a pedestal on the hold cap. q_inj_v = v(port_b) after opening
+** minus the held VCM (measured at TB before / TA after the edge); i_leak = the average
+** current drawn from the source into the open switch over the tail of the run.
+**
+** Assumes the transmission-gate port order:
+**   .subckt <id> port_a port_b vctl vctl_not vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CHOLD TOFF TB TA TSTEP TSTOP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CHOLD=${CHOLD}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vsrc port_a 0 dc {VCM}
+Chold port_b 0 {CHOLD}
+Vctl  vctl 0 pulse({VDD} 0 ${TOFF} 1n 1n 1 2)
+Vctln vctl_not 0 pulse(0 {VDD} ${TOFF} 1n 1n 1 2)
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP}
+  meas tran vheld FIND v(port_b) AT=${TB}
+  meas tran vafter FIND v(port_b) AT=${TA}
+  let q_inj_v = vafter - vheld
+  meas tran i_leak AVG i(Vsrc) from=${TA} to=${TSTOP}
+  * AVG meas lines carry `from=/to=` suffixes the result parser skips - re-print clean
+  print q_inj_v i_leak
+  write
+  quit
+.endc
+.end

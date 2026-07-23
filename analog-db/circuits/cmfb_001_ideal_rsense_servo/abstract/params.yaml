@@ -1,0 +1,21 @@
+# cmfb_001_ideal_rsense_servo — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit cmfb_001_ideal_rsense_servo --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  CIN_SERVO: {Value: cin_val}
+  COUT_SERVO: {Value: cout_val}
+  GM_SERVO: {Value: gm_val}
+  RIN_SERVO: {Value: rin_val}
+  RMN: {Value: x_dut_rmn_value}
+  RMP: {Value: x_dut_rmp_value}
+  ROUT_SERVO: {Value: rout_val}
+groups:
+- name: pair_rmp_rmn
+  kind: shared_geometry
+  members: [RMP, RMN]
+  tie: [Value]
+  description: CM-detector averaging resistors — equal values so cm_sense sits at the true output midpoint
+    (mismatch leaks differential signal into the CM servo).

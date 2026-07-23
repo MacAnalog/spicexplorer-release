@@ -23,6 +23,7 @@ _SCHEMA_FILES = {
     "class": "class.schema.json",
     "scoreboard-entry": "scoreboard-entry.schema.json",
     "params": "params.schema.json",
+    "composition": "composition.schema.json",
 }
 
 

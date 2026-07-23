@@ -43,9 +43,9 @@ N 155 450 155 520 {}
 N 195 430 195 490 {}
 N 195 550 195 660 {}
 N 255 520 255 614 {}
+N 275 200 275 260 {}
 N 360 260 360 490 {}
 N 360 550 360 660 {}
-N 395 200 395 260 {}
 N 480 0 480 260 {}
 N 520 460 520 490 {}
 N 520 550 520 660 {}
@@ -65,8 +65,8 @@ N -590 260 -530 260 {}
 N -490 260 -430 260 {}
 N -250 260 -190 260 {}
 N -150 260 -90 260 {}
-N 275 260 360 260 {}
-N 365 260 480 260 {}
+N 245 260 305 260 {}
+N 360 260 395 260 {}
 N -530 320 -150 320 {}
 N 155 450 195 450 {}
 N 360 460 550 460 {}
@@ -79,25 +79,26 @@ C {devices/lab_wire.sym} -910 660 0 0 {name=l1 lab=vss}
 C {devices/lab_wire.sym} -260 520 0 1 {name=l2 lab=nbias}
 C {devices/lab_wire.sym} 195 430 0 1 {name=l3 lab=nbias}
 C {devices/lab_wire.sym} -150 90 2 0 {name=l4 lab=otao}
-C {devices/lab_wire.sym} 450 0 0 0 {name=l5 lab=otao}
-C {devices/lab_wire.sym} -430 0 0 1 {name=l6 lab=otax}
-C {devices/lab_wire.sym} 20 170 0 1 {name=l7 lab=ref0}
-C {devices/lab_wire.sym} -530 350 2 0 {name=l8 lab=tail}
-C {devices/lab_wire.sym} -430 260 0 1 {name=l9 lab=vout}
-C {devices/lab_wire.sym} 550 90 2 0 {name=l10 lab=vout}
-C {devices/lab_wire.sym} -250 260 0 0 {name=l11 lab=vref}
-C {devices/lab_wire.sym} 20 350 2 0 {name=l12 lab=vref}
-C {devices/lab_wire.sym} -590 94 2 0 {name=l13 lab=vdd}
-C {devices/lab_wire.sym} -90 94 2 0 {name=l14 lab=vdd}
-C {devices/lab_wire.sym} 610 94 2 0 {name=l15 lab=vdd}
-C {devices/lab_wire.sym} -90 354 2 0 {name=l16 lab=vss}
-C {devices/lab_wire.sym} -590 354 2 0 {name=l17 lab=vss}
-C {devices/lab_wire.sym} 255 614 2 0 {name=l18 lab=vss}
-C {devices/lab_wire.sym} -420 614 2 0 {name=l19 lab=vss}
-C {devices/lab_wire.sym} -850 350 2 0 {name=l20 lab=vss}
-C {devices/lab_wire.sym} -850 430 0 1 {name=l21 lab=vdd}
-C {devices/lab_wire.sym} -850 610 2 0 {name=l22 lab=nbias}
-C {devices/lab_wire.sym} -850 170 0 1 {name=l23 lab=ref0}
+C {devices/lab_wire.sym} 245 260 0 0 {name=l5 lab=otao}
+C {devices/lab_wire.sym} 450 0 0 0 {name=l6 lab=otao}
+C {devices/lab_wire.sym} -430 0 0 1 {name=l7 lab=otax}
+C {devices/lab_wire.sym} 20 170 0 1 {name=l8 lab=ref0}
+C {devices/lab_wire.sym} -530 350 2 0 {name=l9 lab=tail}
+C {devices/lab_wire.sym} -430 260 0 1 {name=l10 lab=vout}
+C {devices/lab_wire.sym} 550 90 2 0 {name=l11 lab=vout}
+C {devices/lab_wire.sym} -250 260 0 0 {name=l12 lab=vref}
+C {devices/lab_wire.sym} 20 350 2 0 {name=l13 lab=vref}
+C {devices/lab_wire.sym} -590 94 2 0 {name=l14 lab=vdd}
+C {devices/lab_wire.sym} -90 94 2 0 {name=l15 lab=vdd}
+C {devices/lab_wire.sym} 610 94 2 0 {name=l16 lab=vdd}
+C {devices/lab_wire.sym} -90 354 2 0 {name=l17 lab=vss}
+C {devices/lab_wire.sym} -590 354 2 0 {name=l18 lab=vss}
+C {devices/lab_wire.sym} 255 614 2 0 {name=l19 lab=vss}
+C {devices/lab_wire.sym} -420 614 2 0 {name=l20 lab=vss}
+C {devices/lab_wire.sym} -850 350 2 0 {name=l21 lab=vss}
+C {devices/lab_wire.sym} -850 430 0 1 {name=l22 lab=vdd}
+C {devices/lab_wire.sym} -850 610 2 0 {name=l23 lab=nbias}
+C {devices/lab_wire.sym} -850 170 0 1 {name=l24 lab=ref0}
 C {devices/opin.sym} 880 30 0 0 {name=p0 lab=vout}
 B 8 -706 -78 26 78 {fill=0}
 T {PMOS Simple Current Mirror} -706 -96 0 0 0.3 0.3 {layer=8}

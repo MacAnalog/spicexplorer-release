@@ -1,0 +1,117 @@
+** Abstract ripple-reduction-loop switched-capacitor integrator — the RRL servo of
+** Fan's chopper CCIA (see provenance in circuit.yaml): sense caps Cs pick the output
+** ripple, the RRL chopper demodulates it, a two-phase auto-zeroed SC network
+** integrates it onto Cint around a telescopic+DDA-CMFB opamp (the amp_027 core,
+** instance names carry the flattener's _OPAMP suffix), and a behavioral
+** Gm/Rout/Cout output stage (ideal-amp-fully-diff leaf) converts the integrated
+** correction into the compensation drive voutp/voutn. AUTHORED source of truth
+** (plan D-2). PDK-neutral model tokens (nmos/pmos); per-PDK device names + geometry
+** come from circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports):
+**   vinp vinn voutp voutn clk_ch_rrl clk_ch_rrl_not clk_phi_1 clk_phi_2 vdd vss
+**
+** Topology (machine-flattened from drawings/ccia-02-QinwenFan-chopper-ripple-
+** reduction/simulation/rrl-switched-capa-integrator.spice, cross-checked instance by
+** instance against its subckts; device name suffixes _OPAMP/_CHRRL_n/_Sn kept from
+** the flattener):
+**   chopper — one chopper-diff (true 4-gate modulator, 4 TG = 8 MOS; drawing fixed,
+**     DRAWING_REVIEW item 1) between the sense-cap nodes sc_p/sc_n and the integrator
+**     summing nodes sum_p/sum_n: straight legs sc_p<->sum_p / sc_n<->sum_n conduct when
+**     the drawn Vctl (= CLK_CH_RRL_not, see below) is high, cross legs sc_n<->sum_p /
+**     sc_p<->sum_n conduct on the opposite phase.
+**   SC core — Cs1/Cs2 sample vinp/vinn; S1/S2 ground the sense nodes (p side on
+**     phi_2, n side on phi_1 AS DRAWN); Caz1/Caz2 couple into the opamp inputs;
+**     S3/S4 auto-zero (input->output short, phi_2); S5/S6 connect the opamp outputs
+**     to the integration nodes int_p/int_n (phi_1); Cint1/Cint2 close the
+**     integration loop back to sum_p/sum_n.
+**   opamp — the 16-MOS telescopic-cascode + differential-difference-CMFB core
+**     (same topology as amp_027_fan_rrl_ota; see that entry for the stage-level
+**     walkthrough). Bias levels vb1..vb4 are knob-driven internal sources.
+**   output — behavioral Gm_1 (VCCS) into Rout_1/Cout_1 with Rin_1/Cin_1 loading
+**     int_p/int_n (the compensation-Gm stage of the RRL, drawn as the
+**     ideal-amp-fully-diff macromodel leaf).
+**   drawing conformance + design notes:
+**     - the chopper MATCHES the fixed drawing (DRAWING_REVIEW items 1 FIXED): the
+**       drawn top level feeds the chopper's Vctl pin from CLK_CH_RRL_not, and that
+**       DRAWN polarity is PRESERVED here exactly — straight-leg NMOS gates on
+**       clk_ch_rrl_not, cross-leg NMOS gates on clk_ch_rrl — so clk_ch_rrl LOW =
+**       straight path on. This assignment is the demodulation SIGN of the composed
+**       RRL loop (DRAWING_REVIEW S4.2); the tran_rrl_sense bench measures it as the
+**       sign of ripple_gain.
+**     - every TG's two gates are driven by OPPOSITE PHI phases as drawn, so the
+**       class bench drives clk_phi_1/clk_phi_2 as exact complements (see the
+**       tran_rrl_sense template header);
+**     - the drawing's Vb1..Vb4 bias ports become internal knob-driven sources
+**       {vb1}..{vb4} (instantiator owns bias, a wrap deviation) and the 1p
+**       placeholder cap values become tied value knobs; the leaf's gm_val/rout_val/
+**       rin_val/cout_val/cin_val knobs MATCH the drawing (normalized at source,
+**       DRAWING_REVIEW item 5); internal nets renamed for readability
+**       (net4/5->sc_p/n, net7/6->sum_p/n, net1/8->oa_inp/inn, net2/3->oa_outn/outp,
+**       net9/10->int_p/n, OPAMP_net*->oa_* per the amp_027 naming).
+**.subckt sup_003_rrl_sc_integrator vinp vinn voutp voutn clk_ch_rrl clk_ch_rrl_not clk_phi_1 clk_phi_2 vdd vss
+* --- RRL chopper: 4-gate modulator (2026-07-20 redraw after Fan Fig. 6: the drawn
+* --- Vctl is now clk_ch_rrl, NOT clk_ch_rrl_not -- straight legs conduct when
+* --- clk_ch_rrl is HIGH; suffix _CHRRL_1/2 = straight p/n legs
+* --- (drawing x1/x4), _CHRRL_3/4 = cross legs sum_p<->sc_n / sum_n<->sc_p (x2/x3)) ---
+XM1_CHRRL_1 sum_p clk_ch_rrl sc_p vss nmos w=x_dut_xm1_chrrl_1_w l=x_dut_xm1_chrrl_1_l m=x_dut_xm1_chrrl_1_m
+XM2_CHRRL_1 sc_p clk_ch_rrl_not sum_p vdd pmos w=x_dut_xm2_chrrl_1_w l=x_dut_xm2_chrrl_1_l m=x_dut_xm2_chrrl_1_m
+XM1_CHRRL_2 sum_n clk_ch_rrl sc_n vss nmos w=x_dut_xm1_chrrl_2_w l=x_dut_xm1_chrrl_2_l m=x_dut_xm1_chrrl_2_m
+XM2_CHRRL_2 sc_n clk_ch_rrl_not sum_n vdd pmos w=x_dut_xm2_chrrl_2_w l=x_dut_xm2_chrrl_2_l m=x_dut_xm2_chrrl_2_m
+XM1_CHRRL_3 sum_p clk_ch_rrl_not sc_n vss nmos w=x_dut_xm1_chrrl_3_w l=x_dut_xm1_chrrl_3_l m=x_dut_xm1_chrrl_3_m
+XM2_CHRRL_3 sc_n clk_ch_rrl sum_p vdd pmos w=x_dut_xm2_chrrl_3_w l=x_dut_xm2_chrrl_3_l m=x_dut_xm2_chrrl_3_m
+XM1_CHRRL_4 sum_n clk_ch_rrl_not sc_p vss nmos w=x_dut_xm1_chrrl_4_w l=x_dut_xm1_chrrl_4_l m=x_dut_xm1_chrrl_4_m
+XM2_CHRRL_4 sc_p clk_ch_rrl sum_n vdd pmos w=x_dut_xm2_chrrl_4_w l=x_dut_xm2_chrrl_4_l m=x_dut_xm2_chrrl_4_m
+* --- input sense caps + sense-node ground switches (2026-07-20 redraw after Fan
+* --- Fig. 6: BOTH sense grounds now on phi_2 -- symmetric, same phase as the AZ
+* --- shorts S3/S4, i.e. sample-and-auto-zero together, release-and-transfer on phi_1.
+* --- Was: p on phi_2, n on phi_1 (DRAWING_REVIEW S7 asymmetry)) ---
+Cs1 vinp sc_p 'x_dut_cs1_value'
+Cs2 vinn sc_n 'x_dut_cs2_value'
+XM1_S2 sc_p clk_phi_2 vss vss nmos w=x_dut_xm1_s2_w l=x_dut_xm1_s2_l m=x_dut_xm1_s2_m
+XM2_S2 vss clk_phi_1 sc_p vdd pmos w=x_dut_xm2_s2_w l=x_dut_xm2_s2_l m=x_dut_xm2_s2_m
+XM1_S1 sc_n clk_phi_2 vss vss nmos w=x_dut_xm1_s1_w l=x_dut_xm1_s1_l m=x_dut_xm1_s1_m
+XM2_S1 vss clk_phi_1 sc_n vdd pmos w=x_dut_xm2_s1_w l=x_dut_xm2_s1_l m=x_dut_xm2_s1_m
+* --- auto-zero coupling caps + AZ switches (opamp input -> output short on phi_2) ---
+Caz1 sum_p oa_inp 'x_dut_caz1_value'
+Caz2 sum_n oa_inn 'x_dut_caz2_value'
+XM1_S3 oa_inp clk_phi_2 oa_outn vss nmos w=x_dut_xm1_s3_w l=x_dut_xm1_s3_l m=x_dut_xm1_s3_m
+XM2_S3 oa_outn clk_phi_1 oa_inp vdd pmos w=x_dut_xm2_s3_w l=x_dut_xm2_s3_l m=x_dut_xm2_s3_m
+XM1_S4 oa_inn clk_phi_2 oa_outp vss nmos w=x_dut_xm1_s4_w l=x_dut_xm1_s4_l m=x_dut_xm1_s4_m
+XM2_S4 oa_outp clk_phi_1 oa_inn vdd pmos w=x_dut_xm2_s4_w l=x_dut_xm2_s4_l m=x_dut_xm2_s4_m
+* --- integrate switches (opamp out -> int nodes on phi_1) + integration caps ---
+XM1_S5 oa_outn clk_phi_1 int_p vss nmos w=x_dut_xm1_s5_w l=x_dut_xm1_s5_l m=x_dut_xm1_s5_m
+XM2_S5 int_p clk_phi_2 oa_outn vdd pmos w=x_dut_xm2_s5_w l=x_dut_xm2_s5_l m=x_dut_xm2_s5_m
+XM1_S6 oa_outp clk_phi_1 int_n vss nmos w=x_dut_xm1_s6_w l=x_dut_xm1_s6_l m=x_dut_xm1_s6_m
+XM2_S6 int_n clk_phi_2 oa_outp vdd pmos w=x_dut_xm2_s6_w l=x_dut_xm2_s6_l m=x_dut_xm2_s6_m
+Cint1 sum_p int_p 'x_dut_cint1_value'
+Cint2 sum_n int_n 'x_dut_cint2_value'
+* --- integrator opamp: telescopic cascode + DDA-CMFB (the amp_027 core) ---
+XM1_OPAMP oa_tail vb3 vdd vdd pmos w=x_dut_xm1_opamp_w l=x_dut_xm1_opamp_l m=x_dut_xm1_opamp_m
+XM2_OPAMP oa_d1n oa_inp oa_tail vdd pmos w=x_dut_xm2_opamp_w l=x_dut_xm2_opamp_l m=x_dut_xm2_opamp_m
+XM3_OPAMP oa_d1p oa_inn oa_tail vdd pmos w=x_dut_xm3_opamp_w l=x_dut_xm3_opamp_l m=x_dut_xm3_opamp_m
+XM9_OPAMP oa_outn vb1 oa_d1n vdd pmos w=x_dut_xm9_opamp_w l=x_dut_xm9_opamp_l m=x_dut_xm9_opamp_m
+XM10_OPAMP oa_outp vb1 oa_d1p vdd pmos w=x_dut_xm10_opamp_w l=x_dut_xm10_opamp_l m=x_dut_xm10_opamp_m
+XM11_OPAMP oa_outn vb2 oa_csrc_n vss nmos w=x_dut_xm11_opamp_w l=x_dut_xm11_opamp_l m=x_dut_xm11_opamp_m
+XM12_OPAMP oa_outp vb2 oa_csrc_p vss nmos w=x_dut_xm12_opamp_w l=x_dut_xm12_opamp_l m=x_dut_xm12_opamp_m
+XM13_OPAMP oa_csrc_n oa_cm_bias vss vss nmos w=x_dut_xm13_opamp_w l=x_dut_xm13_opamp_l m=x_dut_xm13_opamp_m
+XM14_OPAMP oa_csrc_p oa_cm_bias vss vss nmos w=x_dut_xm14_opamp_w l=x_dut_xm14_opamp_l m=x_dut_xm14_opamp_m
+XM4_OPAMP oa_cm_tail vb3 vdd vdd pmos w=x_dut_xm4_opamp_w l=x_dut_xm4_opamp_l m=x_dut_xm4_opamp_m
+XM5_OPAMP oa_cm_sense oa_outn oa_cm_tail vdd pmos w=x_dut_xm5_opamp_w l=x_dut_xm5_opamp_l m=x_dut_xm5_opamp_m
+XM7_OPAMP oa_cm_sense oa_outp oa_cm_tail vdd pmos w=x_dut_xm7_opamp_w l=x_dut_xm7_opamp_l m=x_dut_xm7_opamp_m
+XM6_OPAMP oa_cm_bias vb4 oa_cm_tail vdd pmos w=x_dut_xm6_opamp_w l=x_dut_xm6_opamp_l m=x_dut_xm6_opamp_m
+XM8_OPAMP oa_cm_bias vb4 oa_cm_tail vdd pmos w=x_dut_xm8_opamp_w l=x_dut_xm8_opamp_l m=x_dut_xm8_opamp_m
+XM15_OPAMP oa_cm_bias oa_cm_bias vss vss nmos w=x_dut_xm15_opamp_w l=x_dut_xm15_opamp_l m=x_dut_xm15_opamp_m
+XM16_OPAMP oa_cm_sense oa_cm_sense vss vss nmos w=x_dut_xm16_opamp_w l=x_dut_xm16_opamp_l m=x_dut_xm16_opamp_m
+* --- internal bias levels (the drawing's Vb1..Vb4 ports; instantiator-owned knobs) ---
+Vb1 vb1 vss dc {vb1}
+Vb2 vb2 vss dc {vb2}
+Vb3 vb3 vss dc {vb3}
+Vb4 vb4 vss dc {vb4}
+* --- behavioral compensation-Gm output stage (ideal-amp-fully-diff leaf) ---
+Gm_1 voutn voutp int_p int_n {gm_val}
+Rout_1 voutn voutp 'rout_val'
+Rin_1 int_p int_n 'rin_val'
+Cout_1 voutn voutp 'cout_val'
+Cin_1 int_p int_n 'cin_val'
+**.ends
+.end

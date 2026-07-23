@@ -5,8 +5,8 @@ template: line_regulation
 description: "DC Vin sweep 1.4 -> 2.0 V at 1 mA load; delta-Vout (line regulation)."
 params:
   ILOAD: 1m
-  VDD_START: 1.4
-  VDD_STOP: 2.0
+  VDD_START: 2.6
+  VDD_STOP: 3.6
   VDD_STEP: 0.05
 flags: []
 produces: [line_reg]

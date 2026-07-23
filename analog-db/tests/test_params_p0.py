@@ -1,4 +1,4 @@
-"""Parameterization P0 (meta plan_parameterization.md §5 P0).
+"""Parameterization P0.
 
 Locks the ``spicexplorer/params@1`` contract and proves the group-detection spike on the
 ``amp_001_5t`` committed graph: pairs + mirrors found structurally, the proposed document is
@@ -93,7 +93,7 @@ def test_atomic_inventory_is_exhaustive_and_mechanical(graph):
     for cid, fields in inv.items():
         assert set(fields) == {"w", "l", "m"}
         for f, sym in fields.items():
-            assert sym == f"x_dut_{cid.lower()}_{f}"  # plan D-1, collision-free by construction
+            assert sym == f"x_dut_{cid.lower()}_{f}"  # collision-free by construction
     syms = [s for fields in inv.values() for s in fields.values()]
     assert len(syms) == len(set(syms)) == 18  # a 5T OTA is 18 atomic knobs
 

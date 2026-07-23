@@ -1,0 +1,18 @@
+# Analysis binding (plan D-4): switch-class tran_chargeinj template — pedestal left on a
+# 1 pF hold cap when the switch opens at TOFF (1 ns edges), plus the off-state leakage
+# averaged over the tail of the run.
+schema: spicexplorer/analysis@1
+id: tran_chargeinj
+template: tran_chargeinj
+description: "Charge-injection pedestal (q_inj_v) + off-state leakage (i_leak)."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CHOLD: 1p
+  TOFF: 1u
+  TB: 0.9u
+  TA: 1.5u
+  TSTEP: 1n
+  TSTOP: 3u
+flags: []
+produces: [q_inj_v, i_leak]

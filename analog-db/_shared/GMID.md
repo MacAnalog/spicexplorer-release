@@ -254,6 +254,82 @@ IIC_JKU_GMID_DIR=/path/to/analog-circuit-design/gmid \
 
 Checks JD / intrinsic-gain / fT to < 2% and VGS to < 1 mV across ~96 bias points.
 
+## The Spectre lane — licensed-kit PDKs (`gmid-extract-spectre`)
+
+A `sim_engine: spectre` PDK (tsmc-n65) can't use the ngspice flow above — its models only exist
+behind the licensed kit. The **Spectre lane** (`spicexplorer_analog_db.gmid_spectre`,
+`analog-db gmid-extract-spectre`) characterizes it with **plain headless Spectre** — no
+Virtuoso/OCEAN session — using the same registry-`gmid:`-block config style:
+
+```bash
+analog-db gmid-extract-spectre --pdk tsmc-n65              # tt → ~/.spicexplorer/gmid/tsmc-n65/
+analog-db gmid-extract-spectre --pdk tsmc-n65 --corner all --workers 16
+analog-db gmid-extract-spectre --pdk tsmc-n65 --smoke      # 2 L × 1 VSB validation pass
+analog-db gmid-extract-spectre --pdk tsmc-n65 --dry-run    # print the deck, run nothing
+```
+
+Differences from the open lane, and why:
+
+- **Both polarities in ONE pass.** The deck instantiates the registry's `devices.nmos.core` +
+  `devices.pmos.core` side by side with mirrored biases (`vbsn dc=-sb` / `vbsp dc=sb`), so one
+  extraction writes both `<nmos>__<corner>.pkl` and `<pmos>__<corner>.pkl`.
+- **Speed comes from the nested sweep, parallelism from YAML.** One Spectre process per
+  (L, VSB) pair only; inside it a nested `sweepvds sweep { sweepvgs dc }` solves the whole
+  VGS×VDS plane with warm-started DC solves (per-process overhead × nL·nVSB, **not** × every
+  bias point — the difference between ~10 minutes and ~8 hours for a 1.7 M-point grid). The
+  fan-out width is the registry's **`gmid.simulator`** block:
+
+  ```yaml
+  gmid:
+    simulator:            # optional; CLI --workers/--timeout override
+      workers: 12         # parallel Spectre jobs
+      timeout_s: 1200     # per-job wall clock
+  ```
+- **NDA posture.** The deck's only include is the operator's *neutral* wrapper
+  (`$SPICEXPLORER_<PDK>_MODEL_ROOT/<corners.lib_file>` + a **generic** section name — the same
+  indirection the sim bindings use); the Spectre binary/env come from the virtuoso-bridge
+  `local.env` (`VB_SPECTRE_BIN`/`VB_CADENCE_CSHRC`); Spectre logs stay in the scratch dir and
+  are never echoed. LUTs land **out-of-repo** by default (`gmid.out_root`, mirroring the
+  committed `_shared/gmid/<pdk>/` layout) — committing licensed-kit tables is an owner call.
+- **Gate current is stored honestly.** bsim4 splits gate tunneling: `igd`/`igs` are the
+  overlap/edge components only; the **channel** components `igcd`/`igcs` are ~100× larger at
+  65 nm. The stored `IGD`/`IGS` are the folded totals, so a node-loading leak budget
+  (`g_leak ≈ ∂(IGD+IGS)/∂VGS` by finite difference) reads true. A pygmid-convention LUT with
+  bare `igd`/`igs` under-reads 65 nm gate leak two orders of magnitude.
+- **No noise columns.** `STH`/`SFL` are omitted (not zeroed) until a pnoise-based lane exists —
+  an absent key fails loud in `pygmid.Lookup`; silent zeros would lie.
+
+**Accuracy, validated against live amplifier op dumps** (every MOS of two working designs,
+looked up at its exact measured bias): 25 mV VGS/VDS grids give ≤0.3 % gm/ID and ≤5 % JD
+interpolation error. The real accuracy axis is **finger width**, not the grid — the LUT is
+per-unit-width at `width_um` (5 µm) fingers, and narrow fingers deviate (0.5 µm pch measured
+2.2× off on gm/gds). Apply sizings with ~2–10 µm fingers and scale total W via `m`.
+
+## Runners & parallelism (open lane)
+
+The open-PDK lane has the same `simulator:` registry block, plus a **runner choice** — the
+docker base image is no longer required when the host has ngspice + `$PDK_ROOT`:
+
+```yaml
+gmid:
+  simulator:            # optional; CLI --runner/--workers/--timeout override
+    runner: auto        # auto = host ngspice+$PDK_ROOT when available, else docker
+    workers: 8          # parallel ngspice jobs, ONE PER L VALUE
+    timeout_s: 3600
+```
+
+- **`native` runner** (`gmid.native_deck_runner`) reuses the Phase-7 native-sim machinery
+  (`runner._NATIVE_PDK`): a per-PDK `.spiceinit` (sourcepath + IHP OSDI) in each job's scratch
+  dir + the native deck fixes (slim-corner-lib swap, absolute includes). `docker` remains the
+  containerized fallback; `auto` probes `runner.native_pdk_available()`.
+- **Per-L fan-out** (`gmid.extract_parallel`): the characterization deck loops L outermost, so
+  splitting on L is exact — each job runs the full VGS×VDS×VSB sweep for one length and the
+  slices concatenate along axis 0. This is what amortizes sky130's ~60 s model-library parse
+  (one per ngspice process): 8 lengths in parallel ≈ one parse-time, not eight.
+- **Verified bit-identical**: a native re-extraction of all three PDKs reproduces the committed
+  LUTs exactly (max relative error 0.0 across ID/GM/GDS/VT/CGG/STH, axes equal) — same
+  ngspice-45 + models, deterministic solver; the per-L merge is exact.
+
 ## References
 
 - **pygmid** — the LUT reader (and a Spectre sweeper we don't use): https://github.com/dreoilin/pygmid

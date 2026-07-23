@@ -1,0 +1,38 @@
+** Abstract real transistor-level CMFB network, CANONICAL polarity: resistive CM
+** averager (RMP/RMN) + a PMOS-input 5T OTA error amplifier with an on-cell 2-diode
+** bias string (no external bias pin). vcmfb = A*(cm_sense - vref) — canonical, for
+** INVERTING plants (B5 rule; the SRMC core's loops). AUTHORED source of truth
+** (plan D-2). PDK-neutral model tokens (nmos/pmos); per-PDK device names + geometry
+** come from circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vinp vinn vcmfb vref vdd vss
+**
+** Topology (from drawings/shared/simulation/cmfb-output-amp-5t-pmos-input.spice,
+** flattened by hand after xschem netlisting: wrapper = x2 vcm-detector-simple +
+** x1 amp-single-ended-5t-pmos-input):
+**   sense — RMP/RMN resistive averager from the sensed nodes vinp/vinn to cm_sense.
+**   error amp — PMOS diff pair XM4 (gate cm_sense, the + input) / XM5 (gate vref,
+**     the - input) under PMOS tail XM1; NMOS mirror load XM6 (diode) -> XM2 (output
+**     side); single-ended output vcmfb at the XM5/XM2 drains. Raising cm_sense
+**     steals current from XM4 -> mirror pulls less -> vcmfb RISES: canonical.
+**   bias — self-contained 2-diode string vdd -> XM3 (PMOS diode) -> bias -> XM7
+**     (NMOS diode) -> vss; XM1 mirrors XM3 (both gates on `bias`... XM1's gate is
+**     the shared diode node, so the string sets the tail |Vgs|).
+**   drawing conformance: none deviated — device names match the drawing's M-numbers
+**     (spiceprefix X). Sizing defaults are the 2026-07-20 optimizer winner (rounded
+**     3-sigfig == committed drawing values; the rounded point reproduces the
+**     full-precision winner exactly — not bistable. Full precision:
+**     drawings/sizing-and-specs.yaml shared.real_5t_cmfb.pmos_input_winner).
+**   design intent: the winner centers the ZERO-ERROR natural output (~0.28 V)
+**     between the SRMC plant's two actuator balance gates (0.215/0.318 V) instead
+**     of maximizing gain — static CM error ~ (gate - vcmfb_nat)/|slope| per loop
+**     (SIZING_VALIDATION_REPORT.md §8).
+RMP cm_sense vinp 'x_dut_rmp_value'
+RMN vinn cm_sense 'x_dut_rmn_value'
+XM1 ptail bias vdd vdd pmos l=x_dut_xm1_l m=x_dut_xm1_m w=x_dut_xm1_w
+XM2 vcmfb mirr vss vss nmos l=x_dut_xm2_l m=x_dut_xm2_m w=x_dut_xm2_w
+XM3 bias bias vdd vdd pmos l=x_dut_xm3_l m=x_dut_xm3_m w=x_dut_xm3_w
+XM4 mirr cm_sense ptail vdd pmos l=x_dut_xm4_l m=x_dut_xm4_m w=x_dut_xm4_w
+XM5 vcmfb vref ptail vdd pmos l=x_dut_xm5_l m=x_dut_xm5_m w=x_dut_xm5_w
+XM6 mirr mirr vss vss nmos l=x_dut_xm6_l m=x_dut_xm6_m w=x_dut_xm6_w
+XM7 bias bias vss vss nmos l=x_dut_xm7_l m=x_dut_xm7_m w=x_dut_xm7_w
+.end

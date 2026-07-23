@@ -29,7 +29,7 @@ N 700 -320 780 -320 {
 lab=VSS}
 N 700 -470 770 -470 {
 lab=VDD}
-C {title.sym} 180 -40 0 0 {name=l1 author="Stefan Schippers"}
+C {devices/title.sym} 180 -40 0 0 {name=l1 author="Copyright 2026 MacAnalog Research Group"}
 C {sg13g2_pr/sg13_lv_nmos.sym} 680 -320 0 0 {name=M1
 l=0.13u
 w=0.15u

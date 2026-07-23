@@ -1,0 +1,27 @@
+# Analysis binding (P3-2c): pnoise_chopped_diff template — the GOLDEN chopped output
+# noise, measured IN OPERATION via Spectre PSS+pnoise on the differential output pair
+# (voutp voutn): noise under the running clocks with sideband folding — what chopping
+# exists to shape, and what a frozen-network `noise` cannot see. ngspice lane = DC op
+# only (payload is Spectre-only, cf. stb). No datasheet metrics bind here on purpose —
+# read via the platform registry: {meas: onoise_pnoise_total, out: out} /
+# {meas: pnoise_spot, out: out, f: F}.
+schema: spicexplorer/analysis@1
+id: pnoise_chopped
+template: pnoise_chopped_diff
+description: "Golden chopped output noise — Spectre PSS+pnoise, clocks running."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 50f
+  FCHOP: 5k
+  TEDGE: 50n
+  RCM: 30k
+  FSTART: 1
+  FSTOP: 100k
+  PPD: 10
+  HARMS: 15
+  TSTAB: 10m
+  METHOD: gear2
+  MAXSB: 7
+flags: [spectre_only_payload]
+produces: []

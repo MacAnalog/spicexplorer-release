@@ -30,6 +30,9 @@
     "display_name": {"type": "string"},
     "compensation": {"type": "string", "description": "Frequency-compensation scheme (NMCNR, Miller, ...), if applicable."},
     "stages": {"type": "integer", "minimum": 1},
+    "subfamily": {"type": "string", "description": "Soft sub-family label within a class (plan_hierarchical_composition D7/S8) - e.g. `ccia` on an `ia` circuit. Descriptive only; selects nothing by itself (bench sets branch on it by convention)."},
+    "tier": {"type": "string", "description": "Descriptive abstraction-tier facet (plan S4.1) - gm_block | ota | ia | ldo | frontend | support. NOT a verified edge; class stays the binding contract.", "examples": ["gm_block", "ota", "ia", "ldo", "frontend", "support"]},
+    "realization": {"type": "string", "enum": ["transistor", "behavioral", "mixed"], "description": "Fidelity axis orthogonal to identity (plan S3.5): transistor-level, behavioral (G/E/R/C macromodel), or mixed (behavioral leaves inside a transistor design)."},
     "ports": {
       "type": "array",
       "items": {"type": "string"},
@@ -55,6 +58,7 @@
         "datasheet": {"type": "string"},
         "schematic": {"type": "string"},
         "reference_schematic": {"type": "string", "description": "path (relative to circuit dir) of an AUTHORED upstream reference schematic figure (e.g. the original AnalogGym/paper snapshot under reference/) — informational, never generated."},
+        "composition": {"type": "string", "description": "path (relative to circuit dir) of the AUTHORED composition.yaml (spicexplorer/composition@1) a composite is flattened from; its abstract_netlist + pdk sizing.yaml are then GENERATED (plan P4)."},
         "abstract_netlist": {"type": "string"}
       }
     },

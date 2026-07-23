@@ -1,0 +1,157 @@
+{
+  "area": {
+    "active_gate_area_um2": 176.0,
+    "c_count": 1,
+    "c_total_f": 2e-12,
+    "mos_count": 10,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "amp_022_fer_two_stage",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 69.72382,
+            "pm": 82.9749,
+            "ugf": 10115140.0
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 49.26712
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0001509474
+          },
+          "status": "ok"
+        },
+        "iip3": {
+          "error": "amp_022_fer_two_stage/iip3@gf180mcu/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_022_fer_two_stage \u00d7 iip3 \u00d7 gf180mcu \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nvdd                                        1.5\nvss                  ",
+          "status": "sim_error"
+        },
+        "linearity": {
+          "measures": {
+            "icmr_max": 1.19,
+            "icmr_min": 0.025,
+            "icmr_range": 1.165
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.0004583374,
+            "onoise_total": 0.01445558
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 49.46792
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "error": "amp_022_fer_two_stage/stb@gf180mcu/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_022_fer_two_stage \u00d7 stb \u00d7 gf180mcu \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nNo. of Data Rows : 607\nASCII raw file \"rawspice.raw\"\nngspice-45 done\nwarning, can't find model 'x_dut_cc_value' from line\n    cc b vout x_dut_cc_value\nNote: Starting dynamic gmin stepping\nNote: Dynamic gmin stepping com",
+          "status": "sim_error"
+        },
+        "thd": {
+          "error": "amp_022_fer_two_stage/thd@gf180mcu/tt: no measures parsed:\nut                                  0.600287\nvinp                                       0.6\nvinn                                  0.600287\nxdut.b                                  0.6873\nxdut.a                                0.671835\nxdut.c                                 1.41416\nxdut.pbias                            0.625368\nvfb#branch                                   0\nvinp#branch                                  0\nvss#branch          ",
+          "status": "sim_error"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 3.01821e-07,
+            "tcross": 1.301821e-06,
+            "vfinal": 0.8019062
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:21:13+00:00"
+      }
+    }
+  },
+  "design_id": "2cfdec894b",
+  "metrics": {
+    "tt": {
+      "cmrr_db": {
+        "spec": "pass",
+        "value": 49.26712
+      },
+      "dc_gain_db": {
+        "spec": "pass",
+        "value": 69.72382
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 0.0001509474
+      },
+      "icmr_range": {
+        "spec": "pass",
+        "value": 1.165
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 82.9749
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 49.46792
+      },
+      "t_settle": {
+        "spec": "pass",
+        "value": 3.01821e-07
+      },
+      "ugf_hz": {
+        "spec": "pass",
+        "value": 10115140.0
+      },
+      "vn_in": {
+        "spec": "pass",
+        "value": 0.0004583374
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_cc_value": "2e-12",
+      "x_dut_xm0_l": "0.4u",
+      "x_dut_xm0_m": 5,
+      "x_dut_xm0_w": "8u",
+      "x_dut_xm2_l": "0.4u",
+      "x_dut_xm2_m": 24,
+      "x_dut_xm3_l": "0.4u",
+      "x_dut_xm3_m": 2,
+      "x_dut_xm3_w": "6u",
+      "x_dut_xm7_l": "0.4u",
+      "x_dut_xm7_m": 3,
+      "x_dut_xm7_w": "8u",
+      "x_dut_xmbd_l": "0.4u",
+      "x_dut_xmbd_m": 1,
+      "x_dut_xmbd_w": "4u"
+    }
+  },
+  "pdk": "gf180mcu",
+  "ppa": {
+    "active_gate_area_um2": 176.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 69.72382,
+      "pm_deg": 82.9749,
+      "ugf_hz": 10115140.0
+    },
+    "power_w": 0.00022642109999999999
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

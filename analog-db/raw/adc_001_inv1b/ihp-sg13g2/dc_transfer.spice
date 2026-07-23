@@ -6,6 +6,7 @@
 **   docker run --rm -i spicexplorer-spice-base:local \
 **     bash -lc 'd=$(mktemp -d) && cat > $d/c.spice && cd $d && ngspice -b c.spice' < raw/adc_001_inv1b/ihp-sg13g2/dc_transfer.spice
 *----------------------------------------------------------*
+** params: 6 free + 0 frozen knobs (sizing.yaml) · 0 tied · 0 ratio-derived (abstract/params.yaml) · 1 testbench params
 ** AUTHORED TEMPLATE — adc/dc_transfer: static input→output transfer of a converter.
 ** For a 1-bit/flash slice: sweeps the analog input and reads the digital output rails
 ** (v_out_high at VIN_LO, v_out_low at VIN_HI) and the decision level threshold_v (input where the

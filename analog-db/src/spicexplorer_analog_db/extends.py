@@ -1,4 +1,4 @@
-"""The optimizer projection (plan D-3): thin AUTHORED source → full GENERATED config.
+"""The optimizer projection: thin AUTHORED source → full GENERATED config.
 
 ``circuits/<id>/optimizer/projection.yaml`` is the thin view: ``extends: ../circuit.yaml``
 plus only the optimizer-specific wiring (paths, testbenches, pvt, tech constraints, the
@@ -8,9 +8,7 @@ optimizer algorithm). The generator merges in:
 
 and writes the full, ``Project_Setup.from_yaml``-loadable ``circuits/<id>/project_setup.yaml``
 (GENERATED, drift-guarded by Tier 1). The optimizer config is thus *derived, not
-hand-maintained* — the D-3 promise — while staying loadable by the existing optimizer/api
-with zero changes there. The P3 regression gate proves the generated cascode config is
-equivalent to the committed NEWCAS baseline.
+hand-maintained* — while staying loadable by the existing optimizer/api with zero changes there.
 """
 
 from __future__ import annotations

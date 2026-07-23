@@ -3,8 +3,8 @@
 extends: ../circuit.yaml
 pdk: ihp-sg13g2
 project:
-  name: FOLDED-CASCODE-OTA
-  description: Example of optimizing a folded cascode OTA using NGOpt optimizer from Nevergrad
+  name: FOLDED-CASCODE-OTA · analog-db amp_004
+  description: DB projection of amp_004_folded_cascode — folded-cascode OTA sizing in ihp-sg13g2 (mirrors the classic example)
   simulator: ngspice
   save_sim: false
   ws_root: pdk/ihp-sg13g2

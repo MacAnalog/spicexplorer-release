@@ -48,7 +48,7 @@
         "value": 85.83404
       },
       "ugf_hz": {
-        "spec": "none",
+        "spec": "pass",
         "value": 6643528.0
       }
     }
@@ -57,17 +57,14 @@
     "sizing": {
       "CAPACITOR_0": "5p",
       "CURRENT_0_BIAS": "60u",
-      "x_dut_xm7_l": "1u",
-      "x_dut_xm7_m": "16",
-      "x_dut_xm7_w": "1u",
       "x_dut_xm10_l": "1u",
       "x_dut_xm10_m": "8",
       "x_dut_xm10_w": "1u",
       "x_dut_xm11_l": "1u",
       "x_dut_xm11_m": "32",
       "x_dut_xm11_w": "1u",
-      "x_dut_xm19_l": "1u",
       "x_dut_xm14_m": "4",
+      "x_dut_xm19_l": "1u",
       "x_dut_xm19_w": "1u",
       "x_dut_xm21_l": "1u",
       "x_dut_xm21_m": "4",
@@ -75,6 +72,9 @@
       "x_dut_xm23_l": "1u",
       "x_dut_xm23_m": "16",
       "x_dut_xm23_w": "1u",
+      "x_dut_xm7_l": "1u",
+      "x_dut_xm7_m": "16",
+      "x_dut_xm7_w": "1u",
       "x_dut_xm9_l": "1u",
       "x_dut_xm9_m": "4",
       "x_dut_xm9_w": "1u"

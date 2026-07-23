@@ -10,6 +10,19 @@
       "display_name": "CMOS-inverter 1-bit quantizer (degenerate flash slice)",
       "id": "adc_001_inv1b",
       "kind": "verifiable",
+      "params": {
+        "devices": 2,
+        "groups": {},
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 6,
+            "frozen": 0,
+            "ratio": 0,
+            "tied": 0
+          }
+        }
+      },
       "pdks": [
         "ihp-sg13g2"
       ],
@@ -240,9 +253,9 @@
             "power_w": 4.1230935e-05
           },
           "spec": {
-            "fail": 4,
+            "fail": 5,
             "none": 0,
-            "pass": 6
+            "pass": 5
           }
         },
         "sky130": {
@@ -311,13 +324,20 @@
             "frozen": 0,
             "ratio": 13,
             "tied": 35
+          },
+          "tsmc-n65": {
+            "free": 27,
+            "frozen": 0,
+            "ratio": 13,
+            "tied": 35
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -333,19 +353,37 @@
           "_dut": "raw/amp_002_alfio_raffc/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_002_alfio_raffc/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_002_alfio_raffc/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_002_alfio_raffc/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_002_alfio_raffc/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_002_alfio_raffc/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_002_alfio_raffc/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_002_alfio_raffc/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_002_alfio_raffc/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_002_alfio_raffc/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_002_alfio_raffc/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_002_alfio_raffc/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_002_alfio_raffc/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_002_alfio_raffc/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_002_alfio_raffc/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_002_alfio_raffc/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_002_alfio_raffc/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_002_alfio_raffc/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_002_alfio_raffc/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_002_alfio_raffc/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_002_alfio_raffc/sky130/dc_op.spice",
+          "noise": "raw/amp_002_alfio_raffc/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_002_alfio_raffc/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_002_alfio_raffc/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_002_alfio_raffc/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_002_alfio_raffc/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_002_alfio_raffc/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_002_alfio_raffc/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_002_alfio_raffc/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_002_alfio_raffc/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_002_alfio_raffc/tsmc-n65/tran_step.spice"
         }
       },
       "scoreboard": {
@@ -367,22 +405,41 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "b018f7e796",
+          "design_id": "fc7e53c7d6",
+          "ppa": {
+            "active_gate_area_um2": 1612.727,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 74.41905,
+              "pm_deg": 63.89268,
+              "ugf_hz": 2446759.0
+            },
+            "power_w": 0.00076627548
+          },
+          "spec": {
+            "fail": 2,
+            "none": 2,
+            "pass": 4
+          }
+        },
+        "sky130": {
+          "design_id": "aab6f15cda",
           "ppa": {
             "active_gate_area_um2": 78.0,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 27.75551,
-              "pm_deg": 73.04723,
-              "ugf_hz": 584560.6
-            }
+              "dc_gain_db": -13.92692
+            },
+            "power_w": 0.00031793652000000004
           },
           "spec": {
-            "fail": 1,
-            "none": 1,
-            "pass": 1
+            "fail": 4,
+            "none": 2,
+            "pass": 0
           }
         }
       },
@@ -430,13 +487,20 @@
             "frozen": 0,
             "ratio": 15,
             "tied": 36
+          },
+          "tsmc-n65": {
+            "free": 23,
+            "frozen": 0,
+            "ratio": 15,
+            "tied": 36
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -452,19 +516,37 @@
           "_dut": "raw/amp_003_fan_smc/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_003_fan_smc/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_003_fan_smc/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_003_fan_smc/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_003_fan_smc/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_003_fan_smc/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_003_fan_smc/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_003_fan_smc/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_003_fan_smc/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_003_fan_smc/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_003_fan_smc/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_003_fan_smc/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_003_fan_smc/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_003_fan_smc/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_003_fan_smc/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_003_fan_smc/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_003_fan_smc/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_003_fan_smc/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_003_fan_smc/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_003_fan_smc/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_003_fan_smc/sky130/dc_op.spice",
+          "noise": "raw/amp_003_fan_smc/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_003_fan_smc/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_003_fan_smc/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_003_fan_smc/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_003_fan_smc/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_003_fan_smc/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_003_fan_smc/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_003_fan_smc/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_003_fan_smc/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_003_fan_smc/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -489,22 +571,23 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "36036c3e4b",
+          "design_id": "e8ca2052bf",
           "ppa": {
-            "active_gate_area_um2": 412.0,
+            "active_gate_area_um2": 1824.845,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 86.00362,
-              "pm_deg": 85.83404,
-              "ugf_hz": 6643528.0
-            }
+              "dc_gain_db": 99.12752,
+              "pm_deg": 72.51293,
+              "ugf_hz": 6786079.0
+            },
+            "power_w": 0.0010668004200000002
           },
           "spec": {
-            "fail": 1,
-            "none": 1,
-            "pass": 1
+            "fail": 2,
+            "none": 2,
+            "pass": 4
           }
         },
         "sky130": {
@@ -573,6 +656,12 @@
             "frozen": 21,
             "ratio": 0,
             "tied": 21
+          },
+          "tsmc-n65": {
+            "free": 16,
+            "frozen": 21,
+            "ratio": 0,
+            "tied": 21
           }
         },
         "untied_symmetries": [
@@ -583,7 +672,8 @@
       "pdks": [
         "ihp-sg13g2",
         "sky130",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -623,6 +713,15 @@
           "noise": "raw/amp_004_folded_cascode/sky130/noise.spice",
           "psrr_vdd": "raw/amp_004_folded_cascode/sky130/psrr_vdd.spice",
           "tran_step": "raw/amp_004_folded_cascode/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_004_folded_cascode/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_004_folded_cascode/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_004_folded_cascode/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_004_folded_cascode/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_004_folded_cascode/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_004_folded_cascode/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_004_folded_cascode/tsmc-n65/tran_step.spice"
         }
       },
       "scoreboard": {
@@ -645,41 +744,43 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "29aa8c37e5",
+          "design_id": "f6c38b2763",
           "ppa": {
-            "active_gate_area_um2": 3556.0,
+            "active_gate_area_um2": 1423.231,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 44.12522,
-              "pm_deg": 74.66839,
-              "ugf_hz": 3579465.0
+              "dc_gain_db": 59.74519,
+              "pm_deg": 74.48558,
+              "ugf_hz": 9215947.0
             },
-            "power_w": 0.0002329686
-          },
-          "spec": {
-            "fail": 2,
-            "none": 2,
-            "pass": 2
-          }
-        },
-        "sky130": {
-          "design_id": "cc68cc05d1",
-          "ppa": {
-            "active_gate_area_um2": 3556.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": -37.15145
-            },
-            "power_w": 6.8808258e-05
+            "power_w": 9.871804800000001e-05
           },
           "spec": {
             "fail": 1,
-            "none": 1,
-            "pass": 1
+            "none": 2,
+            "pass": 5
+          }
+        },
+        "sky130": {
+          "design_id": "d57715bc27",
+          "ppa": {
+            "active_gate_area_um2": 13579.501,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 80.30798,
+              "pm_deg": 46.08679,
+              "ugf_hz": 110650.2
+            },
+            "power_w": 3.5276238e-06
+          },
+          "spec": {
+            "fail": 1,
+            "none": 2,
+            "pass": 5
           }
         }
       },
@@ -730,13 +831,20 @@
             "frozen": 0,
             "ratio": 16,
             "tied": 44
+          },
+          "tsmc-n65": {
+            "free": 33,
+            "frozen": 0,
+            "ratio": 16,
+            "tied": 44
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -752,19 +860,37 @@
           "_dut": "raw/amp_005_hoilee_affc/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_005_hoilee_affc/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_005_hoilee_affc/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_005_hoilee_affc/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_005_hoilee_affc/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_005_hoilee_affc/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_005_hoilee_affc/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_005_hoilee_affc/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_005_hoilee_affc/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_005_hoilee_affc/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_005_hoilee_affc/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_005_hoilee_affc/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_005_hoilee_affc/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_005_hoilee_affc/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_005_hoilee_affc/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_005_hoilee_affc/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_005_hoilee_affc/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_005_hoilee_affc/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_005_hoilee_affc/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_005_hoilee_affc/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_005_hoilee_affc/sky130/dc_op.spice",
+          "noise": "raw/amp_005_hoilee_affc/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_005_hoilee_affc/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_005_hoilee_affc/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_005_hoilee_affc/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_005_hoilee_affc/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_005_hoilee_affc/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_005_hoilee_affc/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_005_hoilee_affc/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_005_hoilee_affc/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_005_hoilee_affc/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -791,22 +917,23 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "49da9afb18",
+          "design_id": "7874a2872a",
           "ppa": {
-            "active_gate_area_um2": 276.0,
+            "active_gate_area_um2": 4073.394,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 74.67413,
-              "pm_deg": 8.435262,
-              "ugf_hz": 2276030.0
-            }
+              "dc_gain_db": 79.99763,
+              "pm_deg": 63.71968,
+              "ugf_hz": 2299016.0
+            },
+            "power_w": 0.00038156382
           },
           "spec": {
-            "fail": 2,
-            "none": 1,
-            "pass": 0
+            "fail": 1,
+            "none": 2,
+            "pass": 5
           }
         },
         "sky130": {
@@ -874,13 +1001,20 @@
             "frozen": 0,
             "ratio": 15,
             "tied": 36
+          },
+          "tsmc-n65": {
+            "free": 30,
+            "frozen": 0,
+            "ratio": 15,
+            "tied": 36
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -896,19 +1030,37 @@
           "_dut": "raw/amp_006_leung_dfcfc1/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_006_leung_dfcfc1/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_006_leung_dfcfc1/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_006_leung_dfcfc1/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_006_leung_dfcfc1/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_006_leung_dfcfc1/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_006_leung_dfcfc1/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_006_leung_dfcfc1/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_006_leung_dfcfc1/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_006_leung_dfcfc1/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_006_leung_dfcfc1/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_006_leung_dfcfc1/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_006_leung_dfcfc1/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_006_leung_dfcfc1/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_006_leung_dfcfc1/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_006_leung_dfcfc1/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_006_leung_dfcfc1/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_006_leung_dfcfc1/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_006_leung_dfcfc1/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_006_leung_dfcfc1/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_006_leung_dfcfc1/sky130/dc_op.spice",
+          "noise": "raw/amp_006_leung_dfcfc1/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_006_leung_dfcfc1/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_006_leung_dfcfc1/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_006_leung_dfcfc1/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_006_leung_dfcfc1/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_006_leung_dfcfc1/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_006_leung_dfcfc1/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_006_leung_dfcfc1/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_006_leung_dfcfc1/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_006_leung_dfcfc1/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -949,8 +1101,8 @@
           },
           "spec": {
             "fail": 2,
-            "none": 1,
-            "pass": 0
+            "none": 0,
+            "pass": 1
           }
         },
         "sky130": {
@@ -1017,13 +1169,20 @@
             "frozen": 0,
             "ratio": 16,
             "tied": 38
+          },
+          "tsmc-n65": {
+            "free": 27,
+            "frozen": 0,
+            "ratio": 16,
+            "tied": 38
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -1039,19 +1198,37 @@
           "_dut": "raw/amp_007_leung_dfcfc2/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_007_leung_dfcfc2/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_007_leung_dfcfc2/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_007_leung_dfcfc2/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_007_leung_dfcfc2/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_007_leung_dfcfc2/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_007_leung_dfcfc2/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_007_leung_dfcfc2/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_007_leung_dfcfc2/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_007_leung_dfcfc2/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_007_leung_dfcfc2/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_007_leung_dfcfc2/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_007_leung_dfcfc2/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_007_leung_dfcfc2/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_007_leung_dfcfc2/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_007_leung_dfcfc2/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_007_leung_dfcfc2/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_007_leung_dfcfc2/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_007_leung_dfcfc2/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_007_leung_dfcfc2/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_007_leung_dfcfc2/sky130/dc_op.spice",
+          "noise": "raw/amp_007_leung_dfcfc2/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_007_leung_dfcfc2/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_007_leung_dfcfc2/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_007_leung_dfcfc2/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_007_leung_dfcfc2/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_007_leung_dfcfc2/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_007_leung_dfcfc2/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_007_leung_dfcfc2/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_007_leung_dfcfc2/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_007_leung_dfcfc2/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -1078,22 +1255,23 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "2619faed7c",
+          "design_id": "2623a9f205",
           "ppa": {
-            "active_gate_area_um2": 440.0,
+            "active_gate_area_um2": 2802.293,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 91.32035,
-              "pm_deg": 61.40683,
-              "ugf_hz": 2035687.0
-            }
+              "dc_gain_db": 100.8318,
+              "pm_deg": 61.85833,
+              "ugf_hz": 2541231.0
+            },
+            "power_w": 0.0007360345800000001
           },
           "spec": {
             "fail": 1,
-            "none": 1,
-            "pass": 1
+            "none": 2,
+            "pass": 5
           }
         },
         "sky130": {
@@ -1160,13 +1338,20 @@
             "frozen": 0,
             "ratio": 15,
             "tied": 36
+          },
+          "tsmc-n65": {
+            "free": 24,
+            "frozen": 0,
+            "ratio": 15,
+            "tied": 36
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -1182,19 +1367,37 @@
           "_dut": "raw/amp_008_leung_nmcf/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_008_leung_nmcf/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_008_leung_nmcf/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_008_leung_nmcf/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_008_leung_nmcf/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_008_leung_nmcf/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_008_leung_nmcf/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_008_leung_nmcf/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_008_leung_nmcf/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_008_leung_nmcf/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_008_leung_nmcf/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_008_leung_nmcf/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_008_leung_nmcf/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_008_leung_nmcf/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_008_leung_nmcf/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_008_leung_nmcf/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_008_leung_nmcf/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_008_leung_nmcf/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_008_leung_nmcf/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_008_leung_nmcf/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_008_leung_nmcf/sky130/dc_op.spice",
+          "noise": "raw/amp_008_leung_nmcf/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_008_leung_nmcf/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_008_leung_nmcf/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_008_leung_nmcf/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_008_leung_nmcf/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_008_leung_nmcf/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_008_leung_nmcf/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_008_leung_nmcf/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_008_leung_nmcf/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_008_leung_nmcf/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -1235,8 +1438,8 @@
           },
           "spec": {
             "fail": 2,
-            "none": 1,
-            "pass": 0
+            "none": 0,
+            "pass": 1
           }
         },
         "sky130": {
@@ -1303,13 +1506,20 @@
             "frozen": 0,
             "ratio": 16,
             "tied": 38
+          },
+          "tsmc-n65": {
+            "free": 22,
+            "frozen": 0,
+            "ratio": 16,
+            "tied": 38
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -1325,19 +1535,37 @@
           "_dut": "raw/amp_009_leung_nmcnr/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_009_leung_nmcnr/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_009_leung_nmcnr/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_009_leung_nmcnr/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_009_leung_nmcnr/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_009_leung_nmcnr/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_009_leung_nmcnr/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_009_leung_nmcnr/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_009_leung_nmcnr/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_009_leung_nmcnr/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_009_leung_nmcnr/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_009_leung_nmcnr/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_009_leung_nmcnr/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_009_leung_nmcnr/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_009_leung_nmcnr/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_009_leung_nmcnr/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_009_leung_nmcnr/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_009_leung_nmcnr/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_009_leung_nmcnr/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_009_leung_nmcnr/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_009_leung_nmcnr/sky130/dc_op.spice",
+          "noise": "raw/amp_009_leung_nmcnr/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_009_leung_nmcnr/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_009_leung_nmcnr/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_009_leung_nmcnr/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_009_leung_nmcnr/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_009_leung_nmcnr/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_009_leung_nmcnr/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_009_leung_nmcnr/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_009_leung_nmcnr/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_009_leung_nmcnr/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -1364,22 +1592,23 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "3636c6f71a",
+          "design_id": "434d979f06",
           "ppa": {
-            "active_gate_area_um2": 272.0,
+            "active_gate_area_um2": 1093.631,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 95.58187,
-              "pm_deg": 89.58772,
-              "ugf_hz": 1438674.0
-            }
+              "dc_gain_db": 99.74583,
+              "pm_deg": 75.62048,
+              "ugf_hz": 9363910.0
+            },
+            "power_w": 0.00018317160000000003
           },
           "spec": {
             "fail": 1,
-            "none": 1,
-            "pass": 1
+            "none": 2,
+            "pass": 5
           }
         },
         "sky130": {
@@ -1447,6 +1676,12 @@
             "frozen": 0,
             "ratio": 15,
             "tied": 36
+          },
+          "tsmc-n65": {
+            "free": 33,
+            "frozen": 0,
+            "ratio": 15,
+            "tied": 36
           }
         },
         "untied_symmetries": [
@@ -1456,7 +1691,8 @@
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -1472,19 +1708,37 @@
           "_dut": "raw/amp_010_peng_acbc/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_010_peng_acbc/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_010_peng_acbc/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_010_peng_acbc/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_010_peng_acbc/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_010_peng_acbc/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_010_peng_acbc/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_010_peng_acbc/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_010_peng_acbc/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_010_peng_acbc/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_010_peng_acbc/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_010_peng_acbc/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_010_peng_acbc/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_010_peng_acbc/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_010_peng_acbc/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_010_peng_acbc/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_010_peng_acbc/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_010_peng_acbc/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_010_peng_acbc/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_010_peng_acbc/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_010_peng_acbc/sky130/dc_op.spice",
+          "noise": "raw/amp_010_peng_acbc/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_010_peng_acbc/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_010_peng_acbc/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_010_peng_acbc/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_010_peng_acbc/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_010_peng_acbc/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_010_peng_acbc/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_010_peng_acbc/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_010_peng_acbc/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_010_peng_acbc/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -1511,22 +1765,23 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "3dc59abd8f",
+          "design_id": "33c6b6b1d8",
           "ppa": {
-            "active_gate_area_um2": 240.0,
+            "active_gate_area_um2": 1694.807,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 80.24366,
-              "pm_deg": 32.13952,
-              "ugf_hz": 1509783.0
-            }
+              "dc_gain_db": 89.39148,
+              "pm_deg": 67.12996,
+              "ugf_hz": 1990057.0
+            },
+            "power_w": 0.00093997458
           },
           "spec": {
-            "fail": 2,
-            "none": 1,
-            "pass": 0
+            "fail": 3,
+            "none": 2,
+            "pass": 3
           }
         },
         "sky130": {
@@ -1593,13 +1848,20 @@
             "frozen": 0,
             "ratio": 23,
             "tied": 52
+          },
+          "tsmc-n65": {
+            "free": 31,
+            "frozen": 0,
+            "ratio": 23,
+            "tied": 52
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -1615,19 +1877,37 @@
           "_dut": "raw/amp_011_peng_iac/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_011_peng_iac/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_011_peng_iac/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_011_peng_iac/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_011_peng_iac/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_011_peng_iac/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_011_peng_iac/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_011_peng_iac/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_011_peng_iac/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_011_peng_iac/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_011_peng_iac/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_011_peng_iac/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_011_peng_iac/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_011_peng_iac/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_011_peng_iac/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_011_peng_iac/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_011_peng_iac/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_011_peng_iac/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_011_peng_iac/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_011_peng_iac/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_011_peng_iac/sky130/dc_op.spice",
+          "noise": "raw/amp_011_peng_iac/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_011_peng_iac/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_011_peng_iac/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_011_peng_iac/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_011_peng_iac/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_011_peng_iac/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_011_peng_iac/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_011_peng_iac/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_011_peng_iac/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_011_peng_iac/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -1654,22 +1934,23 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "02bf8453a2",
+          "design_id": "1182f679d0",
           "ppa": {
-            "active_gate_area_um2": 356.15,
+            "active_gate_area_um2": 3571.972,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 92.3704,
-              "pm_deg": 8.254305,
-              "ugf_hz": 2169218.0
-            }
+              "dc_gain_db": 114.2748,
+              "pm_deg": 65.23009,
+              "ugf_hz": 3005890.0
+            },
+            "power_w": 6.442016399999999e-05
           },
           "spec": {
-            "fail": 2,
-            "none": 1,
-            "pass": 0
+            "fail": 1,
+            "none": 2,
+            "pass": 5
           }
         },
         "sky130": {
@@ -1736,13 +2017,20 @@
             "frozen": 0,
             "ratio": 23,
             "tied": 52
+          },
+          "tsmc-n65": {
+            "free": 24,
+            "frozen": 0,
+            "ratio": 23,
+            "tied": 52
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -1758,19 +2046,37 @@
           "_dut": "raw/amp_012_peng_tcfc/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_012_peng_tcfc/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_012_peng_tcfc/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_012_peng_tcfc/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_012_peng_tcfc/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_012_peng_tcfc/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_012_peng_tcfc/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_012_peng_tcfc/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_012_peng_tcfc/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_012_peng_tcfc/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_012_peng_tcfc/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_012_peng_tcfc/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_012_peng_tcfc/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_012_peng_tcfc/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_012_peng_tcfc/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_012_peng_tcfc/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_012_peng_tcfc/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_012_peng_tcfc/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_012_peng_tcfc/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_012_peng_tcfc/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_012_peng_tcfc/sky130/dc_op.spice",
+          "noise": "raw/amp_012_peng_tcfc/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_012_peng_tcfc/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_012_peng_tcfc/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_012_peng_tcfc/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_012_peng_tcfc/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_012_peng_tcfc/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_012_peng_tcfc/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_012_peng_tcfc/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_012_peng_tcfc/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_012_peng_tcfc/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -1797,22 +2103,23 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "7ca319e156",
+          "design_id": "c0d46cbffa",
           "ppa": {
-            "active_gate_area_um2": 836.0,
+            "active_gate_area_um2": 1372.822,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 90.80483,
-              "pm_deg": -19.52277,
-              "ugf_hz": 2845710.0
-            }
+              "dc_gain_db": 95.48032,
+              "pm_deg": 71.16532,
+              "ugf_hz": 2081312.0
+            },
+            "power_w": 0.00028485918000000003
           },
           "spec": {
-            "fail": 2,
-            "none": 1,
-            "pass": 0
+            "fail": 1,
+            "none": 2,
+            "pass": 5
           }
         },
         "sky130": {
@@ -1881,13 +2188,20 @@
             "frozen": 0,
             "ratio": 11,
             "tied": 34
+          },
+          "tsmc-n65": {
+            "free": 38,
+            "frozen": 0,
+            "ratio": 11,
+            "tied": 34
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -1903,19 +2217,37 @@
           "_dut": "raw/amp_013_qu2017_azc/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_013_qu2017_azc/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_013_qu2017_azc/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_013_qu2017_azc/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_013_qu2017_azc/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_013_qu2017_azc/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_013_qu2017_azc/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_013_qu2017_azc/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_013_qu2017_azc/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_013_qu2017_azc/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_013_qu2017_azc/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_013_qu2017_azc/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_013_qu2017_azc/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_013_qu2017_azc/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_013_qu2017_azc/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_013_qu2017_azc/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_013_qu2017_azc/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_013_qu2017_azc/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_013_qu2017_azc/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_013_qu2017_azc/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_013_qu2017_azc/sky130/dc_op.spice",
+          "noise": "raw/amp_013_qu2017_azc/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_013_qu2017_azc/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_013_qu2017_azc/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_013_qu2017_azc/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_013_qu2017_azc/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_013_qu2017_azc/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_013_qu2017_azc/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_013_qu2017_azc/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_013_qu2017_azc/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_013_qu2017_azc/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -1942,22 +2274,23 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "55235640e9",
+          "design_id": "1ba56386b0",
           "ppa": {
-            "active_gate_area_um2": 204.0,
+            "active_gate_area_um2": 1918.813,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 80.06226,
-              "pm_deg": 81.96733,
-              "ugf_hz": 1883741.0
-            }
+              "dc_gain_db": 107.432,
+              "pm_deg": 60.43847,
+              "ugf_hz": 5930583.0
+            },
+            "power_w": 0.000145985436
           },
           "spec": {
             "fail": 1,
-            "none": 1,
-            "pass": 1
+            "none": 2,
+            "pass": 5
           }
         },
         "sky130": {
@@ -2024,13 +2357,20 @@
             "frozen": 0,
             "ratio": 15,
             "tied": 36
+          },
+          "tsmc-n65": {
+            "free": 24,
+            "frozen": 0,
+            "ratio": 15,
+            "tied": 36
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -2046,19 +2386,37 @@
           "_dut": "raw/amp_014_ramos_pfc/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_014_ramos_pfc/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_014_ramos_pfc/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_014_ramos_pfc/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_014_ramos_pfc/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_014_ramos_pfc/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_014_ramos_pfc/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_014_ramos_pfc/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_014_ramos_pfc/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_014_ramos_pfc/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_014_ramos_pfc/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_014_ramos_pfc/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_014_ramos_pfc/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_014_ramos_pfc/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_014_ramos_pfc/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_014_ramos_pfc/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_014_ramos_pfc/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_014_ramos_pfc/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_014_ramos_pfc/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_014_ramos_pfc/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_014_ramos_pfc/sky130/dc_op.spice",
+          "noise": "raw/amp_014_ramos_pfc/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_014_ramos_pfc/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_014_ramos_pfc/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_014_ramos_pfc/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_014_ramos_pfc/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_014_ramos_pfc/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_014_ramos_pfc/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_014_ramos_pfc/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_014_ramos_pfc/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_014_ramos_pfc/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -2085,22 +2443,23 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "c3c28d0fcf",
+          "design_id": "04c4a40619",
           "ppa": {
-            "active_gate_area_um2": 2583.0,
+            "active_gate_area_um2": 28681.497,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 102.0979,
-              "pm_deg": 65.80848,
-              "ugf_hz": 2362986.0
-            }
+              "dc_gain_db": 105.6267,
+              "pm_deg": 65.28282,
+              "ugf_hz": 2232364.0
+            },
+            "power_w": 0.0022177728
           },
           "spec": {
             "fail": 0,
-            "none": 1,
-            "pass": 2
+            "none": 2,
+            "pass": 6
           }
         },
         "sky130": {
@@ -2168,6 +2527,12 @@
             "frozen": 0,
             "ratio": 13,
             "tied": 32
+          },
+          "tsmc-n65": {
+            "free": 29,
+            "frozen": 0,
+            "ratio": 13,
+            "tied": 32
           }
         },
         "untied_symmetries": [
@@ -2177,7 +2542,8 @@
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -2193,19 +2559,37 @@
           "_dut": "raw/amp_015_sau_cfcc/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_015_sau_cfcc/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_015_sau_cfcc/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_015_sau_cfcc/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_015_sau_cfcc/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_015_sau_cfcc/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_015_sau_cfcc/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_015_sau_cfcc/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_015_sau_cfcc/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_015_sau_cfcc/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_015_sau_cfcc/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_015_sau_cfcc/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_015_sau_cfcc/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_015_sau_cfcc/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_015_sau_cfcc/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_015_sau_cfcc/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_015_sau_cfcc/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_015_sau_cfcc/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_015_sau_cfcc/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_015_sau_cfcc/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_015_sau_cfcc/sky130/dc_op.spice",
+          "noise": "raw/amp_015_sau_cfcc/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_015_sau_cfcc/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_015_sau_cfcc/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_015_sau_cfcc/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_015_sau_cfcc/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_015_sau_cfcc/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_015_sau_cfcc/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_015_sau_cfcc/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_015_sau_cfcc/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_015_sau_cfcc/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -2232,22 +2616,23 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "7b1f2e761f",
+          "design_id": "b151e9229a",
           "ppa": {
-            "active_gate_area_um2": 376.0,
+            "active_gate_area_um2": 12187.649,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 73.83351,
-              "pm_deg": 46.5793,
-              "ugf_hz": 3124814.0
-            }
+              "dc_gain_db": 91.48182,
+              "pm_deg": 85.3613,
+              "ugf_hz": 3723952.0
+            },
+            "power_w": 0.00029104038
           },
           "spec": {
-            "fail": 1,
-            "none": 1,
-            "pass": 1
+            "fail": 2,
+            "none": 2,
+            "pass": 4
           }
         },
         "sky130": {
@@ -2316,13 +2701,20 @@
             "frozen": 0,
             "ratio": 23,
             "tied": 58
+          },
+          "tsmc-n65": {
+            "free": 33,
+            "frozen": 0,
+            "ratio": 23,
+            "tied": 58
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -2338,19 +2730,37 @@
           "_dut": "raw/amp_016_song_dacfc/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_016_song_dacfc/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_016_song_dacfc/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_016_song_dacfc/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_016_song_dacfc/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_016_song_dacfc/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_016_song_dacfc/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_016_song_dacfc/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_016_song_dacfc/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_016_song_dacfc/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_016_song_dacfc/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_016_song_dacfc/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_016_song_dacfc/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_016_song_dacfc/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_016_song_dacfc/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_016_song_dacfc/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_016_song_dacfc/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_016_song_dacfc/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_016_song_dacfc/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_016_song_dacfc/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_016_song_dacfc/sky130/dc_op.spice",
+          "noise": "raw/amp_016_song_dacfc/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_016_song_dacfc/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_016_song_dacfc/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_016_song_dacfc/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_016_song_dacfc/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_016_song_dacfc/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_016_song_dacfc/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_016_song_dacfc/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_016_song_dacfc/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_016_song_dacfc/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -2390,8 +2800,8 @@
             }
           },
           "spec": {
-            "fail": 1,
-            "none": 1,
+            "fail": 2,
+            "none": 0,
             "pass": 1
           }
         },
@@ -2476,13 +2886,19 @@
           "_dut": "raw/amp_017_tan_clia/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_017_tan_clia/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_017_tan_clia/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_017_tan_clia/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_017_tan_clia/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_017_tan_clia/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_017_tan_clia/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_017_tan_clia/gf180mcu/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_017_tan_clia/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_017_tan_clia/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_017_tan_clia/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_017_tan_clia/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_017_tan_clia/sky130/dc_op.spice",
+          "noise": "raw/amp_017_tan_clia/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_017_tan_clia/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_017_tan_clia/sky130/tran_step.spice"
         }
       },
       "schematic": {
@@ -2506,6 +2922,21 @@
             "fail": 1,
             "none": 1,
             "pass": 1
+          }
+        },
+        "sky130": {
+          "design_id": "eb2fe94b0c",
+          "ppa": {
+            "active_gate_area_um2": 7654.272,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {}
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 0
           }
         }
       },
@@ -2554,6 +2985,12 @@
             "frozen": 10,
             "ratio": 0,
             "tied": 8
+          },
+          "tsmc-n65": {
+            "free": 15,
+            "frozen": 10,
+            "ratio": 0,
+            "tied": 8
           }
         },
         "untied_symmetries": [
@@ -2564,7 +3001,8 @@
       "pdks": [
         "ihp-sg13g2",
         "sky130",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -2604,6 +3042,15 @@
           "noise": "raw/amp_018_telescopic_cascode/sky130/noise.spice",
           "psrr_vdd": "raw/amp_018_telescopic_cascode/sky130/psrr_vdd.spice",
           "tran_step": "raw/amp_018_telescopic_cascode/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_018_telescopic_cascode/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_018_telescopic_cascode/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_018_telescopic_cascode/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_018_telescopic_cascode/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_018_telescopic_cascode/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_018_telescopic_cascode/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_018_telescopic_cascode/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -2644,6 +3091,21 @@
             "fail": 3,
             "none": 0,
             "pass": 3
+          }
+        },
+        "sky130": {
+          "design_id": "2b23e5ab07",
+          "ppa": {
+            "active_gate_area_um2": 2744.974,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {}
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 0
           }
         }
       },
@@ -2813,7 +3275,9 @@
         "ac_open_loop",
         "dc_op",
         "noise",
-        "tran_step"
+        "tran_step",
+        "ac_cm_reg",
+        "tran_cm_kick"
       ],
       "class": "amplifier",
       "compensation": "miller",
@@ -2852,6 +3316,12 @@
             "frozen": 10,
             "ratio": 0,
             "tied": 13
+          },
+          "tsmc-n65": {
+            "free": 18,
+            "frozen": 10,
+            "ratio": 0,
+            "tied": 13
           }
         },
         "untied_symmetries": [
@@ -2862,7 +3332,8 @@
       "pdks": [
         "ihp-sg13g2",
         "sky130",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -2870,32 +3341,48 @@
           "two_stage_miller_cmfb"
         ],
         "designer": "Stefan Schippers",
-        "source": "templates/OTA-Two-Stage"
+        "source": "drawings/OTA-Two-Stage"
       },
       "raw": {
         "gf180mcu": {
           "_dut": "raw/amp_020_two_stage_miller_cmfb/gf180mcu/_dut.spice",
+          "ac_cm_reg": "raw/amp_020_two_stage_miller_cmfb/gf180mcu/ac_cm_reg.spice",
           "ac_open_loop": "raw/amp_020_two_stage_miller_cmfb/gf180mcu/ac_open_loop.spice",
           "dc_op": "raw/amp_020_two_stage_miller_cmfb/gf180mcu/dc_op.spice",
           "noise": "raw/amp_020_two_stage_miller_cmfb/gf180mcu/noise.spice",
+          "tran_cm_kick": "raw/amp_020_two_stage_miller_cmfb/gf180mcu/tran_cm_kick.spice",
           "tran_step": "raw/amp_020_two_stage_miller_cmfb/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_020_two_stage_miller_cmfb/ihp-sg13g2/_dut.spice",
+          "ac_cm_reg": "raw/amp_020_two_stage_miller_cmfb/ihp-sg13g2/ac_cm_reg.spice",
           "ac_open_loop": "raw/amp_020_two_stage_miller_cmfb/ihp-sg13g2/ac_open_loop.spice",
           "dc_op": "raw/amp_020_two_stage_miller_cmfb/ihp-sg13g2/dc_op.spice",
           "noise": "raw/amp_020_two_stage_miller_cmfb/ihp-sg13g2/noise.spice",
+          "tran_cm_kick": "raw/amp_020_two_stage_miller_cmfb/ihp-sg13g2/tran_cm_kick.spice",
           "tran_step": "raw/amp_020_two_stage_miller_cmfb/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_020_two_stage_miller_cmfb/sky130/_dut.spice",
+          "ac_cm_reg": "raw/amp_020_two_stage_miller_cmfb/sky130/ac_cm_reg.spice",
           "ac_open_loop": "raw/amp_020_two_stage_miller_cmfb/sky130/ac_open_loop.spice",
           "dc_op": "raw/amp_020_two_stage_miller_cmfb/sky130/dc_op.spice",
           "noise": "raw/amp_020_two_stage_miller_cmfb/sky130/noise.spice",
+          "tran_cm_kick": "raw/amp_020_two_stage_miller_cmfb/sky130/tran_cm_kick.spice",
           "tran_step": "raw/amp_020_two_stage_miller_cmfb/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_020_two_stage_miller_cmfb/tsmc-n65/_dut.spice",
+          "ac_cm_reg": "raw/amp_020_two_stage_miller_cmfb/tsmc-n65/ac_cm_reg.spice",
+          "ac_open_loop": "raw/amp_020_two_stage_miller_cmfb/tsmc-n65/ac_open_loop.spice",
+          "dc_op": "raw/amp_020_two_stage_miller_cmfb/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_020_two_stage_miller_cmfb/tsmc-n65/noise.spice",
+          "tran_cm_kick": "raw/amp_020_two_stage_miller_cmfb/tsmc-n65/tran_cm_kick.spice",
+          "tran_step": "raw/amp_020_two_stage_miller_cmfb/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
+        "abstract": "circuits/amp_020_two_stage_miller_cmfb/pdk/ihp-sg13g2/schematic/two_stage_miller_cmfb.sch",
         "ihp-sg13g2": "circuits/amp_020_two_stage_miller_cmfb/pdk/ihp-sg13g2/schematic/two_stage_miller_cmfb.svg"
       },
       "scoreboard": {
@@ -2934,9 +3421,9 @@
             "power_w": 0.0004849467
           },
           "spec": {
-            "fail": 2,
+            "fail": 3,
             "none": 0,
-            "pass": 5
+            "pass": 4
           }
         },
         "sky130": {
@@ -3005,13 +3492,20 @@
             "frozen": 0,
             "ratio": 6,
             "tied": 27
+          },
+          "tsmc-n65": {
+            "free": 36,
+            "frozen": 0,
+            "ratio": 6,
+            "tied": 27
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -3027,19 +3521,37 @@
           "_dut": "raw/amp_021_yan_az/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_021_yan_az/gf180mcu/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_021_yan_az/gf180mcu/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_021_yan_az/gf180mcu/psrr_vdd.spice"
+          "dc_op": "raw/amp_021_yan_az/gf180mcu/dc_op.spice",
+          "noise": "raw/amp_021_yan_az/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_021_yan_az/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_021_yan_az/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_021_yan_az/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_021_yan_az/ihp-sg13g2/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_021_yan_az/ihp-sg13g2/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_021_yan_az/ihp-sg13g2/psrr_vdd.spice"
+          "dc_op": "raw/amp_021_yan_az/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_021_yan_az/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_021_yan_az/ihp-sg13g2/psrr_vdd.spice",
+          "tran_step": "raw/amp_021_yan_az/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_021_yan_az/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_021_yan_az/sky130/ac_open_loop.spice",
           "cmrr_vcm": "raw/amp_021_yan_az/sky130/cmrr_vcm.spice",
-          "psrr_vdd": "raw/amp_021_yan_az/sky130/psrr_vdd.spice"
+          "dc_op": "raw/amp_021_yan_az/sky130/dc_op.spice",
+          "noise": "raw/amp_021_yan_az/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_021_yan_az/sky130/psrr_vdd.spice",
+          "tran_step": "raw/amp_021_yan_az/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_021_yan_az/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_021_yan_az/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_021_yan_az/tsmc-n65/cmrr_vcm.spice",
+          "dc_op": "raw/amp_021_yan_az/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_021_yan_az/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_021_yan_az/tsmc-n65/psrr_vdd.spice",
+          "tran_step": "raw/amp_021_yan_az/tsmc-n65/tran_step.spice"
         }
       },
       "schematic": {
@@ -3079,8 +3591,8 @@
             }
           },
           "spec": {
-            "fail": 1,
-            "none": 1,
+            "fail": 2,
+            "none": 0,
             "pass": 1
           }
         },
@@ -3251,24 +3763,44 @@
         }
       ],
       "scoreboard": {
-        "ihp-sg13g2": {
-          "design_id": "3528d29e60",
+        "gf180mcu": {
+          "design_id": "2cfdec894b",
           "ppa": {
             "active_gate_area_um2": 176.0,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 51.50358,
-              "pm_deg": 80.94179,
-              "ugf_hz": 20891840.0
+              "dc_gain_db": 69.72382,
+              "pm_deg": 82.9749,
+              "ugf_hz": 10115140.0
             },
-            "power_w": 0.0003689625
+            "power_w": 0.00022642109999999999
           },
           "spec": {
             "fail": 0,
             "none": 0,
-            "pass": 6
+            "pass": 9
+          }
+        },
+        "ihp-sg13g2": {
+          "design_id": "95246581cb",
+          "ppa": {
+            "active_gate_area_um2": 231.189,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 55.68283,
+              "pm_deg": 75.89232,
+              "ugf_hz": 17109290.0
+            },
+            "power_w": 0.00029982735
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 9
           }
         },
         "sky130": {
@@ -3347,6 +3879,12 @@
             "frozen": 30,
             "ratio": 0,
             "tied": 44
+          },
+          "tsmc-n65": {
+            "free": 20,
+            "frozen": 30,
+            "ratio": 0,
+            "tied": 44
           }
         },
         "untied_symmetries": [
@@ -3357,7 +3895,8 @@
       "pdks": [
         "ihp-sg13g2",
         "sky130",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -3390,6 +3929,13 @@
           "dc_op": "raw/amp_023_fer_fd2s/sky130/dc_op.spice",
           "noise": "raw/amp_023_fer_fd2s/sky130/noise.spice",
           "tran_step": "raw/amp_023_fer_fd2s/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_023_fer_fd2s/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_023_fer_fd2s/tsmc-n65/ac_open_loop.spice",
+          "dc_op": "raw/amp_023_fer_fd2s/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_023_fer_fd2s/tsmc-n65/noise.spice",
+          "tran_step": "raw/amp_023_fer_fd2s/tsmc-n65/tran_step.spice"
         }
       },
       "references": [
@@ -3414,19 +3960,39 @@
         }
       ],
       "scoreboard": {
-        "ihp-sg13g2": {
-          "design_id": "ff409931cf",
+        "gf180mcu": {
+          "design_id": "275a0886b1",
           "ppa": {
-            "active_gate_area_um2": 92.3,
+            "active_gate_area_um2": 94.54,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 65.92503,
-              "pm_deg": 71.8947,
-              "ugf_hz": 150916200.0
+              "dc_gain_db": 78.90865,
+              "pm_deg": 67.04563,
+              "ugf_hz": 103627400.0
             },
-            "power_w": 0.00082463775
+            "power_w": 0.0005847574499999999
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 7
+          }
+        },
+        "ihp-sg13g2": {
+          "design_id": "f021ddf22e",
+          "ppa": {
+            "active_gate_area_um2": 1228.088,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 51.50731,
+              "pm_deg": 85.49176,
+              "ugf_hz": 12343820.0
+            },
+            "power_w": 0.0007827804
           },
           "spec": {
             "fail": 0,
@@ -3497,6 +4063,12 @@
             "frozen": 9,
             "ratio": 0,
             "tied": 9
+          },
+          "tsmc-n65": {
+            "free": 9,
+            "frozen": 9,
+            "ratio": 0,
+            "tied": 9
           }
         },
         "untied_symmetries": [
@@ -3506,7 +4078,8 @@
       "pdks": [
         "ihp-sg13g2",
         "sky130",
-        "gf180mcu"
+        "gf180mcu",
+        "tsmc-n65"
       ],
       "provenance": {
         "aliases": [
@@ -3539,6 +4112,13 @@
           "dc_op": "raw/amp_024_smcnr/sky130/dc_op.spice",
           "noise": "raw/amp_024_smcnr/sky130/noise.spice",
           "tran_step": "raw/amp_024_smcnr/sky130/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_024_smcnr/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_024_smcnr/tsmc-n65/ac_open_loop.spice",
+          "dc_op": "raw/amp_024_smcnr/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_024_smcnr/tsmc-n65/noise.spice",
+          "tran_step": "raw/amp_024_smcnr/tsmc-n65/tran_step.spice"
         }
       },
       "references": [
@@ -3552,6 +4132,26 @@
         }
       ],
       "scoreboard": {
+        "gf180mcu": {
+          "design_id": "234a33dc13",
+          "ppa": {
+            "active_gate_area_um2": 332.5,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 114.086,
+              "pm_deg": 102.8877,
+              "ugf_hz": 77242.8
+            },
+            "power_w": 1.22277735e-06
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 6
+          }
+        },
         "ihp-sg13g2": {
           "design_id": "cf958de246",
           "ppa": {
@@ -3567,9 +4167,9 @@
             "power_w": 1.9543335e-06
           },
           "spec": {
-            "fail": 0,
+            "fail": 2,
             "none": 0,
-            "pass": 6
+            "pass": 4
           }
         },
         "sky130": {
@@ -3590,6 +4190,860 @@
             "fail": 0,
             "none": 0,
             "pass": 6
+          }
+        }
+      },
+      "stages": 2,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "ac_open_loop",
+        "dc_op",
+        "noise",
+        "tran_step",
+        "ac_cm_reg",
+        "tran_cm_kick"
+      ],
+      "class": "amplifier",
+      "compensation": "miller-rz",
+      "display_name": "Hsu bandpass-IA two-stage OTA core with class-AB output (behavioral CMFB)",
+      "id": "amp_025_hsu_classab_ota",
+      "kind": "verifiable",
+      "params": {
+        "devices": 40,
+        "groups": {
+          "mirror_xm4_l": "mirror_length",
+          "mirror_xm5_l": "mirror_length",
+          "pair_xm10_xm11": "shared_geometry",
+          "pair_xm12_xm13": "matched_pair",
+          "pair_xm14_xm20": "matched_pair",
+          "pair_xm15_xm21": "shared_geometry",
+          "pair_xm16_xm22": "shared_geometry",
+          "pair_xm17_xm23": "shared_geometry",
+          "pair_xm18_xm24": "shared_geometry",
+          "pair_xm19_xm25": "matched_pair",
+          "pair_xm2_xm3": "matched_pair",
+          "pair_xm4_xm5": "matched_pair",
+          "pair_xm6_xm8": "matched_pair",
+          "pair_xm7_xm9": "shared_geometry",
+          "shared_c1_value": "shared_geometry",
+          "shared_r1_value": "shared_geometry",
+          "shared_rmp_value": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 37,
+            "frozen": 13,
+            "ratio": 0,
+            "tied": 40
+          },
+          "tsmc-n65": {
+            "free": 37,
+            "frozen": 13,
+            "ratio": 0,
+            "tied": 40
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2",
+        "tsmc-n65"
+      ],
+      "provenance": {
+        "aliases": [
+          "two-stage-ota-core"
+        ],
+        "designer": "Noorizadeh (schematic capture, after Hsu et al.)",
+        "notes": "The class-AB OTA core of the Hsu bandpass IA (biomedical plan Paper-1 ref [8]); CMFB is the drawn behavioral servo macromodel - realization: mixed per plan S3.5. Entry matches the fixed drawing: CMFB servo polarity (vref on +, CM detector on -; DRAWING_REVIEW item 3 FIXED), the vcmfb_ref port name (old vcmbf_ref typo) and the shared Rz nulling-resistor symbol (old Rz/RZ case collision) are all fixed at source (DRAWING_REVIEW item 5). Remaining entry-level wrap: the drawn bias/reference ports become internal knob-driven sources (instantiator owns bias).",
+        "paper": "Y.-P. Hsu, Z. Liu, M. M. Hella, \"A 1.8 uW -65 dB THD ECG Acquisition Front-End IC Using a Bandpass Instrumentation Amplifier With Class-AB Output Configuration\", IEEE TCAS-II 65(12):1859-1863, Dec. 2018",
+        "source": "drawings/ccia-01-YuPinHsu-bandpass-class-ab-output (hand-drawn xschem, two-stage-ota-core.sch)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/amp_025_hsu_classab_ota/ihp-sg13g2/_dut.spice",
+          "ac_cm_reg": "raw/amp_025_hsu_classab_ota/ihp-sg13g2/ac_cm_reg.spice",
+          "ac_open_loop": "raw/amp_025_hsu_classab_ota/ihp-sg13g2/ac_open_loop.spice",
+          "dc_op": "raw/amp_025_hsu_classab_ota/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_025_hsu_classab_ota/ihp-sg13g2/noise.spice",
+          "tran_cm_kick": "raw/amp_025_hsu_classab_ota/ihp-sg13g2/tran_cm_kick.spice",
+          "tran_step": "raw/amp_025_hsu_classab_ota/ihp-sg13g2/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_025_hsu_classab_ota/tsmc-n65/_dut.spice",
+          "ac_cm_reg": "raw/amp_025_hsu_classab_ota/tsmc-n65/ac_cm_reg.spice",
+          "ac_open_loop": "raw/amp_025_hsu_classab_ota/tsmc-n65/ac_open_loop.spice",
+          "dc_op": "raw/amp_025_hsu_classab_ota/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_025_hsu_classab_ota/tsmc-n65/noise.spice",
+          "tran_cm_kick": "raw/amp_025_hsu_classab_ota/tsmc-n65/tran_cm_kick.spice",
+          "tran_step": "raw/amp_025_hsu_classab_ota/tsmc-n65/tran_step.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/amp_025_hsu_classab_ota/pdk/ihp-sg13g2/schematic/two-stage-ota-core.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "400749b5f9",
+          "ppa": {
+            "active_gate_area_um2": 123.0,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 35.79735,
+              "pm_deg": 73.92944,
+              "ugf_hz": 22350110.0
+            },
+            "power_w": 0.00020830511999999997
+          },
+          "spec": {
+            "fail": 3,
+            "none": 0,
+            "pass": 8
+          }
+        }
+      },
+      "stages": 2,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "ac_open_loop",
+        "dc_op",
+        "noise",
+        "tran_step"
+      ],
+      "class": "amplifier",
+      "compensation": "miller",
+      "display_name": "Fan CCIA two-stage opamp core with embedded output chopper (statically transparent)",
+      "id": "amp_026_fan_chopper_ota",
+      "kind": "verifiable",
+      "params": {
+        "devices": 29,
+        "groups": {
+          "chopper_tg_nmos": "shared_geometry",
+          "chopper_tg_pmos": "shared_geometry",
+          "pair_xm10_xm11": "shared_geometry",
+          "pair_xm12_xm13": "shared_geometry",
+          "pair_xm14_xm15": "shared_geometry",
+          "pair_xm2_xm3": "matched_pair",
+          "pair_xm4_xm5": "shared_geometry",
+          "pair_xm6_xm7": "shared_geometry",
+          "pair_xm8_xm9": "shared_geometry",
+          "shared_cm1_value": "shared_geometry",
+          "sources_vb4_l": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 23,
+            "frozen": 10,
+            "ratio": 0,
+            "tied": 42
+          },
+          "tsmc-n65": {
+            "free": 23,
+            "frozen": 10,
+            "ratio": 0,
+            "tied": 42
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2",
+        "tsmc-n65"
+      ],
+      "provenance": {
+        "aliases": [
+          "two-stage-opamp-core"
+        ],
+        "designer": "Noorizadeh (schematic capture, after Fan et al.)",
+        "notes": "The CCIA's main two-stage opamp (the ia_002/ia_003 system entries compose it). Drawing sync: the four formerly-floating source nets (XM1/XM6/XM9 to vdd, XM15 to vss) and the chopper-diff topology are FIXED IN THE DRAWING (drawings/DRAWING_REVIEW.md items 1-2, 2026-07-16) \u2014 this entry matches the fixed two-stage-opamp-core.sch, including the true 4-gate output chopper (2 straight + 2 cross transmission gates, XM16..XM23). Static-entry decision: the chopper's control nets vctl/vctl_not are wired DIRECTLY to vdd/vss in this entry (held transparent = the vctl-HIGH phase): straight legs on, cross legs permanently OFF (swapped static ties; they add only junction parasitics on the fold/gate nodes) \u2014 the clocked characterization lives in the ia_002/ia_003 system entries. Drawn unsized (placeholder minimum-size devices) with Vb1..Vb4 as external bias ports; this entry pulls the four bias levels inside as knob-driven dc sources, per the instantiator-owns-bias convention (plan_hierarchical_composition D3/D4). The drawn Cm_1=1p was an unedited xschem default (Cm_2 was symbolic Cm); both Miller caps are knobs tied to match. NO explicit CMFB is drawn \u2014 output common mode is set by device ratioing, so vocm is sizing/corner-sensitive (cf. amp_020's knife-edge note).",
+        "paper": "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011",
+        "source": "drawings/ccia-02-QinwenFan-chopper-ripple-reduction (hand-drawn xschem, two-stage-opamp-core.sch, ver-B wiring)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/amp_026_fan_chopper_ota/ihp-sg13g2/_dut.spice",
+          "ac_open_loop": "raw/amp_026_fan_chopper_ota/ihp-sg13g2/ac_open_loop.spice",
+          "dc_op": "raw/amp_026_fan_chopper_ota/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_026_fan_chopper_ota/ihp-sg13g2/noise.spice",
+          "tran_step": "raw/amp_026_fan_chopper_ota/ihp-sg13g2/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_026_fan_chopper_ota/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_026_fan_chopper_ota/tsmc-n65/ac_open_loop.spice",
+          "dc_op": "raw/amp_026_fan_chopper_ota/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_026_fan_chopper_ota/tsmc-n65/noise.spice",
+          "tran_step": "raw/amp_026_fan_chopper_ota/tsmc-n65/tran_step.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/amp_026_fan_chopper_ota/pdk/ihp-sg13g2/schematic/two-stage-opamp-core.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "730698f250",
+          "ppa": {
+            "active_gate_area_um2": 116.08,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 61.71543,
+              "pm_deg": 64.29685,
+              "ugf_hz": 20800770.0
+            },
+            "power_w": 0.00020791043999999998
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 7
+          }
+        }
+      },
+      "stages": 2,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "ac_open_loop",
+        "dc_op",
+        "noise",
+        "tran_step",
+        "ac_cm_reg",
+        "tran_cm_kick"
+      ],
+      "class": "amplifier",
+      "compensation": null,
+      "display_name": "Fan ripple-reduction-loop SC-integrator opamp core (telescopic + DDA-CMFB)",
+      "id": "amp_027_fan_rrl_ota",
+      "kind": "verifiable",
+      "params": {
+        "devices": 20,
+        "groups": {
+          "mirror_xm15_l": "mirror_length",
+          "pair_xm11_xm12": "shared_geometry",
+          "pair_xm13_xm14": "matched_pair",
+          "pair_xm15_xm16": "shared_geometry",
+          "pair_xm2_xm3": "matched_pair",
+          "pair_xm5_xm7": "matched_pair",
+          "pair_xm6_xm8": "matched_pair",
+          "pair_xm9_xm10": "shared_geometry",
+          "tails_xm1_xm4_l": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 20,
+            "frozen": 9,
+            "ratio": 0,
+            "tied": 23
+          },
+          "tsmc-n65": {
+            "free": 20,
+            "frozen": 9,
+            "ratio": 0,
+            "tied": 23
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2",
+        "tsmc-n65"
+      ],
+      "provenance": {
+        "aliases": [
+          "integrator-switchcap-opamp"
+        ],
+        "designer": "Noorizadeh (schematic capture, after Fan et al.)",
+        "notes": "The opamp inside the ripple-reduction loop's switched-capacitor integrator (sup_/ia_ entries compose it). Drawn unsized (all devices at placeholder minimum size) with Vb1..Vb4 as external bias ports; this entry pulls the four bias levels inside as knob-driven dc sources, per the instantiator-owns-bias convention (plan_hierarchical_composition D3/D4).",
+        "paper": "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011",
+        "source": "drawings/ccia-02-QinwenFan-chopper-ripple-reduction (hand-drawn xschem, integrator-switchcap-opamp.sch)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/amp_027_fan_rrl_ota/ihp-sg13g2/_dut.spice",
+          "ac_cm_reg": "raw/amp_027_fan_rrl_ota/ihp-sg13g2/ac_cm_reg.spice",
+          "ac_open_loop": "raw/amp_027_fan_rrl_ota/ihp-sg13g2/ac_open_loop.spice",
+          "dc_op": "raw/amp_027_fan_rrl_ota/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_027_fan_rrl_ota/ihp-sg13g2/noise.spice",
+          "tran_cm_kick": "raw/amp_027_fan_rrl_ota/ihp-sg13g2/tran_cm_kick.spice",
+          "tran_step": "raw/amp_027_fan_rrl_ota/ihp-sg13g2/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_027_fan_rrl_ota/tsmc-n65/_dut.spice",
+          "ac_cm_reg": "raw/amp_027_fan_rrl_ota/tsmc-n65/ac_cm_reg.spice",
+          "ac_open_loop": "raw/amp_027_fan_rrl_ota/tsmc-n65/ac_open_loop.spice",
+          "dc_op": "raw/amp_027_fan_rrl_ota/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_027_fan_rrl_ota/tsmc-n65/noise.spice",
+          "tran_cm_kick": "raw/amp_027_fan_rrl_ota/tsmc-n65/tran_cm_kick.spice",
+          "tran_step": "raw/amp_027_fan_rrl_ota/tsmc-n65/tran_step.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/amp_027_fan_rrl_ota/pdk/ihp-sg13g2/schematic/integrator-switchcap-opamp.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "2eb25596c6",
+          "ppa": {
+            "active_gate_area_um2": 83.0,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 46.60664,
+              "pm_deg": 47.5963,
+              "ugf_hz": 444412200.0
+            },
+            "power_w": 7.7070948e-05
+          },
+          "spec": {
+            "fail": 2,
+            "none": 0,
+            "pass": 9
+          }
+        }
+      },
+      "stages": 1,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "ac_open_loop",
+        "dc_op"
+      ],
+      "class": "amplifier",
+      "compensation": null,
+      "display_name": "Behavioral fully-differential amplifier macromodel (Gm/Rout/Cout VCCS)",
+      "id": "amp_028_ideal_fully_diff",
+      "kind": "verifiable",
+      "params": {
+        "devices": 5,
+        "groups": {},
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 5,
+            "frozen": 0,
+            "ratio": 0,
+            "tied": 0
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "aliases": [
+          "ideal-amp-fully-diff"
+        ],
+        "designer": "Noorizadeh",
+        "notes": "Generic behavioral fully-differential amplifier macromodel (VCCS + Rout/Cout + Rin/Cin) used as the CMFB / RRL servo leaf in the drawn CCIAs; the first realization: behavioral entry in the catalogue (plan S3.5). Value symbols (gm_val etc.) match the drawing \u2014 normalized at source (DRAWING_REVIEW item 5). Baseline parameter sets live in _shared/IDEAL_AMP.md: this entry's sizing defaults are the ideal-ota baseline (gain 1000, 60 dB / ~15.9 MHz UGF); the servo-grade baseline (gain 10) is the alternative for composed CM/RRL loops.",
+        "source": "drawings/ccia-01-YuPinHsu-bandpass-class-ab-output (hand-drawn xschem, ideal-amp-fully-diff.sym; reused by the ccia-02 RRL)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/amp_028_ideal_fully_diff/ihp-sg13g2/_dut.spice",
+          "ac_open_loop": "raw/amp_028_ideal_fully_diff/ihp-sg13g2/ac_open_loop.spice",
+          "dc_op": "raw/amp_028_ideal_fully_diff/ihp-sg13g2/dc_op.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/amp_028_ideal_fully_diff/pdk/ihp-sg13g2/schematic/ideal-amp-fully-diff.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "4d5c3c1651",
+          "ppa": {
+            "active_gate_area_um2": 0.0,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 60.0,
+              "ugf_hz": 15528150.0
+            },
+            "power_w": 0.0
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 4
+          }
+        }
+      },
+      "stages": 1,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "ac_open_loop",
+        "dc_op",
+        "dc_cm_bias_sweep",
+        "noise",
+        "tran_step"
+      ],
+      "class": "amplifier",
+      "compensation": "miller",
+      "display_name": "Two-stage Miller OTA, fully differential (no CM control)",
+      "id": "amp_029_two_stage_miller_comp",
+      "kind": "verifiable",
+      "params": {
+        "devices": 16,
+        "groups": {
+          "miller_c": "shared_geometry",
+          "miller_r": "shared_geometry",
+          "mirror_xm6_l": "mirror_length",
+          "pair_xm1_xm2": "matched_pair",
+          "pair_xm3_xm4": "matched_pair",
+          "pair_xm5_xm9": "matched_pair",
+          "pair_xm7_xm10": "matched_pair"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 14,
+            "frozen": 6,
+            "ratio": 0,
+            "tied": 16
+          },
+          "tsmc-n65": {
+            "free": 14,
+            "frozen": 6,
+            "ratio": 0,
+            "tied": 16
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2",
+        "tsmc-n65"
+      ],
+      "provenance": {
+        "aliases": [
+          "two-stage-miller-comp"
+        ],
+        "designer": "Stefan Schippers (xschem examples); landed by Noorizadeh",
+        "notes": "The plain-Miller sibling of amp_020 (which adds the resistive common-mode servo this drawing omits \u2014 'no CM control' is the topology's defining difference, not a defect). Common-source second stage = high output impedance = an OTA (subfamily: ota, drawings/README.md). Deviations from the drawing: the first-stage load-gate net X is FLOATING as drawn \u2014 landed as the internal knob source {vbl}; the 1 mA bias literal became the {i_bias} knob (re-seeded to 20 uA). CHARACTERIZATION FINDING (committed as the dc_cm_bias_sweep analysis; tt): with no CM control at either stage the DC operating point has NO stable interior solution \u2014 stage 1 flips between rails within a ~20 mV vbl window (0.70-0.72) and the output rails on BOTH sides (two cascaded gds-level knife edges). The T4 gain skip is a property of the topology, not the sizing; amp_020 (same drawing family) adds the resistive CM servo that makes this amplifier usable. Kept as the pedagogical/topological sibling and a future CMFB-composition target.",
+        "source": "drawings/OTA-Two-Stage (hand-drawn xschem, two-stage-miller-comp.sch)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/amp_029_two_stage_miller_comp/ihp-sg13g2/_dut.spice",
+          "ac_open_loop": "raw/amp_029_two_stage_miller_comp/ihp-sg13g2/ac_open_loop.spice",
+          "dc_cm_bias_sweep": "raw/amp_029_two_stage_miller_comp/ihp-sg13g2/dc_cm_bias_sweep.spice",
+          "dc_op": "raw/amp_029_two_stage_miller_comp/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_029_two_stage_miller_comp/ihp-sg13g2/noise.spice",
+          "tran_step": "raw/amp_029_two_stage_miller_comp/ihp-sg13g2/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_029_two_stage_miller_comp/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_029_two_stage_miller_comp/tsmc-n65/ac_open_loop.spice",
+          "dc_cm_bias_sweep": "raw/amp_029_two_stage_miller_comp/tsmc-n65/dc_cm_bias_sweep.spice",
+          "dc_op": "raw/amp_029_two_stage_miller_comp/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_029_two_stage_miller_comp/tsmc-n65/noise.spice",
+          "tran_step": "raw/amp_029_two_stage_miller_comp/tsmc-n65/tran_step.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/amp_029_two_stage_miller_comp/pdk/ihp-sg13g2/schematic/two-stage-miller-comp.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "8b0bf2f382",
+          "ppa": {
+            "active_gate_area_um2": 58.0,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 8.331272,
+              "pm_deg": 105.0847,
+              "ugf_hz": 5698261.0
+            },
+            "power_w": 0.00023414796
+          },
+          "spec": {
+            "fail": 3,
+            "none": 0,
+            "pass": 5
+          }
+        }
+      },
+      "stages": 2,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "ac_open_loop",
+        "dc_op",
+        "dc_cm_bias_sweep",
+        "ac_cm_reg",
+        "tran_cm_kick",
+        "noise",
+        "tran_step"
+      ],
+      "class": "amplifier",
+      "compensation": "miller",
+      "display_name": "Two-stage Miller OTA + behavioral CMFB servo (COMPOSITE: amp_029 + cmfb_001_ideal_rsense_servo)",
+      "id": "amp_030_miller_cmfb_composite",
+      "kind": "verifiable",
+      "params": {
+        "devices": 24,
+        "groups": {
+          "miller_c_core": "shared_geometry",
+          "miller_r_core": "shared_geometry",
+          "mirror_xm6_core_l": "mirror_length",
+          "pair_rmp_rmn_servo": "shared_geometry",
+          "pair_xm1_core_xm2_core": "matched_pair",
+          "pair_xm3_core_xm4_core": "matched_pair",
+          "pair_xm5_core_xm9_core": "matched_pair",
+          "pair_xm7_core_xm10_core": "matched_pair"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 21,
+            "frozen": 6,
+            "ratio": 0,
+            "tied": 17
+          },
+          "tsmc-n65": {
+            "free": 21,
+            "frozen": 6,
+            "ratio": 0,
+            "tied": 17
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2",
+        "tsmc-n65"
+      ],
+      "provenance": {
+        "designer": "Composition by Noorizadeh; blocks: amp_029 (Schippers drawing) + cmfb_001_ideal_rsense_servo (Hsu CMFB, hand-drawn)",
+        "notes": "The CMFB-closure experiment amp_029's characterization set up: amp_029 alone has NO stable interior DC operating point (its dc_cm_bias_sweep measures cm_interior_pts = 0 \u2014 two cascaded gds-level knife edges); here the cmfb_001_ideal_rsense_servo behavioral servo (Hsu's CMFB block; baselines in _shared/IDEAL_AMP.md) senses the output common mode and drives the stage-1 load-gate bias in place of the {vbl} knob (taps/omit in composition.yaml \u2014 the composite owns that bias, plan D3). ACCEPTANCE: this entry's dc_cm_bias_sweep sweeps the servo reference {vcm_ref} and must measure cm_interior_pts = 5 (the output CM tracks the command) \u2014 the committed 0 -> 5 flip vs amp_029 is the P4 composition milestone's proof.",
+        "source": "composition.yaml (composer P4 \u2014 the registry's first composed entry)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/amp_030_miller_cmfb_composite/ihp-sg13g2/_dut.spice",
+          "ac_cm_reg": "raw/amp_030_miller_cmfb_composite/ihp-sg13g2/ac_cm_reg.spice",
+          "ac_open_loop": "raw/amp_030_miller_cmfb_composite/ihp-sg13g2/ac_open_loop.spice",
+          "dc_cm_bias_sweep": "raw/amp_030_miller_cmfb_composite/ihp-sg13g2/dc_cm_bias_sweep.spice",
+          "dc_op": "raw/amp_030_miller_cmfb_composite/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/amp_030_miller_cmfb_composite/ihp-sg13g2/noise.spice",
+          "tran_cm_kick": "raw/amp_030_miller_cmfb_composite/ihp-sg13g2/tran_cm_kick.spice",
+          "tran_step": "raw/amp_030_miller_cmfb_composite/ihp-sg13g2/tran_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_030_miller_cmfb_composite/tsmc-n65/_dut.spice",
+          "ac_cm_reg": "raw/amp_030_miller_cmfb_composite/tsmc-n65/ac_cm_reg.spice",
+          "ac_open_loop": "raw/amp_030_miller_cmfb_composite/tsmc-n65/ac_open_loop.spice",
+          "dc_cm_bias_sweep": "raw/amp_030_miller_cmfb_composite/tsmc-n65/dc_cm_bias_sweep.spice",
+          "dc_op": "raw/amp_030_miller_cmfb_composite/tsmc-n65/dc_op.spice",
+          "noise": "raw/amp_030_miller_cmfb_composite/tsmc-n65/noise.spice",
+          "tran_cm_kick": "raw/amp_030_miller_cmfb_composite/tsmc-n65/tran_cm_kick.spice",
+          "tran_step": "raw/amp_030_miller_cmfb_composite/tsmc-n65/tran_step.spice"
+        }
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "e72b7828de",
+          "ppa": {
+            "active_gate_area_um2": 58.0,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 50.13302,
+              "pm_deg": 86.12134,
+              "ugf_hz": 29743800.0
+            },
+            "power_w": 0.0002179866
+          },
+          "spec": {
+            "fail": 1,
+            "none": 0,
+            "pass": 11
+          }
+        }
+      },
+      "stages": 2,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "ac_open_loop",
+        "dc_op",
+        "tran_cm_kick"
+      ],
+      "class": "amplifier",
+      "compensation": "miller-rz",
+      "display_name": "Hsu SRMC filter core amp with dual-loop CMFB (sized)",
+      "id": "amp_031_srmc_core_cmfb",
+      "kind": "verifiable",
+      "params": {
+        "devices": 31,
+        "groups": {
+          "pair_xm1_xm9": "shared_geometry",
+          "pair_xm2_xm10": "matched_pair",
+          "pair_xm3_xm4": "matched_pair",
+          "pair_xm6_xm7": "matched_pair",
+          "shared_c1_value": "shared_geometry",
+          "shared_r1_value": "shared_geometry",
+          "shared_rm1p_value": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 22,
+            "frozen": 6,
+            "ratio": 0,
+            "tied": 17
+          },
+          "tsmc-n65": {
+            "free": 22,
+            "frozen": 6,
+            "ratio": 0,
+            "tied": 17
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2",
+        "tsmc-n65"
+      ],
+      "provenance": {
+        "aliases": [
+          "SRMC-core-amp-w-cmfb",
+          "SRMC-core-amp"
+        ],
+        "designer": "Noorizadeh (schematic capture, after Hsu et al.); sizing: SpiceXplorer optimizer campaign 2026-07-18/19",
+        "notes": "The transistor OTA core of the Hsu SRMC duty-cycled filter, with its two per-stage CMFB loops closed by the drawn shared/ideal canonical servo blocks (flattened here as behavioral macromodels, like amp_025). First entry landed with an OPTIMIZER-SIZED binding as the authoring default (full-precision; the drawn seed is unstable). B5 polarity closure + dual-engine campaign: drawings/SIZING_VALIDATION_REPORT.md; machine specs drawings/sizing-and-specs.yaml (bio_afe_SRMC_core_amp). The bare SRMC-core-amp block (no CMFB) is deliberately NOT its own entry \u2014 it is this entry minus the servos; the wrapper is the verifiable unit.",
+        "paper": "Y.-P. Hsu, Z. Liu, M. M. Hella, \"A -68 dB THD, 0.6 mm2 Active Area Biosignal Acquisition System With a 40-320 Hz Duty-Cycle Controlled Filter\", IEEE TCAS-I 67(1):233-245, Jan. 2020",
+        "source": "drawings/bio-afe-01-YuPinHsu-reconfigable-SRMC (hand-drawn xschem, SRMC-core-amp-w-cmfb.sch)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/amp_031_srmc_core_cmfb/ihp-sg13g2/_dut.spice",
+          "ac_open_loop": "raw/amp_031_srmc_core_cmfb/ihp-sg13g2/ac_open_loop.spice",
+          "dc_op": "raw/amp_031_srmc_core_cmfb/ihp-sg13g2/dc_op.spice",
+          "tran_cm_kick": "raw/amp_031_srmc_core_cmfb/ihp-sg13g2/tran_cm_kick.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/amp_031_srmc_core_cmfb/tsmc-n65/_dut.spice",
+          "ac_open_loop": "raw/amp_031_srmc_core_cmfb/tsmc-n65/ac_open_loop.spice",
+          "dc_op": "raw/amp_031_srmc_core_cmfb/tsmc-n65/dc_op.spice",
+          "tran_cm_kick": "raw/amp_031_srmc_core_cmfb/tsmc-n65/tran_cm_kick.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/amp_031_srmc_core_cmfb/pdk/ihp-sg13g2/schematic/SRMC-core-amp-w-cmfb.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "5cf085b55b",
+          "ppa": {
+            "active_gate_area_um2": 13.698,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 54.66839,
+              "pm_deg": 60.20875,
+              "ugf_hz": 76222650.0
+            },
+            "power_w": 0.00011622887999999999
+          },
+          "spec": {
+            "fail": 2,
+            "none": 0,
+            "pass": 6
+          }
+        }
+      },
+      "stages": 2,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "dc_op",
+        "ac_open_loop",
+        "ac_closed_loop",
+        "psrr_vdd",
+        "cmrr_vcm",
+        "noise",
+        "tran_step",
+        "linearity"
+      ],
+      "class": "amplifier",
+      "compensation": "Rz + Cc from the first-stage node to the output",
+      "display_name": "TI-LDO error amplifier, self-biased (11T two-stage, level-shifted mirror load, direct-CS output)",
+      "id": "amp_032_ti_ldo_error_selfbias",
+      "kind": "verifiable",
+      "params": {
+        "devices": 13,
+        "groups": {
+          "mirror_xmb0_l": "mirror_length",
+          "pair_xm1_xm2": "matched_pair",
+          "shared_xm3_w_l": "shared_geometry",
+          "shared_xmb0_w": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "gf180mcu": {
+            "free": 17,
+            "frozen": 0,
+            "ratio": 0,
+            "tied": 9
+          }
+        },
+        "untied_symmetries": [
+          "matched_pair XM1+XM2 (tie l,m,w)"
+        ]
+      },
+      "pdks": [
+        "gf180mcu"
+      ],
+      "provenance": {
+        "aliases": [
+          "error_amp_selfbias",
+          "ti_ldo_error_amp_selfbias"
+        ],
+        "designer": "Danial Noori Zadeh",
+        "source": "drawings/ldo-005-ti-ldo-buffer-ref/gf180/error_amp/error_amp.sch"
+      },
+      "raw": {
+        "gf180mcu": {
+          "_dut": "raw/amp_032_ti_ldo_error_selfbias/gf180mcu/_dut.spice",
+          "ac_closed_loop": "raw/amp_032_ti_ldo_error_selfbias/gf180mcu/ac_closed_loop.spice",
+          "ac_open_loop": "raw/amp_032_ti_ldo_error_selfbias/gf180mcu/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_032_ti_ldo_error_selfbias/gf180mcu/cmrr_vcm.spice",
+          "dc_op": "raw/amp_032_ti_ldo_error_selfbias/gf180mcu/dc_op.spice",
+          "linearity": "raw/amp_032_ti_ldo_error_selfbias/gf180mcu/linearity.spice",
+          "noise": "raw/amp_032_ti_ldo_error_selfbias/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_032_ti_ldo_error_selfbias/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_032_ti_ldo_error_selfbias/gf180mcu/tran_step.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/amp_032_ti_ldo_error_selfbias/pdk/gf180mcu/schematic/error_amp.sch"
+      },
+      "scoreboard": {
+        "gf180mcu": {
+          "design_id": "0d97ec7f42",
+          "ppa": {
+            "active_gate_area_um2": 477.022,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 61.77028,
+              "pm_deg": 82.69175,
+              "ugf_hz": 7074893.0
+            },
+            "power_w": 0.0005895185999999999
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 12
+          }
+        }
+      },
+      "stages": 2,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "dc_op",
+        "ac_open_loop",
+        "ac_closed_loop",
+        "psrr_vdd",
+        "cmrr_vcm",
+        "noise",
+        "tran_step",
+        "linearity"
+      ],
+      "class": "amplifier",
+      "compensation": "Rz + Cc from the first-stage node to the output",
+      "display_name": "TI-LDO reference amplifier, self-biased (9T two-stage Miller, matched mirror load)",
+      "id": "amp_033_ti_ldo_ref_selfbias",
+      "kind": "verifiable",
+      "params": {
+        "devices": 11,
+        "groups": {
+          "mirror_xmb0_l": "mirror_length",
+          "pair_xm1_xm2": "matched_pair",
+          "pair_xm3_xm4": "matched_pair"
+        },
+        "ratios": 0,
+        "symbols": {
+          "gf180mcu": {
+            "free": 16,
+            "frozen": 0,
+            "ratio": 0,
+            "tied": 6
+          }
+        },
+        "untied_symmetries": [
+          "matched_pair XM1+XM2 (tie l,m,w)"
+        ]
+      },
+      "pdks": [
+        "gf180mcu"
+      ],
+      "provenance": {
+        "aliases": [
+          "ref_amp",
+          "ti_ldo_ref_amp",
+          "ref_amp_selfbias"
+        ],
+        "designer": "Danial Noori Zadeh",
+        "notes": "Distinct from amp_029_two_stage_miller_comp (fully differential, current-source loads, external ibias) and from amp_032 (level-shifted ratioed mirror). The drawing's real ppolyf_u_3k nulling resistor is abstracted to the ideal Rz knob r_z \u2014 a layout-time mapping, not a topology change; keeping Rz/Cc continuous is what made amp_032's PM reachable.",
+        "source": "drawings/ldo-005-ti-ldo-buffer-ref/gf180/ref_amp/ref_amp.sch"
+      },
+      "raw": {
+        "gf180mcu": {
+          "_dut": "raw/amp_033_ti_ldo_ref_selfbias/gf180mcu/_dut.spice",
+          "ac_closed_loop": "raw/amp_033_ti_ldo_ref_selfbias/gf180mcu/ac_closed_loop.spice",
+          "ac_open_loop": "raw/amp_033_ti_ldo_ref_selfbias/gf180mcu/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_033_ti_ldo_ref_selfbias/gf180mcu/cmrr_vcm.spice",
+          "dc_op": "raw/amp_033_ti_ldo_ref_selfbias/gf180mcu/dc_op.spice",
+          "linearity": "raw/amp_033_ti_ldo_ref_selfbias/gf180mcu/linearity.spice",
+          "noise": "raw/amp_033_ti_ldo_ref_selfbias/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_033_ti_ldo_ref_selfbias/gf180mcu/psrr_vdd.spice",
+          "tran_step": "raw/amp_033_ti_ldo_ref_selfbias/gf180mcu/tran_step.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/amp_033_ti_ldo_ref_selfbias/pdk/gf180mcu/schematic/ref_amp.sch"
+      },
+      "scoreboard": {
+        "gf180mcu": {
+          "design_id": "84d3d3403b",
+          "ppa": {
+            "active_gate_area_um2": 331.221,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 74.12296,
+              "pm_deg": 73.89412,
+              "ugf_hz": 7285983.0
+            },
+            "power_w": 0.00039054245999999997
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 12
           }
         }
       },
@@ -3689,6 +5143,25 @@
         }
       ],
       "scoreboard": {
+        "gf180mcu": {
+          "design_id": "c4c04f8e4c",
+          "ppa": {
+            "active_gate_area_um2": 38.4,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "f3db_hz": 591638300.0,
+              "gain_dc": 0.8106656
+            },
+            "power_w": 0.0001172628
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 6
+          }
+        },
         "ihp-sg13g2": {
           "design_id": "3880ac5e87",
           "ppa": {
@@ -3725,6 +5198,252 @@
             "fail": 0,
             "none": 0,
             "pass": 6
+          }
+        }
+      },
+      "stages": 1,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "dc_cmfb_transfer",
+        "ac_servo",
+        "tran_cmfb_step"
+      ],
+      "class": "cmfb",
+      "compensation": null,
+      "display_name": "Output CMFB servo (behavioral fully-diff amp + resistive CM detector)",
+      "id": "cmfb_001_ideal_rsense_servo",
+      "kind": "verifiable",
+      "params": {
+        "devices": 7,
+        "groups": {
+          "pair_rmp_rmn": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 6,
+            "frozen": 0,
+            "ratio": 0,
+            "tied": 1
+          },
+          "tsmc-n65": {
+            "free": 6,
+            "frozen": 0,
+            "ratio": 0,
+            "tied": 1
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2",
+        "tsmc-n65"
+      ],
+      "provenance": {
+        "aliases": [
+          "cmfb-output-ideal-amp",
+          "sup_002_cmfb_servo"
+        ],
+        "designer": "Noorizadeh (schematic capture, after Hsu et al.)",
+        "notes": "CMFB block of the drawn CCIA: resistive CM averager (Rmp/Rmn) + the ideal-amp-fully-diff macromodel leaf used single-ended (its voutn is tied to vss as drawn; only voutp=vcmfb serves the correction). Servo polarity MATCHES the fixed drawing (DRAWING_REVIEW item 3 FIXED: vref on the + input, CM detector on the - input, so vcmfb = A*(vref - vcm_sensed) opposes the CM error). The leaf's *_val value symbols match the drawing (normalized at source, DRAWING_REVIEW item 5); vdd is a no-connect as drawn (the macromodel leaf has no supply pins). Baseline parameter sets for the ideal amp leaf are in _shared/IDEAL_AMP.md: this entry keeps the gain-1000 ideal-ota values (60 dB path gain bench point); the servo-grade baseline (gain 10, rout 100k) is the recommended alternative when composing a real CM loop.",
+        "paper": "Y.-P. Hsu, Z. Liu, M. M. Hella, \"A 1.8 uW -65 dB THD ECG Acquisition Front-End IC Using a Bandpass Instrumentation Amplifier With Class-AB Output Configuration\", IEEE TCAS-II 65(12):1859-1863, Dec. 2018",
+        "source": "drawings/ccia-01-YuPinHsu-bandpass-class-ab-output (hand-drawn xschem, cmfb-output-ideal-amp.sym)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/cmfb_001_ideal_rsense_servo/ihp-sg13g2/_dut.spice",
+          "ac_servo": "raw/cmfb_001_ideal_rsense_servo/ihp-sg13g2/ac_servo.spice",
+          "dc_cmfb_transfer": "raw/cmfb_001_ideal_rsense_servo/ihp-sg13g2/dc_cmfb_transfer.spice",
+          "tran_cmfb_step": "raw/cmfb_001_ideal_rsense_servo/ihp-sg13g2/tran_cmfb_step.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/cmfb_001_ideal_rsense_servo/tsmc-n65/_dut.spice",
+          "ac_servo": "raw/cmfb_001_ideal_rsense_servo/tsmc-n65/ac_servo.spice",
+          "dc_cmfb_transfer": "raw/cmfb_001_ideal_rsense_servo/tsmc-n65/dc_cmfb_transfer.spice",
+          "tran_cmfb_step": "raw/cmfb_001_ideal_rsense_servo/tsmc-n65/tran_cmfb_step.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/cmfb_001_ideal_rsense_servo/pdk/ihp-sg13g2/schematic/cmfb-output-ideal-amp.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "79adf6ddb4",
+          "ppa": {
+            "active_gate_area_um2": 0.0,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "bw_servo_hz": 105850.3,
+              "gain_servo_db": 60.0,
+              "t_cm_settle": 1.038077e-05
+            },
+            "power_w": -0.0
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 9
+          }
+        }
+      },
+      "stages": 1,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "dc_cmfb_transfer",
+        "ac_servo",
+        "tran_cmfb_step"
+      ],
+      "class": "cmfb",
+      "compensation": null,
+      "display_name": "Real 5T CMFB (PMOS-input error amp + resistive CM detector, canonical)",
+      "id": "cmfb_002_5t_pmos_input",
+      "kind": "verifiable",
+      "params": {
+        "devices": 9,
+        "groups": {
+          "mirror_xm2_xm6": "matched_pair",
+          "pair_rmp_rmn": "shared_geometry",
+          "pair_xm4_xm5": "matched_pair"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 11,
+            "frozen": 5,
+            "ratio": 0,
+            "tied": 7
+          }
+        },
+        "untied_symmetries": [
+          "mirror XM3\u2192XM1 (tie l)"
+        ]
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "aliases": [
+          "cmfb-output-amp-5t-pmos-input"
+        ],
+        "designer": "Noorizadeh (schematic); sizing: 2026-07-20 Nevergrad campaign (report \u00a78)",
+        "notes": "The first REAL (transistor-level) member of the cmfb class \u2014 the drop-in replacement for the ideal CMFB macromodels (identical pin footprint; swapping a consumer is a pure symbol-path change). CANONICAL polarity: PMOS pair puts the sensed CM on the + input, vcmfb = A*(cm_sense - vref) \u2014 for INVERTING plants (B5 rule; the -inv wiring variant for non-inverting plants exists in drawings/ shared as cmfb-output-amp-5t-pmos-input-inv, not separately accessioned: same topology, swapped pair gates). Self-biased via an on-cell 2-diode string \u2014 the block has NO bias pin, so composition needs no bias plumbing. Chosen (over the NMOS-input flavor, cmfb_003) for the SRMC core consumer: its zero-error natural output sits nearest the plant's actuator balance gates and its PMOS pair is comfortable at the 0.5 V sensed CM. Rail-clamped by construction \u2014 in-loop CM kicks recover with zero residual (vs the unclamped macromodel's basin escapes). In-loop validation (sized amp_031 SRMC core, both loops real): CM errors 3.6/2.1 mV, diff 54.72 dB / 76.9 MHz / PM 58.9 deg, 116.4 uA total; consumer drawing SRMC-core-amp-w-cmfb-5t.sch (SIZING_VALIDATION_REPORT.md \u00a78).",
+        "paper": "Y.-P. Hsu, S.-L. Liu, M. M. Hella (SRMC bio-AFE context, TCAS-I 67(1) 2020) \u2014 the CMFB itself is an owner design replacing the drawn ideal servos",
+        "source": "drawings/shared (hand-drawn xschem, cmfb-output-amp-5t-pmos-input.sym = vcm-detector-simple + amp-single-ended-5t-pmos-input)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/cmfb_002_5t_pmos_input/ihp-sg13g2/_dut.spice",
+          "ac_servo": "raw/cmfb_002_5t_pmos_input/ihp-sg13g2/ac_servo.spice",
+          "dc_cmfb_transfer": "raw/cmfb_002_5t_pmos_input/ihp-sg13g2/dc_cmfb_transfer.spice",
+          "tran_cmfb_step": "raw/cmfb_002_5t_pmos_input/ihp-sg13g2/tran_cmfb_step.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/cmfb_002_5t_pmos_input/pdk/ihp-sg13g2/schematic/cmfb-output-amp-5t-pmos-input.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "46ad98c560",
+          "ppa": {
+            "active_gate_area_um2": 7.226,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "bw_servo_hz": 3826552.0,
+              "gain_servo_db": 25.15449,
+              "t_cm_settle": 2.161e-07
+            },
+            "power_w": 1.2955272e-05
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 14
+          }
+        }
+      },
+      "stages": 1,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "dc_cmfb_transfer",
+        "ac_servo",
+        "tran_cmfb_step"
+      ],
+      "class": "cmfb",
+      "compensation": null,
+      "display_name": "Real 5T CMFB (NMOS-input error amp + resistive CM detector, canonical)",
+      "id": "cmfb_003_5t_nmos_input",
+      "kind": "verifiable",
+      "params": {
+        "devices": 9,
+        "groups": {
+          "mirror_xm3_xm4": "matched_pair",
+          "pair_rmp_rmn": "shared_geometry",
+          "pair_xm1_xm2": "matched_pair"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 11,
+            "frozen": 5,
+            "ratio": 0,
+            "tied": 7
+          }
+        },
+        "untied_symmetries": [
+          "mirror XM5\u2192XM8 (tie l)"
+        ]
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "aliases": [
+          "cmfb-output-amp-5t-nmos-input"
+        ],
+        "designer": "Noorizadeh (schematic); sizing: 2026-07-20 Nevergrad campaign (report \u00a78)",
+        "notes": "The NMOS-input complement of cmfb_002 \u2014 same architecture (resistive sense + self-biased 5T error amp, canonical polarity, identical pin footprint as the ideal CMFB macromodels), input-pair/mirror/tail polarities flipped. Validated SECONDARY for the SRMC consumer (in-loop CM errors 3.8/4.8 mV vs cmfb_002's 3.6/2.1; diff metrics identical) \u2014 kept as a first-class member because the flavor choice is PLANT-specific: pick the flavor whose zero-error natural output (here ~0.251 V) lands nearest the plant's actuator balance gates, and whose input stage is comfortable at the sensed CM level (NMOS pair prefers higher CM; works at 0.5 V with the IHP LV Vth). The -inv wiring variant lives in drawings/shared as cmfb-output-amp-5t-nmos-input-inv (same topology, swapped pair gates; not separately accessioned). Rail-clamped by construction; in-loop kicks recover with zero residual (SIZING_VALIDATION_REPORT.md \u00a78).",
+        "paper": "Y.-P. Hsu, S.-L. Liu, M. M. Hella (SRMC bio-AFE context, TCAS-I 67(1) 2020) \u2014 the CMFB itself is an owner design replacing the drawn ideal servos",
+        "source": "drawings/shared (hand-drawn xschem, cmfb-output-amp-5t-nmos-input.sym = vcm-detector-simple + amp-single-ended-5t-nmos-input)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/cmfb_003_5t_nmos_input/ihp-sg13g2/_dut.spice",
+          "ac_servo": "raw/cmfb_003_5t_nmos_input/ihp-sg13g2/ac_servo.spice",
+          "dc_cmfb_transfer": "raw/cmfb_003_5t_nmos_input/ihp-sg13g2/dc_cmfb_transfer.spice",
+          "tran_cmfb_step": "raw/cmfb_003_5t_nmos_input/ihp-sg13g2/tran_cmfb_step.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/cmfb_003_5t_nmos_input/pdk/ihp-sg13g2/schematic/cmfb-output-amp-5t-nmos-input.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "5c52aec265",
+          "ppa": {
+            "active_gate_area_um2": 10.437,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "bw_servo_hz": 6183847.0,
+              "gain_servo_db": 21.23039,
+              "t_cm_settle": 1.5421e-07
+            },
+            "power_w": 1.0882302e-05
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 14
           }
         }
       },
@@ -3829,6 +5548,24 @@
         }
       ],
       "scoreboard": {
+        "gf180mcu": {
+          "design_id": "7bc71ba923",
+          "ppa": {
+            "active_gate_area_um2": 50.32,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "v_hyst": 0.026
+            },
+            "power_w": 3.0427815e-05
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 5
+          }
+        },
         "ihp-sg13g2": {
           "design_id": "ddf95e05b5",
           "ppa": {
@@ -3970,6 +5707,24 @@
         }
       ],
       "scoreboard": {
+        "gf180mcu": {
+          "design_id": "45ffb6ffec",
+          "ppa": {
+            "active_gate_area_um2": 19.32,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "t_prop": 9.981145e-10
+            },
+            "power_w": 1.36224015e-06
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 4
+          }
+        },
         "ihp-sg13g2": {
           "design_id": "4804ff55e3",
           "ppa": {
@@ -4102,6 +5857,24 @@
         }
       ],
       "scoreboard": {
+        "gf180mcu": {
+          "design_id": "4b63d3a98b",
+          "ppa": {
+            "active_gate_area_um2": 21.6,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "gain_dc": 2.775251
+            },
+            "power_w": 5.1286680000000003e-05
+          },
+          "spec": {
+            "fail": 1,
+            "none": 0,
+            "pass": 2
+          }
+        },
         "ihp-sg13g2": {
           "design_id": "79535088a2",
           "ppa": {
@@ -4642,6 +6415,25 @@
         }
       ],
       "scoreboard": {
+        "gf180mcu": {
+          "design_id": "92b8eb4b33",
+          "ppa": {
+            "active_gate_area_um2": 32.25,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "f3db_hz": 627337.8,
+              "gain_dc": 78.38962
+            },
+            "power_w": 5.5719285e-05
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 6
+          }
+        },
         "ihp-sg13g2": {
           "design_id": "373acf894e",
           "ppa": {
@@ -4682,6 +6474,449 @@
         }
       },
       "stages": 1,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "ac_closed_loop",
+        "dc_op",
+        "noise",
+        "thd",
+        "ac_zin_diff"
+      ],
+      "class": "ia",
+      "compensation": "Miller RC (Cc + nulling Rz) per side inside the class-AB OTA",
+      "display_name": "Hsu bandpass CCIA with class-AB output (capacitive feedback + pseudo-resistor bias)",
+      "id": "ia_001_hsu_bandpass_classab",
+      "kind": "verifiable",
+      "params": {
+        "devices": 48,
+        "groups": {
+          "bias_vb1_l": "shared_geometry",
+          "mirror_xmo4_l": "mirror_length",
+          "mirror_xmo5_l": "mirror_length",
+          "pair_cc": "shared_geometry",
+          "pair_cf": "shared_geometry",
+          "pair_cin": "shared_geometry",
+          "pair_rm": "shared_geometry",
+          "pair_rz": "shared_geometry",
+          "pair_xmo10_xmo11": "shared_geometry",
+          "pair_xmo12_xmo13": "matched_pair",
+          "pair_xmo14_xmo20": "matched_pair",
+          "pair_xmo15_xmo21": "shared_geometry",
+          "pair_xmo16_xmo22": "shared_geometry",
+          "pair_xmo17_xmo23": "shared_geometry",
+          "pair_xmo18_xmo24": "shared_geometry",
+          "pair_xmo19_xmo25": "matched_pair",
+          "pair_xmo2_xmo3": "matched_pair",
+          "pair_xmo4_xmo5": "matched_pair",
+          "pair_xmo6_xmo8": "matched_pair",
+          "pair_xmo7_xmo9": "shared_geometry",
+          "pseudo_r_quad": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 40,
+            "frozen": 14,
+            "ratio": 0,
+            "tied": 52
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "aliases": [
+          "ccia-dut"
+        ],
+        "designer": "Noorizadeh (schematic capture, after Hsu et al.)",
+        "notes": "The bandpass capacitively-coupled IA of Hsu/Liu/Hella - the IA core that biomedical-AFE plan Paper 1 (Hsu SRMC front-end) cites as its ref [8]. Capacitive gain Cin/Cfb, pseudo-resistor HPF bias, class-AB output OTA, behavioral CMFB servo leaf (realization: mixed). CMFB servo polarity MATCHES the fixed drawing (DRAWING_REVIEW item 3 FIXED: vref on +, CM detector on -); the Rz/RZ case collision is also fixed at source (DRAWING_REVIEW item 5). Entry-level deviation KEPT: the servo's Rout rests at vcmfb_ref (not the drawn vss tie) with gain 10 \u2014 the servo-grade baseline of _shared/IDEAL_AMP.md \u2014 for bounded authority and a stable CM loop (see the netlist header).",
+        "paper": "Y.-P. Hsu, Z. Liu, M. M. Hella, \"A 1.8 uW -65 dB THD ECG Acquisition Front-End IC Using a Bandpass Instrumentation Amplifier With Class-AB Output Configuration\", IEEE TCAS-II 65(12):1859-1863, Dec. 2018",
+        "source": "drawings/ccia-01-YuPinHsu-bandpass-class-ab-output (hand-drawn xschem, ccia-dut.sch)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/ia_001_hsu_bandpass_classab/ihp-sg13g2/_dut.spice",
+          "ac_closed_loop": "raw/ia_001_hsu_bandpass_classab/ihp-sg13g2/ac_closed_loop.spice",
+          "ac_zin_diff": "raw/ia_001_hsu_bandpass_classab/ihp-sg13g2/ac_zin_diff.spice",
+          "dc_op": "raw/ia_001_hsu_bandpass_classab/ihp-sg13g2/dc_op.spice",
+          "noise": "raw/ia_001_hsu_bandpass_classab/ihp-sg13g2/noise.spice",
+          "thd": "raw/ia_001_hsu_bandpass_classab/ihp-sg13g2/thd.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/ia_001_hsu_bandpass_classab/pdk/ihp-sg13g2/schematic/ccia-dut.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "40755e6b55",
+          "ppa": {
+            "active_gate_area_um2": 78.0,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "gain_cl": 19.69564,
+              "vn_in": 8.868638e-05
+            },
+            "power_w": 1.0098687600000001e-05
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 8
+          }
+        }
+      },
+      "stages": null,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "dc_op",
+        "tran_chopper_ripple",
+        "tran_zin_chopped",
+        "pac_gain",
+        "pac_zin",
+        "pnoise_chopped"
+      ],
+      "class": "ia",
+      "compensation": "miller",
+      "display_name": "Fan capacitively-coupled chopper CCIA (simple, no input-impedance boost)",
+      "id": "ia_002_fan_chopper_simple",
+      "kind": "verifiable",
+      "params": {
+        "devices": 51,
+        "groups": {
+          "chfb_tg_nmos": "shared_geometry",
+          "chfb_tg_pmos": "shared_geometry",
+          "chin_tg_nmos": "shared_geometry",
+          "chin_tg_pmos": "shared_geometry",
+          "chout_tg_nmos": "shared_geometry",
+          "chout_tg_pmos": "shared_geometry",
+          "pair_cfb": "shared_geometry",
+          "pair_cin": "shared_geometry",
+          "pair_cm": "shared_geometry",
+          "pair_rb": "shared_geometry",
+          "pair_xm10_xm11": "shared_geometry",
+          "pair_xm12_xm13": "shared_geometry",
+          "pair_xm14_xm15": "shared_geometry",
+          "pair_xm2_xm3": "matched_pair",
+          "pair_xm4_xm5": "shared_geometry",
+          "pair_xm6_xm7": "shared_geometry",
+          "pair_xm8_xm9": "shared_geometry",
+          "sources_vb4_l": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 34,
+            "frozen": 14,
+            "ratio": 0,
+            "tied": 81
+          },
+          "tsmc-n65": {
+            "free": 34,
+            "frozen": 14,
+            "ratio": 0,
+            "tied": 81
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2",
+        "tsmc-n65"
+      ],
+      "provenance": {
+        "aliases": [
+          "ccia-dut-chopper-simple"
+        ],
+        "designer": "Noorizadeh (schematic capture, after Fan et al.)",
+        "notes": "The CCIA system entry composing the two-stage opamp core (amp_026) with the input/feedback chopper network: input chopper + Cin caps into the summing nodes, cap feedback (Cfb) through the feedback chopper, Rb bias resistors to vref, and the core's embedded output chopper clocked from clk_chout. CHOPPER NOTE (drawing fixed 2026-07-16, DRAWING_REVIEW.md \u00a71; entry matches the drawing): every chopper block (chopper-diff) is a TRUE 4-gate modulator \u2014 two straight transmission gates plus two cross gates on the swapped clock hookup \u2014 so the clocked bench (tran_chopper_ripple) measures real chopping (modulate + demodulate through the in/fb choppers); the static benches hold the clocks transparent (straight path on, cross path off), in which configuration this IS a working capacitively-coupled IA with cap-ratio gain Cin/Cfb. The embedded core's four formerly floating source nets (XM1/XM6/XM9 -> vdd, XM15 -> vss) are FIXED in the drawing (DRAWING_REVIEW.md \u00a72) \u2014 no deviation remains for that item. Drawn unsized (placeholder minimum-size devices) with Vb1..Vb4 as external bias ports; this entry pulls the four bias levels inside as knob-driven dc sources (instantiator-owns-bias, plan_hierarchical_composition D3/D4). The drawn Rb=1k placeholder would put the high-pass corner at ~MHz \u2014 the 10Meg sizing default is a deliberate sizing-floor choice.",
+        "paper": "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011",
+        "source": "drawings/ccia-02-QinwenFan-chopper-ripple-reduction (hand-drawn xschem, ccia-dut-chopper-simple.sch)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/ia_002_fan_chopper_simple/ihp-sg13g2/_dut.spice",
+          "dc_op": "raw/ia_002_fan_chopper_simple/ihp-sg13g2/dc_op.spice",
+          "pac_gain": "raw/ia_002_fan_chopper_simple/ihp-sg13g2/pac_gain.spice",
+          "pac_zin": "raw/ia_002_fan_chopper_simple/ihp-sg13g2/pac_zin.spice",
+          "pnoise_chopped": "raw/ia_002_fan_chopper_simple/ihp-sg13g2/pnoise_chopped.spice",
+          "tran_chopper_ripple": "raw/ia_002_fan_chopper_simple/ihp-sg13g2/tran_chopper_ripple.spice",
+          "tran_zin_chopped": "raw/ia_002_fan_chopper_simple/ihp-sg13g2/tran_zin_chopped.spice"
+        },
+        "tsmc-n65": {
+          "_dut": "raw/ia_002_fan_chopper_simple/tsmc-n65/_dut.spice",
+          "dc_op": "raw/ia_002_fan_chopper_simple/tsmc-n65/dc_op.spice",
+          "pac_gain": "raw/ia_002_fan_chopper_simple/tsmc-n65/pac_gain.spice",
+          "pac_zin": "raw/ia_002_fan_chopper_simple/tsmc-n65/pac_zin.spice",
+          "pnoise_chopped": "raw/ia_002_fan_chopper_simple/tsmc-n65/pnoise_chopped.spice",
+          "tran_chopper_ripple": "raw/ia_002_fan_chopper_simple/tsmc-n65/tran_chopper_ripple.spice",
+          "tran_zin_chopped": "raw/ia_002_fan_chopper_simple/tsmc-n65/tran_zin_chopped.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/ia_002_fan_chopper_simple/pdk/ihp-sg13g2/schematic/ccia-dut-chopper-simple.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "7371533b64",
+          "ppa": {
+            "active_gate_area_um2": 103.04,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "gain_cl": 6.991916
+            },
+            "power_w": 0.00017567424
+          },
+          "spec": {
+            "fail": 1,
+            "none": 0,
+            "pass": 9
+          }
+        }
+      },
+      "stages": 2,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "dc_op",
+        "tran_chopper_ripple",
+        "tran_zin_chopped"
+      ],
+      "class": "ia",
+      "compensation": "miller",
+      "display_name": "Fan capacitively-coupled chopper CCIA with positive-feedback input-impedance boost",
+      "id": "ia_003_fan_chopper_pf",
+      "kind": "verifiable",
+      "params": {
+        "devices": 61,
+        "groups": {
+          "chfb_chpf_tg_nmos": "shared_geometry",
+          "chfb_chpf_tg_pmos": "shared_geometry",
+          "chin_tg_nmos": "shared_geometry",
+          "chin_tg_pmos": "shared_geometry",
+          "chout_tg_nmos": "shared_geometry",
+          "chout_tg_pmos": "shared_geometry",
+          "pair_cfb": "shared_geometry",
+          "pair_cin": "shared_geometry",
+          "pair_cm": "shared_geometry",
+          "pair_cpf": "shared_geometry",
+          "pair_rb": "shared_geometry",
+          "pair_xm10_xm11": "shared_geometry",
+          "pair_xm12_xm13": "shared_geometry",
+          "pair_xm14_xm15": "shared_geometry",
+          "pair_xm2_xm3": "matched_pair",
+          "pair_xm4_xm5": "shared_geometry",
+          "pair_xm6_xm7": "shared_geometry",
+          "pair_xm8_xm9": "shared_geometry",
+          "sources_vb4_l": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 35,
+            "frozen": 14,
+            "ratio": 0,
+            "tied": 106
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "aliases": [
+          "ccia-dut-chopper-w-positive-feedback"
+        ],
+        "designer": "Noorizadeh (schematic capture, after Fan et al.)",
+        "notes": "The CCIA system entry composing the two-stage opamp core (amp_026) with the input/feedback chopper network PLUS the paper's positive-feedback input-impedance boost (Fan et al. \u00a7II-B): a fourth chopper taps voutp/voutn and Cpf caps (Cpf = Cfb as drawn) recycle the Cin charging current into the input-cap nodes, raising the chopped input impedance. CHOPPER NOTE (drawing fixed 2026-07-16, DRAWING_REVIEW.md \u00a71; entry matches the drawing): every chopper block (chopper-diff) is a TRUE 4-gate modulator \u2014 two straight transmission gates plus two cross gates on the swapped clock hookup \u2014 so the clocked bench (tran_chopper_ripple) measures real chopping (modulate + demodulate through the in/fb choppers); the static benches hold the clocks transparent (straight path on, cross path off), in which configuration this IS a working capacitively-coupled IA with cap-ratio gain Cin/Cfb. The embedded core's four formerly floating source nets (XM1/XM6/XM9 -> vdd, XM15 -> vss) are FIXED in the drawing (DRAWING_REVIEW.md \u00a72) \u2014 no deviation remains for that item. Drawn unsized (placeholder minimum-size devices) with Vb1..Vb4 as external bias ports; this entry pulls the four bias levels inside as knob-driven dc sources (instantiator-owns-bias, plan_hierarchical_composition D3/D4). The drawn Rb=1k placeholder would put the high-pass corner at ~MHz \u2014 the 10Meg sizing default is a deliberate sizing-floor choice.",
+        "paper": "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011",
+        "source": "drawings/ccia-02-QinwenFan-chopper-ripple-reduction (hand-drawn xschem, ccia-dut-chopper-w-positive-feedback.sch)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/ia_003_fan_chopper_pf/ihp-sg13g2/_dut.spice",
+          "dc_op": "raw/ia_003_fan_chopper_pf/ihp-sg13g2/dc_op.spice",
+          "tran_chopper_ripple": "raw/ia_003_fan_chopper_pf/ihp-sg13g2/tran_chopper_ripple.spice",
+          "tran_zin_chopped": "raw/ia_003_fan_chopper_pf/ihp-sg13g2/tran_zin_chopped.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/ia_003_fan_chopper_pf/pdk/ihp-sg13g2/schematic/ccia-dut-chopper-w-positive-feedback.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "ec4ede83ce",
+          "ppa": {
+            "active_gate_area_um2": 105.12,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "gain_cl": 6.946581
+            },
+            "power_w": 0.00017567424
+          },
+          "spec": {
+            "fail": 1,
+            "none": 0,
+            "pass": 9
+          }
+        }
+      },
+      "stages": 2,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "dc_op"
+      ],
+      "class": "ia",
+      "compensation": null,
+      "display_name": "Fan CCIA + composed ripple-reduction loop (COMPOSITE: ia_002 + sup_003)",
+      "id": "ia_004_fan_chopper_rrl",
+      "kind": "verifiable",
+      "params": {
+        "devices": 102,
+        "groups": {
+          "chfb_tg_nmos_main": "shared_geometry",
+          "chfb_tg_pmos_main": "shared_geometry",
+          "chin_tg_nmos_main": "shared_geometry",
+          "chin_tg_pmos_main": "shared_geometry",
+          "chopper_nmos_rrl": "shared_geometry",
+          "chopper_pmos_rrl": "shared_geometry",
+          "chout_tg_nmos_main": "shared_geometry",
+          "chout_tg_pmos_main": "shared_geometry",
+          "mirror_xm15_opamp_l_rrl": "mirror_length",
+          "pair_caz_rrl": "shared_geometry",
+          "pair_cfb_main": "shared_geometry",
+          "pair_cin_main": "shared_geometry",
+          "pair_cint_rrl": "shared_geometry",
+          "pair_cm_main": "shared_geometry",
+          "pair_cs_rrl": "shared_geometry",
+          "pair_rb_main": "shared_geometry",
+          "pair_xm10_xm11_main": "shared_geometry",
+          "pair_xm11_xm12_rrl": "shared_geometry",
+          "pair_xm12_xm13_main": "shared_geometry",
+          "pair_xm13_xm14_rrl": "matched_pair",
+          "pair_xm14_xm15_main": "shared_geometry",
+          "pair_xm15_xm16_rrl": "shared_geometry",
+          "pair_xm2_opamp_xm3_opamp_rrl": "matched_pair",
+          "pair_xm2_xm3_main": "matched_pair",
+          "pair_xm4_xm5_main": "shared_geometry",
+          "pair_xm5_xm7_rrl": "matched_pair",
+          "pair_xm6_xm7_main": "shared_geometry",
+          "pair_xm6_xm8_rrl": "matched_pair",
+          "pair_xm8_xm9_main": "shared_geometry",
+          "pair_xm9_xm10_rrl": "shared_geometry",
+          "sources_vb4_l_main": "shared_geometry",
+          "tails_xm1_xm4_l_rrl": "shared_geometry",
+          "tg_nmos_rrl": "shared_geometry",
+          "tg_pmos_rrl": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 70,
+            "frozen": 27,
+            "ratio": 0,
+            "tied": 155
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "designer": "Composition by Noorizadeh; blocks: ia_002 + sup_003 (hand-drawn Fan corpus)",
+        "notes": "The full Fan architecture the drawn tops omit: the ripple-reduction loop (sup_003) composed around the chopper CCIA (ia_002) \u2014 RRL senses the output ripple, demodulates at the output-chopper clock, integrates through a two-phase SC network, and injects the DC correction at the first-stage outputs (pre output chopper). This entry is a STRUCTURALLY-COMPLETE composer demonstration (the P4 composer builds the flat hierarchical composite) but is STATICALLY CHARACTERIZED ONLY. HONEST LIMITATION (2026-07-17 adversarial verify): the composed core has NO common-mode control, so once the RRL's SC clocks actually run, the output CM rails to ~+1.19 V within ~1-2 ms and every clocked transient aborts \u2014 so the ripple-nulling figure and the demodulation-sign question (DRAWING_REVIEW \u00a74.2) CANNOT be exercised on this composite. (An earlier v_ripple0_pp \"~40x nulling\" headline here was measured with the SC clocks accidentally undriven, i.e. the RRL INERT \u2014 that bench bug is fixed in the template and the invalid headline removed.) The clocked RRL benches are therefore not bound; the RRL demonstration + demod sign are deferred to the core-CM closure composite (plan P4-4b, cf. amp_030). The static benches (cap-ratio gain, HPF corner, static Zin) are valid and bound.",
+        "paper": "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011",
+        "source": "composition.yaml (composer P4 \u2014 the CCIA-02 system composite)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/ia_004_fan_chopper_rrl/ihp-sg13g2/_dut.spice",
+          "dc_op": "raw/ia_004_fan_chopper_rrl/ihp-sg13g2/dc_op.spice"
+        }
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "ee77a983e2",
+          "ppa": {
+            "active_gate_area_um2": 191.24,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {},
+            "power_w": 0.00026339412
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 6
+          }
+        }
+      },
+      "stages": 2,
+      "status": "draft"
+    },
+    {
+      "analyses": [],
+      "class": "ia",
+      "compensation": null,
+      "display_name": "Hsu 3-bit binary cap-feedback PGA (ideal-amp core)",
+      "id": "ia_005_hsu_pga_ideal",
+      "kind": "verifiable",
+      "params": {
+        "devices": 43,
+        "groups": {
+          "bank_tg_nmos": "shared_geometry",
+          "bank_tg_pmos": "shared_geometry",
+          "caps_bit0_m": "shared_geometry",
+          "caps_bit1_m": "shared_geometry",
+          "caps_bit2_m": "shared_geometry",
+          "caps_fixed_m": "shared_geometry",
+          "pair_cf": "shared_geometry",
+          "pseudo_r_quad": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 13,
+            "frozen": 7,
+            "ratio": 0,
+            "tied": 80
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "aliases": [
+          "PGA-ideal"
+        ],
+        "designer": "Noorizadeh (schematic capture, after Hsu et al.)",
+        "notes": "The programmable-gain stage of the Hsu bio-AFE chain (chain position: ccia -> PGA -> SRMC; family landing manifest drawings/bio-afe-01-YuPinHsu-reconfigable-SRMC/landing.yaml). Cap-feedback PGA: two 3-bit binary capbank instances (= sw_003_binary_capbank, flattened here) set Cin per side against Cf = 1p feedback caps around a behavioral ideal-amp-fully-diff leaf (= amp_028's macromodel, flattened here; realization: mixed); anti-series diode-connected PMOS pseudo-resistor stacks across each Cf give the summing nodes their DC servo path. Gain = -(1+code)*Cu/Cf \u2014 INVERTING, the family's cap-feedback convention \u2014 with HP corner pseudo-R/Cf (code-independent) and LP at beta*GBW. Full 8-code validation 2026-07-19 (DRAWING_REVIEW.md \u00a78 finding 1; machine copy drawings/sizing-and-specs.yaml bio_afe_ideal_chain.PGA_ideal): gains -0.08..17.98 dB vs ideal (1+code), HP 2.17 Hz all codes, LP 1.08-3.4 MHz, vocm 0.6000 every code, 1% step settling 0.52 us, THD 0.0018% at code 111.",
+        "paper": "Y.-P. Hsu, Z. Liu, M. M. Hella, \"A -68 dB THD, 0.6 mm2 Active Area Biosignal Acquisition System With a 40-320 Hz Duty-Cycle Controlled Filter\", IEEE TCAS-I 67(1):233-245, Jan. 2020",
+        "source": "drawings/bio-afe-01-YuPinHsu-reconfigable-SRMC (hand-drawn xschem, PGA-ideal.sch)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/ia_005_hsu_pga_ideal/ihp-sg13g2/_dut.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/ia_005_hsu_pga_ideal/pdk/ihp-sg13g2/schematic/PGA-ideal.sch"
+      },
+      "stages": null,
       "status": "draft"
     },
     {
@@ -5367,6 +7602,7 @@
         "dropout",
         "tran_load_step",
         "loop_stability",
+        "ac_loopgain",
         "noise",
         "tran_line_step"
       ],
@@ -5376,45 +7612,32 @@
       "id": "ldo_005_buffered_ref",
       "kind": "verifiable",
       "params": {
-        "devices": 23,
+        "devices": 33,
         "groups": {
-          "mirror_xm12_w_l": "mirror_length",
-          "mirror_xm3_w_l": "mirror_length",
-          "mirror_xm6_w_l": "mirror_length",
-          "mirror_xm9_w_l": "mirror_length",
-          "pair_xm1_xm2": "matched_pair",
-          "pair_xm7_xm8": "matched_pair"
+          "mirror_xmea_b0_l": "mirror_length",
+          "mirror_xmra_3_w_l": "mirror_length",
+          "mirror_xmra_b0_l": "mirror_length",
+          "pair_xmea_1_xmea_2": "matched_pair",
+          "pair_xmra_1_xmra_2": "matched_pair",
+          "shared_xmea_3_w_l": "shared_geometry",
+          "shared_xmea_b0_w": "shared_geometry"
         },
         "ratios": 0,
         "symbols": {
           "gf180mcu": {
-            "free": 25,
+            "free": 39,
             "frozen": 0,
             "ratio": 0,
-            "tied": 12
-          },
-          "ihp-sg13g2": {
-            "free": 25,
-            "frozen": 0,
-            "ratio": 0,
-            "tied": 12
-          },
-          "sky130": {
-            "free": 25,
-            "frozen": 0,
-            "ratio": 0,
-            "tied": 12
+            "tied": 15
           }
         },
         "untied_symmetries": [
-          "matched_pair XM7+XM8 (tie l,m,w)",
-          "matched_pair XM1+XM2 (tie l,m,w)"
+          "matched_pair XMEA_1+XMEA_2 (tie l,m,w)",
+          "matched_pair XMRA_1+XMRA_2 (tie l,m,w)"
         ]
       },
       "pdks": [
-        "gf180mcu",
-        "ihp-sg13g2",
-        "sky130"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -5428,6 +7651,7 @@
       "raw": {
         "gf180mcu": {
           "_dut": "raw/ldo_005_buffered_ref/gf180mcu/_dut.spice",
+          "ac_loopgain": "raw/ldo_005_buffered_ref/gf180mcu/ac_loopgain.spice",
           "dc_op": "raw/ldo_005_buffered_ref/gf180mcu/dc_op.spice",
           "dropout": "raw/ldo_005_buffered_ref/gf180mcu/dropout.spice",
           "line_regulation": "raw/ldo_005_buffered_ref/gf180mcu/line_regulation.spice",
@@ -5437,30 +7661,6 @@
           "psrr": "raw/ldo_005_buffered_ref/gf180mcu/psrr.spice",
           "tran_line_step": "raw/ldo_005_buffered_ref/gf180mcu/tran_line_step.spice",
           "tran_load_step": "raw/ldo_005_buffered_ref/gf180mcu/tran_load_step.spice"
-        },
-        "ihp-sg13g2": {
-          "_dut": "raw/ldo_005_buffered_ref/ihp-sg13g2/_dut.spice",
-          "dc_op": "raw/ldo_005_buffered_ref/ihp-sg13g2/dc_op.spice",
-          "dropout": "raw/ldo_005_buffered_ref/ihp-sg13g2/dropout.spice",
-          "line_regulation": "raw/ldo_005_buffered_ref/ihp-sg13g2/line_regulation.spice",
-          "load_regulation": "raw/ldo_005_buffered_ref/ihp-sg13g2/load_regulation.spice",
-          "loop_stability": "raw/ldo_005_buffered_ref/ihp-sg13g2/loop_stability.spice",
-          "noise": "raw/ldo_005_buffered_ref/ihp-sg13g2/noise.spice",
-          "psrr": "raw/ldo_005_buffered_ref/ihp-sg13g2/psrr.spice",
-          "tran_line_step": "raw/ldo_005_buffered_ref/ihp-sg13g2/tran_line_step.spice",
-          "tran_load_step": "raw/ldo_005_buffered_ref/ihp-sg13g2/tran_load_step.spice"
-        },
-        "sky130": {
-          "_dut": "raw/ldo_005_buffered_ref/sky130/_dut.spice",
-          "dc_op": "raw/ldo_005_buffered_ref/sky130/dc_op.spice",
-          "dropout": "raw/ldo_005_buffered_ref/sky130/dropout.spice",
-          "line_regulation": "raw/ldo_005_buffered_ref/sky130/line_regulation.spice",
-          "load_regulation": "raw/ldo_005_buffered_ref/sky130/load_regulation.spice",
-          "loop_stability": "raw/ldo_005_buffered_ref/sky130/loop_stability.spice",
-          "noise": "raw/ldo_005_buffered_ref/sky130/noise.spice",
-          "psrr": "raw/ldo_005_buffered_ref/sky130/psrr.spice",
-          "tran_line_step": "raw/ldo_005_buffered_ref/sky130/tran_line_step.spice",
-          "tran_load_step": "raw/ldo_005_buffered_ref/sky130/tran_load_step.spice"
         }
       },
       "schematic": {
@@ -5468,66 +7668,24 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "64f8159047",
+          "design_id": "172a8c6e82",
           "ppa": {
-            "active_gate_area_um2": 232.0,
+            "active_gate_area_um2": 1017.564,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.4087459,
-              "psrr_vdd_db": 4.84997,
-              "v_dropout": 0.117871,
-              "v_undershoot": 0.021942
+              "load_reg": 0.003621,
+              "psrr_vdd_db": 31.94445,
+              "v_dropout": 0.5499162,
+              "v_undershoot": 0.004233
             },
-            "power_w": 0.00098866008
+            "power_w": 0.00155463693
           },
           "spec": {
-            "fail": 4,
+            "fail": 1,
             "none": 0,
-            "pass": 7
-          }
-        },
-        "ihp-sg13g2": {
-          "design_id": "cdaaa39435",
-          "ppa": {
-            "active_gate_area_um2": 232.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "load_reg": 0.046666,
-              "psrr_vdd_db": 28.04143,
-              "v_dropout": 0.038046,
-              "v_undershoot": 0.022235
-            },
-            "power_w": 0.00123885432
-          },
-          "spec": {
-            "fail": 0,
-            "none": 0,
-            "pass": 11
-          }
-        },
-        "sky130": {
-          "design_id": "219de70ae5",
-          "ppa": {
-            "active_gate_area_um2": 232.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "load_reg": 0.2769907,
-              "psrr_vdd_db": -1.50012,
-              "v_dropout": 0.114928,
-              "v_undershoot": 0.02325
-            },
-            "power_w": 0.00101779038
-          },
-          "spec": {
-            "fail": 5,
-            "none": 0,
-            "pass": 6
+            "pass": 13
           }
         }
       },
@@ -5610,6 +7768,24 @@
               "load_reg": 1.233842
             },
             "power_w": 1.1250003e-05
+          },
+          "spec": {
+            "fail": 1,
+            "none": 0,
+            "pass": 1
+          }
+        },
+        "ihp-sg13g2": {
+          "design_id": "0fc1460a11",
+          "ppa": {
+            "active_gate_area_um2": 25.0,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "load_reg": 1.213766
+            },
+            "power_w": 1.12500075e-05
           },
           "spec": {
             "fail": 1,
@@ -5927,6 +8103,27 @@
         }
       ],
       "scoreboard": {
+        "gf180mcu": {
+          "design_id": "b34d51fc96",
+          "ppa": {
+            "active_gate_area_um2": 200.8,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "load_reg": 0.03898,
+              "psrr_vdd_db": 37.38731,
+              "v_dropout": 0.09909901,
+              "v_undershoot": 0.055875
+            },
+            "power_w": 0.00018706248
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 11
+          }
+        },
         "ihp-sg13g2": {
           "design_id": "0d828d6770",
           "ppa": {
@@ -6085,6 +8282,27 @@
         }
       ],
       "scoreboard": {
+        "gf180mcu": {
+          "design_id": "bc43722a01",
+          "ppa": {
+            "active_gate_area_um2": 61.76,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "load_reg": 0.4037317,
+              "psrr_vdd_db": 62.57693,
+              "v_dropout": 0.4645783,
+              "v_undershoot": 0.0293354
+            },
+            "power_w": 0.00011685420000000002
+          },
+          "spec": {
+            "fail": 1,
+            "none": 0,
+            "pass": 10
+          }
+        },
         "ihp-sg13g2": {
           "design_id": "696bb45b65",
           "ppa": {
@@ -6177,6 +8395,19 @@
       "display_name": "NMOS track-and-hold sampler (switch + hold cap)",
       "id": "smp_001_nmos_th",
       "kind": "verifiable",
+      "params": {
+        "devices": 2,
+        "groups": {},
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 4,
+            "frozen": 0,
+            "ratio": 0,
+            "tied": 0
+          }
+        }
+      },
       "pdks": [
         "ihp-sg13g2"
       ],
@@ -6220,6 +8451,338 @@
     },
     {
       "analyses": [
+        "dc_vcm_sense"
+      ],
+      "class": "support",
+      "compensation": null,
+      "display_name": "Resistive common-mode detector (Rm/Rm averager)",
+      "id": "sup_001_vcm_detector",
+      "kind": "verifiable",
+      "params": {
+        "devices": 2,
+        "groups": {
+          "averager_rmp_rmn": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 1,
+            "frozen": 0,
+            "ratio": 0,
+            "tied": 1
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "aliases": [
+          "vcm-detector-simple"
+        ],
+        "designer": "Noorizadeh (schematic capture, after Hsu et al.)",
+        "notes": "Passive resistive CM averager sensing the OTA output common mode for the CMFB loop of the drawn CCIA. Floating (no supply ports); the drawn symbol Rm carried no value, so the tied per-instance value knob is a free design variable (high-R default to avoid loading the OTA outputs).",
+        "paper": "Y.-P. Hsu, Z. Liu, M. M. Hella, \"A 1.8 uW -65 dB THD ECG Acquisition Front-End IC Using a Bandpass Instrumentation Amplifier With Class-AB Output Configuration\", IEEE TCAS-II 65(12):1859-1863, Dec. 2018",
+        "source": "drawings/ccia-01-YuPinHsu-bandpass-class-ab-output (hand-drawn xschem, vcm-detector-simple.sym)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/sup_001_vcm_detector/ihp-sg13g2/_dut.spice",
+          "dc_vcm_sense": "raw/sup_001_vcm_detector/ihp-sg13g2/dc_vcm_sense.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/sup_001_vcm_detector/pdk/ihp-sg13g2/schematic/vcm-detector-simple.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "8ccfa4c95c",
+          "ppa": {
+            "active_gate_area_um2": 0.0,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {}
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 2
+          }
+        }
+      },
+      "stages": null,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "tran_rrl_sense"
+      ],
+      "class": "support",
+      "compensation": null,
+      "display_name": "Ripple-reduction-loop switched-capacitor integrator (Fan CCIA servo)",
+      "id": "sup_003_rrl_sc_integrator",
+      "kind": "verifiable",
+      "params": {
+        "devices": 51,
+        "groups": {
+          "chopper_nmos": "shared_geometry",
+          "chopper_pmos": "shared_geometry",
+          "mirror_xm15_opamp_l": "mirror_length",
+          "pair_caz": "shared_geometry",
+          "pair_cint": "shared_geometry",
+          "pair_cs": "shared_geometry",
+          "pair_xm11_xm12": "shared_geometry",
+          "pair_xm13_xm14": "matched_pair",
+          "pair_xm15_xm16": "shared_geometry",
+          "pair_xm2_opamp_xm3_opamp": "matched_pair",
+          "pair_xm5_xm7": "matched_pair",
+          "pair_xm6_xm8": "matched_pair",
+          "pair_xm9_xm10": "shared_geometry",
+          "tails_xm1_xm4_l": "shared_geometry",
+          "tg_nmos": "shared_geometry",
+          "tg_pmos": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 36,
+            "frozen": 13,
+            "ratio": 0,
+            "tied": 74
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "aliases": [
+          "rrl-switched-capa-integrator"
+        ],
+        "designer": "Noorizadeh (schematic capture, after Fan et al.)",
+        "notes": "Ripple-sensing demodulating SC integrator \u2014 the RRL servo of Fan's CCIA (DRAWING_REVIEW S4): Cs AC-couples the main amplifier's output ripple, the internal 4-gate chopper synchronously demodulates it at f_chop, and the auto-zeroed SC core integrates the demodulated product into the correction drive. AC-coupled BY DESIGN \u2014 a DC differential input transfers zero net charge per cycle (DC rejection is a feature, not a bug), so the bench is tran_rrl_sense (square ripple at FCHOP + synchronous CLK_CH_RRL), not a DC-ramp integrator bench. The chopper matches the fixed drawing (DRAWING_REVIEW item 1 FIXED): true 4-gate modulator, and the DRAWN clock hookup (Vctl fed from CLK_CH_RRL_not, i.e. straight-leg NMOS gates on clk_ch_rrl_not) is preserved exactly \u2014 that assignment sets the demodulation sign of the composed RRL loop (S4.2), recorded as the SIGN of the ripple_gain metric. The drawn TG wiring uses the opposite PHI phase as each switch complement, so the bench drives PHI_1/PHI_2 as exact complements (see tran_rrl_sense header). Entry-level wrap deviations: the drawing's Vb1..Vb4 bias ports become internal knob-driven sources (instantiator owns bias); the ideal-amp leaf's gm_val/rout_val/... symbols match the drawing (normalized at source, DRAWING_REVIEW item 5).",
+        "paper": "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011",
+        "source": "drawings/ccia-02-QinwenFan-chopper-ripple-reduction (hand-drawn xschem, rrl-switched-capa-integrator.sch)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/sup_003_rrl_sc_integrator/ihp-sg13g2/_dut.spice",
+          "tran_rrl_sense": "raw/sup_003_rrl_sc_integrator/ihp-sg13g2/tran_rrl_sense.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/sup_003_rrl_sc_integrator/pdk/ihp-sg13g2/schematic/rrl-switched-capa-integrator.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "843020c225",
+          "ppa": {
+            "active_gate_area_um2": 88.2,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "ripple_gain": -437664.0
+            }
+          },
+          "spec": {
+            "fail": 0,
+            "none": 1,
+            "pass": 0
+          }
+        }
+      },
+      "stages": null,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "dc_ron",
+        "tran_chargeinj"
+      ],
+      "class": "switch",
+      "compensation": null,
+      "display_name": "CMOS transmission gate (complementary pass pair)",
+      "id": "sw_001_transmission_gate_pair",
+      "kind": "verifiable",
+      "params": {
+        "devices": 2,
+        "groups": {},
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 4,
+            "frozen": 2,
+            "ratio": 0,
+            "tied": 0
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "aliases": [
+          "transmission_gate_pair"
+        ],
+        "designer": "Noorizadeh (schematic capture, after Fan et al.)",
+        "notes": "The unit switch instanced throughout the CCIA's chopper and SC networks. The rails vdd/vss exist ONLY as the bulk connections of the two pass devices \u2014 no channel current flows to either rail. Drawn unsized (both devices at placeholder minimum size); the sizing.yaml defaults are a signal-switch starting point (w=2u, min L), not a tuned design point.",
+        "paper": "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011",
+        "source": "drawings/ccia-02-QinwenFan-chopper-ripple-reduction (hand-drawn xschem, transmission_gate_pair.sym)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/sw_001_transmission_gate_pair/ihp-sg13g2/_dut.spice",
+          "dc_ron": "raw/sw_001_transmission_gate_pair/ihp-sg13g2/dc_ron.spice",
+          "tran_chargeinj": "raw/sw_001_transmission_gate_pair/ihp-sg13g2/tran_chargeinj.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/sw_001_transmission_gate_pair/pdk/ihp-sg13g2/schematic/transmission_gate_pair.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "2c220641a3",
+          "ppa": {
+            "active_gate_area_um2": 0.52,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "q_inj_v": -0.0002901,
+              "r_on": 2918.349
+            },
+            "power_w": 3.7163364e-13
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 4
+          }
+        }
+      },
+      "stages": null,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "dc_ron",
+        "tran_chop_polarity"
+      ],
+      "class": "switch",
+      "compensation": null,
+      "display_name": "Differential chopper modulator (2 straight + 2 cross transmission gates)",
+      "id": "sw_002_chopper_diff",
+      "kind": "verifiable",
+      "params": {
+        "devices": 8,
+        "groups": {
+          "legs_nmos": "shared_geometry",
+          "legs_pmos": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 4,
+            "frozen": 2,
+            "ratio": 0,
+            "tied": 18
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "aliases": [
+          "chopper-diff"
+        ],
+        "designer": "Noorizadeh (schematic capture, after Fan et al.)",
+        "notes": "TRUE 4-gate differential chopper modulator: 2 straight transmission gates (va_p->vb_p / va_n->vb_n, conduct when vctl HIGH) + 2 cross gates (va_p->vb_n / va_n->vb_p on swapped controls, conduct when vctl LOW) \u2014 polarity reversal proven electrically in the drawing review (drawings/DRAWING_REVIEW.md item 1, FIXED 2026-07-16); this entry matches the fixed drawing. Hand-flattened here from the drawing's four transmission_gate_pair instances x1..x4; the rails vdd/vss exist ONLY as bulk connections.",
+        "paper": "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011",
+        "source": "drawings/ccia-02-QinwenFan-chopper-ripple-reduction (hand-drawn xschem, chopper-diff.sch)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/sw_002_chopper_diff/ihp-sg13g2/_dut.spice",
+          "dc_ron": "raw/sw_002_chopper_diff/ihp-sg13g2/dc_ron.spice",
+          "tran_chop_polarity": "raw/sw_002_chopper_diff/ihp-sg13g2/tran_chop_polarity.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/sw_002_chopper_diff/pdk/ihp-sg13g2/schematic/chopper-diff.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "29c292acf4",
+          "ppa": {
+            "active_gate_area_um2": 2.08,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "r_on": 2918.349
+            }
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 3
+          }
+        }
+      },
+      "stages": null,
+      "status": "draft"
+    },
+    {
+      "analyses": [],
+      "class": "switch",
+      "compensation": null,
+      "display_name": "3-bit binary-weighted TG-switched cap bank",
+      "id": "sw_003_binary_capbank",
+      "kind": "verifiable",
+      "params": {
+        "devices": 16,
+        "groups": {
+          "legs_nmos": "shared_geometry",
+          "legs_pmos": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 5,
+            "frozen": 6,
+            "ratio": 0,
+            "tied": 30
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "aliases": [
+          "capbank"
+        ],
+        "designer": "Noorizadeh (schematic capture, after Hsu et al.)",
+        "notes": "3-bit BINARY-weighted programmable capacitor bank: one fixed unit cap C1 (vinp<->vout) plus three TG-switched caps C2/C3/C4 whose bottom plates the six transmission_gate_pair instances route to vinp (bit HIGH) or park at VCM (bit LOW) \u2014 C_eff = (1+code)*Cu. The Cin-setting gain element of the Hsu PGA (ia_005_hsu_pga_ideal instantiates it twice). BINARY parameterization is the owner decision of 2026-07-19 (DRAWING_REVIEW.md \u00a78 finding 1, RESOLVED): every cap carries the shared unit value Cu and the weighting is STRUCTURAL via the cap multiplier m (C1 fixed m=1, C2(D0) m=1, C3(D1) m=2, C4(D2) m=4); live-validated C_eff exactly 1p..8p @ Cu=1p, all 8 codes distinct/monotonic. Hand-flattened here from the drawing's six transmission_gate_pair instances x1..x6; the rails VDD/VSS exist ONLY as bulk connections.",
+        "paper": "Y.-P. Hsu, Z. Liu, M. M. Hella, \"A -68 dB THD, 0.6 mm2 Active Area Biosignal Acquisition System With a 40-320 Hz Duty-Cycle Controlled Filter\", IEEE TCAS-I 67(1):233-245, Jan. 2020",
+        "source": "drawings/shared (hand-drawn xschem, capbank.sch; bio-afe-01 landing manifest drawings/bio-afe-01-YuPinHsu-reconfigable-SRMC/landing.yaml)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/sw_003_binary_capbank/ihp-sg13g2/_dut.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/sw_003_binary_capbank/pdk/ihp-sg13g2/schematic/capbank.sch"
+      },
+      "stages": null,
+      "status": "draft"
+    },
+    {
+      "analyses": [
         "dc_op",
         "dc_code_sweep"
       ],
@@ -6228,6 +8791,19 @@
       "display_name": "MOS-triode voltage-controlled trim (analog-code attenuator)",
       "id": "trm_001_vcr",
       "kind": "verifiable",
+      "params": {
+        "devices": 2,
+        "groups": {},
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 4,
+            "frozen": 0,
+            "ratio": 0,
+            "tied": 0
+          }
+        }
+      },
       "pdks": [
         "ihp-sg13g2"
       ],
@@ -6376,6 +8952,26 @@
         }
       ],
       "scoreboard": {
+        "gf180mcu": {
+          "design_id": "24c474455b",
+          "ppa": {
+            "active_gate_area_um2": 49.92,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "line_sens_pct": 19.73248,
+              "psr_db": -29.53429,
+              "sens_v_per_c": 0.0009467586
+            },
+            "power_w": 1.6276523999999998e-11
+          },
+          "spec": {
+            "fail": 0,
+            "none": 1,
+            "pass": 6
+          }
+        },
         "ihp-sg13g2": {
           "design_id": "2839e16f13",
           "ppa": {
@@ -6509,6 +9105,26 @@
         }
       ],
       "scoreboard": {
+        "gf180mcu": {
+          "design_id": "6aebc5b705",
+          "ppa": {
+            "active_gate_area_um2": 14.0,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "line_sens_pct": 32.32855,
+              "psr_db": -25.37032,
+              "sens_v_per_c": 0.000211445
+            },
+            "power_w": 1.832442e-05
+          },
+          "spec": {
+            "fail": 0,
+            "none": 1,
+            "pass": 6
+          }
+        },
         "ihp-sg13g2": {
           "design_id": "f0a2f00009",
           "ppa": {
@@ -6642,6 +9258,26 @@
         }
       ],
       "scoreboard": {
+        "gf180mcu": {
+          "design_id": "ad730c11b9",
+          "ppa": {
+            "active_gate_area_um2": 27.0,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "line_sens_pct": 51.68905,
+              "psr_db": -24.2575,
+              "sens_v_per_c": 0.0001419239
+            },
+            "power_w": 1.157562e-05
+          },
+          "spec": {
+            "fail": 0,
+            "none": 1,
+            "pass": 6
+          }
+        },
         "ihp-sg13g2": {
           "design_id": "a8f2746389",
           "ppa": {
@@ -6698,6 +9334,19 @@
       "display_name": "2-transistor \u0394Vth voltage reference (mixed-flavor sub-Vt core)",
       "id": "vref_001_vgs",
       "kind": "verifiable",
+      "params": {
+        "devices": 2,
+        "groups": {},
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 6,
+            "frozen": 0,
+            "ratio": 0,
+            "tied": 0
+          }
+        }
+      },
       "pdks": [
         "ihp-sg13g2"
       ],
@@ -6776,11 +9425,25 @@
       "amp_022_fer_two_stage",
       "amp_023_fer_fd2s",
       "amp_024_smcnr",
+      "amp_025_hsu_classab_ota",
+      "amp_026_fan_chopper_ota",
+      "amp_027_fan_rrl_ota",
+      "amp_028_ideal_fully_diff",
+      "amp_029_two_stage_miller_comp",
+      "amp_030_miller_cmfb_composite",
+      "amp_031_srmc_core_cmfb",
+      "amp_032_ti_ldo_error_selfbias",
+      "amp_033_ti_ldo_ref_selfbias",
       "ferrosim_pga_16step"
     ],
     "buffer": [
       "buf_001_super_follower",
       "ferrosim_inbuf"
+    ],
+    "cmfb": [
+      "cmfb_001_ideal_rsense_servo",
+      "cmfb_002_5t_pmos_input",
+      "cmfb_003_5t_nmos_input"
     ],
     "comparator": [
       "cmp_001_hyst_diffpair",
@@ -6795,6 +9458,13 @@
     ],
     "gain_stage": [
       "gs_001_cascode_cs"
+    ],
+    "ia": [
+      "ia_001_hsu_bandpass_classab",
+      "ia_002_fan_chopper_simple",
+      "ia_003_fan_chopper_pf",
+      "ia_004_fan_chopper_rrl",
+      "ia_005_hsu_pga_ideal"
     ],
     "ldo": [
       "ldo_001_analoggym_basic",
@@ -6815,6 +9485,15 @@
       "ferrosim_sampling_bts",
       "ferrosim_sc_sample",
       "smp_001_nmos_th"
+    ],
+    "support": [
+      "sup_001_vcm_detector",
+      "sup_003_rrl_sc_integrator"
+    ],
+    "switch": [
+      "sw_001_transmission_gate_pair",
+      "sw_002_chopper_diff",
+      "sw_003_binary_capbank"
     ],
     "temp_sensor": [
       "tsn_001_ptat_2t",

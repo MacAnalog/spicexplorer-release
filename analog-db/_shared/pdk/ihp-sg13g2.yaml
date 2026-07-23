@@ -49,6 +49,10 @@ gmid:
     vsb: [0, -0.4, -0.4]                # 2 body-bias points (0, 0.4 V); --vsb for more
     length_um: [0.13, 0.15, 0.2, 0.5, 1, 2]
   info: "IHP sg13g2, 1.5 V lv, PSP/OSDI"
+  simulator:                              # optional ngspice runtime knobs (CLI --runner/--workers override)
+    runner: auto                          # auto = host ngspice+$PDK_ROOT when available, else docker
+    workers: 8                            # parallel ngspice jobs, one per L value
+    timeout_s: 3600                       # per-job wall clock [s]
   variants:                               # corner override per device variant (matched on device name)
     - match: "_hv_"                       # the HV MOS keep their models in a separate corner lib
       corners: {lib_file: cornerMOShv.lib}  #   (same mos_<corner> sections). e.g. --device sg13_hv_nmos

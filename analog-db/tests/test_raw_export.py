@@ -1,4 +1,4 @@
-"""raw/ export (plan ``doc/plan_raw_export.md``): the deck writer, the catalog ``raw``/``schematic``
+"""raw/ export: the deck writer, the catalog ``raw``/``schematic``
 blocks, and the Tier-0 cross-ref + Tier-1 drift guards. All PDK-free — the committed decks are
 actually SIMULATED on the base image in ``test_slow_sim.py`` (``test_L1_committed_raw_deck_simulates``).
 """
@@ -91,8 +91,8 @@ def test_generate_skips_disabled_and_unbound(ota):
     decks, skipped = export.generate_all()
     reasons = dict(skipped)
     # a scaffolded `enabled: false` analysis is skipped with a reason, not exported
-    assert reasons.get("amp_012_peng_tcfc/dc_op") == "disabled"
-    assert "raw/amp_012_peng_tcfc/sky130/dc_op.spice" not in decks
+    assert reasons.get("amp_018_telescopic_cascode/linearity") == "disabled"
+    assert "raw/amp_018_telescopic_cascode/ihp-sg13g2/linearity.spice" not in decks
     # tan_clia binds only sky130 + gf180 → no ihp deck at all (not even an error)
     assert "raw/amp_017_tan_clia/sky130/ac_open_loop.spice" in decks
     assert "raw/amp_017_tan_clia/ihp-sg13g2/ac_open_loop.spice" not in decks
@@ -107,7 +107,7 @@ def test_deck_index_groups_by_pdk_and_testbench():
     idx = export.deck_index()
     sky = idx["amp_001_5t"]["sky130"]
     assert sky["ac_open_loop"] == "raw/amp_001_5t/sky130/ac_open_loop.spice"
-    assert "_dut" in sky and set(idx["amp_001_5t"]) == {"ihp-sg13g2", "sky130", "gf180mcu"}
+    assert "_dut" in sky and {"ihp-sg13g2", "sky130", "gf180mcu"} <= set(idx["amp_001_5t"])  # registered proprietary lanes (tsmc-n65) may add groups
 
 
 # ───────────────────────────── xschem schematic (.sch) ─────────────────────────────
@@ -139,7 +139,7 @@ def test_schematic_is_not_a_testbench_in_the_index():
 def test_catalog_carries_raw_and_schematic_blocks():
     cat = json.loads(paths.catalog_path().read_text())
     e = next(c for c in cat["circuits"] if c["id"] == CIRCUIT)
-    assert set(e["raw"]) == {"ihp-sg13g2", "sky130", "gf180mcu"}
+    assert {"ihp-sg13g2", "sky130", "gf180mcu"} <= set(e["raw"])  # registered proprietary lanes (tsmc-n65) may add groups
     assert e["raw"]["sky130"]["noise"] == "raw/amp_001_5t/sky130/noise.spice"
     # schematics are reference-only pointers to files that exist (amp_001_5t has authored xschem)
     assert e["schematic"]["abstract"] == "circuits/amp_001_5t/abstract/schematic.svg"

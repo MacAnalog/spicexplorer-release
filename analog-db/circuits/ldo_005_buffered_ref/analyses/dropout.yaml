@@ -5,12 +5,12 @@
 schema: spicexplorer/analysis@1
 id: dropout
 template: dropout
-description: "Vin swept 1.0 -> 1.8 V at 1 mA; dropout = Vin - Vout when Vout crosses VOUT_THRESH."
+description: "Vin swept 1.4 -> 3.6 V at 1 mA; dropout = Vin - Vout when Vout crosses VOUT_THRESH."
 params:
   ILOAD: 1m
-  VDD_START: 1.0
-  VDD_STOP: 1.8
+  VDD_START: 1.4
+  VDD_STOP: 3.6
   VDD_STEP: 0.01
-  VOUT_THRESH: 1.2          # crosses ~VDD=1.32 V at 1 mA load (gf180mcu, tt probe)
+  VOUT_THRESH: 1.52         # 95% of the 1.6 V regulated target (rail moved to 3.3 V, 2026-07-21)
 flags: []
 produces: [v_dropout]

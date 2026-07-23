@@ -67,7 +67,7 @@ C {devices/lab_wire.sym} 550 -506 2 1 {name=l6 lab=VDD}
 C {devices/lab_wire.sym} 1050 -506 2 1 {name=l7 lab=VDD}
 C {devices/lab_wire.sym} 1050 -246 2 1 {name=l8 lab=VDD}
 C {devices/lab_wire.sym} 550 -246 2 1 {name=l9 lab=VDD}
-C {title.sym} 210 -60 0 0 {name=l10 author="Stefan Schippers"}
+C {devices/title.sym} 210 -60 0 0 {name=l10 author="Copyright 2026 MacAnalog Research Group"}
 C {iopin.sym} 1170 -740 0 0 {name=p1 lab=VDD}
 C {iopin.sym} 990 -150 0 0 {name=p2 lab=iout}
 C {iopin.sym} 610 -150 0 0 {name=p3 lab=iin}

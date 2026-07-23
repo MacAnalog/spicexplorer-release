@@ -4,6 +4,6 @@ id: dc_op
 template: dc_op
 description: "DC operating point; quiescent current and regulated output voltage."
 params:
-  VDD: 1.8
+  VDD: 3.3
 flags: []
 produces: [i_q, v_out]

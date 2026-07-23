@@ -1,4 +1,4 @@
-"""AnalogGym → analog-db importer (plan Phase 5).
+"""AnalogGym → analog-db importer.
 
 Normalizes a CODA-Team AnalogGym amplifier (``Amplifier/spice_netlist/<Name>`` +
 ``Amplifier/design_variables/<Name>``) into a DB circuit directory:
@@ -10,13 +10,14 @@ Normalizes a CODA-Team AnalogGym amplifier (``Amplifier/spice_netlist/<Name>`` +
                            preserved verbatim — circuitgraph ingests + lowers them.
   pdk/sky130/{devices.map,sizing,corners}.yaml
   circuit.yaml             class/compensation/stages/ports/provenance from the folder name +
-                           the analoggym-amplifiers skill mapping (BSD-3-Clause).
-  datasheet.yaml           extract-only metrics (benchmark specs, skill §6) + conditions
-                           (cload/vcm/ibias) read from design_variables. No symbolic (3-stage
-                           netlist2tf ingest is deferred).
+                           the AnalogGym compensation-scheme taxonomy (CODA-Team/AnalogGym,
+                           BSD-3-Clause).
+  datasheet.yaml           extract-only metrics (the AnalogGym benchmark specs) + conditions
+                           (cload/vcm/ibias) read from design_variables. No symbolic.
 
 This is a dev-time tool (the produced circuit dirs are committed); it is not on any runtime path.
-Provenance/classification is data-driven from ``_PAPER`` below (the skill's acronym→source table).
+Provenance/classification is data-driven from ``_PAPER`` below (the compensation-acronym →
+source-paper table).
 """
 
 from __future__ import annotations
@@ -27,7 +28,7 @@ from typing import Any
 
 import yaml
 
-# compensation acronym -> source paper (analoggym-amplifiers skill §4 / paper-benchmarks.md)
+# compensation acronym -> source paper
 _PAPER: dict[str, str] = {
     "SMC": "Fan, Mishra, Sanchez-Sinencio, IEEE JSSC 40(3):584-592, 2005",
     "NMCF": "Leung & Mok, IEEE TCAS-I 48(9):1041-1056, 2001",
@@ -48,7 +49,7 @@ _PAPER: dict[str, str] = {
     "AZ": "Yan, Mak, Law, Martins, Maloberti, IEEE JSSC 50(10):2353-2366, 2015",
 }
 
-# AnalogGym single-objective benchmark specs (skill §6 / Eq. 5), restricted to metrics the
+# AnalogGym single-objective benchmark specs, restricted to metrics the
 # universal/amplifier templates actually produce — extract-only, each `extract.meas` matches a
 # template output (no symbolic: 3-stage param-arithmetic isn't netlist2tf-ingestible yet; the
 # dedicated CMRR/PSRR/vos benches are deferred with their fragments).
@@ -142,7 +143,7 @@ def _split_design_vars(dvars: dict[str, str]) -> tuple[list[dict[str, Any]], dic
 
 
 def _resolve_cid(folder: str, dest_circuits_root: Path) -> str:
-    """The circuit id for an upstream folder — stable across re-imports (plan_scoreboard D-1/D-3).
+    """The circuit id for an upstream folder — stable across re-imports.
 
     An already-registered circuit is matched by its provenance aliases (the upstream folder name,
     or the pre-accession legacy id ``folder.lower()``) and keeps its id. A fresh import allocates
@@ -215,7 +216,7 @@ def import_circuit(src_amplifier_dir: Path, folder: str, dest_circuits_root: Pat
             "source": "AnalogGym",
             # the upstream folder + the pre-accession legacy id — the re-import match keys
             "aliases": [folder] + ([folder.lower()] if folder.lower() != cid else []),
-            "paper": _PAPER.get(comp, f"see analoggym-amplifiers skill ({comp})"),
+            "paper": _PAPER.get(comp, f"unmapped compensation acronym ({comp})"),
             "license": "BSD-3-Clause",
         },
         "artifacts": {
@@ -234,7 +235,7 @@ def import_circuit(src_amplifier_dir: Path, folder: str, dest_circuits_root: Pat
         + yaml.safe_dump(manifest, sort_keys=False, width=100))
 
     # --- datasheet.yaml (extract-only; conditions from design_variables) ---
-    supply = "1.8"  # AnalogGym shipped TB / README rail (skill gotcha 1)
+    supply = "1.8"  # AnalogGym shipped TB / README rail
     dconds: dict[str, Any] = {"supply": {"unit": "V", "typical": float(_eng(supply))},
                               "corner": {"typical": "tt"}, "temp": {"unit": "degC", "typical": 27}}
     if "cload" in conds:
@@ -254,20 +255,24 @@ def import_circuit(src_amplifier_dir: Path, folder: str, dest_circuits_root: Pat
     #     port; the bias_wrap flag is an advisory hint for the wrapped open-loop template, deferred) ---
     vcm = conds.get("vcm", "0.3")
     cl = conds.get("cload", "100p")
-    # ac_open_loop uses the bias-wrap template (enabled — the headline sim). dc_op/noise/tran_step
-    # are scaffolded but `enabled: false`: the self-biased 3-stage amps need bias-aware variants of
-    # those benches (the direct-drive universal templates won't bias them) — deferred. Tier 2 still
-    # assembles all four; the runner/sim tiers skip the disabled ones.
+    # All four benches are enabled via the self-bias bias-wrap family. The self-biased 3-stage amps
+    # can't bias under the direct-drive universal templates (they rail), so dc_op/noise/tran_step use
+    # `*_biaswrap` companions of ac_open_loop_biaswrap: Lfb DC-feedback pins the op point; AC/noise
+    # AC-open that loop (Cin), tran_step closes a real unity loop for settling. Validated live on ihp
+    # (M4, design-review 2026-07-05).
     bindings = {
         "ac_open_loop": ("ac_open_loop_biaswrap", True,
                          "Open-loop AC gain/phase via the AnalogGym bias-wrap (Lfb/Cin).",
                          "[dc_gain_db, ugf_hz, pm_deg]",
                          f"{{VDD: {supply}, VCM: {vcm}, CL: {cl}, FSTART: 0.1, FSTOP: 1G, PPD: 50}}"),
-        "dc_op": ("dc_op", False, "DC operating point (bias-aware variant deferred).", "[i_supply]",
+        "dc_op": ("dc_op_biaswrap", True,
+                  "DC operating point + supply current via the self-bias bias-wrap.", "[i_supply]",
                   f"{{VDD: {supply}, VCM: {vcm}}}"),
-        "noise": ("noise", False, "Input-referred noise (bias-aware variant deferred).", "[vn_in]",
+        "noise": ("noise_biaswrap", True,
+                  "Input-referred noise via the AnalogGym self-bias bias-wrap (Lfb/Cin).", "[vn_in]",
                   f"{{VDD: {supply}, VCM: {vcm}, CL: {cl}, FSTART: 1k, FSTOP: 1G, PPD: 50}}"),
-        "tran_step": ("tran_step", False, "Step settling (bias-aware variant deferred).", "[t_settle]",
+        "tran_step": ("tran_step_biaswrap", True,
+                      "Unity-gain step settling (self-bias follower).", "[t_settle]",
                       f"{{VDD: {supply}, VCM: {vcm}, CL: {cl}, VSTEP: 0.2, VTOL: 2m, "
                       f"TSTART: 1u, TSTEP: 10n, TSTOP: 200u}}"),
     }

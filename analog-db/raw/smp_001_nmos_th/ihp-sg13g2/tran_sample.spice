@@ -6,6 +6,7 @@
 **   docker run --rm -i spicexplorer-spice-base:local \
 **     bash -lc 'd=$(mktemp -d) && cat > $d/c.spice && cd $d && ngspice -b c.spice' < raw/smp_001_nmos_th/ihp-sg13g2/tran_sample.spice
 *----------------------------------------------------------*
+** params: 4 free + 0 frozen knobs (sizing.yaml) · 0 tied · 0 ratio-derived (abstract/params.yaml) · 4 testbench params
 ** AUTHORED TEMPLATE — sampler/tran_sample: clocked track/hold transient (pedestal + droop).
 ** Drives a held analog input Vin and a sampling clock (track = clk high on [0,TCLK/2], hold = clk
 ** low on [TCLK/2,TCLK]). From v(vout): pedestal_v = the charge-injection step at the track->hold

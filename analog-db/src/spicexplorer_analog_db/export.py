@@ -1,4 +1,4 @@
-"""Materialize ready-to-run testbench decks under ``raw/`` (plan ``doc/plan_raw_export.md``).
+"""Materialize ready-to-run testbench decks under ``raw/``.
 
 ``assemble()`` already renders one ``(circuit × analysis × pdk × corner)`` cell into a complete,
 self-contained netlist; this module **persists** those decks into a committed, drift-guarded tree so
@@ -8,8 +8,7 @@ an analog designer (or agent, or the UI) can pull one ``.spice`` and simulate it
   ``raw/<circuit>/<pdk>/_dut.spice``                    — standalone lowered DUT subckt
   ``raw/<circuit>/<circuit>.sch``                       — the DUT topology as an xschem schematic
 
-(The tree is flat per circuit: the accession id's ``<code>_`` prefix already carries the class,
-plan_scoreboard D-4.)
+(The tree is flat per circuit: the accession id's ``<code>_`` prefix already carries the class.)
 
 GENERATED, never hand-edited: a fresh re-export must be **byte-identical** to the committed tree
 (Tier-1 drift guard), so every deck is deterministic — no timestamps, no host paths (unlike
@@ -136,7 +135,7 @@ def render_deck(circuit: model.Circuit, analysis_id: str, pdk: str, corner: str 
 
 
 def _params_line(circuit: model.Circuit, pdk: str, body: str, tb: bool = True) -> str:
-    """Owner-requested provenance-count banner line for an analysis deck: the DUT classes plus
+    """Provenance-count banner line for an analysis deck: the DUT classes plus
     how many ``.param`` names are TESTBENCH-side (defined in the deck but outside the DUT's
     sizing/tie surface). Empty — deck byte-identical — without ``abstract/params.yaml``."""
     import re as _re

@@ -1,0 +1,27 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# SUPERSET of cace_format 5.2. See _shared/CACE_FORMAT.md for the field-overlap mapping (O-1).
+# Spec bands are sanity targets for an ideal matched resistive averager: with tied Rm halves
+# the sensed midpoint is exact into the bench's high-Z probe, so the bands mostly guard the
+# harness wiring (and would catch an upstream mismatch/loading regression).
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+  vcm:    {unit: V, typical: 0.6}
+metrics:
+  vcm_out:
+    display: "Sensed common-mode level"
+    description: "Detector output at VCM=0.6 V with VDIFF=0.2 V across the inputs; ideal = VCM"
+    unit: V
+    analysis: dc_vcm_sense
+    extract: {meas: vcm_out}
+    spec: {min: 0.58, typ: 0.6, max: 0.62, unit: V}
+  vos:
+    display: "CM sense error"
+    description: "vcm_out - VCM; nonzero only under averager mismatch or output loading"
+    unit: V
+    analysis: dc_vcm_sense
+    extract: {meas: vos}
+    spec: {min: -20e-3, typ: 0, max: 20e-3, unit: V}

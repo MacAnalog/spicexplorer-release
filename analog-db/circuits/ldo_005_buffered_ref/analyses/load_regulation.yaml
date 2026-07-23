@@ -4,7 +4,7 @@ id: load_regulation
 template: load_regulation
 description: "DC load sweep 0 -> 10 mA; delta-Vout across the load range."
 params:
-  VDD: 1.8
+  VDD: 3.3
   ILOAD_START: 0
   ILOAD_STOP: 10m
   ILOAD_STEP: 0.5m

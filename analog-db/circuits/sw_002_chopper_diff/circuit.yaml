@@ -1,0 +1,30 @@
+schema: spicexplorer/circuit@1
+id: sw_002_chopper_diff
+class: switch
+tier: support
+subfamily: chopper
+realization: transistor
+display_name: "Differential chopper modulator (2 straight + 2 cross transmission gates)"
+ports: [va_p, va_n, vb_p, vb_n, vctl, vctl_not, vdd, vss]
+provenance:
+  source: drawings/ccia-02-QinwenFan-chopper-ripple-reduction (hand-drawn xschem, chopper-diff.sch)
+  paper: "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011"
+  aliases: [chopper-diff]
+  designer: "Noorizadeh (schematic capture, after Fan et al.)"
+  notes: >-
+    TRUE 4-gate differential chopper modulator: 2 straight transmission gates
+    (va_p->vb_p / va_n->vb_n, conduct when vctl HIGH) + 2 cross gates
+    (va_p->vb_n / va_n->vb_p on swapped controls, conduct when vctl LOW) —
+    polarity reversal proven electrically in the drawing review
+    (drawings/DRAWING_REVIEW.md item 1, FIXED 2026-07-16); this entry matches
+    the fixed drawing. Hand-flattened here from the drawing's four
+    transmission_gate_pair instances x1..x4; the rails vdd/vss exist ONLY as
+    bulk connections.
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/chopper-diff.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2]
+analyses: [dc_ron, tran_chop_polarity]
+status: draft

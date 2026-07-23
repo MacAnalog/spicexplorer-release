@@ -1,17 +1,12 @@
-"""The native analysis runner (plan D-4/D-5, Phase 2).
+"""The native analysis runner.
 
 Runs ``analyses × pdk × corner`` through ngspice batch and records provenance-stamped
-scoreboard entries at ``circuits/<id>/scoreboard/<pdk>/<design_id>.json`` (plan_scoreboard
-D-5/D-8). PDK-gated: needs ngspice AND the
-PDK's corner libs on the ngspice sourcepath — that's the ``api`` container on this project
-(host Macs lack the PDK). Two execution modes:
+scoreboard entries at ``circuits/<id>/scoreboard/<pdk>/<design_id>.json``. PDK-gated:
+needs ngspice AND the PDK's corner libs on the ngspice sourcepath. Two execution modes:
 
-  - local:  ``ngspice -b`` on this machine's PATH (works inside the container).
+  - local:  ``ngspice -b`` on this machine's PATH.
   - docker: pipe each netlist into ``docker compose exec -T <service> ngspice`` from the host —
     no dependence on the (possibly stale) repo copy baked into the image.
-
-A future CACE-backend adapter (D-12) slots in behind the same ``run_cell`` interface using the
-``_shared/CACE_FORMAT.md`` mapping.
 """
 
 from __future__ import annotations
@@ -77,8 +72,12 @@ def _prepare_native_deck(netlist: str, pdk_dir: Path, spec: dict) -> str:
 
     return "\n".join(_resolve_include(ln) for ln in lines) + "\n"
 
-# ngspice meas/print output: "name              =  2.977862e+01"
-_MEASURE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([-+]?[0-9.]+(?:[eE][-+]?[0-9]+)?)\s*$")
+# ngspice meas/print output: "name              =  2.977862e+01"; MIN/MAX/PP/AVG
+# measures append the location, e.g. "name = 4.8e-01 at=  4.34e-06" — accept it.
+_MEASURE = re.compile(
+    r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([-+]?[0-9.]+(?:[eE][-+]?[0-9]+)?)"
+    r"(?:\s+(?:at|from|to)\s*=.*)?\s*$"
+)
 _FAILED = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*failed", re.IGNORECASE)
 
 
@@ -160,7 +159,7 @@ def base_image_runner(image: str = "spicexplorer-spice-base:local") -> Callable[
 # ``.lib sky130.lib.spice tt`` / ``.lib sm141064.ngspice nfet_03v3_t``), so ngspice resolves them
 # via ``sourcepath``. We write a per-PDK ``.spiceinit`` into the run's scratch dir (ngspice reads the
 # CWD ``.spiceinit`` in preference to ``$HOME``'s), making the runner self-contained + PDK-correct
-# regardless of the ambient shell config. This is the Phase-7 Tier-3 native sweep path (plan §6 T3).
+# regardless of the ambient shell config. This is the Tier-3 native sweep path.
 
 # registry PDK name → on-disk ``$PDK_ROOT`` layout. dir candidates cover the ciel/volare install
 # names (sky130A, gf180mcuD, …) that differ from the registry name; the first whose model dir exists
@@ -431,8 +430,7 @@ def run_circuit(
 
 
 def write_results(circuit: Circuit, results: dict) -> Path:
-    """Record the run on the circuit's scoreboard (plan_scoreboard D-8 — the successor of the
-    old ``results/<pdk>__<corner>.json`` snapshots): the current design point's entry gains this
+    """Record the run on the circuit's scoreboard: the current design point's entry gains this
     corner, and the first recorded design point per PDK is auto-named the baseline."""
     from .scoreboard import record
 

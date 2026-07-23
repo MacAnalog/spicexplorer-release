@@ -1,0 +1,100 @@
+{
+  "area": {
+    "active_gate_area_um2": 43.95,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 12,
+    "r_count": 3,
+    "r_total_ohm": 606000.0
+  },
+  "circuit": "cmp_001_hyst_diffpair",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_hysteresis": {
+          "measures": {
+            "v_hyst": 0.007,
+            "vth_fall": 0.7675,
+            "vth_rise": 0.7745
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 7.84861e-05,
+            "v_out": 1.5
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:24:42+00:00"
+      }
+    }
+  },
+  "design_id": "7b9661e7e8",
+  "metrics": {
+    "tt": {
+      "i_supply": {
+        "spec": "pass",
+        "value": 7.84861e-05
+      },
+      "v_hyst": {
+        "spec": "pass",
+        "value": 0.007
+      },
+      "v_out": {
+        "spec": "pass",
+        "value": 1.5
+      },
+      "vth_fall": {
+        "spec": "pass",
+        "value": 0.7675
+      },
+      "vth_rise": {
+        "spec": "pass",
+        "value": 0.7745
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_rhn_value": "3e5",
+      "x_dut_xmb1n_m": 1,
+      "x_dut_xmb1n_w": "2u",
+      "x_dut_xmb1p_l": "0.15u",
+      "x_dut_xmb1p_m": 1,
+      "x_dut_xmb1p_w": "5u",
+      "x_dut_xmb2n_m": 2,
+      "x_dut_xmb2p_m": 2,
+      "x_dut_xmb3n_m": 4,
+      "x_dut_xmb3p_m": 4,
+      "x_dut_xmhn_m": 1,
+      "x_dut_xmhn_w": "1u",
+      "x_dut_xmhp_m": 1,
+      "x_dut_xmin_m": 2,
+      "x_dut_xmip_l": "0.3u",
+      "x_dut_xmip_m": 2,
+      "x_dut_xmip_w": "10u",
+      "x_dut_xmpld_l": "0.3u",
+      "x_dut_xmpld_m": 4,
+      "x_dut_xmpld_w": "10u",
+      "x_dut_xmplm_m": 4,
+      "x_rtail": 6000
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 43.95,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "v_hyst": 0.007
+    },
+    "power_w": 0.00011772915000000001
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

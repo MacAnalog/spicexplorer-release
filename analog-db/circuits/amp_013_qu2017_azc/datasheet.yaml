@@ -1,5 +1,3 @@
-# Datasheet — AnalogGym single-objective benchmark specs (skill §6 / Eq. 5), extract-only.
-# Conditions (cload/vcm/ibias) read from the AnalogGym design_variables.
 schema: spicexplorer/datasheet@1
 default_conditions:
   supply:
@@ -36,8 +34,8 @@ metrics:
     extract:
       meas: ugf
     spec:
-      min: any
       unit: Hz
+      min: 2000000.0
   pm_deg:
     display: Phase margin
     unit: deg
@@ -45,9 +43,9 @@ metrics:
     extract:
       meas: pm
     spec:
-      min: 45
-      max: 90
       unit: deg
+      min: 60.0
+      max: 90.0
   vn_in:
     display: Input-referred noise
     unit: V/sqrt(Hz)
@@ -75,17 +73,19 @@ metrics:
       unit: s
   psrr_vdd_db:
     display: Positive-supply rejection
-    description: PSRR+ in the unity-buffer config, DC-band floor (design-review 2026-07-05 rollout).
+    description: PSRR+ in the unity-buffer config, DC-band floor (design-review 2026-07-05
+      rollout).
     unit: dB
     analysis: psrr_vdd
     extract:
       meas: psrr_vdd_db
     spec:
-      min: 20
       unit: dB
+      min: 40.0
   cmrr_db:
     display: Common-mode rejection
-    description: CMRR in the unity-buffer config, DC-band floor (design-review 2026-07-05 rollout).
+    description: CMRR in the unity-buffer config, DC-band floor (design-review 2026-07-05
+      rollout).
     unit: dB
     analysis: cmrr_vcm
     extract:

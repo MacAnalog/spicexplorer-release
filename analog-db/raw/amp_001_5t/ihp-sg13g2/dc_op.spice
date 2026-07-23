@@ -34,14 +34,14 @@ XDUT vdd vout vinp vinn ibias vss amp_001_5t
   write
   quit
 .endc
-.param x_dut_xm1_w=0.5u
-.param x_dut_xm1_l=5.0u
-.param x_dut_xm3_w=1.5u
-.param x_dut_xm3_l=5.0u
-.param x_dut_xm5_w=2.0u
-.param x_dut_xm5_l=5.0u
-.param x_dut_xm6_w=2.0u
-.param x_dut_xm6_l=5.0u
+.param x_dut_xm1_w=10.0u
+.param x_dut_xm1_l=10.0u
+.param x_dut_xm3_w=10.0u
+.param x_dut_xm3_l=7.0u
+.param x_dut_xm5_w=3.8u
+.param x_dut_xm5_l=1.0u
+.param x_dut_xm6_w=3.8u
+.param x_dut_xm6_l=1.0u
 .param x_dut_xm1_m=1
 .param x_dut_xm3_m=1
 .param x_dut_xm5_m=1

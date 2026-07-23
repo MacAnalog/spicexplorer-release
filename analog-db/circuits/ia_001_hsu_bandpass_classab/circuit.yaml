@@ -1,0 +1,40 @@
+schema: spicexplorer/circuit@1
+id: ia_001_hsu_bandpass_classab
+class: ia
+tier: ia
+subfamily: ccia
+realization: mixed
+display_name: Hsu bandpass CCIA with class-AB output (capacitive feedback + pseudo-resistor bias)
+compensation: "Miller RC (Cc + nulling Rz) per side inside the class-AB OTA"
+ports:
+- vinp
+- vinn
+- voutp
+- voutn
+- vdd
+- vss
+provenance:
+  source: drawings/ccia-01-YuPinHsu-bandpass-class-ab-output (hand-drawn xschem, ccia-dut.sch)
+  paper: "Y.-P. Hsu, Z. Liu, M. M. Hella, \"A 1.8 uW -65 dB THD ECG Acquisition Front-End IC Using a Bandpass Instrumentation Amplifier With Class-AB Output Configuration\", IEEE TCAS-II 65(12):1859-1863, Dec. 2018"
+  aliases: [ccia-dut]
+  designer: "Noorizadeh (schematic capture, after Hsu et al.)"
+  notes: >-
+    The bandpass capacitively-coupled IA of Hsu/Liu/Hella - the IA core that
+    biomedical-AFE plan Paper 1 (Hsu SRMC front-end) cites as its ref [8].
+    Capacitive gain Cin/Cfb, pseudo-resistor HPF bias, class-AB output OTA,
+    behavioral CMFB servo leaf (realization: mixed). CMFB servo polarity
+    MATCHES the fixed drawing (DRAWING_REVIEW item 3 FIXED: vref on +, CM
+    detector on -); the Rz/RZ case collision is also fixed at source
+    (DRAWING_REVIEW item 5). Entry-level deviation KEPT: the servo's Rout
+    rests at vcmfb_ref (not the drawn vss tie) with gain 10 — the servo-grade
+    baseline of _shared/IDEAL_AMP.md — for bounded authority and a stable CM
+    loop (see the netlist header).
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/ccia-dut.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks:
+- ihp-sg13g2
+analyses: [ac_closed_loop, dc_op, noise, thd, ac_zin_diff]
+status: draft

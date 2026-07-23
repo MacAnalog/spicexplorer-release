@@ -6,6 +6,7 @@
 **   docker run --rm -i spicexplorer-spice-base:local \
 **     bash -lc 'd=$(mktemp -d) && cat > $d/c.spice && cd $d && ngspice -b c.spice' < raw/vref_001_vgs/ihp-sg13g2/temp_sweep.spice
 *----------------------------------------------------------*
+** params: 6 free + 0 frozen knobs (sizing.yaml) · 0 tied · 0 ratio-derived (abstract/params.yaml) · 1 testbench params
 ** AUTHORED TEMPLATE — voltage_reference/temp_sweep: temperature coefficient (box method).
 ** [VALIDATED 2026-07-16 on ihp-sg13g2 against vref_001_vgs — live ngspice, 4/4 benches pass].
 ** Sweeps ambient temperature and reports the box-method TC (Vmax-Vmin)/Vavg/range (ppm/degC) and

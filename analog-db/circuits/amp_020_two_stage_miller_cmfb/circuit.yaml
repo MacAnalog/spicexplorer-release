@@ -3,21 +3,24 @@
 schema: spicexplorer/circuit@1
 id: amp_020_two_stage_miller_cmfb
 class: amplifier
+tier: ota
+subfamily: ota
 display_name: "Two-stage Miller OTA with resistive CMFB"
 compensation: miller
 stages: 2
 ports: [vinp, vinn, voutp, voutn, vdd, vss]
 provenance:
-  source: templates/OTA-Two-Stage
+  source: drawings/OTA-Two-Stage
   aliases: [two-stage-miller-comp-common-mode-control, two_stage_miller_cmfb]
   designer: "Stefan Schippers"
 artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/two_stage_miller_cmfb.sch
   abstract_netlist: abstract/netlist.spice
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
-pdks: [ihp-sg13g2, sky130, gf180mcu]
+pdks: [ihp-sg13g2, sky130, gf180mcu, tsmc-n65]
 # psrr_vdd/cmrr_vcm deliberately absent: the unity-buffer benches are single-ended-output;
 # a fully-differential DUT needs _diff variants (CMFB-aware buffer) — deferred with the
 # other closed-loop _diff templates (design-review 2026-07-05 rollout).
-analyses: [ac_open_loop, dc_op, noise, tran_step]
+analyses: [ac_open_loop, dc_op, noise, tran_step, ac_cm_reg, tran_cm_kick]
 status: draft                             # DERIVED upward by the verify harness (plan §6)

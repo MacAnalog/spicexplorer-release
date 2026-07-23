@@ -1,4 +1,4 @@
-"""The tiered verification harness (plan §6 / D-13).
+"""The tiered verification harness.
 
 T0 schema      — metadata well-formed + cross-resolvable (LIVE).
 T1 generation  — all netlists generate; committed == regenerated; lowered re-parses (LIVE).
@@ -9,7 +9,7 @@ T4 conformance — measured vs datasheet spec + symbolic cross-check (IMPLEMENTE
                  ``--sim``, parallel to T3, PDK-gated — reuses the T3 measures).
 
 The matrix report is ``list[CheckResult]``: each row is one (circuit, tier, check) → status.
-``circuit.status`` is DERIVED from the highest tier a circuit clears (plan §6).
+``circuit.status`` is DERIVED from the highest tier a circuit clears.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ Status = Literal["pass", "fail", "skip"]
 TIERS = (0, 1, 2, 3, 4)
 _TIER_LANDS = {3: "Phase 7 (PDK-gated)", 4: "Phase 7 (PDK-gated)"}
 
-# status precedence for the DERIVED circuit status (plan §6)
+# status precedence for the DERIVED circuit status
 _TIER_STATUS = {0: "generated", 1: "generated", 2: "generated", 3: "simulated", 4: "validated"}
 
 
@@ -64,7 +64,7 @@ def _skip(circuit: str, tier: int, check: str, reason: str) -> CheckResult:
 
 def _tier0_db_level() -> list[CheckResult]:
     results: list[CheckResult] = []
-    # accession numbers are unique per class code (plan_scoreboard D-1: append-only, never reused)
+    # accession numbers are unique per class code (append-only, never reused)
     seen: dict[tuple[str, int], list[str]] = {}
     for cid in model.list_circuit_ids():
         acc = model.parse_accession(cid)
@@ -141,7 +141,7 @@ def _tier0_db_level() -> list[CheckResult]:
 
 
 def _tier0_raw_catalog() -> list[CheckResult]:
-    """``raw/`` tree ⇄ committed catalog index: no dangling pointers, no unindexed decks (plan §5).
+    """``raw/`` tree ⇄ committed catalog index: no dangling pointers, no unindexed decks.
 
     Cheap (reads the committed catalog + lists ``raw/``; no assembly) — the byte-identical drift of
     the deck *contents* is the Tier-1 ``raw:drift`` guard."""
@@ -179,7 +179,7 @@ def _tier0_raw_catalog() -> list[CheckResult]:
 
 
 def _tier0_reference_circuit(c: model.Circuit) -> list[CheckResult]:
-    """Reference-only T0 subset (D-9): a kind: reference circuit carries foreign/proprietary decks
+    """Reference-only T0 subset: a kind: reference circuit carries foreign/proprietary decks
     that are never lowered or simulated here, so it is exempt from the class-library / abstract-netlist
     / open-PDK checks. It must instead: validate against the circuit schema, credit its source, and
     have every declared reference binding present on disk with at least one DUT deck."""
@@ -192,14 +192,14 @@ def _tier0_reference_circuit(c: model.Circuit) -> list[CheckResult]:
         else _fail(c.id, 0, "schema:circuit", "; ".join(errs))
     )
 
-    # corpus-scoped id (plan_scoreboard D-2): reference circuits keep <corpus>_<name> ids.
+    # corpus-scoped id: reference circuits keep <corpus>_<name> ids.
     r.append(
         _ok(c.id, 0, "id:format")
         if model.REFERENCE_ID_RE.match(c.id)
         else _fail(c.id, 0, "id:format", "reference id must be lowercase [a-z0-9_]")
     )
 
-    # provenance is mandatory for reference circuits — they are imported third-party work (D-9).
+    # provenance is mandatory for reference circuits — they are imported third-party work.
     prov = c.manifest.get("provenance") or {}
     missing = [k for k in ("source", "license") if not prov.get(k)]
     r.append(
@@ -232,9 +232,8 @@ def _tier0_reference_decks_parse(c: model.Circuit) -> list[CheckResult]:
 
     Structural read only — Spectre ``.scs`` via auto-detection, HSPICE-family ``.sp`` via the
     explicit hspice reader (bare-subckt DUT fragments carry no strong dialect markers); includes
-    are never resolved (D-9), and a deck with no devices (a runs/params deck) still counts as
-    parsed. Skips gracefully when spicexplorer-core predates dialect support, so this check
-    self-activates once the platform's `feat/spectre-hspice-support` lands.
+    are never resolved, and a deck with no devices (a runs/params deck) still counts as
+    parsed. Skips gracefully when spicexplorer-core predates dialect support.
     """
     import importlib
     import logging
@@ -287,8 +286,7 @@ def _tier0_reference_decks_parse(c: model.Circuit) -> list[CheckResult]:
 def _tier0_params_yaml(c) -> list[CheckResult]:
     """Optional ``abstract/params.yaml`` (spicexplorer/params@1) schema check.
 
-    The parameterization layer (meta plan_parameterization.md) is adopted per circuit: absent
-    is fine (no row) until the P2 migration lands it; present must validate. Only ``c.dir`` /
+    Adoption is per circuit: absent is fine (no row); present must validate. Only ``c.dir`` /
     ``c.id`` are consumed, so this stays testable in isolation.
     """
     p = c.dir / "abstract" / "params.yaml"
@@ -302,6 +300,34 @@ def _tier0_params_yaml(c) -> list[CheckResult]:
     if errs:
         return [_fail(c.id, 0, "schema:params", "; ".join(errs))]
     return [_ok(c.id, 0, "schema:params")]
+
+
+def _tier0_composition(c: model.Circuit) -> list[CheckResult]:
+    """Composite manifests: ``composition.yaml`` schema + the composer's
+    validators (interface, pins, taps/omit, acyclic DAG, PDK bindings). Absent = not a
+    composite (no row)."""
+    from . import compose
+
+    if not compose.is_composite(c):
+        return []
+    r: list[CheckResult] = []
+    try:
+        doc = compose.load_composition(c)
+    except (compose.ComposeError, yaml.YAMLError) as exc:
+        return [_fail(c.id, 0, "schema:composition", f"unparseable: {exc}")]
+    errs = schema.validation_errors(doc, "composition")
+    r.append(
+        _ok(c.id, 0, "schema:composition")
+        if not errs
+        else _fail(c.id, 0, "schema:composition", "; ".join(errs))
+    )
+    verrs = compose.validate(c)
+    r.append(
+        _ok(c.id, 0, "compose:valid")
+        if not verrs
+        else _fail(c.id, 0, "compose:valid", "; ".join(verrs))
+    )
+    return r
 
 
 def _tier0_circuit(c: model.Circuit) -> list[CheckResult]:
@@ -352,8 +378,9 @@ def _tier0_circuit(c: model.Circuit) -> list[CheckResult]:
         )
 
     r.extend(_tier0_params_yaml(c))
+    r.extend(_tier0_composition(c))
 
-    # --- accession id (plan_scoreboard D-1) ---
+    # --- accession id ---
     acc = model.parse_accession(c.id)
     if acc is None:
         r.append(
@@ -387,6 +414,24 @@ def _tier0_circuit(c: model.Circuit) -> list[CheckResult]:
             _ok(c.id, 0, "xref:analyses_in_class")
             if not bad
             else _fail(c.id, 0, "xref:analyses_in_class", f"not in class templates: {bad}")
+        )
+
+        # A clocked (chopper / switched-cap) circuit must NOT declare a frozen-OP small-signal
+        # analysis (.ac / .noise) — it freezes the switches, so the figure is physically wrong.
+        # Author-time fail-fast (the PDK-free gate); assemble() also refuses it at run time.
+        bad_ss = [
+            a for a in c.analyses if c.is_clocked and model.is_frozen_smallsignal_analysis(a)
+        ]
+        r.append(
+            _ok(c.id, 0, "xref:no_frozen_ss_on_clocked")
+            if not bad_ss
+            else _fail(
+                c.id,
+                0,
+                "xref:no_frozen_ss_on_clocked",
+                f"frozen-OP small-signal analyses on a clocked circuit "
+                f"(use transient or PSS/PAC): {bad_ss}",
+            )
         )
 
         for aid in c.analysis_files():
@@ -455,7 +500,7 @@ def _tier0_circuit(c: model.Circuit) -> list[CheckResult]:
         else _fail(c.id, 0, "xref:abstract_netlist", "abstract/netlist.spice missing")
     )
 
-    # --- scoreboard integrity (plan_scoreboard D-5/D-8) ---
+    # --- scoreboard integrity ---
     from . import scoreboard as sb
 
     entries = sb.load_entries(c)
@@ -485,7 +530,7 @@ def _tier0_circuit(c: model.Circuit) -> list[CheckResult]:
     else:
         r.append(_skip(c.id, 0, "scoreboard:entries", "no recorded design points yet"))
 
-    # --- optimizer projection extends resolution (plan D-3) ---
+    # --- optimizer projection extends resolution ---
     proj = c.dir / "optimizer" / "projection.yaml"
     if proj.is_file():
         try:
@@ -583,7 +628,7 @@ def _tier1_params_checks(c: model.Circuit) -> list[CheckResult]:
     devices: dict = doc["devices"]
     r: list[CheckResult] = []
 
-    # --- referential soundness: members exist, tie fields exist, ratio endpoints exist (D-6) ---
+    # --- referential soundness: members exist, tie fields exist, ratio endpoints exist ---
     bad_refs: list[str] = []
     for g in doc.get("groups") or []:
         gname = g.get("name", "?")
@@ -639,7 +684,7 @@ def _tier1_params_checks(c: model.Circuit) -> list[CheckResult]:
         )
     )
 
-    # --- sizing.yaml keys on exactly the FREE symbols, per PDK (plan D-4) ---
+    # --- sizing.yaml keys on exactly the FREE symbols, per PDK ---
     free = par.free_symbols(doc)
     tied = par.tied_symbols(doc)
     for pdk in c.pdks:
@@ -671,7 +716,7 @@ def _tier1_params_checks(c: model.Circuit) -> list[CheckResult]:
         cls = par.classify_symbols(doc, c.sizing(pdk).get("variables", []))
         r.append(_ok(c.id, 1, f"params:inventory:{pdk}", par.counts_line(cls)))
 
-    # --- detected-but-untied symmetry: WARNING, never a failure (plan D-6, catalog honesty) ---
+    # --- detected-but-untied symmetry: WARNING, never a failure ---
     untied = par.untied_symmetries(graph, doc)
     r.append(
         _ok(c.id, 1, "params:untied_symmetry")
@@ -688,15 +733,42 @@ def _tier1_params_checks(c: model.Circuit) -> list[CheckResult]:
 
 def _tier1_circuit(c: model.Circuit) -> list[CheckResult]:
     """Generation: committed GENERATED artifacts == freshly regenerated; lowered re-parses
-    isomorphically; netlist2tf ingests. All PDK-free (plan §6 T1, O-2 drift guard)."""
+    isomorphically; netlist2tf ingests. All PDK-free (the drift guard)."""
     from spicexplorer_circuitgraph import CircuitGraph
     from spicexplorer_core.spice_engine import NetlistView
+
+    from . import compose
 
     r: list[CheckResult] = []
 
     abstract = c.dir / "abstract" / "netlist.spice"
     if not abstract.is_file():
         return [_fail(c.id, 1, "gen:abstract", "abstract/netlist.spice missing")]
+
+    # composite drift: the flat netlist + per-PDK sizing are GENERATED from
+    # composition.yaml — byte-identical drift guard, same contract as every generated artifact.
+    if compose.is_composite(c):
+        try:
+            fresh_nl = compose.compose_netlist(c)
+        except compose.ComposeError as exc:
+            return [_fail(c.id, 1, "gen:compose", f"composer failed: {exc}")]
+        r.append(
+            _ok(c.id, 1, "gen:compose")
+            if abstract.read_text() == fresh_nl
+            else _fail(c.id, 1, "gen:compose", "stale abstract/netlist.spice; run `analog-db generate`")
+        )
+        for pdk in c.pdks:
+            sz = c.dir / "pdk" / pdk / "sizing.yaml"
+            if not sz.is_file():
+                r.append(_fail(c.id, 1, f"gen:compose_sizing:{pdk}", "sizing.yaml not committed"))
+                continue
+            r.append(
+                _ok(c.id, 1, f"gen:compose_sizing:{pdk}")
+                if sz.read_text() == compose.compose_sizing(c, pdk, fresh_nl)
+                else _fail(
+                    c.id, 1, f"gen:compose_sizing:{pdk}", "stale; run `analog-db generate`"
+                )
+            )
     abstract_graph = CircuitGraph.from_netlist(NetlistView.from_file(str(abstract)), name=c.id)
     n_dev, n_net = abstract_graph.component_count, abstract_graph.net_count
 
@@ -751,10 +823,10 @@ def _tier1_circuit(c: model.Circuit) -> list[CheckResult]:
         except Exception as exc:
             r.append(_fail(c.id, 1, f"reparse:{pdk}", f"lowered netlist failed to re-parse: {exc}"))
 
-    # optional params.yaml tying layer: referential + kind coherence + symbol closure (plan D-6)
+    # optional params.yaml tying layer: referential + kind coherence + symbol closure
     r.extend(_tier1_params_checks(c))
 
-    # generated project_setup.yaml drift (the optimizer projection, plan D-3)
+    # generated project_setup.yaml drift (the optimizer projection)
     if (c.dir / "optimizer" / "projection.yaml").is_file():
         from .extends import ExtendsError as _EErr
         from .extends import generate_project_setup
@@ -850,7 +922,7 @@ def run_tier1(circuit_ids: list[str] | None = None) -> list[CheckResult]:
     for cid in ids:
         c = model.load_circuit(cid)
         if c.is_reference_only:
-            out.append(_skip(cid, 1, "gen:reference", "kind: reference — not lowered/generated here (D-9)"))
+            out.append(_skip(cid, 1, "gen:reference", "kind: reference — not lowered/generated here"))
             continue
         out.extend(_tier1_circuit(c))
     return out
@@ -872,7 +944,7 @@ def _corner_names(c: model.Circuit, pdk: str) -> list[str]:
 
 def _tier2_circuit(c: model.Circuit) -> list[CheckResult]:
     """Assembly: every (analysis × pdk × corner) renders a complete netlist — no unresolved
-    placeholders, all sizing params bound — and the result re-parses. PDK-free (plan §6 T2)."""
+    placeholders, all sizing params bound — and the result re-parses. PDK-free."""
     from spicexplorer_core.spice_engine import NetlistView
 
     from .assemble import AssembleError, assemble
@@ -916,7 +988,7 @@ def run_tier2(circuit_ids: list[str] | None = None) -> list[CheckResult]:
     for cid in ids:
         c = model.load_circuit(cid)
         if c.is_reference_only:
-            out.append(_skip(cid, 2, "asm:reference", "kind: reference — not assembled/lowered here (D-9)"))
+            out.append(_skip(cid, 2, "asm:reference", "kind: reference — not assembled/lowered here"))
             continue
         out.extend(_tier2_circuit(c))
     return out
@@ -925,10 +997,10 @@ def run_tier2(circuit_ids: list[str] | None = None) -> list[CheckResult]:
 # --------------------------------------------------------------------------- Tier 3 (sim smoke)
 #
 # Runs every verifiable (circuit × applicable analysis × pdk × tt corner) natively through ngspice
-# and classifies each cell (plan §6 T3). PDK-gated + OPT-IN: T3/T4 report a skip unless ``sim=True``
+# and classifies each cell. PDK-gated + OPT-IN: T3/T4 report a skip unless ``sim=True``
 # AND the host carries ngspice + the PDK under ``$PDK_ROOT`` — so the per-PR fast gate (and any host
 # without a PDK) stays green in seconds, while the PDK-equipped host / nightly job runs the full
-# matrix (matches D-13's "T0–T2 per-PR, T3 nightly" cadence).
+# matrix ("T0–T2 per-PR, T3 nightly").
 #
 # Two-level contract (the same one the slow-suite T3 sweep proved at 0 hard-fails):
 #   FAIL  — the deck did NOT run: a PDK lib/model/subckt didn't resolve, or a syntax error. A real
@@ -1069,7 +1141,7 @@ def run_tier3(
     for cid in ids:
         c = model.load_circuit(cid)
         if c.is_reference_only:
-            out.append(_skip(cid, 3, "sim:reference", "kind: reference — not simulated here (D-9)"))
+            out.append(_skip(cid, 3, "sim:reference", "kind: reference — not simulated here"))
             continue
         cell = cache.get(cid, {})
         analyses = [a for a in c.analyses if c.analysis(a).get("enabled", True)]
@@ -1088,8 +1160,8 @@ def run_tier3(
 
 # --------------------------------------------------------------------------- Tier 4 (conformance)
 #
-# measured (the Tier-3 sim measures) vs the datasheet ``spec`` band (min/typ/max) — the oracle
-# (plan §6 T4 / D-5). Reuses ``ppa.metric_values`` (the SAME spec verdict the scoreboard records)
+# measured (the Tier-3 sim measures) vs the datasheet ``spec`` band (min/typ/max) — the oracle.
+# Reuses ``ppa.metric_values`` (the SAME spec verdict the scoreboard records)
 # so the conformance matrix is consistent with baseline entries. An out-of-spec metric is reported
 # as a SKIP, not a fail: today's baselines are "runs, not tuned" and must not break the DB-wide
 # verify (todo_examples_db Phase-7 note — the status ladder stops at ``simulated`` for them). A
@@ -1148,7 +1220,7 @@ def run_tier4(
         c = model.load_circuit(cid)
         if c.is_reference_only:
             out.append(
-                _skip(cid, 4, "conform:reference", "kind: reference — no datasheet spec oracle (D-9)")
+                _skip(cid, 4, "conform:reference", "kind: reference — no datasheet spec oracle")
             )
             continue
         metrics = (
@@ -1209,7 +1281,7 @@ def run(
     sim: bool = False,
 ) -> list[CheckResult]:
     """Run the requested tiers (default: all). T3/T4 report skip unless ``sim=True`` on a host with
-    ngspice + ``$PDK_ROOT`` (plan §6 cadence). When both sim tiers run, the native sweep executes
+    ngspice + ``$PDK_ROOT``. When both sim tiers run, the native sweep executes
     once and both tiers read its measures."""
     selected = tiers if tiers is not None else list(TIERS)
     out: list[CheckResult] = []
@@ -1231,9 +1303,9 @@ def run(
 
 
 def derive_status(circuit_id: str, results: list[CheckResult]) -> str:
-    """Highest tier a circuit fully clears → its derived status (plan §6).
+    """Highest tier a circuit fully clears → its derived status.
 
-    A kind: reference circuit (D-9) is terminal at ``reference`` once its T0 subset is clean —
+    A kind: reference circuit is terminal at ``reference`` once its T0 subset is clean —
     it is never lowered or simulated here, so the tier ladder does not apply."""
     try:
         if model.load_circuit(circuit_id).is_reference_only:

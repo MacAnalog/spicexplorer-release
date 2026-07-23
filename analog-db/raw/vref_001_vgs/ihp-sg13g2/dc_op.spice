@@ -6,6 +6,7 @@
 **   docker run --rm -i spicexplorer-spice-base:local \
 **     bash -lc 'd=$(mktemp -d) && cat > $d/c.spice && cd $d && ngspice -b c.spice' < raw/vref_001_vgs/ihp-sg13g2/dc_op.spice
 *----------------------------------------------------------*
+** params: 6 free + 0 frozen knobs (sizing.yaml) · 0 tied · 0 ratio-derived (abstract/params.yaml) · 1 testbench params
 ** AUTHORED TEMPLATE — voltage_reference/dc_op: DC operating point of a reference core.
 ** [VALIDATED 2026-07-16 on ihp-sg13g2 against vref_001_vgs — live ngspice, 4/4 benches pass].
 ** Supply-only 3-terminal block (vdd vref vss); reports the reference level (vref) and the supply

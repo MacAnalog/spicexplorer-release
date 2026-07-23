@@ -4,7 +4,7 @@ id: tran_load_step
 template: tran_load_step
 description: "Fast 1 -> 10 mA load step into Cout; peak undershoot + settling time."
 params:
-  VDD: 1.8
+  VDD: 3.3
   COUT: 1u
   ILOAD_LO: 1m
   ILOAD_HI: 10m

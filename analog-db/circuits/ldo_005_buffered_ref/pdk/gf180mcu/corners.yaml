@@ -1,34 +1,25 @@
 # Corner bundles for gf180mcu (D-6): PDK libs stay out-of-repo, referenced by lib_file (+ section).
+# CHANGED 2026-07-20 with the architecture rewrite: this circuit moved from the 3.3 V family to the
+# 6 V one (nfet_06v0/pfet_06v0 @ 3.3 V), matching the drawing and the two inlined amplifier
+# accessions. The previous bundles named per-family sections (nfet_03v3_t/pfet_03v3_t/...), which
+# after the device swap left ngspice with "can't find model 'nfet_06v0'" and an empty netlist.
+# The lib has per-family sections only for 03v3; 06v0 corner deltas live in the UMBRELLA sections
+# (typical/ff/ss/fs/sf), which also pull in noise_corner + fets_mm.
 pdk: gf180mcu
 corners:
   tt:
     - {lib_file: design.ngspice}
-    - {lib_file: sm141064.ngspice, section: noise_corner}
-    - {lib_file: sm141064.ngspice, section: nfet_03v3_t}
-    - {lib_file: sm141064.ngspice, section: pfet_03v3_t}
-    - {lib_file: sm141064.ngspice, section: fets_mm}
+    - {lib_file: sm141064.ngspice, section: typical}
   ff:
     - {lib_file: design.ngspice}
-    - {lib_file: sm141064.ngspice, section: noise_corner}
-    - {lib_file: sm141064.ngspice, section: nfet_03v3_f}
-    - {lib_file: sm141064.ngspice, section: pfet_03v3_f}
-    - {lib_file: sm141064.ngspice, section: fets_mm}
+    - {lib_file: sm141064.ngspice, section: ff}
   ss:
     - {lib_file: design.ngspice}
-    - {lib_file: sm141064.ngspice, section: noise_corner}
-    - {lib_file: sm141064.ngspice, section: nfet_03v3_s}
-    - {lib_file: sm141064.ngspice, section: pfet_03v3_s}
-    - {lib_file: sm141064.ngspice, section: fets_mm}
-  sf:
-    - {lib_file: design.ngspice}
-    - {lib_file: sm141064.ngspice, section: noise_corner}
-    - {lib_file: sm141064.ngspice, section: nfet_03v3_sf}
-    - {lib_file: sm141064.ngspice, section: pfet_03v3_sf}
-    - {lib_file: sm141064.ngspice, section: fets_mm}
+    - {lib_file: sm141064.ngspice, section: ss}
   fs:
     - {lib_file: design.ngspice}
-    - {lib_file: sm141064.ngspice, section: noise_corner}
-    - {lib_file: sm141064.ngspice, section: nfet_03v3_fs}
-    - {lib_file: sm141064.ngspice, section: pfet_03v3_fs}
-    - {lib_file: sm141064.ngspice, section: fets_mm}
+    - {lib_file: sm141064.ngspice, section: fs}
+  sf:
+    - {lib_file: design.ngspice}
+    - {lib_file: sm141064.ngspice, section: sf}
 default_corner: tt

@@ -5,7 +5,13 @@ __pycache__/
 *.raw
 *.log
 **/temp_spice_out/
+# ephemeral `analog-db run` / raw-project working output — not catalog decks
+raw/**/scratch/
 .DS_Store
 
 
 sandbox/*
+# Local absolute-include deck copies: the committed raw/ decks reference PDK corner libs by
+# BARE NAME (resolved on the ngspice sourcepath). `.include` does NOT search that path, so driving
+# them through the optimizer natively needs copies with absolute paths — machine-specific, never committed.
+raw_optimize/_abs/

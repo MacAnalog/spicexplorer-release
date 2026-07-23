@@ -2,8 +2,9 @@
 # Source: optimizer/projection.yaml (extends circuit.yaml)
 #   + pdk/ihp-sg13g2/sizing.yaml (dut_params) + datasheet.yaml (target_specs).
 project:
-  name: CASCODE-OTA
-  description: Cascode (Telescopic) OTA example sizing in the ihp-sg13g2 technology
+  name: "CASCODE-OTA \xB7 analog-db amp_018"
+  description: "DB projection of amp_018_telescopic_cascode \u2014 telescopic-cascode OTA sizing in ihp-sg13g2 (mirrors\
+    \ the classic example)"
   simulator: ngspice
   save_sim: false
   parallel_sim: true

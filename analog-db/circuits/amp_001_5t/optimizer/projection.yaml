@@ -3,8 +3,8 @@
 extends: ../circuit.yaml
 pdk: ihp-sg13g2
 project:
-  name: 5T-OTA
-  description: 5 Transistor OTA example sizing in the ihp-sg13g2 technology
+  name: 5T-OTA · analog-db amp_001
+  description: DB projection of amp_001_5t — 5-transistor OTA sizing in ihp-sg13g2 (mirrors the classic example)
   simulator: ngspice
   save_sim: false
   ws_root: pdk/ihp-sg13g2

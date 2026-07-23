@@ -1,0 +1,13 @@
+# Analysis binding (plan D-4): switch-class dc_ron template — swept on-resistance of the
+# single pass gate (test current pulled from port_b while port_a sweeps 0..VDD, switch ON).
+schema: spicexplorer/analysis@1
+id: dc_ron
+template: dc_ron
+description: "Swept on-resistance; r_on at VMID + r_on_max over 0..VDD."
+params:
+  VDD: 1.2
+  VMID: 0.6
+  ITEST: 10u
+  VSWEEP_STEP: 0.01
+flags: []
+produces: [r_on, r_on_max]

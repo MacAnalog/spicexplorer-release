@@ -94,8 +94,8 @@ N 750 550 750 660 {}
 N 810 0 810 94 {}
 N 810 260 810 354 {}
 N 810 520 810 614 {}
-N 855 0 855 260 {}
 N 945 260 945 320 {}
+N 975 0 975 260 {}
 N 1045 0 1045 60 {}
 N 1075 200 1075 260 {}
 N 1115 -140 1115 -30 {}
@@ -200,10 +200,10 @@ C {devices/lab_wire.sym} -1380 90 2 0 {name=l23 lab=net043}
 C {devices/lab_wire.sym} 280 260 0 0 {name=l24 lab=net043}
 C {devices/lab_wire.sym} 380 90 2 0 {name=l25 lab=net049}
 C {devices/lab_wire.sym} 380 170 0 1 {name=l26 lab=net049}
-C {devices/lab_wire.sym} 945 320 2 0 {name=l27 lab=net049}
+C {devices/lab_wire.sym} 825 260 0 0 {name=l27 lab=net049}
 C {devices/lab_wire.sym} 1445 200 0 1 {name=l28 lab=net049}
 C {devices/lab_wire.sym} -1280 0 0 1 {name=l29 lab=net050}
-C {devices/lab_wire.sym} 825 260 0 0 {name=l30 lab=net050}
+C {devices/lab_wire.sym} 945 320 2 0 {name=l30 lab=net050}
 C {devices/lab_wire.sym} 1115 90 2 0 {name=l31 lab=net050}
 C {devices/lab_wire.sym} 1115 170 0 1 {name=l32 lab=net050}
 C {devices/lab_wire.sym} 1285 170 0 1 {name=l33 lab=net050}

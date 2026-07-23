@@ -1,0 +1,57 @@
+** AUTHORED TEMPLATE — support/tran_rrl_sense (drawings/DRAWING_REVIEW.md S4, option A).
+** Ripple-sensing demodulating SC integrator bench: the DUT's job is to sense the main
+** amplifier's output RIPPLE (an AC square wave at f_chop), synchronously demodulate it
+** (the internal chopper, CLK_CH_RRL at f_chop), and integrate the demodulated product.
+** So the stimulus is a differential SQUARE ripple of amplitude +/-VR/2 per side at
+** FCHOP, with CLK_CH_RRL clocked in phase and PHI_1/PHI_2 as exact complements at the
+** same rate. A DC input is (correctly) rejected by the AC-coupled front end — the old
+** tran_sc_integrate DC-ramp expectation does not apply to this topology.
+** Measures: ramp_rate between T1 and T2 (inside the linear ramp, integer periods
+** apart) and ripple_gain = ramp_rate/VR (V/s per V of ripple) — the RRL sensing gain.
+** The SIGN of ripple_gain records the demodulation polarity of the drawn clock hookup
+** (S4.2): it is the sign of the composed RRL loop.
+**
+** Assumes the RRL-integrator port order:
+**   .subckt <id> vinp vinn voutp voutn clk_ch_rrl clk_ch_rrl_not clk_phi_1 clk_phi_2
+**                vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM VR FCHOP TEDGE T1 T2 TSTEP TSTOP TMAX
+**                    PDK_INCLUDE.  TMAX = max internal step (TSTEP is only the print
+**                    interval; the SC network needs ~200n or the solver steps over TG
+**                    conduction and dies).
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param VR=${VR}
+.param FCHOP=${FCHOP}
+.param TCHOP={1/FCHOP}
+.param TEDGE=${TEDGE}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vcm  vcm 0 dc {VCM}
+* differential square ripple at FCHOP, +/-VR/2 per side about the common mode
+Vinp vinp vcm pulse({-VR/2} {VR/2} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vinn vinn vcm pulse({VR/2} {-VR/2} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+
+* synchronous demodulation clock + two-phase SC clock (exact complements)
+Vckr  clk_ch_rrl     0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vckrn clk_ch_rrl_not 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vphi1 clk_phi_1 0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vphi2 clk_phi_2 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP} 0 ${TMAX}
+  let vd = v(voutp) - v(voutn)
+  meas tran v1 FIND vd AT=${T1}
+  meas tran v2 FIND vd AT=${T2}
+  let ramp_rate = (v2 - v1)/(${T2} - ${T1})
+  let ripple_gain = ramp_rate/(${VR})
+  print ramp_rate ripple_gain
+  write
+  quit
+.endc
+.end

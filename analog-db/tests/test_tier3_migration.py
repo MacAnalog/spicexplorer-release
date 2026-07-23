@@ -1,5 +1,5 @@
 """Phase-3 gate: the loss-less migration of the 3 in-repo OTAs + the optimizer projection
-generator + the NEWCAS regression gate (plan todo_examples_db.md P3 Exit). PDK-free."""
+generator + the NEWCAS regression gate. PDK-free."""
 
 from __future__ import annotations
 
@@ -90,7 +90,7 @@ def test_cascode_reproduces_newcas_baseline():
 
 
 def test_newcas_appendix_preserved_verbatim():
-    """The research traces are migrated byte-for-byte (plan §3b: preserve verbatim).
+    """The research traces are migrated byte-for-byte (preserved verbatim).
     Skips when the platform legacy is absent (standalone DB checkout)."""
     import filecmp
 

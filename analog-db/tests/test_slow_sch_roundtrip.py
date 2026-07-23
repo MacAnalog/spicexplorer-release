@@ -13,11 +13,10 @@ Covered, per circuit (all connectivity-equivalent to the source, only coordinate
   * ``<id>.sch``                              — the plain DUT topology;
   * ``<id>_annotated.sch``                    — the detected blocks drawn as boxes over a block-aware
                                                 placement (an overlay → must round-trip identically);
-  * ``_block_placement_strategies/<id>/*.sch`` — the alternative placement strategies (P5b).
+  * ``_block_placement_strategies/<id>/*.sch`` — the alternative placement strategies.
 The hierarchical "block diagram" view (``hier/``) is **excluded**: its parent re-netlists to subckt
 instances that must be flattened before comparison — that round-trip is covered for a sample in
-``spicexplorer-netlist2xschem``'s ``test_hierarchy_round_trips_via_xschem``; extending it catalog-wide is
-tracked as the remaining P11 item in the meta-repo ``doc/todo_block_annotation.md``.
+``spicexplorer-netlist2xschem``'s ``test_hierarchy_round_trips_via_xschem``.
 
 The schematics are drawn from the ``ihp-sg13g2`` lowered netlist (export ``_SCH_PDK``), so that lowered
 netlist is the comparison source. xschem-gated (PDK-free otherwise): needs ``xschem`` (3.4.8+) on PATH

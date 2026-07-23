@@ -62,7 +62,7 @@
         "value": 0.0003232978
       },
       "pm_deg": {
-        "spec": "pass",
+        "spec": "fail",
         "value": 90.20595
       },
       "t_settle": {
@@ -85,24 +85,24 @@
   },
   "parameters": {
     "sizing": {
-      "x_dut_c3_value": "0.5p",
-      "x_dut_c1_value": "1p",
       "i_bias": "50u",
+      "x_dut_c1_value": "1p",
+      "x_dut_c3_value": "0.5p",
+      "x_dut_r1_value": "2k",
       "x_dut_r3_value": "5k",
       "x_dut_r5_value": "5k",
-      "x_dut_r1_value": "2k",
       "x_dut_xm1_l": "0.5u",
       "x_dut_xm1_w": "2u",
-      "x_dut_xm7_l": "0.5u",
-      "x_dut_xm7_w": "4u",
-      "x_dut_xm6_l": "0.5u",
-      "x_dut_xm6_w": "2u",
-      "x_dut_xm8_l": "0.5u",
-      "x_dut_xm8_w": "2u",
       "x_dut_xm3_l": "0.5u",
       "x_dut_xm3_w": "2u",
       "x_dut_xm5_l": "0.5u",
-      "x_dut_xm5_w": "10.8u"
+      "x_dut_xm5_w": "10.8u",
+      "x_dut_xm6_l": "0.5u",
+      "x_dut_xm6_w": "2u",
+      "x_dut_xm7_l": "0.5u",
+      "x_dut_xm7_w": "4u",
+      "x_dut_xm8_l": "0.5u",
+      "x_dut_xm8_w": "2u"
     }
   },
   "pdk": "ihp-sg13g2",

@@ -43,6 +43,23 @@ _SPEC_REGISTRY: dict[str, dict[str, Any]] = {
     "load_reg":     {"goal": "minimize", "target": 1.0e-2,  "range": 5.0e-2,  "tolerance": 1.0e-4, "reward_type": "log"},
     "line_reg":     {"goal": "minimize", "target": 5.0e-3,  "range": 5.0e-2,  "tolerance": 1.0e-4, "reward_type": "log"},
     "zout_peak_db": {"goal": "minimize", "target": 3,       "range": 20,      "tolerance": 0.5,    "reward_type": "log"},
+    # rejection benches (unity-buffer residual → dB at 1 kHz; all saved bare)
+    "cmrr_db":      {"goal": "exceed",   "target": 40,      "range": 40,      "tolerance": 2,      "reward_type": "log"},
+    "psrr_vdd_db":  {"goal": "exceed",   "target": 40,      "range": 40,      "tolerance": 2,      "reward_type": "log"},
+    "psrr_db":      {"goal": "exceed",   "target": 40,      "range": 40,      "tolerance": 2,      "reward_type": "log"},
+    "psr_db":       {"goal": "exceed",   "target": 40,      "range": 40,      "tolerance": 2,      "reward_type": "log"},
+    # distortion (in-deck coherent DFT; thd_db is negative-dB, so no log reward)
+    "thd_pct":      {"goal": "minimize", "target": 1.0,     "range": 10.0,    "tolerance": 0.05,   "reward_type": "log"},
+    "thd_db":       {"goal": "minimize", "target": -40,     "range": 40,      "tolerance": 1,      "reward_type": "none"},
+    # integrated input/output-referred noise (ngspice `.noise` native totals — see _NATIVE_PRINT)
+    "inoise_total": {"goal": "minimize", "target": 1.0e-4,  "range": 1.0e-3,  "tolerance": 1.0e-7, "reward_type": "log"},
+    "onoise_total": {"goal": "minimize", "target": 1.0e-3,  "range": 1.0e-2,  "tolerance": 1.0e-6, "reward_type": "log"},
+    # step response + closed-loop buffer benches
+    "t_settle":     {"goal": "minimize", "target": 1.0e-6,  "range": 1.0e-5,  "tolerance": 1.0e-8, "reward_type": "log"},
+    "gain_cl":      {"goal": "exact",    "target": 1.0,     "range": 0.5,     "tolerance": 0.05,   "reward_type": "none"},
+    "bw_cl":        {"goal": "exceed",   "target": 1.0e6,   "range": 1.0e7,   "tolerance": 1.0e5,  "reward_type": "log"},
+    # LDO dropout (dc sweep: vin at which vout reaches its target, minus vout)
+    "v_dropout":    {"goal": "minimize", "target": 0.3,     "range": 1.0,     "tolerance": 0.01,   "reward_type": "log"},
 }
 
 # sizing-var units that are SEARCHED (continuous geometry / bias current); every other unit
@@ -79,6 +96,16 @@ def _control_block(deck_text: str) -> list[str]:
 
 _ANALYSIS_CMDS = ("ac", "dc", "tran", "noise", "op")
 _NON_ANALYSIS = ("meas", "let", "print", "set", "write", "quit", "echo", "plot", "save", "remzerovec")
+
+# Native analysis-output vectors a deck can ``print`` directly — no ``meas``, no ``let``. Keyed by
+# sim_type → {printed name: the name RawRead sees in the written raw file}. The ngspice ``.noise``
+# analysis emits ``inoise_total``/``onoise_total`` as VOLTAGE-typed vectors, so they land v()-wrapped
+# (verified against a written rawfile). Any ``let`` derived from them (e.g. ``sqrt(onoise_total)``)
+# inherits the voltage type and is likewise v()-wrapped — which ``_saved_name``'s RHS-scan can't see,
+# so such derived lets are deliberately left out of the registry (``onoise_total`` already covers them).
+_NATIVE_PRINT: dict[str, dict[str, str]] = {
+    "noise": {"inoise_total": "v(inoise_total)", "onoise_total": "v(onoise_total)"},
+}
 
 
 def _analysis_type(control: list[str]) -> str | None:
@@ -138,8 +165,12 @@ def parse_deck_metrics(deck_text: str) -> list[tuple[str, str]]:
         if m:
             printed += [tok for tok in re.split(r"\s+", m.group(1)) if re.fullmatch(r"\w+", tok)]
     for name in printed:
-        if name in lets and atype is not None:
+        if atype is None:
+            continue
+        if name in lets:
             _add(_saved_name(name, lets[name]), atype)
+        elif name in _NATIVE_PRINT.get(atype, {}):
+            _add(_NATIVE_PRINT[atype][name], atype)  # native totals: no let, hardcoded saved name
     return ordered
 
 
@@ -293,4 +324,93 @@ def write(circuit_id: str, pdk: str | None, out_dir: Path) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     out = out_dir / f"{circuit_id}.yaml"
     out.write_text(generate(circuit_id, pdk, out_dir))
+    return out
+
+
+# --------------------------------------------------------------------------- demo variant
+
+
+def generate_demo(circuit_id: str, pdk: str | None = None) -> str:
+    """Render a Studio DEMO ``project_setup.yaml`` for one circuit (no filesystem writes).
+
+    Same raw-deck testbenches/specs as :func:`generate`, but shaped for the platform's
+    "load a demo as a project" flow: ``ws_root`` pins the circuit's raw deck directory
+    (so example seeding copies just the decks, not the whole DB), netlists are bare
+    filenames, and the project is named from the catalog ``display_name`` + accession id.
+    """
+    circuit = model.load_circuit(circuit_id)
+    pdk = pdk or circuit.pdks[0]
+    tbs, specs = _testbenches_and_specs(circuit, pdk)
+
+    def _base(name: str) -> str:
+        return re.sub(r"^[iv]\((.*)\)$", r"\1", name)
+
+    if not any(_base(s["name"]) != "i_supply" for s in specs):
+        raise ValueError(
+            f"{circuit_id}@{pdk}: only i_supply is scorable — no performance objective "
+            "(add its metric to _SPEC_REGISTRY)"
+        )
+    for tb in tbs:
+        tb["netlist"] = Path(tb["netlist"]).name  # relative to ws_root = the deck dir
+
+    display = str(circuit.manifest.get("display_name", circuit_id))
+    project = {
+        "name": f"{display} · {circuit_id}",
+        "description": f"analog-db {circuit_id} — optimizer demo on the committed {pdk} raw decks",
+        "simulator": "ngspice",
+        "save_sim": False,
+        "parallel_sim": True,
+        "ws_root": f"../../raw/{circuit_id}/{pdk}",
+        "netlist": tbs[0]["netlist"],
+        "outdir": "scratch",
+        "tech_spec": {"name": pdk, "constraints": {}},
+        "dut_params": _dut_params(circuit.sizing(pdk)),
+        "testbenches": tbs,
+        "optimizer_config": {
+            "type": "nevergrad", "random_seed": 48, "budget": 15, "name": "NGOpt",
+            "lin_variable_bounds": {"min": 0, "max": 100},
+            "log_variable_bounds": {"min": 1, "max": 100},
+            "target_specs": specs,
+        },
+    }
+    # Vendored schematic assets: every committed .sch/.sym under the circuit dir
+    # (pdk schematic/ + reference/ trees), YAML-dir-relative. The platform's
+    # example seeding copies them into the project's xschem/ (structure kept so
+    # sibling .sym refs resolve); `assets` is a top-level sibling of `project:`,
+    # ignored by Project_Setup.from_yaml.
+    sch_assets = sorted(
+        p.relative_to(circuit.dir).as_posix()
+        for pat in ("*.sch", "*.sym")
+        for p in circuit.dir.rglob(pat)
+        if p.is_file()
+    )
+    doc: dict[str, Any] = {"project": project}
+    if sch_assets:
+        doc["assets"] = {"xschem": sch_assets}
+
+    header = (
+        "# GENERATED by `analog-db export-raw-project --demo` — DO NOT EDIT.\n"
+        f"# Studio demo entry: drives the committed raw/{circuit_id}/{pdk}/*.spice decks\n"
+        "# through the optimizer. dut_params from sizing.yaml (geometry/bias searched on a\n"
+        "# band around default); target_specs parsed from each deck's meas/let vectors.\n"
+        "# assets.xschem: the circuit's committed schematics — seeded into the\n"
+        "#   project's xschem/ dir when loaded as a demo.\n"
+    )
+    return header + yaml.safe_dump(doc, sort_keys=False, width=100, allow_unicode=True)
+
+
+def write_demo(circuit_id: str, pdk: str | None = None) -> Path:
+    """Write ``circuits/<id>/project_setup.yaml``; returns the path.
+
+    Refuses when the circuit has an ``optimizer/projection.yaml`` — that circuit's
+    ``project_setup.yaml`` belongs to the extends lane (``analog-db generate``).
+    """
+    circuit = model.load_circuit(circuit_id)
+    if (circuit.dir / "optimizer" / "projection.yaml").is_file():
+        raise ValueError(
+            f"{circuit_id}: has optimizer/projection.yaml — its project_setup.yaml is "
+            "owned by `analog-db generate` (the extends lane), not --demo"
+        )
+    out = circuit.dir / "project_setup.yaml"
+    out.write_text(generate_demo(circuit_id, pdk))
     return out

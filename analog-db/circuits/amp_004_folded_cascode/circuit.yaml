@@ -16,7 +16,7 @@ artifacts:
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
   schematic: abstract/schematic.svg
-pdks: [ihp-sg13g2, sky130, gf180mcu]
+pdks: [ihp-sg13g2, sky130, gf180mcu, tsmc-n65]
 analyses: [ac_open_loop, dc_op, noise, tran_step, psrr_vdd, cmrr_vcm]
 optimize:
   budget: 5

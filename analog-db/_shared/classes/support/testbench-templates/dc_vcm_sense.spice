@@ -1,0 +1,32 @@
+** AUTHORED TEMPLATE — support/dc_vcm_sense (plan_hierarchical_composition P3).
+** Common-mode detector sense accuracy: the two inputs are driven to VCM +/- VDIFF/2;
+** an ideal CM detector reports vcm_out = VCM regardless of VDIFF. vos is the sense
+** error. The DUT is passive/supply-less (e.g. a resistive averager) or self-biased;
+** supply rails are provided for DUTs that declare them.
+**
+** Assumes the CM-detector port order (supplies optional — extra driven nets are
+** harmless):  .subckt <id> vcm_out vinp vinn [vdd vss]
+** Required bindings: DUT PORT_LINE VDD VCM VDIFF PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param VDIFF=${VDIFF}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vinp vinp 0 dc {VCM+VDIFF/2}
+Vinn vinn 0 dc {VCM-VDIFF/2}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let vcm_out = v(vcm_out)
+  let vos = v(vcm_out) - ${VCM}
+  print vcm_out vos
+  write
+  quit
+.endc
+.end

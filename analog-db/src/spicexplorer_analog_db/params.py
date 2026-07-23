@@ -1,27 +1,27 @@
 """DUT parameterization — atomic inventory + structural group detection + tie lowering.
 
-Meta plan ``doc/plan_parameterization.md``: this module separates what CAN vary (the atomic
+This module separates what CAN vary (the atomic
 per-instance inventory, a physical fact of the topology) from what SHOULD vary together
 (``groups:``/``ratios:`` — shipped *default* tying, tagged with machine-readable reasons).
 The contract is ``_shared/schema/params.schema.json`` (``spicexplorer/params@1``).
 
 Pure functions over a committed ``abstract/topology.cgraph.json`` document that
 
-- derive the mechanical atomic symbol inventory (plan D-1: ``x_dut_<id>_<field>``),
+- derive the mechanical atomic symbol inventory (``x_dut_<id>_<field>``),
 - structurally detect the default-tying candidates (matched pairs + current mirrors),
-- assemble / refresh a schema-valid ``spicexplorer/params@1`` document (P1 ``gen-params``:
+- assemble / refresh a schema-valid ``spicexplorer/params@1`` document (``gen-params``:
   generated-then-reviewed — ``devices:`` is regenerated mechanically, authored ``groups:``/
   ``ratios:`` are preserved verbatim), and
-- lower the tying layer to ``.param`` lines (P2, plan D-3): one
+- lower the tying layer to ``.param`` lines: one
   ``.param <member_sym> = {<first_member_sym>}`` per tied member-field plus
   ``.param <ref_sym> = {<of_sym>*N/D}`` per ratio. A tied symbol is defined exactly ONCE (by
   its tie line), so redefining the atomic symbol upstream overrides just that symbol
   (*untying = shadowing*); the FREE symbols (:func:`free_symbols`) are the knobs
-  ``pdk/<pdk>/sizing.yaml`` keys on (plan D-4).
+  ``pdk/<pdk>/sizing.yaml`` keys on.
 
 Nothing here writes files (the CLI does).
 
-Settled P0 decisions (plan §4): per-finger ``(w, m)`` is canonical (total-W is derived, never
+Settled decisions: per-finger ``(w, m)`` is canonical (total-W is derived, never
 stored); generation lives in this package (the artifact owner); ties lower to ``.param`` lines
 referencing the FIRST member's atomic symbols (group names never appear in decks).
 
@@ -34,7 +34,7 @@ Detection heuristics (deliberately structural, no design opinion):
   (the shared source must NOT be a supply — a differential/tail node) with distinct gate and
   distinct drain nets → ``kind: matched_pair`` group tying ``[w, l, m]``.
 
-A detected-but-untied symmetry is a *warning* upstream (plan D-6), never a failure — these are
+A detected-but-untied symmetry is a *warning* upstream, never a failure — these are
 proposals to be reviewed, not truths.
 """
 
@@ -97,7 +97,7 @@ def load_params_doc(circuit_dir: str | Path) -> dict[str, Any] | None:
 
 
 def atomic_symbol(instance_id: str, field: str) -> str:
-    """Plan D-1: the mechanically-derived, collision-free atomic symbol for one device field.
+    """The mechanically-derived, collision-free atomic symbol for one device field.
 
     The ``x_dut_`` prefix is kept only for the platform's display grouping heuristic
     (``_is_dut_param`` is DISPLAY-ONLY); nothing in the run path branches on it.
@@ -129,11 +129,11 @@ def atomic_inventory(graph: dict[str, Any]) -> dict[str, dict[str, Any]]:
     One row per component in the graph, one entry per parameter field the component's netlist
     card carries. Purely mechanical — no design opinion, no tying:
 
-    - **MOS** geometry fields always get the mechanical ``x_dut_<id>_<field>`` symbol (plan
-      D-1) — on an unmigrated netlist this IS the migration proposal.
+    - **MOS** geometry fields always get the mechanical ``x_dut_<id>_<field>`` symbol —
+      on an unmigrated netlist this IS the migration proposal.
     - **Everything else** (passives, V/I bias sources) is echoed honestly from the netlist:
       the free-knob symbol the card already binds (``i_tail``, ``vref_val``, ``'c_comp'`` —
-      bias-branch values are already free params and stay first-class knobs, plan D-1), a
+      bias-branch values are already free params and stay first-class knobs), a
       numeric literal verbatim, or the raw value string when nothing extractable remains.
     """
     inv: dict[str, dict[str, Any]] = {}
@@ -255,8 +255,8 @@ def propose_params_doc(graph: dict[str, Any]) -> dict[str, Any]:
     """Assemble a deterministic, schema-valid proposed ``spicexplorer/params@1`` document.
 
     ``devices:`` is the mechanical truth; ``groups:``/``ratios:`` are *proposals* from the
-    structural detectors, meant to be reviewed by a human (generated-then-reviewed, plan D-2)
-    so the shipped defaults reproduce today's knob set before they land (P1/P2).
+    structural detectors, meant to be reviewed by a human (generated-then-reviewed)
+    so the shipped defaults reproduce today's knob set before they land.
     """
     by_id = {c["id"]: c for c in graph["components"]}
     groups: list[dict[str, Any]] = []
@@ -329,7 +329,7 @@ def render_params_yaml(doc: dict[str, Any], circuit_id: str) -> str:
     )
 
 
-# --------------------------------------------------------------------------- lowering (plan D-3)
+# --------------------------------------------------------------------------- lowering
 
 
 def tie_param_lines(doc: dict[str, Any]) -> list[str]:
@@ -384,7 +384,7 @@ def tied_symbols(doc: dict[str, Any]) -> set[str]:
 
 
 def free_symbols(doc: dict[str, Any]) -> set[str]:
-    """The FREE symbols after default tying — the knobs ``sizing.yaml`` keys on (plan D-4):
+    """The FREE symbols after default tying — the knobs ``sizing.yaml`` keys on:
     every inventory symbol not defined by a tie line (first members + untied atomics)."""
     inventory = {
         v
@@ -425,7 +425,7 @@ def classify_symbols(
     - ``ratio``  — defined once by a ``ratios:`` gain line (``{of_symbol*N/D}``)
 
     Without ``sizing_variables`` (the PDK-neutral view, e.g. ``gen-params``) every non-tied
-    symbol lands in ``free`` — freeze flags are a per-PDK ``sizing.yaml`` fact (plan D-4).
+    symbol lands in ``free`` — freeze flags are a per-PDK ``sizing.yaml`` fact.
     """
     ratio = ratio_symbols(doc)
     tied = tied_symbols(doc) - ratio
@@ -488,7 +488,7 @@ def detected_tie_candidates(graph: dict[str, Any]) -> list[tuple[str, frozenset[
 
 
 def untied_symmetries(graph: dict[str, Any], doc: dict[str, Any]) -> list[str]:
-    """Detected-but-untied symmetry candidates: a WARNING upstream (plan D-6, catalog honesty),
+    """Detected-but-untied symmetry candidates: a WARNING upstream,
     never a failure — these are proposals a reviewer may have deliberately declined (e.g. a tail
     mirror shipped as independent knobs)."""
     groups = doc.get("groups") or []

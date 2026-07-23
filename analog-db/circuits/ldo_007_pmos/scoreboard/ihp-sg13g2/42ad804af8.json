@@ -1,0 +1,177 @@
+{
+  "area": {
+    "active_gate_area_um2": 116.0,
+    "c_count": 2,
+    "c_total_f": 6.005e-11,
+    "mos_count": 7,
+    "r_count": 3,
+    "r_total_ohm": 200001.0
+  },
+  "circuit": "ldo_007_pmos",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0003080917,
+            "vout_dc": 1.249347
+          },
+          "status": "ok"
+        },
+        "dropout": {
+          "measures": {
+            "v_dropout": 0.5593421,
+            "vin_at": 1.71,
+            "vout_at": 1.150658
+          },
+          "status": "ok"
+        },
+        "line_regulation": {
+          "measures": {
+            "line_reg": 0.001197,
+            "vout_max": 1.211583,
+            "vout_min": 1.210386
+          },
+          "status": "ok"
+        },
+        "load_regulation": {
+          "measures": {
+            "load_reg": 0.091878,
+            "vout_max": 1.249347,
+            "vout_min": 1.157469
+          },
+          "status": "ok"
+        },
+        "loop_stability": {
+          "measures": {
+            "zout_dc": 20.76849,
+            "zout_max": 20.76849,
+            "zout_peak_db": 0.0
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "onoise_total": 0.0001254142,
+            "vn_out_rms": 0.01119885
+          },
+          "status": "ok"
+        },
+        "psrr": {
+          "measures": {
+            "psrr_vdd_db": 51.46625,
+            "vout_db": -51.46625
+          },
+          "status": "ok"
+        },
+        "tran_line_step": {
+          "measures": {
+            "v_line_pp": 0.000844,
+            "vout_max": 1.211446,
+            "vout_min": 1.210602
+          },
+          "status": "ok"
+        },
+        "tran_load_step": {
+          "measures": {
+            "t_transient": 2.459303e-05,
+            "tcross": 2.959303e-05,
+            "v_undershoot": 0.021629,
+            "vout_min": 1.163149,
+            "vout_post": 1.184778
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T04:45:00+00:00"
+      }
+    }
+  },
+  "design_id": "42ad804af8",
+  "metrics": {
+    "tt": {
+      "i_q": {
+        "spec": "fail",
+        "value": 0.0003080917
+      },
+      "line_reg": {
+        "spec": "pass",
+        "value": 0.001197
+      },
+      "load_reg": {
+        "spec": "fail",
+        "value": 0.091878
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 51.46625
+      },
+      "t_transient": {
+        "spec": "pass",
+        "value": 2.459303e-05
+      },
+      "v_dropout": {
+        "spec": "fail",
+        "value": 0.5593421
+      },
+      "v_line_pp": {
+        "spec": "pass",
+        "value": 0.000844
+      },
+      "v_out": {
+        "spec": "fail",
+        "value": 1.249347
+      },
+      "v_undershoot": {
+        "spec": "pass",
+        "value": 0.021629
+      },
+      "vn_out_rms": {
+        "spec": "pass",
+        "value": 0.01119885
+      },
+      "zout_peak_db": {
+        "spec": "pass",
+        "value": 0.0
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "c_comp": "0.05p",
+      "c_ff": "60p",
+      "i_tail": "200u",
+      "r_bot": "100k",
+      "r_top": "100k",
+      "r_z": 1,
+      "vref_val": 0.6,
+      "x_dut_xm1_l": "0.5u",
+      "x_dut_xm1_w": "4u",
+      "x_dut_xm3_l": "0.5u",
+      "x_dut_xm3_w": "4u",
+      "x_dut_xm6_l": "1.0u",
+      "x_dut_xm6_w": "4u",
+      "x_dut_xmp_l": "0.5u",
+      "x_dut_xmp_m": 20,
+      "x_dut_xmp_w": "10u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 116.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "load_reg": 0.091878,
+      "psrr_vdd_db": 51.46625,
+      "v_dropout": 0.5593421,
+      "v_undershoot": 0.021629
+    },
+    "power_w": 0.00055456506
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

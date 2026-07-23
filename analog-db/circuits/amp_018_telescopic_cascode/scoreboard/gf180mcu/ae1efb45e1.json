@@ -1,0 +1,91 @@
+{
+  "area": {
+    "active_gate_area_um2": 2746.826,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 10,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "amp_018_telescopic_cascode",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "error": "amp_018_telescopic_cascode/ac_open_loop@gf180mcu/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_018_telescopic_cascode \u00d7 ac_open_loop \u00d7 gf180mcu \u00d7 tt\n\nError on line 1573 or its substitute:\n  m.xdut.xm5.m0 xdut.tail ibias vss vss nfet_03v3 w=    1.700820000000000e-04     l=    5.049999999999999e-07     as=    0.000000000000000e+00     ad=    0.000000000000000e+00     ps=    0.000000000000000e+00     pd=    0.000000000000000e+00     nrd=    0.0",
+          "status": "sim_error"
+        },
+        "cmrr_vcm": {
+          "error": "amp_018_telescopic_cascode/cmrr_vcm@gf180mcu/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_018_telescopic_cascode \u00d7 cmrr_vcm \u00d7 gf180mcu \u00d7 tt\n\nError on line 1573 or its substitute:\n  m.xdut.xm5.m0 xdut.tail ibias vss vss nfet_03v3 w=    1.700820000000000e-04     l=    5.049999999999999e-07     as=    0.000000000000000e+00     ad=    0.000000000000000e+00     ps=    0.000000000000000e+00     pd=    0.000000000000000e+00     nrd=    0.000000000",
+          "status": "sim_error"
+        },
+        "dc_op": {
+          "error": "amp_018_telescopic_cascode/dc_op@gf180mcu/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_018_telescopic_cascode \u00d7 dc_op \u00d7 gf180mcu \u00d7 tt\n\nError on line 1573 or its substitute:\n  m.xdut.xm5.m0 xdut.tail ibias vss vss nfet_03v3 w=    1.700820000000000e-04     l=    5.049999999999999e-07     as=    0.000000000000000e+00     ad=    0.000000000000000e+00     ps=    0.000000000000000e+00     pd=    0.000000000000000e+00     nrd=    0.000000000000000",
+          "status": "sim_error"
+        },
+        "linearity": {
+          "status": "disabled"
+        },
+        "noise": {
+          "error": "amp_018_telescopic_cascode/noise@gf180mcu/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_018_telescopic_cascode \u00d7 noise \u00d7 gf180mcu \u00d7 tt\n\nError on line 1573 or its substitute:\n  m.xdut.xm5.m0 xdut.tail ibias vss vss nfet_03v3 w=    1.700820000000000e-04     l=    5.049999999999999e-07     as=    0.000000000000000e+00     ad=    0.000000000000000e+00     ps=    0.000000000000000e+00     pd=    0.000000000000000e+00     nrd=    0.000000000000000",
+          "status": "sim_error"
+        },
+        "psrr_vdd": {
+          "error": "amp_018_telescopic_cascode/psrr_vdd@gf180mcu/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_018_telescopic_cascode \u00d7 psrr_vdd \u00d7 gf180mcu \u00d7 tt\n\nError on line 1573 or its substitute:\n  m.xdut.xm5.m0 xdut.tail ibias vss vss nfet_03v3 w=    1.700820000000000e-04     l=    5.049999999999999e-07     as=    0.000000000000000e+00     ad=    0.000000000000000e+00     ps=    0.000000000000000e+00     pd=    0.000000000000000e+00     nrd=    0.000000000",
+          "status": "sim_error"
+        },
+        "tran_step": {
+          "error": "amp_018_telescopic_cascode/tran_step@gf180mcu/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_018_telescopic_cascode \u00d7 tran_step \u00d7 gf180mcu \u00d7 tt\n\nError on line 1573 or its substitute:\n  m.xdut.xm5.m0 xdut.tail ibias vss vss nfet_03v3 w=    1.700820000000000e-04     l=    5.049999999999999e-07     as=    0.000000000000000e+00     ad=    0.000000000000000e+00     ps=    0.000000000000000e+00     pd=    0.000000000000000e+00     nrd=    0.0000000",
+          "status": "sim_error"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:19:55+00:00"
+      }
+    }
+  },
+  "design_id": "ae1efb45e1",
+  "metrics": {
+    "tt": {}
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_v_bias_1": 0.509,
+      "x_dut_v_bias_2": 1.032,
+      "x_dut_xm1_l": "0.28u",
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": "27.241u",
+      "x_dut_xm1c_l": "5.274u",
+      "x_dut_xm1c_m": 1,
+      "x_dut_xm1c_w": "48.148u",
+      "x_dut_xm2_m": 1,
+      "x_dut_xm2c_m": 1,
+      "x_dut_xm3_l": "1.391u",
+      "x_dut_xm3_m": 1,
+      "x_dut_xm3_w": "99.145u",
+      "x_dut_xm3c_l": "4.589u",
+      "x_dut_xm3c_m": 1,
+      "x_dut_xm3c_w": "78.432u",
+      "x_dut_xm4_m": 1,
+      "x_dut_xm4c_m": 1,
+      "x_dut_xm5_l": "0.505u",
+      "x_dut_xm5_m": 1,
+      "x_dut_xm5_ng": 2,
+      "x_dut_xm5_w": "170.082u",
+      "x_dut_xm6_l": "9.666u",
+      "x_dut_xm6_m": 1,
+      "x_dut_xm6_w": "118.161u"
+    }
+  },
+  "pdk": "gf180mcu",
+  "ppa": {
+    "active_gate_area_um2": 2746.826,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {}
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

@@ -44,6 +44,7 @@ N 0 450 0 520 {}
 N 40 430 40 490 {}
 N 40 550 40 660 {}
 N 100 520 100 614 {}
+N 105 200 105 260 {}
 N 165 260 165 320 {}
 N 310 200 310 260 {}
 N 340 200 340 260 {}
@@ -72,7 +73,8 @@ N -480 260 -450 260 {}
 N -400 260 -340 260 {}
 N -300 260 -240 260 {}
 N -130 260 -70 260 {}
-N -10 260 105 260 {}
+N -10 260 20 260 {}
+N 75 260 105 260 {}
 N 165 260 195 260 {}
 N 310 260 340 260 {}
 N 380 260 440 260 {}
@@ -101,31 +103,32 @@ C {devices/lab_wire.sym} 340 200 0 1 {name=l8 lab=na}
 C {devices/lab_wire.sym} -520 170 0 1 {name=l9 lab=nb}
 C {devices/lab_wire.sym} -340 90 2 0 {name=l10 lab=nb}
 C {devices/lab_wire.sym} -340 170 0 1 {name=l11 lab=nb}
-C {devices/lab_wire.sym} -130 260 0 0 {name=l12 lab=nb}
-C {devices/lab_wire.sym} -10 320 2 0 {name=l13 lab=ncz}
-C {devices/lab_wire.sym} -600 0 0 1 {name=l14 lab=nd}
-C {devices/lab_wire.sym} -240 0 0 1 {name=l15 lab=nd}
-C {devices/lab_wire.sym} -240 260 0 1 {name=l16 lab=ne}
-C {devices/lab_wire.sym} 620 0 0 0 {name=l17 lab=ne}
-C {devices/lab_wire.sym} 380 350 2 0 {name=l18 lab=nlev}
-C {devices/lab_wire.sym} 380 430 0 1 {name=l19 lab=nlev}
-C {devices/lab_wire.sym} -700 350 2 0 {name=l20 lab=tail}
-C {devices/lab_wire.sym} -660 260 0 0 {name=l21 lab=vinn}
-C {devices/lab_wire.sym} -480 320 2 0 {name=l22 lab=vinp}
-C {devices/lab_wire.sym} 165 320 2 0 {name=l23 lab=vout}
-C {devices/lab_wire.sym} 720 90 2 0 {name=l24 lab=vout}
-C {devices/lab_wire.sym} -760 94 2 0 {name=l25 lab=vdd}
-C {devices/lab_wire.sym} 440 354 2 0 {name=l26 lab=vdd}
-C {devices/lab_wire.sym} -400 94 2 0 {name=l27 lab=vdd}
-C {devices/lab_wire.sym} 780 94 2 0 {name=l28 lab=vdd}
-C {devices/lab_wire.sym} -400 354 2 0 {name=l29 lab=vdd}
-C {devices/lab_wire.sym} -760 354 2 0 {name=l30 lab=vss}
-C {devices/lab_wire.sym} -580 354 2 0 {name=l31 lab=vss}
-C {devices/lab_wire.sym} 100 614 2 0 {name=l32 lab=vss}
-C {devices/lab_wire.sym} -760 614 2 0 {name=l33 lab=vss}
-C {devices/lab_wire.sym} -400 614 2 0 {name=l34 lab=vss}
-C {devices/lab_wire.sym} 440 614 2 0 {name=l35 lab=vss}
-C {devices/lab_wire.sym} 780 354 2 0 {name=l36 lab=vss}
+C {devices/lab_wire.sym} -10 320 2 0 {name=l12 lab=nb}
+C {devices/lab_wire.sym} -130 260 0 0 {name=l13 lab=ncz}
+C {devices/lab_wire.sym} 165 320 2 0 {name=l14 lab=ncz}
+C {devices/lab_wire.sym} -600 0 0 1 {name=l15 lab=nd}
+C {devices/lab_wire.sym} -240 0 0 1 {name=l16 lab=nd}
+C {devices/lab_wire.sym} -240 260 0 1 {name=l17 lab=ne}
+C {devices/lab_wire.sym} 620 0 0 0 {name=l18 lab=ne}
+C {devices/lab_wire.sym} 380 350 2 0 {name=l19 lab=nlev}
+C {devices/lab_wire.sym} 380 430 0 1 {name=l20 lab=nlev}
+C {devices/lab_wire.sym} -700 350 2 0 {name=l21 lab=tail}
+C {devices/lab_wire.sym} -660 260 0 0 {name=l22 lab=vinn}
+C {devices/lab_wire.sym} -480 320 2 0 {name=l23 lab=vinp}
+C {devices/lab_wire.sym} 105 200 0 1 {name=l24 lab=vout}
+C {devices/lab_wire.sym} 720 90 2 0 {name=l25 lab=vout}
+C {devices/lab_wire.sym} -760 94 2 0 {name=l26 lab=vdd}
+C {devices/lab_wire.sym} 440 354 2 0 {name=l27 lab=vdd}
+C {devices/lab_wire.sym} -400 94 2 0 {name=l28 lab=vdd}
+C {devices/lab_wire.sym} 780 94 2 0 {name=l29 lab=vdd}
+C {devices/lab_wire.sym} -400 354 2 0 {name=l30 lab=vdd}
+C {devices/lab_wire.sym} -760 354 2 0 {name=l31 lab=vss}
+C {devices/lab_wire.sym} -580 354 2 0 {name=l32 lab=vss}
+C {devices/lab_wire.sym} 100 614 2 0 {name=l33 lab=vss}
+C {devices/lab_wire.sym} -760 614 2 0 {name=l34 lab=vss}
+C {devices/lab_wire.sym} -400 614 2 0 {name=l35 lab=vss}
+C {devices/lab_wire.sym} 440 614 2 0 {name=l36 lab=vss}
+C {devices/lab_wire.sym} 780 354 2 0 {name=l37 lab=vss}
 C {devices/ipin.sym} -1035 260 0 0 {name=p0 lab=vinn}
 C {devices/ipin.sym} -1035 380 0 0 {name=p1 lab=vinp}
 C {devices/opin.sym} 1055 30 0 0 {name=p2 lab=vout}

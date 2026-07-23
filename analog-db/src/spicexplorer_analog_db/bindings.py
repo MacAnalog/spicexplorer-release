@@ -1,4 +1,4 @@
-"""Cross-PDK binding generator (NEXT-SESSION P1: PDK transfer on every circuit).
+"""Cross-PDK binding generator.
 
 Given a circuit that is already bound to one PDK, synthesize the binding for ANOTHER PDK so a
 clone is ready-to-run in *both* — no post-processing. ``add_binding(circuit, target_pdk)`` writes

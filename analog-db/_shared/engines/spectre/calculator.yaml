@@ -49,10 +49,28 @@ expressions:
     notes: unity-gain frequency — first falling 0 dB crossing of the gain.
   pm:
     result: ac
-    expr: 'phaseMargin(v("{OUT}"))'
+    expr: '180 + phase(value(v("{OUT}") cross(dB20(v("{OUT}")) 0 1 "falling"))) - phase(value(v("{OUT}") {FSTART}))'
     notes: >-
-      OPEN-LOOP waves only — OCEAN's phaseMargin refuses a closed-loop wave whose gain
-      never crosses one (expect NaN there; use the stb rows for a loop-gain PM).
+      Phase margin, DC-referenced: PM = 180 + phase(UGF) − phase(DC). Correct for BOTH
+      inverting and non-inverting open-loop amps. OCEAN's built-in phaseMargin() assumes a
+      loop-gain wave whose phase starts at 0 and returns phase(UGF)−180 for an amp that is
+      INVERTING at DC (phase(DC)≈180°) — off by 180° (live: −98.7° vs the true 81.3° on
+      amp_022; this silently corrupted every inverting amp's PM in the first campaign).
+      Referencing to phase at DC (= FSTART, the AC sweep start, from the render context)
+      removes the convention ambiguity and matches the engine-neutral registry `pm`. Still
+      open-loop only (needs a real 0 dB crossing); a closed-loop/loop-gain PM uses the stb rows.
+  # -- noise (integrated RMS off the density spectrum) --------------------------
+  noise_total_rms:
+    result: noise
+    expr: 'sqrt(integ(getData("{SIG}")*getData("{SIG}") {FSTART} {FSTOP}))'
+    notes: >-
+      Total integrated RMS noise (V) over [FSTART,FSTOP]. The Spectre `noise` analysis
+      registers OCEAN result `noise` with bare density vectors `in` (input-referred) and
+      `out` (output) in V/rtHz — SIG=in for input-referred noise, SIG=out for output.
+      `getData(SIG)*getData(SIG)` (NOT `expt(...,2)`, which NaNs on a waveform) is the
+      mean-square density; integ over the band then sqrt is the RMS. Cross-checks the
+      Tier-1 registry `inoise_total`/`onoise_total`, and is the calculator route the
+      Spectre lane uses instead of the Tier-1 PSF read (which mis-looks-up `vout`).
   # -- operating point ---------------------------------------------------------
   node_v:
     result: dc

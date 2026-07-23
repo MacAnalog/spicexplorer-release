@@ -1,4 +1,4 @@
-"""Parameterization P4 (meta plan_parameterization.md §5) — the full-catalog atomic sweep.
+"""Parameterization P4 — the full-catalog atomic sweep.
 
 Acceptance gates:
 
@@ -6,7 +6,7 @@ Acceptance gates:
   _dut.spice`` (atomic ``.param`` header + generated tie block) resolves to exactly the same
   per-device geometry / passive / bias values as the pre-migration deck. The pre-migration
   truth is the committed snapshot ``tests/data/premigration_dut_geometry.json``, resolved from
-  the ``feat/parameterization-p1-p2`` tip decks by ``tools/migrate_params.py``'s oracle
+  the pre-migration decks by ``tools/migrate_params.py``'s oracle
   (:func:`spicexplorer_analog_db.ppa.resolve_deck_geometry`) at migration time — so the gate
   needs no git history at test time.
 - **Full adoption + generator stability**: every verifiable circuit committed an
@@ -75,7 +75,7 @@ def test_knob_symbol_extraction_forms():
 
 
 def test_atomic_inventory_echoes_sources_and_passives():
-    """MOS fields are always mechanical (D-1); V/I bias sources and passives echo the free
+    """MOS fields are always mechanical; V/I bias sources and passives echo the free
     knob the netlist already binds — bias-branch values stay first-class knobs."""
     graph = {
         "components": [

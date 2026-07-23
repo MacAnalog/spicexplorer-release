@@ -1,4 +1,4 @@
-"""Phase-0 exit gate (plan todo_examples_db.md P0 Exit).
+"""Phase-0 exit gate.
 
 Proves the schema end-to-end on the `amp_001_5t` proof circuit:
   - Tier 0 (schema + cross-ref + catalog determinism) is fully green.
@@ -65,7 +65,7 @@ def test_circuitgraph_roundtrips_abstract(circuit):
 
 
 def test_generated_artifacts_are_up_to_date(circuit):
-    """Pre-seeds the Tier 1 drift guard (lands fully in Phase 1)."""
+    """Pre-seeds the Tier 1 drift guard."""
     cg = circuit.dir / "abstract" / "topology.cgraph.json"
     assert cg.read_text() == generate.cgraph_json(circuit)
     for pdk in circuit.pdks:
@@ -89,7 +89,7 @@ def test_extends_resolves(circuit):
 
 
 def test_generated_project_setup_parses_as_optimizer_config(circuit):
-    """The GENERATED project_setup.yaml is a real, loadable Project_Setup (plan D-3)."""
+    """The GENERATED project_setup.yaml is a real, loadable Project_Setup."""
     Project_Setup = pytest.importorskip("spicexplorer.core.domains").Project_Setup
     proj = Project_Setup.from_yaml(str(circuit.dir / "project_setup.yaml"))
     assert proj.dut_params and proj.optimizer_config.target_specs.targets

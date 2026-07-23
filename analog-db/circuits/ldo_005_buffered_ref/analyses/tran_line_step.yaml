@@ -5,8 +5,8 @@ id: tran_line_step
 template: tran_line_step
 description: "Fast 1.6 -> 2.0 V supply step at fixed load; p2p output deviation."
 params:
-  VDD_LO: 1.6
-  VDD_HI: 2.0
+  VDD_LO: 3.1
+  VDD_HI: 3.5
   ILOAD: 1m
   COUT: 1u
   TSTART: 5u

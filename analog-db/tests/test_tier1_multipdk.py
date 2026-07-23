@@ -1,7 +1,7 @@
 """Phase-1 gate: multi-PDK lowering + the Tier-1 generation drift guard.
 
 Proves one abstract topology lowers to BOTH PDKs, both re-parse isomorphically, the committed
-GENERATED artifacts are current, and Tier 1 is green (plan todo_examples_db.md P1 Exit).
+GENERATED artifacts are current, and Tier 1 is green.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ def test_tier1_is_fully_green():
 
 
 def test_devices_map_loader_overrides_builtin(circuit):
-    """The per-topology devices.map.yaml drives the lowered device names (plan Phase 1)."""
+    """The per-topology devices.map.yaml drives the lowered device names."""
     from spicexplorer_circuitgraph.model.nodes import DeviceType, MosPolarityType
 
     ihp = pdks.load_pdk(circuit, "ihp-sg13g2")

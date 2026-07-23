@@ -1,4 +1,4 @@
-"""The PPA scoreboard — recorded design points per (circuit, pdk) (plan_scoreboard P2/D-5..D-9).
+"""The PPA scoreboard — recorded design points per (circuit, pdk).
 
 Storage (per-circuit, self-contained — the global views are GENERATED, see ``scoreboard_index``):
 
@@ -8,7 +8,7 @@ Storage (per-circuit, self-contained — the global views are GENERATED, see ``s
 An entry is keyed by :func:`design_id` — sha256 over the canonical (circuit, pdk, sizing vector)
 — so re-running the SAME design at another corner **upserts** that corner into the same entry,
 and a hash hit doubles as a sim memo-cache for automation. Entries are timestamped recorded
-artifacts (like the old ``results/`` files, which this module absorbed — D-8): they are NOT
+artifacts (like the old ``results/`` files, which this module absorbed): they are NOT
 byte-drift-guarded.
 """
 
@@ -161,7 +161,7 @@ def record(
 
 def _axes(class_id: str) -> list[tuple[str, str]]:
     """The Pareto axes for a class: power (min) + active area (min) + the declared directed
-    performance metrics (D-7/D-8). Axis names address the entry's ``ppa`` block."""
+    performance metrics. Axis names address the entry's ``ppa`` block."""
     axes = [("power_w", "min"), ("active_gate_area_um2", "min")]
     for perf in ppa.class_ppa(class_id).get("performance") or []:
         axes.append((f"performance.{perf['metric']}", perf["better"]))
@@ -227,7 +227,7 @@ def index_path() -> Path:
 
 
 def build_index() -> dict[str, Any]:
-    """The generated global scoreboard (plan_scoreboard D-5): the owner's
+    """The generated global scoreboard: the owner's
     ``<class>/<pdk>/<circuit>/<design-point>`` view, derived deterministically from the
     per-circuit entries + baselines. Drift-guarded like catalog.json (Tier 0)."""
     classes: dict[str, Any] = {}

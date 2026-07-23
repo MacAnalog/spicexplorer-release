@@ -1,0 +1,20 @@
+# Analysis binding: the committed form of the review-pass vbl characterization — the
+# knob sweep that PROVED "no stable interior DC point" (see circuit.yaml notes). Five
+# points bracket the stage-1 flip window (0.70-0.72 at tt); an interior point would
+# put vocm inside VCM +/- VBAND at some sample.
+schema: spicexplorer/analysis@1
+id: dc_cm_bias_sweep
+template: dc_cm_bias_sweep
+description: "Output-CM vs the vbl load-gate bias: 5-point alterparam sweep; cm_interior_pts=0 documents the structural no-interior-OP finding."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  VBAND: 0.25
+  CMKNOB: vbl
+  VB1: 0.66
+  VB2: 0.69
+  VB3: 0.71
+  VB4: 0.73
+  VB5: 0.76
+flags: []
+produces: [vocm_1, vocm_2, vocm_3, vocm_4, vocm_5, cm_interior_pts]

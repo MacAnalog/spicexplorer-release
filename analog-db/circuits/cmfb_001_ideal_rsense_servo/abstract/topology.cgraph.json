@@ -1,0 +1,162 @@
+{
+  "components": [
+    {
+      "connections": {
+        "N": "vref",
+        "P": "cm_sense"
+      },
+      "device_type": "CAP",
+      "id": "CIN_SERVO",
+      "params": {
+        "Value": "'cin_val'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vcmfb",
+        "P": "vss"
+      },
+      "device_type": "CAP",
+      "id": "COUT_SERVO",
+      "params": {
+        "Value": "'cout_val'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "CN": "cm_sense",
+        "CP": "vref",
+        "N": "vcmfb",
+        "P": "vss"
+      },
+      "device_type": "VCCS",
+      "id": "GM_SERVO",
+      "params": {
+        "Value": "{gm_val}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vref",
+        "P": "cm_sense"
+      },
+      "device_type": "RES",
+      "id": "RIN_SERVO",
+      "params": {
+        "Value": "'rin_val'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "cm_sense",
+        "P": "vinn"
+      },
+      "device_type": "RES",
+      "id": "RMN",
+      "params": {
+        "Value": "'x_dut_rmn_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vinp",
+        "P": "cm_sense"
+      },
+      "device_type": "RES",
+      "id": "RMP",
+      "params": {
+        "Value": "'x_dut_rmp_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vcmfb",
+        "P": "vss"
+      },
+      "device_type": "RES",
+      "id": "ROUT_SERVO",
+      "params": {
+        "Value": "'rout_val'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    }
+  ],
+  "meta": {
+    "circuit_name": "cmfb_001_ideal_rsense_servo",
+    "component_count": 7,
+    "net_count": 6
+  },
+  "nets": [
+    {
+      "is_supply": false,
+      "name": "cm_sense",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vcmfb",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vinn",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vinp",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vref",
+      "supply_type": ""
+    },
+    {
+      "is_supply": true,
+      "name": "vss",
+      "supply_type": "VSS"
+    }
+  ]
+}

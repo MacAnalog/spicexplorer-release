@@ -1,0 +1,139 @@
+** Abstract capacitively-coupled chopper instrumentation amplifier (CCIA), the
+** "simple" DUT of Fan's chopper corpus — no input-impedance boost (that variant
+** is ia_003_fan_chopper_pf; see provenance in circuit.yaml). AUTHORED source of
+** truth (plan D-2). PDK-neutral model tokens (nmos/pmos); per-PDK device names +
+** geometry come from circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vinp vinn voutp voutn vref clk_chin
+**   clk_chin_not clk_chfb clk_chfb_not clk_chout clk_chout_not vdd vss
+**
+** CHOPPER NOTE (drawing fixed 2026-07-16, DRAWING_REVIEW.md §1; entry matches
+** the drawing): every chopper block (chopper-diff) is now a TRUE 4-gate
+** modulator — per chopper, two straight transmission gates (conduct when the
+** chopper clock is HIGH) plus two cross gates with the swapped clock hookup
+** (conduct when the clock is LOW), so the differential polarity reverses every
+** half period. The clocked bench (tran_chopper_ripple) therefore measures real
+** chopping (modulate + demodulate through the in/fb choppers); the static
+** benches (ac_closed_loop / dc_op) hold every clock transparent (clk high /
+** clk_not low = straight path on, cross path off), in which configuration this
+** IS a working capacitively-coupled IA with cap-ratio gain Cin/Cfb.
+**
+** Topology (from drawings/ccia-02-QinwenFan-chopper-ripple-reduction/
+** ccia-dut-chopper-simple.sch, normalized here after flattening the
+** two-stage-opamp-core / chopper-diff / transmission_gate_pair hierarchy of
+** simulation/ccia-dut-chopper-simple.spice; the drawing's Vb1..Vb4 bias ports
+** become internal knob-driven sources — instantiator owns bias):
+**   input path — input chopper (straight TGs XM24..XM27 + cross TGs
+**     XM32..XM35, clocks clk_chin/_not) from vinp/vinn to inch_p/inch_n, then
+**     input caps Cin1/Cin2 into the summing
+**     nodes vsum_n/vsum_p; bias resistors Rb1/Rb2 tie the summing nodes to vref
+**     (input common mode + the closed-loop high-pass corner).
+**   core — the embedded two-stage opamp (= amp_026_fan_chopper_ota, ver-B
+**     wiring): PMOS input pair XM2 (gate vsum_p) / XM3 (gate vsum_n), tail XM1
+**     (gate vb4), folded through NMOS cascodes XM12/XM13 (gate vb2) over sinks
+**     XM4/XM5 (gate vb1) into the cascoded PMOS load XM6/XM7 (gate vb4) +
+**     XM10/XM11 (gate vb3), first-stage outputs out1_p/out1_n; the embedded
+**     output chopper (straight TGs XM16..XM19 + cross TGs XM28..XM31) sits
+**     between out1_p/out1_n and the
+**     second-stage gates g2_p/g2_n and is clocked by clk_chout/clk_chout_not —
+**     the core's drawn vctl/vctl_not wired to the top clocks, as drawn; class-A
+**     output branches XM8/XM14 (voutp) and XM9/XM15 (voutn) with per-side
+**     Miller caps Cm1/Cm2. NO explicit CMFB is drawn — output common mode is
+**     set purely by device ratioing (cf. amp_026's note).
+**   feedback path — feedback chopper (straight TGs XM20..XM23 + cross TGs
+**     XM36..XM39, clocks clk_chfb/_not)
+**     from voutp/voutn to fbch_p/fbch_n, then feedback caps Cfb1/Cfb2
+**     CROSS-coupled into the opposite summing nodes (voutp->vsum_n,
+**     voutn->vsum_p) — with the core's non-inverting vsum_n->voutn path this
+**     closes NEGATIVE feedback; mid-band gain = Cin/Cfb.
+**   core wiring note: the four formerly floating source nets inside the
+**     embedded core (XM1/XM6/XM9 sources -> vdd, XM15 source -> vss) are FIXED
+**     in the source drawing (DRAWING_REVIEW.md §2, 2026-07-16) — this entry
+**     matches the drawing; no deviation remains for that item.
+**   Cm note: the drawn Cm_1 value (1p) was an unedited xschem default while
+**     Cm_2 was symbolic (Cm); both are normalized to knobs here and tied.
+**   Rb note: the originally-drawn Rb1/Rb2 literal (1k, since made symbolic Rb at source per DRAWING_REVIEW item 5) was a placeholder that would put the
+**     closed-loop high-pass corner at ~MHz; the sizing default (10Meg) is a
+**     deliberate sizing-floor choice, not the drawn value.
+**   nets renamed for readability: top net1->vsum_n, net2->vsum_p, net3->fbch_p,
+**     net4->fbch_n, net5->inch_n, net6->inch_p; core (as amp_026) net1->tail,
+**     net2->fold_p, net3->fold_n, net4->casc_src_n, net5->casc_src_p,
+**     net6->out1_p, net7->out1_n, net8->g2_p, net9->g2_n. Instances renamed:
+**     core XM1..XM15 kept; per chopper the drawing's straight gates x1/x4 ->
+**     XM16..XM19 (x_CH_out), XM20..XM23 (x_CH_fb), XM24..XM27 (x_CH_in) and
+**     its cross gates x2/x3 -> XM28..XM31 (out), XM32..XM35 (in), XM36..XM39
+**     (fb); caps C3/C4 -> Cin1/Cin2, Cfb_1/Cfb_2 -> Cfb1/Cfb2,
+**     Cm_1/Cm_2 -> Cm1/Cm2.
+**.subckt ia_002_fan_chopper_simple vinp vinn voutp voutn vref clk_chin clk_chin_not clk_chfb clk_chfb_not clk_chout clk_chout_not vdd vss
+* --- embedded two-stage opamp core (= amp_026_fan_chopper_ota, ver-B wiring) ---
+* stage 1: PMOS input pair + tail
+XM1 tail vb4 vdd vdd pmos w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+XM2 fold_p vsum_p tail vdd pmos w=x_dut_xm2_w l=x_dut_xm2_l m=x_dut_xm2_m
+XM3 fold_n vsum_n tail vdd pmos w=x_dut_xm3_w l=x_dut_xm3_l m=x_dut_xm3_m
+* first-stage NMOS current sinks at the fold nodes
+XM4 fold_p vb1 vss vss nmos w=x_dut_xm4_w l=x_dut_xm4_l m=x_dut_xm4_m
+XM5 fold_n vb1 vss vss nmos w=x_dut_xm5_w l=x_dut_xm5_l m=x_dut_xm5_m
+* folded NMOS cascodes up to the first-stage outputs
+XM12 out1_p vb2 fold_p vss nmos w=x_dut_xm12_w l=x_dut_xm12_l m=x_dut_xm12_m
+XM13 out1_n vb2 fold_n vss nmos w=x_dut_xm13_w l=x_dut_xm13_l m=x_dut_xm13_m
+* cascoded PMOS load: current sources + cascodes
+XM6 casc_src_n vb4 vdd vdd pmos w=x_dut_xm6_w l=x_dut_xm6_l m=x_dut_xm6_m
+XM7 casc_src_p vb4 vdd vdd pmos w=x_dut_xm7_w l=x_dut_xm7_l m=x_dut_xm7_m
+XM10 out1_n vb3 casc_src_n vdd pmos w=x_dut_xm10_w l=x_dut_xm10_l m=x_dut_xm10_m
+XM11 out1_p vb3 casc_src_p vdd pmos w=x_dut_xm11_w l=x_dut_xm11_l m=x_dut_xm11_m
+* embedded output chopper (4-gate modulator, clocked by clk_chout/clk_chout_not):
+* straight TGs (conduct when clk_chout HIGH)
+XM16 out1_n clk_chout g2_n vss nmos w=x_dut_xm16_w l=x_dut_xm16_l m=x_dut_xm16_m
+XM17 g2_n clk_chout_not out1_n vdd pmos w=x_dut_xm17_w l=x_dut_xm17_l m=x_dut_xm17_m
+XM18 out1_p clk_chout g2_p vss nmos w=x_dut_xm18_w l=x_dut_xm18_l m=x_dut_xm18_m
+XM19 g2_p clk_chout_not out1_p vdd pmos w=x_dut_xm19_w l=x_dut_xm19_l m=x_dut_xm19_m
+* cross TGs, swapped clocks (conduct when clk_chout LOW)
+XM28 out1_n clk_chout_not g2_p vss nmos w=x_dut_xm28_w l=x_dut_xm28_l m=x_dut_xm28_m
+XM29 g2_p clk_chout out1_n vdd pmos w=x_dut_xm29_w l=x_dut_xm29_l m=x_dut_xm29_m
+XM30 out1_p clk_chout_not g2_n vss nmos w=x_dut_xm30_w l=x_dut_xm30_l m=x_dut_xm30_m
+XM31 g2_n clk_chout out1_p vdd pmos w=x_dut_xm31_w l=x_dut_xm31_l m=x_dut_xm31_m
+* class-A output branches
+XM8 voutp vb4 vdd vdd pmos w=x_dut_xm8_w l=x_dut_xm8_l m=x_dut_xm8_m
+XM14 voutp g2_p vss vss nmos w=x_dut_xm14_w l=x_dut_xm14_l m=x_dut_xm14_m
+XM9 voutn vb4 vdd vdd pmos w=x_dut_xm9_w l=x_dut_xm9_l m=x_dut_xm9_m
+XM15 voutn g2_n vss vss nmos w=x_dut_xm15_w l=x_dut_xm15_l m=x_dut_xm15_m
+* per-side Miller compensation caps
+Cm1 g2_p voutp 'x_dut_cm1_value'
+Cm2 g2_n voutn 'x_dut_cm2_value'
+* internal bias levels (the drawing's Vb1..Vb4 ports; instantiator-owned knobs)
+Vb1 vb1 vss dc {vb1}
+Vb2 vb2 vss dc {vb2}
+Vb3 vb3 vss dc {vb3}
+Vb4 vb4 vss dc {vb4}
+* --- input chopper (drawn x_CH_in; 4-gate modulator) ---
+* straight TGs (conduct when clk_chin HIGH)
+XM24 vinn clk_chin inch_n vss nmos w=x_dut_xm24_w l=x_dut_xm24_l m=x_dut_xm24_m
+XM25 inch_n clk_chin_not vinn vdd pmos w=x_dut_xm25_w l=x_dut_xm25_l m=x_dut_xm25_m
+XM26 vinp clk_chin inch_p vss nmos w=x_dut_xm26_w l=x_dut_xm26_l m=x_dut_xm26_m
+XM27 inch_p clk_chin_not vinp vdd pmos w=x_dut_xm27_w l=x_dut_xm27_l m=x_dut_xm27_m
+* cross TGs, swapped clocks (conduct when clk_chin LOW)
+XM32 vinn clk_chin_not inch_p vss nmos w=x_dut_xm32_w l=x_dut_xm32_l m=x_dut_xm32_m
+XM33 inch_p clk_chin vinn vdd pmos w=x_dut_xm33_w l=x_dut_xm33_l m=x_dut_xm33_m
+XM34 vinp clk_chin_not inch_n vss nmos w=x_dut_xm34_w l=x_dut_xm34_l m=x_dut_xm34_m
+XM35 inch_n clk_chin vinp vdd pmos w=x_dut_xm35_w l=x_dut_xm35_l m=x_dut_xm35_m
+* --- input coupling caps into the summing nodes ---
+Cin1 vsum_n inch_n 'x_dut_cin1_value'
+Cin2 vsum_p inch_p 'x_dut_cin2_value'
+* --- summing-node bias resistors to vref (input CM + high-pass corner) ---
+Rb1 vsum_n vref 'x_dut_rb1_value'
+Rb2 vsum_p vref 'x_dut_rb2_value'
+* --- feedback chopper (drawn x_CH_fb; 4-gate modulator) ---
+* straight TGs (conduct when clk_chfb HIGH)
+XM20 fbch_p clk_chfb voutp vss nmos w=x_dut_xm20_w l=x_dut_xm20_l m=x_dut_xm20_m
+XM21 voutp clk_chfb_not fbch_p vdd pmos w=x_dut_xm21_w l=x_dut_xm21_l m=x_dut_xm21_m
+XM22 fbch_n clk_chfb voutn vss nmos w=x_dut_xm22_w l=x_dut_xm22_l m=x_dut_xm22_m
+XM23 voutn clk_chfb_not fbch_n vdd pmos w=x_dut_xm23_w l=x_dut_xm23_l m=x_dut_xm23_m
+* cross TGs, swapped clocks (conduct when clk_chfb LOW)
+XM36 fbch_p clk_chfb_not voutn vss nmos w=x_dut_xm36_w l=x_dut_xm36_l m=x_dut_xm36_m
+XM37 voutn clk_chfb fbch_p vdd pmos w=x_dut_xm37_w l=x_dut_xm37_l m=x_dut_xm37_m
+XM38 fbch_n clk_chfb_not voutp vss nmos w=x_dut_xm38_w l=x_dut_xm38_l m=x_dut_xm38_m
+XM39 voutp clk_chfb fbch_n vdd pmos w=x_dut_xm39_w l=x_dut_xm39_l m=x_dut_xm39_m
+* --- feedback caps, cross-coupled (voutp->vsum_n, voutn->vsum_p) ---
+Cfb1 fbch_p vsum_n 'x_dut_cfb1_value'
+Cfb2 fbch_n vsum_p 'x_dut_cfb2_value'
+**.ends
+.end

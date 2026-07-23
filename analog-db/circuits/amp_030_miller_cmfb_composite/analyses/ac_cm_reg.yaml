@@ -1,0 +1,14 @@
+# Analysis binding: CM-loop health (frequency domain) — closed-loop CM output impedance.
+schema: spicexplorer/analysis@1
+id: ac_cm_reg
+template: ac_cm_reg
+description: "CM output impedance vs f: zcm_lf_ohm (servo stiffness) + cm_peaking_db (underdamped-CM-loop flag). behavioral cmfb_001_ideal_rsense_servo servo (composite)."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 50f
+  FSTART: 100
+  FSTOP: 1G
+  PPD: 41
+flags: []
+produces: [zcm_lf_ohm, zcm_peak_ohm, cm_peaking_db]

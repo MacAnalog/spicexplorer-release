@@ -48,7 +48,7 @@
         "value": 8.75582
       },
       "ugf_hz": {
-        "spec": "none",
+        "spec": "fail",
         "value": 394140.6
       }
     }
@@ -58,9 +58,12 @@
       "CAPACITOR_0": "1.4p",
       "CAPACITOR_1": "1.3p",
       "CURRENT_1_BIAS": "5u",
-      "x_dut_xm67_l": "1u",
-      "x_dut_xm67_m": "4",
-      "x_dut_xm67_w": "1u",
+      "RESISTOR_0": "240k",
+      "RESISTOR_1": "85.7k",
+      "RESISTOR_2": "85.7K",
+      "x_dut_xm10_l": "1u",
+      "x_dut_xm10_m": "4",
+      "x_dut_xm10_w": "1u",
       "x_dut_xm11_l": "1u",
       "x_dut_xm11_m": "4",
       "x_dut_xm11_w": "1u",
@@ -85,12 +88,9 @@
       "x_dut_xm23_l": "1u",
       "x_dut_xm23_m": "4",
       "x_dut_xm23_w": "1u",
-      "x_dut_xm10_l": "1u",
-      "x_dut_xm10_m": "4",
-      "x_dut_xm10_w": "1u",
-      "RESISTOR_0": "240k",
-      "RESISTOR_1": "85.7k",
-      "RESISTOR_2": "85.7K"
+      "x_dut_xm67_l": "1u",
+      "x_dut_xm67_m": "4",
+      "x_dut_xm67_w": "1u"
     }
   },
   "pdk": "ihp-sg13g2",

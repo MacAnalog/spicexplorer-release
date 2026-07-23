@@ -43,7 +43,7 @@ N 340 -300 440 -300 {
 lab=VDD}
 N 680 -300 790 -300 {
 lab=VDD}
-C {title.sym} 180 -60 0 0 {name=l1 author="Stefan Schippers"}
+C {devices/title.sym} 180 -60 0 0 {name=l1 author="Copyright 2026 MacAnalog Research Group"}
 C {ipin.sym} 780 -570 2 0 {name=p1 lab=vinp}
 C {ipin.sym} 350 -570 2 1 {name=p2 lab=vinn}
 C {ipin.sym} 560 -670 3 1 {name=p3 lab=CM_tail}

@@ -4,7 +4,7 @@ id: loop_stability
 template: loop_stability
 description: "AC closed-loop Zout(f) via a current probe into vout; peaking above DC = ringing/low PM."
 params:
-  VDD: 1.8
+  VDD: 3.3
   ILOAD: 1m
   COUT: 1u
   PPD: 20

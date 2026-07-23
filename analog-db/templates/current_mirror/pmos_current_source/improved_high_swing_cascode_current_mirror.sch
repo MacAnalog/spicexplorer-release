@@ -5,6 +5,7 @@ V {}
 S {}
 E {}
 T {improved_high_swing_cascode_current_mirror} 0 -180 0 0 0.4 0.4 {}
+C {devices/title.sym} 0 90 0 0 {name=l1 author="Copyright 2026 MacAnalog Research Group"}
 C {sg13g2_pr/sg13_lv_pmos.sym} 0 0 0 0 {name=M1 model=sg13_lv_pmos spiceprefix=X w=0.15u l=0.13u ng=1 m=1}
 C {sg13g2_pr/sg13_lv_pmos.sym} 200 0 0 0 {name=M2 model=sg13_lv_pmos spiceprefix=X w=0.15u l=0.13u ng=1 m=1}
 C {sg13g2_pr/sg13_lv_pmos.sym} 400 0 0 0 {name=M3 model=sg13_lv_pmos spiceprefix=X w=0.15u l=0.13u ng=1 m=1}

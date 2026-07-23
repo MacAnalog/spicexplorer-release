@@ -1,0 +1,70 @@
+# Design variables for the ihp-sg13g2 binding (explicit `u` tokens; sg13 lv-MOS geometry
+# rules). Hand-seeded starting point from gm/ID intuition at VDD=1.2 V — the source drawing
+# used identical minimum-size placeholder devices, so these defaults are a design floor for
+# a later sizing pass, not a tuned design point. Group representatives only (see
+# abstract/params.yaml ties): XM3<-XM2, XM5<-XM4, l(XM8)<-XM4, l(XM6)<-XM5, w/m(XM8)<-XM6,
+# XM9<-XM7, XM11<-XM10, XM13<-XM12, XM20<-XM14, XM21<-XM15, XM22<-XM16, XM23<-XM17,
+# XM24<-XM18, XM25<-XM19, C2<-C1, R2<-R1, RMN<-RMP. The CMFB servo macromodel knobs
+# (gm_val/rout_val/rin_val/cout_val/cin_val) are behavioral, not geometry.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xm1_w,  description: "Input-pair tail current-source width (PMOS, gate vb1)", default: 20u, min: 0.15u, max: 200u, unit: m}
+  - {name: x_dut_xm1_l,  description: "Input-pair tail current-source length", default: 1u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm2_w,  description: "PMOS input pair width", default: 20u, min: 0.15u, max: 200u, unit: m}
+  - {name: x_dut_xm2_l,  description: "PMOS input pair length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm4_w,  description: "Stage-1 NMOS diode-load width", default: 4u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xm4_l,  description: "Stage-1 NMOS diode-load length (anchors both mirror-L ties)", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm6_w,  description: "Second-stage mirror output width (L tied to the diodes)", default: 8u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm7_w,  description: "NMOS cascode width (gate vb3)", default: 5u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm7_l,  description: "NMOS cascode length", default: 0.3u, min: 0.13u, max: 5u, unit: m}
+  - {name: x_dut_xm10_w, description: "Folded PMOS cascode width (gate vb2)", default: 10u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm10_l, description: "Folded PMOS cascode length", default: 0.3u, min: 0.13u, max: 5u, unit: m}
+  - {name: x_dut_xm12_w, description: "CMFB-controlled PMOS source width (gate on vcmfb)", default: 10u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm12_l, description: "CMFB-controlled PMOS source length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  # Class-AB stack + follower defaults were live-tuned (dc_op sweeps, tt): with a 1.2 V rail
+  # and vcmfb_ref=0.6 the achievable output-CM window is NARROW — the battery diodes
+  # (XM15/XM17) must drop ≤~0.9 V at XM14's current or XM14 triodes, the stack pins at vdd
+  # and the CMFB servo winds up (vcmfb -> +/-10s of volts, dead actuator). Wide shifters +
+  # a small stack source/sink + an asymmetric follower pair (weak NMOS push vs strong PMOS
+  # pull — the pull follower's bulk-at-vdd body effect weakens it) put vocm=0.6 inside the
+  # window with vcmfb settling in-rail (~0.58) and drv ~0.53.
+  - {name: x_dut_xm14_w, description: "Class-AB battery-stack current-source width (gate vb1)", default: 3u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm14_l, description: "Class-AB battery-stack current-source length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm15_w, description: "Monticelli NMOS level-shifter diode width", default: 16u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xm15_l, description: "Monticelli NMOS level-shifter diode length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm16_w, description: "NMOS push follower width", default: 5u, min: 0.15u, max: 200u, unit: m}
+  - {name: x_dut_xm16_l, description: "NMOS push follower length", default: 0.3u, min: 0.13u, max: 5u, unit: m}
+  - {name: x_dut_xm17_w, description: "Monticelli PMOS level-shifter diode width", default: 16u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xm17_l, description: "Monticelli PMOS level-shifter diode length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm18_w, description: "PMOS pull follower width", default: 20u, min: 0.15u, max: 200u, unit: m}
+  - {name: x_dut_xm18_l, description: "PMOS pull follower length", default: 0.3u, min: 0.13u, max: 5u, unit: m}
+  - {name: x_dut_xm19_w, description: "Class-AB battery-stack sink width (gate on the drive node)", default: 2u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm19_l, description: "Class-AB battery-stack sink length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_c1_value, description: "Per-side Miller compensation cap (drawn Cc)", default: 1p, min: 0.05p, max: 20p, unit: F}
+  - {name: x_dut_r1_value, description: "Per-side Miller nulling resistor (drawn Rz)", default: 10k, min: 100, max: 200k, unit: ohm}
+  - {name: x_dut_rmp_value, description: "CM-detector resistor half (drawn Rm)", default: 1Meg, min: 10k, max: 100Meg, unit: ohm}
+  - {name: gm_val,   description: "CMFB servo macromodel transconductance (VCCS gain)", default: 100u, min: 1u, max: 10m, unit: S}
+  - {name: rout_val, description: "CMFB servo macromodel output resistance", default: 10Meg, min: 100k, max: 1.0e9, unit: ohm}
+  - {name: rin_val,  description: "CMFB servo macromodel input resistance (near-ideal)", default: 1.0e12, min: 1.0e9, max: 1.0e14, unit: ohm}
+  - {name: cout_val, description: "CMFB servo macromodel output capacitance", default: 100f, min: 1f, max: 10p, unit: F}
+  - {name: cin_val,  description: "CMFB servo macromodel input capacitance", default: 10f, min: 1f, max: 1p, unit: F}
+  - {name: vb1, description: "PMOS tail/current-source gate bias — XM1/XM14/XM20 (drawn as an external 0.5 V port)", default: 0.55, min: 0.0, max: 1.2, unit: V}
+  - {name: vb2, description: "Folded PMOS cascode gate bias — XM10/XM11 (drawn 0.5 V)", default: 0.45, min: 0.0, max: 1.2, unit: V}
+  - {name: vb3, description: "NMOS cascode gate bias — XM7/XM9 (drawn 0.5 V)", default: 0.75, min: 0.0, max: 1.2, unit: V}
+  - {name: vcmfb_ref, description: "Output common-mode reference into the CMFB servo (drawn port vcmbf_ref, 0.5 V)", default: 0.6, min: 0.0, max: 1.2, unit: V}
+  # Frozen per-device literals: defaults reproduce the drawn m=1 exactly; freeze keeps
+  # them out of the search space.
+  - {name: x_dut_xm1_m,  description: "XM1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm2_m,  description: "XM2 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm4_m,  description: "XM4 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm6_m,  description: "XM6 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm7_m,  description: "XM7 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm10_m, description: "XM10 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm12_m, description: "XM12 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm14_m, description: "XM14 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm15_m, description: "XM15 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm16_m, description: "XM16 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm17_m, description: "XM17 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm18_m, description: "XM18 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm19_m, description: "XM19 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

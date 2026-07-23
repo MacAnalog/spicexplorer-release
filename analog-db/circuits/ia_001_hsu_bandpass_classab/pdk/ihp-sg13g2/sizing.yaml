@@ -1,0 +1,77 @@
+# Design variables for the ihp-sg13g2 binding (explicit `u`/`p`/`k`/`Meg` eng tokens; sg13
+# lv-MOS geometry rules). Hand-seeded starting point from gm/ID intuition at VDD=1.2 V —
+# the source drawing used identical minimum-size placeholder devices, so these defaults are
+# a design floor for a later sizing pass, not a tuned design point. Capacitor defaults set
+# the paper's headline mid-band gain: Cin/Cf = 16p/0.8p = 20 V/V = 26 dB (drawn 1p/1p is a
+# placeholder). Pseudo-resistor default is 0.5u/1u: the anti-series pair's off-current
+# plateau (~7 pA) must exceed the input pair's ~2.6 pA gate leakage (else the summing
+# nodes float away) yet stay far below the ~1 nA feedback signal current; HPF ~4 Hz.
+# Group representatives only (see abstract/params.yaml ties): XMO3<-XMO2, XMO5<-XMO4,
+# l(XMO8)<-XMO4, l(XMO6)<-XMO5, XMO8{w,m}<-XMO6, XMO9<-XMO7, XMO11<-XMO10, XMO13<-XMO12,
+# l(XMO14/XMO20)<-XMO1, XMO20{w,m}<-XMO14, XMO21<-XMO15, XMO22<-XMO16, XMO23<-XMO17,
+# XMO24<-XMO18, XMO25<-XMO19, XM2/XM3/XM4<-XM1, and the passive pairs Cin/Cf/Cc/Rz/Rm.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  # --- OTA stage 1 ---
+  - {name: x_dut_xmo1_w,  description: "Input-pair tail current-source width (PMOS, gate vb1; ~0.5 uA)", default: 0.5u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xmo1_l,  description: "vb1 current-source length (shared with class-AB sources XMO14/XMO20)", default: 4u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xmo2_w,  description: "PMOS input pair width (weak inversion for noise + tail headroom at VCM 0.6; area kept moderate — pair gate leakage through the pseudo-resistors sets the summing-node DC offset)", default: 20u, min: 0.15u, max: 200u, unit: m}
+  - {name: x_dut_xmo2_l,  description: "PMOS input pair length", default: 0.3u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xmo4_w,  description: "Stage-1 NMOS diode-load width (mirror reference)", default: 4u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xmo4_l,  description: "Mirror length (diode references + outputs, both sides)", default: 1u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xmo6_w,  description: "Mirror-output sink width (W ratio to XMO4 = mirror gain, default 1:1)", default: 4u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xmo7_w,  description: "NMOS cascode width (gate vb3)", default: 8u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xmo7_l,  description: "NMOS cascode length", default: 0.3u, min: 0.13u, max: 5u, unit: m}
+  - {name: x_dut_xmo10_w, description: "PMOS cascode width (gate vb2)", default: 16u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xmo10_l, description: "PMOS cascode length", default: 0.3u, min: 0.13u, max: 5u, unit: m}
+  - {name: x_dut_xmo12_w, description: "Stage-1 PMOS current-source width (sized so its ~0.25 uA operating Vsg puts vcmfb right at the servo rest level 0.6 V — the CM loop then needs almost no swing and cannot latch)", default: 0.6u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xmo12_l, description: "Stage-1 PMOS current-source length (long: at the CM-latch error voltage these sources push far less than the mirror sinks, so the railed-out1 state cannot sustain itself)", default: 3u, min: 0.13u, max: 10u, unit: m}
+  # --- OTA stage 2 (class-AB) ---
+  - {name: x_dut_xmo14_w, description: "Class-AB floating-battery current-source width (gate vb1; ~1 uA — low battery current keeps the level-shift diode VSGs small so the CS drivers XMO19/XMO25 stay saturated)", default: 1u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xmo15_w, description: "Class-AB NMOS level-shift diode width (narrow: a large VGS drop holds the follower gate rail gup high enough to drive the NMOS follower at vout ~ 0.6)", default: 1u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xmo15_l, description: "Class-AB NMOS level-shift diode length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xmo16_w, description: "NMOS output-follower width (2x XMO15 -> ~2x battery quiescent)", default: 2u, min: 0.15u, max: 200u, unit: m}
+  - {name: x_dut_xmo16_l, description: "NMOS output-follower length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xmo17_w, description: "Class-AB PMOS level-shift diode width (VSG drop sized so the CS drivers XMO19/XMO25 keep ~0.1 V of drain headroom)", default: 5u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xmo17_l, description: "Class-AB PMOS level-shift diode length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xmo18_w, description: "PMOS output-follower width (2x XMO17)", default: 10u, min: 0.15u, max: 200u, unit: m}
+  - {name: x_dut_xmo18_l, description: "PMOS output-follower length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xmo19_w, description: "Second-stage common-source driver width (gate on out1p/out1n)", default: 1u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xmo19_l, description: "Second-stage common-source driver length (sets out1 DC = its VGS)", default: 1u, min: 0.13u, max: 10u, unit: m}
+  # --- feedback network + pseudo-resistors ---
+  - {name: x_dut_cin1_value, description: "Input coupling cap (gain numerator; Cin/Cf = 20)", default: 16p, min: 1p, max: 50p, unit: F}
+  - {name: x_dut_cf1_value,  description: "Feedback cap (gain denominator)", default: 0.8p, min: 0.1p, max: 10p, unit: F}
+  - {name: x_dut_xm1_w, description: "Pseudo-resistor diode PMOS width", default: 0.5u, min: 0.15u, max: 10u, unit: m}
+  - {name: x_dut_xm1_l, description: "Pseudo-resistor diode PMOS length (anti-series pair off-current plateau ~7 pA: above the input-pair gate leakage so the summing nodes cannot float away, far below the ~1 nA signal current so the tone is not squashed; sets the sub-200 Hz HPF corner)", default: 1u, min: 0.13u, max: 10u, unit: m}
+  # --- OTA compensation ---
+  - {name: x_dut_c1_value, description: "Miller compensation cap Cc (per side)", default: 1p, min: 0.1p, max: 10p, unit: F}
+  - {name: x_dut_r1_value, description: "Miller zero resistor Rz (per side)", default: 10k, min: 100, max: 1Meg, unit: Ohm}
+  # --- behavioral CMFB servo + CM detector ---
+  - {name: gm_val,   description: "CMFB servo transconductance (behavioral VCCS)", default: 100u, min: 1u, max: 10m, unit: S}
+  - {name: rout_val, description: "CMFB servo output resistance (DC gain = gm*rout = 5, rest level at vcmfb_ref: full authority inside the rails + a stable CM loop — see netlist header)", default: 50k, min: 10k, max: 1G, unit: Ohm}
+  - {name: cout_val, description: "CMFB servo output cap (servo dominant pole)", default: 100f, min: 1f, max: 100p, unit: F}
+  - {name: rin_val,  description: "CMFB servo input resistance (near-ideal load on the CM detector)", default: 1e12, min: 1Meg, max: 1e13, unit: Ohm}
+  - {name: cin_val,  description: "CMFB servo input cap", default: 10f, min: 1f, max: 10p, unit: F}
+  - {name: x_dut_rmp_value, description: "Output CM detector resistor (per half; high-R to spare the followers)", default: 1Meg, min: 10k, max: 100Meg, unit: Ohm}
+  # --- internal bias levels (the drawing's 0.5 V ports; instantiator-owned) ---
+  - {name: vb1, description: "PMOS current-source gate bias (tail + class-AB batteries; drawn 0.5 V)", default: 0.55, min: 0.0, max: 1.2, unit: V}
+  - {name: vb2, description: "PMOS cascode gate bias (drawn 0.5 V)", default: 0.45, min: 0.0, max: 1.2, unit: V}
+  - {name: vb3, description: "NMOS cascode gate bias (drawn 0.5 V; 0.40 leaves both the mirror sinks and the cascodes saturated at out1 ~ 0.33)", default: 0.40, min: 0.0, max: 1.2, unit: V}
+  - {name: vcmfb_ref, description: "Output common-mode reference into the CMFB servo (drawn 0.5 V; mid-rail here)", default: 0.6, min: 0.0, max: 1.2, unit: V}
+  # Frozen per-device literals: defaults reproduce the drawn m=1 exactly; freeze keeps
+  # them out of the search space.
+  - {name: x_dut_xmo1_m,  description: "XMO1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmo2_m,  description: "XMO2 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmo4_m,  description: "XMO4 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmo6_m,  description: "XMO6 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmo7_m,  description: "XMO7 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmo10_m, description: "XMO10 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmo12_m, description: "XMO12 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmo14_m, description: "XMO14 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmo15_m, description: "XMO15 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmo16_m, description: "XMO16 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmo17_m, description: "XMO17 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmo18_m, description: "XMO18 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmo19_m, description: "XMO19 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm1_m,   description: "XM1 m (frozen literal; pseudo-resistor quad)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

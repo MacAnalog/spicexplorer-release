@@ -1,8 +1,11 @@
 # spicexplorer-analog-db
 
-A versioned, tool-agnostic database of analog circuits. **41 verifiable circuits** across
-**seven classes** (24 OTAs/amplifiers, 9 LDOs, 3 temperature sensors, 2 comparators, plus
-gain-stage / buffer / diff-pair cells) are each lowered to up to **three open PDKs**
+A versioned, tool-agnostic database of analog circuits. **65 verifiable circuits** across
+**fifteen classes** (31 OTAs/amplifiers incl. a behavioral macromodel and a composed CMFB
+closure, 5 instrumentation amplifiers, 9 LDOs, 3 dedicated CMFB networks — behavioral +
+real 5T — 3 switches, 3 temperature sensors, 2 comparators, 2 support blocks, plus
+ADC / gain-stage / buffer / diff-pair / sampler / trim / voltage-reference cells) are each
+lowered to up to **three open PDKs**
 (`ihp-sg13g2`, `sky130`, `gf180mcu`) as ready-to-run SPICE decks, with a tiered `verify` harness.
 Every verifiable circuit pairs one PDK-neutral topology (lowered per-PDK via `circuitgraph`) with
 class-scoped reusable analyses, a machine-readable datasheet (a `cace_format` 5.2 superset),
@@ -31,11 +34,13 @@ plan `doc/plan_examples_db.md` (in the meta-repo).
 ## Layout
 ```
 spicexplorer-analog-db/
-├─ circuits/<id>/                   # one self-contained circuit  (×41)
+├─ circuits/<id>/                   # one self-contained circuit  (×65)
 │  ├─ circuit.yaml                  #   topology + metadata
+│  ├─ composition.yaml              #   COMPOSITES only (×2): instance DAG the flat netlist
+│  │                                #   + per-PDK sizing are composed from (plan P4)
 │  ├─ datasheet.yaml                #   machine-readable spec
 │  ├─ abstract/
-│  │  ├─ netlist.spice              #   PDK-neutral topology
+│  │  ├─ netlist.spice              #   PDK-neutral topology ((gen) for composites)
 │  │  └─ topology.cgraph.json       #   (gen) lowered graph
 │  ├─ reference/                    #   original upstream design sources, verbatim, if any: an AnalogGym/
 │  │                                #   paper schematic snapshot (<Alias>.png) and/or the design's own
@@ -72,7 +77,13 @@ spicexplorer-analog-db/
 ├─ catalog.json                     # (gen) class-aware index — the agent entry point
 ├─ scoreboard.json                  # (gen) global PPA scoreboard: class × pdk × circuit × design
 │                                   #   point, Pareto-marked (see Scoreboard below)
-├─ templates/                        # xschem symbol + schematic templates (current_mirror, OTA-*, …)
+├─ drawings/                        # hand-drawn design families: staging + landing.yaml manifests +
+│                                   #   DRAWING_REVIEW.md (see drawings/README.md; edits post-landing happen
+│                                   #   in-place at circuits/<id>/pdk/<pdk>/schematic/)
+├─ campaigns/<name>/                # reproducible multi-circuit optimization campaigns: generator +
+│                                   #   runner + generated configs + the distilled result and report
+│                                   #   (per-trial histories are gitignored). See ppa_ihp130/README.md
+├─ templates/                       # circuitgraph MATCHER template library (structural signatures, not designs)
 ├─ _shared/                         # schema, per-class metrics + templates, PDK registries, notes
 ├─ src/spicexplorer_analog_db/      # the harness + `analog-db` CLI
 └─ notebooks/                       # executed Jupyter tours (DB, gm/ID LUT, sizing)
@@ -134,7 +145,7 @@ analog-db verify           [--tier N ...] [--circuit ID] [--pdk PDK] [--sim] [--
 analog-db generate         [--circuit ID] [--all]                              # rewrite GENERATED artifacts (--all: + raw/ + catalog + scoreboard.json)
 analog-db gen-params       (--circuit ID | --all) [--write]                     # generate/refresh abstract/params.yaml (atomic inventory + proposed tying; see _shared/PARAMS.md)
 analog-db export-raw       [--circuit ID] [--pdk PDK] [--corner tt[,ss,ff]] [--check] [--svg]   # materialize raw/ decks (+ plain/annotated/hier .sch + structural.json; --svg renders images)
-analog-db export-raw-project [--circuit ID] [--pdk PDK] [--out DIR]            # emit a raw-targeting project_setup.yaml (optimizer driven off the raw/ decks) into raw_optimize/generated/
+analog-db export-raw-project [--circuit ID] [--pdk PDK] [--out DIR] [--demo]   # emit a raw-targeting project_setup.yaml (optimizer driven off the raw/ decks) into raw_optimize/generated/; --demo writes a Studio demo projection to circuits/<id>/project_setup.yaml instead
 analog-db catalog          [--write]                                           # rebuild catalog.json (no --write → stdout)
 analog-db scoreboard       [--write]                                           # rebuild the global scoreboard.json (no --write → stdout)
 analog-db scoreboard set-baseline --circuit ID --pdk PDK --design HASH          # name a recorded design point the baseline
@@ -142,15 +153,32 @@ analog-db new-circuit      --class CLS --slug SLUG --ports p1,p2,… [--pdks …
 analog-db run              --circuit ID --pdk PDK [--corner tt] [--docker [SERVICE]] [--docker-image [IMAGE]] [--crosscheck] [--write]
 analog-db add-binding      --circuit ID --pdk PDK [--from PDK]                  # synthesize another PDK binding (cross-PDK transfer)
 analog-db gmid-extract     --pdk PDK [--device DEV] [--corner tt|tt,ss,ff|all] [--vgs/--vds/--vsb a,s,b] [--length L1,L2,…] [--width UM] [--temp K]
+analog-db gmid-extract-spectre --pdk PDK [--corner tt|all] [--workers N] [--out-root DIR] [--smoke|--dry-run]  # licensed-kit lane (native Spectre, both core flavours in one pass)
 analog-db import-analoggym --src <AnalogGym/Amplifier> [--circuit FOLDER]       # (re-)import the AnalogGym corpus
 analog-db import-ferrosim  --src <ferrosim/tests> [--no-catalog]                # import the ferrosim corpus as kind: reference circuits (D-9)
 ```
 `run` and `gmid-extract` need a PDK-enabled ngspice: pass `--docker-image IMAGE` (default
 `spicexplorer-spice-base:local`) to spin up a fresh EDA base image, or — for `run` — `--docker
-[SERVICE]` (default `api`) to use a running compose service. `add-binding` converts an existing PDK
+[SERVICE]` (default `api`) to use a running compose service. `gmid-extract` also runs
+**docker-less** on a host with ngspice + `$PDK_ROOT` (`--runner native`; the default `auto`
+picks it up), parallelized one ngspice job per L value via the registry
+`gmid.simulator: {runner, workers, timeout_s}` block. `add-binding` converts an existing PDK
 binding (`devices.map` + corners + unit-converted sizing) into a new one, then `generate` emits the
 lowered netlist. `gmid-extract` writes a pygmid LUT to `_shared/gmid/<pdk>/<device>__<corner>.pkl`.
-See [`_shared/PDK_SIM.md`](_shared/PDK_SIM.md) and [`_shared/GMID.md`](_shared/GMID.md).
+`gmid-extract-spectre` is the same characterization for a **Spectre-routed licensed kit**
+(tsmc-n65): plain headless Spectre via the virtuoso-bridge env, config from the registry `gmid:`
+block (incl. a `simulator: {workers, timeout_s}` parallelization block), LUTs out-of-repo by
+default. See [`_shared/PDK_SIM.md`](_shared/PDK_SIM.md) and [`_shared/GMID.md`](_shared/GMID.md).
+
+**`export-raw-project --demo` — the Studio demo lane.** Writes a demo-shaped
+`circuits/<id>/project_setup.yaml`: named from the catalog `display_name` + accession id (the
+id also seeds the description), `ws_root` pinned to `raw/<id>/<pdk>` so example seeding copies
+just the decks, bare-filename netlists, a small optimizer budget (NGOpt·15), and a top-level
+`assets.xschem` block listing every committed `.sch`/`.sym` under the circuit dir (the
+platform's `from-example` flow copies those into the new project's `xschem/` tree). It
+**refuses** a circuit that has `optimizer/projection.yaml` — that circuit's
+`project_setup.yaml` is owned by `analog-db generate` (the extends lane). Which demos the
+Studio actually lists (and their order) is curated platform-side in `examples/demos.yaml`.
 
 ## Scoreboard
 
@@ -177,6 +205,12 @@ The catalog carries each circuit's baseline PPA + spec counts, so agents can ans
 (timestamped, schema-validated at Tier 0, not byte-drift-guarded); `scoreboard.json` is
 GENERATED and drift-guarded like `catalog.json`. Usage guide:
 [`_shared/SCOREBOARD.md`](_shared/SCOREBOARD.md).
+
+**Note on `active_gate_area_um2`:** it counts MOS gate area only. In the compensated
+amplifier corpus capacitors *dominate* silicon — amp_008 is ~5263 µm² of cmim against
+236 µm² of gate — so this number understates real area by up to ~20× for those circuits.
+`c_total_f`/`r_total_ohm` are recorded alongside so passive area can be costed;
+[`campaigns/ppa_ihp130/`](campaigns/ppa_ihp130/README.md) scores capacitor area explicitly.
 
 ## Verification tiers (plan §6 / D-13)
 | Tier | Checks | Gate |

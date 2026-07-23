@@ -1,7 +1,7 @@
 [project]
 name = "spicexplorer-analog-db"
 version = "0.0.0"
-description = "SpiceXplorer analog circuit database — the canonical topology/circuit registry (super-DSL + datasheets + class libraries) and the tiered `verify` harness (plan doc/plan_examples_db.md)."
+description = "SpiceXplorer analog circuit database — the canonical topology/circuit registry (super-DSL + datasheets + class libraries) and the tiered `verify` harness."
 requires-python = ">=3.10"
 dependencies = [
     "spicexplorer-core",            # project_root() anchoring + NetlistView (the read-only netlist seam)
@@ -15,7 +15,7 @@ dependencies = [
 # netlist2tf is only needed for the symbolic cross-check tier; keep it out of the core dep set
 # so a shallow/Tier-0 consumer stays light.
 symbolic = ["spicexplorer-netlist2tf"]
-# gm/ID LUT extraction + access (Phase 6): numpy builds the LUT arrays; pygmid is the LUT reader
+# gm/ID LUT extraction + access: numpy builds the LUT arrays; pygmid is the LUT reader
 # (its sweeper is Spectre-only, so extraction uses our ngspice decks). See _shared/GMID.md.
 gmid = ["numpy>=1.24", "pygmid>=1.2"]
 

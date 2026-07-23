@@ -1,4 +1,4 @@
-"""The class-aware ``catalog.json`` — the agent entry point (plan D-7/D-8).
+"""The class-aware ``catalog.json`` — the machine-readable entry point.
 
 A typed, queryable index of every circuit + its derived status, grouped by class. Generated
 deterministically; Tier 0 diffs the committed file against a fresh build (the determinism guard).
@@ -16,7 +16,7 @@ CATALOG_SCHEMA = "spicexplorer/catalog@1"
 
 
 def _schematic_refs(c: Circuit) -> dict[str, str]:
-    """Reference-only pointers to authored schematics that exist on disk (plan §6): the abstract
+    """Reference-only pointers to authored schematics that exist on disk: the abstract
     topology snapshot + each PDK's primary DUT schematic (the non-testbench ``*.svg``), plus any
     upstream reference figure (the original paper/AnalogGym snapshot under ``reference/``). xschem
     nets schematic→SPICE, not the reverse, so this only *indexes* what's authored — never generates."""
@@ -41,7 +41,7 @@ def _schematic_refs(c: Circuit) -> dict[str, str]:
 
 
 def _reference_index(c: Circuit) -> list[dict[str, Any]]:
-    """Index a reference circuit's foreign/proprietary bindings (D-9): every authored ``.scs`` deck
+    """Index a reference circuit's foreign/proprietary bindings: every authored ``.scs`` deck
     under the binding (searched recursively — upstream layouts vary), classified by its path role
     (dut / tb / runs / other), as db-root-relative paths. Lets agents find a reference circuit AND
     its testbenches without lowering anything."""
@@ -74,10 +74,10 @@ def _reference_index(c: Circuit) -> list[dict[str, Any]]:
 
 
 def _params_block(c: Circuit) -> dict[str, Any] | None:
-    """Per-circuit parameter-provenance summary (owner-requested): symbol counts by class,
+    """Per-circuit parameter-provenance summary: symbol counts by class,
     the shipped tying (group -> kind), and the detected-but-untied WARNINGS — persisted here
     so the info survives outside a verify run. Absent until the circuit adopts
-    ``abstract/params.yaml`` (plan_parameterization D-2)."""
+    ``abstract/params.yaml``."""
     from . import params as par
 
     doc = par.load_params_doc(c.dir)
@@ -98,7 +98,7 @@ def _params_block(c: Circuit) -> dict[str, Any] | None:
     if cg.is_file():
         untied = par.untied_symmetries(par.load_graph(cg), doc)
         if untied:
-            block["untied_symmetries"] = untied  # warnings, not gates (plan D-6)
+            block["untied_symmetries"] = untied  # warnings, not gates
     return block
 
 

@@ -1,12 +1,12 @@
 # PDK-level registry for TSMC N65 (CRN65, 65 nm — low-Vt core flavour).
 #
-# ⚠ NDA POSTURE — the licensed kit is NEVER vendored or path-referenced here. This registry names
-# only device/corner *identifiers* + public geometry rules (standard TSMC nomenclature, not model
-# bytes). Corner libraries stay out-of-repo: `corners.lib_file` is a NEUTRAL wrapper filename the
-# operator supplies at simulation time (a `.lib`/section indirection onto the licensed models),
-# resolved against `model_lib_root` on the Spectre path. The committed repo carries GENERIC corner
-# labels (tt/ss/ff/sf/fs); the operator wrapper maps tt->tt_lvt, ss->ss_lvt, … so no kit-specific
-# section name ever lands in git either.
+# Licensing note: TSMC's kit is commercial, so this registry records only device/corner
+# *identifiers* + public geometry rules (standard TSMC nomenclature), not the model files
+# themselves. Corner libraries stay out-of-repo: `corners.lib_file` is a neutral wrapper
+# filename the operator supplies at simulation time (a `.lib`/section indirection onto the
+# licensed models), resolved against `model_lib_root` on the Spectre path. The committed repo
+# carries generic corner labels (tt/ss/ff/sf/fs); the operator wrapper maps tt->tt_lvt,
+# ss->ss_lvt, … so no kit-specific section name needs to land in git either.
 #
 # Live simulation runs **Spectre via the virtuoso-bridge** (native, licensed), NOT the open-PDK
 # ngspice path: there is deliberately no `_NATIVE_PDK` runner entry, so `analog-db verify --sim`
@@ -21,6 +21,26 @@ corners:
   lib_file: tsmc_n65_models.scs           # neutral operator-supplied wrapper (see NDA note above)
   sections: [tt, ss, ff, sf, fs]
 geometry: {min_l: 0.06u, min_w: 0.12u, max_l: 10u, max_w: 100u}
-# gm/ID LUT characterization defaults are intentionally omitted: TSMC N65 device tables are
-# produced through the licensed Spectre kit (virtuoso-bridge), not the open-PDK ngspice
-# `analog-db gmid-extract` flow.
+# gm/ID LUT characterization — the SPECTRE lane (`analog-db gmid-extract-spectre`), not the
+# open-PDK ngspice `gmid-extract` flow. Characterizes BOTH core flavours (devices.{nmos,pmos})
+# in one pass through the licensed kit; the deck references only the neutral wrapper above.
+# LUTs land OUT-OF-REPO (`out_root`, mirroring the committed `_shared/gmid/<pdk>/` layout) —
+# committing licensed-kit tables is an owner decision.
+gmid:
+  family: bsim4
+  engine: spectre
+  corners: [tt]                           # `--corner all` extracts each registered corner
+  width_um: 5                             # characterization finger width; apply sizings with
+  nfing: 1                                #   ~2-10 µm fingers + m (narrow fingers deviate)
+  temp_k: 300.15                          # 27 °C
+  sweep:                                  # 25 mV bias grids: validated ≤0.3 % gm/ID interp error
+    vgs: [0, 0.025, 1.5]                  #   (start, step, stop) V
+    vds: [0, 0.025, 1.8]                  # covers the 1.8 V-rail drawings (amp_003)
+    vsb: [0, 0.1, 1.0]                    # stored magnitudes; deck mirrors signs per polarity
+    length_um: [0.06, 0.08, 0.1, 0.13, 0.18, 0.25, 0.35, 0.5, 0.7,
+                1.0, 1.5, 2.0, 3.0, 4.5, 6.0, 8.0, 10.0]
+  info: "TSMC N65 core LVT pair, native Spectre"
+  out_root: ~/.spicexplorer/gmid          # out-of-repo (licensed kit; see note above)
+  simulator:                              # optional Spectre fan-out knobs
+    workers: 12                           # parallel jobs (one per (L, VSB) pair)
+    timeout_s: 1200                       # per-job wall clock [s]

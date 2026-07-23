@@ -35,6 +35,30 @@ def test_parse_deck_metrics_op_and_ac():
     assert raw_project.parse_deck_metrics(ac_deck) == [("dcgain", "ac"), ("ugf", "ac"), ("pm", "ac")]
 
 
+def test_parse_deck_metrics_native_noise_totals():
+    # `.noise` emits inoise_total/onoise_total as NATIVE voltage vectors — not a meas, not a let —
+    # so `print`ing them must still yield the v()-wrapped names RawRead sees in the written raw file.
+    noise_deck = (
+        ".control\n set filetype=ascii\n noise v(vout) Vinp dec 50 1k 100MEG\n"
+        " print inoise_total onoise_total\n write\n quit\n.endc\n.end\n"
+    )
+    assert raw_project.parse_deck_metrics(noise_deck) == [
+        ("v(inoise_total)", "noise"),
+        ("v(onoise_total)", "noise"),
+    ]
+
+
+def test_parse_deck_metrics_native_total_with_derived_let():
+    # the `print onoise_total vn_out_rms` template: onoise_total is native (→ v()-wrapped), while
+    # vn_out_rms = sqrt(onoise_total) is a derived let NOT in the registry, so it's dropped — the
+    # native onoise_total already scores the bench (no double-count).
+    deck = (
+        ".control\n noise v(vout) Vdd dec 10 10 10meg\n let vn_out_rms = sqrt(onoise_total)\n"
+        " print onoise_total vn_out_rms\n write\n quit\n.endc\n.end\n"
+    )
+    assert raw_project.parse_deck_metrics(deck) == [("v(onoise_total)", "noise")]
+
+
 def test_parse_deck_metrics_dc_sweep_keeps_only_whitelisted():
     # vout_max/vout_min are intermediate meas results (not whitelisted) → dropped; load_reg kept.
     dc_deck = (
@@ -78,3 +102,14 @@ def test_generate_ldo_pulls_vout_target_and_freezes_passives():
     assert specs["load_reg"]["sim_type"] == "dc" and specs["line_reg"]["sim_type"] == "dc"
     assert specs["zout_peak_db"]["sim_type"] == "ac"
     assert specs["v(vout_dc)"]["target"] == 1.2   # from datasheet default_conditions.vout
+
+
+def test_generate_demo_lists_schematic_assets():
+    # ldo_005 vendors the TI reference schematics — the demo YAML must declare
+    # them (top-level assets.xschem, YAML-dir-relative, no traversal) so the
+    # platform's example seeding can copy them into the project's xschem/.
+    text = raw_project.generate_demo("ldo_005_buffered_ref", "gf180mcu")
+    doc = yaml.safe_load(text)
+    xs = doc["assets"]["xschem"]
+    assert any(p.endswith("/ldo.sch") for p in xs)
+    assert all(not p.startswith("/") and ".." not in p.split("/") for p in xs)

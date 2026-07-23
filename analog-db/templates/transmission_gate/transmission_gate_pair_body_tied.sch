@@ -33,7 +33,7 @@ N 380 -590 560 -590 {
 lab=vctl_not}
 N 560 -250 650 -250 {
 lab=port_B}
-C {title.sym} 180 -40 0 0 {name=l1 author="Stefan Schippers"}
+C {devices/title.sym} 180 -40 0 0 {name=l1 author="Copyright 2026 MacAnalog Research Group"}
 C {ipin.sym} 350 -370 0 0 {name=p1 lab=port_A}
 C {ipin.sym} 710 -370 0 1 {name=p2 lab=port_B}
 C {ipin.sym} 490 -150 2 1 {name=p6 lab=vctl}

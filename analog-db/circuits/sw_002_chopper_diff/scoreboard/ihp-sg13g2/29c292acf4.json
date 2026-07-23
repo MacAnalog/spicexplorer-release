@@ -1,0 +1,75 @@
+{
+  "area": {
+    "active_gate_area_um2": 2.08,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 8,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "sw_002_chopper_diff",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_ron": {
+          "measures": {
+            "r_on": 2918.349,
+            "r_on_max": 3734.665
+          },
+          "status": "ok"
+        },
+        "tran_chop_polarity": {
+          "measures": {
+            "chop_inversion": -1.0,
+            "v_fwd": 0.1948839,
+            "v_rev": -0.1948842
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:29:05+00:00"
+      }
+    }
+  },
+  "design_id": "29c292acf4",
+  "metrics": {
+    "tt": {
+      "chop_inversion": {
+        "spec": "pass",
+        "value": -1.0
+      },
+      "r_on": {
+        "spec": "pass",
+        "value": 2918.349
+      },
+      "r_on_max": {
+        "spec": "pass",
+        "value": 3734.665
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_xm1_l": "0.13u",
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": "2u",
+      "x_dut_xm2_l": "0.13u",
+      "x_dut_xm2_m": 1,
+      "x_dut_xm2_w": "2u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 2.08,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "r_on": 2918.349
+    }
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

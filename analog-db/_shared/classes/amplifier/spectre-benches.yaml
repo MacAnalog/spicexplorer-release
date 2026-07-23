@@ -59,8 +59,13 @@ benches:
   noise:
     analyses:
       - {template: dc_op}
-      - {template: noise, args: {OUT: vout, IPROBE: VINP}}
-    calculator: []
+      # OUT = $NOISE_OUT (vout single / voutp differential); OUTN comes from the context
+      # (0 single / voutn differential) — both set by _spectre_context from circuit.yaml ports
+      - {template: noise, args: {OUT: $NOISE_OUT, IPROBE: VINP}}
+    calculator:
+      # input-referred integrated noise off the `in` density vector (iprobe-based, so it is
+      # output-node-agnostic and works for single-ended AND differential-output DUTs)
+      - {name: inoise_total, expr: noise_total_rms, args: {SIG: in, FSTART: $FSTART, FSTOP: $FSTOP}}
   tran_step:
     analyses:
       - {template: dc_op}

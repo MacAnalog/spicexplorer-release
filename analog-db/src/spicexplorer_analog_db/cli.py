@@ -1,4 +1,4 @@
-"""``analog-db`` CLI — the verification + generation entry point (plan §6).
+"""``analog-db`` CLI — the verification + generation entry point.
 
 analog-db verify      [--tier N ...] [--circuit ID] [--pdk PDK] [--json]
 analog-db generate    [--circuit ID] [--all]
@@ -8,6 +8,7 @@ analog-db catalog     [--write]
 analog-db run         --circuit ID --pdk PDK [--corner tt] [--docker [SERVICE]] [--write]
 analog-db add-binding --circuit ID --pdk PDK [--from PDK]
 analog-db gmid-extract --pdk PDK [--device DEV] [--corner tt|tt,ss,ff|all] [--vgs a,s,b] [--length l1,l2,…]
+analog-db gmid-extract-spectre --pdk PDK [--corner tt|all] [--workers N] [--smoke|--dry-run]
 """
 
 from __future__ import annotations
@@ -73,12 +74,12 @@ def _cmd_generate(args: argparse.Namespace) -> int:
 
 
 def _cmd_gen_params(args: argparse.Namespace) -> int:
-    """``gen-params``: generate / refresh ``abstract/params.yaml`` (plan_parameterization P1).
+    """``gen-params``: generate / refresh ``abstract/params.yaml``.
 
     Generated-then-reviewed semantics: a fresh circuit gets the full structural proposal
     (inventory + detected groups/ratios); a circuit that already adopted the layer gets its
     ``devices:`` refreshed mechanically while the AUTHORED ``groups:``/``ratios:`` are preserved
-    verbatim. Detected-but-untied symmetries are always reported (warnings, plan D-6). Without
+    verbatim. Detected-but-untied symmetries are always reported (warnings). Without
     ``--write`` the proposal/diff goes to stdout; nothing is written."""
     import difflib
 
@@ -92,7 +93,7 @@ def _cmd_gen_params(args: argparse.Namespace) -> int:
     for cid in ids:
         c = model.load_circuit(cid)
         if c.is_reference_only:
-            print(f"  skip  {cid} — kind: reference (no sizing contract, plan D-9)")
+            print(f"  skip  {cid} — kind: reference (no sizing contract)")
             continue
         cg = c.dir / "abstract" / "topology.cgraph.json"
         if not cg.is_file():
@@ -107,6 +108,16 @@ def _cmd_gen_params(args: argparse.Namespace) -> int:
         if existing is None:
             doc = par.propose_params_doc(graph)
             action = "proposed (structural detection — review before committing)"
+            from . import compose
+
+            if compose.is_composite(c):
+                # composite proposal: inherit the blocks' AUTHORED groups through the
+                # composer rename (block ties beat structural re-detection)
+                doc = compose.merge_composed_groups(doc, c)
+                action = (
+                    "proposed (blocks' authored groups ported through the composer rename"
+                    " + structural detection — review before committing)"
+                )
         else:
             doc = par.refresh_params_doc(existing, graph)
             action = "refreshed (devices: regenerated; authored groups:/ratios: preserved)"
@@ -131,7 +142,7 @@ def _cmd_gen_params(args: argparse.Namespace) -> int:
                     )
                 )
         for u in par.untied_symmetries(graph, doc):
-            print(f"  WARN  {cid}: detected-but-untied symmetry: {u} (warning, never a gate — plan D-6)")
+            print(f"  WARN  {cid}: detected-but-untied symmetry: {u} (warning, never a gate)")
     return rc
 
 
@@ -183,7 +194,10 @@ def _cmd_export_raw_project(args: argparse.Namespace) -> int:
     skipped: list[tuple[str, str]] = []
     for cid in ids:
         try:
-            p = raw_project.write(cid, args.pdk, out_dir)
+            if getattr(args, "demo", False):
+                p = raw_project.write_demo(cid, args.pdk)
+            else:
+                p = raw_project.write(cid, args.pdk, out_dir)
             written.append(p)
             print(f"  wrote {p.relative_to(paths.db_root())}")
         except Exception as exc:  # a circuit with no whitelisted metric / no binding → skip
@@ -355,10 +369,26 @@ def _cmd_gmid_extract(args: argparse.Namespace) -> int:
     else:
         corners = [c.strip() for c in args.corner.split(",") if c.strip()]
 
-    runner = gmid.base_image_deck_runner(args.docker_image)
-    ngspice = gmid.base_image_ngspice_version(
-        args.docker_image
-    )  # one cheap query, for the manifest
+    # runner + fan-out come from the registry `gmid.simulator` block, CLI-overridable:
+    #   simulator: {runner: auto|native|docker, workers: N, timeout_s: S}
+    # `auto` prefers the host's ngspice+$PDK_ROOT (no container) and falls back to docker.
+    from . import runner as _runner_mod
+
+    sim = gmid.simulator_settings(args.pdk)
+    mode = args.runner or str(sim.get("runner", "auto"))
+    workers = args.workers if args.workers is not None else int(sim.get("workers", 1))
+    timeout = args.timeout if args.timeout is not None else int(sim.get("timeout_s", 3600))
+    if mode == "auto":
+        mode = "native" if _runner_mod.native_pdk_available(args.pdk) else "docker"
+    if mode == "native":
+        runner = gmid.native_deck_runner(args.pdk, timeout=timeout)
+        ngspice = gmid.native_ngspice_version()
+    else:
+        runner = gmid.base_image_deck_runner(args.docker_image)
+        ngspice = gmid.base_image_ngspice_version(
+            args.docker_image
+        )  # one cheap query, for the manifest
+    print(f"  runner: {mode} (ngspice {ngspice or '?'}), workers={workers}")
     stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     failures: list[str] = []
     for corner in corners:
@@ -376,7 +406,7 @@ def _cmd_gmid_extract(args: argparse.Namespace) -> int:
                 f"  characterizing {cfg.pdk}/{cfg.device} @{cfg.corner} over ~{n} bias points "
                 f"(L×VGS×VDS×VSB)…"
             )
-            lut = gmid.extract(cfg, runner)
+            lut = gmid.extract_parallel(cfg, runner, workers=workers)
             path = gmid.write_lut(cfg, lut)
             man = gmid.write_manifest(cfg, lut, ngspice=ngspice, extracted_at=stamp)
             print(
@@ -384,6 +414,71 @@ def _cmd_gmid_extract(args: argparse.Namespace) -> int:
                 f"{lut['GM'].shape[1]}×{lut['GM'].shape[2]}×{lut['GM'].shape[3]})"
             )
             print(f"  wrote {man}")
+        except (ValueError, KeyError, RuntimeError) as exc:
+            print(f"analog-db: {corner}: {exc}", file=sys.stderr)
+            failures.append(corner)
+    return 1 if failures else 0
+
+
+def _cmd_gmid_extract_spectre(args: argparse.Namespace) -> int:
+    from . import gmid_spectre
+
+    def _triple(s: str) -> tuple[float, float, float]:
+        a, b, c = (float(x) for x in s.split(","))
+        return (a, b, c)
+
+    overrides: dict = {}
+    if args.vgs:
+        overrides["vgs"] = _triple(args.vgs)
+    if args.vds:
+        overrides["vds"] = _triple(args.vds)
+    if args.vsb:
+        overrides["vsb"] = _triple(args.vsb)
+    if args.length:
+        overrides["length_um"] = [float(x) for x in args.length.split(",")]
+    if args.width is not None:
+        overrides["width_um"] = args.width
+    if args.temp is not None:
+        overrides["temp_k"] = args.temp
+    if args.workers is not None:
+        overrides["workers"] = args.workers
+    if args.timeout is not None:
+        overrides["timeout_s"] = args.timeout
+    if args.out_root:
+        overrides["out_root"] = args.out_root
+
+    try:
+        base = gmid_spectre.SpectreGmidConfig.from_registry(args.pdk, **overrides)
+    except (ValueError, KeyError) as exc:
+        print(f"analog-db: {exc}", file=sys.stderr)
+        return 2
+    if args.corner == "all":
+        corners = base.registered_corners
+        print(f"  --corner all → registered corners for {args.pdk}: {', '.join(corners)}")
+    else:
+        corners = [c.strip() for c in args.corner.split(",") if c.strip()]
+
+    stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    failures: list[str] = []
+    for corner in corners:
+        try:
+            cfg = gmid_spectre.SpectreGmidConfig.from_registry(args.pdk, corner=corner, **overrides)
+            if args.smoke:
+                cfg.length_um = cfg.length_um[:2]
+                cfg.vsb = (cfg.vsb[0], cfg.vsb[1], cfg.vsb[0])  # single VSB point
+            if args.dry_run:
+                ax = gmid_spectre.axes(cfg)
+                print(gmid_spectre.build_deck(cfg, float(ax["L"][0]), float(ax["VSB"][0])))
+                continue
+            luts = gmid_spectre.extract(
+                cfg, scratch=Path(args.scratch) if args.scratch else None
+            )
+            for pol, lut in luts.items():
+                path = gmid_spectre.write_lut(cfg, lut, pol)
+                man = gmid_spectre.write_manifest(cfg, lut, pol, extracted_at=stamp)
+                print(f"  wrote {path}  (VGS×VDS×VSB={lut['GM'].shape[1]}×"
+                      f"{lut['GM'].shape[2]}×{lut['GM'].shape[3]}, {lut['GM'].shape[0]} L)")
+                print(f"  wrote {man}")
         except (ValueError, KeyError, RuntimeError) as exc:
             print(f"analog-db: {corner}: {exc}", file=sys.stderr)
             failures.append(corner)
@@ -421,7 +516,7 @@ def main(argv: list[str] | None = None) -> int:
         "--sim",
         action="store_true",
         help="run the Tier-3/4 native ngspice sweep (needs ngspice + $PDK_ROOT); off by default "
-        "so the fast gate stays PDK-free (plan §6 cadence)",
+        "so the fast gate stays PDK-free",
     )
     v.set_defaults(func=_cmd_verify)
 
@@ -484,6 +579,11 @@ def main(argv: list[str] | None = None) -> int:
     erp.add_argument("--circuit", help="one circuit id (default: every circuit with scorable decks)")
     erp.add_argument("--pdk", help="PDK binding to target (default: the circuit's first)")
     erp.add_argument("--out", help="output dir (default: <db>/raw_optimize/generated)")
+    erp.add_argument(
+        "--demo", action="store_true",
+        help="write a Studio demo project_setup.yaml into circuits/<id>/ instead "
+        "(ws_root = the raw deck dir; refuses circuits owned by the extends lane)",
+    )
     erp.set_defaults(func=_cmd_export_raw_project)
 
     r = sub.add_parser(
@@ -515,7 +615,7 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument(
         "--crosscheck",
         action="store_true",
-        help="netlist2tf symbolic-vs-sim cross-check (D-5; needs the [symbolic] extra)",
+        help="netlist2tf symbolic-vs-sim cross-check (needs the [symbolic] extra)",
     )
     r.set_defaults(func=_cmd_run)
 
@@ -527,7 +627,7 @@ def main(argv: list[str] | None = None) -> int:
     ig.set_defaults(func=_cmd_import_analoggym)
 
     fs = sub.add_parser(
-        "import-ferrosim", help="import the ferrosim corpus as kind: reference circuits (D-9)"
+        "import-ferrosim", help="import the ferrosim corpus as kind: reference circuits"
     )
     fs.add_argument(
         "--src", required=True, help="path to the ferrosim tests/ dir (has decks/, va_demo/, sc_sample/)"
@@ -584,7 +684,47 @@ def main(argv: list[str] | None = None) -> int:
         default="spicexplorer-spice-base:local",
         help="EDA base image carrying ngspice + the PDK (default: spicexplorer-spice-base:local)",
     )
+    ge.add_argument(
+        "--runner",
+        choices=["auto", "native", "docker"],
+        help="how to run ngspice: host ngspice+$PDK_ROOT (native), the base image (docker), or "
+        "auto = native when available (default: registry gmid.simulator.runner, else auto)",
+    )
+    ge.add_argument("--workers", type=int,
+                    help="parallel ngspice jobs, one per L value "
+                    "(default: registry gmid.simulator.workers, else 1)")
+    ge.add_argument("--timeout", type=int,
+                    help="per-job timeout in s (default: registry gmid.simulator.timeout_s)")
     ge.set_defaults(func=_cmd_gmid_extract)
+
+    gs = sub.add_parser(
+        "gmid-extract-spectre",
+        help="characterize a Spectre-routed PDK's core MOS pair into gm/ID LUTs "
+        "(licensed-kit lane; config = the registry `gmid` block)",
+    )
+    gs.add_argument("--pdk", required=True)
+    gs.add_argument(
+        "--corner",
+        default="tt",
+        help="corner(s): one (tt), a comma list, or 'all' = the registry gmid.corners set",
+    )
+    gs.add_argument("--vgs", help="VGS sweep 'start,step,stop' (V; default: registry)")
+    gs.add_argument("--vds", help="VDS sweep 'start,step,stop' (V; default: registry)")
+    gs.add_argument("--vsb", help="VSB sweep 'start,step,stop' (V magnitudes; default: registry)")
+    gs.add_argument("--length", help="comma-separated L values in µm (default: registry)")
+    gs.add_argument("--width", type=float, help="finger width in µm (default: registry)")
+    gs.add_argument("--temp", type=float, help="temperature in K (default: registry)")
+    gs.add_argument("--workers", type=int,
+                    help="parallel Spectre jobs (default: registry gmid.simulator.workers)")
+    gs.add_argument("--timeout", type=int,
+                    help="per-job timeout in s (default: registry gmid.simulator.timeout_s)")
+    gs.add_argument("--out-root", help="LUT output root (default: registry gmid.out_root — "
+                    "out-of-repo for licensed kits)")
+    gs.add_argument("--scratch", help="work dir for decks/raws (default: a fresh temp dir)")
+    gs.add_argument("--smoke", action="store_true",
+                    help="2 lengths × 1 VSB quick validation pass")
+    gs.add_argument("--dry-run", action="store_true", help="print one deck and exit")
+    gs.set_defaults(func=_cmd_gmid_extract_spectre)
 
     c = sub.add_parser("catalog", help="build the class-aware catalog.json")
     c.add_argument("--write", action="store_true", help="write to the db root instead of stdout")

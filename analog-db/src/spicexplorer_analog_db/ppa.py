@@ -1,4 +1,4 @@
-"""PPA extraction — the scoreboard's Power / Performance / Area axes (plan_scoreboard P1/D-7).
+"""PPA extraction — the scoreboard's Power / Performance / Area axes.
 
 Pure functions over committed artifacts; no simulation:
 
@@ -92,7 +92,7 @@ def _eval_expr(expr: str, symbols: dict[str, float], context: str) -> float:
 
 def sizing_symbols(circuit: Circuit, pdk: str) -> dict[str, float]:
     """The sizing variables' defaults as numbers (eng-parsed, units as authored), plus the
-    TIED symbols resolved through the ``abstract/params.yaml`` tie graph (plan D-3): sizing
+    TIED symbols resolved through the ``abstract/params.yaml`` tie graph: sizing
     keys on the free symbols only, so a numeric resolver must evaluate the generated ties
     (``x_dut_xm2_w = x_dut_xm1_w``, ratio refs) to cover every netlist symbol."""
     from .params import load_params_doc, tie_expressions
@@ -120,7 +120,7 @@ def sizing_symbols(circuit: Circuit, pdk: str) -> dict[str, float]:
 
 
 def resolve_deck_geometry(deck_text: str) -> dict[str, dict[str, float]]:
-    """Numerically resolve a committed deck's per-device parameters (plan_parameterization §3-4).
+    """Numerically resolve a committed deck's per-device parameters.
 
     Resolves the deck's ``.param`` graph (sizing defaults + generated tie lines, fixpoint over
     chained ties) and returns ``{DEVICE: {field: value}}`` for every card in the ``.subckt``
@@ -188,7 +188,7 @@ def resolve_deck_geometry(deck_text: str) -> dict[str, dict[str, float]]:
 
 
 def area_report(circuit: Circuit, pdk: str) -> dict[str, Any]:
-    """Active gate area + passive inventory from the lowered netlist (plan_scoreboard D-7)."""
+    """Active gate area + passive inventory from the lowered netlist."""
     symbols = sizing_symbols(circuit, pdk)
     um = 1.0 if pdk in _SCALE_UM_PDKS else 1e6  # geometry value → µm
     area_um2 = 0.0
@@ -212,12 +212,16 @@ def area_report(circuit: Circuit, pdk: str) -> dict[str, Any]:
             continue
         kind = line[0].upper()
         if kind in ("C", "R"):
-            value = _eval_expr(line.split()[-1], symbols, ctx)
+            # The value is the last non-assignment token — trailing key=value
+            # params (e.g. `m=x_dut_c1_m`) are instance params, not the value.
+            tokens = [t for t in line.split()[1:] if "=" not in t]
+            value = _eval_expr(tokens[-1], symbols, ctx)
+            m = _eval_expr(geom["m"], symbols, ctx) if "m" in geom else 1.0
             if kind == "C":
-                c_total += value
+                c_total += value * m  # m parallel devices add
                 c_count += 1
             else:
-                r_total += value
+                r_total += value / m  # m parallel devices divide
                 r_count += 1
     return {
         "active_gate_area_um2": round(area_um2, 3),
@@ -282,7 +286,7 @@ def class_ppa(class_id: str) -> dict[str, Any]:
 def ppa_rollup(
     circuit: Circuit, corners_metrics: dict[str, dict[str, Any]], area: dict[str, Any]
 ) -> dict[str, Any]:
-    """The PPA vector over the recorded corners (worst case, direction-aware; D-7/D-8)."""
+    """The PPA vector over the recorded corners (worst case, direction-aware)."""
     decl = class_ppa(circuit.klass)
     out: dict[str, Any] = {
         "active_gate_area_um2": area.get("active_gate_area_um2"),

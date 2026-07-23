@@ -1,0 +1,129 @@
+** Abstract bandpass capacitively-coupled instrumentation amplifier (CCIA) with
+** class-AB output — Hsu/Liu/Hella's ECG-acquisition IA (see provenance in
+** circuit.yaml). AUTHORED source of truth (plan D-2). PDK-neutral model tokens
+** (nmos/pmos); per-PDK device names + geometry come from circuitgraph lowering +
+** pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vinp vinn voutp voutn vdd vss
+**
+** Topology (from drawings/ccia-01-YuPinHsu-bandpass-class-ab-output/ccia-dut.sch,
+** normalized here after xschem netlisting + machine flattening of the two-stage-ota-core
+** / cmfb-output-ideal-amp / ideal-amp-fully-diff / vcm-detector-simple hierarchy):
+**   feedback network — input caps Cin1/Cin2 couple vinn/vinp onto the OTA summing
+**     nodes (sum_p/sum_n); feedback caps Cf1/Cf2 close each summing node on the
+**     inverting-polarity output (sum_p<-voutp, sum_n<-voutn). Mid-band gain =
+**     Cin/Cf (defaults 16p/0.8p = 20 V/V = 26 dB, the paper's ~25.7 dB).
+**   pseudo-resistor bias — XM1+XM2 / XM3+XM4: two ANTI-SERIES diode-connected pmos
+**     per side (shared mid node = both sources+bulks) in parallel with each Cf,
+**     giving the summing nodes their DC path to the output CM and the bandpass
+**     low corner hpf_hz = 1/(2*pi*Rpseudo*Cf).
+**   OTA core (the drawn two-stage-ota-core M1..M25 -> XMO1..XMO25 here) —
+**     stage 1: pmos input pair XMO2/XMO3 (tail XMO1, gate bias vb1) into nmos
+**     diode loads XMO4/XMO5, mirrored (XMO8/XMO6) up through nmos cascodes
+**     XMO9/XMO7 (gate vb3) against pmos sources XMO12/XMO13 (gate = CMFB servo
+**     output vcmfb) cascoded by XMO10/XMO11 (gate vb2) -> first-stage outputs
+**     out1p/out1n. stage 2 (class-AB, per side): XMO19/XMO25 common-source from
+**     out1p/out1n into a floating translinear battery (current source XMO14/XMO20
+**     from vb1 through diodes XMO15/XMO17 resp. XMO21/XMO23) that drives the
+**     complementary source-follower output pair XMO16+XMO18 / XMO22+XMO24; Miller
+**     compensation Cc+Rz (C1+R1 / C2+R2) from each first-stage output to its
+**     floating node.
+**   CMFB (behavioral leaf, realization: mixed) — resistive detector Rmp/Rmn
+**     averages voutp/voutn onto vcm_sense; the servo (VCCS Gsrv + rout_val/cout_val
+**     load, rin_val/cin_val input load) integrates (vcmfb_ref - vcm_sense) onto
+**     vcmfb, the gate of stage-1 sources XMO12/XMO13.
+**   drawing conformance + entry-level deviations:
+**     - nets renamed for readability (net1->sum_n, net2->sum_p, net3->pr_mid_p,
+**       net4->pr_mid_n; core net1..net15/net_A/net_B -> tail, dio_p/n, msrc_p/n,
+**       csrc_p/n, out1p/n, gup_p/n, flt_p/n, zc_p/n, gdn_p/n; v_cmfb_out->vcmfb).
+**     - the drawn Vb1/Vb2/Vb3/Vcmfb_ref 0.5 V sources become knob-driven internal
+**       dc sources {vb1}/{vb2}/{vb3}/{vcmfb_ref} (instantiator owns bias).
+**     - CMFB servo polarity MATCHES the drawing (DRAWING_REVIEW item 3 FIXED:
+**       owner re-routed cmfb-output-ideal-amp so vref drives the + input and
+**       the CM detector the - input, vcmfb = A*(vref - vcm_sense)). The Gsrv
+**       control pair (vcmfb_ref, vcm_sense) is exactly the fixed drawing's
+**       hookup — negative CM feedback around the twice-inverting OTA CM path,
+**       electrically what the paper's CMFB does.
+**     - CMFB REFERENCE (entry-level deviation, KEPT): the drawn ideal amp still
+**       rests its macromodel output at VSS (DRAWING_REVIEW item 3 residual —
+**       owner's call whether to move it in ideal-amp-fully-diff.sch). The
+**       class-AB output stage cannot sink its CM below ~0.54 V, so a
+**       vss-referenced servo needs DC gain > ~14 for authority (vcmfb must
+**       reach ~0.85 V from < 65 mV of CM error), and at that gain the CM loop
+**       (servo x the OTA's ~55 dB CM path) is dynamically unstable (verified:
+**       relaxation limit cycle, tran aborts). Authored with Rosrv returned to
+**       vcmfb_ref instead of vss — the servo rests AT the CM reference, and
+**       low gain (tuned to 5 = rout_val 50k; servo-grade baseline in _shared/IDEAL_AMP.md is 10) gives full
+**       authority (vcmfb bounded inside the rails by construction) and a
+**       stable CM loop.
+**     - the two zero resistors both carry the shared symbol Rz — the old Rz/RZ
+**       case collision is FIXED IN THE DRAWING (DRAWING_REVIEW item 5);
+**       atomized here as x_dut_r1_value/x_dut_r2_value and tied in
+**       abstract/params.yaml, like the shared symbols Cc, Rm.
+**     - pseudo-resistor default geometry is w=0.5u l=1u, NOT the drawn 0.15u/0.13u
+**       placeholder: the placeholder is far too conductive (uselessly high HPF
+**       corner), but the intuitive long-L extreme (0.15u/4u) FAILS in this PDK —
+**       the sg13_lv input pair's ~2.6 pA gate leakage must flow through the
+**       pseudo-resistors, and an anti-series diode pair saturates at its ~zero-Vgs
+**       off-current plateau, so the plateau must EXCEED the gate leakage (else the
+**       summing nodes float up ~0.2 V and starve the input pair) while staying far
+**       below the ~1 nA feedback signal current. 0.5u/1u puts the plateau at ~7 pA,
+**       between both limits, with a ~4 Hz HPF corner.
+**.subckt ia_001_hsu_bandpass_classab vinp vinn voutp voutn vdd vss
+* --- capacitive gain network: input + feedback caps ---
+Cin1 vinn sum_p 'x_dut_cin1_value'
+Cin2 vinp sum_n 'x_dut_cin2_value'
+Cf1 sum_p voutp 'x_dut_cf1_value'
+Cf2 voutn sum_n 'x_dut_cf2_value'
+* --- pseudo-resistor input bias: anti-series diode pmos pairs across each Cf ---
+XM1 sum_p sum_p pr_mid_p pr_mid_p pmos w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+XM2 voutp voutp pr_mid_p pr_mid_p pmos w=x_dut_xm2_w l=x_dut_xm2_l m=x_dut_xm2_m
+XM3 voutn voutn pr_mid_n pr_mid_n pmos w=x_dut_xm3_w l=x_dut_xm3_l m=x_dut_xm3_m
+XM4 sum_n sum_n pr_mid_n pr_mid_n pmos w=x_dut_xm4_w l=x_dut_xm4_l m=x_dut_xm4_m
+* --- OTA stage 1: pmos input pair + diode loads + mirrors + cascoded outputs ---
+XMO1 tail vb1 vdd vdd pmos w=x_dut_xmo1_w l=x_dut_xmo1_l m=x_dut_xmo1_m
+XMO2 dio_p sum_p tail vdd pmos w=x_dut_xmo2_w l=x_dut_xmo2_l m=x_dut_xmo2_m
+XMO3 dio_n sum_n tail vdd pmos w=x_dut_xmo3_w l=x_dut_xmo3_l m=x_dut_xmo3_m
+XMO4 dio_p dio_p vss vss nmos w=x_dut_xmo4_w l=x_dut_xmo4_l m=x_dut_xmo4_m
+XMO5 dio_n dio_n vss vss nmos w=x_dut_xmo5_w l=x_dut_xmo5_l m=x_dut_xmo5_m
+XMO6 msrc_n dio_n vss vss nmos w=x_dut_xmo6_w l=x_dut_xmo6_l m=x_dut_xmo6_m
+XMO7 out1n vb3 msrc_n vss nmos w=x_dut_xmo7_w l=x_dut_xmo7_l m=x_dut_xmo7_m
+XMO8 msrc_p dio_p vss vss nmos w=x_dut_xmo8_w l=x_dut_xmo8_l m=x_dut_xmo8_m
+XMO9 out1p vb3 msrc_p vss nmos w=x_dut_xmo9_w l=x_dut_xmo9_l m=x_dut_xmo9_m
+XMO10 out1n vb2 csrc_n vdd pmos w=x_dut_xmo10_w l=x_dut_xmo10_l m=x_dut_xmo10_m
+XMO11 out1p vb2 csrc_p vdd pmos w=x_dut_xmo11_w l=x_dut_xmo11_l m=x_dut_xmo11_m
+XMO12 csrc_n vcmfb vdd vdd pmos w=x_dut_xmo12_w l=x_dut_xmo12_l m=x_dut_xmo12_m
+XMO13 csrc_p vcmfb vdd vdd pmos w=x_dut_xmo13_w l=x_dut_xmo13_l m=x_dut_xmo13_m
+* --- OTA stage 2, voutp side: CS driver + floating class-AB battery + followers ---
+XMO14 gup_p vb1 vdd vdd pmos w=x_dut_xmo14_w l=x_dut_xmo14_l m=x_dut_xmo14_m
+XMO15 gup_p gup_p flt_p vss nmos w=x_dut_xmo15_w l=x_dut_xmo15_l m=x_dut_xmo15_m
+XMO16 vdd gup_p voutp vss nmos w=x_dut_xmo16_w l=x_dut_xmo16_l m=x_dut_xmo16_m
+XMO17 gdn_p gdn_p flt_p vdd pmos w=x_dut_xmo17_w l=x_dut_xmo17_l m=x_dut_xmo17_m
+XMO18 vss gdn_p voutp vdd pmos w=x_dut_xmo18_w l=x_dut_xmo18_l m=x_dut_xmo18_m
+XMO19 gdn_p out1p vss vss nmos w=x_dut_xmo19_w l=x_dut_xmo19_l m=x_dut_xmo19_m
+C1 flt_p zc_p 'x_dut_c1_value'
+R1 zc_p out1p 'x_dut_r1_value'
+* --- OTA stage 2, voutn side ---
+XMO20 gup_n vb1 vdd vdd pmos w=x_dut_xmo20_w l=x_dut_xmo20_l m=x_dut_xmo20_m
+XMO21 gup_n gup_n flt_n vss nmos w=x_dut_xmo21_w l=x_dut_xmo21_l m=x_dut_xmo21_m
+XMO22 vdd gup_n voutn vss nmos w=x_dut_xmo22_w l=x_dut_xmo22_l m=x_dut_xmo22_m
+XMO23 gdn_n gdn_n flt_n vdd pmos w=x_dut_xmo23_w l=x_dut_xmo23_l m=x_dut_xmo23_m
+XMO24 vss gdn_n voutn vdd pmos w=x_dut_xmo24_w l=x_dut_xmo24_l m=x_dut_xmo24_m
+XMO25 gdn_n out1n vss vss nmos w=x_dut_xmo25_w l=x_dut_xmo25_l m=x_dut_xmo25_m
+C2 flt_n zc_n 'x_dut_c2_value'
+R2 out1n zc_n 'x_dut_r2_value'
+* --- behavioral CMFB servo (leaf; drawn ideal-amp polarity + reference corrected, see header) ---
+Gsrv vss vcmfb vcmfb_ref vcm_sense {gm_val}
+Rosrv vcmfb_ref vcmfb 'rout_val'
+Cosrv vss vcmfb 'cout_val'
+Risrv vcm_sense vcmfb_ref 'rin_val'
+Cisrv vcm_sense vcmfb_ref 'cin_val'
+* --- resistive output CM detector ---
+Rmp vcm_sense voutp 'x_dut_rmp_value'
+Rmn voutn vcm_sense 'x_dut_rmn_value'
+* --- internal bias levels (the drawing's 0.5 V sources; instantiator-owned knobs) ---
+Vb1 vb1 vss dc {vb1}
+Vb2 vb2 vss dc {vb2}
+Vb3 vb3 vss dc {vb3}
+Vcmref vcmfb_ref vss dc {vcmfb_ref}
+**.ends
+.end

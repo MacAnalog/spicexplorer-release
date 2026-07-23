@@ -1,0 +1,10 @@
+** sch_path: inverter_stack.sch
+**.subckt inverter_stack VDD VSS vout vin
+*.iopin VDD
+*.iopin VSS
+*.iopin vout
+*.iopin vin
+XM1 vout vin VSS VSS sg13_lv_nmos w=0.15u l=0.13u ng=1 m=1
+XM2 vout vin VDD VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+**.ends
+.end

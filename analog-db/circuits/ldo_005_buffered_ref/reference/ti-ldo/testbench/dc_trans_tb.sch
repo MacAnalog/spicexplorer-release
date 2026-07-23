@@ -70,7 +70,7 @@ let tstep = 0.001*tper
 ** Set Sources
 alter @VIN[DC] = 3.0
 alter @VIN[PULSE] = [ 0 6 0 $&tfr $&tfr $&ton $&tper 0 ]
-** $& is to convert the variables defined by "let" to string variables defined by "set" command
+** $& is to convert the variables defined by \"let\" to string variables defined by \"set\" command
 
 ** Simulation 
 op

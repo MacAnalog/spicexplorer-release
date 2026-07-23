@@ -1,0 +1,8 @@
+# Design variables for the ihp-sg13g2 binding. The drawn symbol Rm carried no value —
+# 1 Meg default keeps the averager from loading the driving OTA outputs (the detector's
+# only absolute-value concern); matching is what sets the CM sense error. Group
+# representative only (see abstract/params.yaml ties): RMN<-RMP.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_rmp_value, description: "CM-averager resistor value (Rm; RMN tied)", default: 1Meg, min: 10k, max: 1G, unit: ohm}

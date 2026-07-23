@@ -5,63 +5,79 @@
 # recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
 schema: spicexplorer/params@1
 devices:
-  CC: {Value: c_comp}
+  C1: {Value: c_out_int}
+  CEAC: {Value: c_ea_comp}
+  CRAC: {Value: c_ra_comp}
   C_LPF: {Value: c_lpf}
-  IBIAS_ERR: {Value: i_tail_err}
-  IBIAS_REF: {Value: i_tail_ref}
   R1: {Value: r_ref_top}
   R2: {Value: r_ref_bot}
   R3: {Value: r_bleed}
-  RZ: {Value: r_z}
+  REAZ: {Value: r_ea_z}
+  RRAZ: {Value: r_ra_z}
   R_LPF: {Value: r_lpf}
+  VLP: {Value: dc 0}
   VREF: {Value: vref_val}
-  XM1: {l: x_dut_xm1_l, w: x_dut_xm1_w}
-  XM10: {l: x_dut_xm10_l, w: x_dut_xm10_w}
-  XM11: {l: x_dut_xm11_l, w: x_dut_xm11_w}
-  XM12: {l: x_dut_xm12_l, w: x_dut_xm12_w}
-  XM2: {l: x_dut_xm2_l, w: x_dut_xm2_w}
-  XM3: {l: x_dut_xm3_l, w: x_dut_xm3_w}
-  XM4: {l: x_dut_xm4_l, w: x_dut_xm4_w}
-  XM5: {l: x_dut_xm5_l, w: x_dut_xm5_w}
-  XM6: {l: x_dut_xm6_l, w: x_dut_xm6_w}
-  XM7: {l: x_dut_xm7_l, w: x_dut_xm7_w}
-  XM8: {l: x_dut_xm8_l, w: x_dut_xm8_w}
-  XM9: {l: x_dut_xm9_l, w: x_dut_xm9_w}
+  XMEA_1: {l: x_dut_xmea_1_l, w: x_dut_xmea_1_w}
+  XMEA_2: {l: x_dut_xmea_2_l, w: x_dut_xmea_2_w}
+  XMEA_3: {l: x_dut_xmea_3_l, w: x_dut_xmea_3_w}
+  XMEA_4: {l: x_dut_xmea_4_l, w: x_dut_xmea_4_w}
+  XMEA_5: {l: x_dut_xmea_5_l, w: x_dut_xmea_5_w}
+  XMEA_6: {l: x_dut_xmea_6_l, w: x_dut_xmea_6_w}
+  XMEA_B0: {l: x_dut_xmea_b0_l, w: x_dut_xmea_b0_w}
+  XMEA_BC: {l: x_dut_xmea_bc_l, w: x_dut_xmea_bc_w}
+  XMEA_BF: {l: x_dut_xmea_bf_l, w: x_dut_xmea_bf_w}
+  XMEA_BO: {l: x_dut_xmea_bo_l, w: x_dut_xmea_bo_w}
+  XMEA_BP: {l: x_dut_xmea_bp_l, w: x_dut_xmea_bp_w}
   XMP: {l: x_dut_xmp_l, m: x_dut_xmp_m, w: x_dut_xmp_w}
+  XMRA_1: {l: x_dut_xmra_1_l, w: x_dut_xmra_1_w}
+  XMRA_2: {l: x_dut_xmra_2_l, w: x_dut_xmra_2_w}
+  XMRA_3: {l: x_dut_xmra_3_l, w: x_dut_xmra_3_w}
+  XMRA_4: {l: x_dut_xmra_4_l, w: x_dut_xmra_4_w}
+  XMRA_5: {l: x_dut_xmra_5_l, w: x_dut_xmra_5_w}
+  XMRA_B0: {l: x_dut_xmra_b0_l, w: x_dut_xmra_b0_w}
+  XMRA_BC: {l: x_dut_xmra_bc_l, w: x_dut_xmra_bc_w}
+  XMRA_BO: {l: x_dut_xmra_bo_l, w: x_dut_xmra_bo_w}
+  XMRA_BP: {l: x_dut_xmra_bp_l, w: x_dut_xmra_bp_w}
 groups:
-- name: pair_xm1_xm2
+- name: mirror_xmra_b0_l
+  kind: mirror_length
+  members: [XMRA_B0, XMRA_BC, XMRA_BO]
+  tie: [l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_ra_xmb0_l
+    (l).'
+- name: pair_xmra_1_xmra_2
   kind: matched_pair
-  members: [XM1, XM2]
+  members: [XMRA_1, XMRA_2]
   tie: [w, l]
-  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_ref_in (w),
-    l_ref_in (l).'
-- name: mirror_xm3_w_l
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_ra_xm1_w (w),
+    x_ra_xm1_l (l).'
+- name: mirror_xmra_3_w_l
   kind: mirror_length
-  members: [XM3, XM4]
+  members: [XMRA_3, XMRA_4]
   tie: [w, l]
-  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_ref_load (w),
-    l_ref_load (l).'
-- name: mirror_xm6_w_l
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_ra_xm3_w (w),
+    x_ra_xm3_l (l).'
+- name: mirror_xmea_b0_l
   kind: mirror_length
-  members: [XM6, XM5]
-  tie: [w, l]
-  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_ref_tail (w),
-    l_ref_tail (l).'
-- name: pair_xm7_xm8
+  members: [XMEA_B0, XMEA_BC, XMEA_BF, XMEA_BO]
+  tie: [l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_ea_xmb0_l
+    (l).'
+- name: shared_xmea_b0_w
+  kind: shared_geometry
+  members: [XMEA_B0, XMEA_BC, XMEA_BO]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_ea_xmb0_w
+    (w).'
+- name: pair_xmea_1_xmea_2
   kind: matched_pair
-  members: [XM7, XM8]
+  members: [XMEA_1, XMEA_2]
   tie: [w, l]
-  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_err_in (w),
-    l_err_in (l).'
-- name: mirror_xm9_w_l
-  kind: mirror_length
-  members: [XM9, XM10]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_ea_xm1_w (w),
+    x_ea_xm1_l (l).'
+- name: shared_xmea_3_w_l
+  kind: shared_geometry
+  members: [XMEA_3, XMEA_5]
   tie: [w, l]
-  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_err_load (w),
-    l_err_load (l).'
-- name: mirror_xm12_w_l
-  kind: mirror_length
-  members: [XM12, XM11]
-  tie: [w, l]
-  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_err_tail (w),
-    l_err_tail (l).'
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_ea_xm3_w (w),
+    x_ea_xm3_l (l).'

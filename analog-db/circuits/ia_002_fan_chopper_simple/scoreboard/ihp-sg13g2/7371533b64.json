@@ -1,0 +1,186 @@
+{
+  "area": {
+    "active_gate_area_um2": 103.04,
+    "c_count": 6,
+    "c_total_f": 3.5600000000000005e-11,
+    "mos_count": 39,
+    "r_count": 2,
+    "r_total_ohm": 20000000.0
+  },
+  "circuit": "ia_002_fan_chopper_simple",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_closed_loop": {
+          "measures": {
+            "bw_cl_hz": 1240711.0,
+            "gain_cl": 19.31363,
+            "gain_cl_db": 25.71728,
+            "hpf_hz": 31.85285
+          },
+          "status": "ok"
+        },
+        "ac_zin_diff": {
+          "measures": {
+            "zin_ohm": 204649000.0
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0001463952,
+            "vocm": 0.6096373,
+            "vos": -5.36711e-06
+          },
+          "status": "ok"
+        },
+        "pac_gain": {
+          "error": "ia_002_fan_chopper_simple/pac_gain@ihp-sg13g2/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 ia_002_fan_chopper_simple \u00d7 pac_gain \u00d7 ihp-sg13g2 \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n Reference value :  1.00000e+00\nNo. of Data Rows : 27\nASCII raw file \"rawspice.raw\"\nngspice-45 done\n",
+          "status": "sim_error"
+        },
+        "pac_zin": {
+          "error": "ia_002_fan_chopper_simple/pac_zin@ihp-sg13g2/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 ia_002_fan_chopper_simple \u00d7 pac_zin \u00d7 ihp-sg13g2 \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n Reference value :  1.00000e+00\nNo. of Data Rows : 27\nASCII raw file \"rawspice.raw\"\nngspice-45 done\n",
+          "status": "sim_error"
+        },
+        "pnoise_chopped": {
+          "error": "ia_002_fan_chopper_simple/pnoise_chopped@ihp-sg13g2/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 ia_002_fan_chopper_simple \u00d7 pnoise_chopped \u00d7 ihp-sg13g2 \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n Reference value :  0.00000e+00\nNo. of Data Rows : 1\nASCII raw file \"rawspice.raw\"\nngspice-45 done\n",
+          "status": "sim_error"
+        },
+        "tran_chopper_ripple": {
+          "measures": {
+            "gain_cl": 6.991916,
+            "v_ripple_pp": 0.4022486,
+            "vavga": 4.952021e-10,
+            "vavgb": 0.06991916,
+            "vdmax": 0.2207216,
+            "vdmin": -0.181527,
+            "vos_residual": 7.082495e-11
+          },
+          "status": "ok"
+        },
+        "tran_zin_chopped": {
+          "measures": {
+            "iavgn": 6.54691e-10,
+            "iavgp": -1.041822e-09,
+            "zin_chop_ohm": 11788890.0
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:25:47+00:00"
+      }
+    }
+  },
+  "design_id": "7371533b64",
+  "metrics": {
+    "tt": {
+      "bw_cl_hz": {
+        "spec": "pass",
+        "value": 1240711.0
+      },
+      "gain_cl": {
+        "spec": "pass",
+        "value": 6.991916
+      },
+      "gain_cl_db": {
+        "spec": "pass",
+        "value": 25.71728
+      },
+      "hpf_hz": {
+        "spec": "pass",
+        "value": 31.85285
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 0.0001463952
+      },
+      "v_ripple_pp": {
+        "spec": "fail",
+        "value": 0.4022486
+      },
+      "vos": {
+        "spec": "pass",
+        "value": -5.36711e-06
+      },
+      "vos_residual": {
+        "spec": "pass",
+        "value": 7.082495e-11
+      },
+      "zin_chop_ohm": {
+        "spec": "pass",
+        "value": 11788890.0
+      },
+      "zin_ohm": {
+        "spec": "pass",
+        "value": 204649000.0
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "vb1": 0.5,
+      "vb2": 0.75,
+      "vb3": 0.45,
+      "vb4": 0.55,
+      "x_dut_cfb1_value": "0.8p",
+      "x_dut_cin1_value": "16p",
+      "x_dut_cm1_value": "1p",
+      "x_dut_rb1_value": "10Meg",
+      "x_dut_xm10_l": "0.3u",
+      "x_dut_xm10_m": 1,
+      "x_dut_xm10_w": "10u",
+      "x_dut_xm12_l": "0.3u",
+      "x_dut_xm12_m": 1,
+      "x_dut_xm12_w": "5u",
+      "x_dut_xm14_l": "0.5u",
+      "x_dut_xm14_m": 1,
+      "x_dut_xm14_w": "6u",
+      "x_dut_xm16_l": "0.13u",
+      "x_dut_xm16_m": 1,
+      "x_dut_xm16_w": "2u",
+      "x_dut_xm17_l": "0.13u",
+      "x_dut_xm17_m": 1,
+      "x_dut_xm17_w": "2u",
+      "x_dut_xm1_l": "1u",
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": "20u",
+      "x_dut_xm20_l": "0.13u",
+      "x_dut_xm20_m": 1,
+      "x_dut_xm20_w": "2u",
+      "x_dut_xm21_l": "0.13u",
+      "x_dut_xm21_m": 1,
+      "x_dut_xm21_w": "2u",
+      "x_dut_xm24_l": "0.13u",
+      "x_dut_xm24_m": 1,
+      "x_dut_xm24_w": "2u",
+      "x_dut_xm25_l": "0.13u",
+      "x_dut_xm25_m": 1,
+      "x_dut_xm25_w": "2u",
+      "x_dut_xm2_l": "0.5u",
+      "x_dut_xm2_m": 1,
+      "x_dut_xm2_w": "20u",
+      "x_dut_xm4_l": "1u",
+      "x_dut_xm4_m": 1,
+      "x_dut_xm4_w": "4.7u",
+      "x_dut_xm6_m": 1,
+      "x_dut_xm6_w": "10u",
+      "x_dut_xm8_m": 1,
+      "x_dut_xm8_w": "6.2u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 103.04,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "gain_cl": 6.991916
+    },
+    "power_w": 0.00017567424
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

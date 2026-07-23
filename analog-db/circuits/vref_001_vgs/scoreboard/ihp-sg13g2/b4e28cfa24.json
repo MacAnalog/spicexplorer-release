@@ -36,6 +36,9 @@
         "temp_sweep": {
           "measures": {
             "tc_ppm": 25.86546,
+            "vavg": 0.3593043,
+            "vmax": 0.3602084,
+            "vmin": 0.3589073,
             "vref_25c": 0.35899
           },
           "status": "ok"
@@ -44,7 +47,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-16T02:38:29+00:00"
+        "run_at": "2026-07-21T02:29:27+00:00"
       }
     }
   },

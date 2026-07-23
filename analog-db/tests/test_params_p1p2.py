@@ -1,6 +1,6 @@
-"""Parameterization P1 + P2 (meta plan_parameterization.md §5).
+"""Parameterization P1 + P2.
 
-P1 — the ``gen-params`` generator (generated-then-reviewed refresh) + the Tier-1 D-6 verify
+P1 — the ``gen-params`` generator (generated-then-reviewed refresh) + the Tier-1 verify
 checks (referential soundness, kind coherence, symbol closure, detected-but-untied WARNING).
 
 P2 — lowering the tying layer to ``.param`` tie blocks (untying = shadowing) + the numeric
@@ -141,7 +141,7 @@ def _free_sizing(doc):
 
 def test_tier1_all_green_with_untied_warning(tmp_path, five_t_graph):
     """The dry-run posture: pairs tied, tail mirror deliberately untied → all checks pass and
-    the untied mirror surfaces as a WARNING (skip), never a failure (plan D-6)."""
+    the untied mirror surfaces as a WARNING (skip), never a failure."""
     doc = _doc(
         five_t_graph,
         groups=[
@@ -263,7 +263,7 @@ def test_tie_param_lines_groups_and_ratios(five_t_graph):
     assert params.tied_symbols(doc) == {
         "x_dut_xm2_w", "x_dut_xm2_l", "x_dut_xm2_m", "x_dut_xm5_l", "x_dut_xm5_m",
     }
-    # free = first members + untied atomics; sizing keys on exactly these (plan D-4)
+    # free = first members + untied atomics; sizing keys on exactly these
     free = params.free_symbols(doc)
     assert "x_dut_xm1_w" in free and "x_dut_xm6_l" in free and "x_dut_xm5_w" in free
     assert free.isdisjoint(params.tied_symbols(doc))
@@ -307,7 +307,7 @@ def test_dut_subckt_defines_each_tied_symbol_exactly_once():
 
 # --------------------------------------------------------------------------- P2: numeric parity
 #
-# The dry-run acceptance (plan §3-4): the NEW atomic deck at default ties resolves to the SAME
+# The dry-run acceptance: the NEW atomic deck at default ties resolves to the SAME
 # per-device {w, l, m} as the OLD committed deck (pre-migration main). The OLD geometry below is
 # the resolved `git show main:raw/amp_001_5t/<pdk>/_dut.spice` param header — hardcoded so the
 # gate needs no git history at test time.
@@ -315,10 +315,10 @@ def test_dut_subckt_defines_each_tied_symbol_exactly_once():
 _UM = 1e-6
 _OLD_GEOMETRY = {
     # pdk: {device: (w, l, m)} — resolved values in the deck's own unit convention
-    "ihp-sg13g2": {
-        "XM1": (0.5 * _UM, 5.0 * _UM, 1), "XM2": (0.5 * _UM, 5.0 * _UM, 1),
-        "XM3": (1.5 * _UM, 5.0 * _UM, 1), "XM4": (1.5 * _UM, 5.0 * _UM, 1),
-        "XM5": (2.0 * _UM, 5.0 * _UM, 1), "XM6": (2.0 * _UM, 5.0 * _UM, 1),
+    "ihp-sg13g2": {  # gm/ID re-size (2026-07-22): sizing.yaml defaults, XM2/XM4 tied
+        "XM1": (10.0 * _UM, 10.0 * _UM, 1), "XM2": (10.0 * _UM, 10.0 * _UM, 1),
+        "XM3": (10.0 * _UM, 7.0 * _UM, 1), "XM4": (10.0 * _UM, 7.0 * _UM, 1),
+        "XM5": (3.8 * _UM, 1.0 * _UM, 1), "XM6": (3.8 * _UM, 1.0 * _UM, 1),
     },
     "sky130": {  # bare-µm convention (.option scale=1u decks)
         "XM1": (1.0, 2.0, 1), "XM2": (1.0, 2.0, 1),
@@ -436,7 +436,7 @@ def test_amp_001_5t_deck_banner_counts_and_catalog_block():
 
 def test_non_adopted_circuit_renders_without_params_line(monkeypatch):
     """A circuit without abstract/params.yaml renders with NO provenance line (byte-identical
-    legacy output). Synthetic — on the P4 branch every corpus circuit is adopted."""
+    legacy output). Synthetic — every corpus circuit is adopted."""
     from spicexplorer_analog_db import export, model, params
 
     monkeypatch.setattr(params, "load_params_doc", lambda _dir: None)

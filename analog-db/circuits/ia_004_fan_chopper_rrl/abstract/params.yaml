@@ -1,0 +1,324 @@
+# ia_004_fan_chopper_rrl — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit ia_004_fan_chopper_rrl --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  CAZ1_RRL: {Value: x_dut_caz1_rrl_value}
+  CAZ2_RRL: {Value: x_dut_caz2_rrl_value}
+  CFB1_MAIN: {Value: x_dut_cfb1_main_value}
+  CFB2_MAIN: {Value: x_dut_cfb2_main_value}
+  CIN1_MAIN: {Value: x_dut_cin1_main_value}
+  CIN2_MAIN: {Value: x_dut_cin2_main_value}
+  CINT1_RRL: {Value: x_dut_cint1_rrl_value}
+  CINT2_RRL: {Value: x_dut_cint2_rrl_value}
+  CIN_1_RRL: {Value: cin_val_rrl}
+  CM1_MAIN: {Value: x_dut_cm1_main_value}
+  CM2_MAIN: {Value: x_dut_cm2_main_value}
+  COUT_1_RRL: {Value: cout_val_rrl}
+  CS1_RRL: {Value: x_dut_cs1_rrl_value}
+  CS2_RRL: {Value: x_dut_cs2_rrl_value}
+  GM_1_RRL: {Value: gm_val_rrl}
+  RB1_MAIN: {Value: x_dut_rb1_main_value}
+  RB2_MAIN: {Value: x_dut_rb2_main_value}
+  RIN_1_RRL: {Value: rin_val_rrl}
+  ROUT_1_RRL: {Value: rout_val_rrl}
+  VB1_MAIN: {Value: vb1_main}
+  VB1_RRL: {Value: vb1_rrl}
+  VB2_MAIN: {Value: vb2_main}
+  VB2_RRL: {Value: vb2_rrl}
+  VB3_MAIN: {Value: vb3_main}
+  VB3_RRL: {Value: vb3_rrl}
+  VB4_MAIN: {Value: vb4_main}
+  VB4_RRL: {Value: vb4_rrl}
+  XM10_MAIN: {l: x_dut_xm10_main_l, m: x_dut_xm10_main_m, w: x_dut_xm10_main_w}
+  XM10_OPAMP_RRL: {l: x_dut_xm10_opamp_rrl_l, m: x_dut_xm10_opamp_rrl_m, w: x_dut_xm10_opamp_rrl_w}
+  XM11_MAIN: {l: x_dut_xm11_main_l, m: x_dut_xm11_main_m, w: x_dut_xm11_main_w}
+  XM11_OPAMP_RRL: {l: x_dut_xm11_opamp_rrl_l, m: x_dut_xm11_opamp_rrl_m, w: x_dut_xm11_opamp_rrl_w}
+  XM12_MAIN: {l: x_dut_xm12_main_l, m: x_dut_xm12_main_m, w: x_dut_xm12_main_w}
+  XM12_OPAMP_RRL: {l: x_dut_xm12_opamp_rrl_l, m: x_dut_xm12_opamp_rrl_m, w: x_dut_xm12_opamp_rrl_w}
+  XM13_MAIN: {l: x_dut_xm13_main_l, m: x_dut_xm13_main_m, w: x_dut_xm13_main_w}
+  XM13_OPAMP_RRL: {l: x_dut_xm13_opamp_rrl_l, m: x_dut_xm13_opamp_rrl_m, w: x_dut_xm13_opamp_rrl_w}
+  XM14_MAIN: {l: x_dut_xm14_main_l, m: x_dut_xm14_main_m, w: x_dut_xm14_main_w}
+  XM14_OPAMP_RRL: {l: x_dut_xm14_opamp_rrl_l, m: x_dut_xm14_opamp_rrl_m, w: x_dut_xm14_opamp_rrl_w}
+  XM15_MAIN: {l: x_dut_xm15_main_l, m: x_dut_xm15_main_m, w: x_dut_xm15_main_w}
+  XM15_OPAMP_RRL: {l: x_dut_xm15_opamp_rrl_l, m: x_dut_xm15_opamp_rrl_m, w: x_dut_xm15_opamp_rrl_w}
+  XM16_MAIN: {l: x_dut_xm16_main_l, m: x_dut_xm16_main_m, w: x_dut_xm16_main_w}
+  XM16_OPAMP_RRL: {l: x_dut_xm16_opamp_rrl_l, m: x_dut_xm16_opamp_rrl_m, w: x_dut_xm16_opamp_rrl_w}
+  XM17_MAIN: {l: x_dut_xm17_main_l, m: x_dut_xm17_main_m, w: x_dut_xm17_main_w}
+  XM18_MAIN: {l: x_dut_xm18_main_l, m: x_dut_xm18_main_m, w: x_dut_xm18_main_w}
+  XM19_MAIN: {l: x_dut_xm19_main_l, m: x_dut_xm19_main_m, w: x_dut_xm19_main_w}
+  XM1_CHRRL_1_RRL: {l: x_dut_xm1_chrrl_1_rrl_l, m: x_dut_xm1_chrrl_1_rrl_m, w: x_dut_xm1_chrrl_1_rrl_w}
+  XM1_CHRRL_2_RRL: {l: x_dut_xm1_chrrl_2_rrl_l, m: x_dut_xm1_chrrl_2_rrl_m, w: x_dut_xm1_chrrl_2_rrl_w}
+  XM1_CHRRL_3_RRL: {l: x_dut_xm1_chrrl_3_rrl_l, m: x_dut_xm1_chrrl_3_rrl_m, w: x_dut_xm1_chrrl_3_rrl_w}
+  XM1_CHRRL_4_RRL: {l: x_dut_xm1_chrrl_4_rrl_l, m: x_dut_xm1_chrrl_4_rrl_m, w: x_dut_xm1_chrrl_4_rrl_w}
+  XM1_MAIN: {l: x_dut_xm1_main_l, m: x_dut_xm1_main_m, w: x_dut_xm1_main_w}
+  XM1_OPAMP_RRL: {l: x_dut_xm1_opamp_rrl_l, m: x_dut_xm1_opamp_rrl_m, w: x_dut_xm1_opamp_rrl_w}
+  XM1_S1_RRL: {l: x_dut_xm1_s1_rrl_l, m: x_dut_xm1_s1_rrl_m, w: x_dut_xm1_s1_rrl_w}
+  XM1_S2_RRL: {l: x_dut_xm1_s2_rrl_l, m: x_dut_xm1_s2_rrl_m, w: x_dut_xm1_s2_rrl_w}
+  XM1_S3_RRL: {l: x_dut_xm1_s3_rrl_l, m: x_dut_xm1_s3_rrl_m, w: x_dut_xm1_s3_rrl_w}
+  XM1_S4_RRL: {l: x_dut_xm1_s4_rrl_l, m: x_dut_xm1_s4_rrl_m, w: x_dut_xm1_s4_rrl_w}
+  XM1_S5_RRL: {l: x_dut_xm1_s5_rrl_l, m: x_dut_xm1_s5_rrl_m, w: x_dut_xm1_s5_rrl_w}
+  XM1_S6_RRL: {l: x_dut_xm1_s6_rrl_l, m: x_dut_xm1_s6_rrl_m, w: x_dut_xm1_s6_rrl_w}
+  XM20_MAIN: {l: x_dut_xm20_main_l, m: x_dut_xm20_main_m, w: x_dut_xm20_main_w}
+  XM21_MAIN: {l: x_dut_xm21_main_l, m: x_dut_xm21_main_m, w: x_dut_xm21_main_w}
+  XM22_MAIN: {l: x_dut_xm22_main_l, m: x_dut_xm22_main_m, w: x_dut_xm22_main_w}
+  XM23_MAIN: {l: x_dut_xm23_main_l, m: x_dut_xm23_main_m, w: x_dut_xm23_main_w}
+  XM24_MAIN: {l: x_dut_xm24_main_l, m: x_dut_xm24_main_m, w: x_dut_xm24_main_w}
+  XM25_MAIN: {l: x_dut_xm25_main_l, m: x_dut_xm25_main_m, w: x_dut_xm25_main_w}
+  XM26_MAIN: {l: x_dut_xm26_main_l, m: x_dut_xm26_main_m, w: x_dut_xm26_main_w}
+  XM27_MAIN: {l: x_dut_xm27_main_l, m: x_dut_xm27_main_m, w: x_dut_xm27_main_w}
+  XM28_MAIN: {l: x_dut_xm28_main_l, m: x_dut_xm28_main_m, w: x_dut_xm28_main_w}
+  XM29_MAIN: {l: x_dut_xm29_main_l, m: x_dut_xm29_main_m, w: x_dut_xm29_main_w}
+  XM2_CHRRL_1_RRL: {l: x_dut_xm2_chrrl_1_rrl_l, m: x_dut_xm2_chrrl_1_rrl_m, w: x_dut_xm2_chrrl_1_rrl_w}
+  XM2_CHRRL_2_RRL: {l: x_dut_xm2_chrrl_2_rrl_l, m: x_dut_xm2_chrrl_2_rrl_m, w: x_dut_xm2_chrrl_2_rrl_w}
+  XM2_CHRRL_3_RRL: {l: x_dut_xm2_chrrl_3_rrl_l, m: x_dut_xm2_chrrl_3_rrl_m, w: x_dut_xm2_chrrl_3_rrl_w}
+  XM2_CHRRL_4_RRL: {l: x_dut_xm2_chrrl_4_rrl_l, m: x_dut_xm2_chrrl_4_rrl_m, w: x_dut_xm2_chrrl_4_rrl_w}
+  XM2_MAIN: {l: x_dut_xm2_main_l, m: x_dut_xm2_main_m, w: x_dut_xm2_main_w}
+  XM2_OPAMP_RRL: {l: x_dut_xm2_opamp_rrl_l, m: x_dut_xm2_opamp_rrl_m, w: x_dut_xm2_opamp_rrl_w}
+  XM2_S1_RRL: {l: x_dut_xm2_s1_rrl_l, m: x_dut_xm2_s1_rrl_m, w: x_dut_xm2_s1_rrl_w}
+  XM2_S2_RRL: {l: x_dut_xm2_s2_rrl_l, m: x_dut_xm2_s2_rrl_m, w: x_dut_xm2_s2_rrl_w}
+  XM2_S3_RRL: {l: x_dut_xm2_s3_rrl_l, m: x_dut_xm2_s3_rrl_m, w: x_dut_xm2_s3_rrl_w}
+  XM2_S4_RRL: {l: x_dut_xm2_s4_rrl_l, m: x_dut_xm2_s4_rrl_m, w: x_dut_xm2_s4_rrl_w}
+  XM2_S5_RRL: {l: x_dut_xm2_s5_rrl_l, m: x_dut_xm2_s5_rrl_m, w: x_dut_xm2_s5_rrl_w}
+  XM2_S6_RRL: {l: x_dut_xm2_s6_rrl_l, m: x_dut_xm2_s6_rrl_m, w: x_dut_xm2_s6_rrl_w}
+  XM30_MAIN: {l: x_dut_xm30_main_l, m: x_dut_xm30_main_m, w: x_dut_xm30_main_w}
+  XM31_MAIN: {l: x_dut_xm31_main_l, m: x_dut_xm31_main_m, w: x_dut_xm31_main_w}
+  XM32_MAIN: {l: x_dut_xm32_main_l, m: x_dut_xm32_main_m, w: x_dut_xm32_main_w}
+  XM33_MAIN: {l: x_dut_xm33_main_l, m: x_dut_xm33_main_m, w: x_dut_xm33_main_w}
+  XM34_MAIN: {l: x_dut_xm34_main_l, m: x_dut_xm34_main_m, w: x_dut_xm34_main_w}
+  XM35_MAIN: {l: x_dut_xm35_main_l, m: x_dut_xm35_main_m, w: x_dut_xm35_main_w}
+  XM36_MAIN: {l: x_dut_xm36_main_l, m: x_dut_xm36_main_m, w: x_dut_xm36_main_w}
+  XM37_MAIN: {l: x_dut_xm37_main_l, m: x_dut_xm37_main_m, w: x_dut_xm37_main_w}
+  XM38_MAIN: {l: x_dut_xm38_main_l, m: x_dut_xm38_main_m, w: x_dut_xm38_main_w}
+  XM39_MAIN: {l: x_dut_xm39_main_l, m: x_dut_xm39_main_m, w: x_dut_xm39_main_w}
+  XM3_MAIN: {l: x_dut_xm3_main_l, m: x_dut_xm3_main_m, w: x_dut_xm3_main_w}
+  XM3_OPAMP_RRL: {l: x_dut_xm3_opamp_rrl_l, m: x_dut_xm3_opamp_rrl_m, w: x_dut_xm3_opamp_rrl_w}
+  XM4_MAIN: {l: x_dut_xm4_main_l, m: x_dut_xm4_main_m, w: x_dut_xm4_main_w}
+  XM4_OPAMP_RRL: {l: x_dut_xm4_opamp_rrl_l, m: x_dut_xm4_opamp_rrl_m, w: x_dut_xm4_opamp_rrl_w}
+  XM5_MAIN: {l: x_dut_xm5_main_l, m: x_dut_xm5_main_m, w: x_dut_xm5_main_w}
+  XM5_OPAMP_RRL: {l: x_dut_xm5_opamp_rrl_l, m: x_dut_xm5_opamp_rrl_m, w: x_dut_xm5_opamp_rrl_w}
+  XM6_MAIN: {l: x_dut_xm6_main_l, m: x_dut_xm6_main_m, w: x_dut_xm6_main_w}
+  XM6_OPAMP_RRL: {l: x_dut_xm6_opamp_rrl_l, m: x_dut_xm6_opamp_rrl_m, w: x_dut_xm6_opamp_rrl_w}
+  XM7_MAIN: {l: x_dut_xm7_main_l, m: x_dut_xm7_main_m, w: x_dut_xm7_main_w}
+  XM7_OPAMP_RRL: {l: x_dut_xm7_opamp_rrl_l, m: x_dut_xm7_opamp_rrl_m, w: x_dut_xm7_opamp_rrl_w}
+  XM8_MAIN: {l: x_dut_xm8_main_l, m: x_dut_xm8_main_m, w: x_dut_xm8_main_w}
+  XM8_OPAMP_RRL: {l: x_dut_xm8_opamp_rrl_l, m: x_dut_xm8_opamp_rrl_m, w: x_dut_xm8_opamp_rrl_w}
+  XM9_MAIN: {l: x_dut_xm9_main_l, m: x_dut_xm9_main_m, w: x_dut_xm9_main_w}
+  XM9_OPAMP_RRL: {l: x_dut_xm9_opamp_rrl_l, m: x_dut_xm9_opamp_rrl_m, w: x_dut_xm9_opamp_rrl_w}
+groups:
+- name: pair_xm2_xm3_main
+  kind: matched_pair
+  members: [XM2_MAIN, XM3_MAIN]
+  tie: [w, l, m]
+  description: PMOS input differential pair of the embedded core (structural detection; shared source
+    = tail) (ported from ia_002_fan_chopper_simple through the composer rename).
+- name: pair_xm4_xm5_main
+  kind: shared_geometry
+  members: [XM4_MAIN, XM5_MAIN]
+  tie: [w, l, m]
+  description: First-stage NMOS current sinks at the two fold nodes (gates on vb1) — symmetric halves
+    (ported from ia_002_fan_chopper_simple through the composer rename).
+- name: pair_xm12_xm13_main
+  kind: shared_geometry
+  members: [XM12_MAIN, XM13_MAIN]
+  tie: [w, l, m]
+  description: Folded NMOS cascodes over the two first-stage output branches (gates on vb2) (ported from
+    ia_002_fan_chopper_simple through the composer rename).
+- name: pair_xm10_xm11_main
+  kind: shared_geometry
+  members: [XM10_MAIN, XM11_MAIN]
+  tie: [w, l, m]
+  description: PMOS cascodes of the first-stage load (gates on vb3) (ported from ia_002_fan_chopper_simple
+    through the composer rename).
+- name: pair_xm6_xm7_main
+  kind: shared_geometry
+  members: [XM6_MAIN, XM7_MAIN]
+  tie: [w, m]
+  description: PMOS fold current sources (gates on vb4); L tied through sources_vb4_l (ported from ia_002_fan_chopper_simple
+    through the composer rename).
+- name: pair_xm8_xm9_main
+  kind: shared_geometry
+  members: [XM8_MAIN, XM9_MAIN]
+  tie: [w, m]
+  description: Class-A output PMOS current sources (gates on vb4); L tied through sources_vb4_l (ported
+    from ia_002_fan_chopper_simple through the composer rename).
+- name: sources_vb4_l_main
+  kind: shared_geometry
+  members: [XM1_MAIN, XM6_MAIN, XM7_MAIN, XM8_MAIN, XM9_MAIN]
+  tie: [l]
+  description: All vb4-gated PMOS current sources (tail + fold sources + output sources) share one gate
+    net — same L so their current densities track off the single bias level (mirror-style tie; the kind
+    checker requires a diode-connected anchor for mirror_length, and vb4 is a knob source) (ported from
+    ia_002_fan_chopper_simple through the composer rename).
+- name: pair_xm14_xm15_main
+  kind: shared_geometry
+  members: [XM14_MAIN, XM15_MAIN]
+  tie: [w, l, m]
+  description: Class-A output NMOS common-source devices (gates on the output-chopper nodes g2_p/g2_n)
+    (ported from ia_002_fan_chopper_simple through the composer rename).
+- name: chout_tg_nmos_main
+  kind: shared_geometry
+  members: [XM16_MAIN, XM18_MAIN, XM28_MAIN, XM30_MAIN]
+  tie: [w, l, m]
+  description: NMOS pass devices of the embedded output chopper's four transmission gates (straight XM16/XM18
+    + cross XM28/XM30) — all gates must match for symmetric on-resistance and charge injection across
+    both chop phases (ported from ia_002_fan_chopper_simple through the composer rename).
+- name: chout_tg_pmos_main
+  kind: shared_geometry
+  members: [XM17_MAIN, XM19_MAIN, XM29_MAIN, XM31_MAIN]
+  tie: [w, l, m]
+  description: PMOS pass devices of the embedded output chopper's four gates (straight + cross); n and
+    p halves stay independent (different mobility) (ported from ia_002_fan_chopper_simple through the
+    composer rename).
+- name: chin_tg_nmos_main
+  kind: shared_geometry
+  members: [XM24_MAIN, XM26_MAIN, XM32_MAIN, XM34_MAIN]
+  tie: [w, l, m]
+  description: NMOS pass devices of the input chopper's four gates (straight XM24/XM26 + cross XM32/XM34)
+    — gate symmetry on the differential signal across both chop phases (ported from ia_002_fan_chopper_simple
+    through the composer rename).
+- name: chin_tg_pmos_main
+  kind: shared_geometry
+  members: [XM25_MAIN, XM27_MAIN, XM33_MAIN, XM35_MAIN]
+  tie: [w, l, m]
+  description: PMOS pass devices of the input chopper's four gates (straight + cross) (ported from ia_002_fan_chopper_simple
+    through the composer rename).
+- name: chfb_tg_nmos_main
+  kind: shared_geometry
+  members: [XM20_MAIN, XM22_MAIN, XM36_MAIN, XM38_MAIN]
+  tie: [w, l, m]
+  description: NMOS pass devices of the feedback chopper's four gates (straight XM20/XM22 + cross XM36/XM38;
+    voutp / voutn) (ported from ia_002_fan_chopper_simple through the composer rename).
+- name: chfb_tg_pmos_main
+  kind: shared_geometry
+  members: [XM21_MAIN, XM23_MAIN, XM37_MAIN, XM39_MAIN]
+  tie: [w, l, m]
+  description: PMOS pass devices of the feedback chopper's four gates (straight + cross) (ported from
+    ia_002_fan_chopper_simple through the composer rename).
+- name: pair_cin_main
+  kind: shared_geometry
+  members: [CIN1_MAIN, CIN2_MAIN]
+  tie: [Value]
+  description: Input coupling caps — the two legs must match; sets the closed-loop gain numerator (gain
+    = Cin/Cfb) (ported from ia_002_fan_chopper_simple through the composer rename).
+- name: pair_cfb_main
+  kind: shared_geometry
+  members: [CFB1_MAIN, CFB2_MAIN]
+  tie: [Value]
+  description: Feedback caps — the two legs must match; sets the closed-loop gain denominator (ported
+    from ia_002_fan_chopper_simple through the composer rename).
+- name: pair_cm_main
+  kind: shared_geometry
+  members: [CM1_MAIN, CM2_MAIN]
+  tie: [Value]
+  description: Per-side Miller caps must match (the originally-drawn Cm_1=1p (now symbolic Cm at source,
+    DRAWING_REVIEW item 5) was an unedited xschem default; Cm_2 was symbolic Cm) (ported from ia_002_fan_chopper_simple
+    through the composer rename).
+- name: pair_rb_main
+  kind: shared_geometry
+  members: [RB1_MAIN, RB2_MAIN]
+  tie: [Value]
+  description: Summing-node bias resistors to vref — the two legs must match (input CM + high-pass corner
+    symmetry) (ported from ia_002_fan_chopper_simple through the composer rename).
+- name: mirror_xm15_opamp_l_rrl
+  kind: mirror_length
+  members: [XM15_OPAMP_RRL, XM13_OPAMP_RRL, XM14_OPAMP_RRL]
+  tie: [l]
+  description: CMFB bias diode XM15 mirrors onto the output sinks XM13/XM14 — same L for mirror accuracy
+    (structural detection) (ported from sup_003_rrl_sc_integrator through the composer rename).
+- name: pair_xm2_opamp_xm3_opamp_rrl
+  kind: matched_pair
+  members: [XM2_OPAMP_RRL, XM3_OPAMP_RRL]
+  tie: [w, l, m]
+  description: PMOS input differential pair (structural detection) (ported from sup_003_rrl_sc_integrator
+    through the composer rename).
+- name: pair_xm9_xm10_rrl
+  kind: shared_geometry
+  members: [XM9_OPAMP_RRL, XM10_OPAMP_RRL]
+  tie: [w, l, m]
+  description: PMOS telescopic cascode pair over the two output branches (ported from sup_003_rrl_sc_integrator
+    through the composer rename).
+- name: pair_xm11_xm12_rrl
+  kind: shared_geometry
+  members: [XM11_OPAMP_RRL, XM12_OPAMP_RRL]
+  tie: [w, l, m]
+  description: NMOS telescopic cascode pair over the two output branches (ported from sup_003_rrl_sc_integrator
+    through the composer rename).
+- name: pair_xm13_xm14_rrl
+  kind: matched_pair
+  members: [XM13_OPAMP_RRL, XM14_OPAMP_RRL]
+  tie: [w, m]
+  description: Output current sinks (gates on the shared CMFB bias node); W/m matched, L already tied
+    through mirror_xm15_opamp_l (ported from sup_003_rrl_sc_integrator through the composer rename).
+- name: pair_xm5_xm7_rrl
+  kind: matched_pair
+  members: [XM5_OPAMP_RRL, XM7_OPAMP_RRL]
+  tie: [w, l, m]
+  description: DDA-CMFB sense pair (gates on the opamp outputs oa_outn/oa_outp) (ported from sup_003_rrl_sc_integrator
+    through the composer rename).
+- name: pair_xm6_xm8_rrl
+  kind: matched_pair
+  members: [XM6_OPAMP_RRL, XM8_OPAMP_RRL]
+  tie: [w, l, m]
+  description: DDA-CMFB reference half — drawn as two parallel unit devices (both gates on vb4), matching
+    the sense pair's combined strength (ported from sup_003_rrl_sc_integrator through the composer rename).
+- name: pair_xm15_xm16_rrl
+  kind: shared_geometry
+  members: [XM15_OPAMP_RRL, XM16_OPAMP_RRL]
+  tie: [w, l, m]
+  description: The two DDA diode loads (oa_cm_bias / oa_cm_sense) — symmetric halves of the differential-difference
+    comparison; XM15's L is the mirror_xm15_opamp_l representative (ported from sup_003_rrl_sc_integrator
+    through the composer rename).
+- name: tails_xm1_xm4_l_rrl
+  kind: shared_geometry
+  members: [XM1_OPAMP_RRL, XM4_OPAMP_RRL]
+  tie: [l]
+  description: Main tail (XM1) and CMFB tail (XM4) share the gate bias vb3 — same L so their current densities
+    track; W stays free to scale the CMFB branch current independently (ported from sup_003_rrl_sc_integrator
+    through the composer rename).
+- name: pair_cs_rrl
+  kind: shared_geometry
+  members: [CS1_RRL, CS2_RRL]
+  tie: [Value]
+  description: Ripple sense caps — p/n halves of the differential sampling path (drawn 1p placeholders)
+    (ported from sup_003_rrl_sc_integrator through the composer rename).
+- name: pair_caz_rrl
+  kind: shared_geometry
+  members: [CAZ1_RRL, CAZ2_RRL]
+  tie: [Value]
+  description: Auto-zero coupling caps into the opamp inputs — p/n halves must match for offset storage
+    (ported from sup_003_rrl_sc_integrator through the composer rename).
+- name: pair_cint_rrl
+  kind: shared_geometry
+  members: [CINT1_RRL, CINT2_RRL]
+  tie: [Value]
+  description: Integration caps — p/n halves; Cs/Cint sets the per-cycle charge-transfer gain (ported
+    from sup_003_rrl_sc_integrator through the composer rename).
+- name: tg_nmos_rrl
+  kind: shared_geometry
+  members: [XM1_S1_RRL, XM1_S2_RRL, XM1_S3_RRL, XM1_S4_RRL, XM1_S5_RRL, XM1_S6_RRL]
+  tie: [w, l, m]
+  description: NMOS legs of the six identical transmission-gate switches (drawn as one unit TG cell) (ported
+    from sup_003_rrl_sc_integrator through the composer rename).
+- name: tg_pmos_rrl
+  kind: shared_geometry
+  members: [XM2_S1_RRL, XM2_S2_RRL, XM2_S3_RRL, XM2_S4_RRL, XM2_S5_RRL, XM2_S6_RRL]
+  tie: [w, l, m]
+  description: PMOS legs of the six identical transmission-gate switches (drawn as one unit TG cell) (ported
+    from sup_003_rrl_sc_integrator through the composer rename).
+- name: chopper_nmos_rrl
+  kind: shared_geometry
+  members: [XM1_CHRRL_1_RRL, XM1_CHRRL_2_RRL, XM1_CHRRL_3_RRL, XM1_CHRRL_4_RRL]
+  tie: [w, l, m]
+  description: NMOS legs of the four chopper TGs — straight (_1/_2) and cross (_3/_4) legs of the 4-gate
+    modulator, all the same drawn unit TG cell, kept as its own functional block (ported from sup_003_rrl_sc_integrator
+    through the composer rename).
+- name: chopper_pmos_rrl
+  kind: shared_geometry
+  members: [XM2_CHRRL_1_RRL, XM2_CHRRL_2_RRL, XM2_CHRRL_3_RRL, XM2_CHRRL_4_RRL]
+  tie: [w, l, m]
+  description: PMOS legs of the four chopper TGs — straight (_1/_2) and cross (_3/_4) legs of the 4-gate
+    modulator, all the same drawn unit TG cell, kept as its own functional block (ported from sup_003_rrl_sc_integrator
+    through the composer rename).

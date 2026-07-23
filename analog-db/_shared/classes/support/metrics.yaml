@@ -1,0 +1,30 @@
+# SUPPORT class — block-level constituents off the amplifier spine that are not big
+# enough for a class of their own (plan_hierarchical_composition S4.2 "support (off-spine)";
+# created on demand for the drawn CCIA constituents: CM detector, behavioral ideal amp,
+# SC-integrator servo). Members differ widely; each binds only the analyses that
+# characterize it, so this class's template list is a toolbox, not a suite every
+# member runs. CMFB circuits moved OUT to their own `cmfb` class 2026-07-20
+# (sup_002_cmfb_servo -> cmfb_001_ideal_rsense_servo; the ac_servo template moved
+# with them) — CMFB designs vary enough to deserve a uniform rigorous suite.
+schema: spicexplorer/class@1
+class: support
+id_code: sup            # accession-id prefix -> sup_001_<slug>
+description: >-
+  Support-tier constituent blocks: common-mode detectors, behavioral macromodel
+  leaves, switched-capacitor servo integrators. Analyses are per-member
+  (SC-integrator ramp, DC sense accuracy) rather than a uniform suite. CMFB
+  networks live in the dedicated `cmfb` class.
+ppa:
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: ripple_gain, better: max}
+canonical_metrics:
+  - i_supply
+  - vos
+  - vcm_out          # sensed common-mode level (CM detector)
+  - ripple_gain      # RRL sense block: demodulated ramp rate per volt of input ripple (V/s/V)
+  - area_um2
+templates:
+  - dc_op            # resolves from _shared/testbench-templates (single-ended shape)
+  - dc_vcm_sense     # CM detector: differential drive -> sensed midpoint accuracy
+  - tran_rrl_sense     # ripple-sensing demodulating integrator: square ripple at f_chop -> ripple_gain

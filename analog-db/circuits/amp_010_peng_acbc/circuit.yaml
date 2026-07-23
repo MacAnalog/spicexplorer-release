@@ -27,6 +27,7 @@ pdks:
 - sky130
 - ihp-sg13g2
 - gf180mcu
+- tsmc-n65
 analyses:
 - ac_open_loop
 - dc_op

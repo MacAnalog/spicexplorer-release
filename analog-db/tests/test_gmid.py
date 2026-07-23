@@ -242,3 +242,58 @@ def test_manifest_reader_and_list_luts():
     assert m["pdk"] == "sky130" and m["dimensions"]["L_um"]["n"] == 8 and m["lut_file"].endswith(".pkl")
     with pytest.raises(FileNotFoundError, match="gmid-extract"):
         gmid.manifest("sky130", "sky130_fd_pr__pfet_01v8", corner="ss")  # uncommitted corner
+
+
+# ── simulator block + per-L parallel extraction (the native/docker-less lane) ────────────────────
+def test_simulator_settings_reads_registry_block():
+    for pdk in ("ihp-sg13g2", "sky130", "gf180mcu"):
+        sim = gmid.simulator_settings(pdk)
+        assert sim["runner"] == "auto" and sim["workers"] >= 1 and sim["timeout_s"] > 0
+
+
+def test_extract_parallel_merges_per_l_slices(monkeypatch):
+    cfg = gmid.GmidConfig.from_registry("sky130")
+    cfg.length_um = [0.15, 0.5, 2.0]
+    shape = (1, 4, 3, 2)  # each per-L job returns a single-L slice
+
+    def fake_extract(one_cfg, run):
+        assert len(one_cfg.length_um) == 1  # fan-out is one job per L
+        val = float(one_cfg.length_um[0])
+        return {
+            "INFO": "x", "CORNER": "TT", "TEMP": 300.0, "NFING": 1, "W": 5.0,
+            "L": np.array(one_cfg.length_um), "VGS": np.zeros(4), "VDS": np.zeros(3),
+            "VSB": np.zeros(2), "ID": np.full(shape, val), "GM": np.full(shape, 10 * val),
+        }
+
+    monkeypatch.setattr(gmid, "extract", fake_extract)
+    lut = gmid.extract_parallel(cfg, run=None, workers=3)
+    assert lut["ID"].shape == (3, 4, 3, 2)
+    assert list(lut["L"]) == [0.15, 0.5, 2.0]                      # L order preserved
+    assert lut["ID"][0].flat[0] == 0.15 and lut["ID"][2].flat[0] == 2.0
+    assert lut["GM"][1].flat[0] == 5.0                              # slices land at their own index
+
+
+def test_extract_parallel_single_worker_falls_through(monkeypatch):
+    cfg = gmid.GmidConfig.from_registry("sky130")
+    called = {}
+
+    def fake_extract(one_cfg, run):
+        called["lengths"] = list(one_cfg.length_um)
+        return {"L": np.array(one_cfg.length_um)}
+
+    monkeypatch.setattr(gmid, "extract", fake_extract)
+    gmid.extract_parallel(cfg, run=None, workers=1)
+    assert called["lengths"] == cfg.length_um                       # classic one-deck path
+
+
+def test_extract_parallel_rejects_inconsistent_slices(monkeypatch):
+    cfg = gmid.GmidConfig.from_registry("sky130")
+    cfg.length_um = [0.15, 0.5]
+
+    def fake_extract(one_cfg, run):  # second job drops a VGS row (non-converged point)
+        n_vgs = 4 if one_cfg.length_um[0] == 0.15 else 3
+        return {"L": np.array(one_cfg.length_um), "ID": np.zeros((1, n_vgs, 3, 2))}
+
+    monkeypatch.setattr(gmid, "extract", fake_extract)
+    with pytest.raises(ValueError, match="inconsistent"):
+        gmid.extract_parallel(cfg, run=None, workers=2)

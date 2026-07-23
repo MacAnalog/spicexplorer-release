@@ -1,0 +1,37 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "sw_001_transmission_gate_pair",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 2,
+    "blocks_detected": 1,
+    "by_family": {
+      "transmission_gate": 1
+    },
+    "structural_roles": {
+      "XM1": "analog_switch",
+      "XM2": "analog_switch"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#1",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM1",
+        "XM2"
+      ],
+      "ports": {
+        "a": "port_a",
+        "b": "port_b",
+        "ctl_n": "vctl",
+        "ctl_p": "vctl_not"
+      }
+    }
+  ]
+}

@@ -41,12 +41,23 @@ def main() -> int:
     ap.add_argument("project_setup", type=Path, help="a raw_optimize/*.yaml project setup")
     ap.add_argument("--loops", type=int, default=None,
                     help="number of optimizer steps (default: optimizer_config.budget)")
+    # Until 2026-07-20 this runner PINNED the engine to NEVERGRAD_SINGLE, which silently beat
+    # the YAML: the orchestrator documents that an explicit `optimizer_type` wins over the DSL,
+    # so a project setup carrying `type: bayesian_ax` still ran under NGOpt with no warning.
+    # Default is now None = resolve `optimizer_config.type` from the YAML (the shipped configs
+    # all carry `type: nevergrad`, so their behavior is unchanged); pass --engine to override.
+    ap.add_argument("--engine", choices=["nevergrad", "bayesian_ax"], default=None,
+                    help="override the YAML's optimizer_config.type (default: honor the YAML)")
     args = ap.parse_args()
     setup_loggers()
 
+    _ENGINE = {
+        "nevergrad": Optimizer_Type_Enum.NEVERGRAD_SINGLE,
+        "bayesian_ax": Optimizer_Type_Enum.AX_SINGLE,
+    }
     orch = Orchestrator(
         project_setup_path=str(args.project_setup),
-        optimizer_type=Optimizer_Type_Enum.NEVERGRAD_SINGLE,
+        optimizer_type=_ENGINE[args.engine] if args.engine else None,
         auto_load=False,
         verbose=False,
     )

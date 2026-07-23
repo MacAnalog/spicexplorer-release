@@ -1,0 +1,12 @@
+# xschemrc for the landed amp_032_ti_ldo_error_selfbias drawing (gf180mcu).
+# Mirrors the convention used by the ihp-sg13g2 entries: source the PDK's own xschemrc for the
+# device symbols, then put BOTH the shared drawings/ library and this directory on the path so
+# the block's own .sym and any shared symbols resolve.
+if { ![info exists env(PDK_ROOT)] } {
+  puts stderr {Warning: PDK_ROOT env. var. not set - PDK device symbols will not resolve}
+}
+if { ![info exists env(PDK)] } { set ::env(PDK) gf180mcuD }
+catch { source $env(PDK_ROOT)/$env(PDK)/libs.tech/xschem/xschemrc }
+append XSCHEM_LIBRARY_PATH :[file normalize [file dirname [info script]]/../../../../../drawings]
+append XSCHEM_LIBRARY_PATH :[file dirname [info script]]
+set netlist_dir [file dirname [info script]]/netlist

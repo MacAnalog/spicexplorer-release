@@ -1,0 +1,37 @@
+schema: spicexplorer/circuit@1
+id: amp_028_ideal_fully_diff
+class: amplifier
+tier: ota
+subfamily: ota
+realization: behavioral
+display_name: Behavioral fully-differential amplifier macromodel (Gm/Rout/Cout VCCS)
+stages: 1
+ports:
+- vinp
+- vinn
+- voutp
+- voutn
+- vdd
+- vss
+provenance:
+  source: drawings/ccia-01-YuPinHsu-bandpass-class-ab-output (hand-drawn xschem, ideal-amp-fully-diff.sym; reused by the ccia-02 RRL)
+  aliases: [ideal-amp-fully-diff]
+  designer: "Noorizadeh"
+  notes: >-
+    Generic behavioral fully-differential amplifier macromodel (VCCS + Rout/Cout +
+    Rin/Cin) used as the CMFB / RRL servo leaf in the drawn CCIAs; the first
+    realization: behavioral entry in the catalogue (plan S3.5). Value symbols
+    (gm_val etc.) match the drawing — normalized at source (DRAWING_REVIEW
+    item 5). Baseline parameter sets live in _shared/IDEAL_AMP.md: this entry's
+    sizing defaults are the ideal-ota baseline (gain 1000, 60 dB / ~15.9 MHz
+    UGF); the servo-grade baseline (gain 10) is the alternative for composed
+    CM/RRL loops.
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/ideal-amp-fully-diff.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+analyses: [ac_open_loop, dc_op]
+pdks:
+- ihp-sg13g2
+status: draft

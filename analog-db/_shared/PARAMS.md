@@ -23,6 +23,12 @@ ratios:                       # mirror gains: frozen constants, or integer knobs
   - {param: m, ref: XM7, of: XM6, ratio: "17/3"}   # m(XM7) = m(XM6) × 17/3
 ```
 
+> **Follow-on (owner decision 2026-07-17, not yet built):** a ratio VALUE is itself a sizing
+> decision — `ratios:` entries are slated to become ratio-space knobs exposed in `sizing.yaml`
+> by default (lowering: `.param x_dut_gain_<ref>=…` + `{<of> * x_dut_gain_<ref>}`), with an
+> explicit `fixed: true` opt-out. Today the gain literal is baked inside the tie expression and
+> is un-sweepable. Design + caveats: meta `doc/plan_parameterization.md` §6.
+
 ## Settled design decisions (plan §4, locked in P0)
 
 1. **Per-finger `(w, m)` is canonical.** The atomic pair is what the netlist says (and IHP PSP

@@ -1,0 +1,21 @@
+# Landing manifest — drawn block -> circuits/ entry (see drawings/README.md).
+# After landing, the entry's pdk/<pdk>/schematic/ copy is the authoritative
+# editable drawing; this family dir is the staging record.
+family: OTA-Two-Stage
+blocks:
+  two-stage-miller-comp-common-mode-control:
+    circuit: amp_020_two_stage_miller_cmfb
+    class: amplifier
+    subfamily: ota   # common-source second stage (see drawings/README.md)
+    notes: landed pre-dating this manifest; the entry's schematic copy is two_stage_miller_cmfb.sch
+  two-stage-miller-comp:
+    circuit: amp_029_two_stage_miller_comp
+    class: amplifier
+    subfamily: ota
+    notes: >-
+      Drawing bug: the stage-1 load-gate net X is floating — landed as the {vbl}
+      knob. Characterization: no stable interior DC point without CM control
+      (see the entry's provenance.notes); amp_020 is the servo'd variant.
+  two-stage-skeleton:
+    circuit: null   # NOT LANDED — a topology sketch (no biasing), staging only
+    class: null

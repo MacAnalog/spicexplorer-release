@@ -1,34 +1,88 @@
-# Design variables for the gf180mcu binding (native PDK — matches the TI-paper source design's
-# own device family). Explicit `u` tokens; 3.3 V devices run at 1.8 V here (D-6 convention).
-# NOTE: vref_val is 0.8 V here (not the 0.6 V used on ihp-sg13g2/sky130) — the 3.3 V nfet_03v3's
-# higher Vth leaves too little input-pair headroom at 0.6 V for the reference-buffer stage to
-# turn on (probed empirically: 0.6 V collapses v_ref_out to ~0 V; 0.8 V gets a working DC point).
-# Starting point only — UNVALIDATED until the sim tier tunes compensation + device sizes.
+# Design variables for the gf180mcu binding — REWRITTEN 2026-07-20 alongside abstract/netlist.spice.
+#
+# The 6 V device family at a 3.3 V rail (see devices.map.yaml for why the old 03v3 @ 1.8 V mapping
+# was dropped). Every amplifier knob below is SEEDED FROM THE LANDED SIZING of its own accession,
+# so this LDO starts from two independently verified amplifiers rather than from scratch:
+#   x_ra_* -> amp_033_ti_ldo_ref_selfbias  (scoreboard 84d3d3403b, 12/12 specs pass:
+#             74.1 dB / 7.29 MHz / pm 73.9 deg / vos -3.80 mV / psrr 54.1 dB / 118 uA)
+#   x_ea_* -> amp_032_ti_ldo_error_selfbias (scoreboard ff05bbd572, 10/12: 54.3 dB / 10.2 MHz /
+#             pm 65.8 deg / psrr 31.6 dB / 127 uA; vos ~93 mV and icmr are its known structural misses)
+#
+# IMPORTANT — a block that meets its own specs standalone is NOT automatically correct in system:
+#   * The amplifier benches load each amp with CL = 10 pF. Here the reference amp drives the
+#     r_ref_top/r_ref_bot divider plus r_lpf, and the error amp drives the pass device's GATE
+#     capacitance, which for a wide power PMOS is far larger than 10 pF. Expect the error amp's
+#     compensation (r_ea_z/c_ea_comp) to need re-tuning against that real load — this is the classic
+#     reason a "verified" error amp destabilises an LDO.
+#   * amp_032's ~93 mV systematic offset lands DIRECTLY on vout (the error amp compares vout against
+#     the filtered reference with no divider), so vout will sit ~93 mV off target before any
+#     regulation error is counted. That is a known, documented consequence, not a sizing bug.
+#
+# COMPENSATED 2026-07-21, guided by the loop-gain pole/zero structure rather than blind search.
+# Measured on the loop (ac_loopgain, Middlebrook injection): dominant pole ~15 Hz (the output node,
+# r_bleed x COUT), a zero ~300 Hz-1 kHz, and a SECOND POLE near 300 kHz - the pass-device gate node
+# (error-amp output resistance x the 400 um pass gate's ~2 pF). With crossover at 350 kHz that
+# second pole sat BELOW the unity-gain frequency, which is what left only 12-14 deg of margin.
+# Three things were tried and only the third is right:
+#   * c_ea_comp 6.7p -> 0.2p: the error amp carried its OWN Miller pole inside the loop, so the LDO
+#     had two independently-compensated low-frequency poles. Removing it: pm 12.5 -> 37.9 deg.
+#     r_ea_z then does nothing (its zero moves to 8-28 MHz, far above crossover) - confirmed by a
+#     4x3 sweep where pm varied only 37.9 -> 38.7 deg across the whole r_ea_z range.
+#   * an outer Miller across the pass device (pole splitting) makes it WORSE (37.9 -> 29.5 -> 10.5
+#     deg as Cm grows): the dominant pole is ALREADY at the output, so that cap only loads the
+#     error-amp output and adds lag. Correctly predicted by the pole map, and the reason the
+#     drawing's compensation-free output network was kept.
+#   * shrinking the pass device works for margin (m=3 gives pm 75.8 deg) but destroys load
+#     regulation (9.56 V - it cannot source the sweep), so it was rejected.
+# The fix that holds is lowering LOOP GAIN so crossover falls below the gate pole, via the error
+# amp's output device: x_dut_xmea_6_w 72.84u -> 12u takes loop gain 100 -> 80 dB and crossover
+# 445 -> 175 kHz. At 8u the loop collapses entirely, so 12u sits above a real floor.
+# x_dut_xmea_6_w and c_ea_comp therefore DIVERGE from amp_032's standalone landed sizing on purpose -
+# exactly the in-system re-tuning this header predicted (the standalone bench loads that amp with
+# 10 pF; here it drives a 400 um pass gate).
 schema: spicexplorer/sizing@1
 pdk: gf180mcu
 variables:
-  - {name: x_dut_xmp_w,     description: "Pass PMOS per-device width (<=bin max)", default: 20u, min: 0.22u, max: 100u, unit: m}
-  - {name: x_dut_xmp_m,     description: "Pass PMOS parallel multiplier (total W = x_dut_xmp_w*x_dut_xmp_m)", default: 20, min: 1, max: 200, unit: count, is_integer: true}
-  - {name: x_dut_xmp_l,     description: "Pass PMOS length",                default: 0.5u, min: 0.28u, max: 2u,   unit: m}
-  - {name: r_bleed,    description: "Output bleeder resistor",         default: 10k,  min: 1k,    max: 1Meg, unit: ohm}
-  - {name: r_z,        description: "Miller nulling resistor",         default: 1,    min: 0,     max: 100k, unit: ohm}
-  - {name: c_comp,     description: "Miller compensation cap",         default: 0.05p, min: 0.01p, max: 100p, unit: F}
-  - {name: x_dut_xm7_w,   description: "Error-amp input pair width",      default: 4u,   min: 0.22u, max: 50u,  unit: m}
-  - {name: x_dut_xm7_l,   description: "Error-amp input pair length",     default: 0.5u, min: 0.28u, max: 10u,  unit: m}
-  - {name: x_dut_xm9_w, description: "Error-amp PMOS load width",       default: 4u,   min: 0.22u, max: 50u,  unit: m}
-  - {name: x_dut_xm9_l, description: "Error-amp PMOS load length",      default: 0.5u, min: 0.28u, max: 10u,  unit: m}
-  - {name: x_dut_xm12_w, description: "Error-amp tail/bias mirror width",default: 4u,   min: 0.22u, max: 50u,  unit: m}
-  - {name: x_dut_xm12_l, description: "Error-amp tail/bias mirror length",default: 1.0u, min: 0.28u, max: 10u, unit: m}
-  - {name: i_tail_err, description: "Error-amp tail bias current",     default: 200u, min: 1u,    max: 500u, unit: A}
-  - {name: x_dut_xm1_w,   description: "Ref-buffer input pair width",     default: 4u,   min: 0.22u, max: 50u,  unit: m}
-  - {name: x_dut_xm1_l,   description: "Ref-buffer input pair length",    default: 0.5u, min: 0.28u, max: 10u,  unit: m}
-  - {name: x_dut_xm3_w, description: "Ref-buffer PMOS load width",      default: 4u,   min: 0.22u, max: 50u,  unit: m}
-  - {name: x_dut_xm3_l, description: "Ref-buffer PMOS load length",     default: 0.5u, min: 0.28u, max: 10u,  unit: m}
-  - {name: x_dut_xm6_w, description: "Ref-buffer tail/bias mirror width",default: 4u,  min: 0.22u, max: 50u,  unit: m}
-  - {name: x_dut_xm6_l, description: "Ref-buffer tail/bias mirror length",default: 1.0u, min: 0.28u, max: 10u, unit: m}
-  - {name: i_tail_ref, description: "Ref-buffer tail bias current",    default: 100u, min: 1u,    max: 500u, unit: A}
-  - {name: r_ref_top,  description: "Ref-buffer feedback divider top",  default: 100k, min: 1k,    max: 10Meg, unit: ohm}
-  - {name: r_ref_bot,  description: "Ref-buffer feedback divider bottom",default: 100k, min: 1k,   max: 10Meg, unit: ohm}
-  - {name: r_lpf,      description: "Reference low-pass filter resistor",default: 10k,  min: 1k,   max: 1Meg, unit: ohm}
-  - {name: c_lpf,      description: "Reference low-pass filter cap",    default: 10p,  min: 0.1p, max: 10n,  unit: F}
-  - {name: vref_val,   description: "Internal reference voltage",      default: 0.8,  min: 0.3,   max: 1.2,  unit: V}
+# --- Reference amplifier (amp_033 landed sizing, trial 27) ---
+  - {name: x_dut_xmra_bp_w, description: "Ref-amp self-bias PMOS diode (sets its whole bias current)", default: 10.844u, min: 2u, max: 64u, unit: m}
+  - {name: x_dut_xmra_bp_l, description: "Ref-amp self-bias PMOS length", default: 2u, min: 0.5u, max: 10u, unit: m}
+  - {name: x_dut_xmra_b0_w, description: "Ref-amp mirror-rail NMOS diode (unit device)", default: 12u, min: 2u, max: 100u, unit: m}
+  - {name: x_dut_xmra_b0_l, description: "Ref-amp mirror-rail length (shared by tail + output sink)", default: 2u, min: 0.5u, max: 10u, unit: m}
+  - {name: x_dut_xmra_bc_w, description: "Ref-amp tail sink (stage-1 current)", default: 8.316u, min: 2u, max: 100u, unit: m}
+  - {name: x_dut_xmra_bo_w, description: "Ref-amp stage-2 sink (output-stage current)", default: 4u, min: 2u, max: 100u, unit: m}
+  - {name: x_dut_xmra_1_w,  description: "Ref-amp input pair width (XRA1/XRA2 matched)", default: 86.42u, min: 4u, max: 100u, unit: m}
+  - {name: x_dut_xmra_1_l,  description: "Ref-amp input pair length", default: 0.7u, min: 0.28u, max: 10u, unit: m}
+  - {name: x_dut_xmra_3_w,  description: "Ref-amp PMOS mirror load (XRA3/XRA4 matched - mismatch here IS offset)", default: 20u, min: 2u, max: 100u, unit: m}
+  - {name: x_dut_xmra_3_l,  description: "Ref-amp PMOS mirror load length", default: 1u, min: 0.28u, max: 10u, unit: m}
+  - {name: x_dut_xmra_5_w,  description: "Ref-amp stage-2 common-source PMOS", default: 37.76u, min: 4u, max: 100u, unit: m}
+  - {name: x_dut_xmra_5_l,  description: "Ref-amp stage-2 PMOS length", default: 2.646u, min: 0.28u, max: 10u, unit: m}
+  - {name: r_ra_z,      description: "Ref-amp Miller nulling resistor", default: 30.853k, min: 100, max: 100k, unit: ohm}
+  - {name: c_ra_comp,   description: "Ref-amp Miller capacitor", default: 4.508p, min: 0.2p, max: 50p, unit: F}
+# --- Error amplifier (amp_032 landed sizing). r_ea_z/c_ea_comp are the knobs most likely to move:
+# --- standalone they saw a 10 pF load; here they drive the pass device's gate.
+  - {name: x_dut_xmea_bp_w, description: "Error-amp self-bias PMOS diode (primary power/PSRR trade knob)", default: 6.3111u, min: 2u, max: 64u, unit: m}
+  - {name: x_dut_xmea_bp_l, description: "Error-amp self-bias PMOS length", default: 2u, min: 0.5u, max: 10u, unit: m}
+  - {name: x_dut_xmea_b0_w, description: "Error-amp mirror unit width (diode + tail + output sink share it)", default: 34.533u, min: 2u, max: 100u, unit: m}
+  - {name: x_dut_xmea_b0_l, description: "Error-amp mirror-rail length (all five sinks share it)", default: 2u, min: 0.5u, max: 10u, unit: m}
+  - {name: x_dut_xmea_bf_w, description: "Error-amp mirror_f sink (level-shifter anchor, ~0 current by design)", default: 5u, min: 1u, max: 40u, unit: m}
+  - {name: x_dut_xmea_1_w,  description: "Error-amp input pair width (XEA1/XEA2 matched)", default: 68.542u, min: 4u, max: 100u, unit: m}
+  - {name: x_dut_xmea_1_l,  description: "Error-amp input pair length", default: 0.7u, min: 0.28u, max: 10u, unit: m}
+  - {name: x_dut_xmea_3_w,  description: "Error-amp level-shifted PMOS mirror (XEA3/XEA5 matched)", default: 69.545u, min: 4u, max: 100u, unit: m}
+  - {name: x_dut_xmea_3_l,  description: "Error-amp PMOS mirror length", default: 0.5u, min: 0.28u, max: 10u, unit: m}
+  - {name: x_dut_xmea_4_w,  description: "Error-amp M4 compound-diode level shifter (~zero DC current)", default: 10u, min: 2u, max: 100u, unit: m}
+  - {name: x_dut_xmea_4_l,  description: "Error-amp M4 length", default: 0.5u, min: 0.28u, max: 10u, unit: m}
+  - {name: x_dut_xmea_6_w,  description: "Error-amp output PMOS (drives the pass gate)", default: 12u, min: 8u, max: 100u, unit: m}
+  - {name: x_dut_xmea_6_l,  description: "Error-amp output PMOS length", default: 3.8349u, min: 0.28u, max: 10u, unit: m}
+  - {name: r_ea_z,      description: "Error-amp Miller nulling resistor - expect re-tuning against the pass gate", default: 28.429k, min: 100, max: 100k, unit: ohm}
+  - {name: c_ea_comp,   description: "Error-amp Miller capacitor - expect re-tuning against the pass gate", default: 0.2p, min: 0.2p, max: 50p, unit: F}
+# --- System level: reference, divider, RC filter, pass device, output network ---
+  - {name: vref_val,    description: "Internal reference voltage (ideal source; a real bandgap is vref_001_vgs)", default: 0.8, min: 0.3, max: 1.5, unit: V}
+  - {name: r_ref_top,   description: "Ref-amp feedback divider top - with r_ref_bot sets vout = vref*(top+bot)/bot", default: 100k, min: 1k, max: 10Meg, unit: ohm}
+  - {name: r_ref_bot,   description: "Ref-amp feedback divider bottom (100k/100k => gain 2 => vout 1.6 V)", default: 100k, min: 1k, max: 10Meg, unit: ohm}
+  - {name: r_lpf,       description: "Reference low-pass filter resistor", default: 10k, min: 1k, max: 1Meg, unit: ohm}
+  - {name: c_lpf,       description: "Reference low-pass filter cap (10k/10p => ~1.6 MHz corner)", default: 10p, min: 0.1p, max: 10n, unit: F}
+  - {name: x_dut_xmp_w, description: "Pass PMOS per-device width (<= the gf180 100u bin max)", default: 20u, min: 1u, max: 100u, unit: m}
+  - {name: x_dut_xmp_m, description: "Pass PMOS parallel multiplier (total W = w*m)", default: 20, min: 1, max: 200, unit: count, is_integer: true}
+  - {name: x_dut_xmp_l, description: "Pass PMOS length (short = low dropout, but more gate cap to drive)", default: 0.6u, min: 0.28u, max: 2u, unit: m}
+  - {name: r_bleed,     description: "Output bleeder / minimum-load path (the drawing's R3)", default: 10k, min: 1k, max: 1Meg, unit: ohm}
+  - {name: c_out_int,   description: "On-die output capacitor (the drawing's C1); benches add their own external COUT", default: 10p, min: 0.1p, max: 1n, unit: F}

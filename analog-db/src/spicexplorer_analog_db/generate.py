@@ -1,12 +1,11 @@
-"""Generators for the committed-but-derived artifacts (plan D-2, O-2).
+"""Generators for the committed-but-derived artifacts.
 
 ``abstract/netlist.spice`` is AUTHORED; everything here is GENERATED from it:
   - ``abstract/topology.cgraph.json`` — circuitgraph serialization (the abstract source of truth).
   - ``pdk/<pdk>/netlist.spice`` — the abstract graph lowered to a PDK via ``to_netlist(pdk=…)``.
 
-These are committed and CI-guarded: Tier 1 (Phase 1) re-runs the generator and diffs the
-committed file, so a stale commit fails. P0 ships the generator + the committed artifacts;
-the drift-guard tier wires in at P1.
+These are committed and CI-guarded: Tier 1 re-runs the generator and diffs the
+committed file, so a stale commit fails.
 """
 
 from __future__ import annotations
@@ -40,7 +39,7 @@ def cgraph_json(circuit: Circuit) -> str:
 def lowered_netlist(circuit: Circuit, pdk_name: str) -> str:
     """The abstract graph lowered to ``pdk_name`` (device names retargeted).
 
-    Honors the per-topology ``pdk/<pdk>/devices.map.yaml`` override (Phase 1) over the
+    Honors the per-topology ``pdk/<pdk>/devices.map.yaml`` override over the
     circuitgraph built-in table.
     """
     pdk = load_pdk(circuit, pdk_name)
@@ -51,15 +50,18 @@ def lowered_netlist(circuit: Circuit, pdk_name: str) -> str:
 def write_generated(circuit: Circuit) -> list[str]:
     """(Re)write all generated artifacts for one circuit; return the relative paths written.
 
-    A ``kind: reference`` circuit (D-9) has no abstract netlist to lower and no open-PDK bindings,
+    A ``kind: reference`` circuit has no abstract netlist to lower and no open-PDK bindings,
     so there is nothing to generate — return empty.
     """
+    from . import compose
     from .extends import write_project_setup
 
     if circuit.is_reference_only:
         return []
 
-    written: list[str] = []
+    # composites first: composition.yaml → flat abstract/netlist.spice +
+    # per-PDK sizing.yaml, so the ordinary pipeline below lowers the fresh compose.
+    written: list[str] = list(compose.write_composed(circuit))
     cg = circuit.dir / "abstract" / "topology.cgraph.json"
     cg.write_text(cgraph_json(circuit))
     written.append(str(cg.relative_to(circuit.dir)))

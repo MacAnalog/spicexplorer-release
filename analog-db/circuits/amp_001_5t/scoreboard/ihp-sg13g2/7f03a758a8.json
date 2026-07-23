@@ -1,0 +1,169 @@
+{
+  "area": {
+    "active_gate_area_um2": 40.0,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 6,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "amp_001_5t",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_closed_loop": {
+          "measures": {
+            "bw_cl": 19764450.0,
+            "gain_cl": 0.9417521
+          },
+          "status": "ok"
+        },
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 29.77862,
+            "pm": 61.47803,
+            "ugf": 30148150.0
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 29.67609
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 2.748729e-05
+          },
+          "status": "ok"
+        },
+        "iip3": {
+          "error": "amp_001_5t/iip3@ihp-sg13g2/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_001_5t \u00d7 iip3 \u00d7 ihp-sg13g2 \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nvdd                                        1.5\nvss                                    ",
+          "status": "sim_error"
+        },
+        "linearity": {
+          "measures": {
+            "icmr_max": 0.855,
+            "icmr_min": 0.055,
+            "icmr_range": 0.8
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.001713082,
+            "onoise_total": 0.003751348
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 29.69583
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "error": "amp_001_5t/stb@ihp-sg13g2/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_001_5t \u00d7 stb \u00d7 ihp-sg13g2 \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nNo. of Data Rows : 607\nASCII raw file \"rawspice.raw\"\nngspice-45 done\n",
+          "status": "sim_error"
+        },
+        "thd": {
+          "error": "amp_001_5t/thd@ihp-sg13g2/tt: no measures parsed:\n\n Reference value :  9.76856e-06\n Reference value :  1.01286e-05\n Reference value :  1.04306e-05\n Reference value :  1.08166e-05\n Reference value :  1.11666e-05\n Reference value :  1.14686e-05\n Reference value :  1.18646e-05\n Reference value :  1.22006e-05\n Reference value :  1.25166e-05\n Reference value :  1.29126e-05\n Reference value :  1.32386e-05\n Reference value :  1.35666e-05\n Reference value :  1.39586e-05\n Reference value :  1.42806e-05\n ",
+          "status": "sim_error"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 2.3999e-08,
+            "tcross": 1.023999e-06,
+            "vfinal": 0.9481616
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:11:31+00:00"
+      }
+    }
+  },
+  "design_id": "7f03a758a8",
+  "metrics": {
+    "tt": {
+      "bw_cl_hz": {
+        "spec": "pass",
+        "value": 19764450.0
+      },
+      "cmrr_db": {
+        "spec": "fail",
+        "value": 29.67609
+      },
+      "dc_gain_db": {
+        "spec": "fail",
+        "value": 29.77862
+      },
+      "gain_cl": {
+        "spec": "fail",
+        "value": 0.9417521
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 2.748729e-05
+      },
+      "icmr_range": {
+        "spec": "pass",
+        "value": 0.8
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 61.47803
+      },
+      "psrr_vdd_db": {
+        "spec": "fail",
+        "value": 29.69583
+      },
+      "t_settle": {
+        "spec": "pass",
+        "value": 2.3999e-08
+      },
+      "ugf_hz": {
+        "spec": "pass",
+        "value": 30148150.0
+      },
+      "vn_in": {
+        "spec": "fail",
+        "value": 0.001713082
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_xm1_l": "5.0u",
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": "0.5u",
+      "x_dut_xm3_l": "5.0u",
+      "x_dut_xm3_m": 1,
+      "x_dut_xm3_w": "1.5u",
+      "x_dut_xm5_l": "5.0u",
+      "x_dut_xm5_m": 1,
+      "x_dut_xm5_w": "2.0u",
+      "x_dut_xm6_l": "5.0u",
+      "x_dut_xm6_m": 1,
+      "x_dut_xm6_w": "2.0u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 40.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 29.77862,
+      "pm_deg": 61.47803,
+      "ugf_hz": 30148150.0
+    },
+    "power_w": 4.1230935e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

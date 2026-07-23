@@ -12,13 +12,19 @@
 schema: spicexplorer/datasheet@1
 cace_format: "5.2"
 default_conditions:
-  supply: {unit: V, typical: 1.8}      # input rail (Vin=vdd for this 3-port DUT)
-  vout:   {unit: V, typical: 1.2}      # regulated output target (= vref*(r_ref_top+r_ref_bot)/r_ref_bot)
-  vref:   {unit: V, typical: 0.6}      # internal reference (sizing var vref_val, on ihp-sg13g2)
+  supply: {unit: V, typical: 3.3}      # input rail (Vin=vdd for this 3-port DUT); 6 V device family
+  vout:   {unit: V, typical: 1.6}      # regulated output target (= vref*(r_ref_top+r_ref_bot)/r_ref_bot)
+  vref:   {unit: V, typical: 0.8}      # internal reference (sizing var vref_val)
   cout:   {unit: uF, typical: 1.0}     # external output cap assumed by PSRR/transient/stability
   iload:  {unit: mA, typical: 1.0}     # nominal load current
   corner: {typical: tt}
   temp:   {unit: degC, typical: 27}
+# RE-TARGETED 2026-07-20 for the rewritten architecture: 3.3 V rail (6 V devices), 1.6 V output.
+# The v_out window is +/-100 mV rather than the old +/-50 mV ON PURPOSE — the error amp compares
+# vout DIRECTLY against the filtered reference with no feedback divider, so amp_032's ~93 mV
+# systematic input offset appears at vout one-for-one, before any regulation error. Tightening it
+# below that would be specifying a number the chosen error-amp topology cannot meet; closing that
+# gap is an amp_032 topology question (its ratioed mirror_e sink), tracked separately.
 metrics:
   v_out:
     display: "Regulated output voltage"
@@ -26,7 +32,7 @@ metrics:
     unit: V
     analysis: dc_op
     extract: {meas: vout_dc}
-    spec: {min: 1.15, typ: 1.2, max: 1.25, unit: V}
+    spec: {min: 1.50, typ: 1.6, max: 1.70, unit: V}
   i_q:
     display: "Quiescent current"
     description: "Total supply current at no load (ref-buffer tail + error-amp tail + dividers)."
@@ -106,3 +112,28 @@ metrics:
     analysis: tran_line_step
     extract: {meas: v_line_pp}
     spec: {max: 0.03, unit: V}          # ihp-sg13g2 measured 15.8 mV p2p
+  pm_loop_deg:
+    display: "Loop phase margin"
+    description: "TRUE regulation-loop phase margin by voltage injection at the Vlp marker. The
+      previous revision of this circuit measured 0.97 dB of loop gain with pm_loop 206 deg (i.e. no
+      usable loop), while zout_peak_db read 0.0 and looked perfectly damped — which is exactly why
+      this metric exists alongside the peaking proxy."
+    unit: deg
+    analysis: ac_loopgain
+    extract: {meas: pm_loop}
+    spec: {min: 45, unit: deg}
+  loopgain_db:
+    display: "DC loop gain"
+    description: "Loop gain at FSTART. Sets the regulation accuracy floor: static load/line error
+      scales as 1/loop-gain."
+    unit: dB
+    analysis: ac_loopgain
+    extract: {meas: loopgain_db}
+    spec: {min: 50, unit: dB}
+  ugf_loop_hz:
+    display: "Loop unity-gain frequency"
+    description: "Regulation bandwidth — how fast the loop can correct a load step."
+    unit: Hz
+    analysis: ac_loopgain
+    extract: {meas: ugf_loop}
+    spec: {min: 1e5, unit: Hz}

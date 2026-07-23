@@ -1,0 +1,42 @@
+schema: spicexplorer/circuit@1
+id: cmfb_001_ideal_rsense_servo
+class: cmfb
+tier: support
+realization: behavioral
+display_name: Output CMFB servo (behavioral fully-diff amp + resistive CM detector)
+stages: 1
+ports:
+- vinp
+- vinn
+- vcmfb
+- vref
+- vdd
+- vss
+provenance:
+  source: drawings/ccia-01-YuPinHsu-bandpass-class-ab-output (hand-drawn xschem, cmfb-output-ideal-amp.sym)
+  paper: "Y.-P. Hsu, Z. Liu, M. M. Hella, \"A 1.8 uW -65 dB THD ECG Acquisition Front-End IC Using a Bandpass Instrumentation Amplifier With Class-AB Output Configuration\", IEEE TCAS-II 65(12):1859-1863, Dec. 2018"
+  aliases: [cmfb-output-ideal-amp, sup_002_cmfb_servo]
+  designer: "Noorizadeh (schematic capture, after Hsu et al.)"
+  notes: >-
+    CMFB block of the drawn CCIA: resistive CM averager (Rmp/Rmn) + the
+    ideal-amp-fully-diff macromodel leaf used single-ended (its voutn is tied to
+    vss as drawn; only voutp=vcmfb serves the correction). Servo polarity
+    MATCHES the fixed drawing (DRAWING_REVIEW item 3 FIXED: vref on the +
+    input, CM detector on the - input, so vcmfb = A*(vref - vcm_sensed) opposes
+    the CM error). The leaf's *_val value symbols match the drawing (normalized
+    at source, DRAWING_REVIEW item 5); vdd is a no-connect as drawn (the
+    macromodel leaf has no supply pins). Baseline parameter sets for the ideal
+    amp leaf are in _shared/IDEAL_AMP.md: this entry keeps the gain-1000
+    ideal-ota values (60 dB path gain bench point); the servo-grade baseline
+    (gain 10, rout 100k) is the recommended alternative when composing a real
+    CM loop.
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/cmfb-output-ideal-amp.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+analyses: [dc_cmfb_transfer, ac_servo, tran_cmfb_step]
+pdks:
+- ihp-sg13g2
+- tsmc-n65
+status: draft

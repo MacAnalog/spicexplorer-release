@@ -1,0 +1,53 @@
+# SUPER-DSL manifest — the TI-application-note LDO error amplifier in its SELF-BIASED form:
+# a two-stage core with the external `ibias` port replaced by an on-chip diode-connected PMOS
+# reference (XMBP). This is the shape the owner drew in
+# drawings/ldo-005-ti-ldo-buffer-ref/gf180/error_amp/error_amp.sch, and the shape the
+# buffered-reference LDO needs, since that LDO has no separate bias rail to hand its error amp.
+#
+# REVISED 2026-07-20 — stage-2 stack removed, which eliminated this amp's structural input offset.
+# The original transcription put a diode M7 in stage 2 whose SOURCE sat on the first-stage output
+# node nb, biased by a sink XMBE. Two measured consequences (gf180mcu tt, at the then-landed sizing):
+#   * KCL at the two mirror-load branches differed by M7's current I_e — na carried I(M1)+I(M4)
+#     (M4 is a ~zero-current level shifter, measured 1.0e-12 A) while nb carried I(M2)+I_e. M3m/M5
+#     are a MATCHED pair on a shared gate, so the circuit could only reconcile that by skewing the
+#     input pair, measured 46.17 uA vs 17.19 uA. That skew WAS the ~93 mV systematic offset.
+#   * nb = vdd - Vsg(M6) + Vsg(M7) pinned nb near the rail (3.091 V of 3.3), leaving M5 just 0.21 V
+#     of Vsd — deep triode, so it could not act as a current source at all. Widening M7 barely
+#     helped (12.88u -> 100u moved nb only 3.121 -> 3.013 V), and a replica sink on the na branch
+#     only got vos to 54.9 mV: both treat the symptom, not the pinned node.
+# THE CHANGE: delete M7 and XMBE; drive M6's gate directly from nb. KCL at nb becomes I(M5)=I(M2),
+# the matched mirror forces I(M1)=I(M2), and the systematic offset has nowhere to come from.
+# 13 devices -> 11. Everything else (input pair, Vth-level-shifted mirror load, self-bias, Rz+Cc
+# compensation) is unchanged, which is why this stayed the same accession rather than forking.
+#
+# Before -> after, both at their own optimizer-landed sizings:
+#   specs 10/12 -> 12/12 · vos 93.1 -> -17.1 mV · icmr_range 0.0 -> 2.10 V · dc_gain 54.3 -> 61.4 dB
+#   psrr 31.6 -> 38.2 dB · cmrr 45.8 -> 48.8 dB · vn_in 227 -> 107 uV · pm 65.8 -> 75.7 deg
+#   i_supply 127 -> 284 uA (the one regression — see sizing.yaml on the ugf spec that forces it)
+# The pre-fix scoreboard entry (ff05bbd572) was dropped: its design_id hashes a knob set that no
+# longer exists (x_dut_xm7_*, x_dut_xmbe_w), so it was not reproducible from this netlist.
+schema: spicexplorer/circuit@1
+id: amp_032_ti_ldo_error_selfbias
+class: amplifier
+display_name: "TI-LDO error amplifier, self-biased (11T two-stage, level-shifted mirror load, direct-CS output)"
+compensation: "Rz + Cc from the first-stage node to the output"
+stages: 2
+subfamily: ota
+ports: [vdd, vout, vinp, vinn, vss]   # vinp=VFB (non-inv), vinn=VREF (inv) — see amp_019 README
+provenance:
+  source: drawings/ldo-005-ti-ldo-buffer-ref/gf180/error_amp/error_amp.sch
+  aliases: [error_amp_selfbias, ti_ldo_error_amp_selfbias]
+  designer: "Danial Noori Zadeh"
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+  schematic: pdk/gf180mcu/schematic/error_amp.sch   # editable xschem drawing, sized to the
+                                                    # landed sizing.yaml (scoreboard ff05bbd572)
+pdks: [gf180mcu]
+analyses: [dc_op, ac_open_loop, ac_closed_loop, psrr_vdd, cmrr_vcm, noise, tran_step, linearity]
+optimize:
+  budget: 30
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

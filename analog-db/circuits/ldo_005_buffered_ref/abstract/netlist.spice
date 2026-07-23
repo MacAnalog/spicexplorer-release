@@ -1,65 +1,125 @@
-** Abstract buffered-reference LDO — a PMOS-pass regulator with a BUFFERED + RC-FILTERED
-** internal reference feeding the error amp, inspired by the TI application-note LDO
-** architecture in external/conceptual_LDO_design/ti-ldo/ldo/ldo.sch (ref_amp + error_amp +
-** lpf_rc + PMOS pass device, GF180MCU-native source). PDK-neutral model tokens (nmos/pmos);
-** per-PDK device names + geometry come from circuitgraph lowering + pdk/<pdk>/{devices.map,
-** sizing}.yaml. Two 5T OTA stages (both hand-INLINED as flat primitives, same rationale as
-** ldo_007_pmos: the lowering pipeline emits a foreign `.subckt` instance as a dangling reference,
-** so composition is a separate hierarchical-netlist feature) — a reference-buffer amp and an
-** error amp — plus a single-pole RC filter between them, distinguishing this circuit from the
-** simpler direct-reference ldo_007_pmos.
+** Abstract buffered-reference LDO — REWRITTEN 2026-07-20 to match the owner's gf180 drawing
+** (drawings/ldo-005-ti-ldo-buffer-ref/gf180/ldo/ldo.sch). The previous version modelled both
+** amplifiers as 5T OTAs driven by IDEAL current sources; the drawing has since become two
+** self-biased multi-stage amps, and those are now landed as their own verified accessions:
+**   reference amp -> amp_033_ti_ldo_ref_selfbias  (9T two-stage Miller, matched PMOS mirror load)
+**   error amp     -> amp_032_ti_ldo_error_selfbias (12T two-stage, level-shifted mirror load)
+** Both are inlined FLAT here (hand-lowered), the same rationale ldo_007_pmos and the previous
+** revision used: the lowering pipeline emits a foreign `.subckt` instance as a dangling reference,
+** so cross-circuit composition is a separate hierarchical-netlist feature
+** (doc/plan_hierarchical_composition.md, not started). Device geometry defaults below are the
+** LANDED sizings of those two accessions, so this LDO starts from two independently verified amps
+** rather than from scratch.
+**
+** WHY THE REWRITE: the old 5T netlist does not regulate. Measured 2026-07-20 (gf180mcu tt):
+**   vout_dc 1.359 V against a 1.6 V target · load_reg 0.409 V (output collapses to 0.950 V)
+**   line_reg 0.249 V · psrr_vdd_db 4.85 dB · loop gain 0.97 dB at DC
+** i.e. essentially no loop gain at all. Note that the class's `loop_stability` proxy reported
+** zout_peak_db = 0.0 for exactly that circuit, which reads as "beautifully damped" — a dead loop
+** and a perfectly compensated one are INDISTINGUISHABLE to a peaking metric. That is what the new
+** `ac_loopgain` bench exists to separate, and why this circuit now carries a loop-break marker.
+**
+** DEVICE NAMING — every inlined transistor MUST start with `XM`. circuitgraph's DeviceFactory
+** dispatches on the instance-name prefix (device_factory.py: MOS_PREFIXES=("M","XM"),
+** RES_PREFIXES=("R","XR"), ...). An earlier draft of this netlist named the two amps' devices
+** XRA*/XEA*, which cost two silent failures: every XRA* was read as a RESISTOR, failed the 2-net
+** arity check and was DROPPED from the graph (9 transistors gone, one warning), while every XEA*
+** fell through unlowered and kept the generic `nmos`/`pmos` tokens instead of nfet_06v0/pfet_06v0
+** — an unsimulatable deck. Both amps' own accessions use XM* throughout; keep it that way.
+**
 ** Subckt port order (= circuit.yaml ports): vdd vout vss
 **
-** Signal path: vref -(buffer amp, gain=(r_ref_top+r_ref_bot)/r_ref_bot)-> v_ref_out
-**   -(RC lowpass)-> v_lpf_out -(error amp, in+=vout in-=v_lpf_out)-> egate -> Mp -> vout.
-** Loop polarity (negative feedback): vout^ -> egate^ -> Vsg(pass)=vdd-egatev -> Ipassv -> voutv.
+** Signal path: vref -(ref amp, closed-loop gain (r_ref_top+r_ref_bot)/r_ref_bot)-> v_ref_out
+**   -(RC lowpass)-> v_lpf_out -(error amp, in-)-> ea_out -> pass gate -> vout -(marker)-> in+.
+** Loop polarity (negative feedback): vout^ -> ea_out^ -> Vsg(pass) v -> Ipass v -> vout v.
 ** Regulates to vout = v_lpf_out = v_ref_out = vref*(r_ref_top+r_ref_bot)/r_ref_bot.
+** NOTE there is NO divider on vout itself — the error amp compares vout DIRECTLY against the
+** filtered reference, so the reference amp's gain sets the output level and BOTH amps' input
+** offsets land on vout un-attenuated (the ref amp's multiplied by its own closed-loop gain).
+** That is why amp_033 was given a 5 mV vos spec and a matched (not ratioed) mirror load.
 **.subckt ldo_005_buffered_ref vdd vout vss
 **
-** --- internal ideal reference (sim reference, not a silicon bandgap) ---
-** NOTE: passive value fields are single-quoted and source values are braced so ngspice
-** evaluates them as .param expressions (a bare `r_ref_top` is parsed as a model name).
-Vref      vref      vss dc {vref_val}
-Ibias_ref vdd       ebias_ref dc {i_tail_ref}
+** ---------------------------------------------------------------------------------------------
+** internal ideal reference (a sim reference, NOT a silicon bandgap — vref_001_vgs is the real one)
+** ---------------------------------------------------------------------------------------------
+Vref vref vss dc {vref_val}
 **
-** --- Reference buffer: 5T OTA (NMOS input pair + PMOS mirror load + NMOS tail), output taken
-** at the mirror node. Configured as a non-inverting buffer/gain block via the outer R1/R2
-** feedback divider around its own output (v_ref_out -> v_ref_fb -> vss). in+=vref (mirrored
-** via M3/M4 onto the output), in-=v_ref_fb (direct output-node drain) — in+ must be the
-** MIRRORED side for negative feedback (swapping these makes the divider positive feedback).
-XM1 rd1       vref     retail    vss nmos w=x_dut_xm1_w   l=x_dut_xm1_l
-XM2 v_ref_out v_ref_fb retail    vss nmos w=x_dut_xm2_w   l=x_dut_xm2_l
-XM3 rd1       rd1      vdd       vdd pmos w=x_dut_xm3_w l=x_dut_xm3_l
-XM4 v_ref_out rd1      vdd       vdd pmos w=x_dut_xm4_w l=x_dut_xm4_l
-XM5 retail    ebias_ref vss      vss nmos w=x_dut_xm5_w l=x_dut_xm5_l
-XM6 ebias_ref ebias_ref vss      vss nmos w=x_dut_xm6_w l=x_dut_xm6_l
+** ---------------------------------------------------------------------------------------------
+** REFERENCE AMPLIFIER — amp_033_ti_ldo_ref_selfbias inlined (prefix XMRA_/net prefix ra_).
+** Non-inverting gain stage: in+ = vref, in- = the r_ref_top/r_ref_bot divider tap.
+** ---------------------------------------------------------------------------------------------
+XMRA_BP ra_ibias ra_ibias vdd     vdd pmos w=x_dut_xmra_bp_w l=x_dut_xmra_bp_l
+XMRA_B0 ra_ibias ra_ibias vss     vss nmos w=x_dut_xmra_b0_w l=x_dut_xmra_b0_l
+XMRA_BC ra_tail  ra_ibias vss     vss nmos w=x_dut_xmra_bc_w l=x_dut_xmra_bc_l
+XMRA_BO v_ref_out ra_ibias vss    vss nmos w=x_dut_xmra_bo_w l=x_dut_xmra_bo_l
+XMRA_1  ra_na    v_ref_fb ra_tail vss nmos w=x_dut_xmra_1_w  l=x_dut_xmra_1_l
+XMRA_2  ra_nb    vref     ra_tail vss nmos w=x_dut_xmra_2_w  l=x_dut_xmra_2_l
+XMRA_3  ra_na    ra_na    vdd     vdd pmos w=x_dut_xmra_3_w  l=x_dut_xmra_3_l
+XMRA_4  ra_nb    ra_na    vdd     vdd pmos w=x_dut_xmra_4_w  l=x_dut_xmra_4_l
+XMRA_5  v_ref_out ra_nb   vdd     vdd pmos w=x_dut_xmra_5_w  l=x_dut_xmra_5_l
+RRAz  ra_nb    ra_ncz   'r_ra_z'
+CRAc  ra_ncz   v_ref_out 'c_ra_comp'
 **
-** --- feedback divider around the buffer: v_ref_out = vref*(r_ref_top+r_ref_bot)/r_ref_bot ---
+** feedback divider around the reference amp: v_ref_out = vref*(r_ref_top+r_ref_bot)/r_ref_bot
 R1 v_ref_out v_ref_fb 'r_ref_top'
-R2 v_ref_fb  vss       'r_ref_bot'
+R2 v_ref_fb  vss      'r_ref_bot'
 **
-** --- RC low-pass filter smoothing the buffered reference before the error amp sees it ---
+** ---------------------------------------------------------------------------------------------
+** RC low-pass smoothing the buffered reference before the error amp sees it. This is the whole
+** point of the "buffered reference" architecture: it attenuates the reference amp's own noise and
+** ripple above its corner, so the error amp compares against a quiet reference.
+** ---------------------------------------------------------------------------------------------
 R_lpf v_ref_out v_lpf_out 'r_lpf'
 C_lpf v_lpf_out vss       'c_lpf'
 **
-** --- Error amplifier: 5T OTA (NMOS input pair, PMOS mirror load) comparing vout against the
-** buffered+filtered reference; out=egate, in+=vout (fb), in-=v_lpf_out (vref). ---
-Ibias_err vdd       ebias_err dc {i_tail_err}
-XM7  noutm      vout       etail     vss nmos w=x_dut_xm7_w   l=x_dut_xm7_l
-XM8  egate      v_lpf_out  etail     vss nmos w=x_dut_xm8_w   l=x_dut_xm8_l
-XM9  noutm      noutm      vdd       vdd pmos w=x_dut_xm9_w l=x_dut_xm9_l
-XM10 egate      noutm      vdd       vdd pmos w=x_dut_xm10_w l=x_dut_xm10_l
-XM11 etail      ebias_err  vss       vss nmos w=x_dut_xm11_w l=x_dut_xm11_l
-XM12 ebias_err  ebias_err  vss       vss nmos w=x_dut_xm12_w l=x_dut_xm12_l
+** ---------------------------------------------------------------------------------------------
+** ERROR AMPLIFIER — amp_032_ti_ldo_error_selfbias inlined (prefix XMEA_/net prefix ea_).
+** in+ = lp_brk (the regulated output, through the loop-break marker), in- = v_lpf_out.
+** Stage 2 is a plain common-source driver off the first-stage output ea_nb — amp_032's stacked
+** diode (and its bias sink) were removed there for the reasons in that circuit's header, and the
+** same removal is mirrored here. That fix is what makes this LDO's DC point correct: with the
+** stack in place the error amp needed ~417 mV across its inputs to balance, and vout settled that
+** far below the reference.
+** ---------------------------------------------------------------------------------------------
+XMEA_BP ea_ibias ea_ibias vdd     vdd pmos w=x_dut_xmea_bp_w l=x_dut_xmea_bp_l
+XMEA_B0 ea_ibias ea_ibias vss     vss nmos w=x_dut_xmea_b0_w l=x_dut_xmea_b0_l
+XMEA_BC ea_tail  ea_ibias vss     vss nmos w=x_dut_xmea_bc_w l=x_dut_xmea_bc_l
+XMEA_BF ea_nlev  ea_ibias vss     vss nmos w=x_dut_xmea_bf_w l=x_dut_xmea_bf_l
+XMEA_BO ea_out   ea_ibias vss     vss nmos w=x_dut_xmea_bo_w l=x_dut_xmea_bo_l
+XMEA_1  ea_na    v_lpf_out ea_tail vss nmos w=x_dut_xmea_1_w l=x_dut_xmea_1_l
+XMEA_2  ea_nb    lp_brk    ea_tail vss nmos w=x_dut_xmea_2_w l=x_dut_xmea_2_l
+XMEA_3  ea_na    ea_nd    vdd     vdd pmos w=x_dut_xmea_3_w  l=x_dut_xmea_3_l
+XMEA_4  ea_nlev  ea_na    ea_nd   vdd pmos w=x_dut_xmea_4_w  l=x_dut_xmea_4_l
+XMEA_5  ea_nb    ea_nd    vdd     vdd pmos w=x_dut_xmea_5_w  l=x_dut_xmea_5_l
+XMEA_6  ea_out   ea_nb    vdd     vdd pmos w=x_dut_xmea_6_w  l=x_dut_xmea_6_l
+REAz  ea_nb    ea_ncz   'r_ea_z'
+CEAc  ea_ncz   ea_out   'c_ea_comp'
 **
-** --- Miller compensation across the pass stage (pole split) with nulling resistor ---
-Rz egate ncz 'r_z'
-Cc ncz   vout 'c_comp'
+** ---------------------------------------------------------------------------------------------
+** LOOP-BREAK MARKER (contract for the ldo/ac_loopgain bench — see that template's header).
+** A 0 V source is an ideal short, so this is INVISIBLE to dc_op / regulation / psrr / transients:
+** they all see the loop closed exactly as if the error amp's in+ were wired straight to vout.
+** Only ac_loopgain turns it into a generator, via `alter @v.xdut.vlp[acmag]=1`.
+** Injection point chosen per Middlebrook: source side = vout (low Z, driven by the pass device
+** and the output cap), load side = a MOSFET gate (high Z).
+** ---------------------------------------------------------------------------------------------
+Vlp lp_brk vout dc 0
 **
-** --- PMOS pass device: source=vdd, gate=egate, drain=vout ---
-XMP vout egate vdd vdd pmos w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m
+** ---------------------------------------------------------------------------------------------
+** PMOS pass device: source=vdd, gate=ea_out, drain=vout
+** ---------------------------------------------------------------------------------------------
+XMP vout ea_out vdd vdd pmos w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m
 **
-** --- output bleeder resistor (minimum-load path, matches the source design's R3) ---
+** Output network, straight from the drawing: a bleeder (minimum-load path, the source design's R3)
+** and an ON-CHIP output capacitor (its C1). DELIBERATELY NO outer Miller across the pass stage —
+** the previous revision of this netlist carried an `Rz ea_out ncz` / `Cc ncz vout` pair, but the
+** drawing has no such elements: each amplifier compensates itself internally (REAz/CEAc and
+** RRAz/CRAc above) and the dominant output pole is set by C1 against the load. Re-adding an outer
+** Miller would be a design change, not a transcription, so it is left out and the new ac_loopgain
+** bench is the instrument that decides whether this compensation scheme actually holds.
+** The class benches additionally hang their own COUT on vout to model the external capacitor;
+** c_out_int is the on-die part and is a knob in its own right.
 R3 vout vss 'r_bleed'
+C1 vout vss 'c_out_int'
 **.ends
 .end

@@ -1,0 +1,75 @@
+** AUTHORED TEMPLATE — ia/pac_gain_chopper_diff (P3-2c: the GOLDEN chopper gain bench).
+** Closed-loop gain of a chopper-subfamily IA measured IN OPERATION — all chopper clocks
+** RUNNING at FCHOP — via Spectre PSS+PAC: the periodic steady state pins the clocked
+** operating point, and the periodic AC computes the small-signal transfer the signal
+** band actually sees through the modulate→amplify→demodulate round-trip. This is the
+** figure tran_chopper_ripple's windowed average APPROXIMATES (and a static .ac on the
+** frozen network cannot see at all).
+** ngspice lane: no PSS — the deck's own .control runs the frozen-clock closed-loop AC
+** as an EYEBALL check only (the clocks sit at their t=0 pulse values, one chop phase).
+** Spectre lane: the platform composes `pss` + `pac` (class spectre-benches.yaml); the
+** input sources' `ac ±0.5` marker translates to mag= AND pacmag=, so the SAME deck
+** stimulus drives either analysis. Read the baseband via the platform registry:
+**   {meas: gain_cl,  analysis: pac, out: vout}   (linear V/V; vout = voutp - voutn)
+**   {meas: dcgain,   analysis: pac, out: vout}   (dB)
+** Assumes the chopper-IA port convention (extra driven clock nets are harmless):
+**   .subckt <id> vinp vinn voutp voutn vref clk_chin clk_chin_not clk_chfb clk_chfb_not
+**                clk_chout clk_chout_not [clk_chpf clk_chpf_not] [clk_phi_1 clk_phi_2]
+**                vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CL FCHOP TEDGE FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+.param FCHOP=${FCHOP}
+.param TCHOP={1/FCHOP}
+.param TEDGE=${TEDGE}
+.param RCM=${RCM}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+Vref vref 0 dc {VCM}
+* bench-side output-CM anchor/load (P3-2c): the drawn core has NO CMFB, so its output
+* common mode has no periodic steady state on its own (pss SPCRTRF-15044 period-2
+* bounce, live 2026-07-17; core-CM closure is plan P4-4b). RCM to vref is the CM
+* reference a real CCIA gets from its CMFB AND a legitimate next-stage load: at the
+* default 30k the diff loop gain stays >> the cap-ratio 20 (closed-loop ~19 V/V) while
+* the anchor pins the per-phase output CM (tau = RCM*CL ~ 1.5 ns) so the chopped orbit
+* actually closes. A weak 10Meg tie was proven insufficient (60 nA vs ~90 uA device
+* currents — the period-2 CM dance survives it).
+Rcmp voutp vref {RCM}
+Rcmn voutn vref {RCM}
+Vcm  vcm 0 dc {VCM}
+* differential small-signal excitation: 1 V total. The `ac` marker feeds BOTH lanes
+* (ngspice .ac eyeball via mag=, Spectre pac via pacmag=).
+Vinp vinp vcm dc 0 ac 0.5
+Vinn vinn vcm dc 0 ac -0.5
+* differential output sense node (translates to a Spectre vcvs): vout = voutp - voutn
+Evd vout 0 voutp voutn 1
+
+* chopper clocks: complementary pairs, all phases aligned at FCHOP (RUNNING — the pss
+* fundamental; on the ngspice eyeball .ac they freeze at their t=0 values)
+Vck_in_a  clk_chin      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_in_b  clk_chin_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_fb_a  clk_chfb      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_fb_b  clk_chfb_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_out_a clk_chout     0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_out_b clk_chout_not 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_pf_a  clk_chpf      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_pf_b  clk_chpf_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vphi1 clk_phi_1 0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vphi2 clk_phi_2 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  * EYEBALL ONLY (frozen clocks — one chop phase); the golden number is Spectre PSS+PAC
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  write
+  quit
+.endc
+.end

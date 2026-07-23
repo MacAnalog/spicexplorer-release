@@ -61,6 +61,10 @@ gmid:
     vsb: [0, -0.4, -0.4]                # 2 body-bias points (0, 0.4 V); --vsb for more
     length_um: [0.28, 0.3, 0.5, 1, 2, 4]
   info: "GlobalFoundries gf180mcu, 3.3 V, BSIM4"
+  simulator:                              # optional ngspice runtime knobs (CLI --runner/--workers override)
+    runner: auto                          # auto = host ngspice+$PDK_ROOT when available, else docker
+    workers: 8                            # parallel ngspice jobs, one per L value
+    timeout_s: 3600                       # per-job wall clock [s]
   variants:                               # corner override per device variant (matched on device name)
     - match: "06v0"                       # the 6V IO device: model cards reference skew params
       corners:                            #   (nfet_06v0_tox …) only the master `typical` corner defines

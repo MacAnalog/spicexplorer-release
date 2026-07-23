@@ -97,8 +97,7 @@ N 860 170 860 230 {}
 N 860 290 860 660 {}
 N 920 0 920 94 {}
 N 920 260 920 354 {}
-N 950 320 950 390 {}
-N 1040 390 1040 450 {}
+N 1070 320 1070 390 {}
 N 1130 0 1130 60 {}
 N 1160 190 1160 260 {}
 N 1200 -140 1200 -30 {}
@@ -110,7 +109,7 @@ N 1260 260 1260 354 {}
 N 1470 200 1470 260 {}
 N 1540 -140 1540 -30 {}
 N 1540 30 1540 230 {}
-N 1540 290 1540 350 {}
+N 1540 290 1540 660 {}
 N 1600 0 1600 94 {}
 N 1600 260 1600 354 {}
 N -1760 -140 1735 -140 {}
@@ -156,8 +155,8 @@ N 1200 260 1260 260 {}
 N 1440 260 1500 260 {}
 N 1540 260 1600 260 {}
 N 125 320 315 320 {}
-N 495 320 950 320 {}
-N 950 390 980 390 {}
+N 495 320 1070 320 {}
+N 920 390 980 390 {}
 N 1040 390 1070 390 {}
 N -1440 520 -1380 520 {}
 N -1340 520 -1280 520 {}
@@ -184,7 +183,7 @@ C {devices/lab_wire.sym} -495 520 0 1 {name=l13 lab=VB4}
 C {devices/lab_wire.sym} 395 520 0 0 {name=l14 lab=VB4}
 C {devices/lab_wire.sym} 275 200 0 1 {name=l15 lab=VINN}
 C {devices/lab_wire.sym} 640 200 0 1 {name=l16 lab=VINP}
-C {devices/lab_wire.sym} 1040 450 2 0 {name=l17 lab=VOUT}
+C {devices/lab_wire.sym} 920 390 0 0 {name=l17 lab=VOUT}
 C {devices/lab_wire.sym} 1540 90 2 0 {name=l18 lab=VOUT}
 C {devices/lab_wire.sym} 25 0 0 0 {name=l19 lab=VOUTN}
 C {devices/lab_wire.sym} 125 170 0 1 {name=l20 lab=VOUTN}
@@ -236,7 +235,6 @@ C {devices/lab_wire.sym} 920 354 2 0 {name=l65 lab=vss}
 C {devices/lab_wire.sym} 1600 354 2 0 {name=l66 lab=vss}
 C {devices/lab_wire.sym} -1700 430 0 1 {name=l67 lab=net013}
 C {devices/lab_wire.sym} -1700 610 2 0 {name=l68 lab=vss}
-C {devices/lab_wire.sym} 1540 350 2 0 {name=l69 lab=vss}
 C {devices/ipin.sym} -1900 260 0 0 {name=p0 lab=VINN}
 C {devices/ipin.sym} -1900 380 0 0 {name=p1 lab=VINP}
 B 8 -1548 -78 -47 78 {fill=0}

@@ -1,0 +1,65 @@
+** AUTHORED TEMPLATE — ia/thd_diff (plan_hierarchical_composition P3).
+** Fully-differential large-signal distortion: a single tone at F0 (differential amplitude
+** ASIG about VCM) drives the closed-loop IA; THD of the differential output is computed
+** IN-DECK by a coherent single-bin DFT over harmonics 2..5 (control-script vector math —
+** validated against known-composition signals; no FFT windowing/padding error), so the
+** verify harness's measure parser picks up thd_pct/thd_db directly. The platform registry
+** {meas: thd_pct} route over the written raw remains available as a cross-check, and the
+** Spectre lane upgrade is a native pss (fd-PSF harmonics), as in thd.spice.
+**
+** COHERENCE + SETTLING REQUIREMENT: recording starts at TSTART (the tran third
+** argument) so the closed-loop startup transient is DISCARDED — without it the
+** transient leaks into the harmonic bins (measured ~13% HD2 shift on ia_001).
+** TSTART and (TSTOP-TSTART) must BOTH be integer numbers of F0 periods
+** (>= 8 measured periods recommended) and TSTEP <= 1/(200*F0).
+**
+** Assumes a self-biased, differential-in/differential-out DUT port order:
+**   .subckt <id> vinp vinn voutp voutn vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CL ASIG F0 TSTEP TSTART TSTOP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+.param ASIG=${ASIG}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+Vcm  vcm 0 dc {VCM}
+* balanced differential tone: +/- ASIG/2 per side about the common mode
+Vinp vinp vcm sin(0 {ASIG/2} ${F0})
+Vinn vinn vcm sin(0 {-ASIG/2} ${F0})
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP} ${TSTART}
+  let vd = v(voutp) - v(voutn)
+  linearize vd
+  let t = time
+  let w = 2*pi*${F0}
+  let re1 = mean(vd*cos(w*t))
+  let im1 = mean(vd*sin(w*t))
+  let a1 = 2*sqrt(re1^2+im1^2)
+  let re2 = mean(vd*cos(2*w*t))
+  let im2 = mean(vd*sin(2*w*t))
+  let a2 = 2*sqrt(re2^2+im2^2)
+  let re3 = mean(vd*cos(3*w*t))
+  let im3 = mean(vd*sin(3*w*t))
+  let a3 = 2*sqrt(re3^2+im3^2)
+  let re4 = mean(vd*cos(4*w*t))
+  let im4 = mean(vd*sin(4*w*t))
+  let a4 = 2*sqrt(re4^2+im4^2)
+  let re5 = mean(vd*cos(5*w*t))
+  let im5 = mean(vd*sin(5*w*t))
+  let a5 = 2*sqrt(re5^2+im5^2)
+  let thd_pct = 100*sqrt(a2^2+a3^2+a4^2+a5^2)/a1
+  let thd_db = 20*log10(thd_pct/100)
+  print a1 a2 a3 thd_pct thd_db
+  write
+  quit
+.endc
+.end

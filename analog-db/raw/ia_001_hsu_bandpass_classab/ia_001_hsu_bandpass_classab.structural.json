@@ -1,0 +1,124 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "ia_001_hsu_bandpass_classab",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 48,
+    "blocks_detected": 5,
+    "by_family": {
+      "current_mirror": 2,
+      "pseudo_resistor": 2,
+      "differential_pair": 1
+    },
+    "structural_roles": {
+      "XM1": "pseudo_resistor",
+      "XM2": "pseudo_resistor",
+      "XM3": "pseudo_resistor",
+      "XM4": "pseudo_resistor",
+      "XMO1": "tail_current_source",
+      "XMO2": "differential_pair",
+      "XMO3": "differential_pair",
+      "XMO4": "current_mirror_reference",
+      "XMO5": "current_mirror_reference",
+      "XMO6": "current_mirror",
+      "XMO8": "current_mirror"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.nmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XMO4",
+      "output_devices": [
+        "XMO8"
+      ],
+      "devices": [
+        "XMO4",
+        "XMO8"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "dio_p",
+        "out": "msrc_p"
+      }
+    },
+    {
+      "group_id": "cm.nmos.simple#2",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XMO5",
+      "output_devices": [
+        "XMO6"
+      ],
+      "devices": [
+        "XMO5",
+        "XMO6"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "dio_n",
+        "out": "msrc_n"
+      }
+    },
+    {
+      "group_id": "pr.series.shared_well#1",
+      "family": "pseudo_resistor",
+      "mirror_class": "series_shared_well",
+      "polarity": "pmos",
+      "template_id": "pr.series.shared_well",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM1",
+        "XM2"
+      ],
+      "ports": {
+        "a": "sum_p",
+        "b": "voutp"
+      }
+    },
+    {
+      "group_id": "pr.series.shared_well#2",
+      "family": "pseudo_resistor",
+      "mirror_class": "series_shared_well",
+      "polarity": "pmos",
+      "template_id": "pr.series.shared_well",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM3",
+        "XM4"
+      ],
+      "ports": {
+        "a": "sum_n",
+        "b": "voutn"
+      }
+    },
+    {
+      "group_id": "dp.pmos.simple#1",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "pmos",
+      "template_id": "dp.pmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XMO2",
+        "XMO3"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "in_p": "sum_p",
+        "in_n": "sum_n",
+        "CM_tail": "tail",
+        "out_n": "dio_n",
+        "out_p": "dio_p"
+      }
+    }
+  ]
+}

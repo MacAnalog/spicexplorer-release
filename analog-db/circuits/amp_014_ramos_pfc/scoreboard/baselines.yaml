@@ -2,5 +2,5 @@
 # Maintained via `analog-db scoreboard set-baseline` (or auto-named on first record).
 baselines:
   gf180mcu: 4a6df029b3
-  ihp-sg13g2: c3c28d0fcf
+  ihp-sg13g2: 04c4a40619
   sky130: 64e5b4e4c7

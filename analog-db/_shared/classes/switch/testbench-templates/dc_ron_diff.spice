@@ -1,0 +1,37 @@
+** AUTHORED TEMPLATE — switch/dc_ron_diff (plan_hierarchical_composition P3).
+** On-resistance of a differential pass pair (e.g. the CCIA chopper-diff block: two
+** transmission gates passing va_p->vb_p and va_n->vb_n when ON). The P path is swept and
+** measured; the N path is biased at VMID and loaded identically so both halves conduct.
+**
+** Assumes the differential pass-pair port order:
+**   .subckt <id> va_p va_n vb_p vb_n vctl vctl_not vdd vss
+** Required bindings: DUT PORT_LINE VDD VMID ITEST VSWEEP_STEP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VMID=${VMID}
+.param ITEST=${ITEST}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vctl  vctl 0 dc {VDD}
+Vctln vctl_not 0 dc 0
+Vap  va_p 0 dc 0
+Van  va_n 0 dc {VMID}
+Isensep vb_p 0 dc {ITEST}
+Isensen vb_n 0 dc {ITEST}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  dc Vap 0 ${VDD} ${VSWEEP_STEP}
+  let ron_v = (v(va_p) - v(vb_p))/(${ITEST})
+  meas dc r_on FIND ron_v AT=${VMID}
+  meas dc r_on_max MAX ron_v
+  * MAX meas lines carry an `at=` suffix the result parser skips - re-print clean
+  print r_on_max
+  write
+  quit
+.endc
+.end

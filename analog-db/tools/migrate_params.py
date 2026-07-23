@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-"""One-shot P4 catalog migration to the atomic params layer (meta plan_parameterization §5 P4).
+"""One-shot P4 catalog migration to the atomic params layer.
 
 For each verifiable circuit this helper mechanically:
 
 1. reads the committed ``abstract/topology.cgraph.json`` (the cgraph records every card's
    parameter values) and maps device-field → legacy symbol / literal / ``base*N`` expression;
-2. re-authors ``abstract/netlist.spice`` atomically (plan D-1: ``x_dut_<inst>_<field>`` on every
+2. re-authors ``abstract/netlist.spice`` atomically (``x_dut_<inst>_<field>`` on every
    MOS geometry field and on SHARED passive values; numeric literals like ``m=1`` are
    symbolized; UNIQUE passive knobs and V/I bias-source values — ``i_tail``, ``vref_val``,
    ``'c_comp'`` — are already atomic first-class knobs and stay untouched);

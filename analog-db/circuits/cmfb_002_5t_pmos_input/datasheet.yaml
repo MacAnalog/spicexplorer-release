@@ -1,0 +1,116 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# SUPERSET of cace_format 5.2. See _shared/CACE_FORMAT.md for the field-overlap mapping.
+# Bands set from the 2026-07-20 sized standalone characterization (ihp tt, VDD 1.2,
+# vref 0.5 — the SRMC system CM this member was sized for): slope +15.1 (+23.6 dB),
+# vcmfb_nat 0.279, output range ~[0, 1.2], sensed-CM active range ~[0.477, 0.555],
+# i_supply 10.8 uA. CANONICAL polarity: cmfb_slope and step_delta_v bands are POSITIVE
+# on purpose (the sign IS the polarity spec). vcmfb_nat's band is the design point:
+# the sizing centers it between the SRMC plant's actuator balance gates (0.215/0.318 V)
+# — moving vnat, not maximizing gain, is what bought the 3.6/2.1 mV in-loop CM accuracy.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  cload:  {unit: fF, typical: 50}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+  vcm:    {unit: V, typical: 0.5}
+metrics:
+  cmfb_slope:
+    display: "Signed CM transfer slope"
+    description: "d(vcmfb)/d(vcm_sense) at vref, two-point +/-10 mV — POSITIVE (canonical polarity for inverting plants); ~ +15 V/V sized"
+    unit: V/V
+    analysis: dc_cmfb_transfer
+    extract: {meas: cmfb_slope}
+    spec: {min: 8, unit: V/V}
+  gain_servo_db:
+    display: "CM servo path gain"
+    description: "Common-mode sense -> vcmfb low-frequency gain (~24 dB sized: modest by design — accuracy comes from vcmfb_nat placement)"
+    unit: dB
+    analysis: ac_servo
+    extract: {meas: gain_servo_db}
+    spec: {min: 18, unit: dB}
+  bw_servo_hz:
+    display: "CM servo -3 dB bandwidth"
+    description: "-3 dB rolloff of the servo transfer into the 50 fF control-node load"
+    unit: Hz
+    analysis: ac_servo
+    extract: {meas: bw_servo_hz}
+    spec: {min: 2.0e5, unit: Hz}
+  ugf_servo_hz:
+    display: "CM servo unity-gain frequency"
+    description: "|servo transfer| 0 dB crossing into 50 fF"
+    unit: Hz
+    analysis: ac_servo
+    extract: {meas: ugf_servo_hz}
+    spec: {min: 1.0e6, unit: Hz}
+  vcmfb_nat:
+    display: "Zero-error natural output"
+    description: "vcmfb at sensed == vref — the actuator-matching level; sized to 0.279 V, centered between the SRMC loops' balance gates (0.215/0.318 V)"
+    unit: V
+    analysis: dc_cmfb_transfer
+    extract: {meas: vcmfb_nat}
+    spec: {min: 0.2, max: 0.36, unit: V}
+  vcmfb_min:
+    display: "Control-output range floor"
+    description: "min vcmfb over the full 0..VDD sensed-CM sweep (rail-clamped, unlike the behavioral servo)"
+    unit: V
+    analysis: dc_cmfb_transfer
+    extract: {meas: vcmfb_min}
+    spec: {max: 0.05, unit: V}
+  vcmfb_max:
+    display: "Control-output range ceiling"
+    description: "max vcmfb over the full sensed-CM sweep"
+    unit: V
+    analysis: dc_cmfb_transfer
+    extract: {meas: vcmfb_max}
+    spec: {min: 1.0, unit: V}
+  sense_lo:
+    display: "Active sensed-CM range low edge"
+    description: "|local slope| >= 10% of peak — the error amp's input stage compresses outside [~0.48, ~0.55]; keep the plant's CM ref inside"
+    unit: V
+    analysis: dc_cmfb_transfer
+    extract: {meas: sense_lo}
+    spec: {max: 0.49, unit: V}
+  sense_hi:
+    display: "Active sensed-CM range high edge"
+    description: "upper |slope| >= 10%-of-peak edge"
+    unit: V
+    analysis: dc_cmfb_transfer
+    extract: {meas: sense_hi}
+    spec: {min: 0.54, unit: V}
+  r_sense_in:
+    display: "Sense-port DC loading"
+    description: "DC resistance looking into the tied sense pins (gate-terminated detector: essentially unloading, >> the 500k differential-mode Rm/2 figure)"
+    unit: ohm
+    analysis: dc_cmfb_transfer
+    extract: {meas: r_sense_in}
+    spec: {min: 1.0e9, unit: ohm}
+  step_delta_v:
+    display: "Step response settled shift"
+    description: "Settled vcmfb shift for a +20 mV sensed-CM step — POSITIVE (time-domain polarity cross-check; ~ slope*0.02 ~ +0.3 V)"
+    unit: V
+    analysis: tran_cmfb_step
+    extract: {meas: step_delta_v}
+    spec: {min: 0.15, unit: V}
+  ring_v:
+    display: "Plateau ringing half-amplitude"
+    description: "(max-min)/2 of vcmfb over the settled half of the step plateau — flags an underdamped error amp under 50 fF"
+    unit: V
+    analysis: tran_cmfb_step
+    extract: {meas: ring_v}
+    spec: {max: 0.01, unit: V}
+  t_cm_settle:
+    display: "Step release settle time"
+    description: "Release-edge recovery to |vcmfb - final| < VTOL"
+    unit: s
+    analysis: tran_cmfb_step
+    extract: {meas: t_cm_settle}
+    spec: {max: 2.0e-5, unit: s}
+  i_supply:
+    display: "Supply current"
+    description: "op supply draw of the self-biased error amp (bias string + tail; 10.8 uA sized)"
+    unit: A
+    analysis: dc_cmfb_transfer
+    extract: {meas: i_supply}
+    spec: {max: 2.0e-5, unit: A}

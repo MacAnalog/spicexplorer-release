@@ -1,9 +1,6 @@
 """SpiceXplorer analog circuit database — registry + tiered verify harness.
 
-See ``doc/plan_examples_db.md`` (design) and ``doc/todo_examples_db.md`` (phases).
-The on-disk database lives under ``examples/`` in-tree (Phases 0–3), then extracts to the
-``spicexplorer-analog-db`` submodule at the P3→P4 boundary (D-9). Resolve it via
-``paths.db_root()`` — the single env-overridable seam.
+Resolve the on-disk database via ``paths.db_root()`` — the single env-overridable seam.
 """
 
 from . import catalog, generate, gmid, model, paths, schema, verify

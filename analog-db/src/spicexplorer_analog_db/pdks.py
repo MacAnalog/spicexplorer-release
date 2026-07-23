@@ -1,4 +1,4 @@
-"""PDK resolution for lowering (plan D-1/D-2, Phase 1).
+"""PDK resolution for lowering.
 
 A circuit's ``pdk/<pdk>/devices.map.yaml`` is the per-topology override of circuitgraph's
 built-in device table: it maps generic kinds (``nmos``/``pmos``/``res``/``cap``) to the PDK's

@@ -80,7 +80,7 @@ spiceprefix=X
 C {lab_pin.sym} 230 -460 0 0 {name=p7 sig_type=std_logic lab=VSS}
 C {lab_pin.sym} 640 -460 0 1 {name=p8 sig_type=std_logic lab=VSS}
 C {ipin.sym} 430 -460 3 1 {name=p9 lab=VBIAS}
-C {title.sym} 190 -60 0 0 {name=l2 author="Stefan Schippers"}
+C {devices/title.sym} 190 -60 0 0 {name=l2 author="Copyright 2026 MacAnalog Research Group"}
 C {lab_pin.sym} 560 -400 0 0 {name=p10 sig_type=std_logic lab=net1
 }
 C {lab_pin.sym} 320 -390 0 0 {name=p11 sig_type=std_logic lab=net2

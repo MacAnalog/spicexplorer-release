@@ -1,0 +1,8 @@
+** sch_path: pseudo-resistor-a-independant-well-generator.sch
+**.subckt pseudo-resistor-a-independant-well-generator port_A port_B
+*.ipin port_A
+*.ipin port_B
+XM1 net1 port_B port_B port_B sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM2 net1 port_A port_A port_A sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+**.ends
+.end

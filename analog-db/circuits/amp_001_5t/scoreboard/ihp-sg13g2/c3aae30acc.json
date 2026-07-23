@@ -95,7 +95,7 @@
         "value": 61.47803
       },
       "psrr_vdd_db": {
-        "spec": "pass",
+        "spec": "fail",
         "value": 29.69583
       },
       "t_settle": {
@@ -116,12 +116,12 @@
     "sizing": {
       "x_dut_xm1_l": "5.0u",
       "x_dut_xm1_w": "0.5u",
-      "x_dut_xm5_l": "5.0u",
-      "x_dut_xm6_l": "5.0u",
-      "x_dut_xm6_w": "2.0u",
-      "x_dut_xm5_w": "2.0u",
       "x_dut_xm3_l": "5.0u",
-      "x_dut_xm3_w": "1.5u"
+      "x_dut_xm3_w": "1.5u",
+      "x_dut_xm5_l": "5.0u",
+      "x_dut_xm5_w": "2.0u",
+      "x_dut_xm6_l": "5.0u",
+      "x_dut_xm6_w": "2.0u"
     }
   },
   "pdk": "ihp-sg13g2",

@@ -48,7 +48,7 @@
         "value": 81.96733
       },
       "ugf_hz": {
-        "spec": "none",
+        "spec": "fail",
         "value": 1883741.0
       }
     }
@@ -59,9 +59,13 @@
       "CAPACITOR_1": "404f",
       "CAPACITOR_2": "310f",
       "CURRENT_0_BIAS": "1u",
-      "x_dut_xm3_l": "1u",
-      "x_dut_xm5_m": "4",
-      "x_dut_xm3_w": "1u",
+      "RESISTOR_0": "35K",
+      "RESISTOR_1": "35k",
+      "RESISTOR_2": "350k",
+      "RESISTOR_3": "40k",
+      "x_dut_xm10_l": "1u",
+      "x_dut_xm10_m": "4",
+      "x_dut_xm10_w": "1u",
       "x_dut_xm11_l": "1u",
       "x_dut_xm11_m": "4",
       "x_dut_xm11_w": "1u",
@@ -83,16 +87,12 @@
       "x_dut_xm24_l": "1u",
       "x_dut_xm24_m": "4",
       "x_dut_xm24_w": "1u",
+      "x_dut_xm3_l": "1u",
+      "x_dut_xm3_w": "1u",
+      "x_dut_xm5_m": "4",
       "x_dut_xm6_l": "1u",
       "x_dut_xm6_m": "4",
-      "x_dut_xm6_w": "1u",
-      "x_dut_xm10_l": "1u",
-      "x_dut_xm10_m": "4",
-      "x_dut_xm10_w": "1u",
-      "RESISTOR_0": "35K",
-      "RESISTOR_1": "35k",
-      "RESISTOR_2": "350k",
-      "RESISTOR_3": "40k"
+      "x_dut_xm6_w": "1u"
     }
   },
   "pdk": "ihp-sg13g2",

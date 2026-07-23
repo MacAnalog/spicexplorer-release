@@ -35,14 +35,14 @@ XDUT vdd vout vinp vinn ibias vss amp_022_fer_two_stage
   quit
 .endc
 .param x_dut_xmbd_w=4u
-.param x_dut_xm7_w=8u
-.param x_dut_xm0_w=8u
-.param x_dut_xm3_w=6u
-.param x_dut_xm7_l=0.4u
-.param x_dut_xm0_l=0.4u
-.param x_dut_xm3_l=0.4u
-.param x_dut_xm2_l=0.4u
-.param x_dut_xmbd_l=0.4u
+.param x_dut_xm7_w=4u
+.param x_dut_xm0_w=10u
+.param x_dut_xm3_w=1u
+.param x_dut_xm7_l=4.5u
+.param x_dut_xm0_l=3u
+.param x_dut_xm3_l=3u
+.param x_dut_xm2_l=1u
+.param x_dut_xmbd_l=4u
 .param x_dut_cc_value=2e-12
 .param x_dut_xm0_m=5
 .param x_dut_xm3_m=2

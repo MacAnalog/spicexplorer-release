@@ -37,7 +37,7 @@ lab=iin}
 N 595 -400 710 -400 {}
 N 710 -440 710 -400 {
 lab=#net2}
-C {title.sym} 160 -40 0 0 {name=l1 author="Stefan Schippers"}
+C {devices/title.sym} 160 -40 0 0 {name=l1 author="Copyright 2026 MacAnalog Research Group"}
 C {sg13g2_pr/sg13_lv_nmos.sym} 500 -340 0 1 {name=M1
 l=0.13u
 w=0.15u

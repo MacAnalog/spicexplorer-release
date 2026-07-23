@@ -1,4 +1,4 @@
-"""The single DB-root indirection (plan §3c part 1).
+"""The single DB-root indirection.
 
 Every consumer resolves the database through `db_root()` — one env-overridable seam — so the
 location is decided in exactly one place. The database (``_shared/`` + ``circuits/`` +

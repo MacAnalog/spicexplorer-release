@@ -49,7 +49,7 @@ N 520 -470 560 -470 {
 lab=iin}
 N 400 -470 480 -470 {
 lab=VSS}
-C {title.sym} 160 -40 0 0 {name=l1 author="Stefan Schippers"}
+C {devices/title.sym} 160 -40 0 0 {name=l1 author="Copyright 2026 MacAnalog Research Group"}
 C {sg13g2_pr/sg13_lv_nmos.sym} 500 -340 0 1 {name=M1
 l=0.13u
 w=0.15u

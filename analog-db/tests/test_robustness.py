@@ -1,5 +1,5 @@
 """Robustness edges: path overrides, unknown circuits, measure-parsing formats, assemble error
-paths (test-suite review 2026-06-11, analog-db backlog). All PDK-free."""
+paths. All PDK-free."""
 
 from __future__ import annotations
 

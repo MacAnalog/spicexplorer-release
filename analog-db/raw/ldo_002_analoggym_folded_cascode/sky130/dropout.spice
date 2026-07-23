@@ -7,10 +7,36 @@
 **     bash -lc 'd=$(mktemp -d) && cat > $d/c.spice && cd $d && ngspice -b c.spice' < raw/ldo_002_analoggym_folded_cascode/sky130/dropout.spice
 *----------------------------------------------------------*
 ** params: 19 free + 0 frozen knobs (sizing.yaml) · 8 tied · 0 ratio-derived (abstract/params.yaml) · 0 testbench params
-** AUTHORED TEMPLATE — ldo/dropout: sweep Vin upward at heavy load; Vin - Vout at the
-** regulation threshold. As Vin rises out of dropout, v(vout) climbs to its regulated target;
-** dropout = (Vin at which v(vout) first reaches VOUT_THRESH) - VOUT_THRESH.
-** Bindings: DUT PORT_LINE ILOAD VDD_START VDD_STOP VDD_STEP VOUT_THRESH PDK_INCLUDE.
+** AUTHORED TEMPLATE — ldo/dropout: the smallest (Vin - Vout) at which the regulator still
+** REGULATES, under heavy load. Vin is swept upward and dropout is read at the first point where
+** the output is genuinely in regulation.
+**
+** REWRITTEN 2026-07-21. The previous form was
+**     meas dc vin_at WHEN v(vout)=1.764 RISE=1
+**     let v_dropout = vin_at - 1.764
+** i.e. purely "when does vout first rise past a threshold". That cannot tell REGULATION from a
+** DEAD PASS DEVICE, and it fails in the worst possible direction — optimistically. When the loop
+** is not working the pass transistor sits fully on, so vout simply follows vin; vout then crosses
+** VOUT_THRESH at vin ~ VOUT_THRESH and the bench reports a dropout of ~0. A completely broken
+** regulator scores a PERFECT dropout number.
+**
+** That is not hypothetical: it green-lit a real candidate here. A resistor-biased variant of
+** ldo_005_buffered_ref reported dropout 0.090 V (against 0.490 V for the working design) while
+** actually RAILING below ~3.1 V — vout was 2.59 V at vin 2.6 V. Only line_reg (1.185 V) caught it.
+** This is the same class of defect as the amplifier ICMR bench measuring rail coincidence instead
+** of tracking, and it takes the same cure: an ACTIVITY criterion alongside the level test.
+**
+** In regulation now requires BOTH:
+**   * the output is at its target:      |vout - VOUT_NOM| <= VREG_TOL
+**   * the output is not following vin:  |dvout/dvin| <= REG_SLOPE_MAX
+** A regulating LDO has dvout/dvin ~ line-regulation slope (1e-3 or less); a railed one has ~1, so
+** the slope test separates them cleanly no matter where the level test happens to land.
+**
+** Bindings: DUT PORT_LINE ILOAD VDD_START VDD_STOP VDD_STEP VOUT_NOM VREG_TOL REG_SLOPE_MAX
+**           PDK_INCLUDE.
+** VOUT_NOM defaults to the datasheet's default_conditions.vout typical value; VREG_TOL and
+** REG_SLOPE_MAX have defaults in assemble.py, so existing circuits need no edits. The legacy
+** VOUT_THRESH binding is no longer used — a threshold alone is exactly what was wrong.
 .lib sky130.lib.spice tt
 .temp 27
 
@@ -23,9 +49,35 @@ XDUT vdd vout vss ldo_002_analoggym_folded_cascode
 .control
   set filetype=ascii
   dc Vdd 1.2 2.0 0.01
-  meas dc vin_at WHEN v(vout)=1.764 RISE=1
-  let v_dropout = vin_at - 1.764
-  print v_dropout
+  let vo    = v(vout)
+  let vsw   = v(vdd)
+  let dvo   = deriv(vo)
+  let dvi   = deriv(vsw)
+  let slope = dvo / dvi
+  let inreg = (abs(vo - 1.8) <= 0.05) & (abs(slope) <= 0.1)
+  let npts  = length(inreg)
+  let k     = 0
+  let found = 0
+  let vin_at = 0
+  let vout_at = 0
+  while k < npts
+    if found < 0.5
+      if inreg[k] > 0.5
+        let vin_at  = vsw[k]
+        let vout_at = vo[k]
+        let found   = 1
+      end
+    end
+    let k = k + 1
+  end
+  * NaN rather than a fabricated number when the sweep never reaches regulation — an honest
+  * "this circuit does not regulate anywhere in the swept range".
+  if found < 0.5
+    let v_dropout = 0/0
+  else
+    let v_dropout = vin_at - vout_at
+  end
+  print vin_at vout_at v_dropout
   write
   quit
 .endc

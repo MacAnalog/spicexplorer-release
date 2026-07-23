@@ -1,4 +1,4 @@
-"""gm/ID lookup-table extraction (Phase 6 — gm/ID sizing reference).
+"""gm/ID lookup-table extraction.
 
 Characterizes a single PDK MOS device across an ``(L × VGS × VDS × VSB)`` grid with an automated
 ngspice sweep and writes a **pygmid-compatible** LUT (``.pkl``) into the DB at
@@ -496,6 +496,92 @@ def list_luts(pdk: str | None = None) -> list[dict[str, Any]]:
                 }
             )
     return rows
+
+
+def native_deck_runner(pdk: str, pdk_root: str | None = None, timeout: int = 3600):
+    """A ``(deck, txt) -> txt-contents`` runner on THIS host — no container.
+
+    Reuses the Phase-7 native-sim machinery (:mod:`.runner`): a per-PDK ``.spiceinit``
+    (sourcepath + OSDI) dropped into a scratch dir + the native deck fixes (slim-corner-lib
+    swap, absolute includes), then ``ngspice -b`` and read back the ``wrdata`` file. The
+    docker-less lane for hosts with ngspice + ``$PDK_ROOT`` (e.g. the research server); gate
+    with :func:`.runner.native_pdk_available`.
+    """
+    import subprocess
+    import tempfile
+
+    from . import runner as _runner
+
+    pdk_dir = _runner.native_pdk_dir(pdk, pdk_root)
+    spec = _runner._NATIVE_PDK.get(pdk)
+    if pdk_dir is None or spec is None:
+        raise RuntimeError(
+            f"native PDK {pdk!r} not installed under $PDK_ROOT — use the docker runner"
+        )
+    init = _runner._native_spiceinit(pdk_dir, spec)
+
+    def _run(deck: str, txt: str) -> str:
+        with tempfile.TemporaryDirectory(prefix="gmid_native_") as td:
+            Path(td, ".spiceinit").write_text(init)
+            Path(td, "cell.spice").write_text(_runner._prepare_native_deck(deck, pdk_dir, spec))
+            subprocess.run(
+                ["ngspice", "-b", "cell.spice"],
+                cwd=td, capture_output=True, text=True, timeout=timeout,
+            )
+            out = Path(td, txt)
+            return out.read_text() if out.is_file() else ""
+
+    return _run
+
+
+def native_ngspice_version() -> str | None:
+    """The host ngspice version string (manifest provenance); ``None`` if unavailable."""
+    import re as _re
+    import shutil as _shutil
+    import subprocess
+
+    if _shutil.which("ngspice") is None:
+        return None
+    out = subprocess.run(["ngspice", "--version"], capture_output=True, text=True,
+                         timeout=60).stdout
+    m = _re.search(r"ngspice(?:-| )(\d+)", out)
+    return m.group(1) if m else None
+
+
+def extract_parallel(cfg: GmidConfig, run: Any, workers: int = 1) -> dict[str, Any]:
+    """:func:`extract`, fanned out **one ngspice job per L value** (the spectre-lane shape).
+
+    The characterization deck loops L outermost, so splitting on L is exact: each job runs the
+    full VGS×VDS×VSB sweep for a single length, and the per-L LUT slices concatenate along
+    axis 0. ``workers`` is the ``gmid.simulator.workers`` YAML knob; ``workers=1`` (or a single
+    L) falls back to the classic one-deck path. Fail-loud: any job failure aborts the LUT.
+    """
+    if workers <= 1 or len(cfg.length_um) <= 1:
+        return extract(cfg, run)
+    from concurrent.futures import ThreadPoolExecutor
+    from dataclasses import replace
+
+    def one(l_um: float) -> dict[str, Any]:
+        return extract(replace(cfg, length_um=[l_um]), run)
+
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        slices = list(ex.map(one, cfg.length_um))  # preserves L order
+
+    merged: dict[str, Any] = dict(slices[0])
+    merged["L"] = np.array(cfg.length_um, dtype=float)
+    for key, val in slices[0].items():
+        if isinstance(val, np.ndarray) and val.ndim == 4:
+            parts = [s[key] for s in slices]
+            shapes = {p.shape[1:] for p in parts}
+            if len(shapes) != 1:  # a job with non-converged rows would mis-shape silently
+                raise ValueError(f"{cfg.pdk}/{cfg.device}: inconsistent {key} slice shapes {shapes}")
+            merged[key] = np.concatenate(parts, axis=0)
+    return merged
+
+
+def simulator_settings(pdk: str) -> dict[str, Any]:
+    """The registry ``gmid.simulator`` block (runner/workers/timeout knobs), ``{}`` if absent."""
+    return dict(pdks.load_registry(pdk).get("gmid", {}).get("simulator", {}) or {})
 
 
 def base_image_deck_runner(image: str = "spicexplorer-spice-base:local"):

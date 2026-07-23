@@ -40,7 +40,7 @@ _SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9_]*$")
 
 
 def allocate_id(class_id: str, slug: str) -> str:
-    """The next free accession id for ``class_id`` (plan_scoreboard D-1): ``<id_code>_<nnn>_<slug>``.
+    """The next free accession id for ``class_id``: ``<id_code>_<nnn>_<slug>``.
 
     Allocation is max+1 over the checked-out registry — append-only by construction (a concurrent
     branch claiming the same number surfaces as a Tier-0 ``id:accession_unique`` failure at merge,

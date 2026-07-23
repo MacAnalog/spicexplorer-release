@@ -1,4 +1,4 @@
-"""The analysis resolver (plan D-4, Phase 2).
+"""The analysis resolver.
 
 ``assemble(circuit, analysis_id, pdk, corner)`` renders one (circuit × analysis × pdk × corner)
 cell of the matrix into a **complete runnable netlist**:
@@ -20,7 +20,7 @@ from typing import Any
 
 import yaml
 
-from .model import Circuit, resolve_template
+from .model import Circuit, is_frozen_smallsignal_analysis, resolve_template
 
 _PLACEHOLDER = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
 
@@ -59,7 +59,7 @@ def _sizing_params(circuit: Circuit, pdk: str) -> str:
 
 
 def _tie_block(circuit: Circuit) -> str:
-    """The GENERATED parameter-tie block (plan_parameterization D-3, P2 lowering).
+    """The GENERATED parameter-tie block.
 
     Empty (and the deck byte-identical to the pre-params rendering) unless the circuit adopted
     ``abstract/params.yaml``. Each tied symbol is defined exactly ONCE, here — so an upstream
@@ -117,7 +117,8 @@ def _conditions(circuit: Circuit, analysis: dict[str, Any], pdk: str) -> dict[st
     ds = circuit.datasheet()
     defaults = ds.get("default_conditions", {})
     # the universal fallbacks every template may reference
-    fallback_map = {"VDD": "supply", "VCM": "vcm", "IBIAS": "ibias", "CL": "cload", "TEMP": "temp"}
+    fallback_map = {"VDD": "supply", "VCM": "vcm", "IBIAS": "ibias", "CL": "cload", "TEMP": "temp",
+                    "VOUT_NOM": "vout"}
     for var, cond in fallback_map.items():
         if cond in defaults and "typical" in defaults[cond]:
             out[var] = str(defaults[cond]["typical"])
@@ -132,6 +133,17 @@ def _conditions(circuit: Circuit, analysis: dict[str, Any], pdk: str) -> dict[st
 
 def assemble(circuit: Circuit, analysis_id: str, pdk: str, corner: str = "tt") -> str:
     """Render one matrix cell into a complete runnable netlist (raises ``AssembleError``)."""
+    # A frozen-operating-point small-signal analysis (.ac / .noise) linearizes the network with
+    # every switch held in one state, so it does NOT represent a clocked (chopper / switched-cap)
+    # circuit whose switches toggle. Refuse it here — the universal chokepoint every bind/run/
+    # export path routes through — so it can never be assembled or run. Correct benches: transient
+    # (native ngspice) or PSS/PAC/pnoise (Spectre).
+    if is_frozen_smallsignal_analysis(analysis_id) and circuit.is_clocked:
+        raise AssembleError(
+            f"{circuit.id}/{analysis_id}: a frozen-operating-point small-signal analysis "
+            f"(.ac/.noise) is invalid on a clocked (chopper/switched-cap) circuit — its switches "
+            f"toggle. Use a transient bench (native) or PSS/PAC/pnoise (Spectre)."
+        )
     adoc = circuit.analysis(analysis_id)
     template_id = adoc.get("template", analysis_id)
     tpath = resolve_template(circuit.klass, template_id)
@@ -144,6 +156,31 @@ def assemble(circuit: Circuit, analysis_id: str, pdk: str, corner: str = "tt") -
         "DUT": circuit.id,
         "PORT_LINE": "XDUT " + " ".join(circuit.manifest["ports"]),
         "PDK_INCLUDE": _corner_includes(circuit, pdk, corner) + f"\n.temp {temp}",
+        # Class-template defaults. Spread FIRST so `_conditions` (datasheet defaults →
+        # analyses/<id>.yaml params → sizing.yaml analysis_params) still overrides them.
+        # SLOPE_TOL is the ICMR activity criterion |dvout/dvin - 1| <= SLOPE_TOL, which the
+        # amplifier linearity templates need to reject rail-coincidence "tracking" (see that
+        # template's header). Defaulted so the 2026-07-20 fix did not have to be pasted into
+        # every consuming analyses/linearity.yaml, and so a new circuit gets it for free.
+        "SLOPE_TOL": "0.1",
+        # LP_PROBE names the in-DUT 0 V loop-break marker the ldo/ac_loopgain bench turns into an
+        # AC generator (see that template's header). Defaulted to the `vlp` naming convention.
+        "LP_PROBE": "vlp",
+        # ldo/dropout regulation window. VREG_TOL is how far from VOUT_NOM still counts as
+        # regulating; REG_SLOPE_MAX is the activity criterion |dvout/dvin| that separates a
+        # regulating output (slope ~ line-reg, <1e-3) from a railed one following vin (slope ~1).
+        # Defaulted so the 2026-07-21 dropout rewrite needed no per-circuit edits.
+        "VREG_TOL": "0.05",
+        "REG_SLOPE_MAX": "0.1",
+        # FMID is the in-band frequency at which the ia closed-loop AC templates read the
+        # PASSBAND gain. They used to take gain_cl_db as MAX over the sweep, which silently
+        # reports a resonant peak as "the gain" and then places the (gain-3dB) corners around
+        # the peak instead of the band (observed: a statically-connected RRL peaked 12 dB and
+        # hpf_hz came back as 542 kHz instead of 32 Hz). 1 kHz sits mid-band for every current
+        # consumer (ia_001..ia_004 all sweep 0.1 Hz..10 MHz with corners ~32 Hz / ~1-2 MHz).
+        # Defaulted so the fix needed no edit to any existing analyses/ac_closed_loop.yaml;
+        # a circuit whose passband excludes 1 kHz binds its own FMID in params.
+        "FMID": "1k",
         **_conditions(circuit, adoc, pdk),
     }
     rendered = Template(tpath.read_text()).safe_substitute(mapping)

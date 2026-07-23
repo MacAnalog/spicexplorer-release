@@ -1,0 +1,16 @@
+# Analysis binding (plan D-4): DC operating point with every
+# chopper clock HELD transparent (clk high / clk_not low); i_supply + vos.
+#
+# 2026-07-21 — template switched dc_op_chopper_diff -> dc_op_chopper_rrl for the same reason
+# as ac_closed_loop: the _diff base leaves clk_phi_1/clk_phi_2 undriven, so the RRL was
+# inert and i_supply/vos described the CCIA alone. Recorded scoreboard (ee77a983e2) is
+# STALE for this bench too.
+schema: spicexplorer/analysis@1
+id: dc_op
+template: dc_op_chopper_rrl
+description: "DC operating point, clocks held transparent; i_supply + vos (output offset)."
+params:
+  VDD: 1.2
+  VCM: 0.6
+flags: []
+produces: [i_supply, vos]

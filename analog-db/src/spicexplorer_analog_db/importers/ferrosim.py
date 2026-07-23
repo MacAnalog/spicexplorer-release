@@ -1,6 +1,6 @@
-"""Import the `ferrosim` corpus into analog-db as ``kind: reference`` circuits (plan D-9).
+"""Import the `ferrosim` corpus into analog-db as ``kind: reference`` circuits.
 
-Source: ``Arcadia-1/ferrosim`` (author **Token Zhang**, MIT), vendored via ``netlist-crawler``. These
+Source: ``Arcadia-1/ferrosim`` (author **Token Zhang**, MIT). These
 are proprietary-PDK (TSMC 28/65 nm) Spectre decks — indexed for reference/eval, NOT lowered or
 simulated. Each upstream family becomes one ``circuits/ferrosim_<name>/`` circuit whose upstream deck
 layout is preserved **verbatim** under a ``spectre/<node>/`` reference binding (so relative ``include``

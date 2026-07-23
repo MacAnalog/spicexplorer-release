@@ -27,7 +27,7 @@ N 340 -360 340 -270 {
 lab=port_A}
 N 260 -360 340 -360 {
 lab=port_A}
-C {title.sym} 180 -40 0 0 {name=l1 author="Stefan Schippers"}
+C {devices/title.sym} 180 -40 0 0 {name=l1 author="Copyright 2026 MacAnalog Research Group"}
 C {ipin.sym} 260 -360 0 0 {name=p1 lab=port_A}
 C {ipin.sym} 880 -360 0 1 {name=p2 lab=port_B}
 C {sg13g2_pr/sg13_lv_pmos.sym} 730 -340 3 0 {name=M1

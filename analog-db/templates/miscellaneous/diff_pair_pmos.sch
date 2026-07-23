@@ -27,7 +27,7 @@ N 420 -380 540 -380 {
 lab=#net1}
 N 540 -380 540 -360 {}
 N 540 -380 660 -380 {}
-C {title.sym} 170 -30 0 0 {name=l1 author="Stefan Schippers"}
+C {devices/title.sym} 170 -30 0 0 {name=l1 author="Copyright 2026 MacAnalog Research Group"}
 C {ipin.sym} 760 -380 2 0 {name=p1 lab=vinp}
 C {ipin.sym} 330 -380 2 1 {name=p2 lab=vinn}
 C {ipin.sym} 540 -480 3 1 {name=p3 lab=CM_tail}

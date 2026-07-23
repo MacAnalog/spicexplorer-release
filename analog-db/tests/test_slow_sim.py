@@ -1,10 +1,10 @@
-"""The ``slow`` SIMULATION test pyramid (plan §6 T3/T4 + integration), bottom-to-top.
+"""The ``slow`` SIMULATION test pyramid, bottom-to-top.
 
 Each level gates the next; the bottom is the most critical:
   L0  syntax     — the assembled ngspice netlist PARSES, no syntax/library error (no sim).
   L1  feature    — each enabled analysis SIMULATES (ngspice + the real PDK), finite numbers.
   L1b PDK-swap   — one abstract topology simulates on BOTH PDKs (ihp-sg13g2 AND sky130).
-  L1c crosscheck — netlist2tf symbolic DC gain agrees with the sim (the in-repo OTAs; plan D-5).
+  L1c crosscheck — netlist2tf symbolic DC gain agrees with the sim (the in-repo OTAs).
   L2  wrapper    — the platform spicelib NGSpice_Wrapper imports + drives a netlist (integration).
   L3  project    — a project_setup.yaml runs one real optimizer step (full integration).
 
@@ -165,7 +165,7 @@ def _pdk_transfer_pairs() -> list[tuple[str, str]]:
     The in-repo cascodes (folded/telescopic) sim on ihp only: their sky130 lowering is now
     finger-correct (ng→nf, per-finger width), but the IHP-tuned device geometries fall outside
     sky130's reliable binned-model envelope (single-finger caps at ~100µm; nf>1 needs per-finger
-    W ≲ 5µm) — meaningful sky130 baselines need device re-sizing (Phase 6 / gm-ID). See
+    W ≲ 5µm) — meaningful sky130 baselines need device re-sizing. See
     `_shared/PDK_SIM.md`."""
     pairs = [("amp_001_5t", "ihp-sg13g2"), ("amp_001_5t", "sky130")]
     for cid in _analoggym_ids():
@@ -231,9 +231,9 @@ def test_L1c_symbolic_crosscheck_agrees(cid):
     assert checked and all(e["agrees"] for e in checked.values()), report["metrics"]
 
 
-# ───────── raw/ committed decks: the ON-DISK artifact loads + simulates (plan_raw_export §5) ─────────
+# ───────── raw/ committed decks: the ON-DISK artifact loads + simulates ─────────
 #
-# T3 sim-smoke realized over the materialized tree (todo_examples_db Phase 7): EVERY committed deck is
+# T3 sim-smoke realized over the materialized tree: EVERY committed deck is
 # run through ngspice. The contract has two levels —
 #   HARD (fail): the deck RUNS — ngspice loads it and the PDK libs/models/subckts resolve (`_LOAD_ERR`).
 #   SOFT (skip): the metrics of interest EXTRACT (finite measures). A baseline whose default sizing
@@ -355,7 +355,7 @@ def test_committed_raw_deck_byte_identical_to_render():
     assert deck.read_text() == export.render_deck(c, "ac_open_loop", "sky130", "tt")
 
 
-# ───────────────────── gm/ID LUT extraction (Phase 6) ─────────────────────
+# ───────────────────── gm/ID LUT extraction ─────────────────────
 
 
 @needs_base

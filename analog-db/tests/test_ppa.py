@@ -1,4 +1,4 @@
-"""PPA extraction (plan_scoreboard P1/D-7): active gate area, metric mapping, rollup."""
+"""PPA extraction: active gate area, metric mapping, rollup."""
 
 from __future__ import annotations
 
@@ -26,10 +26,10 @@ def test_expr_arithmetic():
 
 
 def test_area_5t_hand_computed():
-    """ihp 5T: input 2 x (0.5x5) + load 2 x (1.5x5) + tail (2x5) + ref (2x5) = 40 um2, 6 MOS."""
+    """ihp 5T (gm/ID re-size): input 2 x (10x10) + load 2 x (10x7) + tail (3.8x1) + ref (3.8x1) = 347.6 um2, 6 MOS."""
     rep = ppa.area_report(model.load_circuit("amp_001_5t"), "ihp-sg13g2")
     assert rep["mos_count"] == 6
-    assert rep["active_gate_area_um2"] == pytest.approx(40.0)
+    assert rep["active_gate_area_um2"] == pytest.approx(347.6)
 
 
 def test_area_counts_m_multiplier_and_passives():
@@ -48,8 +48,12 @@ def test_area_every_verifiable_binding():
             continue
         for pdk in c.pdks:
             rep = ppa.area_report(c, pdk)
+            if rep["mos_count"] == 0:
+                # MOS-less by construction (behavioral macromodels, passive sense
+                # dividers) — zero gate area is the truth, nothing to resolve
+                assert rep["active_gate_area_um2"] == 0, (cid, pdk, rep)
+                continue
             assert rep["active_gate_area_um2"] > 0, (cid, pdk, rep)
-            assert rep["mos_count"] > 0, (cid, pdk)
 
 
 def test_metric_values_and_spec_verdicts():

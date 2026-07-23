@@ -92,8 +92,8 @@ N 890 170 890 230 {}
 N 890 290 890 660 {}
 N 950 0 950 94 {}
 N 950 260 950 354 {}
-N 1000 0 1000 260 {}
 N 1090 260 1090 320 {}
+N 1120 0 1120 260 {}
 N 1220 0 1220 70 {}
 N 1220 200 1220 260 {}
 N 1260 -140 1260 -30 {}
@@ -203,7 +203,7 @@ C {devices/lab_wire.sym} 1405 200 0 1 {name=l16 lab=VINN}
 C {devices/lab_wire.sym} 2065 200 0 1 {name=l17 lab=VINP}
 C {devices/lab_wire.sym} 550 90 2 0 {name=l18 lab=VOUT}
 C {devices/lab_wire.sym} 550 170 0 1 {name=l19 lab=VOUT}
-C {devices/lab_wire.sym} 1090 320 2 0 {name=l20 lab=VOUT}
+C {devices/lab_wire.sym} 970 260 0 0 {name=l20 lab=VOUT}
 C {devices/lab_wire.sym} 1160 0 0 0 {name=l21 lab=VOUTN}
 C {devices/lab_wire.sym} 1260 170 0 1 {name=l22 lab=VOUTN}
 C {devices/lab_wire.sym} 1525 0 0 0 {name=l23 lab=VOUTN}
@@ -215,10 +215,10 @@ C {devices/lab_wire.sym} 890 170 0 1 {name=l28 lab=net049}
 C {devices/lab_wire.sym} -1450 0 0 1 {name=l29 lab=net050}
 C {devices/lab_wire.sym} 110 0 0 0 {name=l30 lab=net050}
 C {devices/lab_wire.sym} 450 0 0 0 {name=l31 lab=net050}
-C {devices/lab_wire.sym} 970 260 0 0 {name=l32 lab=net050}
+C {devices/lab_wire.sym} 1090 320 2 0 {name=l32 lab=net050}
 C {devices/lab_wire.sym} 1625 90 2 0 {name=l33 lab=net050}
 C {devices/lab_wire.sym} 1625 170 0 1 {name=l34 lab=net050}
-C {devices/lab_wire.sym} 1770 200 0 1 {name=l35 lab=net050}
+C {devices/lab_wire.sym} 1830 260 0 0 {name=l35 lab=net050}
 C {devices/lab_wire.sym} 1625 350 2 0 {name=l36 lab=net063}
 C {devices/lab_wire.sym} -1170 60 2 0 {name=l37 lab=net1}
 C {devices/lab_wire.sym} -990 60 2 0 {name=l38 lab=net1}
@@ -228,7 +228,7 @@ C {devices/lab_wire.sym} -70 0 0 1 {name=l41 lab=net1}
 C {devices/lab_wire.sym} 790 0 0 0 {name=l42 lab=net1}
 C {devices/lab_wire.sym} 210 90 2 0 {name=l43 lab=net2}
 C {devices/lab_wire.sym} 210 170 0 1 {name=l44 lab=net2}
-C {devices/lab_wire.sym} 1830 260 0 0 {name=l45 lab=net2}
+C {devices/lab_wire.sym} 1770 200 0 1 {name=l45 lab=net2}
 C {devices/lab_wire.sym} -1030 90 2 0 {name=l46 lab=net31}
 C {devices/lab_wire.sym} 1445 170 0 1 {name=l47 lab=net31}
 C {devices/lab_wire.sym} 2105 170 0 1 {name=l48 lab=net31}

@@ -143,7 +143,7 @@ N 540 -760 540 -700 {
 lab=IIN}
 N 490 -760 540 -760 {
 lab=IIN}
-C {title.sym} 280 -160 0 0 {name=l1 author="Stefan Schippers"}
+C {devices/title.sym} 280 -160 0 0 {name=l1 author="Copyright 2026 MacAnalog Research Group"}
 C {iopin.sym} 260 -1040 2 0 {name=p1 lab=VDD}
 C {lab_pin.sym} 370 -910 2 1 {name=p2 sig_type=std_logic lab=VDD}
 C {lab_pin.sym} 370 -760 2 1 {name=p3 sig_type=std_logic lab=VDD}

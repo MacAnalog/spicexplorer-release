@@ -1,0 +1,70 @@
+# AUTHORED composite manifest (spicexplorer/composition@1, plan_hierarchical_composition
+# P4-4 — the CCIA-02 composite: Fan's chopper CCIA + its ripple-reduction loop. A
+# structurally-complete composer demonstration; the RRL demodulation-sign question
+# (DRAWING_REVIEW §4.2) is NOT resolved here — see the honest limitation below (P4-4b).
+schema: spicexplorer/composition@1
+of: ia_004_fan_chopper_rrl
+notes: >-
+  Fan (JSSC 2011) ripple-reduction architecture: the RRL (sup_003) senses the
+  CCIA output ripple capacitively (its Cs front end on voutp/voutn), demodulates
+  it synchronously (its internal chopper's clk_ch_rrl wired to the SAME clk_chout
+  pair that up-modulates the core's offset — the drawn CLK_CH_RRL_not polarity is
+  baked inside sup_003), integrates it through a two-phase SC network, and injects
+  the DC correction at the first-stage outputs out1_p/out1_n (taps; PRE output
+  chopper — where the input pair's offset current lives). The correction is
+  CROSS-wired to the taps (rrl voutp -> out1_n, voutn -> out1_p) as the intended
+  negative-feedback orientation for sup_003's drawn clock polarity.
+  HONEST LIMITATION (2026-07-17 adversarial verify — retracts an earlier claim):
+  this composite CANNOT validate the RRL. The composed core has no common-mode
+  control, so once the SC clocks (clk_phi_1/2) actually run, the output CM rails
+  to ~+1.19 V within ~1-2 ms and the clocked transient aborts. The prior note here
+  ("cross nulls to ~1 mV, straight regenerates, both measured live") was NOT
+  reproducible — it was measured with clk_phi_1/2 accidentally UNDRIVEN (a bench
+  template bug, since fixed), i.e. with the RRL loop INERT; with the loop actually
+  clocked, BOTH hookups rail (the sign is indeterminate on the CM-uncontrolled
+  core). So the demod SIGN remains OPEN and the ripple-nulling figure is not
+  measurable here. The RRL demonstration is deferred to the core-CM closure
+  composite (plan P4-4b, cf. amp_030's servo): close the core CM first, then this
+  RRL exercises and the cross-vs-straight sign resolves. The clk_phi_1/2 ports are
+  exposed for that future bench; ia_004's committed benches are static only.
+instances:
+  - name: main
+    block: ia_002_fan_chopper_simple
+    pin: db0af98f1e15
+    ports:
+      vinp: vinp
+      vinn: vinn
+      voutp: voutp
+      voutn: voutn
+      vref: vref
+      clk_chin: clk_chin
+      clk_chin_not: clk_chin_not
+      clk_chfb: clk_chfb
+      clk_chfb_not: clk_chfb_not
+      clk_chout: clk_chout
+      clk_chout_not: clk_chout_not
+      vdd: vdd
+      vss: vss
+    taps: {out1_p: out1_p, out1_n: out1_n}
+  - name: rrl
+    block: sup_003_rrl_sc_integrator
+    # re-pinned 2026-07-20: sup_003 took the Fan Fig. 6 sense-ground symmetry fix
+    # (DRAWING_REVIEW S7) + the chopper Vctl flip (S4.2). Was 15266f8af33a.
+    pin: e5616a7d6d6d
+    ports:
+      vinp: voutp
+      vinn: voutn
+      voutp: out1_n
+      voutn: out1_p
+      clk_ch_rrl: clk_chout
+      clk_ch_rrl_not: clk_chout_not
+      clk_phi_1: clk_phi_1
+      clk_phi_2: clk_phi_2
+      vdd: vdd
+      vss: vss
+    # RRL authority scales with the chop period: at the registry's 5 kHz default the
+    # per-phase SC integration window is 10x the 50 kHz one, so the block's 100u
+    # compensation Gm makes the discrete-time RRL loop gain > 1 (measured live: the
+    # clocked transient hard-diverges at ~1.2 ms). gm/10 restores the per-cycle loop
+    # gain of the stable 50 kHz point; settle time stretches to ~5 ms (windows sit later).
+    override: {gm_val: 10u}

@@ -39,3 +39,7 @@ gmid:
     vsb: [0, -0.4, -0.4]                # 2 body-bias points (0, 0.4 V); --vsb for more
     length_um: [0.15, 0.18, 0.2, 0.3, 0.5, 1, 2, 4]
   info: "SkyWater sky130, 1.8 V core, BSIM4"
+  simulator:                              # optional ngspice runtime knobs (CLI --runner/--workers override)
+    runner: auto                          # auto = host ngspice+$PDK_ROOT when available, else docker
+    workers: 8                            # parallel ngspice jobs, one per L value
+    timeout_s: 3600                       # per-job wall clock [s]

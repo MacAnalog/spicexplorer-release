@@ -34,31 +34,36 @@ bias:tail:load, 2:24 mirror:CS) are preserved so the current split matches the s
 | i_supply | 246 µA | 85 µA |
 | t_settle (0.2 V, 2 mV band) | 38 ns | 2.6 µs |
 
-**Spectre (tsmc-n65, tt_lvt, 27 °C, 1.2 V / 20 µA / 500 fF)** — open-loop AC through the
-platform's `SpectreSimulator` (virtuoso-bridge) + engine-neutral Tier-1 metrics: **dc_gain
-47.4 dB · UGF 18.0 MHz · PM 61°** (`spicexplorer` `tests/test_amp022_tsmc65_ac_live.py`). Lower
-than the open-PDK bindings by design — CRN65 low-Vt cores have lower intrinsic gain at the same
-sizing. (Not an ngspice column: TSMC is Spectre-only, run at its 1.2 V core rail.)
+**Spectre (tsmc-n65, tt_lvt, 27 °C, 1.2 V / 20 µA / 500 fF)** — the binding carries the
+**gm/ID re-sizing of 2026-07-22** (PPA-campaign `hand_design` tag `gmid_v7`: LUT-driven,
+leak-aware — the global sizing-space optimum computed over the m-welds): **dc_gain 55.3 dB ·
+UGF 11.5 MHz · PM 78° · ~224 µW** live through the config-driven binding path
+(`spicexplorer` `tests/test_amp022_tsmc65_configdriven_live.py`). The pre-campaign sizing
+measured 47.4 dB · 18.0 MHz · 61° (`tests/test_amp022_tsmc65_ac_live.py`, which pins its own
+deck). Still lower than the open-PDK bindings by design — CRN65 low-Vt cores have lower
+intrinsic gain — and the LUT analysis shows **60 dB is unreachable in this sizing space**
+(LVT V_A + stage-2 gate leakage + the frozen m=17/3 stage-2 current). (Not an ngspice column:
+TSMC is Spectre-only, run at its 1.2 V core rail.)
 
-Same node, **Spectre noise** analysis (1 kHz–100 MHz) through the same engine-neutral Tier-1
+Same node (pre-campaign sizing), **Spectre noise** analysis (1 kHz–100 MHz) through the same engine-neutral Tier-1
 registry (`inoise_total`/`onoise_total`): **integrated output-referred ≈ 813 µV · input-referred
 ≈ 210 µV rms** (`spicexplorer` `tests/test_amp022_tsmc65_noise_live.py`). Wide-band figures — the
 input-referred integral is dominated by the high-frequency tail where the gain has rolled off.
 
-Same node, **Spectre transient THD** — wired as a unity-gain follower, driven by a 100 mV / 1 MHz
+Same node (pre-campaign sizing), **Spectre transient THD** — wired as a unity-gain follower, driven by a 100 mV / 1 MHz
 sine, through the same engine-neutral Tier-1 registry (`thd`, the coherent-FFT `thd_from_waveform`,
 a SPICE `.four` analogue): **THD ≈ 0.077 % (−62 dB), HD2-dominated**, at a fundamental of 99.7 mV
 (loop gain ≈ 1) (`spicexplorer` `tests/test_amp022_tsmc65_thd_live.py`). A closed-loop follower well
 below the ~18 MHz UGF, so loop gain suppresses distortion.
 
-**Bench-validation pass (2026-07-09, tt, in-library `run_circuit`)** — the full amplifier bench
+**Bench-validation pass (2026-07-09, tt, in-library `run_circuit`; pre-campaign sizing)** — the full amplifier bench
 suite on both lanes. ihp-sg13g2 (ngspice): CMRR 64.3 dB, PSRR+ 76.4 dB, ICMR 1.37 V,
 THD 0.023 % (100 mV @ 1 MHz), IIP3 +23.6 dBV. tsmc-n65 (native Spectre, 1.2 V): CMRR 58.4 dB,
 PSRR+ 96.6 dB, ICMR 1.07 V, THD 0.076 % (native PSS — matches the transient figure above),
 IIP3 +17.9 dBV (two-tone 0.9/1.0 MHz on a 100 kHz-fundamental pss). Within each lane the
 THD/IIP3 pair is internally coherent (lower distortion ↔ higher intercept).
 
-**stb bench (2026-07-10, tsmc-n65 tt, native Spectre)** — the loop-gain probe (`stb` analysis
+**stb bench (2026-07-10, tsmc-n65 tt, native Spectre; pre-campaign sizing — the gmid_v7 sizing measures pm_loop 76–79°, loop gain 55.3 dB)** — the loop-gain probe (`stb` analysis
 off the template's `VIPRB` marker): pm_loop 61.6°/60.8° (platform registry / Spectre's native
 stb margin) vs the open-loop PM 60.9°, gain margin 8.06 dB on both routes, loop gain@DC
 47.41 dB == the open-loop dcgain (β = 1). The bench's SKILL calculator set (the class

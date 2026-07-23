@@ -1,0 +1,61 @@
+** Abstract TI-LDO REFERENCE amplifier, self-biased — the 9-transistor two-stage Miller OTA that
+** buffers and gains the LDO's internal reference before the RC filter and the error amp see it.
+** Source drawing: drawings/ldo-005-ti-ldo-buffer-ref/gf180/ref_amp/ref_amp.sch (owner-drawn,
+** gf180mcu-native; the ideal reference current source was replaced by the diode PMOS XMBP on
+** 2026-07-20, same substitution the error amp got).
+**
+** Role in ldo_005_buffered_ref (from the netlisted drawing, 2026-07-20):
+**   x_ref_amp vdd v_ref_out VREF v_ref_fb vss ref_amp
+**   XR1 v_ref_fb v_ref_out ...   XR2 vss v_ref_fb ...
+** i.e. it is a NON-INVERTING GAIN STAGE, not a unity buffer: the R1/R2 divider from v_ref_out
+** taps v_ref_fb into vinn, so v_ref_out = VREF*(R1+R2)/R2. With the landed ldo_005 values
+** (VREF 0.8 V, R1=R2=100k) the closed-loop gain is 2 and v_ref_out = 1.6 V — which IS the LDO's
+** regulated output, because the error amp compares VOUT against the filtered v_ref_out with no
+** further divider. So this amp's DC accuracy sets the LDO's output-voltage accuracy directly:
+** its input-referred offset appears at VOUT multiplied by (R1+R2)/R2.
+**
+** Why this topology is NOT amp_032: the error amp uses a Vth-level-shifted mirror load with a
+** deliberately ratioed sink (mirror_e), which buys headroom but costs a large STRUCTURAL
+** systematic offset (~93 mV measured, irreducible across 72 optimizer trials). The reference amp
+** instead uses a PLAIN matched PMOS mirror load (XM3 diode / XM4 out) with no ratioed sink, so
+** its systematic offset should be small — the right trade for the block that sets DC accuracy.
+**
+** Topology: NMOS input pair XM1 (g=vinn, into the XM3 diode) / XM2 (g=vinp, into the XM4 mirror
+** output); PMOS current-mirror load XM3/XM4; first-stage output nb drives the PMOS common-source
+** second stage XM5 against the mirrored NMOS sink XMBO; Rz+Cc Miller compensation nb->vout.
+** Bias: XMBP (diode PMOS off vdd) into the XMB0 diode NMOS sets the mirror rail feeding the tail
+** sink XMBC and the output sink XMBO. Self-biased, so NO ibias port — every analysis must use the
+** class's ibias-free template variants (*_biaswrap / *_selfbias).
+**
+** Polarity check (sim-confirmable): vinp^ -> XM2 current^ -> nb pulled DOWN -> XM5 Vsg^ ->
+** vout^. So vinp is the NON-INVERTING input, matching the .sym pin labels and the LDO wiring
+** (VREF on vinp, the divider tap v_ref_fb on vinn = negative feedback).
+**
+** Deviation from the drawing: the drawing realizes the nulling resistor as a real ppolyf_u_3k
+** device (XR1, r_width/r_length). Here it is the ideal element Rz with the continuous knob r_z,
+** matching amp_032 and keeping Rz/Cc as continuous optimizer levers — unfreezing exactly those
+** two is what took amp_032's phase margin from 21.9 to 65.8 deg. The poly realization is a
+** layout-time mapping, not a topology difference.
+**
+** Subckt port order (= circuit.yaml ports): vdd vout vinp vinn vss
+**.subckt amp_033_ti_ldo_ref_selfbias vdd vout vinp vinn vss
+** --- on-chip reference: diode PMOS from vdd into the mirror rail (replaces the ibias port) ---
+XMBP ibias ibias vdd vdd pmos w=x_dut_xmbp_w l=x_dut_xmbp_l
+XMB0 ibias ibias vss vss nmos w=x_dut_xmb0_w l=x_dut_xmb0_l
+** --- mirrored sinks: tail (stage 1) and output-stage load (stage 2) ---
+** Widths deliberately NOT tied to each other: the tail/output current ratio is the primary
+** gm1-vs-gm5 lever (UGF vs phase margin) in a two-stage Miller amp.
+XMBC tail ibias vss vss nmos w=x_dut_xmbc_w l=x_dut_xmbc_l m=x_dut_xmbc_m
+XMBO vout ibias vss vss nmos w=x_dut_xmbo_w l=x_dut_xmbo_l m=x_dut_xmbo_m
+** --- stage 1: NMOS input pair + matched PMOS current-mirror load ---
+XM1 na vinn tail vss nmos w=x_dut_xm1_w l=x_dut_xm1_l
+XM2 nb vinp tail vss nmos w=x_dut_xm2_w l=x_dut_xm2_l
+XM3 na na vdd vdd pmos w=x_dut_xm3_w l=x_dut_xm3_l
+XM4 nb na vdd vdd pmos w=x_dut_xm4_w l=x_dut_xm4_l
+** --- stage 2: PMOS common-source driver against the mirrored sink XMBO ---
+XM5 vout nb vdd vdd pmos w=x_dut_xm5_w l=x_dut_xm5_l
+** --- Miller compensation (nulling resistor + cap, first-stage node to the output) ---
+Rz nb ncz 'r_z'
+Cc ncz vout 'c_comp'
+**.ends
+.end

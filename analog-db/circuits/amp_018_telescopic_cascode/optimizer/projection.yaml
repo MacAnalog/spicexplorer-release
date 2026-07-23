@@ -6,8 +6,8 @@
 extends: ../circuit.yaml
 pdk: ihp-sg13g2
 project:
-  name: CASCODE-OTA
-  description: Cascode (Telescopic) OTA example sizing in the ihp-sg13g2 technology
+  name: CASCODE-OTA · analog-db amp_018
+  description: DB projection of amp_018_telescopic_cascode — telescopic-cascode OTA sizing in ihp-sg13g2 (mirrors the classic example)
   simulator: ngspice
   save_sim: false
   parallel_sim: true

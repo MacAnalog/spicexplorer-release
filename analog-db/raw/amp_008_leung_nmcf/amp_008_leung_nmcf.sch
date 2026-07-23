@@ -113,7 +113,8 @@ N 1475 30 1475 230 {}
 N 1475 290 1475 350 {}
 N 1535 0 1535 94 {}
 N 1535 260 1535 354 {}
-N 1760 200 1760 260 {}
+N 1640 200 1640 260 {}
+N 1730 260 1730 320 {}
 N -1760 -140 1910 -140 {}
 N -1440 0 -1380 0 {}
 N -1340 0 -1280 0 {}
@@ -138,7 +139,7 @@ N -1040 70 -1000 70 {}
 N -680 70 -640 70 {}
 N -1380 190 -1340 190 {}
 N 360 190 400 190 {}
-N 1475 200 1760 200 {}
+N 1475 200 1640 200 {}
 N -1440 260 -1380 260 {}
 N -1100 260 -1040 260 {}
 N -1000 260 -970 260 {}
@@ -200,7 +201,7 @@ C {devices/lab_wire.sym} 640 260 0 0 {name=l28 lab=net043}
 C {devices/lab_wire.sym} 740 90 2 0 {name=l29 lab=net049}
 C {devices/lab_wire.sym} 740 170 0 1 {name=l30 lab=net049}
 C {devices/lab_wire.sym} 1435 200 0 1 {name=l31 lab=net049}
-C {devices/lab_wire.sym} 1670 260 0 0 {name=l32 lab=net049}
+C {devices/lab_wire.sym} 1730 320 2 0 {name=l32 lab=net049}
 C {devices/lab_wire.sym} -1280 0 0 1 {name=l33 lab=net050}
 C {devices/lab_wire.sym} 1110 90 2 0 {name=l34 lab=net050}
 C {devices/lab_wire.sym} 1110 170 0 1 {name=l35 lab=net050}

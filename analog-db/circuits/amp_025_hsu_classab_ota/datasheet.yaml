@@ -1,0 +1,161 @@
+schema: spicexplorer/datasheet@1
+cace_format: '5.2'
+default_conditions:
+  supply:
+    unit: V
+    typical: 1.2
+  cload:
+    unit: fF
+    typical: 50
+  corner:
+    typical: tt
+  temp:
+    unit: degC
+    typical: 27
+  vcm:
+    unit: V
+    typical: 0.6
+metrics:
+  dc_gain_db:
+    display: DC open-loop differential gain
+    description: Differential large-signal DC gain, vdb(voutp,voutn); folded-mirror
+      stage into the class-AB output
+    unit: dB
+    analysis: ac_open_loop
+    extract:
+      meas: dcgain
+    spec:
+      min: 60
+      unit: dB
+  ugf_hz:
+    display: Unity-gain frequency
+    unit: Hz
+    analysis: ac_open_loop
+    extract:
+      meas: ugf
+    spec:
+      unit: Hz
+      min: 5000000.0
+  pm_deg:
+    display: Phase margin
+    description: Miller-Rz compensated (C1/R1 per side, class-AB battery midnode to
+      drive node)
+    unit: deg
+    analysis: ac_open_loop
+    extract:
+      meas: pm
+    spec:
+      unit: deg
+      min: 60.0
+      max: 90
+  vos:
+    display: Output offset
+    description: voutp - voutn at matched DC inputs; the residual of the behavioral
+      CMFB servo
+    unit: V
+    analysis: dc_op
+    extract:
+      meas: vos
+    spec:
+      min: -50e-3
+      max: 50e-3
+      unit: V
+  i_supply:
+    display: Supply current
+    unit: A
+    analysis: dc_op
+    extract:
+      meas: i_supply
+    spec:
+      max: 500e-6
+      unit: A
+  vn_in:
+    display: Input-referred noise (integrated)
+    description: "ngspice inoise_total = total noise INTEGRATED over the bench band\
+      \ (see analyses/noise.yaml FSTART..FSTOP) \u2014 a voltage, not a density; the\
+      \ bound is a characterization band at the family's measured magnitude"
+    unit: V
+    analysis: noise
+    extract:
+      meas: inoise_total
+    spec:
+      max: 0.001
+      unit: V
+  t_settle:
+    display: Settling time
+    description: Unity-gain differential-follower settling (see tran_step_diff.spice)
+    unit: s
+    analysis: tran_step
+    extract:
+      meas: t_settle
+    spec:
+      max: 1.0e-05
+      unit: s
+  zcm_lf_ohm:
+    display: CM output impedance (low frequency)
+    description: "Closed-loop common-mode output impedance at FSTART \u2014 the CM\
+      \ servo's stiffness (characterization bound, loose sanity band)"
+    unit: ohm
+    analysis: ac_cm_reg
+    extract:
+      meas: zcm_lf_ohm
+    spec:
+      max: 100e3
+      unit: ohm
+  cm_peaking_db:
+    display: CM impedance peaking
+    description: "20log10(Zcm_peak/Zcm_lf) \u2014 >6 dB flags an underdamped CM loop\
+      \ (the external signature of poor CM phase margin; internal T_cm needs a composed\
+      \ loop probe)"
+    unit: dB
+    analysis: ac_cm_reg
+    extract:
+      meas: cm_peaking_db
+    spec:
+      max: 6
+      unit: dB
+  cm_resid_v:
+    display: CM kick residual
+    description: "vocm displacement after the CM current kick releases. OP-DEPENDENT\
+      \ (2026-07-17 polarity audit): the behavioral CMFB has a SECOND stable DC equilibrium\
+      \ (vcmfb railed to ~+42 V, XM12/XM13 cut off) and the plain-seeded DC solver\
+      \ reaches it intermittently (card-order sensitive); a range-reference series\
+      \ bias seeds the good OP in an isolated deck but does not eliminate the second\
+      \ equilibrium in the sorted committed deck. The output-CM node is hyper-sensitive\
+      \ to the load-gate voltage (cascoded high-Z), so a stable low-gain servo can't\
+      \ hold it and the high-gain servo is under-damped \u2014 proper CMFB loop compensation\
+      \ is the open sizing task. Treat this and t_cm_settle as indicative, not signed-off."
+    unit: V
+    analysis: tran_cm_kick
+    extract:
+      meas: cm_resid_v
+    spec:
+      min: -5e-3
+      max: 5e-3
+      unit: V
+  t_cm_settle:
+    display: CM kick recovery time
+    description: "OP-dependent (see cm_resid_v) \u2014 the behavioral CMFB's second\
+      \ railed equilibrium makes the committed CM-bench numbers solver-path sensitive;\
+      \ proper CMFB compensation is an open sizing follow-up."
+    unit: s
+    analysis: tran_cm_kick
+    extract:
+      meas: t_cm_settle
+    spec:
+      max: 5e-6
+      unit: s
+notes: "2026-07-18/19 dual-engine campaign findings (drawings/SIZING_VALIDATION_REPORT.md;\
+  \ machine copy drawings/sizing-and-specs.yaml ccia_01_two_stage_ota_core): (1) the\
+  \ under-damped behavioral CMFB has a MEASURED fix candidate \u2014 servo cout_val\
+  \ 100f -> 100p (100f lets a 100 nA CM kick escape the interior basin; 100p regulates\
+  \ and kick-recovers at both seed and this sizing) \u2014 apply on the next re-lower.\
+  \ (2) An optimizer fine-tune (3 campaigns, 800 loops total) plateaus at 38.8 dB:\
+  \ the 55-60 dB gain target is a TOPOLOGY limit of this two-stage class-AB core at\
+  \ 1.2 V (needs cascoding), not a sizing miss; the winner is NOT adopted here \u2014\
+  \ its DC solution is a bistable knife-edge (verifies only at full-precision knob\
+  \ values; preserved in sizing-and-specs.yaml). (3) tsmc-n65 context: achievable\
+  \ output-CM window [0.61, 1.04] (vcmfb_ref must move to ~0.8 there), ~28.9 dB at\
+  \ the LVT gm/gds ceiling. (4) The entry schematic copy was re-pointed to the -inv\
+  \ shared CMFB block (B5 decision-A fanout) \u2014 polarity unchanged vs the frozen\
+  \ netlist."

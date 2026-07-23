@@ -1,9 +1,9 @@
 # AnalogGym analysis binding (tran_step).
 schema: spicexplorer/analysis@1
 id: tran_step
-template: tran_step
-description: "Step settling (bias-aware variant deferred)."
-enabled: false
+template: tran_step_biaswrap
+description: "Unity-gain step settling (self-bias follower)."
+enabled: true
 params: {VDD: 1.8, VCM: 240m, CL: 150p, VSTEP: 0.2, VTOL: 2m, TSTART: 1u, TSTEP: 10n, TSTOP: 200u}
 flags: []
 produces: [t_settle]

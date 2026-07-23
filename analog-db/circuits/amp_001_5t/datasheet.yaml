@@ -1,121 +1,231 @@
-# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
-# SUPERSET of cace_format 5.2 — modelled on analog-circuit-design's cace/voltage-buffer-ota.yaml
-# (the 5t). See _shared/CACE_FORMAT.md for the field-overlap mapping (O-1).
 schema: spicexplorer/datasheet@1
-cace_format: "5.2"
+cace_format: '5.2'
 default_conditions:
-  supply: {unit: V, typical: 1.5}        # JKU rail (cace default_conditions.vdd)
-  cload:  {unit: fF, typical: 50}
-  corner: {typical: tt}
-  temp:   {unit: degC, typical: 27}
-  vcm:    {unit: V, typical: 0.8}
-  ibias:  {unit: uA, typical: 20}
+  supply:
+    unit: V
+    typical: 1.5
+  cload:
+    unit: fF
+    typical: 50
+  corner:
+    typical: tt
+  temp:
+    unit: degC
+    typical: 27
+  vcm:
+    unit: V
+    typical: 0.8
+  ibias:
+    unit: uA
+    typical: 20
 metrics:
   dc_gain_db:
-    display: "DC open-loop gain"
-    description: "Large-signal DC gain"
+    display: DC open-loop gain
+    description: Large-signal DC gain
     unit: dB
     analysis: ac_open_loop
-    extract: {meas: dcgain}
+    extract:
+      meas: dcgain
     symbolic:
       tool: netlist2tf
       call: open_loop_gain
-      args: {output: [vout, vss], input: [vinp, vinn], scale: db}
-    spec: {min: 35, unit: dB}
-    optimize: {spec_name: dcgain, testbench: tb_ac, sim_type: ac, goal: exceed, target: 35,
-               range: 100, tolerance: 5, weight: 100.0, error_type: relative-sigmoid, enable: true}
+      args:
+        output:
+        - vout
+        - vss
+        input:
+        - vinp
+        - vinn
+        scale: db
+    spec:
+      unit: dB
+      min: 40.0
+    optimize:
+      spec_name: dcgain
+      testbench: tb_ac
+      sim_type: ac
+      goal: exceed
+      target: 35
+      range: 100
+      tolerance: 5
+      weight: 100.0
+      error_type: relative-sigmoid
+      enable: true
   ugf_hz:
-    display: "Unity-gain frequency"
+    display: Unity-gain frequency
     unit: Hz
     analysis: ac_open_loop
-    extract: {meas: ugf}
-    spec: {min: 2.0e6, unit: Hz}
-    optimize: {spec_name: ugf, testbench: tb_ac, sim_type: ac, goal: exceed, target: 2.0e6,
-               range: 1.0e6, tolerance: 2.0e5, weight: 100.0, error_type: relative-sigmoid, enable: true}
+    extract:
+      meas: ugf
+    spec:
+      unit: Hz
+      min: 5000000.0
+    optimize:
+      spec_name: ugf
+      testbench: tb_ac
+      sim_type: ac
+      goal: exceed
+      target: 2.0e6
+      range: 1.0e6
+      tolerance: 2.0e5
+      weight: 100.0
+      error_type: relative-sigmoid
+      enable: true
   pm_deg:
-    display: "Phase margin"
+    display: Phase margin
     unit: deg
     analysis: ac_open_loop
-    extract: {meas: pm}
-    spec: {min: 60, typ: 70, unit: deg}
-    optimize: {spec_name: pm, testbench: tb_ac, sim_type: ac, goal: exact, target: 70,
-               range: 45, tolerance: 30, weight: 100.0, error_type: relative-sigmoid, enable: true}
+    extract:
+      meas: pm
+    spec:
+      typ: 70
+      unit: deg
+      min: 60.0
+      max: 90
+    optimize:
+      spec_name: pm
+      testbench: tb_ac
+      sim_type: ac
+      goal: exact
+      target: 70
+      range: 45
+      tolerance: 30
+      weight: 100.0
+      error_type: relative-sigmoid
+      enable: true
   gain_cl:
-    display: "Buffer gain"
-    description: "Unity-gain buffer voltage ratio (the a-c-d CACE ac_params.gain spec)"
-    unit: "V/V"
+    display: Buffer gain
+    description: Unity-gain buffer voltage ratio (the a-c-d CACE ac_params.gain spec)
+    unit: V/V
     analysis: ac_closed_loop
-    extract: {meas: gain_cl}
-    spec: {min: 0.97, max: 1.03, unit: "V/V"}
+    extract:
+      meas: gain_cl
+    spec:
+      min: 0.97
+      max: 1.03
+      unit: V/V
   bw_cl_hz:
-    display: "Buffer bandwidth"
-    description: "-3 dB bandwidth of the buffer (the a-c-d CACE ac_params.bw spec)"
+    display: Buffer bandwidth
+    description: -3 dB bandwidth of the buffer (the a-c-d CACE ac_params.bw spec)
     unit: Hz
     analysis: ac_closed_loop
-    extract: {meas: bw_cl}
-    spec: {min: 10.0e6, unit: Hz}
+    extract:
+      meas: bw_cl
+    spec:
+      min: 10.0e6
+      unit: Hz
   psrr_vdd_db:
-    display: "Positive-supply rejection"
-    description: "PSRR+ in the unity-buffer config, DC-band floor (design-review 2026-07-05, wired)."
+    display: Positive-supply rejection
+    description: PSRR+ in the unity-buffer config, DC-band floor (design-review 2026-07-05,
+      wired).
     unit: dB
     analysis: psrr_vdd
-    extract: {meas: psrr_vdd_db}
-    spec: {min: 20, unit: dB}
+    extract:
+      meas: psrr_vdd_db
+    spec:
+      unit: dB
+      min: 40.0
   cmrr_db:
-    display: "Common-mode rejection"
-    description: "CMRR in the unity-buffer config, DC-band floor (design-review 2026-07-05, wired)."
+    display: Common-mode rejection
+    description: CMRR in the unity-buffer config, DC-band floor (design-review 2026-07-05,
+      wired).
     unit: dB
     analysis: cmrr_vcm
-    extract: {meas: cmrr_db}
-    spec: {min: 40, unit: dB}
+    extract:
+      meas: cmrr_db
+    spec:
+      min: 40
+      unit: dB
   thd_pct:
-    display: "Total harmonic distortion (100 mV @ 1 MHz, buffer)"
-    description: "tran+FFT on ngspice; native PSS harmonics on Spectre (tb-validation follow-on 2026-07-09)."
-    unit: "%"
+    display: Total harmonic distortion (100 mV @ 1 MHz, buffer)
+    description: tran+FFT on ngspice; native PSS harmonics on Spectre (tb-validation
+      follow-on 2026-07-09).
+    unit: '%'
     analysis: thd
-    extract: {meas: thd_pct, f0: 1.0e6}
-    spec: {max: 2.0, unit: "%"}
+    extract:
+      meas: thd_pct
+      f0: 1.0e6
+    spec:
+      max: 2.0
+      unit: '%'
   iip3_dbv:
-    display: "Input IP3 (two-tone 0.9/1.0 MHz, 50 mV/tone, buffer)"
-    description: "Single-point IM3 extrapolation; tran+FFT on ngspice, native PSS on Spectre (2026-07-09)."
+    display: Input IP3 (two-tone 0.9/1.0 MHz, 50 mV/tone, buffer)
+    description: Single-point IM3 extrapolation; tran+FFT on ngspice, native PSS on
+      Spectre (2026-07-09).
     unit: dBV
     analysis: iip3
-    extract: {meas: iip3_dbv, f1: 0.9e6, f2: 1.0e6, ampl_in: 0.05}
-    spec: {min: -10, unit: dBV}
+    extract:
+      meas: iip3_dbv
+      f1: 0.9e6
+      f2: 1.0e6
+      ampl_in: 0.05
+    spec:
+      min: -10
+      unit: dBV
   icmr_range:
-    display: "Input common-mode range"
-    description: "Widest contiguous 20 mV tracking band of the buffer-connected DC sweep (tb-validation pass 2026-07-09)."
+    display: Input common-mode range
+    description: Widest contiguous 20 mV tracking band of the buffer-connected DC
+      sweep (tb-validation pass 2026-07-09).
     unit: V
     analysis: linearity
-    extract: {meas: icmr_range, vin: vinp, vtrack: 0.02}
-    spec: {min: 0.3, unit: V}
+    extract:
+      meas: icmr_range
+      vin: vinp
+      vtrack: 0.02
+    spec:
+      min: 0.3
+      unit: V
   vn_in:
-    display: "Input-referred noise"
-    unit: "V/sqrt(Hz)"
+    display: Input-referred noise
+    unit: V/sqrt(Hz)
     analysis: noise
-    extract: {meas: inoise_total}
-    spec: {max: 1.2e-3, unit: "V/sqrt(Hz)"}
-    optimize: {spec_name: "v(inoise_total)", testbench: tb_noise, sim_type: noise, goal: minimize,
-               target: 1.2e-3, range: 1.0e-3, tolerance: 1.0e-6, weight: 100.0,
-               error_type: relative-sigmoid, enable: true}
+    extract:
+      meas: inoise_total
+    spec:
+      max: 0.0012
+      unit: V/sqrt(Hz)
+    optimize:
+      spec_name: v(inoise_total)
+      testbench: tb_noise
+      sim_type: noise
+      goal: minimize
+      target: 0.0012
+      range: 0.001
+      tolerance: 1.0e-06
+      weight: 100.0
+      error_type: relative-sigmoid
+      enable: true
   t_settle:
-    display: "Settling time"
+    display: Settling time
     unit: s
     analysis: tran_step
-    extract: {meas: t_settle}
-    spec: {max: 1.5e-7, unit: s}
-    optimize: {spec_name: tsettle, testbench: tb_tran, sim_type: tran, goal: minimize,
-               target: 1.5e-7, range: 1.0e-6, tolerance: 1.0e-8, weight: 100.0,
-               error_type: relative-sigmoid, enable: true}
+    extract:
+      meas: t_settle
+    spec:
+      max: 1.5e-07
+      unit: s
+    optimize:
+      spec_name: tsettle
+      testbench: tb_tran
+      sim_type: tran
+      goal: minimize
+      target: 1.5e-07
+      range: 1.0e-06
+      tolerance: 1.0e-08
+      weight: 100.0
+      error_type: relative-sigmoid
+      enable: true
   i_supply:
-    display: "Supply current"
+    display: Supply current
     unit: A
     analysis: dc_op
-    extract: {meas: i_supply}
-    spec: {max: 1.0e-3, unit: A}
+    extract:
+      meas: i_supply
+    spec:
+      max: 0.001
+      unit: A
   fom_s:
-    display: "Small-signal FOM"
-    # FOM_S = GBW[MHz]·CL[pF] / power[mW]. CL is the datasheet load (cload = 50 fF = 0.05 pF),
-    # not 50 pF — the old `50` constant overstated the FOM 1000× (design-review 2026-07-05, M1).
-    formula: "ugf_hz*1e-6 * 0.05 / (i_supply*1.5*1e3)"   # GBW·CL / power
-    spec: {min: any}
+    display: Small-signal FOM
+    formula: ugf_hz*1e-6 * 0.05 / (i_supply*1.5*1e3)
+    spec:
+      min: any

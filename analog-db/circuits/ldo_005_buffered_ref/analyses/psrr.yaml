@@ -4,7 +4,7 @@ id: psrr
 template: psrr
 description: "AC PSRR from Vdd to Vout; reported at FMEAS = 1 kHz."
 params:
-  VDD: 1.8
+  VDD: 3.3
   ILOAD: 1m
   COUT: 1u
   PPD: 20

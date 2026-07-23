@@ -6,6 +6,7 @@
 **   docker run --rm -i spicexplorer-spice-base:local \
 **     bash -lc 'd=$(mktemp -d) && cat > $d/c.spice && cd $d && ngspice -b c.spice' < raw/trm_001_vcr/ihp-sg13g2/dc_code_sweep.spice
 *----------------------------------------------------------*
+** params: 4 free + 0 frozen knobs (sizing.yaml) · 0 tied · 0 ratio-derived (abstract/params.yaml) · 1 testbench params
 ** AUTHORED TEMPLATE — trim/dc_code_sweep: static trim-code transfer + linearity.
 ** Sweeps the trim control Vcode across its range (each CODE_STEP increment is one "code") and
 ** extracts, from the swept transfer v(vout): the full-scale range, the average LSB step, peak INL

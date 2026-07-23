@@ -42,7 +42,7 @@ def test_assemble_binds_everything(ota):
     assert "XDUT vdd vout vinp vinn ibias vss amp_001_5t" in nl
     assert ".subckt amp_001_5t vdd vout vinp vinn ibias vss" in nl
     # sizing defaults injected as global .param (the FREE atomic symbols, plan_parameterization D-4)
-    assert ".param x_dut_xm1_w=0.5u" in nl
+    assert ".param x_dut_xm1_w=10.0u" in nl
     # the adopted params.yaml tying layer lowers to a generated tie block (plan D-3)
     assert ".param x_dut_xm2_w = {x_dut_xm1_w}" in nl
 

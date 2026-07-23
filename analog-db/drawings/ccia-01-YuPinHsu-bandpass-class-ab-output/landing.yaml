@@ -1,0 +1,29 @@
+# Landing manifest — drawn block -> circuits/ entry (see drawings/README.md).
+# After landing, the entry's pdk/<pdk>/schematic/ copy is the authoritative
+# editable drawing; this family dir is the staging record.
+family: ccia-01-YuPinHsu-bandpass-class-ab-output
+paper: >-
+  Y.-P. Hsu, Z. Liu, M. M. Hella, "A 1.8 uW -65 dB THD ECG Acquisition
+  Front-End IC Using a Bandpass Instrumentation Amplifier With Class-AB Output
+  Configuration", IEEE TCAS-II 65(12):1859-1863, Dec. 2018
+blocks:
+  ccia-dut:
+    circuit: ia_001_hsu_bandpass_classab
+    class: ia
+    subfamily: ccia
+    notes: flat self-contained composite until the P4 composer lands
+  two-stage-ota-core:
+    circuit: amp_025_hsu_classab_ota
+    class: amplifier
+    subfamily: opamp   # buffered class-AB follower output (see drawings/README.md)
+    notes: drawn Vb/vcmfb_ref ports become internal knob sources in the entry
+  cmfb-output-ideal-amp:
+    circuit: cmfb_001_ideal_rsense_servo
+    class: support
+  vcm-detector-simple:
+    circuit: sup_001_vcm_detector
+    class: support
+  ideal-amp-fully-diff:
+    circuit: amp_028_ideal_fully_diff
+    class: amplifier
+    subfamily: ota     # ideal OTA macromodel; baselines in _shared/IDEAL_AMP.md

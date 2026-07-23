@@ -1,0 +1,11 @@
+** sch_path: cascode_current_mirror.sch
+**.subckt cascode_current_mirror iout VDD iin
+*.iopin iout
+*.iopin VDD
+*.iopin iin
+XM1 net1 net1 VDD VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM2 net2 net1 VDD VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM3 iout iin net2 VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM4 iin iin net1 VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+**.ends
+.end

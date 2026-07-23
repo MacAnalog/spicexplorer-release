@@ -1,0 +1,58 @@
+# CMFB class — common-mode feedback networks (sense + error amplification), split out
+# of the generic `support` toolbox 2026-07-20 (owner decision): CMFB designs vary widely
+# (resistive-sense + real error amp, behavioral macromodel servos, SC-CMFB, triode
+# sensing, canonical vs inverted polarity) and deserve a uniform, rigorous suite rather
+# than per-member ad-hoc benches. Validated against _shared/schema/class.schema.json.
+#
+# A member is the COMPLETE CMFB network: CM detector + error amplifier, sensed pins in,
+# one control voltage out. Polarity is a FIRST-CLASS measured quantity: `cmfb_slope` is
+# SIGNED (canonical vcmfb = A*(sensed - vref) -> positive; inverted -> negative); pick
+# the variant by plant parity (the amplifier-class `dc_cmfb_plant_sign` template is the
+# PLANT-side complement of this class's block-level suite — B5 rule,
+# drawings/TODO_bio_afe_port.md).
+#
+# Design-reuse metric worth reading first: `vcmfb_nat`, the control output at ZERO CM
+# error. A real (rail-clamped, finite-gain) CMFB's static CM error in a closed loop is
+# ~ (needed actuator gate - vcmfb_nat)/|slope| — match vcmfb_nat to the plant's balance
+# gate or buy gain (2026-07-20 real-5T campaign, drawings/SIZING_VALIDATION_REPORT.md §8).
+#
+# Port convention (illustrative; members bind their own PORT_LINE):
+#   .subckt <id> vinp vinn vcmfb vref vdd vss
+# vinp/vinn = sensed nodes (the plant's differential outputs), vcmfb = control out,
+# vref = CM target. Behavioral members may leave vdd/vss no-connect.
+schema: spicexplorer/class@1
+class: cmfb
+id_code: cmfb           # accession-id prefix -> cmfb_001_<slug> (plan_scoreboard D-1)
+description: >-
+  Common-mode feedback networks: CM detector + error amplifier serving a control
+  voltage against a CM reference. Uniform suite measures signed polarity slope,
+  servo path gain/bandwidth/UGF, the zero-error natural output level, control-output
+  range, active sensed-CM range, sense-port loading, time-domain step polarity,
+  ringing and settling, and supply current — engine-neutral, both real and
+  behavioral realizations.
+ppa:                      # scoreboard PPA rollup declaration (plan_scoreboard D-7)
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: gain_servo_db, better: max}
+    - {metric: bw_servo_hz, better: max}
+    - {metric: t_cm_settle, better: min}
+canonical_metrics:
+  - cmfb_slope       # SIGNED DC transfer slope d(vcmfb)/d(vcm_sense) at vref (V/V); sign = polarity
+  - gain_servo_db    # 20*log10(|cmfb_slope|) — low-frequency servo path gain (dB)
+  - bw_servo_hz      # servo -3 dB bandwidth into the bound control-node load (Hz)
+  - ugf_servo_hz     # servo path unity-gain frequency (Hz; absent if gain < 0 dB)
+  - vcmfb_nat        # natural control output at zero CM error (sensed == vref) — actuator-matching level (V)
+  - vcmfb_min        # control-output range floor over the full sensed-CM sweep (V)
+  - vcmfb_max        # control-output range ceiling (V)
+  - sense_lo         # active sensed-CM range low edge: |local slope| >= 10% of its peak (V)
+  - sense_hi         # active sensed-CM range high edge (V)
+  - r_sense_in       # DC resistance looking into the tied sense pins — plant loading (ohm)
+  - step_delta_v     # settled vcmfb shift for a +VSTEP sensed-CM step (V, SIGNED — time-domain polarity cross-check)
+  - ring_v           # residual ringing half-amplitude in the settled half of the step plateau (V; ~0 = clean, >0 flags an underdamped/oscillating servo)
+  - t_cm_settle      # settle time after the step release, |vcmfb - final| < VTOL (s)
+  - i_supply         # supply current (A; ~0 for behavioral members)
+  - area_um2
+templates:
+  - dc_cmfb_transfer  # sensed-CM sweep: polarity slope, gain, natural output, ranges, sense loading, i_supply
+  - ac_servo          # CM AC drive -> vcmfb transfer: gain_servo_db, bw_servo_hz, ugf_servo_hz (moved from support 2026-07-20, + UGF)
+  - tran_cmfb_step    # sensed-CM step: signed step_delta_v, ring_v, t_cm_settle

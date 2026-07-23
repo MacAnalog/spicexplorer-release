@@ -13,7 +13,7 @@
 ** gated on the tail-current plateau via an internal ammeter (v.xota.vmeas1#branch), which
 ** depends on legacy-DUT internals; this distilled form is DUT-agnostic. Bind with
 ** `enabled: false` until per-circuit thresholds are reviewed.
-** Bindings: DUT PORT_LINE VDD VCM IBIAS CL VTRACK VSWEEP_STEP PDK_INCLUDE.
+** Bindings: DUT PORT_LINE VDD VCM IBIAS CL VTRACK VSWEEP_STEP SLOPE_TOL PDK_INCLUDE.
 .lib cornerMOSlv.lib mos_tt
 .temp 27
 
@@ -37,24 +37,62 @@ XDUT vdd vout vinp vinn ibias vss amp_001_5t
   set filetype=ascii
   dc Vinp 0 1.5 0.005
   let verr = abs(v(vout) - v(vinp))
-  * In-deck HINT only: the CROSS pair misreads a DUT that already tracks at vin=0 (the
-  * first crossing is then the band EXIT). The canonical figure is the platform registry's
-  * `{meas: icmr_range}` (widest contiguous |verr|<=VTRACK band over the written sweep).
-  meas dc icmr_min FIND v(vinp) WHEN verr=20m CROSS=1
-  meas dc icmr_max FIND v(vinp) WHEN verr=20m CROSS=LAST
-  let icmr_range = icmr_max - icmr_min
-  print icmr_range
+  * ICMR = widest CONTIGUOUS run of points that both track in absolute terms
+  * (|verr| <= VTRACK) and are ACTIVE (dvout/dvin ~ 1). This mirrors the platform registry's
+  * `{meas: icmr_range}` (spicexplorer_core waveforms.icmr_band) exactly, so the analog-db
+  * run/verify lane and the optimizer lane report the same number.
+  *
+  * REWRITTEN 2026-07-20. The previous form was `meas dc ... WHEN verr=VTRACK CROSS=1/LAST`,
+  * which was wrong two ways. (1) CROSS=1 finds the band EXIT on a DUT that already tracks at
+  * vin=0, so the pair returned the complement of the real band — it read amp_022 as 0.105 V
+  * against a true 1.400 V. (2) More fundamentally, an absolute-error test ALONE cannot tell
+  * "the follower is tracking" from "both ends sit near the same rail": where the input pair
+  * is cut off vout is pinned at a rail, and if vin is near that rail too then verr is small
+  * by coincidence. That reported a 3.23 V band on a 3.3 V supply for amp_033. The slope test
+  * rejects those dead points because a railed output has dvout/dvin ~ 0.
+  let vsw = v(vinp)
+  let dvout = deriv(v(vout))
+  let dvin  = deriv(vsw)
+  let slope = dvout / dvin
+  let intrack = (verr <= 20m) & (abs(slope - 1) <= 0.1)
+  let npts = length(intrack)
+  let k = 0
+  let best = 0
+  let bstart = 0
+  let bend = 0
+  let cstart = 0
+  let inband = 0
+  while k < npts
+    if intrack[k] > 0.5
+      if inband < 0.5
+        let cstart = vsw[k]
+        let inband = 1
+      end
+      if (vsw[k] - cstart) > best
+        let best = vsw[k] - cstart
+        let bstart = cstart
+        let bend = vsw[k]
+      end
+    else
+      let inband = 0
+    end
+    let k = k + 1
+  end
+  let icmr_min = bstart
+  let icmr_max = bend
+  let icmr_range = best
+  print icmr_min icmr_max icmr_range
   write
   quit
 .endc
-.param x_dut_xm1_w=0.5u
-.param x_dut_xm1_l=5.0u
-.param x_dut_xm3_w=1.5u
-.param x_dut_xm3_l=5.0u
-.param x_dut_xm5_w=2.0u
-.param x_dut_xm5_l=5.0u
-.param x_dut_xm6_w=2.0u
-.param x_dut_xm6_l=5.0u
+.param x_dut_xm1_w=10.0u
+.param x_dut_xm1_l=10.0u
+.param x_dut_xm3_w=10.0u
+.param x_dut_xm3_l=7.0u
+.param x_dut_xm5_w=3.8u
+.param x_dut_xm5_l=1.0u
+.param x_dut_xm6_w=3.8u
+.param x_dut_xm6_l=1.0u
 .param x_dut_xm1_m=1
 .param x_dut_xm3_m=1
 .param x_dut_xm5_m=1

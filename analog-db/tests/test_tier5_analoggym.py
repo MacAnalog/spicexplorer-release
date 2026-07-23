@@ -1,6 +1,5 @@
 """Phase-5 gate: the AnalogGym amplifier corpus is imported, classified, and schema/generation/
-assembly valid (plan todo_examples_db.md P5). PDK-free; the sky130 sim-match is the gated
-follow-up (needs the AnalogGym-vendored PDK)."""
+assembly valid. PDK-free."""
 
 from __future__ import annotations
 
@@ -34,7 +33,7 @@ def test_analoggym_circuit_clears_t0_t2(cid):
 
 
 def test_classification_is_data_driven():
-    """Folder name → compensation/stages, and the paper attribution is the skill's."""
+    """Folder name → compensation/stages, and the paper attribution is data-driven."""
     assert analoggym.parse_folder("Leung_NMCNR_Pin_3") == {
         "author": "Leung", "compensation": "NMCNR", "stages": 3
     }
@@ -42,7 +41,7 @@ def test_classification_is_data_driven():
     m = c.manifest
     assert m["compensation"] == "NMCNR" and m["stages"] == 3
     assert m["provenance"]["license"] == "BSD-3-Clause"
-    # upstream folder + the pre-accession legacy id (plan_scoreboard D-3)
+    # upstream folder + the pre-accession legacy id
     assert m["provenance"]["aliases"] == ["Leung_NMCNR_Pin_3", "leung_nmcnr_pin_3"]
     assert m["ports"] == ["vss", "vdd", "vinn", "vinp", "vout"]  # normalized from gnda/vdda
 

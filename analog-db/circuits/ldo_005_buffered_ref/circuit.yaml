@@ -1,16 +1,24 @@
 # SUPER-DSL manifest — a buffered/filtered-reference LDO, inspired by the TI application-note
 # architecture in external/conceptual_LDO_design/ti-ldo/ldo/ldo.sch (GF180MCU-native source:
 # ref_amp + error_amp + lpf_rc + PMOS pass device). Distinguishes itself from ldo_007_pmos by
-# buffering+gaining the internal reference through its own 5T OTA (with an outer feedback
+# buffering+gaining the internal reference through its own amplifier (with an outer feedback
 # divider) and RC-filtering it before the error amp compares it against vout — reducing the
 # error amp's sensitivity to reference noise/ripple, at the cost of an extra gain stage's own
 # pole to compensate for.
+#
+# REWRITTEN 2026-07-20 to the architecture the owner actually drew. Both amplifiers were previously
+# modelled as 5T OTAs on ideal current sources; they are now the landed, independently verified
+# amp_033_ti_ldo_ref_selfbias and amp_032_ti_ldo_error_selfbias, inlined flat. The gf180mcu binding
+# also moved from nfet/pfet_03v3 @ 1.8 V to the 6 V family @ 3.3 V to match the drawing and those
+# two accessions, and the ihp-sg13g2 + sky130 bindings were removed (their sizings encoded the dead
+# 5T knob names; recover with `git checkout HEAD~ -- circuits/ldo_005_buffered_ref/pdk/<pdk>`).
+# The DUT now also carries a 0 V `Vlp` loop-break marker for the new ldo/ac_loopgain bench.
 schema: spicexplorer/circuit@1
 id: ldo_005_buffered_ref
 class: ldo
 display_name: "Buffered-reference LDO (ref-buffer + RC filter + error amp, Miller-compensated)"
 compensation: Miller
-stages: 3                       # ref-buffer amp + error-amp gain stage + pass-device gain stage
+stages: 3                       # ref amp + error-amp gain stage + pass-device gain stage
 ports: [vdd, vout, vss]         # reference + both tail biases are generated INTERNALLY (ideal)
 provenance:
   source: external/conceptual_LDO_design/ti-ldo/ldo/ldo.sch    # vendored verbatim at reference/ti-ldo/
@@ -21,6 +29,6 @@ artifacts:
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
   reference_schematic: reference/ti-ldo/pictures/TI_LDO_system_architecture.png
-pdks: [gf180mcu, ihp-sg13g2, sky130]
-analyses: [dc_op, load_regulation, line_regulation, psrr, dropout, tran_load_step, loop_stability, noise, tran_line_step]
+pdks: [gf180mcu]
+analyses: [dc_op, load_regulation, line_regulation, psrr, dropout, tran_load_step, loop_stability, ac_loopgain, noise, tran_line_step]
 status: draft

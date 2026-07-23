@@ -43,8 +43,23 @@ templates:
       Swept-source DC transfer (the linearity/ICMR bench). Compose WITHOUT the dc_op
       sibling — `dcOp dc` also writes a `.dc` PSF and the reader prefers the exact
       `dc.dc` name, but two `.dc` files invite confusion.
+  dc_sweep_down:
+    statement: "dcdown dc dev={DEV} param=dc start={STOP} stop={START} step=-{STEP}"
+    psf: dcdown.dc
+    notes: >-
+      The REVERSE leg of a two-direction sweep (the comparator hysteresis bench): the
+      same source swept STOP→START with a negated step. Composes AFTER the forward
+      `dc_sweep`; its own analysis name/PSF (`dcdown.dc`) so the two directions never
+      collide on `dc.dc`. Callers pass the SAME START/STOP/STEP args as the up leg.
+  temp_sweep:
+    statement: "dctemp dc param=temp start={TSTART} stop={TSTOP} step={TSTEP}"
+    psf: dctemp.dc
+    notes: >-
+      Ambient-temperature sweep (the temp_sensor class vocabulary): a plain `dc`
+      analysis sweeping the simulator's own `temp` parameter — no dev= source. The
+      abscissa in `dctemp.dc` is temperature in °C.
   noise:
-    statement: "noise ( {OUT} 0 ) noise start={FSTART} stop={FSTOP} dec={PPD}[ iprobe={IPROBE}]"
+    statement: "noise ( {OUT} {OUTN} ) noise start={FSTART} stop={FSTOP} dec={PPD}[ iprobe={IPROBE}]"
     psf: noise.noise
     notes: >-
       Small-signal noise: output density across (OUT, 0); `iprobe=` names the input
@@ -58,7 +73,7 @@ templates:
       loose tolerance manufactures numerical distortion) — required when the payload is
       a settling edge or an FFT.
   pss:
-    statement: "pss pss fund={FUND} harms={HARMS}[ tstab={TSTAB}] errpreset=conservative"
+    statement: "pss pss fund={FUND} harms={HARMS}[ tstab={TSTAB}][ method={METHOD}] errpreset=conservative"
     defaults: {HARMS: 7}
     psf: pss.fd.pss
     notes: >-
@@ -75,3 +90,28 @@ templates:
       feedback path — the class templates mark it with a 0 V source named VIPRB* that
       the platform's Spectre emitter translates to an iprobe. Results carry the
       loopGain wave (pm_loop / gain-margin / loop-gain-vs-f).
+  pac:
+    statement: "pac pac start={FSTART} stop={FSTOP} dec={PPD} maxsideband={MAXSB}"
+    defaults: {MAXSB: 15}
+    psf: pac.0.pac
+    notes: >-
+      Periodic AC riding a PRECEDING pss (compose pss first — the platform enforces the
+      order). The golden gain/impedance analysis for chopper / switched-cap benches:
+      the operating point is periodic (the chop clock), so a static `ac` on the frozen
+      network is meaningless. Spectre writes one PSF per output sideband (pac.<k>.pac)
+      plus a metadata-only pac.pac parent; the signal-band transfer is harmonic 0, so
+      the platform reader pins `pac` to pac.0.pac (sidebands stay reachable as
+      `pac.<k>`). The deck's small-signal marker (`ac <mag>` on the input source)
+      translates to BOTH mag= and pacmag=, so the same stimulus serves ac and pac.
+  pnoise:
+    statement: "pnoise ( {OUT} {REF} ) pnoise start={FSTART} stop={FSTOP} dec={PPD} maxsideband={MAXSB}[ iprobe={IPROBE} refsideband={REFSB}]"
+    defaults: {MAXSB: 7, REF: 0}
+    psf: pnoise.pnoise
+    notes: >-
+      Periodic noise riding a PRECEDING pss — noise under the running large-signal
+      clocks, folding in MAXSB sidebands of the periodic operating point (what a
+      small-signal `noise` cannot see: chopped/modulated noise). Densities land in the
+      swept pnoise.pnoise PSF (`out`/`in` V/√Hz); the registry integrates them via
+      {meas: onoise_pnoise_total | inoise_pnoise_total}. `iprobe=` (with refsideband,
+      0 = no frequency translation) names the input source for the input-referred
+      spectrum — omit it for output-only reads (e.g. a differential (OUT REF) pair).

@@ -17,3 +17,19 @@ dev = [
     "pytest>=8.3",
     "ruff>=0.8",
 ]
+
+# Anchors pytest's rootdir at the workspace root so the root conftest.py (the
+# example-registry fixtures) loads for per-package invocations — same shape as
+# the private workspace root, restricted to the released packages.
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = [
+    "packages/spicexplorer-core/tests",
+    "packages/spicexplorer/tests",
+    "packages/spicexplorer-circuitgraph/tests",
+    "packages/spicexplorer-netlist2xschem/tests",
+]
+markers = [
+    "slow: marks tests that run a real SPICE simulation (deselect with -m 'not slow')",
+    "notebooks: executes a guide notebook headlessly (deselect with -m 'not notebooks')",
+]

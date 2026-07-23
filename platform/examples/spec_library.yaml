@@ -1,0 +1,113 @@
+# Standard analog target-spec templates for the new-project wizard's one-click
+# "Spec library". Targets/ranges/tolerances are illustrative defaults — adjust per
+# design after adding. Field names mirror the wizard's TargetSpec form.
+specs:
+  - name: ugf
+    sim_type: ac
+    goal: exceed
+    target: "100e6"
+    range: "50e6"
+    tolerance: "5e6"
+    weight: "1.0"
+    error_type: relative-absolute
+    reward_type: none
+    description: Unity-gain frequency (Hz)
+
+  - name: gain_db
+    sim_type: ac
+    goal: exceed
+    target: "60"
+    range: "20"
+    tolerance: "2"
+    weight: "1.0"
+    error_type: relative-absolute
+    reward_type: none
+    description: DC open-loop gain (dB)
+
+  - name: pm
+    sim_type: ac
+    goal: exact
+    target: "60"
+    range: "30"
+    tolerance: "10"
+    weight: "1.0"
+    error_type: relative-absolute
+    reward_type: none
+    description: Phase margin (deg)
+
+  - name: gbw
+    sim_type: ac
+    goal: exceed
+    target: "100e6"
+    range: "50e6"
+    tolerance: "5e6"
+    weight: "1.0"
+    error_type: relative-absolute
+    reward_type: none
+    description: Gain-bandwidth product (Hz)
+
+  - name: slew_rate
+    sim_type: tran
+    goal: exceed
+    target: "10e6"
+    range: "5e6"
+    tolerance: "1e6"
+    weight: "1.0"
+    error_type: relative-absolute
+    reward_type: none
+    description: Slew rate (V/s)
+
+  - name: cmrr
+    sim_type: ac
+    goal: exceed
+    target: "80"
+    range: "40"
+    tolerance: "5"
+    weight: "1.0"
+    error_type: relative-absolute
+    reward_type: none
+    description: Common-mode rejection ratio (dB)
+
+  - name: psrr
+    sim_type: ac
+    goal: exceed
+    target: "60"
+    range: "30"
+    tolerance: "5"
+    weight: "1.0"
+    error_type: relative-absolute
+    reward_type: none
+    description: Power-supply rejection ratio (dB)
+
+  - name: i_supply
+    sim_type: op
+    goal: minimize
+    target: "1e-3"
+    range: "1e-3"
+    tolerance: "1e-4"
+    weight: "1.0"
+    error_type: relative-absolute
+    reward_type: none
+    description: Total supply current (A)
+
+  - name: input_noise
+    sim_type: noise
+    goal: minimize
+    target: "1e-8"
+    range: "1e-8"
+    tolerance: "1e-9"
+    weight: "1.0"
+    error_type: relative-absolute
+    reward_type: none
+    description: Input-referred noise (V/√Hz)
+
+  - name: output_swing
+    sim_type: dc
+    goal: exceed
+    target: "1.0"
+    range: "0.5"
+    tolerance: "0.05"
+    weight: "1.0"
+    error_type: relative-absolute
+    reward_type: none
+    description: Output voltage swing (V)

@@ -1,0 +1,180 @@
+# Multi-corner PVT sizing of the 5T OTA (Phase 2 demonstration).
+# Every trial runs the {enabled testbenches} x {enabled corners} cross-product and
+# collapses the per-corner scores into ONE objective via `pvt.score_aggregation`,
+# using the constraint-first rule (a failing corner's penalty can never be masked by
+# a passing corner's reward). AC-only (loopgain testbench) to keep the sweep fast and
+# focused on the classic PVT-sensitive specs: DC gain, UGF, phase margin.
+project:
+  name: 5T-OTA-MULTICORNER
+  description: 5-corner (PVT) sizing of a 5-transistor OTA in ihp-sg13g2
+  simulator: ngspice
+  save_sim: False
+
+  ws_root : ..
+  netlist : spice/ota-5t_tb-loopgain.spice
+  outdir  : spice/temp_spice_out_multicorner
+
+  tech_spec :
+    name : ihp-sg13g2
+    constraints:
+      max_nfet_w : 10u
+      min_nfet_w : 0.18u
+      max_nfet_l : 10u
+      min_nfet_l : 0.18u
+      max_pfet_w : 10u
+      min_pfet_w : 0.18u
+      max_pfet_l : 10u
+      min_pfet_l : 0.18u
+
+  # ------------------------
+  # PVT (Phase 2, multi-corner). Each corner is a process bundle + temperature + supply.
+  # The 5T OTA has only MOS devices, so every corner selects a cornerMOSlv.lib section
+  # (all corners share the same lib basename + supply node VDD => "symmetric", as the
+  # multi-mode load-time validation requires). VDD overrides the netlist's `.param VDD`
+  # (parameterized supply); temperature is emitted as `.options temp=`.
+  # ------------------------
+  pvt:
+    mode: multi
+    score_aggregation: mean       # constraint-first: masking-safe (see doc/PVT_plan.md AGG-1)
+    active_corner: tt_27C_1V50    # used by single-corner manual sims / UI corner picks
+
+    process_bundles:
+      tt: [ { lib_file: cornerMOSlv.lib, section: mos_tt } ]
+      ss: [ { lib_file: cornerMOSlv.lib, section: mos_ss } ]
+      ff: [ { lib_file: cornerMOSlv.lib, section: mos_ff } ]
+      sf: [ { lib_file: cornerMOSlv.lib, section: mos_sf } ]
+      fs: [ { lib_file: cornerMOSlv.lib, section: mos_fs } ]
+
+    corners:
+      # (1) typical: nominal P/V/T — reproduces the netlist's own hardcoded corner.
+      - name: tt_27C_1V50
+        process: tt
+        temp: 27
+        supply: { node: VDD, value: 1.5 }
+        enabled: true
+
+      # (2) worst-case speed/gain: slow-slow, hot, -10% supply.
+      - name: ss_125C_1V35
+        process: ss
+        temp: 125
+        supply: { node: VDD, value: 1.35 }
+        enabled: true
+
+      # (3) best-case: fast-fast, cold, +10% supply.
+      - name: ff_m40C_1V65
+        process: ff
+        temp: -40
+        supply: { node: VDD, value: 1.65 }
+        enabled: true
+
+      # (4) skew corner: slow-NMOS / fast-PMOS, warm, nominal supply.
+      - name: sf_85C_1V50
+        process: sf
+        temp: 85
+        supply: { node: VDD, value: 1.5 }
+        enabled: true
+
+      # (5) opposite skew: fast-NMOS / slow-PMOS, cold, nominal supply.
+      - name: fs_0C_1V50
+        process: fs
+        temp: 0
+        supply: { node: VDD, value: 1.5 }
+        enabled: true
+
+    model_lib_root: null
+
+  # ------------------------
+  # DUT Parameters (8): the input pair, the mirror, the mirror reference, and the
+  # PMOS active load — widths & lengths sized by the optimizer.
+  # ------------------------
+  dut_params :
+    - name : x_dut_nfet_input_w
+      min_val: min_nfet_w
+      max_val: max_nfet_w
+    - name : x_dut_nfet_input_l
+      min_val: min_nfet_l
+      max_val: max_nfet_l
+    - name : x_dut_nfet_mirror_w
+      min_val: min_nfet_w
+      max_val: max_nfet_w
+    - name : x_dut_nfet_mirror_l
+      min_val: min_nfet_l
+      max_val: max_nfet_l
+    - name : x_dut_nfet_mirror_ref_w
+      min_val: min_nfet_w
+      max_val: max_nfet_w
+    - name : x_dut_nfet_mirror_ref_l
+      min_val: min_nfet_l
+      max_val: max_nfet_l
+    - name : x_dut_pfet_load_w
+      min_val: min_pfet_w
+      max_val: max_pfet_w
+    - name : x_dut_pfet_load_l
+      min_val: min_pfet_l
+      max_val: max_pfet_l
+
+  # ------------------------
+  # Testbench: AC (loopgain) only for this multi-corner demo.
+  # ------------------------
+  testbenches :
+    - name: tb_ac
+      params:
+        - name : CL
+          description : load capacitance
+          val : 50f
+      netlist : spice/ota-5t_tb-loopgain.spice
+      enable: True
+      description : AC loop-gain analysis for UGF, DC gain, PM
+
+  # ------------------------
+  # Optimizer Configuration + target specs.
+  # Targets tuned so a well-sized design tends to PASS at the easy corners
+  # (ff/cold/high-V) but is stressed at the worst corner (ss/hot/low-V), which is the
+  # exact scenario constraint-first aggregation is built for.
+  # ------------------------
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48
+    budget: 20
+    name: NGOpt
+    parallel_sim: true            # fan out the corner axis (each corner sims concurrently)
+
+    lin_variable_bounds: { min: 0, max: 100 }
+    log_variable_bounds: { min: 1, max: 100 }
+
+    target_specs:
+      - name: ugf
+        description: Unity-gain frequency
+        testbench: tb_ac
+        sim_type: ac
+        goal: exceed
+        target: 2e6
+        range: 5e6
+        tolerance: 2e5
+        weight: 1.0
+        error_type: relative-sigmoid
+        enable: True
+
+      - name: dcgain
+        description: DC loop gain (dB)
+        testbench: tb_ac
+        sim_type: ac
+        goal: exceed
+        target: 24
+        range: 30
+        tolerance: 1
+        weight: 1.0
+        error_type: relative-sigmoid
+        enable: True
+
+      - name: pm
+        description: phase margin (deg)
+        testbench: tb_ac
+        sim_type: ac
+        goal: exact
+        target: 70
+        range: 45
+        tolerance: 30
+        weight: 1.0
+        error_type: relative-sigmoid
+        enable: True

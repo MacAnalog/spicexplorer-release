@@ -1,0 +1,20 @@
+// Native Spectre DUT subckt — TEMPLATE (fill in for your TSMC-65 PDK).
+//
+// A 5-transistor OTA: NMOS input pair, NMOS tail, PMOS mirror load. Device model names
+// (nch_lvt / pch_lvt) and the corner section come from the TSMC-65 PDK, included at the
+// top level by the PVT corner in project_setup.yaml — NOT here. The subckt exposes the
+// design variables (w_in / l_in / w_tail) as subckt parameters so the composed deck can
+// inject a fresh value per optimizer candidate.
+//
+// Ports: (out inp cm vdd vss)
+subckt ota_5t (out inp cm vdd vss)
+  parameters w_in=1u l_in=0.2u w_tail=2u wl=1u ll=0.5u wm=2u lm=0.5u
+  // input pair
+  XM1 (n1  inp tail vss) nch_lvt w=w_in  l=l_in  nf=1
+  XM2 (out cm  tail vss) nch_lvt w=w_in  l=l_in  nf=1
+  // tail current source (bias node `vb_tail` assumed provided by the testbench/bias)
+  XM5 (tail vb_tail vss vss) nch_lvt w=w_tail l=ll nf=1
+  // PMOS mirror load
+  XM3 (n1  n1  vdd vdd) pch_lvt w=wm l=lm nf=1
+  XM4 (out n1  vdd vdd) pch_lvt w=wm l=lm nf=1
+ends ota_5t

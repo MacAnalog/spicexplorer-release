@@ -1,0 +1,332 @@
+# The universal circuit setup file
+project:
+  name: CASCODE-OTA
+  description: Cascode (Telescopic) OTA example sizing in the ihp-sg13g2 technology
+  simulator: ngspice
+  save_sim : False
+  parallel_sim : True # Default is True
+
+  # Workspace root for this design. A relative path is resolved against THIS file's
+  # directory, so this example works on a fresh clone with no path editing. Use an
+  # absolute path to point at a workspace outside the repo.
+  ws_root : ..
+  # The following paths are relative to the ws_root
+  netlist : spice/ota-improved.spice
+  schematic : xschem/ota-improved.sch  # optional, used by the UI Schematic tab
+  outdir  : spice/temp_spice_out
+  
+  # ------------------------
+  # Technology Specification: Define the technology and PDK rules
+  # ------------------------
+  tech_spec : 
+    name : ihp-sg13g2
+    # PDK RULES
+    constraints:
+      # n-fet
+      max_nfet_w : 200u
+      min_nfet_w : 0.18u
+      max_nfet_l : 10u
+      min_nfet_l : 0.18u
+
+      # p-fet
+      max_pfet_w : 200u
+      min_pfet_w : 0.18u
+      max_pfet_l : 10u
+      min_pfet_l : 0.18u
+
+  # ------------------------
+  # PVT (Phase 1): named corners that actually drive the simulation.
+  # `active_corner` is the single corner the optimizer runs against (overridable from
+  # the UI). The default `tt_27C_1V5` reproduces these testbenches' hardcoded netlists
+  # exactly (.lib cornerMOSlv.lib mos_tt, .lib cornerRES.lib res_typ, temp 27, VDD 1.5),
+  # so enabling PVT changes nothing until you switch corners. Cascode uses MOS + RES
+  # models only (no CAP corner).
+  # ------------------------
+  pvt:
+    active_corner: tt_27C_1V5
+    # This example runs SINGLE-corner (the default). To sweep every enabled corner
+    # per trial and aggregate the scores, add:
+    #   mode: multi
+    #   score_aggregation: mean   # or: sum (add) | min (worst_case)
+    # (see examples/OTA/folded_cascode for a live multi-corner setup)
+
+    process_bundles:
+      tt:
+        - { lib_file: cornerMOSlv.lib, section: mos_tt }
+        - { lib_file: cornerRES.lib,   section: res_typ }
+      ss:
+        - { lib_file: cornerMOSlv.lib, section: mos_ss }
+        - { lib_file: cornerRES.lib,   section: res_wcs }
+      ff:
+        - { lib_file: cornerMOSlv.lib, section: mos_ff }
+        - { lib_file: cornerRES.lib,   section: res_bcs }
+
+    corners:
+      - name: tt_27C_1V5            # typical — matches the netlist's hardcoded corner
+        process: tt
+        temp: 27
+        supply: { node: VDD, value: 1.5 }
+        enabled: true
+
+      - name: ss_125C_1V35          # slow-slow, hot, -10% supply
+        process: ss
+        temp: 125
+        supply: { node: VDD, value: 1.35 }
+        enabled: true
+
+      - name: ff_m40C_1V65          # fast-fast, cold, +10% supply
+        process: ff
+        temp: -40
+        supply: { node: VDD, value: 1.65 }
+        enabled: false
+
+    model_lib_root: null
+
+  # ------------------------
+  # DUT Parameters: Configure the parameters to be sized/optimized ([optional] freeze : true/false)
+  # ------------------------
+  dut_params :
+    # ------------------------
+    # Device 1/2 (NMOS)
+    # ------------------------
+    - name : X_DUT_M1M2_W
+      min_val: min_nfet_w
+      max_val: max_nfet_w
+    
+    - name : X_DUT_M1M2_L
+      min_val: min_nfet_l
+      max_val: max_nfet_l
+
+    # ------------------------
+    # Device 1C/2C (NMOS)
+    # ------------------------
+    - name : X_DUT_M1CM2C_W
+      min_val: min_nfet_w
+      max_val: max_nfet_w
+    
+    - name : X_DUT_M1CM2C_L
+      min_val: min_nfet_l
+      max_val: max_nfet_l
+
+    # ------------------------
+    # Device 3/4 (PMOS)
+    # ------------------------
+    - name : X_DUT_M3M4_W
+      min_val: min_pfet_w
+      max_val: max_pfet_w
+    
+    - name : X_DUT_M3M4_L
+      min_val: min_pfet_l
+      max_val: max_pfet_l
+
+    # ------------------------
+    # Device 3C/4C (PMOS)
+    # ------------------------
+    - name : X_DUT_M3CM4C_W
+      min_val: min_pfet_w
+      max_val: max_pfet_w
+    
+    - name : X_DUT_M3CM4C_L
+      min_val: min_pfet_l
+      max_val: max_pfet_l
+
+    # ------------------------
+    # Device 5 (NMOS)
+    # ------------------------
+    - name : X_DUT_M5_W
+      min_val: min_nfet_w
+      max_val: max_nfet_w
+    
+    - name : X_DUT_M5_L
+      min_val: min_nfet_l
+      max_val: max_nfet_l
+
+    - name : X_DUT_M5_NG
+      min_val: 1
+      max_val: 5
+      is_integer : True # [Optional] default is False.
+
+
+    # ------------------------
+    # Device 6 (NMOS)
+    # ------------------------
+    - name : X_DUT_M6_W
+      min_val: min_nfet_w
+      max_val: max_nfet_w
+    
+    - name : X_DUT_M6_L
+      min_val: min_nfet_l
+      max_val: max_nfet_l
+
+    # ------------------------
+    # Bias Voltage
+    # ------------------------
+    - name : X_DUT_V_BIAS_1
+      min_val: 0
+      max_val: 1.2
+    
+    - name : X_DUT_V_BIAS_2
+      min_val: 0
+      max_val: 1.2
+
+
+  # ------------------------
+  # Testbench: Configure the testbenches to be used for simulations
+  # ------------------------
+  testbenches :
+    # ------------------------
+    # Testbench 1 - AC Simulation
+    # ------------------------
+    - name: tb_ac
+      params:
+        - name : CL
+          description : load capacitance
+          val : 50f
+        - name : V_CM
+          description : input common mode voltage
+          val : 0.8
+        - name : F_AC_START
+          description : start frequency for AC analysis
+          val : 1
+        - name : F_AC_STOP
+          description : stop frequency for AC analysis
+          val : 100e9
+
+      netlist : spice/ota-improved_tb-loopgain.spice
+      enable: True # Optional: Enable or disable this testbench
+      description : AC analysis for UGF, Gain, PM
+
+    # ------------------------
+    # Testbench 2 - Noise Simulation
+    # ------------------------
+    - name: tb_noise
+      params:
+        - name : CL
+          description : load capacitance
+          val : 50f
+        - name : V_CM
+          description : input common mode voltage
+          val : 0.8
+        - name : F_NOISE_START
+          description : start frequency for noise analysis
+          val : 1e6
+        - name : F_NOISE_STOP
+          description : stop frequency for noise analysis
+          val : 1e9
+
+      netlist : spice/ota-improved_tb-noise.spice
+      enable: True # Optional: Enable or disable this testbench
+      description : Noise analysis for input referred noise
+
+    # ------------------------
+    # Testbench 3 - Transient Simulation
+    # ------------------------
+    - name: tb_tran
+      params:
+        - name : CL
+          description : load capacitance
+          val : 50f
+        - name : V_REF
+          description : reference voltage used for step input
+          val : 0.8
+      netlist : spice/ota-improved_tb-tran.spice
+      enable: True # Optional: Enable or disable this testbench
+      description : Transient analysis for slew rate and settling time
+
+  # ------------------------
+  # Optimizer Configuration: Configure the optimizer and target specifications
+  # ------------------------
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48
+    budget: 2000
+    name: LogBFGSCMAPlus   # LhsDE, TinyCMA, LHSSearch, ScrHaltonSearch, LBFGSB
+
+    # The following overwrite [optional] the optimizer bounds.
+    lin_variable_bounds:
+      min : 0
+      max : 100
+
+    log_variable_bounds:
+      min : 1
+      max : 100
+    
+    target_specs:
+      - name: ugf
+        description:  Unitiy gain frequency # optional documentation field
+        testbench:    tb_ac
+        sim_type:     ac      # options: dc, ac, tran, noise
+        goal:         exceed   # options: exact, exceed, minimize
+        target:       200e6    # Unit: MHz
+        range:        100e6     # The expected variation range. used in normalizing the metric values
+        tolerance:    10e6     # [Optional] allowed deviation in the spec, otherwise 5% margin is assumed.
+        weight:       100.0   # [Optional] non-negative weight factor for this target, else it is 1.0
+        log_scale:    False   # [Optional] Used to indicate the spec is on log scale
+        error_type:   relative-absolute # [Optional] options: absolute, target_spec_val, squared, relative-squared, relative-absolute, relative-exponential
+        reward_type:  log       # if none, it only satisifes the constraint
+        enable:       True      # [Optional] Used to exclude from the loss function
+
+      - name: dcgain
+        description:  gain in dB at DC
+        testbench:    tb_ac
+        sim_type:     ac      # options: dc, ac, tran, noise
+        goal:         exceed  # options: exact, exceed, minimize
+        target:       40      # 40 dB
+        range:        100     # The expected variation range. used in normalizing the metric values
+        tolerance:    1       # [Optional] allowed deviation in the spec
+        weight:       100.0   # [Optional] non-negative weight factor for this target, else it is 1.0
+        error_type:   relative-absolute # [Optional] options: absolute, target_spec_val, squared, relative-squared, relative-absolute, relative-exponential
+        reward_type:  log     # if none, it only satisifes the constraint
+        enable:       True    # [Optional] Used to exclude from the loss function
+
+      - name: pm
+        description: phase margin
+        testbench:    tb_ac
+        sim_type:     ac      # options: dc, ac, tran, noise
+        goal:         exact   # options: exact, exceed, minimize
+        target:       60      # in degrees
+        range:        45      # The expected variation range. used in normalizing the metric values
+        tolerance:    10      # [Optional] allowed deviation in the spec
+        weight:       100.0   # [Optional] non-negative weight factor for this target, else it is 1.0
+        error_type:   relative-absolute # [Optional] options: absolute, target_spec_val, squared, relative-squared, relative-absolute, relative-exponential
+        reward_type:  none    # if none, it only satisifes the constraint
+        enable:       True    # [Optional] Used to exclude from the loss function
+
+      - name: v(inoise_total)
+        description:  Total Input-referred noise  # optional documentation field
+        testbench:    tb_noise
+        sim_type:     noise     # options: dc, ac, tran, noise, noise_spectrum
+        goal:         minimize  # options: exact, exceed, minimize
+        target:       1.2e-3    # Unit: V/sqrt(Hz)
+        range:        1e-3      # The expected variation range. used in normalizing the metric values
+        tolerance:    1e-6      # [Optional] allowed deviation in the spec, otherwise 5% margin is assumed.
+        weight:       100.0     # [Optional] non-negative weight factor for this target, else it is 1.0
+        error_type:   relative-absolute # [Optional] options: absolute, target_spec_val, squared, relative-squared, relative-absolute, relative-exponential
+        reward_type:  log       # if none, it only satisifes the constraint
+        enable:       True      # [Optional] Used to exclude from the loss function
+
+      - name: i(idd_total)
+        description:  Total current drawn from VDD  # optional documentation field
+        testbench:    tb_noise
+        sim_type:     op     # options: dc, ac, tran, noise, noise_spectrum
+        goal:         minimize  # options: exact, exceed, minimize
+        target:       25e-6    # Unit: Amps
+        range:        100e-6      # The expected variation range. used in normalizing the metric values
+        tolerance:    1e-6      # [Optional] allowed deviation in the spec, otherwise 5% margin is assumed.
+        weight:       100.0     # [Optional] non-negative weight factor for this target, else it is 1.0
+        error_type:   relative-absolute # [Optional] options: absolute, target_spec_val, squared, relative-squared, relative-absolute, relative-exponential
+        reward_type:  log       # if none, it only satisifes the constraint
+        enable:       True      # [Optional] Used to exclude from the loss function
+
+      - name: tsettle
+        description:  Total settling time in response to a step input  # optional documentation field
+        testbench:    tb_tran
+        sim_type:     tran      # options: dc, ac, tran, noise, noise_spectrum
+        goal:         minimize  # options: exact, exceed, minimize
+        target:       15e-6     # Unit: seconds
+        tolerance:    1e-8      # [Optional] allowed deviation in the spec, otherwise 5% margin is assumed.
+        range:        1e-6      # The expected variation range. used in normalizing the metric values
+        weight:       10.0     # [Optional] non-negative weight factor for this target, else it is 1.0
+        error_type:   relative-absolute # [Optional] options: absolute, target_spec_val, squared, relative-squared, relative-absolute, relative-exponential
+        reward_type:  none      # if none, it only satisifes the constraint
+        enable:       True     # [Optional] Used to exclude from the loss function 

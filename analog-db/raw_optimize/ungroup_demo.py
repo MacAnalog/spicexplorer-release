@@ -104,12 +104,12 @@ def resolved_dims(*, ungroup: bool) -> dict:
 
 def run_optimization(*, ungroup: bool) -> dict:
     """Run ONE short seeded live optimization; return best params + best metrics + n trials."""
+    import os
+
     from spicexplorer.optimization.orchestrator import (
         Circuit_Optimizer_Orchestrator_with_SPICE as Orch,
     )
     from spicexplorer.optimization.orchestrator import Optimizer_Type_Enum
-
-    import os
 
     # Keep the committed notebook output clean: the optimizer wraps its loop in a tqdm bar that
     # writes many carriage-return frames to stderr. TQDM_DISABLE silences it without touching the

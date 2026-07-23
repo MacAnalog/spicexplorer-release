@@ -1,0 +1,12 @@
+** sch_path: diff_pair_pmos.sch
+**.subckt diff_pair_pmos vinp vinn CM_tail drain_n drain_p VDD
+*.ipin vinp
+*.ipin vinn
+*.ipin CM_tail
+*.ipin drain_n
+*.ipin drain_p
+*.ipin VDD
+XM1 drain_n vinn CM_tail VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM2 drain_p vinp CM_tail VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+**.ends
+.end

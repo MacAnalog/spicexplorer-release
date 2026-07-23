@@ -1,0 +1,5 @@
+# Generic device kind -> sky130 device names. The stage uses 1.8 V core NMOS + PMOS only.
+pdk: sky130
+devices:
+  nmos: {model: sky130_fd_pr__nfet_01v8}
+  pmos: {model: sky130_fd_pr__pfet_01v8}

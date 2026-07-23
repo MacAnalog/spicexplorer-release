@@ -1,0 +1,44 @@
+# amp_018_telescopic_cascode — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit amp_018_telescopic_cascode --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  V1: {Value: x_dut_v_bias_2}
+  V2: {Value: x_dut_v_bias_1}
+  XM1: {l: x_dut_xm1_l, m: x_dut_xm1_m, w: x_dut_xm1_w}
+  XM1C: {l: x_dut_xm1c_l, m: x_dut_xm1c_m, w: x_dut_xm1c_w}
+  XM2: {l: x_dut_xm2_l, m: x_dut_xm2_m, w: x_dut_xm2_w}
+  XM2C: {l: x_dut_xm2c_l, m: x_dut_xm2c_m, w: x_dut_xm2c_w}
+  XM3: {l: x_dut_xm3_l, m: x_dut_xm3_m, w: x_dut_xm3_w}
+  XM3C: {l: x_dut_xm3c_l, m: x_dut_xm3c_m, w: x_dut_xm3c_w}
+  XM4: {l: x_dut_xm4_l, m: x_dut_xm4_m, w: x_dut_xm4_w}
+  XM4C: {l: x_dut_xm4c_l, m: x_dut_xm4c_m, w: x_dut_xm4c_w}
+  XM5: {l: x_dut_xm5_l, m: x_dut_xm5_m, ng: x_dut_xm5_ng, w: x_dut_xm5_w}
+  XM6: {l: x_dut_xm6_l, m: x_dut_xm6_m, w: x_dut_xm6_w}
+groups:
+- name: pair_xm1_xm2
+  kind: matched_pair
+  members: [XM1, XM2]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_dut_m1m2_w
+    (w), x_dut_m1m2_l (l).'
+- name: shared_xm1c_w_l
+  kind: shared_geometry
+  members: [XM1C, XM2C]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_dut_m1cm2c_w
+    (w), x_dut_m1cm2c_l (l).'
+- name: shared_xm3_w_l
+  kind: shared_geometry
+  members: [XM3, XM4]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_dut_m3m4_w
+    (w), x_dut_m3m4_l (l).'
+- name: shared_xm3c_w_l
+  kind: shared_geometry
+  members: [XM3C, XM4C]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_dut_m3cm4c_w
+    (w), x_dut_m3cm4c_l (l).'

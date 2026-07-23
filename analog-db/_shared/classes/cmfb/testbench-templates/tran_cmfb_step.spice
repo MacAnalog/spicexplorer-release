@@ -1,0 +1,56 @@
+** AUTHORED TEMPLATE — cmfb/tran_cmfb_step (time-domain polarity + stability + speed).
+** A sensed-CM square step: both sense pins ride Vs, which steps VCM -> VCM+VSTEP at
+** TSTEP1 and back at TSTEP2 (edges 10n); the control output drives the bound CL
+** (actuator gate proxy). Complements dc_cmfb_transfer (same polarity, measured in
+** time domain) and ac_servo (ringing realizes what a shallow phase margin hides).
+**   step_delta_v  settled vcmfb shift on the plateau (FIND at TMID) minus the
+**                 pre-step level (FIND at TSTEP1/2) — SIGNED: sign must match
+**                 cmfb_slope (canonical +, inverted -)
+**   ring_v        half-amplitude (max-min)/2 of vcmfb over the SETTLED half of the
+**                 plateau (TMID..TSTEP2): ~0 for a clean servo; >0 flags an
+**                 underdamped or oscillating error amp under this CL
+**   t_cm_settle   release-edge recovery: last |vcmfb - vcmfb(TEND)| = VTOL crossing
+**                 minus TSTEP2 (the amplifier/tran_cm_kick settle convention)
+** Choose TMID with >= 10 servo time constants after TSTEP1 (bw_servo_hz from ac_servo)
+** and TEND likewise after TSTEP2, or the plateau/settle reads transient residue.
+** Assumes the CMFB-servo port order:
+**   .subckt <id> vinp vinn vcmfb vref vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CL VSTEP TSTEP1 TMID TSTEP2 TEND VTOL
+**                    TSTEP TSTOP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vref vref 0 dc {VCM}
+* sensed-CM square step, one-shot: VCM -> VCM+VSTEP during TSTEP1..TSTEP2
+Vs   vs 0 dc {VCM} pulse({VCM} {${VCM}+${VSTEP}} ${TSTEP1} 10n 10n {${TSTEP2}-${TSTEP1}} 1)
+Vinp vinp vs dc 0
+Vinn vinn vs dc 0
+CLoad vcmfb 0 {CL}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP}
+  meas tran vpre FIND v(vcmfb) AT={${TSTEP1}/2}
+  meas tran von FIND v(vcmfb) AT=${TMID}
+  let step_delta_v = von - vpre
+  print step_delta_v
+  meas tran von_max MAX v(vcmfb) FROM=${TMID} TO=${TSTEP2}
+  meas tran von_min MIN v(vcmfb) FROM=${TMID} TO=${TSTEP2}
+  let ring_v = (von_max - von_min)/2
+  print ring_v
+  meas tran vend FIND v(vcmfb) AT=${TEND}
+  let verr = abs(v(vcmfb) - vend)
+  meas tran tcross WHEN verr=${VTOL} FALL=LAST
+  let t_cm_settle = tcross - ${TSTEP2}
+  print t_cm_settle
+  write
+  quit
+.endc
+.end

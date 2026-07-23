@@ -1,0 +1,144 @@
+# amp_025_hsu_classab_ota — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit amp_025_hsu_classab_ota --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  C1: {Value: x_dut_c1_value}
+  C2: {Value: x_dut_c2_value}
+  CIN: {Value: cin_val}
+  COUT: {Value: cout_val}
+  GM: {Value: gm_val}
+  R1: {Value: x_dut_r1_value}
+  R2: {Value: x_dut_r2_value}
+  RIN: {Value: rin_val}
+  RMN: {Value: x_dut_rmn_value}
+  RMP: {Value: x_dut_rmp_value}
+  ROUT: {Value: rout_val}
+  VB1: {Value: vb1}
+  VB2: {Value: vb2}
+  VB3: {Value: vb3}
+  VCMFB_REF: {Value: vcmfb_ref}
+  XM1: {l: x_dut_xm1_l, m: x_dut_xm1_m, w: x_dut_xm1_w}
+  XM10: {l: x_dut_xm10_l, m: x_dut_xm10_m, w: x_dut_xm10_w}
+  XM11: {l: x_dut_xm11_l, m: x_dut_xm11_m, w: x_dut_xm11_w}
+  XM12: {l: x_dut_xm12_l, m: x_dut_xm12_m, w: x_dut_xm12_w}
+  XM13: {l: x_dut_xm13_l, m: x_dut_xm13_m, w: x_dut_xm13_w}
+  XM14: {l: x_dut_xm14_l, m: x_dut_xm14_m, w: x_dut_xm14_w}
+  XM15: {l: x_dut_xm15_l, m: x_dut_xm15_m, w: x_dut_xm15_w}
+  XM16: {l: x_dut_xm16_l, m: x_dut_xm16_m, w: x_dut_xm16_w}
+  XM17: {l: x_dut_xm17_l, m: x_dut_xm17_m, w: x_dut_xm17_w}
+  XM18: {l: x_dut_xm18_l, m: x_dut_xm18_m, w: x_dut_xm18_w}
+  XM19: {l: x_dut_xm19_l, m: x_dut_xm19_m, w: x_dut_xm19_w}
+  XM2: {l: x_dut_xm2_l, m: x_dut_xm2_m, w: x_dut_xm2_w}
+  XM20: {l: x_dut_xm20_l, m: x_dut_xm20_m, w: x_dut_xm20_w}
+  XM21: {l: x_dut_xm21_l, m: x_dut_xm21_m, w: x_dut_xm21_w}
+  XM22: {l: x_dut_xm22_l, m: x_dut_xm22_m, w: x_dut_xm22_w}
+  XM23: {l: x_dut_xm23_l, m: x_dut_xm23_m, w: x_dut_xm23_w}
+  XM24: {l: x_dut_xm24_l, m: x_dut_xm24_m, w: x_dut_xm24_w}
+  XM25: {l: x_dut_xm25_l, m: x_dut_xm25_m, w: x_dut_xm25_w}
+  XM3: {l: x_dut_xm3_l, m: x_dut_xm3_m, w: x_dut_xm3_w}
+  XM4: {l: x_dut_xm4_l, m: x_dut_xm4_m, w: x_dut_xm4_w}
+  XM5: {l: x_dut_xm5_l, m: x_dut_xm5_m, w: x_dut_xm5_w}
+  XM6: {l: x_dut_xm6_l, m: x_dut_xm6_m, w: x_dut_xm6_w}
+  XM7: {l: x_dut_xm7_l, m: x_dut_xm7_m, w: x_dut_xm7_w}
+  XM8: {l: x_dut_xm8_l, m: x_dut_xm8_m, w: x_dut_xm8_w}
+  XM9: {l: x_dut_xm9_l, m: x_dut_xm9_m, w: x_dut_xm9_w}
+groups:
+- name: pair_xm2_xm3
+  kind: matched_pair
+  members: [XM2, XM3]
+  tie: [w, l, m]
+  description: PMOS input differential pair (structural detection).
+- name: pair_xm4_xm5
+  kind: matched_pair
+  members: [XM4, XM5]
+  tie: [w, l, m]
+  description: Stage-1 NMOS diode loads — symmetric halves of the differential path; XM4 also anchors
+    both mirror-L ties.
+- name: mirror_xm4_l
+  kind: mirror_length
+  members: [XM4, XM8]
+  tie: [l]
+  description: Diode XM4 mirrors onto XM8 (voutp-side second-stage sink) — same L for mirror accuracy
+    (structural detection).
+- name: mirror_xm5_l
+  kind: mirror_length
+  members: [XM5, XM6]
+  tie: [l]
+  description: Diode XM5 mirrors onto XM6 (voutn-side second-stage sink) — same L for mirror accuracy
+    (structural detection; XM5's own L chains to XM4 via pair_xm4_xm5).
+- name: pair_xm6_xm8
+  kind: matched_pair
+  members: [XM6, XM8]
+  tie: [w, m]
+  description: The two second-stage mirror output devices — one per output side; W/m matched, Ls already
+    tied through mirror_xm4_l/mirror_xm5_l.
+- name: pair_xm7_xm9
+  kind: shared_geometry
+  members: [XM7, XM9]
+  tie: [w, l, m]
+  description: NMOS cascode pair (gate vb3) over the two mirror sinks (sources on distinct csrc_n/csrc_p
+    nodes, hence not matched_pair structurally).
+- name: pair_xm10_xm11
+  kind: shared_geometry
+  members: [XM10, XM11]
+  tie: [w, l, m]
+  description: Folded PMOS cascode pair (gate vb2) into the two class-AB drive nodes (sources on distinct
+    psrc_n/psrc_p nodes).
+- name: pair_xm12_xm13
+  kind: matched_pair
+  members: [XM12, XM13]
+  tie: [w, l, m]
+  description: CMFB-controlled PMOS current sources (gates on the servo output vcmfb) feeding the folded
+    cascodes.
+- name: pair_xm14_xm20
+  kind: matched_pair
+  members: [XM14, XM20]
+  tie: [w, l, m]
+  description: Class-AB battery-stack current sources (gate vb1) — side-symmetric output branches.
+- name: pair_xm15_xm21
+  kind: shared_geometry
+  members: [XM15, XM21]
+  tie: [w, l, m]
+  description: Monticelli NMOS level-shifter diodes — side-symmetric (sources on distinct abm_p/abm_n
+    midnodes).
+- name: pair_xm16_xm22
+  kind: shared_geometry
+  members: [XM16, XM22]
+  tie: [w, l, m]
+  description: NMOS push followers — side-symmetric (sources are the two outputs).
+- name: pair_xm17_xm23
+  kind: shared_geometry
+  members: [XM17, XM23]
+  tie: [w, l, m]
+  description: Monticelli PMOS level-shifter diodes — side-symmetric (sources on distinct abm_p/abm_n
+    midnodes).
+- name: pair_xm18_xm24
+  kind: shared_geometry
+  members: [XM18, XM24]
+  tie: [w, l, m]
+  description: PMOS pull followers — side-symmetric (sources are the two outputs).
+- name: pair_xm19_xm25
+  kind: matched_pair
+  members: [XM19, XM25]
+  tie: [w, l, m]
+  description: Class-AB battery-stack sinks (gates on the drive nodes drv_p/drv_n) — the second-stage
+    transconductors of the two output branches.
+- name: shared_c1_value
+  kind: shared_geometry
+  members: [C1, C2]
+  tie: [Value]
+  description: Per-side Miller caps — the drawing's single symbol Cc on both sides.
+- name: shared_r1_value
+  kind: shared_geometry
+  members: [R1, R2]
+  tie: [Value]
+  description: Per-side Miller nulling resistors — drawn as one shared symbol Rz (an earlier Rz/RZ case collision, fixed at source per DRAWING_REVIEW item 5; SPICE-case-insensitively
+    one shared symbol).
+- name: shared_rmp_value
+  kind: shared_geometry
+  members: [RMP, RMN]
+  tie: [Value]
+  description: CM-detector resistor halves — must match for an unskewed common-mode average.

@@ -1,0 +1,176 @@
+** sch_path: ota-improved_tb-noise.sch
+**.subckt ota-improved_tb-noise
+*----------------------------------------------------------*
+* Testbench
+*----------------------------------------------------------*
+Vdd v_dd GND VDD
+xota v_dd v_out v_cm net1 net2 v_ena v_ss ota-improved
+Vss v_ss GND 0
+C1 v_out v_ss CL m=1
+Vcm v_cm v_ss dc V_CM
+I0 v_dd net2 5u
+Venable v_ena v_ss VDD
+.save v(v_cm)
+.save v(v_out)
+.save v(v_ena)
+Vin v_cm net1 dc 0 ac 1
+
+*----------------------------------------------------------*
+* Technology Library
+*----------------------------------------------------------*
+.lib cornerMOSlv.lib mos_tt
+.lib cornerRES.lib res_typ
+
+
+
+.temp 27
+
+*----------------------------------------------------------*
+* Control Block
+*----------------------------------------------------------*
+.control
+    echo ==================================
+    echo start of Control
+    echo ==================================
+    option sparse
+    set filetype=ascii
+    save all
+
+    echo
+    echo (A) start of OP
+    echo ----------------------------------
+    * Operating Point Analysis (not needed in the optimization... could be turned on but it is turned off to save sim time)
+    op
+    
+    echo
+    echo "=== POWER CONSUMPTION RESULTS ==="
+    * Calculate positive current magnitude (invert the negative sign)
+    let idd_total = -i(Vdd)
+
+    * Calculate Power (Current * Voltage)
+    * We use the defined parameter 'VDD' or the node voltage 'v(v_dd)'
+    let power_total = idd_total * v(v_dd)
+    
+    print idd_total
+    print power_total
+    echo "================================="
+
+    remzerovec
+    write
+    set appendwrite
+
+    echo
+    echo (C) start of Noise sim
+    echo ----------------------------------
+    run
+    print inoise_total
+    print onoise_total
+
+    echo
+    echo SAVING SIMULATION RESULTS IN THE RAW FILE  
+    echo NOISE 1 saving the Integrated Noise
+    setplot noise1
+    * plot inoise_spectrum linplot
+    * plot onoise_spectrum linplot
+    remzerovec
+    write
+
+    echo
+    echo NOISE 2 saving the Noise Spectral Density Curves
+    setplot noise2
+    remzerovec
+    write 
+
+    echo ==================================
+    echo END of Control
+    echo ==================================
+    quit 
+    * ^ This is needed for spicelib (uncommented)
+.endc
+
+
+*----------------------------------------------------------*
+* Parameter Definitions
+*----------------------------------------------------------*
+.param X_DUT_V_BIAS_1 = 0.6
+.param X_DUT_V_BIAS_2 = 0.5
+
+.param X_DUT_M5_L = 5u
+.param X_DUT_M5_W = 6u
+.param X_DUT_M5_NG = 3
+
+.param X_DUT_M6_L = 5u
+.param X_DUT_M6_W = 2u
+
+.param X_DUT_M1M2_L = .5u
+.param X_DUT_M1M2_W = 1u
+
+.param X_DUT_M1CM2C_L = .5u
+.param X_DUT_M1CM2C_W = 1u
+
+.param X_DUT_M3CM4C_L = .5u
+.param X_DUT_M3CM4C_W = 3u
+
+.param X_DUT_M3M4_L = .5u
+.param X_DUT_M3M4_W = 3u
+
+.param VDD = 1.5
+.param CL = 50f
+.param V_CM = 0.8
+
+
+.param F_NOISE_START=1MEG
+.param F_NOISE_STOP=1000MEG
+
+
+*----------------------------------------------------------*
+* ANALYSIS COMMAND (Moved to Netlist)
+*----------------------------------------------------------*
+* By placing this here, we can use { } expansion directly.
+.noise v(v_out) Vin lin 1000 {F_NOISE_START} {F_NOISE_STOP} 1
+
+
+*----------------------------------------------------------*
+* Subcircuit Definition
+*----------------------------------------------------------*
+* expanding   symbol:  ota-improved.sym # of pins=7
+** sym_path: ota-improved.sym
+** sch_path: ota-improved.sch
+.subckt ota-improved vdd vout vinp vinn ibias_5u d_ena vss
+*.ipin ibias_5u
+*.iopin vdd
+*.iopin vss
+*.ipin vinp
+*.ipin vinn
+*.opin vout
+*.ipin d_ena
+XM5 net6 gate vss vss sg13_lv_nmos w=X_DUT_M5_W l=X_DUT_M5_L ng=X_DUT_M5_NG m=1
+XM4 net2 gate_p vdd vdd sg13_lv_pmos w=X_DUT_M3M4_W l=X_DUT_M3M4_L ng=1 m=1
+XM1 net4 vinp tail vss sg13_lv_nmos w=X_DUT_M1M2_W l=X_DUT_M1M2_L ng=1 m=1
+XM2 net5 vinn tail vss sg13_lv_nmos w=X_DUT_M1M2_W l=X_DUT_M1M2_L ng=1 m=1
+XM3 net3 gate_p vdd vdd sg13_lv_pmos w=X_DUT_M3M4_W l=X_DUT_M3M4_L ng=1 m=1
+XM6 net1 gate vss vss sg13_lv_nmos w=X_DUT_M6_W l=X_DUT_M6_L ng=1 m=1
+XMpd5 gate ena_n vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XMpd3 ena ena_n vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XMpd4 ena ena_n vdd vdd sg13_lv_pmos w=1u l=0.13u ng=1 m=1
+XMpd6 net1 ena gate vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XM2c vout dp_casc net5 vss sg13_lv_nmos w=X_DUT_M1CM2C_W l=X_DUT_M1CM2C_L ng=1 m=1
+XM1c gate_p dp_casc net4 vss sg13_lv_nmos w=X_DUT_M1CM2C_W l=X_DUT_M1CM2C_L ng=1 m=1
+XM4c vout gate_pc net2 vdd sg13_lv_pmos w=X_DUT_M3CM4C_W l=X_DUT_M3CM4C_L ng=1 m=1
+XM3c gate_p gate_pc net3 vdd sg13_lv_pmos w=X_DUT_M3CM4C_W l=X_DUT_M3CM4C_L ng=1 m=1
+XMpd8 gate_p ena vdd vdd sg13_lv_pmos w=1u l=0.13u ng=1 m=1
+Vmeas1 tail net6 0
+.save i(vmeas1)
+XMpd1 ena_n d_ena vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XMpd2 ena_n d_ena vdd vdd sg13_lv_pmos w=1u l=0.13u ng=1 m=1
+Vmeas4 ibias_5u net1 0
+.save i(vmeas4)
+XMpd11 vout ena_n vss vss sg13_lv_nmos w=0.5u l=0.13u ng=1 m=1
+XMdecoup1 vss gate vss vss sg13_lv_nmos w=8u l=1u ng=4 m=1
+XMdecoup3 vdd gate_pc vdd vdd sg13_lv_pmos w=12u l=0.5u ng=4 m=1
+V1 vdd gate_pc X_DUT_V_BIAS_2
+V2 dp_casc tail X_DUT_V_BIAS_1
+.ends
+
+.GLOBAL GND
+.end

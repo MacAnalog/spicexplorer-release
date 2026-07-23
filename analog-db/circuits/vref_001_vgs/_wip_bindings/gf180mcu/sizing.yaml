@@ -1,0 +1,12 @@
+# Design variables for the gf180mcu binding. vref = (Vth_03v3 - Vth_nvt) + n·Vt·ln[(W/L)_0/(W/L)_1].
+# The native/standard ΔVth is large (~a 3.3V Vth), so vref is a few hundred mV; the W-ratio nulls the
+# residual curvature (tuned live below). Long L keeps both sub-Vt branches at nano-amp currents.
+schema: spicexplorer/sizing@1
+pdk: gf180mcu
+variables:
+  - {name: x_dut_xm0_w, description: "native (Vgs=0) source NMOS width",  default: 2.0u, min: 0.22u, max: 20u, unit: m}
+  - {name: x_dut_xm0_l, description: "native (Vgs=0) source NMOS length", default: 2.0u, min: 0.6u, max: 20u, unit: m}
+  - {name: x_dut_xm0_m, description: "native source NMOS multiplier",     default: 1, is_integer: true}
+  - {name: x_dut_xm1_w, description: "standard diode NMOS width",         default: 1.0u, min: 0.22u, max: 20u, unit: m}
+  - {name: x_dut_xm1_l, description: "standard diode NMOS length",        default: 2.0u, min: 0.28u, max: 20u, unit: m}
+  - {name: x_dut_xm1_m, description: "standard diode NMOS multiplier",    default: 1, is_integer: true}

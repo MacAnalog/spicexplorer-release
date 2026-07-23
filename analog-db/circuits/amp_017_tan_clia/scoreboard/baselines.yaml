@@ -1,0 +1,5 @@
+# AUTHORED baseline pointers (plan_scoreboard D-8): the named design point per PDK.
+# Maintained via `analog-db scoreboard set-baseline` (or auto-named on first record).
+baselines:
+  gf180mcu: 1d8292af38
+  sky130: eb2fe94b0c

@@ -1,0 +1,108 @@
+schema: spicexplorer/datasheet@1
+cace_format: '5.2'
+default_conditions:
+  supply:
+    unit: V
+    typical: 1.2
+  cload:
+    unit: fF
+    typical: 50
+  corner:
+    typical: tt
+  temp:
+    unit: degC
+    typical: 27
+  vcm:
+    unit: V
+    typical: 0.6
+metrics:
+  dc_gain_db:
+    display: DC open-loop differential gain
+    description: "Differential large-signal DC gain. STRUCTURAL SKIP: with no CM control\
+      \ the topology has no stable interior operating point (see circuit.yaml notes)\
+      \ \u2014 this spec is unreachable at ANY sizing; amp_020 is the servo'd variant"
+    unit: dB
+    analysis: ac_open_loop
+    extract:
+      meas: dcgain
+    spec:
+      min: 50
+      unit: dB
+  ugf_hz:
+    display: Unity-gain frequency
+    unit: Hz
+    analysis: ac_open_loop
+    extract:
+      meas: ugf
+    spec:
+      unit: Hz
+      min: 5000000.0
+  pm_deg:
+    display: Phase margin
+    description: Two-stage with per-side Miller R+C
+    unit: deg
+    analysis: ac_open_loop
+    extract:
+      meas: pm
+    spec:
+      unit: deg
+      min: 60.0
+      max: 90
+  vos:
+    display: Output offset
+    description: "voutp - voutn at matched DC inputs; no CMFB \u2014 set by device\
+      \ ratioing (corner-fragile)"
+    unit: V
+    analysis: dc_op
+    extract:
+      meas: vos
+    spec:
+      typ: 0
+      max: 100e-3
+      min: -100e-3
+      unit: V
+  i_supply:
+    display: Supply current
+    unit: A
+    analysis: dc_op
+    extract:
+      meas: i_supply
+    spec:
+      max: 500e-6
+      unit: A
+  vn_in:
+    display: Input-referred noise (integrated)
+    description: "ngspice inoise_total = total noise INTEGRATED over the bench band\
+      \ (see analyses/noise.yaml FSTART..FSTOP) \u2014 a voltage, not a density; the\
+      \ bound is a characterization band at the family's measured magnitude"
+    unit: V
+    analysis: noise
+    extract:
+      meas: inoise_total
+    spec:
+      max: 0.001
+      unit: V
+  t_settle:
+    display: Settling time
+    description: Unity-gain differential-follower settling (see tran_step_diff.spice)
+    unit: s
+    analysis: tran_step
+    extract:
+      meas: t_settle
+    spec:
+      max: 5.0e-06
+      unit: s
+  cm_interior_pts:
+    display: Interior operating points across the vbl sweep
+    description: "STRUCTURAL: of 5 vbl samples bracketing the stage-1 flip window,\
+      \ how many give vocm inside VCM+/-0.25 V. Measured 0 \u2014 the no-CM-control\
+      \ topology has no interior DC point at any sampled bias (see circuit.yaml notes);\
+      \ a composed CMFB is the fix \u2014 LANDED as amp_030_miller_cmfb_composite\
+      \ (this core + cmfb_001_ideal_rsense_servo via the P4 composer), which measures\
+      \ 5/5 on the same sweep"
+    unit: ''
+    analysis: dc_cm_bias_sweep
+    extract:
+      meas: cm_interior_pts
+    spec:
+      min: 1

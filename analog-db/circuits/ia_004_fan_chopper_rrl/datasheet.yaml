@@ -1,0 +1,54 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# SUPERSET of cace_format 5.2. Composite entry (ia_002 + sup_003, see composition.yaml):
+# the clocked claims of this entry are RIPPLE NULLING (v_ripple0_pp — directly
+# comparable to ia_002's window ripple, same clocks) and chopped Zin; the closed-loop
+# gain figure lives in the static ac_closed_loop. A STEPPED clocked gain is not
+# measurable on this composite (measured live: the post-step RRL reconvergence drives
+# the no-CMFB core's output CM into a rail corner — the core-CM closure, cf. amp_030,
+# is the follow-on composition; Fan's silicon pairs the RRL with a designed output CM).
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  cload:  {unit: fF, typical: 50}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+  vcm:    {unit: V, typical: 0.6}
+metrics:
+  # NOTE (2026-07-22): the small-signal figures gain_cl_db / hpf_hz / bw_cl_hz / zin_ohm
+  # had their `analysis:`+`extract:` removed — a FROZEN-switch .ac is invalid on a chopper
+  # (enforced by the ia-class clocked guard). The specs stay as paper-datasheet targets; the
+  # in-operation figures come from the transient benches, or PSS+PAC on the closed (Spectre)
+  # lane. gain_cl (linear) is still produced live by tran_chopper_ripple where present.
+  gain_cl_db:
+    display: "Closed-loop mid-band gain"
+    description: "Cap-ratio gain Cin/Cfb (16p/0.8p = 20x = 26 dB), clocks held transparent (the frozen RRL only shunt-loads out1 through its 10Meg behavioral Rout)"
+    unit: dB
+    spec: {min: 20, typ: 26, unit: dB}
+  hpf_hz:
+    display: "High-pass corner"
+    description: "Low-frequency -3 dB corner set by Rb against the feedback network"
+    unit: Hz
+    spec: {max: 1000, unit: Hz}
+  bw_cl_hz:
+    display: "Closed-loop bandwidth"
+    unit: Hz
+    spec: {min: 500, unit: Hz}
+  i_supply:
+    display: "Supply current"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 500e-6, unit: A}
+  vos:
+    display: "Output offset"
+    description: "voutp - voutn at matched DC inputs, clocks held transparent"
+    unit: V
+    analysis: dc_op
+    extract: {meas: vos}
+    spec: {min: -50e-3, typ: 0, max: 50e-3, unit: V}
+  zin_ohm:
+    display: "Differential input impedance (static, 100 Hz)"
+    description: "Voltage-driven |Zin| at FSIG with clocks frozen — the cap-coupled 1/(pi*f*Cin) figure; the in-operation number is zin_chop_ohm"
+    unit: Ohm
+    spec: {min: 50e6, unit: Ohm}

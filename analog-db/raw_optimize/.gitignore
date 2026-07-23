@@ -1,0 +1,5 @@
+# Optimizer scratch output (the wrapper wipes + rewrites these each run).
+_runs/
+# Log files the runner/optimizer drop in the working dir.
+logs/
+*.log

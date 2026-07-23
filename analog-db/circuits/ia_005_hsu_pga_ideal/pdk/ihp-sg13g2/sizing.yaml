@@ -1,0 +1,41 @@
+# Design variables for the ihp-sg13g2 binding (explicit `u`/`p`/`Meg` eng tokens; sg13
+# lv-MOS geometry rules). Defaults are EXACTLY the 2026-07-19 full-validation point
+# (drawings/sizing-and-specs.yaml bio_afe_ideal_chain.PGA_ideal + DRAWING_REVIEW §8
+# finding 1): Cu = Cf = 1p, TG + pseudo-resistor devices at the drawn minimum geometry
+# (0.15u/0.13u — pseudo-R ~73G there -> HP 2.17 Hz), ideal-amp macromodel at the drawing
+# defaults (gm*rout = 100u*10Meg = 60 dB; tera-ohm rin is a plain numeric — parse_value
+# has no 'T' suffix, like amp_028). Gains -0.08..17.98 dB over codes 000..111 measured
+# at exactly these values. Group representatives only (see abstract/params.yaml ties):
+# XMA3/5/7/9/11 + XMB1..XMB11(odd) <- XMA1 (all 12 bank nmos), XMA4..12(even) +
+# XMB2..12(even) <- XMA2 (all 12 bank pmos), XM2/XM3/XM4 <- XM1 (pseudo-R quad),
+# CF2 <- CF1, and the per-bit cap m knobs CB* <- CA*.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  # --- gain network ---
+  - {name: Cu, description: "Bank unit capacitor (shared by all 8 bank caps; Cin = (1+code)*Cu per side)", default: 1p, min: 0.1p, max: 10p, unit: F}
+  - {name: x_dut_cf1_value, description: "Feedback cap Cf (per side; gain = -(1+code)*Cu/Cf, HP = 1/(2*pi*Rpseudo*Cf))", default: 1p, min: 0.1p, max: 10p, unit: F}
+  # --- bank transmission gates (drawn min-size; validated as-drawn) ---
+  - {name: x_dut_xma1_w, description: "Bank TG NMOS width (all 12 legs, both banks; drawn min-size)", default: 0.15u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xma1_l, description: "Bank TG NMOS length (all 12 legs; drawn min-size)", default: 0.13u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_xma2_w, description: "Bank TG PMOS width (all 12 legs; drawn min-size)", default: 0.15u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xma2_l, description: "Bank TG PMOS length (all 12 legs; drawn min-size)", default: 0.13u, min: 0.13u, max: 2u, unit: m}
+  # --- pseudo-resistor DC servo (drawn min-size; ~73G -> HP 2.17 Hz, code-independent) ---
+  - {name: x_dut_xm1_w, description: "Pseudo-resistor diode PMOS width (quad; drawn min-size)", default: 0.15u, min: 0.15u, max: 10u, unit: m}
+  - {name: x_dut_xm1_l, description: "Pseudo-resistor diode PMOS length (quad; drawn min-size — anti-series pair ~73G at 0.15u/0.13u sets the validated 2.17 Hz HP corner with Cf=1p)", default: 0.13u, min: 0.13u, max: 10u, unit: m}
+  # --- behavioral ideal-amp macromodel (testbench-supplied globals in the drawing; knobs here) ---
+  - {name: gm_val,   description: "Ideal-amp VCCS transconductance (differential gm)", default: 100u, min: 1u, max: 10m, unit: S}
+  - {name: rout_val, description: "Ideal-amp differential output resistance (A = gm*rout = 60 dB @ defaults)", default: 10Meg, min: 10k, max: 1G, unit: ohm}
+  - {name: rin_val,  description: "Ideal-amp differential input resistance (near-ideal high-Z)", default: 1e12, min: 1Meg, max: 1e14, unit: ohm}
+  - {name: cout_val, description: "Ideal-amp differential output capacitance (dominant pole with rout; closed-loop LP = beta*GBW, validated 1.08-3.4 MHz over the codes)", default: 100f, min: 1f, max: 100p, unit: F}
+  - {name: cin_val,  description: "Ideal-amp differential input capacitance", default: 10f, min: 0, max: 10p, unit: F}
+  # Frozen per-device literals: defaults reproduce the drawn m exactly; freeze keeps
+  # them out of the search space. The bank cap multipliers ARE the binary weighting
+  # (Cin = (1+code)*Cu) — structural identity, never a sizing knob.
+  - {name: x_dut_xma1_m, description: "XMA1 m (frozen literal; ties all 12 bank nmos legs)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xma2_m, description: "XMA2 m (frozen literal; ties all 12 bank pmos legs)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm1_m,  description: "XM1 m (frozen literal; pseudo-resistor quad)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_ca1_m, description: "CA1 m (frozen structural weight: fixed always-in unit; ties CB1)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_ca2_m, description: "CA2 m (frozen structural weight: bit D0 = 1x Cu; ties CB2)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_ca3_m, description: "CA3 m (frozen structural weight: bit D1 = 2x Cu; ties CB3)", default: 2, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_ca4_m, description: "CA4 m (frozen structural weight: bit D2 = 4x Cu; ties CB4)", default: 4, min: 1, max: 16, freeze: true, is_integer: true}

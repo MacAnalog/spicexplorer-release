@@ -1,0 +1,10 @@
+# Analysis binding: ICMR via the buffer-connected DC sweep (class template). ENABLED with
+# the tb-validation pass (2026-07-09): the 20 mV threshold reviewed against a live ihp
+# sweep (the 5T buffer's tracking band is clean; edges are tail/threshold-limited).
+schema: spicexplorer/analysis@1
+id: linearity
+template: linearity
+description: "ICMR via buffer-connected DC sweep (widest contiguous tracking band)."
+params: {VDD: 1.5, VCM: 0.8, IBIAS: 20u, CL: 50f, VTRACK: 20m, VSWEEP_STEP: 0.005}
+flags: []
+produces: [icmr_min, icmr_max, icmr_range]

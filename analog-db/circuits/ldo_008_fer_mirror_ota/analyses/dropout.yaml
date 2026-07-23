@@ -1,0 +1,16 @@
+# Dropout: sweep Vin upward at moderate load; Vin - Vout at the regulation threshold.
+# NOTE: ILOAD kept at 1 mA (not ldo_007_pmos's 10 mA) — this circuit's small default pass device
+# (w_pass=10u, m_pass=20) doesn't have headroom to regulate through a 10 mA sweep at all; a
+# probe DC sweep confirmed vout never exceeds ~1.17 V under 10 mA even at VDD=1.8 V.
+schema: spicexplorer/analysis@1
+id: dropout
+template: dropout
+description: "Vin swept 1.0 -> 1.8 V at 1 mA; dropout = Vin - Vout when Vout crosses VOUT_THRESH."
+params:
+  ILOAD: 1m
+  VDD_START: 1.0
+  VDD_STOP: 1.8
+  VDD_STEP: 0.01
+  VOUT_THRESH: 1.1
+flags: []
+produces: [v_dropout]

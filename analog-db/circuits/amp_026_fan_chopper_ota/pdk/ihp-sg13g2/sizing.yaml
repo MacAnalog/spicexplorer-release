@@ -1,0 +1,45 @@
+# Design variables for the ihp-sg13g2 binding (explicit `u`/`p` tokens; sg13 lv-MOS
+# geometry rules). Hand-seeded starting point from gm/ID intuition at VDD=1.2 V — the
+# source drawing used identical minimum-size placeholder devices, so these defaults are
+# a design floor for a later sizing pass, not a tuned design point.
+# Group representatives only (see abstract/params.yaml ties): XM3<-XM2, XM5<-XM4,
+# XM13<-XM12, XM11<-XM10, XM7<-XM6(w,m), XM9<-XM8(w,m), l(XM6/7/8/9)<-XM1
+# (sources_vb4_l), XM15<-XM14, XM18<-XM16, XM19<-XM17, CM2<-CM1.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xm1_w,  description: "PMOS tail current-source width (gate vb4)", default: 20u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm1_l,  description: "vb4 PMOS current-source length (shared: tail + fold + output sources)", default: 1u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm2_w,  description: "PMOS input pair width", default: 20u, min: 0.15u, max: 200u, unit: m}
+  - {name: x_dut_xm2_l,  description: "PMOS input pair length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm4_w,  description: "First-stage NMOS fold-sink width (gate vb1)", default: 10u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm4_l,  description: "First-stage NMOS fold-sink length", default: 1u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm6_w,  description: "PMOS fold current-source width (gate vb4)", default: 10u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm8_w,  description: "Class-A output PMOS current-source width (gate vb4)", default: 10u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm10_w, description: "PMOS cascode width (gate vb3)", default: 10u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm10_l, description: "PMOS cascode length", default: 0.3u, min: 0.13u, max: 5u, unit: m}
+  - {name: x_dut_xm12_w, description: "Folded NMOS cascode width (gate vb2)", default: 5u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm12_l, description: "Folded NMOS cascode length", default: 0.3u, min: 0.13u, max: 5u, unit: m}
+  - {name: x_dut_xm14_w, description: "Class-A output NMOS common-source width (big W/L: gm2 must clear the Miller RHP zero)", default: 10u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm14_l, description: "Class-A output NMOS common-source length", default: 0.25u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm16_w, description: "Chopper TG NMOS pass-device width (all 4 legs)", default: 2u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xm16_l, description: "Chopper TG NMOS pass-device length (all 4 legs)", default: 0.13u, min: 0.13u, max: 5u, unit: m}
+  - {name: x_dut_xm17_w, description: "Chopper TG PMOS pass-device width (all 4 legs)", default: 2u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xm17_l, description: "Chopper TG PMOS pass-device length (all 4 legs)", default: 0.13u, min: 0.13u, max: 5u, unit: m}
+  - {name: x_dut_cm1_value, description: "Per-side Miller compensation cap (pair tied; drawn 1p was an unedited default)", default: 2p, min: 0.05p, max: 20p, unit: F}
+  - {name: vb1, description: "First-stage NMOS fold-sink gate bias (drawn as an external 0.5 V port; retuned — 0.5 collapses the knife-edge stage-1 output node, no CMFB)", default: 0.398118, min: 0.0, max: 1.2, unit: V}
+  - {name: vb2, description: "Folded NMOS cascode gate bias (drawn as an external 0.5 V port; lowered for out1 headroom at the gm2-boosted stage-2 gate level)", default: 0.65, min: 0.0, max: 1.2, unit: V}
+  - {name: vb3, description: "PMOS cascode gate bias (drawn as an external 0.5 V port)", default: 0.45, min: 0.0, max: 1.2, unit: V}
+  - {name: vb4, description: "PMOS current-source gate bias — tail + fold + output sources (drawn 0.5 V)", default: 0.55, min: 0.0, max: 1.2, unit: V}
+  # Frozen per-device literals: defaults reproduce the drawn m=1 exactly; freeze keeps
+  # them out of the search space.
+  - {name: x_dut_xm1_m,  description: "XM1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm2_m,  description: "XM2 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm4_m,  description: "XM4 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm6_m,  description: "XM6 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm8_m,  description: "XM8 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm10_m, description: "XM10 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm12_m, description: "XM12 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm14_m, description: "XM14 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm16_m, description: "XM16 m (frozen literal; ties XM18/XM20/XM22)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm17_m, description: "XM17 m (frozen literal; ties XM19/XM21/XM23)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

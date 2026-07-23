@@ -1,0 +1,12 @@
+# Analysis binding (plan D-4): voltage_reference psrr — low-frequency supply rejection.
+schema: spicexplorer/analysis@1
+id: psrr
+template: psrr
+description: "AC supply->reference rejection; psrr_db at the low-frequency edge."
+params:
+  VDD: 1.2
+  FSTART: 10
+  FSTOP: 10meg
+  PPD: 10
+flags: []
+produces: [psrr_db]

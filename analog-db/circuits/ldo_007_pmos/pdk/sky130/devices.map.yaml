@@ -1,0 +1,5 @@
+# Generic device kind -> sky130 device name. Passives (R/C) stay ideal (pass-through).
+pdk: sky130
+devices:
+  nmos: {model: sky130_fd_pr__nfet_01v8}
+  pmos: {model: sky130_fd_pr__pfet_01v8}

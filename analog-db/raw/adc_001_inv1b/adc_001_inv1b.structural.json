@@ -1,0 +1,40 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "adc_001_inv1b",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 2,
+    "blocks_detected": 1,
+    "by_family": {
+      "inverter": 1
+    },
+    "structural_roles": {
+      "XMN": "current_mirror",
+      "XMP": "current_mirror"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "inv.cmos.stack#1",
+      "family": "inverter",
+      "mirror_class": "inverter",
+      "polarity": "complementary",
+      "template_id": "inv.cmos.stack",
+      "reference_device": null,
+      "output_devices": [
+        "XMN",
+        "XMP"
+      ],
+      "devices": [
+        "XMN",
+        "XMP"
+      ],
+      "ports": {
+        "supply_n": "vss",
+        "supply_p": "vdd",
+        "in": "vin",
+        "out": "vout"
+      }
+    }
+  ]
+}

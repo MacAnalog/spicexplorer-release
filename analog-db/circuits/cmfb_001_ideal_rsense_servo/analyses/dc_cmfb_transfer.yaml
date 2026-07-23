@@ -1,0 +1,21 @@
+# Analysis binding (plan D-4). Binds the cmfb-class dc_cmfb_transfer template (tied
+# sensed-CM sweep -> vcmfb transfer) to this behavioral member. Produces the SIGNED
+# polarity slope (this entry is the INVERTED servo: vcmfb = A*(vref - sensed), so
+# cmfb_slope ~ -gm*rout = -1000) and the zero-error natural output (0 V — the
+# unclamped macromodel rests at its vss reference). vcmfb_min/max, sense_lo/hi and
+# r_sense_in are NOT produced here: the macromodel is linear and unclamped (no rails,
+# no compression) and its 1T rin makes sense loading unmeasurable — real members
+# produce them.
+schema: spicexplorer/analysis@1
+id: dc_cmfb_transfer
+template: dc_cmfb_transfer
+description: "Sensed-CM DC transfer: signed polarity slope (inverted, ~-1000), servo gain, zero-error natural output, supply current."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  VDELTA: 20m
+  VSLO: 0
+  VSHI: 1.2
+  VSSTEP: 2m
+flags: []
+produces: [cmfb_slope, gain_servo_db, vcmfb_nat, i_supply]

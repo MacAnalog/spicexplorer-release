@@ -1,0 +1,100 @@
+{
+  "area": {
+    "active_gate_area_um2": 440.0,
+    "c_count": 2,
+    "c_total_f": 3.4e-11,
+    "mos_count": 26,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "amp_007_leung_dfcfc2",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 91.32035,
+            "pm": 61.40683,
+            "ugf": 2035687.0
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "status": "disabled"
+        },
+        "noise": {
+          "status": "disabled"
+        },
+        "tran_step": {
+          "status": "disabled"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-06-11T13:59:31+00:00"
+      }
+    }
+  },
+  "design_id": "2619faed7c",
+  "metrics": {
+    "tt": {
+      "dc_gain_db": {
+        "spec": "fail",
+        "value": 91.32035
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 61.40683
+      },
+      "ugf_hz": {
+        "spec": "pass",
+        "value": 2035687.0
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "CAPACITOR_0": "17p",
+      "CAPACITOR_1": "17p",
+      "CURRENT_0_BIAS": "20u",
+      "x_dut_xm10_l": "1u",
+      "x_dut_xm10_m": "4",
+      "x_dut_xm10_w": "1u",
+      "x_dut_xm11_l": "1u",
+      "x_dut_xm11_m": "4",
+      "x_dut_xm11_w": "1u",
+      "x_dut_xm12_l": "1u",
+      "x_dut_xm12_m": "4",
+      "x_dut_xm12_w": "1u",
+      "x_dut_xm15_m": "4",
+      "x_dut_xm20_l": "1u",
+      "x_dut_xm20_w": "1u",
+      "x_dut_xm23_l": "1u",
+      "x_dut_xm23_m": "4",
+      "x_dut_xm23_w": "1u",
+      "x_dut_xm25_l": "1u",
+      "x_dut_xm25_m": "4",
+      "x_dut_xm25_w": "1u",
+      "x_dut_xm7_l": "1u",
+      "x_dut_xm7_m": "4",
+      "x_dut_xm7_w": "1u",
+      "x_dut_xm9_l": "1u",
+      "x_dut_xm9_m": "100",
+      "x_dut_xm9_w": "1u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 440.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 91.32035,
+      "pm_deg": 61.40683,
+      "ugf_hz": 2035687.0
+    }
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

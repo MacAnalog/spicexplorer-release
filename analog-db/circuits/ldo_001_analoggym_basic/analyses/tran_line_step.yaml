@@ -1,0 +1,17 @@
+schema: spicexplorer/analysis@1
+id: tran_line_step
+template: tran_line_step
+description: "Fast 1.7 -> 1.9 supply step at nominal load; p2p output deviation."
+params:
+  VDD_LO: 1.7
+  VDD_HI: 1.9
+  ILOAD: 5m
+  COUT: 50p
+  TSTART: 5u
+  TEDGE: 100n
+  TPULSE: 20u
+  TPER: 50u
+  TSTEP: 10n
+  TSTOP: 45u
+flags: []
+produces: [v_line_pp]

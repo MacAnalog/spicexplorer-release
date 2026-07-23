@@ -1,0 +1,12 @@
+** sch_path: high_swing_cascode_current_mirror.sch
+**.subckt high_swing_cascode_current_mirror iout iin VDD iin2
+*.iopin iout
+*.iopin iin
+*.iopin VDD
+*.iopin iin2
+XM1 iin2 iin2 VDD VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM2 net1 iin2 VDD VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM3 iout iin net1 VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM4 iin iin VDD VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+**.ends
+.end

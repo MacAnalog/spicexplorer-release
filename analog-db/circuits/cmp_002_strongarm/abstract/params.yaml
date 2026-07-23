@@ -1,0 +1,54 @@
+# cmp_002_strongarm — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit cmp_002_strongarm --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  XMINN: {l: x_dut_xminn_l, m: x_dut_xminn_m, w: x_dut_xminn_w}
+  XMINP: {l: x_dut_xminp_l, m: x_dut_xminp_m, w: x_dut_xminp_w}
+  XMLEM: {l: x_dut_xmlem_l, m: x_dut_xmlem_m, w: x_dut_xmlem_w}
+  XMLEP: {l: x_dut_xmlep_l, m: x_dut_xmlep_m, w: x_dut_xmlep_w}
+  XMLUM: {l: x_dut_xmlum_l, m: x_dut_xmlum_m, w: x_dut_xmlum_w}
+  XMLUP: {l: x_dut_xmlup_l, m: x_dut_xmlup_m, w: x_dut_xmlup_w}
+  XMOBN1: {l: x_dut_xmobn1_l, m: x_dut_xmobn1_m, w: x_dut_xmobn1_w}
+  XMOBN2: {l: x_dut_xmobn2_l, m: x_dut_xmobn2_m, w: x_dut_xmobn2_w}
+  XMOBP1: {l: x_dut_xmobp1_l, m: x_dut_xmobp1_m, w: x_dut_xmobp1_w}
+  XMOBP2: {l: x_dut_xmobp2_l, m: x_dut_xmobp2_m, w: x_dut_xmobp2_w}
+  XMPC1: {l: x_dut_xmpc1_l, m: x_dut_xmpc1_m, w: x_dut_xmpc1_w}
+  XMPC2: {l: x_dut_xmpc2_l, m: x_dut_xmpc2_m, w: x_dut_xmpc2_w}
+  XMPC3: {l: x_dut_xmpc3_l, m: x_dut_xmpc3_m, w: x_dut_xmpc3_w}
+  XMPC4: {l: x_dut_xmpc4_l, m: x_dut_xmpc4_m, w: x_dut_xmpc4_w}
+  XMTAIL: {l: x_dut_xmtail_l, m: x_dut_xmtail_m, w: x_dut_xmtail_w}
+groups:
+- name: shared_xmtail_l
+  kind: shared_geometry
+  members: [XMTAIL, XMINN, XMINP, XMLEM, XMLEP, XMLUM, XMLUP, XMPC1, XMPC2, XMPC3, XMPC4, XMOBN1, XMOBP1,
+    XMOBN2, XMOBP2]
+  tie: [l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_l (l).'
+- name: pair_xminn_xminp
+  kind: matched_pair
+  members: [XMINN, XMINP]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_pair_w (w).'
+- name: shared_xmlem_w
+  kind: shared_geometry
+  members: [XMLEM, XMLEP, XMLUM, XMLUP]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_latch_w (w).'
+- name: shared_xmpc1_w
+  kind: shared_geometry
+  members: [XMPC1, XMPC2, XMPC3, XMPC4]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_pre_w (w).'
+- name: shared_xmobn1_w
+  kind: shared_geometry
+  members: [XMOBN1, XMOBN2]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_bufn_w (w).'
+- name: shared_xmobp1_w
+  kind: shared_geometry
+  members: [XMOBP1, XMOBP2]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_bufp_w (w).'

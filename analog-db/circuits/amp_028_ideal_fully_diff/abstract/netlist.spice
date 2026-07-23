@@ -1,0 +1,32 @@
+** Abstract behavioral fully-differential amplifier macromodel — a single VCCS (Gm)
+** into a differential Rout||Cout load, with an Rin||Cin differential input port.
+** The ideal-opamp leaf reused across the drawn CCIAs (see provenance in circuit.yaml).
+** AUTHORED source of truth (plan D-2). BEHAVIORAL realization (plan S3.5): no MOS
+** devices, so no PDK lowering beyond passives; vdd/vss are declared for the class
+** bench contract but UNREFERENCED in the body — the macromodel draws no supply current.
+** Subckt port order (= circuit.yaml ports): vinp vinn voutp voutn vdd vss
+**
+** Topology (from drawings/ccia-01-YuPinHsu-bandpass-class-ab-output/
+** ideal-amp-fully-diff.sch, normalized here after xschem netlisting):
+**   Gm (VCCS, gain gm_val) drives the differential output voutn/voutp from vinp/vinn;
+**   Rout/Cout across the outputs set the DC gain (gm*rout) and the single dominant
+**   pole; Rin/Cin across the inputs model a finite differential input impedance.
+**   drawing conformance + entry-level deviations:
+**     - the value symbols gm_val/rout_val/rin_val/cout_val/cin_val MATCH the
+**       drawing (normalized at source, DRAWING_REVIEW item 5 — the old UPPERCASE
+**       GM/ROUT/... case-collision with the instance names is fixed in
+**       ideal-amp-fully-diff.sch);
+**     - the drawn subckt port order (vinp vinn voutn voutp VSS VDD) is normalized
+**       to the amplifier-class convention vinp vinn voutp voutn vdd vss (the two
+**       supply pins stay no-connects, as drawn).
+**   Baseline parameter sets for this leaf (ideal-ota vs servo-grade) live in
+**   _shared/IDEAL_AMP.md; this entry's sizing defaults are the ideal-ota
+**   baseline (gain 1000 = 60 dB, UGF ~ 15.9 MHz).
+**.subckt amp_028_ideal_fully_diff vinp vinn voutp voutn vdd vss
+Gm voutn voutp vinp vinn {gm_val}
+Rout voutn voutp 'rout_val'
+Rin vinp vinn 'rin_val'
+Cout voutn voutp 'cout_val'
+Cin vinp vinn 'cin_val'
+**.ends
+.end

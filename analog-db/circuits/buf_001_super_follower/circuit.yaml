@@ -1,0 +1,29 @@
+# ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
+# PROMOTED from the ferrosim_source_follower reference entry: authored a device-generic abstract
+# netlist + open-PDK bindings so the feedback (super) source follower is lowerable, assembled and
+# simulated. The original FOUNDRY 28nm/65nm ferrosim decks are retained under `references`.
+schema: spicexplorer/circuit@1
+id: buf_001_super_follower
+class: buffer
+display_name: "Feedback (super) source follower, current-mirror biased"
+stages: 1
+ports: [vdd, vout, vin, ibias, vss]     # ibias is SOURCE-referenced (class convention)
+provenance:
+  source: Arcadia-1/ferrosim (imported via netlist-crawler)
+  aliases: [source_follower, ferrosim_source_follower]
+  designer: Token Zhang
+  license: MIT
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, sky130, gf180mcu]
+analyses: [dc_op, dc_transfer, ac_gain]
+references:
+  - {tool: spectre, dir: spectre/28nm, node: 28nm}
+  - {tool: spectre, dir: spectre/65nm, node: 65nm}
+optimize:
+  budget: 500
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

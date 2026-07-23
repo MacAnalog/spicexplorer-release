@@ -1,0 +1,9 @@
+schema: spicexplorer/analysis@1
+id: ac_open_loop
+template: ac_open_loop
+description: "Open-loop AC gain/phase (the CORA tb_ac measurements)."
+# IBIAS is NEGATIVE: the template's `Ibias vdd ibias` then PULLS current out of the ibias
+# node — this design's bias reference is a PMOS diode sourcing from vdd (legacy: I0 ib GND).
+params: {VDD: 1.8, VCM: 0.9, IBIAS: -34u, CL: 5p, FSTART: 1, FSTOP: 10G, PPD: 101}
+flags: []
+produces: [dc_gain_db, ugf_hz, pm_deg]

@@ -1,0 +1,68 @@
+** AUTHORED TEMPLATE — amplifier/dc_cmfb_plant_sign (CMFB polarity discriminator).
+** [VALIDATED 2026-07-18 live ihp-sg13g2 tt — drawings: bio-afe SRMC-core-amp (both CM
+**  loops, inverting plants -> canonical servo) + ccia-01 two-stage-ota-core (non-inverting
+**  plant -> inverted servo); the B5 bio-afe port blocker's decision-A evidence.]
+** Open-loop CM-actuation sweep: the CMFB servo is disconnected and its actuation node
+** driven by a swept DC source; the output common mode vocm(vcmfb) answers, in one dc run,
+** the three questions every CMFB hookup must pass BEFORE closing the loop:
+**   cm_plant_delta  vocm(VAT_HI) - vocm(VAT_LO). Its SIGN is the plant parity:
+**                   negative (inverting plant)     -> servo must be A*(sensed - vref)
+**                                                     (the canonical cmfb block);
+**                   positive (non-inverting plant) -> servo must be A*(vref - sensed)
+**                                                     (the -inv cmfb block).
+**                   Wrong pairing = positive CM feedback: the loop latches/rails.
+**   vcmfb_bal       actuation voltage where vocm crosses VREF_CM. Must sit INSIDE the
+**                   rails with margin — an out-of-rail balance means a real (clamped)
+**                   error amp cannot hold the target CM: re-bias or re-size the
+**                   actuator (e.g. the bio-afe stage-1 fix: tail-ref 0.5->0.7 V *and*
+**                   XM8 0.15u->0.5u; each alone leaves vcmfb_bal unusable/unstable).
+**   vocm_lim_min/max  the achievable output-CM window over the whole sweep. VREF_CM
+**                   outside [min, max] can NEVER regulate at this sizing (the ccia
+**                   seed drawing's floor is ~0.61 V: a drawn 0.5 V ref is unreachable
+**                   -> both polarities wind up, matching the amp_025 +42 V runaway).
+** Closed-loop follow-up: verify with tran_cm_kick. If the plant is NON-MONOTONIC over
+** the full actuation range (one-sided actuator dying at one end), .op can converge to
+** the wound-up dead-actuator equilibrium even with the correct servo — seed the interior
+** basin with `.ic v(<servo output node>)=<vcmfb_bal>` in that bench, and check the
+** servo's settled output stays near vcmfb_bal (a behavioral, unclamped ideal servo
+** parked 10s-100s of volts out of rail is the latched-state signature). An underdamped
+** escape from the interior basin is a servo-compensation problem, not polarity
+** (slow the behavioral servo pole: cout_val 100f -> 100p fixed the ccia core).
+** For a DUT with SEVERAL CM loops (e.g. the SRMC core's per-stage loops), run once per
+** actuation pin, holding each other loop's pin at ITS previously-found vcmfb_bal.
+**
+** Assumes a differential-output DUT whose CMFB actuation input is exposed as a port,
+** wired by PORT_LINE to the net named CMFB_NODE (extra bias ports: fixed nets/sources
+** added by the binding's PORT_LINE conventions). Matched DC inputs at VCM.
+** Required bindings: DUT PORT_LINE VDD VCM VREF_CM CMFB_NODE CMFB_MID VLO VHI VAT_LO
+**                    VAT_HI PDK_INCLUDE.  (VLO/VHI: sweep rails, e.g. 0.05/VDD-0.05;
+**                    VAT_LO/VAT_HI: interior sample points for the delta, e.g. 0.3/0.9.)
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vcm  vcm 0 dc {VCM}
+Vinp vinp vcm dc 0
+Vinn vinn vcm dc 0
+Vcmfb ${CMFB_NODE} 0 dc ${CMFB_MID}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  dc Vcmfb ${VLO} ${VHI} 2m
+  let vocm = (v(voutp)+v(voutn))/2
+  meas dc vocm_lo FIND vocm AT=${VAT_LO}
+  meas dc vocm_hi FIND vocm AT=${VAT_HI}
+  let cm_plant_delta = vocm_hi - vocm_lo
+  meas dc vcmfb_bal WHEN vocm=${VREF_CM} CROSS=1
+  meas dc vocm_lim_min MIN vocm
+  meas dc vocm_lim_max MAX vocm
+  print cm_plant_delta
+  write
+  quit
+.endc
+.end

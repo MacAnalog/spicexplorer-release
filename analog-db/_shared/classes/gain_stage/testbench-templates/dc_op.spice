@@ -1,0 +1,30 @@
+** AUTHORED TEMPLATE — gain_stage/dc_op: self-biased DC operating point + supply current.
+** An inverting gain stage has a narrow high-gain input window that moves with PDK/corner, so a
+** fixed input bias is useless: a 1 TH feedback inductor DC-shorts vout back to vin instead
+** (the amplifier-class bias-wrap trick), self-biasing the stage at its trip point vin = vout.
+** Reports that trip voltage (v_trip) and the supply current at the ACTIVE operating point.
+** Class port convention: vdd vout vin ibias vss; `ibias` is SINK-referenced (the DUT holds a
+** PMOS-side diode at ibias, the bench pulls IBIAS out of it to vss).
+** Bindings: DUT PORT_LINE VDD IBIAS PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param IBIAS=${IBIAS}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias ibias vss dc {IBIAS}
+Lfb  vout vin 1T              ; 1 TH: DC short — self-bias at the trip point
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  let v_trip = v(vout)
+  print i_supply v_trip
+  write
+  quit
+.endc
+.end

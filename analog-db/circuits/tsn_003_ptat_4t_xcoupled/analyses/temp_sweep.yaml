@@ -1,0 +1,14 @@
+# Analysis binding (plan D-4): temp_sensor temp_sweep — PTAT slope + box-method spread.
+schema: spicexplorer/analysis@1
+id: temp_sweep
+template: temp_sweep
+description: "Ambient temperature sweep; v_out_25c, sens_v_per_c, tc_box_ppm."
+params:
+  VDD: 1.5
+  TSTART: -20
+  TSTOP: 120
+  TSTEP: 5
+  TLO: -20
+  THI: 120
+flags: []
+produces: [v_out_25c, sens_v_per_c, tc_box_ppm]

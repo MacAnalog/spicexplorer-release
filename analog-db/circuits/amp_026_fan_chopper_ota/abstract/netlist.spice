@@ -1,0 +1,85 @@
+** Abstract two-stage folded-cascode OTA with an embedded output chopper (held
+** statically transparent) — the "two-stage-opamp-core" (VER-B wiring) of Fan's
+** chopper CCIA (see provenance in circuit.yaml). AUTHORED source of truth
+** (plan D-2). PDK-neutral model tokens (nmos/pmos); per-PDK device names + geometry
+** come from circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vinp vinn voutp voutn vdd vss
+**
+** Topology (from drawings/ccia-02-QinwenFan-chopper-ripple-reduction/
+** two-stage-opamp-core.sch as netlisted inside simulation/ccia-dut-chopper-simple.spice,
+** normalized here after flattening the chopper-diff/transmission_gate_pair subckts by
+** hand; the drawing's Vb1..Vb4 bias PORTS become internal knob-driven sources, matching
+** how the drawn ccia tops wrap this core with fixed supplies — instantiator owns bias):
+**   stage 1 — PMOS input pair XM2 (vinp) / XM3 (vinn), tail XM1 from vdd (gate vb4),
+**     folded through NMOS cascodes XM12/XM13 (gate vb2) over the first-stage current
+**     sinks XM4/XM5 (gate vb1) into the cascoded PMOS load: sources XM6/XM7 (gate vb4)
+**     under PMOS cascodes XM10/XM11 (gate vb3), forming the first-stage outputs
+**     out1_p/out1_n.
+**   output chopper — the drawn chopper-diff (true 4-gate modulator: 2 straight +
+**     2 cross transmission gates, 8 MOS; DRAWING_REVIEW.md item 1 FIXED 2026-07-16)
+**     sits between the fold outputs out1_p/out1_n and the second-stage gates g2_p/g2_n;
+**     flattened here as XM16/XM17 (straight n leg out1_n<->g2_n), XM18/XM19 (straight
+**     p leg out1_p<->g2_p), XM20/XM21 (cross leg out1_p<->g2_n) and XM22/XM23 (cross
+**     leg out1_n<->g2_p). The cross pair is PRESENT but STATICALLY OFF in this entry
+**     (see static-entry decision below).
+**   stage 2 — class-A output branches: PMOS current sources XM8 (voutp) / XM9 (voutn)
+**     (gate vb4) over NMOS common-source devices XM14 (gate g2_p) / XM15 (gate g2_n);
+**     per-side Miller caps Cm1 (g2_p-voutp) / Cm2 (g2_n-voutn). NO explicit CMFB is
+**     drawn — the output common mode is set purely by device ratioing (XM8/XM9 vs
+**     XM14/XM15), so expect vocm sensitivity to sizing/corners (cf. amp_020's
+**     knife-edge note).
+**   drawing sync: the four formerly-floating source nets (XM1/XM6/XM9 rails to vdd,
+**     XM15 to vss) are FIXED IN THE DRAWING (DRAWING_REVIEW.md item 2, 2026-07-16);
+**     this entry matches the fixed two-stage-opamp-core.sch — no deviation.
+**   static-entry decision: the drawn chopper control ports vctl/vctl_not are wired
+**     DIRECTLY to vdd/vss here (chopper held transparent = the drawing's vctl-HIGH
+**     phase): straight-leg NMOS gates=vdd / PMOS gates=vss (both straight TGs on);
+**     cross-leg NMOS gates=vss / PMOS gates=vdd (swapped ties -> cross pair
+**     permanently OFF, contributing only junction parasitics on out1_*/g2_*).
+**     The clocked characterization lives in the ia_002/ia_003 system entries.
+**   Cm note: the drawn Cm_1 value (1p) was an unedited xschem default while Cm_2 was
+**     symbolic (Cm); both are normalized to knobs here and tied — the pair must match.
+**   nets renamed for readability: net1->tail, net2->fold_p, net3->fold_n,
+**     net4->casc_src_n, net5->casc_src_p, net6->out1_p, net7->out1_n, net8->g2_p,
+**     net9->g2_n; chopper devices x_CH_out.x1..x4 -> XM16..XM23.
+**.subckt amp_026_fan_chopper_ota vinp vinn voutp voutn vdd vss
+* --- PMOS input pair + tail ---
+XM1 tail vb4 vdd vdd pmos w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+XM2 fold_p vinp tail vdd pmos w=x_dut_xm2_w l=x_dut_xm2_l m=x_dut_xm2_m
+XM3 fold_n vinn tail vdd pmos w=x_dut_xm3_w l=x_dut_xm3_l m=x_dut_xm3_m
+* --- first-stage NMOS current sinks at the fold nodes ---
+XM4 fold_p vb1 vss vss nmos w=x_dut_xm4_w l=x_dut_xm4_l m=x_dut_xm4_m
+XM5 fold_n vb1 vss vss nmos w=x_dut_xm5_w l=x_dut_xm5_l m=x_dut_xm5_m
+* --- folded NMOS cascodes up to the first-stage outputs ---
+XM12 out1_p vb2 fold_p vss nmos w=x_dut_xm12_w l=x_dut_xm12_l m=x_dut_xm12_m
+XM13 out1_n vb2 fold_n vss nmos w=x_dut_xm13_w l=x_dut_xm13_l m=x_dut_xm13_m
+* --- cascoded PMOS load: current sources + cascodes ---
+XM6 casc_src_n vb4 vdd vdd pmos w=x_dut_xm6_w l=x_dut_xm6_l m=x_dut_xm6_m
+XM7 casc_src_p vb4 vdd vdd pmos w=x_dut_xm7_w l=x_dut_xm7_l m=x_dut_xm7_m
+XM10 out1_n vb3 casc_src_n vdd pmos w=x_dut_xm10_w l=x_dut_xm10_l m=x_dut_xm10_m
+XM11 out1_p vb3 casc_src_p vdd pmos w=x_dut_xm11_w l=x_dut_xm11_l m=x_dut_xm11_m
+* --- output chopper, flattened + held transparent: straight legs ON (NMOS gates=vdd, PMOS gates=vss) ---
+XM16 out1_n vdd g2_n vss nmos w=x_dut_xm16_w l=x_dut_xm16_l m=x_dut_xm16_m
+XM17 g2_n vss out1_n vdd pmos w=x_dut_xm17_w l=x_dut_xm17_l m=x_dut_xm17_m
+XM18 out1_p vdd g2_p vss nmos w=x_dut_xm18_w l=x_dut_xm18_l m=x_dut_xm18_m
+XM19 g2_p vss out1_p vdd pmos w=x_dut_xm19_w l=x_dut_xm19_l m=x_dut_xm19_m
+* --- output chopper cross legs, statically OFF (swapped ties: NMOS gates=vss, PMOS gates=vdd) ---
+XM20 out1_p vss g2_n vss nmos w=x_dut_xm20_w l=x_dut_xm20_l m=x_dut_xm20_m
+XM21 g2_n vdd out1_p vdd pmos w=x_dut_xm21_w l=x_dut_xm21_l m=x_dut_xm21_m
+XM22 out1_n vss g2_p vss nmos w=x_dut_xm22_w l=x_dut_xm22_l m=x_dut_xm22_m
+XM23 g2_p vdd out1_n vdd pmos w=x_dut_xm23_w l=x_dut_xm23_l m=x_dut_xm23_m
+* --- class-A output branches ---
+XM8 voutp vb4 vdd vdd pmos w=x_dut_xm8_w l=x_dut_xm8_l m=x_dut_xm8_m
+XM14 voutp g2_p vss vss nmos w=x_dut_xm14_w l=x_dut_xm14_l m=x_dut_xm14_m
+XM9 voutn vb4 vdd vdd pmos w=x_dut_xm9_w l=x_dut_xm9_l m=x_dut_xm9_m
+XM15 voutn g2_n vss vss nmos w=x_dut_xm15_w l=x_dut_xm15_l m=x_dut_xm15_m
+* --- per-side Miller compensation caps ---
+Cm1 g2_p voutp 'x_dut_cm1_value'
+Cm2 g2_n voutn 'x_dut_cm2_value'
+* --- internal bias levels (the drawing's Vb1..Vb4 ports; instantiator-owned knobs) ---
+Vb1 vb1 vss dc {vb1}
+Vb2 vb2 vss dc {vb2}
+Vb3 vb3 vss dc {vb3}
+Vb4 vb4 vss dc {vb4}
+**.ends
+.end

@@ -1,0 +1,18 @@
+schema: spicexplorer/analysis@1
+id: tran_load_step
+template: tran_load_step
+description: "Fast 10u -> 10m load step (upstream val0/val1) into the ~50 pF cap; undershoot + recovery."
+params:
+  VDD: 2.0
+  COUT: 50p
+  ILOAD_LO: 10u
+  ILOAD_HI: 10m
+  TSTART: 5u
+  TEDGE: 10n
+  TPULSE: 20u
+  TPER: 40u
+  TSTEP: 10n
+  TSTOP: 30u
+  VTOL: 5m
+flags: []
+produces: [v_undershoot, t_transient]

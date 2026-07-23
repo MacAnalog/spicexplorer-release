@@ -1,0 +1,633 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "ia_003_fan_chopper_pf",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 61,
+    "blocks_detected": 29,
+    "by_family": {
+      "transmission_gate": 16,
+      "differential_pair": 13
+    },
+    "structural_roles": {
+      "XM1": "tail_current_source",
+      "XM14": "tail_current_source",
+      "XM15": "tail_current_source",
+      "XM16": "analog_switch",
+      "XM17": "analog_switch",
+      "XM18": "analog_switch",
+      "XM19": "analog_switch",
+      "XM2": "differential_pair",
+      "XM20": "differential_pair",
+      "XM21": "analog_switch",
+      "XM22": "differential_pair",
+      "XM23": "analog_switch",
+      "XM24": "analog_switch",
+      "XM25": "analog_switch",
+      "XM26": "analog_switch",
+      "XM27": "analog_switch",
+      "XM28": "differential_pair",
+      "XM29": "analog_switch",
+      "XM3": "differential_pair",
+      "XM30": "differential_pair",
+      "XM31": "analog_switch",
+      "XM32": "analog_switch",
+      "XM33": "analog_switch",
+      "XM34": "analog_switch",
+      "XM35": "analog_switch",
+      "XM36": "analog_switch",
+      "XM37": "analog_switch",
+      "XM38": "analog_switch",
+      "XM39": "analog_switch",
+      "XM40": "differential_pair",
+      "XM41": "analog_switch",
+      "XM42": "differential_pair",
+      "XM43": "analog_switch",
+      "XM44": "analog_switch",
+      "XM45": "analog_switch",
+      "XM46": "analog_switch",
+      "XM47": "analog_switch",
+      "XM8": "tail_current_source",
+      "XM9": "tail_current_source"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#1",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM16",
+        "XM17"
+      ],
+      "ports": {
+        "a": "out1_n",
+        "b": "g2_n",
+        "ctl_n": "clk_chout",
+        "ctl_p": "clk_chout_not"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#2",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM18",
+        "XM19"
+      ],
+      "ports": {
+        "a": "out1_p",
+        "b": "g2_p",
+        "ctl_n": "clk_chout",
+        "ctl_p": "clk_chout_not"
+      }
+    },
+    {
+      "group_id": "dp.pmos.simple#1",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "pmos",
+      "template_id": "dp.pmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM2",
+        "XM3"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "in_p": "vsum_p",
+        "in_n": "vsum_n",
+        "CM_tail": "tail",
+        "out_n": "fold_n",
+        "out_p": "fold_p"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#3",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM20",
+        "XM21"
+      ],
+      "ports": {
+        "a": "fbch_p",
+        "b": "voutp",
+        "ctl_n": "clk_chfb",
+        "ctl_p": "clk_chfb_not"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#1",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM20",
+        "XM28"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "clk_chpf",
+        "in_n": "clk_chfb",
+        "CM_tail": "voutp",
+        "out_n": "fbch_p",
+        "out_p": "pfch_p"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#2",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM20",
+        "XM42"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "clk_chfb_not",
+        "in_n": "clk_chfb",
+        "CM_tail": "voutp",
+        "out_n": "fbch_p",
+        "out_p": "fbch_n"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#3",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM20",
+        "XM46"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "clk_chpf_not",
+        "in_n": "clk_chfb",
+        "CM_tail": "voutp",
+        "out_n": "fbch_p",
+        "out_p": "pfch_n"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#4",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM22",
+        "XM23"
+      ],
+      "ports": {
+        "a": "fbch_n",
+        "b": "voutn",
+        "ctl_n": "clk_chfb",
+        "ctl_p": "clk_chfb_not"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#4",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM22",
+        "XM30"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "clk_chpf",
+        "in_n": "clk_chfb",
+        "CM_tail": "voutn",
+        "out_n": "fbch_n",
+        "out_p": "pfch_n"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#5",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM22",
+        "XM40"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "clk_chfb_not",
+        "in_n": "clk_chfb",
+        "CM_tail": "voutn",
+        "out_n": "fbch_n",
+        "out_p": "fbch_p"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#6",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM22",
+        "XM44"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "clk_chpf_not",
+        "in_n": "clk_chfb",
+        "CM_tail": "voutn",
+        "out_n": "fbch_n",
+        "out_p": "pfch_p"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#5",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM24",
+        "XM25"
+      ],
+      "ports": {
+        "a": "vinn",
+        "b": "inch_n",
+        "ctl_n": "clk_chin",
+        "ctl_p": "clk_chin_not"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#6",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM26",
+        "XM27"
+      ],
+      "ports": {
+        "a": "vinp",
+        "b": "inch_p",
+        "ctl_n": "clk_chin",
+        "ctl_p": "clk_chin_not"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#7",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM28",
+        "XM29"
+      ],
+      "ports": {
+        "a": "pfch_p",
+        "b": "voutp",
+        "ctl_n": "clk_chpf",
+        "ctl_p": "clk_chpf_not"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#7",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM28",
+        "XM42"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "clk_chpf",
+        "in_n": "clk_chfb_not",
+        "CM_tail": "voutp",
+        "out_n": "fbch_n",
+        "out_p": "pfch_p"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#8",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM28",
+        "XM46"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "clk_chpf_not",
+        "in_n": "clk_chpf",
+        "CM_tail": "voutp",
+        "out_n": "pfch_p",
+        "out_p": "pfch_n"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#8",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM30",
+        "XM31"
+      ],
+      "ports": {
+        "a": "pfch_n",
+        "b": "voutn",
+        "ctl_n": "clk_chpf",
+        "ctl_p": "clk_chpf_not"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#9",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM30",
+        "XM40"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "clk_chpf",
+        "in_n": "clk_chfb_not",
+        "CM_tail": "voutn",
+        "out_n": "fbch_p",
+        "out_p": "pfch_n"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#10",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM30",
+        "XM44"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "clk_chpf_not",
+        "in_n": "clk_chpf",
+        "CM_tail": "voutn",
+        "out_n": "pfch_n",
+        "out_p": "pfch_p"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#9",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM32",
+        "XM33"
+      ],
+      "ports": {
+        "a": "out1_n",
+        "b": "g2_p",
+        "ctl_n": "clk_chout_not",
+        "ctl_p": "clk_chout"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#10",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM34",
+        "XM35"
+      ],
+      "ports": {
+        "a": "out1_p",
+        "b": "g2_n",
+        "ctl_n": "clk_chout_not",
+        "ctl_p": "clk_chout"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#11",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM36",
+        "XM37"
+      ],
+      "ports": {
+        "a": "vinn",
+        "b": "inch_p",
+        "ctl_n": "clk_chin_not",
+        "ctl_p": "clk_chin"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#12",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM38",
+        "XM39"
+      ],
+      "ports": {
+        "a": "vinp",
+        "b": "inch_n",
+        "ctl_n": "clk_chin_not",
+        "ctl_p": "clk_chin"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#13",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM40",
+        "XM41"
+      ],
+      "ports": {
+        "a": "fbch_p",
+        "b": "voutn",
+        "ctl_n": "clk_chfb_not",
+        "ctl_p": "clk_chfb"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#11",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM40",
+        "XM44"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "clk_chpf_not",
+        "in_n": "clk_chfb_not",
+        "CM_tail": "voutn",
+        "out_n": "fbch_p",
+        "out_p": "pfch_p"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#14",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM42",
+        "XM43"
+      ],
+      "ports": {
+        "a": "fbch_n",
+        "b": "voutp",
+        "ctl_n": "clk_chfb_not",
+        "ctl_p": "clk_chfb"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#12",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM42",
+        "XM46"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "clk_chpf_not",
+        "in_n": "clk_chfb_not",
+        "CM_tail": "voutp",
+        "out_n": "fbch_n",
+        "out_p": "pfch_n"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#15",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM44",
+        "XM45"
+      ],
+      "ports": {
+        "a": "pfch_p",
+        "b": "voutn",
+        "ctl_n": "clk_chpf_not",
+        "ctl_p": "clk_chpf"
+      }
+    },
+    {
+      "group_id": "tg.pair.cmos_rail_bulk#16",
+      "family": "transmission_gate",
+      "mirror_class": "pass_gate",
+      "polarity": "complementary",
+      "template_id": "tg.pair.cmos_rail_bulk",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM46",
+        "XM47"
+      ],
+      "ports": {
+        "a": "pfch_n",
+        "b": "voutp",
+        "ctl_n": "clk_chpf_not",
+        "ctl_p": "clk_chpf"
+      }
+    }
+  ]
+}

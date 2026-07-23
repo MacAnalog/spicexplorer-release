@@ -1,0 +1,164 @@
+{
+  "area": {
+    "active_gate_area_um2": 3556.0,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 14,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "amp_004_folded_cascode",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 44.12522,
+            "pm": 74.66839,
+            "ugf": 3579465.0
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.000129427
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.0005196783,
+            "onoise_total": 0.002279049
+          },
+          "status": "ok"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 4.29445e-07,
+            "tcross": 2.429445e-06,
+            "vfinal": 1.100836
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-06-10T20:07:26+00:00"
+      },
+      "symbolic_crosscheck": {
+        "metrics": {
+          "dc_gain_db": {
+            "abs_error": 0.6788570959657889,
+            "agrees": true,
+            "call": "open_loop_gain",
+            "sim": 44.12522,
+            "symbolic": 43.44636290403421,
+            "tolerance": 2.206261
+          }
+        },
+        "operating_point": {
+          "gm_m0": 0.0002812037,
+          "gm_m1": 0.0002510296,
+          "gm_m10": 0.0001748248,
+          "gm_m11": 0.0002834383,
+          "gm_m12": 0.0002879572,
+          "gm_m13": 0.0007152956,
+          "gm_m2": 0.0002510307,
+          "gm_m3": 0.0009121533,
+          "gm_m4": 0.0009121329,
+          "gm_m5": 0.0004745303,
+          "gm_m6": 0.0004745432,
+          "gm_m7": 0.0003787043,
+          "gm_m8": 0.0003787473,
+          "gm_m9": 0.0001748065,
+          "ro_m0": 479121.32981083327,
+          "ro_m1": 1081167.8082717555,
+          "ro_m10": 1758.4758094396036,
+          "ro_m11": 808627.0805974783,
+          "ro_m12": 2645483.749190151,
+          "ro_m13": 40366.59325328907,
+          "ro_m2": 1081341.538264568,
+          "ro_m3": 59562.631596189174,
+          "ro_m4": 59560.00640865669,
+          "ro_m5": 63018.56400858564,
+          "ro_m6": 62835.34437853017,
+          "ro_m7": 563392.9778699238,
+          "ro_m8": 567028.4308055206,
+          "ro_m9": 1758.4065460552172
+        }
+      }
+    }
+  },
+  "design_id": "29aa8c37e5",
+  "metrics": {
+    "tt": {
+      "dc_gain_db": {
+        "spec": "fail",
+        "value": 44.12522
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 0.000129427
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 74.66839
+      },
+      "t_settle": {
+        "spec": "none",
+        "value": 4.29445e-07
+      },
+      "ugf_hz": {
+        "spec": "fail",
+        "value": 3579465.0
+      },
+      "vn_in": {
+        "spec": "none",
+        "value": 0.0005196783
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_ib": "34u",
+      "x_dut_xm1_l": "2u",
+      "x_dut_xm13_l": "2u",
+      "x_dut_xm6_l": "2.5u",
+      "x_dut_xm7_l": "2u",
+      "x_dut_xm9_l": "4.5u",
+      "x_dut_xm11_l": "3u",
+      "x_dut_xm12_l": "3u",
+      "x_dut_xm1_ng": 8,
+      "x_dut_xm13_ng": 11,
+      "x_dut_xm6_ng": 5,
+      "x_dut_xm7_ng": 8,
+      "x_dut_xm9_ng": 19,
+      "x_dut_xm11_ng": 5,
+      "x_dut_xm12_ng": 5,
+      "x_dut_vb1": 1.225,
+      "x_dut_vb2": 1.275,
+      "x_dut_xm1_w": "72u",
+      "x_dut_xm13_w": "106.5u",
+      "x_dut_xm6_w": "44u",
+      "x_dut_xm7_w": "78u",
+      "x_dut_xm9_w": "183u",
+      "x_dut_xm11_w": "50u",
+      "x_dut_xm12_w": "50u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 3556.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 44.12522,
+      "pm_deg": 74.66839,
+      "ugf_hz": 3579465.0
+    },
+    "power_w": 0.0002329686
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

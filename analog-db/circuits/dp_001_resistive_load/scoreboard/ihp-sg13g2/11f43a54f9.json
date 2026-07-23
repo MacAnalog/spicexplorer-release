@@ -1,0 +1,80 @@
+{
+  "area": {
+    "active_gate_area_um2": 21.6,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 4,
+    "r_count": 2,
+    "r_total_ohm": 44000.0
+  },
+  "circuit": "dp_001_resistive_load",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 4.46617e-05,
+            "v_ocm": 1.228721
+          },
+          "status": "ok"
+        },
+        "gain_dc": {
+          "measures": {
+            "gain_dc": 5.328921,
+            "vd_hi": -0.05328832,
+            "vd_lo": 0.05329011
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:24:53+00:00"
+      }
+    }
+  },
+  "design_id": "11f43a54f9",
+  "metrics": {
+    "tt": {
+      "gain_dc": {
+        "spec": "pass",
+        "value": 5.328921
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 4.46617e-05
+      },
+      "v_ocm": {
+        "spec": "fail",
+        "value": 1.228721
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_rp_value": 22000,
+      "x_dut_xmn_m": 1,
+      "x_dut_xmp_l": "0.3u",
+      "x_dut_xmp_m": 1,
+      "x_dut_xmp_w": "12u",
+      "x_dut_xmr_l": "0.3u",
+      "x_dut_xmr_m": 1,
+      "x_dut_xmr_w": "24u",
+      "x_dut_xmt_m": 1,
+      "x_dut_xmt_w": "24u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 21.6,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "gain_dc": 5.328921
+    },
+    "power_w": 6.699255e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

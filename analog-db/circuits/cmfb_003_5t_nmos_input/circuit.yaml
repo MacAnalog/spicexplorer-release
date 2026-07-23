@@ -1,0 +1,41 @@
+schema: spicexplorer/circuit@1
+id: cmfb_003_5t_nmos_input
+class: cmfb
+tier: support
+realization: transistor
+display_name: Real 5T CMFB (NMOS-input error amp + resistive CM detector, canonical)
+stages: 1
+ports:
+- vinp
+- vinn
+- vcmfb
+- vref
+- vdd
+- vss
+provenance:
+  source: drawings/shared (hand-drawn xschem, cmfb-output-amp-5t-nmos-input.sym = vcm-detector-simple + amp-single-ended-5t-nmos-input)
+  paper: "Y.-P. Hsu, S.-L. Liu, M. M. Hella (SRMC bio-AFE context, TCAS-I 67(1) 2020) — the CMFB itself is an owner design replacing the drawn ideal servos"
+  aliases: [cmfb-output-amp-5t-nmos-input]
+  designer: "Noorizadeh (schematic); sizing: 2026-07-20 Nevergrad campaign (report §8)"
+  notes: >-
+    The NMOS-input complement of cmfb_002 — same architecture (resistive sense +
+    self-biased 5T error amp, canonical polarity, identical pin footprint as the
+    ideal CMFB macromodels), input-pair/mirror/tail polarities flipped. Validated
+    SECONDARY for the SRMC consumer (in-loop CM errors 3.8/4.8 mV vs cmfb_002's
+    3.6/2.1; diff metrics identical) — kept as a first-class member because the
+    flavor choice is PLANT-specific: pick the flavor whose zero-error natural output
+    (here ~0.251 V) lands nearest the plant's actuator balance gates, and whose
+    input stage is comfortable at the sensed CM level (NMOS pair prefers higher CM;
+    works at 0.5 V with the IHP LV Vth). The -inv wiring variant lives in
+    drawings/shared as cmfb-output-amp-5t-nmos-input-inv (same topology, swapped
+    pair gates; not separately accessioned). Rail-clamped by construction; in-loop
+    kicks recover with zero residual (SIZING_VALIDATION_REPORT.md §8).
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/cmfb-output-amp-5t-nmos-input.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+analyses: [dc_cmfb_transfer, ac_servo, tran_cmfb_step]
+pdks:
+- ihp-sg13g2
+status: draft

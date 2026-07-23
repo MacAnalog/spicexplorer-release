@@ -1,0 +1,14 @@
+# Closed-loop output-impedance peaking — a port-respecting stability proxy.
+schema: spicexplorer/analysis@1
+id: loop_stability
+template: loop_stability
+description: "AC closed-loop Zout(f) via a current probe into vout; peaking above DC = ringing/low PM."
+params:
+  VDD: 1.8
+  ILOAD: 1m
+  COUT: 1u
+  PPD: 20
+  FSTART: 10
+  FSTOP: 10meg
+flags: []
+produces: [zout_peak_db]

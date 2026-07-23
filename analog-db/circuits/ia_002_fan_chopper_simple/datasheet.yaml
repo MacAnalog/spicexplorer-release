@@ -1,0 +1,81 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# SUPERSET of cace_format 5.2. See _shared/CACE_FORMAT.md for the field-overlap mapping (O-1).
+# Spec bands are sanity targets for the hand-seeded sizing (see pdk/*/sizing.yaml), not the
+# Fan-paper numbers — the paper characterizes a full 65 nm CCIA system (incl. ripple
+# reduction); the drawn choppers are true 4-gate modulators (drawing fixed 2026-07-16,
+# DRAWING_REVIEW.md §1; see the CHOPPER NOTE in abstract/netlist.spice), but the drawn
+# core has no CMFB, so the clocked figures carry a real output-CM instability.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  cload:  {unit: fF, typical: 50}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+  vcm:    {unit: V, typical: 0.6}
+metrics:
+  # NOTE (2026-07-22): the small-signal figures gain_cl_db / hpf_hz / bw_cl_hz / zin_ohm
+  # had their `analysis:`+`extract:` removed — a FROZEN-switch .ac is invalid on a chopper
+  # (enforced by the ia-class clocked guard). The specs stay as paper-datasheet targets; the
+  # in-operation figures come from the transient benches, or PSS+PAC on the closed (Spectre)
+  # lane. gain_cl (linear) is still produced live by tran_chopper_ripple where present.
+  gain_cl_db:
+    display: "Closed-loop mid-band gain"
+    description: "Cap-ratio gain Cin/Cfb (16p/0.8p = 20x = 26 dB), clocks held transparent"
+    unit: dB
+    spec: {min: 20, typ: 26, unit: dB}
+  hpf_hz:
+    display: "High-pass corner"
+    description: "Low-frequency -3 dB corner set by Rb against the feedback network"
+    unit: Hz
+    spec: {max: 1000, unit: Hz}
+  bw_cl_hz:
+    display: "Closed-loop bandwidth"
+    unit: Hz
+    spec: {min: 500, unit: Hz}
+  i_supply:
+    display: "Supply current"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 500e-6, unit: A}
+  vos:
+    display: "Output offset"
+    description: "voutp - voutn at matched DC inputs, clocks held transparent"
+    unit: V
+    analysis: dc_op
+    extract: {meas: vos}
+    spec: {min: -50e-3, typ: 0, max: 50e-3, unit: V}
+  v_ripple_pp:
+    display: "Clocked output ripple"
+    description: "Peak-to-peak differential output ripple in the settled clocked window (true 4-gate chopping; includes the no-CMFB output-CM wander). Ripple grows ~1/f_chop: measured ~50 mV at 50 kHz, ~400 mV at the registry 5 kHz default — THE motivation for the ripple-reduction loop (composed in ia_004; note that RRL demonstration needs core-CM closure first, plan P4-4b — see ia_004)"
+    unit: V
+    analysis: tran_chopper_ripple
+    extract: {meas: v_ripple_pp}
+    spec: {max: 100e-3, unit: V}
+  gain_cl:
+    display: "Clocked closed-loop gain"
+    description: "At the 5 kHz default the windows span the ~0.7 ms CM relaxation and average it out — measured ~7 V/V (passes the sanity band; still underreads the cap-ratio 20 because the no-CMFB core CM is bistable under clocking; the RRL is composed in ia_004 to attack this, but demonstrating it needs the core-CM closure of P4-4b since the RRL correction is purely differential). Window-sensitive: sampled inside the ~0.7 ms CM relaxation. (avg window B - avg window A)/VIN_DC under the running clocks"
+    unit: V/V
+    analysis: tran_chopper_ripple
+    extract: {meas: gain_cl}
+    spec: {min: 5, unit: V/V}
+  vos_residual:
+    display: "Clocked residual offset"
+    description: "WINDOW-SENSITIVE (divides by the underread clocked gain_cl; see gain_cl caveat). Window-A output average input-referred through the clocked gain"
+    unit: V
+    analysis: tran_chopper_ripple
+    extract: {meas: vos_residual}
+    spec: {min: -50e-3, max: 50e-3, unit: V}
+  zin_ohm:
+    display: "Differential input impedance (static, 100 Hz)"
+    description: "Voltage-driven |Zin| at FSIG with clocks frozen — the cap-coupled 1/(pi*f*Cin) figure; the in-operation number is zin_chop_ohm"
+    unit: Ohm
+    spec: {min: 50e6, unit: Ohm}
+  zin_chop_ohm:
+    display: "Chopped input impedance (in operation)"
+    description: "Average input current under 5 kHz clocking -> |Zin|; theory 1/(2*fc*Cin) = 6.25 MOhm, measured ~12 MOhm (feedback bootstrapping helps) [OPEN-PDK APPROX of the golden Spectre PSS+PAC — plan P3-2c; treat as indicative]"
+    unit: Ohm
+    analysis: tran_zin_chopped
+    extract: {meas: zin_chop_ohm}
+    spec: {min: 5e6, unit: Ohm}

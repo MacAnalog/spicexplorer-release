@@ -1,0 +1,51 @@
+schema: spicexplorer/circuit@1
+id: sup_003_rrl_sc_integrator
+class: support
+tier: support
+subfamily: ccia
+realization: mixed
+display_name: Ripple-reduction-loop switched-capacitor integrator (Fan CCIA servo)
+ports:
+- vinp
+- vinn
+- voutp
+- voutn
+- clk_ch_rrl
+- clk_ch_rrl_not
+- clk_phi_1
+- clk_phi_2
+- vdd
+- vss
+provenance:
+  source: drawings/ccia-02-QinwenFan-chopper-ripple-reduction (hand-drawn xschem, rrl-switched-capa-integrator.sch)
+  paper: "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011"
+  aliases: [rrl-switched-capa-integrator]
+  designer: "Noorizadeh (schematic capture, after Fan et al.)"
+  notes: >-
+    Ripple-sensing demodulating SC integrator — the RRL servo of Fan's CCIA
+    (DRAWING_REVIEW S4): Cs AC-couples the main amplifier's output ripple, the
+    internal 4-gate chopper synchronously demodulates it at f_chop, and the
+    auto-zeroed SC core integrates the demodulated product into the correction
+    drive. AC-coupled BY DESIGN — a DC differential input transfers zero net
+    charge per cycle (DC rejection is a feature, not a bug), so the bench is
+    tran_rrl_sense (square ripple at FCHOP + synchronous CLK_CH_RRL), not a
+    DC-ramp integrator bench. The chopper matches the fixed drawing
+    (DRAWING_REVIEW item 1 FIXED): true 4-gate modulator, and the DRAWN clock
+    hookup (Vctl fed from CLK_CH_RRL_not, i.e. straight-leg NMOS gates on
+    clk_ch_rrl_not) is preserved exactly — that assignment sets the demodulation
+    sign of the composed RRL loop (S4.2), recorded as the SIGN of the
+    ripple_gain metric. The drawn TG wiring uses the opposite PHI phase as each
+    switch complement, so the bench drives PHI_1/PHI_2 as exact complements
+    (see tran_rrl_sense header). Entry-level wrap deviations: the drawing's
+    Vb1..Vb4 bias ports become internal knob-driven sources (instantiator owns
+    bias); the ideal-amp leaf's gm_val/rout_val/... symbols match the drawing
+    (normalized at source, DRAWING_REVIEW item 5).
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/rrl-switched-capa-integrator.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+analyses: [tran_rrl_sense]
+pdks:
+- ihp-sg13g2
+status: draft

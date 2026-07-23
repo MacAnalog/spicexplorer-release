@@ -1,0 +1,34 @@
+** AUTHORED TEMPLATE — sampler/tran_sample: clocked track/hold transient (pedestal + droop).
+** Drives a held analog input Vin and a sampling clock (track = clk high on [0,TCLK/2], hold = clk
+** low on [TCLK/2,TCLK]). From v(vout): pedestal_v = the charge-injection step at the track->hold
+** edge; droop_v_per_s = the hold-mode output drift rate. The `.control` block cannot evaluate {}
+** brace expressions, so the sample instants (T_TRK/T_HS/T_HE) + step (TSTEP) arrive as bench params.
+** Port convention: vdd vin clk vout vss.
+** Bindings: DUT PORT_LINE VDD VCM VCLK TCLK TSTEP TSTOP T_TRK T_HS T_HE T_HOLD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param VCLK=${VCLK}
+.param TCLK=${TCLK}
+
+Vdd vdd 0 dc {VDD}
+Vss vss 0 dc 0
+Vin vin 0 dc {VCM}
+Vclk clk 0 dc 0 pulse(0 {VCLK} 0 {TCLK/100} {TCLK/100} {TCLK/2} {TCLK})
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP}
+  meas tran v_track FIND v(vout) AT=${T_TRK}
+  meas tran v_hs    FIND v(vout) AT=${T_HS}
+  meas tran v_he    FIND v(vout) AT=${T_HE}
+  let pedestal_v = v_hs - v_track
+  let droop_v_per_s = (v_he - v_hs) / ${T_HOLD}
+  print pedestal_v droop_v_per_s
+  write
+  quit
+.endc
+.end

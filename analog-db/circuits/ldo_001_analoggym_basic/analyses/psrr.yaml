@@ -1,0 +1,14 @@
+schema: spicexplorer/analysis@1
+id: psrr
+template: psrr
+description: "AC PSRR from Vdd to Vout at nominal load + the upstream ~50 pF output cap."
+params:
+  VDD: 1.8
+  ILOAD: 5m
+  COUT: 50p
+  PPD: 20
+  FSTART: 10
+  FSTOP: 10meg
+  FMEAS: 1k
+flags: []
+produces: [psrr_vdd_db]

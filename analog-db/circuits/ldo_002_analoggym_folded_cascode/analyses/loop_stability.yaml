@@ -1,0 +1,13 @@
+schema: spicexplorer/analysis@1
+id: loop_stability
+template: loop_stability
+description: "AC closed-loop Zout(f); peaking above DC = ringing/low PM."
+params:
+  VDD: 2.0
+  ILOAD: 10m
+  COUT: 50p
+  PPD: 20
+  FSTART: 10
+  FSTOP: 10meg
+flags: []
+produces: [zout_peak_db]

@@ -1,0 +1,17 @@
+# Analysis binding (plan D-4): universal tran_step template — unity-gain step settling.
+schema: spicexplorer/analysis@1
+id: tran_step
+template: tran_step
+description: "Unity-gain follower step response; settling time."
+params:
+  VDD: 3.3
+  VCM: 1.2
+  IBIAS: 1m
+  CL: 10p
+  VSTEP: 0.2
+  VTOL: 2m          # settle band: |vout - vinp| < 2 mV (1% of the step)
+  TSTART: 1u
+  TSTEP: 1n
+  TSTOP: 5u
+flags: []
+produces: [t_settle]

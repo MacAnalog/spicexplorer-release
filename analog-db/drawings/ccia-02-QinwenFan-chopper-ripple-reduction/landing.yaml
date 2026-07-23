@@ -1,0 +1,38 @@
+# Landing manifest — drawn block -> circuits/ entry (see drawings/README.md).
+# After landing, the entry's pdk/<pdk>/schematic/ copy is the authoritative
+# editable drawing; this family dir is the staging record.
+family: ccia-02-QinwenFan-chopper-ripple-reduction
+paper: >-
+  Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, "A 1.8 uW
+  60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in
+  65 nm CMOS for Wireless Sensor Nodes", IEEE JSSC 46(7):1534-1543, Jul. 2011
+blocks:
+  ccia-dut-chopper-simple:
+    circuit: ia_002_fan_chopper_simple
+    class: ia
+    subfamily: ccia
+  ccia-dut-chopper-w-positive-feedback:
+    circuit: ia_003_fan_chopper_pf
+    class: ia
+    subfamily: ccia
+  two-stage-opamp-core:
+    circuit: amp_026_fan_chopper_ota
+    class: amplifier
+    subfamily: ota     # common-source second stage, high-Zout (see drawings/README.md)
+    notes: entry holds the embedded output chopper transparent (clocked life is in ia_002/003)
+  integrator-switchcap-opamp:
+    circuit: amp_027_fan_rrl_ota
+    class: amplifier
+    subfamily: ota
+  rrl-switched-capa-integrator:
+    circuit: sup_003_rrl_sc_integrator
+    class: support
+    subfamily: ccia
+    notes: ripple-sensing demodulating SC integrator (DRAWING_REVIEW.md S4) — benched with tran_rrl_sense
+  chopper-diff:
+    circuit: sw_002_chopper_diff
+    class: switch
+    subfamily: chopper
+  transmission_gate_pair:
+    circuit: sw_001_transmission_gate_pair
+    class: switch

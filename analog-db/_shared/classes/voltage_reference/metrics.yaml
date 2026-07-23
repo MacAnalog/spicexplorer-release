@@ -1,0 +1,40 @@
+# Voltage-reference class — canonical metric vocabulary + owned testbench templates (plan D-10).
+# Validated against _shared/schema/class.schema.json by the verify harness (Tier 0).
+# Added 2026-07-15 (class-registry completion); it also replaced the placeholder `reference` label
+# on `ferrosim_bandgap_core`, `ferrosim_refbuf` and `sfe_reference_core_library` (all kind:reference).
+# DEVELOPED 2026-07-16: the four templates below are VALIDATED live on ihp-sg13g2 against the first
+# verifiable member `vref_001_vgs` (a 2-transistor ΔVth reference — the reference member that
+# exercises this class end-to-end: vref ≈ 0.36 V, tc_box ≈ 26 ppm/°C, 0.14 nA, PSRR ≈ −35 dB).
+# Distinct from `temp_sensor`: a reference's output is
+# temperature-INDEPENDENT (bandgap/CTAT-PTAT cancellation), so TC is a defect to minimise, not the
+# signal. Port convention (illustrative): vdd vref vss (self-contained 3-terminal reference).
+schema: spicexplorer/class@1
+class: voltage_reference
+id_code: vref           # accession-id prefix -> vref_001_<slug> (plan_scoreboard D-1)
+description: >-
+  Bandgap, sub-threshold and PTAT voltage/current references and reference buffers. DC operating
+  point (the reference level + power), a temperature sweep (temperature coefficient, box method),
+  a supply sweep (line regulation) and a low-frequency supply-rejection AC (PSRR); startup time,
+  integrated noise and minimum functional supply round out the vocabulary.
+ppa:                      # scoreboard PPA rollup declaration (plan_scoreboard D-7)
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: tc_ppm, better: min}
+    - {metric: psrr_db, better: min}
+canonical_metrics:
+  - vref_v            # nominal reference output level (V)
+  - vref_25c          # reference output at 25 degC (from the temp sweep)
+  - tc_ppm            # temperature coefficient, box method (ppm/degC) — smaller is better
+  - psrr_db           # low-frequency supply→reference rejection (dB, more negative is better)
+  - line_reg_pct      # output %-change over the supply sweep (%)
+  - noise_vrms        # integrated output noise (Vrms)
+  - startup_time_s    # power-on settling time to the reference level (s)
+  - min_supply_v      # minimum functional supply (V)
+  - i_supply          # DC supply current (A)
+  - area_um2
+  - v_out             # generic DC-op output node alias for vref (V)
+templates:
+  - dc_op
+  - temp_sweep        # TC extraction over temperature (box method)
+  - line_sweep        # line regulation over the supply
+  - psrr              # low-frequency supply rejection

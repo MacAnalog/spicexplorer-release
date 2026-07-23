@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spicexplorer/params@1",
+  "title": "SpiceXplorer per-circuit DUT parameterization (atomic inventory + declarative tying)",
+  "description": "abstract/params.yaml — separates what CAN vary from what SHOULD vary together (meta doc/plan_parameterization.md). `devices:` is the exhaustive atomic per-instance inventory (a physical fact of the topology, GENERATED from abstract/topology.cgraph.json); `groups:`/`ratios:` are the shipped DEFAULT tying (design intent, tagged with machine-readable reasons) that an upstream user may accept, edit, or dissolve by category — without re-authoring the abstract netlist. Settled P0 decisions (plan §4): per-finger (w, m) is canonical — total-W is a derived convenience, never stored; generation lives in the analog-db CLI (`gen-params`, P1) with circuitgraph as the detector; ties lower to `.param` lines referencing the FIRST member's atomic symbols — group names stay a YAML-level concept and never appear in decks.",
+  "type": "object",
+  "required": ["schema", "devices"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "spicexplorer/params@1"},
+    "devices": {
+      "type": "object",
+      "description": "Atomic inventory — one entry per netlist instance, keys are instance ids from the circuitgraph (XM1, C1, …). Each value maps that instance's SPICE parameter fields (w/l/m for MOS; c/r/… for passives) to its mechanically-derived atomic symbol (`x_dut_<id>_<field>`, plan D-1 — the `x_dut_` prefix is display-only grouping) or to a frozen numeric literal. Exhaustive: every parameterizable field of every instance appears here (Tier-1 verified, P1).",
+      "minProperties": 1,
+      "propertyNames": {"pattern": "^[A-Za-z][A-Za-z0-9_]*$"},
+      "additionalProperties": {
+        "type": "object",
+        "minProperties": 1,
+        "propertyNames": {"pattern": "^[A-Za-z][A-Za-z0-9_]*$"},
+        "additionalProperties": {"type": ["string", "number"]}
+      }
+    },
+    "groups": {
+      "type": "array",
+      "description": "Shipped DEFAULT tying — recommendations, not topology. Each group ties one or more fields across its members; the `kind` tag is the upstream affordance (dissolve ties by category, e.g. \"keep pairs matched, untie all mirror Ls\"). Lowering (P2) emits one `.param <member_symbol> = {<first_member_symbol>}` line per tied field for every non-first member.",
+      "items": {
+        "type": "object",
+        "required": ["name", "kind", "members", "tie"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "YAML-level handle (addressable by `dut_params` / `ungroup:` upstream, D-5); never appears in lowered decks."
+          },
+          "kind": {
+            "enum": ["matched_pair", "mirror_length", "bias_chain", "shared_geometry"],
+            "description": "Machine-readable WHY: matched_pair = symmetric same-polarity pair (diff pair, mirror load halves) tying full geometry; mirror_length = current-mirror members sharing L for ratio accuracy; bias_chain = devices tracking a bias branch; shared_geometry = author-opinion sharing with no single structural cause (the escape hatch for legacy global ties)."
+          },
+          "members": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {"type": "string"},
+            "description": "Instance ids; each MUST exist in `devices:` (Tier-1, D-6). Order matters: the FIRST member's atomic symbols are the tie targets in lowered decks."
+          },
+          "tie": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string"},
+            "description": "The parameter fields tied across members (e.g. [w, l, m] for a matched pair, [l] for a mirror)."
+          },
+          "description": {"type": "string"}
+        }
+      }
+    },
+    "ratios": {
+      "type": "array",
+      "description": "Mirror gains as data: param(ref) = param(of) × ratio. Frozen constants by default; `is_integer: true` exposes the ratio as an integer knob instead (per-PDK bounds then live in sizing.yaml, D-4).",
+      "items": {
+        "type": "object",
+        "required": ["param", "ref", "of", "ratio"],
+        "additionalProperties": false,
+        "properties": {
+          "param": {"type": "string", "description": "The derived field — normally m (per-finger w stays canonical; total-W scales via m, plan §4-1)."},
+          "ref": {"type": "string", "description": "The DERIVED instance (the mirror output); must exist in `devices:`."},
+          "of": {"type": "string", "description": "The base instance (the diode-connected reference); must exist in `devices:`."},
+          "ratio": {
+            "type": ["string", "number"],
+            "description": "Exact fraction as a string (\"17/3\") or a number. param(ref) = param(of) × ratio."
+          },
+          "is_integer": {"type": "boolean", "description": "Expose as an integer knob instead of a frozen constant (default false)."},
+          "description": {"type": "string"}
+        }
+      }
+    }
+  }
+}

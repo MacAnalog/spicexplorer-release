@@ -1,0 +1,12 @@
+** sch_path: low_voltage_cascode_current_mirror.sch
+**.subckt low_voltage_cascode_current_mirror VSS iin iout VBIAS
+*.iopin VSS
+*.iopin iin
+*.iopin iout
+*.iopin VBIAS
+XM1 net2 iin VSS VSS sg13_lv_nmos w=0.15u l=0.13u ng=1 m=1
+XM2 net1 iin VSS VSS sg13_lv_nmos w=0.15u l=0.13u ng=1 m=1
+XM3 iout VBIAS net1 VSS sg13_lv_nmos w=0.15u l=0.13u ng=1 m=1
+XM4 iin VBIAS net2 VSS sg13_lv_nmos w=0.15u l=0.13u ng=1 m=1
+**.ends
+.end

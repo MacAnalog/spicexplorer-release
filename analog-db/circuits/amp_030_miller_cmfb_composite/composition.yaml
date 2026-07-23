@@ -1,0 +1,44 @@
+# AUTHORED composite manifest (spicexplorer/composition@1, plan_hierarchical_composition
+# P4-4 — the FIRST composed entry, and the amp_029 CMFB-closure experiment its
+# characterization finding set up). `analog-db generate` flattens this into
+# abstract/netlist.spice + pdk/<pdk>/sizing.yaml (both GENERATED + drift-guarded).
+schema: spicexplorer/composition@1
+of: amp_030_miller_cmfb_composite
+notes: >-
+  CMFB closure of amp_029 (which has NO interior DC operating point on its own —
+  its committed dc_cm_bias_sweep measures cm_interior_pts = 0): the cmfb_001_ideal_rsense_servo
+  behavioral servo senses the output common mode resistively and corrects the
+  stage-1 PMOS load-gate node in place of amp_029's knife-edge {vbl} knob source
+  (tap vbl -> vbl_ctl; omit Vbl — the composite, as instantiator, owns that bias,
+  plan D3). Loop sign: vocm UP -> cm_sense UP -> correction = gm*rout*(vref -
+  cm_sense) DOWN -> vbl DOWN -> stage-1 load current UP -> stg1 CM UP -> stage-2
+  PMOS vsg DOWN -> vocm DOWN: NEGATIVE feedback.
+  RANGE-REFERENCING (found live, first compose attempt): an UNCLAMPED behavioral
+  servo at gain 1000 saturates to gm*rout*vref = +600 V on the load gates, which
+  drives the PSP models into a nonphysical leakage regime where the railed-low
+  output is a STABLE spurious equilibrium (4/5 op solves latched there). The fix
+  is structural, not a tune: the series {vbl0} source carries the DC bias point
+  and the servo contributes only the CORRECTION at gain ~1 (rout_val override
+  10k, so gm*rout = 1) — the saturated drive stays inside [vbl0-0.6, vbl0+0.6],
+  physical gate range, and NEITHER rail state survives as a DC equilibrium (each
+  contradicts its own load state). The servo reference is the composite-owned
+  {vcm_ref} knob; acceptance = dc_cm_bias_sweep over vcm_ref flips 0 -> 5.
+instances:
+  - name: core
+    block: amp_029_two_stage_miller_comp
+    pin: 67c6e24e4137
+    ports: {vinp: vinp, vinn: vinn, voutp: voutp, voutn: voutn, vdd: vdd, vss: vss}
+    taps: {vbl: vbl_ctl}
+    omit: [Vbl]
+  - name: servo
+    block: cmfb_001_ideal_rsense_servo
+    pin: 9c8861186398
+    ports: {vinp: voutp, vinn: voutn, vcmfb: vcmfb_raw, vref: vref_cm, vdd: vdd, vss: vss}
+    override: {rout_val: 10k}
+nets:
+  - "Vrefcm vref_cm vss dc {vcm_ref}"
+  - "Vbl0 vbl_ctl vcmfb_raw dc {vbl0}"
+sizing:
+  variables:
+    - {name: vcm_ref, description: "Commanded output common-mode reference for the CMFB servo (composite-owned)", default: 0.6, min: 0.0, max: 1.2, unit: V}
+    - {name: vbl0, description: "Series level shift carrying the stage-1 load-gate DC bias point (amp_029's vbl midpoint); the servo adds only the gain-1 correction around it (range-referencing — see notes)", default: 0.71, min: 0.0, max: 1.2, unit: V}

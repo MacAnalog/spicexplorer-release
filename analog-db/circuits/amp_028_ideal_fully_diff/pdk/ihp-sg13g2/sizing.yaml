@@ -1,0 +1,13 @@
+# Design variables for the ihp-sg13g2 binding — all behavioral macromodel element values
+# (no MOS geometry, no m knobs). Defaults give gm*rout = 100u * 10Meg = 1000 V/V (60 dB)
+# and a dominant pole at the output: ugf ~= gm / (2*pi*(cout + CL_diff)) ~= 15 MHz with
+# the bench's 50 fF single-ended loads. The drawing carried no values (symbols GM/ROUT/
+# RIN/COUT/CIN); tera-ohm bounds are plain numerics — parse_value has no 'T' suffix.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: gm_val,   description: "VCCS transconductance (differential gm)", default: 100u, min: 1u, max: 10m, unit: S}
+  - {name: rout_val, description: "Differential output resistance (sets DC gain gm*rout)", default: 10Meg, min: 10k, max: 1G, unit: ohm}
+  - {name: rin_val,  description: "Differential input resistance (near-ideal high-Z)", default: 1e12, min: 1Meg, max: 1e14, unit: ohm}
+  - {name: cout_val, description: "Differential output capacitance (dominant pole with rout)", default: 1p, min: 1f, max: 100p, unit: F}
+  - {name: cin_val,  description: "Differential input capacitance", default: 10f, min: 0, max: 10p, unit: F}

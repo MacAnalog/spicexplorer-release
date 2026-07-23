@@ -1,0 +1,37 @@
+schema: spicexplorer/circuit@1
+id: amp_029_two_stage_miller_comp
+class: amplifier
+tier: ota
+subfamily: ota
+realization: transistor
+display_name: "Two-stage Miller OTA, fully differential (no CM control)"
+stages: 2
+compensation: miller
+ports: [vinp, vinn, voutp, voutn, vdd, vss]
+provenance:
+  source: drawings/OTA-Two-Stage (hand-drawn xschem, two-stage-miller-comp.sch)
+  aliases: [two-stage-miller-comp]
+  designer: "Stefan Schippers (xschem examples); landed by Noorizadeh"
+  notes: >-
+    The plain-Miller sibling of amp_020 (which adds the resistive common-mode
+    servo this drawing omits — 'no CM control' is the topology's defining
+    difference, not a defect). Common-source second stage = high output
+    impedance = an OTA (subfamily: ota, drawings/README.md). Deviations from
+    the drawing: the first-stage load-gate net X is FLOATING as drawn — landed
+    as the internal knob source {vbl}; the 1 mA bias literal became the
+    {i_bias} knob (re-seeded to 20 uA). CHARACTERIZATION FINDING (committed as the
+    dc_cm_bias_sweep analysis; tt): with no CM control at either stage the DC operating point has NO
+    stable interior solution — stage 1 flips between rails within a ~20 mV vbl
+    window (0.70-0.72) and the output rails on BOTH sides (two cascaded
+    gds-level knife edges). The T4 gain skip is a property of the topology,
+    not the sizing; amp_020 (same drawing family) adds the resistive CM servo
+    that makes this amplifier usable. Kept as the pedagogical/topological
+    sibling and a future CMFB-composition target.
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/two-stage-miller-comp.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, FOUNDRY-n65]
+analyses: [ac_open_loop, dc_op, dc_cm_bias_sweep, noise, tran_step]
+status: draft

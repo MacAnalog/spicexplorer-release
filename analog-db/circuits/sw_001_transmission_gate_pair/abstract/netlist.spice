@@ -1,0 +1,24 @@
+** Abstract CMOS transmission gate (complementary pass pair) — the unit switch of
+** Fan's chopper CCIA (see provenance in circuit.yaml): an NMOS and a PMOS in
+** parallel between port_a and port_b, gated by complementary controls vctl /
+** vctl_not, so the composite on-resistance stays bounded over the full signal
+** range. AUTHORED source of truth (plan D-2). PDK-neutral model tokens
+** (nmos/pmos); per-PDK device names + geometry come from circuitgraph lowering +
+** pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): port_a port_b vctl vctl_not vdd vss
+**
+** Topology (from drawings/ccia-02-QinwenFan-chopper-ripple-reduction/
+** transmission_gate_pair.sch, normalized here after xschem netlisting):
+**   XM1 (nmos) passes port_a<->port_b when vctl is high, bulk on vss;
+**   XM2 (pmos) passes port_b<->port_a when vctl_not is low, bulk on vdd.
+**   The rails vdd/vss appear ONLY as the bulk connections of the two devices —
+**   no channel current flows to either rail; they set the body bias (and hence
+**   the signal-dependent Vt walk-off each half sees).
+**   deviation from the drawing: none electrically; the drawn placeholder
+**   minimum geometry (w=0.15u l=0.13u) is replaced by symbolic knobs with
+**   signal-switch defaults (w=2u, l=0.13u) in pdk/*/sizing.yaml.
+**.subckt sw_001_transmission_gate_pair port_a port_b vctl vctl_not vdd vss
+XM1 port_a vctl port_b vss nmos w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+XM2 port_b vctl_not port_a vdd pmos w=x_dut_xm2_w l=x_dut_xm2_l m=x_dut_xm2_m
+**.ends
+.end

@@ -1,0 +1,45 @@
+** AUTHORED TEMPLATE — cmfb/ac_servo (servo path transfer). Moved from support/
+** 2026-07-20 when CMFB circuits got their own class (sup_002 -> cmfb_001); extended
+** with ugf_servo_hz. History: plan_hierarchical_composition P3.
+** CMFB-servo transfer: both sense inputs driven together (common-mode) with an AC unit
+** about VCM; the servo's control output (vcmfb) transfer gives the CM-loop path gain,
+** bandwidth, and unity-gain frequency into the bound control-node load CL (the actuator
+** gate proxy). The DC bias point is the ZERO-ERROR point (sensed == vref), i.e. the
+** small-signal is taken about vcmfb_nat (see dc_cmfb_transfer).
+**   gain_servo_db  low-frequency servo path gain, db(v(vcmfb)) at FSTART
+**   bw_servo_hz    -3 dB rolloff into CL
+**   ugf_servo_hz   |servo transfer| = 0 dB crossing (absent when gain < 0 dB —
+**                  harmless meas failure; keep it in `produces:` only for members
+**                  with above-unity servo gain)
+** Assumes the CMFB-servo port order:
+**   .subckt <id> vinp vinn vcmfb vref vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CL FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vref vref 0 dc {VCM}
+Vcm  vcm 0 dc {VCM} ac 1
+* common-mode drive: both inputs follow the same AC source
+Vinp vinp vcm dc 0
+Vinn vinn vcm dc 0
+CLoad vcmfb 0 {CL}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  let gdb = db(v(vcmfb))
+  meas ac gain_servo_db FIND gdb AT=${FSTART}
+  let g3 = gain_servo_db - 3
+  meas ac bw_servo_hz WHEN gdb=g3 FALL=1
+  meas ac ugf_servo_hz WHEN gdb=0 FALL=1
+  write
+  quit
+.endc
+.end

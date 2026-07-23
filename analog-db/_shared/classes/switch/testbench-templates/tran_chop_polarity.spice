@@ -1,0 +1,50 @@
+** AUTHORED TEMPLATE — switch/tran_chop_polarity (adversarial-review follow-up: the
+** modulator's defining function needs a committed gate, not commit-message prose).
+** Chopper polarity-reversal proof: a DC differential input VD drives the VA pair; the
+** control clock toggles at FCHOP; the VB pair (loaded resistively to VCM) must show the
+** differential input FORWARD in one phase and INVERTED in the other. Measures:
+**   v_fwd            differential output mid-phase-1 (clock high, straight path)
+**   v_rev            differential output mid-phase-2 (clock low, cross path)
+**   chop_inversion   v_rev/v_fwd — a true 4-gate modulator gives ~ -1 (sign proof +
+**                    straight/cross symmetry in one number); a pass-gate placeholder
+**                    (no cross path) gives ~0 (output floats/holds toward 0 via RLOAD)
+**
+** Assumes the differential pass-pair port order:
+**   .subckt <id> va_p va_n vb_p vb_n vctl vctl_not vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM VD RLOAD FCHOP TEDGE TM1 TM2 TSTEP TSTOP
+**                    PDK_INCLUDE.  (TM1/TM2: mid-phase-1/2 sample times, inside a
+**                    settled period — e.g. 0.25/TCHOP and 0.75/TCHOP into a late cycle.)
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param VD=${VD}
+.param RLOAD=${RLOAD}
+.param FCHOP=${FCHOP}
+.param TCHOP={1/FCHOP}
+.param TEDGE=${TEDGE}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vcm  vcm 0 dc {VCM}
+Vap  va_p 0 dc {VCM+VD/2}
+Van  va_n 0 dc {VCM-VD/2}
+Rlp  vb_p vcm {RLOAD}
+Rln  vb_n vcm {RLOAD}
+Vck  vctl     0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vckn vctl_not 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP}
+  let vbd = v(vb_p) - v(vb_n)
+  meas tran v_fwd FIND vbd AT=${TM1}
+  meas tran v_rev FIND vbd AT=${TM2}
+  let chop_inversion = v_rev/v_fwd
+  print chop_inversion
+  write
+  quit
+.endc
+.end

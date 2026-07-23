@@ -1,0 +1,39 @@
+schema: spicexplorer/circuit@1
+id: ia_004_fan_chopper_rrl
+class: ia
+tier: ia
+subfamily: ccia
+realization: mixed
+display_name: "Fan CCIA + composed ripple-reduction loop (COMPOSITE: ia_002 + sup_003)"
+stages: 2
+ports: [vinp, vinn, voutp, voutn, vref, clk_chin, clk_chin_not, clk_chfb, clk_chfb_not, clk_chout, clk_chout_not, clk_phi_1, clk_phi_2, vdd, vss]
+provenance:
+  source: composition.yaml (composer P4 — the CCIA-02 system composite)
+  paper: "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011"
+  designer: "Composition by Noorizadeh; blocks: ia_002 + sup_003 (hand-drawn Fan corpus)"
+  notes: >-
+    The full Fan architecture the drawn tops omit: the ripple-reduction loop
+    (sup_003) composed around the chopper CCIA (ia_002) — RRL senses the output
+    ripple, demodulates at the output-chopper clock, integrates through a
+    two-phase SC network, and injects the DC correction at the first-stage
+    outputs (pre output chopper). This entry is a STRUCTURALLY-COMPLETE composer
+    demonstration (the P4 composer builds the flat hierarchical composite) but is
+    STATICALLY CHARACTERIZED ONLY. HONEST LIMITATION (2026-07-17 adversarial
+    verify): the composed core has NO common-mode control, so once the RRL's SC
+    clocks actually run, the output CM rails to ~+1.19 V within ~1-2 ms and every
+    clocked transient aborts — so the ripple-nulling figure and the
+    demodulation-sign question (DRAWING_REVIEW §4.2) CANNOT be exercised on this
+    composite. (An earlier v_ripple0_pp "~40x nulling" headline here was measured
+    with the SC clocks accidentally undriven, i.e. the RRL INERT — that bench bug
+    is fixed in the template and the invalid headline removed.) The clocked RRL
+    benches are therefore not bound; the RRL demonstration + demod sign are
+    deferred to the core-CM closure composite (plan P4-4b, cf. amp_030). The
+    static benches (cap-ratio gain, HPF corner, static Zin) are valid and bound.
+artifacts:
+  composition: composition.yaml
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2]
+analyses: [dc_op]
+status: draft

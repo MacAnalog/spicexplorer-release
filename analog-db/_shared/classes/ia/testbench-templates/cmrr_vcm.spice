@@ -1,0 +1,33 @@
+** AUTHORED TEMPLATE — amplifier/cmrr_vcm (plan D-4/D-5): common-mode rejection.
+** The DUT is closed in a unity-gain buffer and the SAME 1 V AC rides on both inputs:
+** Vinp carries ac 1, and the vinn–vout short (Vfb) also carries ac 1, so vinn = vout + vac.
+** The differential input is then vinp − vinn = −vout while the common mode moves by a full
+** volt; solving vout = Ad·(−vout) + Acm·vac gives vout ≈ (Acm/Ad)·vac = vac/CMRR, so
+** CMRR = −20·log10|vout| = −vdb(vout) (vac = 1). Reported at FSTART (the DC-band floor).
+** Bindings: DUT PORT_LINE VDD VCM IBIAS CL FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}          ; supply quiet — isolate the common-mode path
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+CLoad vout 0 {CL}
+
+Vinp vinp 0 dc {VCM} ac 1    ; +1 V AC on the + input ...
+Vfb  vinn vout dc 0 ac 1     ; ... and the same +1 V AC lifted onto vinn (unity buffer at DC)
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  let cmrr = -vdb(vout)
+  meas ac cmrr_db FIND cmrr AT=${FSTART}
+  write
+  quit
+.endc
+.end

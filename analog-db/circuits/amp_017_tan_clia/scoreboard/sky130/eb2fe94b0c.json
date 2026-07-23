@@ -1,0 +1,91 @@
+{
+  "area": {
+    "active_gate_area_um2": 7654.272,
+    "c_count": 2,
+    "c_total_f": 5.87e-13,
+    "mos_count": 25,
+    "r_count": 1,
+    "r_total_ohm": 247560.0
+  },
+  "circuit": "amp_017_tan_clia",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "error": "amp_017_tan_clia/ac_open_loop@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_017_tan_clia \u00d7 ac_open_loop \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm12.msky130_fd_pr__nfet_01v8 xdut.vb4 xdut.vb3 xdut.net6 vss xdut.xm12:sky130_fd_pr__nfet_01v8__model l=    1.000000000000000e+00     w=    2.000000000000000e-01     nf=    1.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0",
+          "status": "sim_error"
+        },
+        "cmrr_vcm": {
+          "error": "amp_017_tan_clia/cmrr_vcm@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_017_tan_clia \u00d7 cmrr_vcm \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm12.msky130_fd_pr__nfet_01v8 xdut.vb4 xdut.vb3 xdut.net6 vss xdut.xm12:sky130_fd_pr__nfet_01v8__model l=    1.000000000000000e+00     w=    2.000000000000000e-01     nf=    1.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.0000000",
+          "status": "sim_error"
+        },
+        "dc_op": {
+          "error": "amp_017_tan_clia/dc_op@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_017_tan_clia \u00d7 dc_op \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm12.msky130_fd_pr__nfet_01v8 xdut.vb4 xdut.vb3 xdut.net6 vss xdut.xm12:sky130_fd_pr__nfet_01v8__model l=    1.000000000000000e+00     w=    2.000000000000000e-01     nf=    1.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.0000000000000",
+          "status": "sim_error"
+        },
+        "noise": {
+          "error": "amp_017_tan_clia/noise@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_017_tan_clia \u00d7 noise \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm12.msky130_fd_pr__nfet_01v8 xdut.vb4 xdut.vb3 xdut.net6 vss xdut.xm12:sky130_fd_pr__nfet_01v8__model l=    1.000000000000000e+00     w=    2.000000000000000e-01     nf=    1.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.0000000000000",
+          "status": "sim_error"
+        },
+        "psrr_vdd": {
+          "error": "amp_017_tan_clia/psrr_vdd@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_017_tan_clia \u00d7 psrr_vdd \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm12.msky130_fd_pr__nfet_01v8 xdut.vb4 xdut.vb3 xdut.net6 vss xdut.xm12:sky130_fd_pr__nfet_01v8__model l=    1.000000000000000e+00     w=    2.000000000000000e-01     nf=    1.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.0000000",
+          "status": "sim_error"
+        },
+        "tran_step": {
+          "error": "amp_017_tan_clia/tran_step@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_017_tan_clia \u00d7 tran_step \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm12.msky130_fd_pr__nfet_01v8 xdut.vb4 xdut.vb3 xdut.net6 vss xdut.xm12:sky130_fd_pr__nfet_01v8__model l=    1.000000000000000e+00     w=    2.000000000000000e-01     nf=    1.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.00000",
+          "status": "sim_error"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:19:53+00:00"
+      }
+    }
+  },
+  "design_id": "eb2fe94b0c",
+  "metrics": {
+    "tt": {}
+  },
+  "parameters": {
+    "sizing": {
+      "CAPACITOR_0": "347f",
+      "CAPACITOR_1": "240f",
+      "CURRENT_0_BIAS": "630n",
+      "RESISTOR_0": "247.56K",
+      "x_dut_xm14_m": "1",
+      "x_dut_xm5_l": "1",
+      "x_dut_xm5_m": "117",
+      "x_dut_xm5_w": "1",
+      "x_dut_xm61_l": "1",
+      "x_dut_xm61_w": "0.200",
+      "x_dut_xm68_l": "0.500",
+      "x_dut_xm68_m": "6",
+      "x_dut_xm68_w": "1",
+      "x_dut_xm69_l": "0.900",
+      "x_dut_xm69_m": "3",
+      "x_dut_xm69_w": "1",
+      "x_dut_xm70_l": "0.480",
+      "x_dut_xm70_m": "2",
+      "x_dut_xm70_w": "1",
+      "x_dut_xm71_l": "1",
+      "x_dut_xm71_m": "1",
+      "x_dut_xm71_w": "0.253",
+      "x_dut_xm73_l": "1",
+      "x_dut_xm73_m": 2400,
+      "x_dut_xm73_w": "1",
+      "x_dut_xm9_l": "1",
+      "x_dut_xm9_m": "100",
+      "x_dut_xm9_w": "1"
+    }
+  },
+  "pdk": "sky130",
+  "ppa": {
+    "active_gate_area_um2": 7654.272,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {}
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

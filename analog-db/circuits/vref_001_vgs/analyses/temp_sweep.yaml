@@ -1,0 +1,12 @@
+# Analysis binding (plan D-4): voltage_reference temp_sweep — TC (box method) + 25 degC level.
+schema: spicexplorer/analysis@1
+id: temp_sweep
+template: temp_sweep
+description: "Ambient temperature sweep; vref_25c + tc_ppm (box method)."
+params:
+  VDD: 1.2
+  TSTART: -20
+  TSTOP: 120
+  TSTEP: 5
+flags: []
+produces: [vref_25c, tc_ppm]

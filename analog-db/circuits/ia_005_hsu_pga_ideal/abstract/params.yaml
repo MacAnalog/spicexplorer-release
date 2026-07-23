@@ -1,0 +1,103 @@
+# ia_005_hsu_pga_ideal — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit ia_005_hsu_pga_ideal --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+# All eight bank caps share the drawn unit-value symbol Cu directly (owner decision
+# 2026-07-19, DRAWING_REVIEW §8 finding 1: value=Cu, weighting structural via m) — no
+# Value tie needed; the per-bit m knobs are tied ACROSS the two banks (side matching)
+# but deliberately not to each other (they carry the binary weights 1/1/2/4).
+schema: spicexplorer/params@1
+devices:
+  CA1: {Value: Cu, m: x_dut_ca1_m}
+  CA2: {Value: Cu, m: x_dut_ca2_m}
+  CA3: {Value: Cu, m: x_dut_ca3_m}
+  CA4: {Value: Cu, m: x_dut_ca4_m}
+  CB1: {Value: Cu, m: x_dut_cb1_m}
+  CB2: {Value: Cu, m: x_dut_cb2_m}
+  CB3: {Value: Cu, m: x_dut_cb3_m}
+  CB4: {Value: Cu, m: x_dut_cb4_m}
+  CF1: {Value: x_dut_cf1_value}
+  CF2: {Value: x_dut_cf2_value}
+  CIN: {Value: cin_val}
+  COUT: {Value: cout_val}
+  GM: {Value: gm_val}
+  RIN: {Value: rin_val}
+  ROUT: {Value: rout_val}
+  XM1: {l: x_dut_xm1_l, m: x_dut_xm1_m, w: x_dut_xm1_w}
+  XM2: {l: x_dut_xm2_l, m: x_dut_xm2_m, w: x_dut_xm2_w}
+  XM3: {l: x_dut_xm3_l, m: x_dut_xm3_m, w: x_dut_xm3_w}
+  XM4: {l: x_dut_xm4_l, m: x_dut_xm4_m, w: x_dut_xm4_w}
+  XMA1: {l: x_dut_xma1_l, m: x_dut_xma1_m, w: x_dut_xma1_w}
+  XMA10: {l: x_dut_xma10_l, m: x_dut_xma10_m, w: x_dut_xma10_w}
+  XMA11: {l: x_dut_xma11_l, m: x_dut_xma11_m, w: x_dut_xma11_w}
+  XMA12: {l: x_dut_xma12_l, m: x_dut_xma12_m, w: x_dut_xma12_w}
+  XMA2: {l: x_dut_xma2_l, m: x_dut_xma2_m, w: x_dut_xma2_w}
+  XMA3: {l: x_dut_xma3_l, m: x_dut_xma3_m, w: x_dut_xma3_w}
+  XMA4: {l: x_dut_xma4_l, m: x_dut_xma4_m, w: x_dut_xma4_w}
+  XMA5: {l: x_dut_xma5_l, m: x_dut_xma5_m, w: x_dut_xma5_w}
+  XMA6: {l: x_dut_xma6_l, m: x_dut_xma6_m, w: x_dut_xma6_w}
+  XMA7: {l: x_dut_xma7_l, m: x_dut_xma7_m, w: x_dut_xma7_w}
+  XMA8: {l: x_dut_xma8_l, m: x_dut_xma8_m, w: x_dut_xma8_w}
+  XMA9: {l: x_dut_xma9_l, m: x_dut_xma9_m, w: x_dut_xma9_w}
+  XMB1: {l: x_dut_xmb1_l, m: x_dut_xmb1_m, w: x_dut_xmb1_w}
+  XMB10: {l: x_dut_xmb10_l, m: x_dut_xmb10_m, w: x_dut_xmb10_w}
+  XMB11: {l: x_dut_xmb11_l, m: x_dut_xmb11_m, w: x_dut_xmb11_w}
+  XMB12: {l: x_dut_xmb12_l, m: x_dut_xmb12_m, w: x_dut_xmb12_w}
+  XMB2: {l: x_dut_xmb2_l, m: x_dut_xmb2_m, w: x_dut_xmb2_w}
+  XMB3: {l: x_dut_xmb3_l, m: x_dut_xmb3_m, w: x_dut_xmb3_w}
+  XMB4: {l: x_dut_xmb4_l, m: x_dut_xmb4_m, w: x_dut_xmb4_w}
+  XMB5: {l: x_dut_xmb5_l, m: x_dut_xmb5_m, w: x_dut_xmb5_w}
+  XMB6: {l: x_dut_xmb6_l, m: x_dut_xmb6_m, w: x_dut_xmb6_w}
+  XMB7: {l: x_dut_xmb7_l, m: x_dut_xmb7_m, w: x_dut_xmb7_w}
+  XMB8: {l: x_dut_xmb8_l, m: x_dut_xmb8_m, w: x_dut_xmb8_w}
+  XMB9: {l: x_dut_xmb9_l, m: x_dut_xmb9_m, w: x_dut_xmb9_w}
+groups:
+- name: bank_tg_nmos
+  kind: shared_geometry
+  members: [XMA1, XMA3, XMA5, XMA7, XMA9, XMA11, XMB1, XMB3, XMB5, XMB7, XMB9, XMB11]
+  tie: [w, l, m]
+  description: The NMOS halves of all twelve bank transmission gates (select + park, both banks) —
+    parallel signal paths with no shared channel net, but every leg must match for uniform series
+    resistance and charge injection on the switched bottom plates, per bit AND per side (the two
+    banks set the differential gain — side mismatch is gain error).
+- name: bank_tg_pmos
+  kind: shared_geometry
+  members: [XMA2, XMA4, XMA6, XMA8, XMA10, XMA12, XMB2, XMB4, XMB6, XMB8, XMB10, XMB12]
+  tie: [w, l, m]
+  description: The PMOS halves of all twelve bank transmission gates — same leg-matching argument
+    as bank_tg_nmos; the n and p halves stay independent (different mobility).
+- name: pseudo_r_quad
+  kind: shared_geometry
+  members: [XM1, XM2, XM3, XM4]
+  tie: [w, l, m]
+  description: Pseudo-resistor bias quad — all four anti-series diode-connected PMOS share one
+    geometry so both summing nodes see the same DC servo path and the same (code-independent)
+    HP corner pseudo-R x Cf.
+- name: pair_cf
+  kind: shared_geometry
+  members: [CF1, CF2]
+  tie: [Value]
+  description: Feedback caps — the denominator of the -(1+code)*Cu/Cf gain; matched per side
+    (drawn as one 1p value on both).
+- name: caps_fixed_m
+  kind: shared_geometry
+  members: [CA1, CB1]
+  tie: [m]
+  description: The always-in fixed unit cap of each bank (m=1) — cross-bank side matching; the
+    weighting knobs stay per-bit (binary identity), never tied bit-to-bit.
+- name: caps_bit0_m
+  kind: shared_geometry
+  members: [CA2, CB2]
+  tie: [m]
+  description: Bit-D0 switched cap of each bank (m=1) — cross-bank side matching.
+- name: caps_bit1_m
+  kind: shared_geometry
+  members: [CA3, CB3]
+  tie: [m]
+  description: Bit-D1 switched cap of each bank (m=2) — cross-bank side matching.
+- name: caps_bit2_m
+  kind: shared_geometry
+  members: [CA4, CB4]
+  tie: [m]
+  description: Bit-D2 switched cap of each bank (m=4) — cross-bank side matching.

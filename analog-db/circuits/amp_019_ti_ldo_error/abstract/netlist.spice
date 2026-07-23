@@ -1,0 +1,37 @@
+** Abstract TI-LDO error amplifier — the full 12-transistor two-stage error amp from the TI
+** application-note LDO source design (ldo_005_buffered_ref's reference/ti-ldo/error_amp/error_amp.sch,
+** gf180mcu-native, decoded via .sym pin-geometry resolution — see README). Topology: a single
+** external-bias mirror rail feeding four NMOS sinks; NMOS input pair (M1=VREF inverting,
+** M2=VFB non-inverting); a Vth-LEVEL-SHIFTED PMOS mirror load (M3m/M4 compound diode: M4 runs at
+** ~zero current as a source-follower level shifter, so M3m/M5 mirror with extra Vds headroom —
+** the TI paper's low-voltage mirror trick); an M7-diode -> M6 second stage; Rz+Cc compensation
+** from the first-stage output node back to EA_OUT.
+** Subckt port order (= circuit.yaml ports, amplifier-class convention): vdd vout vinp vinn ibias vss
+** vinp = VFB (non-inverting: M2's current is mirrored via M7->M6 onto vout);
+** vinn = VREF (inverting: M1 drives the level-shifted load side).
+** The source's internal ideal I_error_amp_ref (1 mA) is exposed as the class ibias port.
+**.subckt amp_019_ti_ldo_error vdd vout vinp vinn ibias vss
+** bias mirror rail (upstream: M_mirror_error_amp_ref/_c/_f/_e/_ea_out). The source .sch has
+** placeholder 1x ratios everywhere, which is degenerate: M5 must supply BOTH M2's tail-half AND
+** mirror_e's sink (KCL at nb: i1 = i2 + I_e needs I_e < tail), so the _e/_f sinks get their own
+** (smaller) widths — ratioed to ~tail/4 by default.
+XMB0 ibias ibias vss vss nmos w=x_dut_xmb0_w l=x_dut_xmb0_l
+XMBC tail  ibias vss vss nmos w=x_dut_xmbc_w l=x_dut_xmbc_l m=x_dut_xmbc_m
+XMBF nlev  ibias vss vss nmos w=x_dut_xmbf_w l=x_dut_xmbf_l
+XMBE ne    ibias vss vss nmos w=x_dut_xmbe_w l=x_dut_xmbe_l
+XMBO vout  ibias vss vss nmos w=x_dut_xmbo_w l=x_dut_xmbo_l m=x_dut_xmbo_m
+** input pair (M1 g=VREF, M2 g=VFB; common source = tail)
+XM1 na vinn tail vss nmos w=x_dut_xm1_w l=x_dut_xm1_l
+XM2 nb vinp tail vss nmos w=x_dut_xm2_w l=x_dut_xm2_l
+** level-shifted PMOS mirror load: M3m/M5 gates on nd; M4 = compound-diode level shifter
+XM3 na nd vdd vdd pmos w=x_dut_xm3_w l=x_dut_xm3_l
+XM4 nlev na nd vdd pmos w=x_dut_xm4_w l=x_dut_xm4_l
+XM5 nb nd vdd vdd pmos w=x_dut_xm5_w l=x_dut_xm5_l
+** second stage: M7 diode (stacked on nb) mirrors to M6 output PMOS
+XM7 ne ne nb vdd pmos w=x_dut_xm7_w l=x_dut_xm7_l
+XM6 vout ne vdd vdd pmos w=x_dut_xm6_w l=x_dut_xm6_l
+** compensation (upstream RZ ppolyf_u_3k + Cc)
+Rz nb ncz 'r_z'
+Cc ncz vout 'c_comp'
+**.ends
+.end

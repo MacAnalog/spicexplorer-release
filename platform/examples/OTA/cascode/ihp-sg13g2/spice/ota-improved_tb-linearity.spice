@@ -1,0 +1,146 @@
+** sch_path: ota-improved_tb-linearity.sch
+**.subckt ota-improved_tb-linearity
+Vdd v_dd GND VDD
+xota v_dd v_out v_cm net1 net2 v_ena v_ss ota-improved
+Vss v_ss GND 0
+C1 v_out v_ss CL m=1
+Vcm v_cm v_ss dc V_CM
+I0 v_dd net2 5u
+Venable v_ena v_ss VDD
+
+* --- CHANGED: Setup for Transient Amplitude Sweep ---
+* Initial SIN params: Offset=0, Amp=1m (overwritten by script), Freq=1MHz
+Vin v_cm net1 sin(0 1m 1Meg)
+* ---------------------------------------------------
+
+.lib cornerMOSlv.lib mos_tt
+.lib cornerRES.lib res_typ
+
+.temp 27
+
+.control
+    echo "=== Robust ICMR Calculation ==="
+    option sparse
+    save all
+
+    * --- PART 1: TAIL CURRENT CHECK (Low Side) ---
+    * Polarity doesn't matter for tail current check
+    alter @Vin[ac] = 0
+    alter @Vin[sin] = [ 0 0 0 ]
+    alter @Vin[dc] = 0
+    dc Vcm 0 1.5 0.01
+    
+    meas dc itail_max max v.xota.vmeas1#branch
+    let itail_limit = 0.90 * itail_max
+    meas dc icmr_min find v(v_cm) when v.xota.vmeas1#branch=itail_limit rise=1
+
+    * --- PART 2: HIGH SIDE CHECK (Auto-Polarity) ---
+    * Try Positive Offset first
+    alter @Vin[dc] = 2m 
+    dc Vcm 0 1.5 0.01
+    
+    * Check if output went high (approx > 0.7V)
+    meas dc vout_test_pos find v(v_out) at=0.8
+    
+    * Variable to store the correct limit
+    let icmr_max = 0
+    let high_side_valid = 0
+
+    if vout_test_pos > 0.7
+        echo " >> Positive Input forces Output HIGH. Using this sweep."
+        let vout_thresh = vout_test_pos * 0.9
+        meas dc icmr_max find v(v_cm) when v(v_out)=vout_thresh fall=last
+        let high_side_valid = 1
+    else
+        echo " >> Positive Input kept Output LOW ($&vout_test_pos V). Flipping polarity..."
+        
+        * Run Negative Offset Sweep
+        alter @Vin[dc] = -2m
+        dc Vcm 0 1.5 0.01
+        
+        meas dc vout_test_neg find v(v_out) at=0.8
+        
+        if vout_test_neg > 0.7
+            echo " >> Negative Input forces Output HIGH ($&vout_test_neg V). Calculating..."
+            let vout_thresh = vout_test_neg * 0.9
+            meas dc icmr_max find v(v_cm) when v(v_out)=vout_thresh fall=last
+            let high_side_valid = 1
+        else
+            echo " >> ERROR: Output stays LOW for both polarities!"
+            echo " >> Is the Enable pin set correctly? Is the Load too heavy?"
+        end
+    end
+
+    * --- PART 3: REPORT ---
+    echo
+    echo "=========================================="
+    echo "       ICMR COMPUTED RESULTS              "
+    echo "=========================================="
+    echo "ICMR Min (Tail Limit): $&icmr_min V"
+    
+    if high_side_valid
+        echo "ICMR Max (Gain Limit): $&icmr_max V"
+        echo "Valid Range:           $&icmr_min V to $&icmr_max V"
+    else
+        echo "ICMR Max:              FAILED (Output stuck low)"
+    end
+    echo "=========================================="
+
+.endc
+
+* --- Parameters ---
+.param X_DUT_V_BIAS_1 = 0.6
+.param X_DUT_V_BIAS_2 = 0.5
+.param X_DUT_M5_L = 5u
+.param X_DUT_M5_W = 6u
+.param X_DUT_M5_NG = 3
+.param X_DUT_M6_L = 5u
+.param X_DUT_M6_W = 2u
+.param X_DUT_M1M2_L = .5u
+.param X_DUT_M1M2_W = 1u
+.param X_DUT_M1CM2C_L = .5u
+.param X_DUT_M1CM2C_W = 1u
+.param X_DUT_M3CM4C_L = .5u
+.param X_DUT_M3CM4C_W = 3u
+.param X_DUT_M3M4_L = .5u
+.param X_DUT_M3M4_W = 3u
+.param VDD = 1.5
+.param CL = 50f
+.param V_CM = 0.8
+
+**** end user architecture code
+**.ends
+
+* (Original Subcircuit kept below unchanged)
+* expanding   symbol:  ota-improved.sym # of pins=7
+.subckt ota-improved vdd vout vinp vinn ibias_5u d_ena vss
+XM5 net6 gate vss vss sg13_lv_nmos w=X_DUT_M5_W l=X_DUT_M5_L ng=X_DUT_M5_NG m=1
+XM4 net2 gate_p vdd vdd sg13_lv_pmos w=X_DUT_M3M4_W l=X_DUT_M3M4_L ng=1 m=1
+XM1 net4 vinp tail vss sg13_lv_nmos w=X_DUT_M1M2_W l=X_DUT_M1M2_L ng=1 m=1
+XM2 net5 vinn tail vss sg13_lv_nmos w=X_DUT_M1M2_W l=X_DUT_M1M2_L ng=1 m=1
+XM3 net3 gate_p vdd vdd sg13_lv_pmos w=X_DUT_M3M4_W l=X_DUT_M3M4_L ng=1 m=1
+XM6 net1 gate vss vss sg13_lv_nmos w=X_DUT_M6_W l=X_DUT_M6_L ng=1 m=1
+XMpd5 gate ena_n vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XMpd3 ena ena_n vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XMpd4 ena ena_n vdd vdd sg13_lv_pmos w=1u l=0.13u ng=1 m=1
+XMpd6 net1 ena gate vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XM2c vout dp_casc net5 vss sg13_lv_nmos w=X_DUT_M1CM2C_W l=X_DUT_M1CM2C_L ng=1 m=1
+XM1c gate_p dp_casc net4 vss sg13_lv_nmos w=X_DUT_M1CM2C_W l=X_DUT_M1CM2C_L ng=1 m=1
+XM4c vout gate_pc net2 vdd sg13_lv_pmos w=X_DUT_M3CM4C_W l=X_DUT_M3CM4C_L ng=1 m=1
+XM3c gate_p gate_pc net3 vdd sg13_lv_pmos w=X_DUT_M3CM4C_W l=X_DUT_M3CM4C_L ng=1 m=1
+XMpd8 gate_p ena vdd vdd sg13_lv_pmos w=1u l=0.13u ng=1 m=1
+Vmeas1 tail net6 0
+.save i(vmeas1)
+XMpd1 ena_n d_ena vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XMpd2 ena_n d_ena vdd vdd sg13_lv_pmos w=1u l=0.13u ng=1 m=1
+Vmeas4 ibias_5u net1 0
+.save i(vmeas4)
+XMpd11 vout ena_n vss vss sg13_lv_nmos w=0.5u l=0.13u ng=1 m=1
+XMdecoup1 vss gate vss vss sg13_lv_nmos w=8u l=1u ng=4 m=1
+XMdecoup3 vdd gate_pc vdd vdd sg13_lv_pmos w=12u l=0.5u ng=4 m=1
+V1 vdd gate_pc X_DUT_V_BIAS_2
+V2 dp_casc tail X_DUT_V_BIAS_1
+.ends
+
+.GLOBAL GND
+.end

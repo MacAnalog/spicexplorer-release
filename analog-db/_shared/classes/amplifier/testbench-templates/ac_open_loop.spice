@@ -1,0 +1,48 @@
+** AUTHORED TEMPLATE — amplifier/ac_open_loop (plan D-4).
+** Open-loop AC gain/phase of an OTA. Placeholders are bound by the analysis resolver
+** (assemble.py) from analyses/<id>.yaml params + datasheet default_conditions.
+** Flag `bias_wrap` (AnalogGym trick): close the DC loop with a huge Lfb/Cin so the DUT
+** self-biases, while the AC path stays open. Without the flag the inputs are driven directly.
+**
+** Required bindings: DUT (subckt name), PORT_LINE (instance port order),
+**   VDD VCM IBIAS CL, FSTART FSTOP PPD (points/decade),
+**   PDK_INCLUDE (.lib/.include lines for the bound PDK+corner).
+*----------------------------------------------------------*
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+CLoad vout 0 {CL}
+
+* DUT instance (port order = circuit.yaml ports)
+${PORT_LINE} ${DUT}
+
+* --- input drive (AC open loop) ---
+Vcm  vcm 0 dc {VCM}
+Vinp vinp vcm dc 0 ac 0.5
+Vinn vinn vcm dc 0 ac -0.5
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  meas ac dcgain  FIND vdb(vout) AT=${FSTART}
+  meas ac ugf     WHEN vdb(vout)=0 FALL=1
+  * cph() = continuous (unwrapped) phase — vp() wraps at +/-180 and corrupts PM for
+  * multi-pole phase trajectories; normalize to the DC phase so PM = 180 - total phase lag.
+  * NOTE: this DIRECT open-loop PM is reliable for dominant-pole single-stage OTAs (5t,
+  * folded-cascode). For a telescopic cascode the differential→single-ended mirror path adds
+  * excess phase that makes direct-drive PM ill-defined — accurate PM/stability there needs a
+  * dedicated loop-gain probe (the legacy tb-loopgain testbench / a future ac_loopgain template).
+  let phc = cph(vout)*180/3.14159265
+  let ph = 180 + phc - phc[0]
+  meas ac pm      FIND ph WHEN vdb(vout)=0 FALL=1
+  write
+  quit
+.endc
+.end

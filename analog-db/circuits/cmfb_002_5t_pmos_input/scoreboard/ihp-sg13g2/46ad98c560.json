@@ -1,0 +1,158 @@
+{
+  "area": {
+    "active_gate_area_um2": 7.226,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 7,
+    "r_count": 2,
+    "r_total_ohm": 2000000.0
+  },
+  "circuit": "cmfb_002_5t_pmos_input",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_servo": {
+          "measures": {
+            "bw_servo_hz": 3826552.0,
+            "gain_servo_db": 25.15449,
+            "ugf_servo_hz": 58540090.0
+          },
+          "status": "ok"
+        },
+        "dc_cmfb_transfer": {
+          "measures": {
+            "cmfb_slope": 17.68996,
+            "dpk": 20.11323,
+            "g_hi": 0.4693406,
+            "g_lo": 0.1155414,
+            "gain_servo_db": 24.95454,
+            "i_supply": 1.079606e-05,
+            "is_hi": 4.246207e-13,
+            "is_lo": 4.722432e-13,
+            "r_sense_in": 419969600000.0,
+            "sense_hi": 0.5547628,
+            "sense_lo": 0.4767188,
+            "vcmfb_max": 1.199966,
+            "vcmfb_min": 1.077472e-07,
+            "vcmfb_nat": 0.2790842
+          },
+          "status": "ok"
+        },
+        "tran_cmfb_step": {
+          "measures": {
+            "ring_v": 0.0,
+            "step_delta_v": 0.3893816,
+            "t_cm_settle": 2.161e-07,
+            "tcross": 8.02161e-05,
+            "vend": 0.2790843,
+            "von": 0.6684659,
+            "von_max": 0.6684659,
+            "von_min": 0.6684659,
+            "vpre": 0.2790843
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:24:38+00:00"
+      }
+    }
+  },
+  "design_id": "46ad98c560",
+  "metrics": {
+    "tt": {
+      "bw_servo_hz": {
+        "spec": "pass",
+        "value": 3826552.0
+      },
+      "cmfb_slope": {
+        "spec": "pass",
+        "value": 17.68996
+      },
+      "gain_servo_db": {
+        "spec": "pass",
+        "value": 25.15449
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 1.079606e-05
+      },
+      "r_sense_in": {
+        "spec": "pass",
+        "value": 419969600000.0
+      },
+      "ring_v": {
+        "spec": "pass",
+        "value": 0.0
+      },
+      "sense_hi": {
+        "spec": "pass",
+        "value": 0.5547628
+      },
+      "sense_lo": {
+        "spec": "pass",
+        "value": 0.4767188
+      },
+      "step_delta_v": {
+        "spec": "pass",
+        "value": 0.3893816
+      },
+      "t_cm_settle": {
+        "spec": "pass",
+        "value": 2.161e-07
+      },
+      "ugf_servo_hz": {
+        "spec": "pass",
+        "value": 58540090.0
+      },
+      "vcmfb_max": {
+        "spec": "pass",
+        "value": 1.199966
+      },
+      "vcmfb_min": {
+        "spec": "pass",
+        "value": 1.077472e-07
+      },
+      "vcmfb_nat": {
+        "spec": "pass",
+        "value": 0.2790842
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_rmp_value": "1Meg",
+      "x_dut_xm1_l": "0.267u",
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": "0.329u",
+      "x_dut_xm2_l": "1.31u",
+      "x_dut_xm2_m": 1,
+      "x_dut_xm2_w": "2.32u",
+      "x_dut_xm3_l": "0.259u",
+      "x_dut_xm3_m": 1,
+      "x_dut_xm3_w": "0.881u",
+      "x_dut_xm4_l": "0.27u",
+      "x_dut_xm4_m": 1,
+      "x_dut_xm4_w": "1.42u",
+      "x_dut_xm7_l": "0.22u",
+      "x_dut_xm7_m": 1,
+      "x_dut_xm7_w": "0.293u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 7.226,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "bw_servo_hz": 3826552.0,
+      "gain_servo_db": 25.15449,
+      "t_cm_settle": 2.161e-07
+    },
+    "power_w": 1.2955272e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

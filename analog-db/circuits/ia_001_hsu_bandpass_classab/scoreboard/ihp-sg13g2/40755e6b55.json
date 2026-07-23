@@ -1,0 +1,170 @@
+{
+  "area": {
+    "active_gate_area_um2": 78.0,
+    "c_count": 8,
+    "c_total_f": 3.571e-11,
+    "mos_count": 29,
+    "r_count": 6,
+    "r_total_ohm": 1000002070000.0
+  },
+  "circuit": "ia_001_hsu_bandpass_classab",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_closed_loop": {
+          "measures": {
+            "bw_cl_hz": 47853.51,
+            "gain_cl": 19.69564,
+            "gain_cl_db": 25.8874,
+            "hpf_hz": 4.140846
+          },
+          "status": "ok"
+        },
+        "ac_zin_diff": {
+          "measures": {
+            "zin_ohm": 201640000.0
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 8.415573e-06,
+            "vocm": 0.5805964,
+            "vos": 4.034226e-05
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 8.868638e-05,
+            "onoise_total": 0.001480767
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "measures": {
+            "a1": 0.03933561,
+            "a2": 4.804382e-07,
+            "a3": 1.984898e-05,
+            "thd_db": -65.9353,
+            "thd_pct": 0.05049347
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:25:17+00:00"
+      }
+    }
+  },
+  "design_id": "40755e6b55",
+  "metrics": {
+    "tt": {
+      "bw_cl_hz": {
+        "spec": "pass",
+        "value": 47853.51
+      },
+      "gain_cl": {
+        "spec": "pass",
+        "value": 19.69564
+      },
+      "hpf_hz": {
+        "spec": "pass",
+        "value": 4.140846
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 8.415573e-06
+      },
+      "thd_pct": {
+        "spec": "pass",
+        "value": 0.05049347
+      },
+      "vn_in": {
+        "spec": "pass",
+        "value": 8.868638e-05
+      },
+      "vos": {
+        "spec": "pass",
+        "value": 4.034226e-05
+      },
+      "zin_ohm": {
+        "spec": "pass",
+        "value": 201640000.0
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "cin_val": "10f",
+      "cout_val": "100f",
+      "gm_val": "100u",
+      "rin_val": "1e12",
+      "rout_val": "50k",
+      "vb1": 0.55,
+      "vb2": 0.45,
+      "vb3": 0.4,
+      "vcmfb_ref": 0.6,
+      "x_dut_c1_value": "1p",
+      "x_dut_cf1_value": "0.8p",
+      "x_dut_cin1_value": "16p",
+      "x_dut_r1_value": "10k",
+      "x_dut_rmp_value": "1Meg",
+      "x_dut_xm1_l": "1u",
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": "0.5u",
+      "x_dut_xmo10_l": "0.3u",
+      "x_dut_xmo10_m": 1,
+      "x_dut_xmo10_w": "16u",
+      "x_dut_xmo12_l": "3u",
+      "x_dut_xmo12_m": 1,
+      "x_dut_xmo12_w": "0.6u",
+      "x_dut_xmo14_m": 1,
+      "x_dut_xmo14_w": "1u",
+      "x_dut_xmo15_l": "0.5u",
+      "x_dut_xmo15_m": 1,
+      "x_dut_xmo15_w": "1u",
+      "x_dut_xmo16_l": "0.5u",
+      "x_dut_xmo16_m": 1,
+      "x_dut_xmo16_w": "2u",
+      "x_dut_xmo17_l": "0.5u",
+      "x_dut_xmo17_m": 1,
+      "x_dut_xmo17_w": "5u",
+      "x_dut_xmo18_l": "0.5u",
+      "x_dut_xmo18_m": 1,
+      "x_dut_xmo18_w": "10u",
+      "x_dut_xmo19_l": "1u",
+      "x_dut_xmo19_m": 1,
+      "x_dut_xmo19_w": "1u",
+      "x_dut_xmo1_l": "4u",
+      "x_dut_xmo1_m": 1,
+      "x_dut_xmo1_w": "0.5u",
+      "x_dut_xmo2_l": "0.3u",
+      "x_dut_xmo2_m": 1,
+      "x_dut_xmo2_w": "20u",
+      "x_dut_xmo4_l": "1u",
+      "x_dut_xmo4_m": 1,
+      "x_dut_xmo4_w": "4u",
+      "x_dut_xmo6_m": 1,
+      "x_dut_xmo6_w": "4u",
+      "x_dut_xmo7_l": "0.3u",
+      "x_dut_xmo7_m": 1,
+      "x_dut_xmo7_w": "8u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 78.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "gain_cl": 19.69564,
+      "vn_in": 8.868638e-05
+    },
+    "power_w": 1.0098687600000001e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

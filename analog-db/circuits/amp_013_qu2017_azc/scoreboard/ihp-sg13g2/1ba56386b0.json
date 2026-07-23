@@ -1,0 +1,157 @@
+{
+  "area": {
+    "active_gate_area_um2": 1918.813,
+    "c_count": 3,
+    "c_total_f": 4.148296919343847e-12,
+    "mos_count": 25,
+    "r_count": 4,
+    "r_total_ohm": 1550793.020892611
+  },
+  "circuit": "amp_013_qu2017_azc",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 107.432,
+            "pm": 60.43847,
+            "ugf": 5930583.0
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 80.99142
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 8.110302e-05,
+            "vos": -0.000126193
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.01195293,
+            "onoise_total": 0.03976593
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 102.6294
+          },
+          "status": "ok"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 0.000198994,
+            "tcross": 0.000199994,
+            "vfinal": 0.4287382
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T15:29:15+00:00"
+      }
+    }
+  },
+  "design_id": "1ba56386b0",
+  "metrics": {
+    "tt": {
+      "cmrr_db": {
+        "spec": "pass",
+        "value": 80.99142
+      },
+      "dc_gain_db": {
+        "spec": "pass",
+        "value": 107.432
+      },
+      "i_supply": {
+        "spec": "none",
+        "value": 8.110302e-05
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 60.43847
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 102.6294
+      },
+      "t_settle": {
+        "spec": "fail",
+        "value": 0.000198994
+      },
+      "ugf_hz": {
+        "spec": "pass",
+        "value": 5930583.0
+      },
+      "vn_in": {
+        "spec": "none",
+        "value": 0.01195293
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "CAPACITOR_0": 2.0637202681682363e-12,
+      "CAPACITOR_1": 8.725004008251723e-13,
+      "CAPACITOR_2": 1.2120762503504383e-12,
+      "CURRENT_0_BIAS": 1.8279347503460667e-06,
+      "RESISTOR_0": 89442.60606538625,
+      "RESISTOR_1": 94404.12496194962,
+      "RESISTOR_2": 1254436.0533220395,
+      "RESISTOR_3": 112510.23654323554,
+      "x_dut_xm10_l": 4.217410221121323e-07,
+      "x_dut_xm10_m": "4",
+      "x_dut_xm10_w": 3.3897678802752638e-06,
+      "x_dut_xm11_l": 2.054360903727089e-06,
+      "x_dut_xm11_m": "4",
+      "x_dut_xm11_w": 5.022404147029428e-06,
+      "x_dut_xm12_l": 2.9628937045891945e-06,
+      "x_dut_xm12_m": "4",
+      "x_dut_xm12_w": 6.531719782267851e-06,
+      "x_dut_xm13_l": 2.790364478883583e-06,
+      "x_dut_xm13_m": "4",
+      "x_dut_xm13_w": 8.540412689433458e-06,
+      "x_dut_xm16_l": 2.2869355896152886e-07,
+      "x_dut_xm16_m": "4",
+      "x_dut_xm16_w": 5.492807306546832e-07,
+      "x_dut_xm18_l": 4.395596065062817e-06,
+      "x_dut_xm18_m": "4",
+      "x_dut_xm18_w": 7.668777797356237e-06,
+      "x_dut_xm19_l": 4.059144997287015e-06,
+      "x_dut_xm19_m": "4",
+      "x_dut_xm20_w": 1.9481763176773623e-06,
+      "x_dut_xm24_l": 4.800683228821925e-06,
+      "x_dut_xm24_m": "4",
+      "x_dut_xm24_w": 1.4714117408340194e-06,
+      "x_dut_xm3_l": 4.9334144612249735e-06,
+      "x_dut_xm3_w": 4.046225903040126e-06,
+      "x_dut_xm5_m": "4",
+      "x_dut_xm6_l": 5.004508246886115e-06,
+      "x_dut_xm6_m": "4",
+      "x_dut_xm6_w": 2.3366803995320927e-06
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 1918.813,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 107.432,
+      "pm_deg": 60.43847,
+      "ugf_hz": 5930583.0
+    },
+    "power_w": 0.000145985436
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

@@ -1,0 +1,10 @@
+# Corner bundles for sky130 (plan D-6): corner libs stay OUT of repo; reference by
+# lib_file + section. sky130 ships the corners in the top-level models lib.
+pdk: sky130
+corners:
+  tt: [{lib_file: sky130.lib.spice, section: tt}]
+  ss: [{lib_file: sky130.lib.spice, section: ss}]
+  ff: [{lib_file: sky130.lib.spice, section: ff}]
+  sf: [{lib_file: sky130.lib.spice, section: sf}]
+  fs: [{lib_file: sky130.lib.spice, section: fs}]
+default_corner: tt

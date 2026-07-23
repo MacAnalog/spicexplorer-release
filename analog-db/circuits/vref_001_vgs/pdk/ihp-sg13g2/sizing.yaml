@@ -1,0 +1,15 @@
+# Design variables for the ihp-sg13g2 binding (plan §3 tree). Validated against sizing.schema.json.
+# vref = (Vth_hv - Vth_lv) + n·Vt·ln[(W/L)_0/(W/L)_1]. The ΔVth term is ~temperature-stable; the
+# ln-term is PTAT and is tuned to NULL the residual ΔVth curvature. A live IHP sweep of the W-ratio
+# W0/W1 found a clear TC minimum at W0=2.5µ / W1=1.0µ (matched L=2µ): tc_box ≈ 26 ppm/°C, vref ≈
+# 0.36 V, i_supply ≈ 0.14 nA, line-reg ≈ 3.4 %, PSRR ≈ −35 dB @ 1.2 V, tt, −20…120 °C. Long L keeps
+# both branches deep sub-Vt (picowatt) and DIBL low. The W-ratio is the TC knob for the optimizer.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xm0_w, description: "lv (Vgs=0) source NMOS width",   default: 2.5u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm0_l, description: "lv (Vgs=0) source NMOS length",  default: 2.0u, min: 0.13u, max: 20u, unit: m}
+  - {name: x_dut_xm0_m, description: "lv source NMOS multiplier",      default: 1, is_integer: true}
+  - {name: x_dut_xm1_w, description: "hv diode NMOS width",            default: 1.0u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm1_l, description: "hv diode NMOS length",           default: 2.0u, min: 0.13u, max: 20u, unit: m}
+  - {name: x_dut_xm1_m, description: "hv diode NMOS multiplier",       default: 1, is_integer: true}

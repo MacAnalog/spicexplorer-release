@@ -1,0 +1,60 @@
+# amp_004_folded_cascode — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit amp_004_folded_cascode --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  V1: {Value: x_dut_vb1}
+  V2: {Value: x_dut_vb2}
+  XM0: {l: x_dut_xm0_l, m: x_dut_xm0_m, ng: x_dut_xm0_ng, w: x_dut_xm0_w}
+  XM1: {l: x_dut_xm1_l, m: x_dut_xm1_m, ng: x_dut_xm1_ng, w: x_dut_xm1_w}
+  XM10: {l: x_dut_xm10_l, m: x_dut_xm10_m, ng: x_dut_xm10_ng, w: x_dut_xm10_w}
+  XM11: {l: x_dut_xm11_l, m: x_dut_xm11_m, ng: x_dut_xm11_ng, w: x_dut_xm11_w}
+  XM12: {l: x_dut_xm12_l, m: x_dut_xm12_m, ng: x_dut_xm12_ng, w: x_dut_xm12_w}
+  XM13: {l: x_dut_xm13_l, m: x_dut_xm13_m, ng: x_dut_xm13_ng, w: x_dut_xm13_w}
+  XM2: {l: x_dut_xm2_l, m: x_dut_xm2_m, ng: x_dut_xm2_ng, w: x_dut_xm2_w}
+  XM3: {l: x_dut_xm3_l, m: x_dut_xm3_m, ng: x_dut_xm3_ng, w: x_dut_xm3_w}
+  XM4: {l: x_dut_xm4_l, m: x_dut_xm4_m, ng: x_dut_xm4_ng, w: x_dut_xm4_w}
+  XM5: {l: x_dut_xm5_l, m: x_dut_xm5_m, ng: x_dut_xm5_ng, w: x_dut_xm5_w}
+  XM6: {l: x_dut_xm6_l, m: x_dut_xm6_m, ng: x_dut_xm6_ng, w: x_dut_xm6_w}
+  XM7: {l: x_dut_xm7_l, m: x_dut_xm7_m, ng: x_dut_xm7_ng, w: x_dut_xm7_w}
+  XM8: {l: x_dut_xm8_l, m: x_dut_xm8_m, ng: x_dut_xm8_ng, w: x_dut_xm8_w}
+  XM9: {l: x_dut_xm9_l, m: x_dut_xm9_m, ng: x_dut_xm9_ng, w: x_dut_xm9_w}
+groups:
+- name: mirror_xm13_w_l_ng
+  kind: mirror_length
+  members: [XM13, XM4, XM3]
+  tie: [w, l, ng]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_dut_w_2 (w),
+    x_dut_l_2 (l), x_dut_ng_2 (ng).'
+- name: pair_xm1_xm2
+  kind: matched_pair
+  members: [XM1, XM2]
+  tie: [w, l, ng]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_dut_w_1 (w),
+    x_dut_l_1 (l), x_dut_ng_1 (ng).'
+- name: shared_xm11_w_l_ng
+  kind: shared_geometry
+  members: [XM11, XM0]
+  tie: [w, l, ng]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_dut_w_6 (w),
+    x_dut_l_6 (l), x_dut_ng_6 (ng).'
+- name: shared_xm6_w_l_ng
+  kind: shared_geometry
+  members: [XM6, XM5]
+  tie: [w, l, ng]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_dut_w_3 (w),
+    x_dut_l_3 (l), x_dut_ng_3 (ng).'
+- name: shared_xm7_w_l_ng
+  kind: shared_geometry
+  members: [XM7, XM8]
+  tie: [w, l, ng]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_dut_w_4 (w),
+    x_dut_l_4 (l), x_dut_ng_4 (ng).'
+- name: shared_xm9_w_l_ng
+  kind: shared_geometry
+  members: [XM9, XM10]
+  tie: [w, l, ng]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_dut_w_5 (w),
+    x_dut_l_5 (l), x_dut_ng_5 (ng).'

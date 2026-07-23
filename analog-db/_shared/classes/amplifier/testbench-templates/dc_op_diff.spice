@@ -1,0 +1,37 @@
+** AUTHORED TEMPLATE — amplifier/dc_op_diff (self-biased, differential-output DC op point).
+** DC operating point for a DUT with no external ibias port and a true differential output
+** (voutp/voutn): supply current + the achieved output offset/common-mode. Matched inputs
+** (vinp=vinn=VCM) into a symmetric FD topology give a well-defined offset regardless of
+** open-loop gain (see ac_open_loop_diff.spice) — no bias-wrap/loop-closing needed. The
+** output COMMON MODE (vocm) is a sizing concern (stage-2 pull-up vs. pull-down balance),
+** which is exactly what this analysis exists to surface.
+**
+** Assumes a self-biased, differential-output DUT port order:
+**   .subckt <id> vinp vinn voutp voutn vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vcm  vcm 0 dc {VCM}
+Vinp vinp vcm dc 0
+Vinn vinn vcm dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  * vos = output offset (voutp - voutn at matched inputs, ideally ~0)
+  let vos = v(voutp) - v(voutn)
+  * vocm = achieved output common mode (diagnostic — not a formal datasheet metric)
+  let vocm = (v(voutp) + v(voutn))/2
+  print i_supply vos vocm
+  write
+  quit
+.endc
+.end

@@ -1,0 +1,84 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "ldo_008_fer_mirror_ota",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 13,
+    "blocks_detected": 3,
+    "by_family": {
+      "current_mirror": 2,
+      "differential_pair": 1
+    },
+    "structural_roles": {
+      "XMDF": "differential_pair",
+      "XMDR": "differential_pair",
+      "XMLD": "current_mirror_reference",
+      "XMLM": "current_mirror",
+      "XMNB": "current_mirror_reference",
+      "XMNT": "tail_current_source"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.pmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XMLD",
+      "output_devices": [
+        "XMLM"
+      ],
+      "devices": [
+        "XMLD",
+        "XMLM"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "ldiode",
+        "out": "egate"
+      }
+    },
+    {
+      "group_id": "cm.nmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XMNB",
+      "output_devices": [
+        "XMNT"
+      ],
+      "devices": [
+        "XMNB",
+        "XMNT"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "nbias",
+        "out": "tail"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#1",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XMDF",
+        "XMDR"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "vref",
+        "in_n": "fb",
+        "CM_tail": "tail",
+        "out_n": "ldiode",
+        "out_p": "egate"
+      }
+    }
+  ]
+}

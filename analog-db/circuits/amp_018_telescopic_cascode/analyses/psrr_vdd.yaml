@@ -1,0 +1,9 @@
+# Analysis analysis binding (psrr_vdd) — positive-supply rejection
+# (design-review 2026-07-05 rollout; unity-buffer config).
+schema: spicexplorer/analysis@1
+id: psrr_vdd
+template: psrr_vdd
+description: "PSRR+ — 1 V supply ripple into the unity buffer, DC-band floor."
+params: {VDD: 1.5, VCM: 0.8, IBIAS: 5u, CL: 50f, FSTART: 1k, FSTOP: 1G, PPD: 101}
+flags: []
+produces: [psrr_vdd_db]

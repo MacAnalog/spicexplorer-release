@@ -1,0 +1,37 @@
+# Gain-stage class — canonical metric vocabulary + owned testbench templates (plan D-10).
+# Validated against _shared/schema/class.schema.json by the verify harness (Tier 0).
+# Single-ended small-signal gain stages (common-source and friends): the DUT is a complete,
+# internally bias-distributed stage with ONE signal input and ONE output.
+#
+# Port convention (all class templates assume these port NAMES): vdd vout vin ibias vss.
+# `ibias` is SINK-referenced: the DUT holds a diode (typically PMOS, hanging from vdd) at the
+# ibias node and the bench PULLS the bias current out of it to vss (`Ibias ibias vss`). This is
+# the opposite sense from the amplifier class's ibias convention (sourced vdd -> ibias into an
+# NMOS diode) — gain stages ported from PMOS-referenced bias ladders keep their native sense.
+#
+# Biasing: an inverting stage's high-gain input window is ~VDD/gain wide and moves with
+# PDK/corner, so dc_op and ac_gain BIAS-WRAP the DUT (1 TH inductor vout->vin) to self-bias at
+# the trip point; only dc_transfer drives the input directly (full-range sweep).
+schema: spicexplorer/class@1
+class: gain_stage
+id_code: gs             # accession-id prefix for verifiable circuits (plan_scoreboard D-1)
+description: >-
+  Single-ended gain stages (common-source, cascode CS, ...). DC transfer sweep for peak
+  incremental gain, DC operating point + supply current, and biased AC response.
+ppa:
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: gain_dc, better: max}
+    - {metric: f3db_hz, better: max}
+canonical_metrics:
+  - gain_dc          # peak |dVout/dVin| over the DC transfer sweep, V/V
+  - vin_pk           # input voltage at which the transfer gain peaks (the trip point)
+  - v_trip           # self-biased operating point vin = vout (dc_op, bias-wrapped)
+  - gain_ac_db       # low-frequency AC gain at the self-biased trip point, dB
+  - f3db_hz          # -3 dB bandwidth of the biased stage into CL
+  - i_supply
+  - v_out
+templates:
+  - dc_op
+  - dc_transfer
+  - ac_gain

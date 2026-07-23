@@ -1,0 +1,27 @@
+** AUTHORED TEMPLATE — universal/dc_op (plan D-4): DC operating point + supply current.
+** Truly class-agnostic; any circuit with a supply + bias can run it.
+** Bindings: DUT PORT_LINE VDD IBIAS VCM PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+Vcm  vcm 0 dc {VCM}
+Vinp vinp vcm dc 0
+Vinn vinn vcm dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  print i_supply
+  write
+  quit
+.endc
+.end

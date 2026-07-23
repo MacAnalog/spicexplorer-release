@@ -1,0 +1,214 @@
+# The universal circuit setup file
+project:
+  name: 5T-OTA
+  description: 5 Transistor OTA example sizing in the ihp-sg13g2 technology
+  simulator: ngspice
+  save_sim: False
+
+  # Workspace root for this design. A relative path is resolved against THIS file's
+  # directory, so this example works on a fresh clone with no path editing. Use an
+  # absolute path to point at a workspace outside the repo.
+  ws_root : ..
+  # The following paths are relative to the ws_root
+  netlist : spice/ota-5t_tb-loopgain.spice
+  outdir  : spice/temp_spice_out
+  
+  # ------------------------
+  # Technology Specification: Define the technology and PDK rules
+  # ------------------------
+  tech_spec : 
+    name : ihp-sg13g2
+    # PDK RULES
+    constraints:
+      # n-fet
+      max_nfet_w : 10u
+      min_nfet_w : 0.18u
+      max_nfet_l : 10u
+      min_nfet_l : 0.18u
+
+      # p-fet
+      max_pfet_w : 10u
+      min_pfet_w : 0.18u
+      max_pfet_l : 10u
+      min_pfet_l : 0.18u
+
+  # ------------------------
+  # DUT Parameters: Configure the parameters to be sized/optimized ([optional] freeze : true/false)
+  # ------------------------
+  dut_params :
+    # ------------------------
+    # Device 1 (NMOS) - Input Pair
+    # ------------------------
+    - name : x_dut_nfet_input_w
+      min_val: min_nfet_w
+      max_val: max_nfet_w
+    
+    - name : x_dut_nfet_input_l
+      min_val: min_nfet_l
+      max_val: max_nfet_l
+
+    # ------------------------
+    # Device 2 (NMOS) - Current Mirror
+    # ------------------------
+    - name : x_dut_nfet_mirror_w
+      min_val: min_nfet_w
+      max_val: max_nfet_w
+    
+    - name : x_dut_nfet_mirror_l
+      min_val: min_nfet_l
+      max_val: max_nfet_l
+
+    # ------------------------
+    # Device 3 (NMOS) - Current Mirror Reference
+    # ------------------------
+    - name : x_dut_nfet_mirror_ref_w
+      min_val: min_nfet_w
+      max_val: max_nfet_w
+    
+    - name : x_dut_nfet_mirror_ref_l
+      min_val: min_nfet_l
+      max_val: max_nfet_l
+
+    # ------------------------
+    # Device 3 (PMOS) - Current Mirror Reference
+    # ------------------------
+    - name : x_dut_pfet_load_w
+      min_val: min_pfet_w
+      max_val: max_pfet_w
+    
+    - name : x_dut_pfet_load_l
+      min_val: min_pfet_l
+      max_val: max_pfet_l
+
+  # ------------------------
+  # Testbench: Configure the testbenches to be used for simulations
+  # ------------------------
+  testbenches :
+    # ------------------------
+    # Testbench 1 - AC Simulation
+    # ------------------------
+    - name: tb_ac
+      params:
+        - name : CL
+          description : load capacitance
+          val : 50f
+        - name : VCM
+          description : input common mode voltage
+          val : 0.8
+      netlist : spice/ota-5t_tb-loopgain.spice
+      enable: True # Optional: Enable or disable this testbench
+      description : AC analysis for UGF, Gain, PM
+
+    # ------------------------
+    # Testbench 2 - Noise Simulation
+    # ------------------------
+    - name: tb_noise
+      params:
+        - name : CL
+          description : load capacitance
+          val : 50f
+        - name : VCM
+          description : input common mode voltage
+          val : 0.8
+      netlist : spice/ota-5t_tb-noise.spice
+      enable: True # Optional: Enable or disable this testbench
+      description : Noise analysis for input referred noise
+
+    # ------------------------
+    # Testbench 3 - Transient Simulation
+    # ------------------------
+    - name: tb_tran
+      params:
+        - name : CL
+          description : load capacitance
+          val : 50f
+        - name : VCM
+          description : input common mode voltage
+          val : 0.8
+      netlist : spice/ota-5t_tb-tran.spice
+      enable: True # Optional: Enable or disable this testbench
+      description : Transient analysis for slew rate and settling time
+
+  # ------------------------
+  # Optimizer Configuration: Configure the optimizer and target specifications
+  # ------------------------
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48
+    budget: 5
+    name: SamplingSearch
+    optimizer_kwargs:
+      sampler: Hammersley  # The closest alternative to Sobol
+      scrambled: True      # Critical: randomization removes structural artifacts
+      rescaled: True       # Ensures you hit the boundaries    
+
+    # The following overwrite [optional] the optimizer bounds.
+    lin_variable_bounds:
+      min : 0
+      max : 100
+
+    log_variable_bounds:
+      min : 1
+      max : 100
+    
+    target_specs:
+      - name: ugf
+        description:  Unitiy gain frequency # optional documentation field
+        testbench:    tb_ac
+        sim_type:     ac      # options: dc, ac, tran, noise
+        goal:         exceed   # options: exact, exceed, minimize
+        target:       20e5    # Unit: MHz
+        range:        1e6     # The expected variation range. used in normalizing the metric values
+        tolerance:    2e5     # [Optional] allowed deviation in the spec, otherwise 5% margin is assumed.
+        weight:       100.0   # [Optional] non-negative weight factor for this target, else it is 1.0
+        log_scale:    False   # [Optional] Used to indicate the spec is on log scale
+        error_type:   relative-sigmoid # [Optional] options: absolute, target_spec_val, squared, relative-squared, relative-absolute, relative-exponential
+        enable:       True      # [Optional] Used to exclude from the loss function
+
+      - name: dcgain
+        description:  gain in dB at DC
+        testbench:    tb_ac
+        sim_type:     ac      # options: dc, ac, tran, noise
+        goal:         exceed  # options: exact, exceed, minimize
+        target:       35      # 40 dB
+        range:        100     # The expected variation range. used in normalizing the metric values
+        tolerance:    5       # [Optional] allowed deviation in the spec
+        weight:       100.0   # [Optional] non-negative weight factor for this target, else it is 1.0
+        error_type:   relative-sigmoid # [Optional] options: absolute, target_spec_val, squared, relative-squared, relative-absolute, relative-exponential
+        enable:       True    # [Optional] Used to exclude from the loss function
+
+      - name: pm
+        description: phase margin
+        testbench:    tb_ac
+        sim_type:     ac      # options: dc, ac, tran, noise
+        goal:         exact   # options: exact, exceed, minimize
+        target:       70      # in degrees
+        range:        45      # The expected variation range. used in normalizing the metric values
+        tolerance:    30      # [Optional] allowed deviation in the spec
+        weight:       100.0   # [Optional] non-negative weight factor for this target, else it is 1.0
+        error_type:   relative-sigmoid # [Optional] options: absolute, target_spec_val, squared, relative-squared, relative-absolute, relative-exponential
+        enable:       True    # [Optional] Used to exclude from the loss function
+
+      - name: v(inoise_total)
+        description:  Total Input-referred noise  # optional documentation field
+        testbench:    tb_noise
+        sim_type:     noise     # options: dc, ac, tran, noise, noise_spectrum
+        goal:         minimize  # options: exact, exceed, minimize
+        target:       1.2e-3    # Unit: V/sqrt(Hz)
+        range:        1e-3      # The expected variation range. used in normalizing the metric values
+        tolerance:    1e-6      # [Optional] allowed deviation in the spec, otherwise 5% margin is assumed.
+        weight:       100.0     # [Optional] non-negative weight factor for this target, else it is 1.0
+        error_type:   relative-sigmoid # [Optional] options: absolute, target_spec_val, squared, relative-squared, relative-absolute, relative-exponential
+        enable:       True      # [Optional] Used to exclude from the loss function
+
+      - name: tsettle
+        description:  Total settling time in response to a step input  # optional documentation field
+        testbench:    tb_tran
+        sim_type:     tran      # options: dc, ac, tran, noise, noise_spectrum
+        goal:         minimize  # options: exact, exceed, minimize
+        target:       1.5e-7    # Unit: seconds
+        tolerance:    1e-8      # [Optional] allowed deviation in the spec, otherwise 5% margin is assumed.
+        range:        1e-6      # The expected variation range. used in normalizing the metric values
+        weight:       100.0     # [Optional] non-negative weight factor for this target, else it is 1.0
+        error_type:   relative-sigmoid # [Optional] options: absolute, target_spec_val, squared, relative-squared, relative-absolute, relative-exponential
+        enable:       True     # [Optional] Used to exclude from the loss function 

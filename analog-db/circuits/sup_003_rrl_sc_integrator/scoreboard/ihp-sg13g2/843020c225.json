@@ -1,0 +1,104 @@
+{
+  "area": {
+    "active_gate_area_um2": 88.2,
+    "c_count": 8,
+    "c_total_f": 1.211e-11,
+    "mos_count": 36,
+    "r_count": 2,
+    "r_total_ohm": 1000010000000.0
+  },
+  "circuit": "sup_003_rrl_sc_integrator",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "tran_rrl_sense": {
+          "measures": {
+            "ramp_rate": -875.328,
+            "ripple_gain": -437664.0,
+            "v1": -0.4582189,
+            "v2": -1.508613
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:29:02+00:00"
+      }
+    }
+  },
+  "design_id": "843020c225",
+  "metrics": {
+    "tt": {
+      "ripple_gain": {
+        "spec": "none",
+        "value": -437664.0
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "cin_val": "10f",
+      "cout_val": "100f",
+      "gm_val": "100u",
+      "rin_val": "1T",
+      "rout_val": "10Meg",
+      "vb1": 0.45,
+      "vb2": 0.75,
+      "vb3": 0.55,
+      "vb4": 0.6,
+      "x_dut_caz1_value": "1p",
+      "x_dut_cint1_value": "4p",
+      "x_dut_cs1_value": "1p",
+      "x_dut_xm11_opamp_l": "0.3u",
+      "x_dut_xm11_opamp_m": 1,
+      "x_dut_xm11_opamp_w": "5u",
+      "x_dut_xm13_opamp_m": 1,
+      "x_dut_xm13_opamp_w": "6u",
+      "x_dut_xm15_opamp_l": "1u",
+      "x_dut_xm15_opamp_m": 1,
+      "x_dut_xm15_opamp_w": "2u",
+      "x_dut_xm1_chrrl_1_l": "0.13u",
+      "x_dut_xm1_chrrl_1_m": 1,
+      "x_dut_xm1_chrrl_1_w": "2u",
+      "x_dut_xm1_opamp_l": "1u",
+      "x_dut_xm1_opamp_m": 1,
+      "x_dut_xm1_opamp_w": "20u",
+      "x_dut_xm1_s1_l": "0.13u",
+      "x_dut_xm1_s1_m": 1,
+      "x_dut_xm1_s1_w": "2u",
+      "x_dut_xm2_chrrl_1_l": "0.13u",
+      "x_dut_xm2_chrrl_1_m": 1,
+      "x_dut_xm2_chrrl_1_w": "2u",
+      "x_dut_xm2_opamp_l": "0.5u",
+      "x_dut_xm2_opamp_m": 1,
+      "x_dut_xm2_opamp_w": "20u",
+      "x_dut_xm2_s1_l": "0.13u",
+      "x_dut_xm2_s1_m": 1,
+      "x_dut_xm2_s1_w": "2u",
+      "x_dut_xm4_opamp_m": 1,
+      "x_dut_xm4_opamp_w": "10u",
+      "x_dut_xm5_opamp_l": "0.5u",
+      "x_dut_xm5_opamp_m": 1,
+      "x_dut_xm5_opamp_w": "4u",
+      "x_dut_xm6_opamp_l": "0.5u",
+      "x_dut_xm6_opamp_m": 1,
+      "x_dut_xm6_opamp_w": "4u",
+      "x_dut_xm9_opamp_l": "0.3u",
+      "x_dut_xm9_opamp_m": 1,
+      "x_dut_xm9_opamp_w": "10u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 88.2,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "ripple_gain": -437664.0
+    }
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

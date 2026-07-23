@@ -1,0 +1,141 @@
+# amp_022 — the LIVE `ungroup:` re-sizing worked example (parameterization layer end-to-end).
+#
+# This is a HAND-AUTHORED sibling of raw_optimize/amp_001_5t.yaml (NOT the machine-owned
+# generated/ projection). It drives amp_022's committed ihp-sg13g2 decks through the optimizer
+# and exercises the P3 parameterization projection (platform pf #49):
+#
+#   • `params_file:` points at the circuit's abstract/params.yaml (spicexplorer/params@1 — the
+#     atomic per-instance inventory + the shipped default ties). Setting it lets a dut_param
+#     name be a GROUP knob `<group>.<field>`, resolved to the group's FIRST member's atomic
+#     symbol under the D-3 lowering (e.g. `input_pair.w` → `x_dut_xm0_w`, the tie target every
+#     `.param x_dut_xm1_w = {x_dut_xm0_w}` line references). So the curated dut_params below
+#     address GROUPS by name, not raw device symbols — availability stays atomic, the default
+#     search stays low-dimensional (plan D-5).
+#
+#   • `ungroup:` (commented out here; the DEMO — notebooks/ungroup_resizing.ipynb — injects it
+#     in-memory) dissolves a shipped tie by appending FROZEN shadow dut_params: one explicit
+#     `.param <member_symbol> = <current deck default>` per dissolved non-first member. Untying
+#     = shadowing (the frozen param overrides the deck's tie line), so the tied and untied
+#     decks are numerically IDENTICAL until a freed symbol is actually swept. The demo dissolves
+#     `stage2_load_width` (the legacy x_nload_w opinion: XM2's 2nd-stage width == XM3's mirror-
+#     load width) and adds `x_dut_xm2_w` as its own free knob — the search space gains exactly
+#     one dimension, and XM2's width becomes addressable independent of the mirror load.
+#
+# Runnable, small budget — this is a DEMONSTRATION of the affordance, not an optimization
+# campaign. PDK-gated: needs live ngspice + ihp-sg13g2 (amp_022's open lane). See README.md
+# (`The ungroup: affordance` section) for the worked before/after numbers.
+project:
+  name: RAW-amp_022-ungroup-demo
+  description: "amp_022 two-stage — group-addressed curated search; ungroup: frees stage2_load_width."
+  simulator: ngspice
+  save_sim: false
+  parallel_sim: true
+
+  # ws_root resolves against THIS file's dir → the analog-db repo root (like amp_001_5t.yaml).
+  ws_root: ..
+  netlist: raw/amp_022_fer_two_stage/ihp-sg13g2/ac_open_loop.spice
+  outdir: raw_optimize/_runs/amp_022_ungroup_demo
+
+  # P3 parameterization: the circuit's contract. A relative path resolves against ws_root
+  # (the analog-db root), like `netlist`. With this set, dut_param names may be `<group>.<field>`.
+  params_file: circuits/amp_022_fer_two_stage/abstract/params.yaml
+
+  tech_spec:
+    name: ihp-sg13g2
+    constraints:
+      max_nfet_w: 50u
+      min_nfet_w: 0.18u
+      max_nfet_l: 5u
+      min_nfet_l: 0.18u
+      max_pfet_w: 50u
+      min_pfet_w: 0.18u
+      max_pfet_l: 5u
+      min_pfet_l: 0.18u
+
+  # CURATED low-dim search (5 free knobs). Every geometry knob is addressed BY GROUP — the
+  # params_file projection resolves each to the group's first-member atomic symbol (logged as
+  # `🔗 dut_param '<group>.<field>' → atomic symbol '<sym>'`). Bounds are a bias-preserving band
+  # around the committed deck defaults (see raw/.../ac_open_loop.spice .param header). Passives +
+  # integer m-counts are left tied/frozen (the ratios: mirror gains stay intact).
+  dut_params:
+    # input differential pair (matched_pair: XM0≡XM1) — first member XM0
+    - { name: input_pair.w, min_val: 4u,   max_val: 16u }   # default 8u  → gm / UGF
+    - { name: input_pair.l, min_val: 0.2u, max_val: 0.8u }  # default 0.4u
+    # stage-1 NMOS mirror load width (nmos_load_mirror ties [w,l]; address the atomic width
+    # directly — this is XM3.w, the tie TARGET). Under the shipped ties this ALSO drives XM4.w
+    # (the mirror partner) AND XM2.w (stage2_load_width shared_geometry) — one knob, three
+    # devices. The ungroup demo frees XM2.w off this exact symbol.
+    - { name: x_dut_xm3_w,        min_val: 3u,   max_val: 12u }  # default 6u  → load ro / gain
+    - { name: nmos_load_mirror.l, min_val: 0.2u, max_val: 0.8u } # default 0.4u (XM3≡XM4 length)
+    # PMOS bias-mirror length (pmos_bias_mirror ties [w,l] across XM7/XM5/XM6) — first member XM7
+    - { name: pmos_bias_mirror.l, min_val: 0.2u, max_val: 0.8u } # default 0.4u → tail/CS ro
+
+  # One testbench per raw deck (each hardcodes its own VDD/VCM/CL/IBIAS). ac_open_loop →
+  # dcgain/ugf/pm; dc_op → supply current.
+  testbenches:
+    - name: ac_open_loop
+      params: []
+      netlist: raw/amp_022_fer_two_stage/ihp-sg13g2/ac_open_loop.spice
+      enable: true
+      description: Open-loop AC — dcgain / ugf / pm
+    - name: dc_op
+      params: []
+      netlist: raw/amp_022_fer_two_stage/ihp-sg13g2/dc_op.spice
+      enable: true
+      description: DC operating point — supply current
+
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48          # seeded for reproducibility
+    budget: 20               # small — a DEMONSTRATION, not a campaign
+    name: NGOpt
+    lin_variable_bounds: { min: 0, max: 100 }
+    log_variable_bounds: { min: 1, max: 100 }
+
+    target_specs:
+      - name: dcgain
+        description: open-loop DC gain
+        testbench: ac_open_loop
+        sim_type: ac
+        goal: exceed
+        target: 40        # dB
+        range: 40
+        tolerance: 1
+        weight: 1.0
+        reward_type: log
+        enable: true
+      - name: ugf
+        description: unity-gain frequency
+        testbench: ac_open_loop
+        sim_type: ac
+        goal: exceed
+        target: 1e6       # Hz
+        range: 10e6
+        tolerance: 1e5
+        weight: 1.0
+        reward_type: log
+        enable: true
+      - name: pm
+        description: phase margin
+        testbench: ac_open_loop
+        sim_type: ac
+        goal: exact
+        target: 60        # degrees
+        range: 45
+        tolerance: 10
+        weight: 1.0
+        reward_type: none
+        enable: true
+      # deck writes `let i_supply = abs(i(Vdd))` → ngspice saves the current-typed vector as
+      # `i(i_supply)` (a `meas` result like dcgain stays bare). See amp_001_5t.yaml note.
+      - name: i(i_supply)
+        description: quiescent supply current
+        testbench: dc_op
+        sim_type: op
+        goal: minimize
+        target: 100e-6    # A
+        range: 1e-3
+        tolerance: 1e-6
+        weight: 1.0
+        reward_type: log
+        enable: true

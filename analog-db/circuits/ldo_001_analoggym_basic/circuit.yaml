@@ -1,0 +1,24 @@
+# SUPER-DSL manifest — AnalogGym's Basic_LDO (CODA-Team/AnalogGym, BSD-3-Clause), the LDO used by
+# the AnalogGym RGNN_RL example (upstream also: ChrisZonghaoLi/sky130_ldo_rl lineage). Two-stage
+# amp (PMOS input pair into a cascoded NMOS load + pfet gm2 stage) driving a large power PMOS,
+# with an internal 300k/100k divider (vout = 4*vref) and a Miller cap. Output-cap-LESS design:
+# upstream runs a ~50 pF mim output cap at 5-55 mA loads.
+schema: spicexplorer/circuit@1
+id: ldo_001_analoggym_basic
+class: ldo
+display_name: "AnalogGym Basic LDO (2-stage, cascoded load, capless)"
+compensation: "Miller cap (upstream mim XC0) + internal cascode pole control"
+stages: 2
+ports: [vdd, vout, vss]         # upstream vinn/vinp/vfb/Ib pins folded internally (see abstract)
+provenance:
+  source: external/AnalogGym-remainder/Low Dropout Regulator/spice_netlist/LDO_netlist.txt
+  aliases: [Basic_LDO, LDO_1, analoggym_basic_ldo]
+  license: BSD-3-Clause
+  upstream: https://github.com/CODA-Team/AnalogGym
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [sky130, ihp-sg13g2, gf180mcu]
+analyses: [dc_op, load_regulation, line_regulation, psrr, dropout, tran_load_step, loop_stability, noise, tran_line_step]
+status: draft

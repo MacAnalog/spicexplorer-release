@@ -1,0 +1,44 @@
+v {xschem version=3.4.4 file_version=1.2
+*
+* This file is part of XSCHEM,
+* a schematic capture and Spice/Vhdl/Verilog netlisting tool for circuit
+* simulation.
+* Copyright (C) 1998-2023 Stefan Frederik Schippers
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+}
+G {}
+K {type=connector
+format="*connector(3,1) @pinlist"
+tedax_format="footprint @name @footprint"
+template="name=c1 footprint=connector(3,1)"
+}
+V {}
+S {}
+E {}
+B 5 18.75 -31.25 21.25 -28.75 {name=conn_1 dir=inout pinnumber=1}
+B 5 18.75 -11.25 21.25 -8.75 {name=conn_2 dir=inout pinnumber=2}
+B 5 18.75 8.75 21.25 11.25 {name=conn_3 dir=inout pinnumber=3}
+B 5 18.75 28.75 21.25 31.25 {name=conn_4 dir=inout pinnumber=4}
+A 4 15 -30 5 270 360 {}
+A 4 15 -10 5 270 360 {}
+A 4 15 10 5 270 360 {}
+A 4 15 30 5 270 360 {}
+P 4 5 10 40 -10 40 -10 -40 10 -40 10 40 {}
+T {@#0:pinnumber} 7.5 -33.75 0 1 0.2 0.2 {layer=13}
+T {@#1:pinnumber} 7.5 -13.75 0 1 0.2 0.2 {layer=13}
+T {@#2:pinnumber} 7.5 6.25 0 1 0.2 0.2 {layer=13}
+T {@name} -18.75 -53.75 0 0 0.2 0.2 {}
+T {@#3:pinnumber} 7.5 26.25 0 1 0.2 0.2 {layer=13}

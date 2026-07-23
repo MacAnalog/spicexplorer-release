@@ -1,0 +1,76 @@
+# amp_031_srmc_core_cmfb — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` maps every abstract-netlist device to its sizing symbol (hand-authored to the
+# amp_025 shape; refresh with `analog-db gen-params --circuit amp_031_srmc_core_cmfb --write`
+# after any topology edit). `groups:` are AUTHORED default tying (plan D-2).
+schema: spicexplorer/params@1
+devices:
+  C1: {Value: x_dut_c1_value}
+  C2: {Value: x_dut_c2_value}
+  CIN1: {Value: cin_val}
+  CIN2: {Value: cin_val}
+  COUT1: {Value: cout_val}
+  COUT2: {Value: cout_val}
+  GM1: {Value: gm_val}
+  GM2: {Value: gm_val}
+  R1: {Value: x_dut_r1_value}
+  R2: {Value: x_dut_r2_value}
+  RIN1: {Value: rin_val}
+  RIN2: {Value: rin_val}
+  RM1P: {Value: x_dut_rm1p_value}
+  RM1N: {Value: x_dut_rm1n_value}
+  RM2P: {Value: x_dut_rm2p_value}
+  RM2N: {Value: x_dut_rm2n_value}
+  ROUT1: {Value: rout_val}
+  ROUT2: {Value: rout_val}
+  VB2: {Value: vb2}
+  VREF1: {Value: vref_cm}
+  VREF2: {Value: vref_cm}
+  XM1: {l: x_dut_xm1_l, m: x_dut_xm1_m, w: x_dut_xm1_w}
+  XM2: {l: x_dut_xm2_l, m: x_dut_xm2_m, w: x_dut_xm2_w}
+  XM3: {l: x_dut_xm3_l, m: x_dut_xm3_m, w: x_dut_xm3_w}
+  XM4: {l: x_dut_xm4_l, m: x_dut_xm4_m, w: x_dut_xm4_w}
+  XM5: {l: x_dut_xm5_l, m: x_dut_xm5_m, w: x_dut_xm5_w}
+  XM6: {l: x_dut_xm6_l, m: x_dut_xm6_m, w: x_dut_xm6_w}
+  XM7: {l: x_dut_xm7_l, m: x_dut_xm7_m, w: x_dut_xm7_w}
+  XM8: {l: x_dut_xm8_l, m: x_dut_xm8_m, w: x_dut_xm8_w}
+  XM9: {l: x_dut_xm9_l, m: x_dut_xm9_m, w: x_dut_xm9_w}
+  XM10: {l: x_dut_xm10_l, m: x_dut_xm10_m, w: x_dut_xm10_w}
+groups:
+- name: pair_xm3_xm4
+  kind: matched_pair
+  members: [XM3, XM4]
+  tie: [w, l, m]
+  description: NMOS input differential pair (complementary stage 1).
+- name: pair_xm6_xm7
+  kind: matched_pair
+  members: [XM6, XM7]
+  tie: [w, l, m]
+  description: PMOS input differential pair (complementary stage 1; tail is the CMFB
+    loop-1 actuator).
+- name: pair_xm1_xm9
+  kind: shared_geometry
+  members: [XM1, XM9]
+  tie: [w, l, m]
+  description: Per-side output NMOS drivers (gates on the opposite stage-1 outputs).
+- name: pair_xm2_xm10
+  kind: matched_pair
+  members: [XM2, XM10]
+  tie: [w, l, m]
+  description: CMFB-controlled output PMOS current sources (gates on the loop-2 servo
+    output vcmfb2).
+- name: shared_c1_value
+  kind: shared_geometry
+  members: [C1, C2]
+  tie: [Value]
+  description: Per-side Miller caps — the drawing's single symbol Cc on both sides.
+- name: shared_r1_value
+  kind: shared_geometry
+  members: [R1, R2]
+  tie: [Value]
+  description: Per-side Miller nulling resistors — drawn as one shared symbol Rz.
+- name: shared_rm1p_value
+  kind: shared_geometry
+  members: [RM1P, RM1N, RM2P, RM2N]
+  tie: [Value]
+  description: All four CM-detector resistor halves (both loops) — matched for
+    unskewed common-mode averages.

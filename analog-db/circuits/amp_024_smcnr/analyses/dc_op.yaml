@@ -1,0 +1,8 @@
+# Analysis binding (plan D-4): universal dc_op — supply current at matched inputs.
+schema: spicexplorer/analysis@1
+id: dc_op
+template: dc_op
+description: "DC operating point; i_supply."
+params: {VDD: 1.5, VCM: 0.5}
+flags: []
+produces: [i_supply]

@@ -1,0 +1,20 @@
+# Analysis binding: the P4 composition ACCEPTANCE check. amp_029 (this composite's core,
+# alone) commits cm_interior_pts = 0 over its vbl knife-edge; here the swept knob is the
+# composite-owned servo reference {vcm_ref} — a healthy CMFB closure makes the output CM
+# TRACK the command, so all 5 samples must land inside VCM +/- VBAND (0 -> 5 flip).
+schema: spicexplorer/analysis@1
+id: dc_cm_bias_sweep
+template: dc_cm_bias_sweep
+description: "Output-CM vs the commanded servo reference vcm_ref: 5-point alterparam sweep; cm_interior_pts=5 proves the composed CMFB closes amp_029's no-interior-OP hole."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  VBAND: 0.15
+  CMKNOB: vcm_ref
+  VB1: 0.50
+  VB2: 0.55
+  VB3: 0.60
+  VB4: 0.65
+  VB5: 0.70
+flags: []
+produces: [vocm_1, vocm_2, vocm_3, vocm_4, vocm_5, cm_interior_pts]

@@ -1,0 +1,76 @@
+# Datasheet — TI-LDO error amplifier (12T two-stage, level-shifted mirror load).
+# Characterized on gf180mcu (the source design's native PDK, 6 V devices at 3.3 V).
+# PROVISIONAL specs bracketing first recorded baselines — see results/.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 3.3}
+  cload:  {unit: pF, typical: 10}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+  vcm:    {unit: V, typical: 1.2}      # in-loop common mode (VREF/VFB sit near 1.2 V in the LDO)
+  ibias:  {unit: mA, typical: 1.0}     # the source's I_error_amp_ref
+metrics:
+  dc_gain_db:
+    display: "DC open-loop gain"
+    unit: dB
+    analysis: ac_open_loop
+    extract: {meas: dcgain}
+    spec: {min: 35, unit: dB}             # gf180mcu measured 40.3 dB
+  ugf_hz:
+    display: "Unity-gain frequency"
+    unit: Hz
+    analysis: ac_open_loop
+    extract: {meas: ugf}
+    spec: {min: 1.0e6, unit: Hz}
+  pm_deg:
+    display: "Phase margin"
+    unit: deg
+    analysis: ac_open_loop
+    extract: {meas: pm}
+    spec: {min: 45, unit: deg}
+  gain_cl:
+    display: "Buffer gain"
+    unit: "V/V"
+    analysis: ac_closed_loop
+    extract: {meas: gain_cl}
+    spec: {min: 0.95, max: 1.05, unit: "V/V"}   # gf180 0.979; sky130 0.78 (untuned VCM/Vth margin)
+  bw_cl_hz:
+    display: "Closed-loop bandwidth"
+    unit: Hz
+    analysis: ac_closed_loop
+    extract: {meas: bw_cl}
+    spec: {min: 1.0e6, unit: Hz}
+  vn_in:
+    display: "Input-referred noise"
+    unit: "V/sqrt(Hz)"
+    analysis: noise
+    extract: {meas: inoise_total}
+    spec: {max: 1.0e-3, unit: "V/sqrt(Hz)"}   # gf180mcu measured 1.4e-4
+  t_settle:
+    display: "Settling time"
+    unit: s
+    analysis: tran_step
+    extract: {meas: t_settle}
+    spec: {max: 4.0e-6, unit: s}
+  i_supply:
+    display: "Supply current"
+    description: "Total draw at the 1 mA class bias (mirror rail runs 4+ branches of it)."
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 5.0e-3, unit: A}          # gf180mcu measured 2.32 mA
+  psrr_vdd_db:
+    display: "Positive-supply rejection"
+    description: "PSRR+ in the unity-buffer config, DC-band floor (design-review 2026-07-05 rollout)."
+    unit: dB
+    analysis: psrr_vdd
+    extract: {meas: psrr_vdd_db}
+    spec: {min: 20, unit: dB}
+  cmrr_db:
+    display: "Common-mode rejection"
+    description: "CMRR in the unity-buffer config, DC-band floor (design-review 2026-07-05 rollout)."
+    unit: dB
+    analysis: cmrr_vcm
+    extract: {meas: cmrr_db}
+    spec: {min: 40, unit: dB}

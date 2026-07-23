@@ -1,0 +1,36 @@
+** Abstract AnalogGym "ldo_folded_cascode" — the folded-cascode-OTA + PMOS-pass LDO from the
+** AnalogGym LDO suite. As with ldo_simple, the subckt was never published in CODA-Team/AnalogGym
+** itself; source of truth is ChrisZonghaoLi/sky130_ldo_rl (Apache-2.0):
+** python/simulations/ldo_folded_cascode_tb.spice, subckts `ldo_folded_cascode` +
+** `diff_pair_folded_cascode`. sky130-native, 5 V (g5v0d10v5) devices at a 2.0 V rail.
+** Topology: NMOS input pair (XM1 in+ = feedback -> mirrored side, XM2 in- = reference) whose
+** drain nodes are the SOURCES of a self-biased PMOS cascode pair (XM5/XM6, gates on the external
+** vb2 rail): XM3/XM4 top PMOS current sources share gate nmir = XM5's drain (self-biased mirror);
+** XM7/XM8 NMOS sinks (vb1) terminate the folded branches, XM9 is the tail. PMOS pass + Rz/Cc.
+** 3-port wrap per the LDO class: unity feedback (upstream TB ties Vfb->Vreg), so XM1's gate goes
+** straight to vout; Vref/Vb1/Vb2 fold in as internal ideal sources.
+**.subckt ldo_002_analoggym_folded_cascode vdd vout vss
+** folded-cascode error amp (upstream diff_pair_folded_cascode)
+XM1 n2   vout n4  vss nmos w=x_dut_xm1_w   l=x_dut_xm1_l
+XM2 n3   vref n4  vss nmos w=x_dut_xm2_w   l=x_dut_xm2_l
+XM3 n2   nmir vdd vdd pmos w=x_dut_xm3_w  l=x_dut_xm3_l
+XM4 n3   nmir vdd vdd pmos w=x_dut_xm4_w  l=x_dut_xm4_l
+XM5 nmir vb2  n2  vdd pmos w=x_dut_xm5_w l=x_dut_xm5_l
+XM6 ngate vb2 n3  vdd pmos w=x_dut_xm6_w l=x_dut_xm6_l
+XM7 nmir vb1  vss vss nmos w=x_dut_xm7_w l=x_dut_xm7_l
+XM8 ngate vb1 vss vss nmos w=x_dut_xm8_w l=x_dut_xm8_l
+XM9 n4   vb1  vss vss nmos w=x_dut_xm9_w l=x_dut_xm9_l
+** pass device + Miller Rz/Cc (upstream XM10 + XRfb/XCfb)
+XMP vout ngate vdd vdd pmos w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m
+Rz ncz ngate 'r_z'
+Cc ncz vout  'c_comp'
+** minimum-load bleed: upstream never runs below ~10 uA load (the TB always applies Iload);
+** with unity feedback and no divider there is NO internal DC path, so a no-load dc_op rails
+** vout to vdd. r_bleed internalizes the upstream minimum-load condition.
+R_bleed vout vss 'r_bleed'
+** internal ideal reference + cascode/tail biases (3-port fold of upstream Vref/Vb1/Vb2 pins)
+Vref vref vss dc {vref_val}
+Vb1  vb1  vss dc {vb1_val}
+Vb2  vb2  vss dc {vb2_val}
+**.ends
+.end

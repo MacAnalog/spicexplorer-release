@@ -1,0 +1,9 @@
+schema: spicexplorer/analysis@1
+id: dc_op
+template: dc_op
+description: "DC operating point at mid-input; v_out + i_supply (crossover current)."
+params:
+  VDD: 1.2
+  VCM: 0.6
+flags: []
+produces: [v_out, i_supply]

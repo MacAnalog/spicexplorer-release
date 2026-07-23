@@ -1,0 +1,24 @@
+** AUTHORED TEMPLATE — voltage_reference/dc_op: DC operating point of a reference core.
+** [VALIDATED 2026-07-16 on ihp-sg13g2 against vref_001_vgs — live ngspice, 4/4 benches pass].
+** Supply-only 3-terminal block (vdd vref vss); reports the reference level (vref) and the supply
+** current (power). Port convention: vdd vref vss. Bindings: DUT PORT_LINE VDD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+
+Vdd vdd 0 dc {VDD}
+Vss vss 0 dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  let vref_v = v(vref)
+  print i_supply
+  print vref_v
+  write
+  quit
+.endc
+.end

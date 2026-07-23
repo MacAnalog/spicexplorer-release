@@ -1,0 +1,33 @@
+** AUTHORED TEMPLATE — amplifier/stb: loop-gain (stability) probe in the unity buffer.
+** VIPRB is the loop-probe MARKER: a 0 V source in the feedback path (vinn <- vout). On
+** the ngspice lane it is electrically a short, so the deck runs as a plain closed-loop
+** AC response (ngspice has no stb analysis — eyeball check only). On the Spectre lane
+** the platform's emitter translates VIPRB* -> the `iprobe` primitive and composes
+** `stb stb probe=VIPRB ...`, so the TRUE loop gain lands in the stb.stb PSF:
+** {meas: pm_loop|gain_margin_db|loopgain_db, out: loopGain}, or OCEAN
+** phaseMargin(getData("loopGain")) via the class calculator set.
+** Bindings: DUT PORT_LINE VDD VCM IBIAS CL FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+CLoad vout 0 {CL}
+
+Vinp vinp 0 dc {VCM} ac 1
+VIPRB vinn vout dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  write
+  quit
+.endc
+.end

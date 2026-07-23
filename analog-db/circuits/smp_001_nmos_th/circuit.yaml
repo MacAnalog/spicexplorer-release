@@ -1,0 +1,24 @@
+# ★ SUPER-DSL manifest (plan D-3). First VERIFIABLE member of the `sampler` class.
+schema: spicexplorer/circuit@1
+id: smp_001_nmos_th
+class: sampler
+display_name: "NMOS track-and-hold sampler (switch + hold cap)"
+stages: 1
+ports: [vdd, vin, clk, vout, vss]
+provenance:
+  source: analog-circuit-design
+  aliases: [nmos_track_hold, basic_sample_hold]
+  paper: "NMOS-switch track-and-hold — textbook sampler primitive"
+  license: Apache-2.0
+  designer: "SpiceXplorer (worked example for the sampler class)"
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2]
+analyses: [dc_op, tran_sample]
+optimize:
+  budget: 300
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

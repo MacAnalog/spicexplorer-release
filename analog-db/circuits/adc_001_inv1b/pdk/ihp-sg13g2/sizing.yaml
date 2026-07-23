@@ -1,0 +1,11 @@
+# The XMP/XMN strength ratio sets the decision level (threshold_v). PMOS ~2-3x wider than NMOS
+# centres it near vdd/2.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xmn_w, description: "Pull-down NMOS width",   default: 1.0u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xmn_l, description: "Pull-down NMOS length",  default: 0.13u, min: 0.13u, max: 5u, unit: m}
+  - {name: x_dut_xmn_m, description: "Pull-down NMOS mult",    default: 1, is_integer: true}
+  - {name: x_dut_xmp_w, description: "Pull-up PMOS width",     default: 2.5u, min: 0.15u, max: 40u, unit: m}
+  - {name: x_dut_xmp_l, description: "Pull-up PMOS length",    default: 0.13u, min: 0.13u, max: 5u, unit: m}
+  - {name: x_dut_xmp_m, description: "Pull-up PMOS mult",      default: 1, is_integer: true}

@@ -1,0 +1,53 @@
+** Abstract single-stage telescopic-cascode OTA with differential-difference CMFB —
+** the opamp core inside the ripple-reduction-loop switched-capacitor integrator of
+** Fan's chopper CCIA (see provenance in circuit.yaml). AUTHORED source of truth
+** (plan D-2). PDK-neutral model tokens (nmos/pmos); per-PDK device names + geometry
+** come from circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vinp vinn voutp voutn vdd vss
+**
+** Topology (from drawings/ccia-02-QinwenFan-chopper-ripple-reduction/
+** integrator-switchcap-opamp.sch, normalized here after xschem netlisting; the
+** drawing's Vb1..Vb4 bias PORTS become internal knob-driven sources, matching how
+** the drawn ccia tops wrap this core with fixed supplies — instantiator owns bias):
+**   core — PMOS input pair (M2 vinp / M3 vinn, tail M1 from vdd, gate bias vb3),
+**     PMOS cascodes M9/M10 (gate vb1) up to the outputs, NMOS cascodes M11/M12
+**     (gate vb2) over ground-referred sinks M13/M14. Telescopic: one stage,
+**     self-compensated at the load.
+**   CMFB — differential-difference sense: M4 (gate vb3) sources a second tail
+**     (cm_tail); M5/M7 (gates voutn/voutp) steer CM-proportional current into
+**     diode M16 (cm_sense); the reference half M6+M8 (both gate vb4 = the CM
+**     reference level, drawn as two parallel devices) steers into diode M15
+**     (cm_bias), which mirrors onto the output sinks M13/M14 — closing the
+**     common-mode loop without a resistive sense network.
+**   deviation from the drawing: none electrically; nets renamed for readability
+**     (net1->tail, net6->d1n, net5->d1p, net2->cm_tail, net3->cm_sense,
+**     net4->cm_bias, net7->csrc_n, net8->csrc_p) and the four Vb ports pulled
+**     inside as dc sources {vb1}..{vb4}.
+**.subckt amp_027_fan_rrl_ota vinp vinn voutp voutn vdd vss
+* --- input pair + tail (PMOS) ---
+XM1 tail vb3 vdd vdd pmos w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+XM2 d1n vinp tail vdd pmos w=x_dut_xm2_w l=x_dut_xm2_l m=x_dut_xm2_m
+XM3 d1p vinn tail vdd pmos w=x_dut_xm3_w l=x_dut_xm3_l m=x_dut_xm3_m
+* --- telescopic cascodes to the outputs ---
+XM9 voutn vb1 d1n vdd pmos w=x_dut_xm9_w l=x_dut_xm9_l m=x_dut_xm9_m
+XM10 voutp vb1 d1p vdd pmos w=x_dut_xm10_w l=x_dut_xm10_l m=x_dut_xm10_m
+XM11 voutn vb2 csrc_n vss nmos w=x_dut_xm11_w l=x_dut_xm11_l m=x_dut_xm11_m
+XM12 voutp vb2 csrc_p vss nmos w=x_dut_xm12_w l=x_dut_xm12_l m=x_dut_xm12_m
+* --- output current sinks, gate driven by the CMFB bias ---
+XM13 csrc_n cm_bias vss vss nmos w=x_dut_xm13_w l=x_dut_xm13_l m=x_dut_xm13_m
+XM14 csrc_p cm_bias vss vss nmos w=x_dut_xm14_w l=x_dut_xm14_l m=x_dut_xm14_m
+* --- differential-difference CMFB ---
+XM4 cm_tail vb3 vdd vdd pmos w=x_dut_xm4_w l=x_dut_xm4_l m=x_dut_xm4_m
+XM5 cm_sense voutn cm_tail vdd pmos w=x_dut_xm5_w l=x_dut_xm5_l m=x_dut_xm5_m
+XM7 cm_sense voutp cm_tail vdd pmos w=x_dut_xm7_w l=x_dut_xm7_l m=x_dut_xm7_m
+XM6 cm_bias vb4 cm_tail vdd pmos w=x_dut_xm6_w l=x_dut_xm6_l m=x_dut_xm6_m
+XM8 cm_bias vb4 cm_tail vdd pmos w=x_dut_xm8_w l=x_dut_xm8_l m=x_dut_xm8_m
+XM15 cm_bias cm_bias vss vss nmos w=x_dut_xm15_w l=x_dut_xm15_l m=x_dut_xm15_m
+XM16 cm_sense cm_sense vss vss nmos w=x_dut_xm16_w l=x_dut_xm16_l m=x_dut_xm16_m
+* --- internal bias levels (the drawing's Vb1..Vb4 ports; instantiator-owned knobs) ---
+Vb1 vb1 vss dc {vb1}
+Vb2 vb2 vss dc {vb2}
+Vb3 vb3 vss dc {vb3}
+Vb4 vb4 vss dc {vb4}
+**.ends
+.end

@@ -1,0 +1,14 @@
+# Analysis binding (plan D-4). Validated against _shared/schema/analysis.schema.json.
+# Binds the support-class dc_vcm_sense template: inputs driven to VCM +/- VDIFF/2, the
+# detector's sensed midpoint vs the ideal VCM. The DUT is passive/floating — the bench's
+# vdd/vss rails are provided but unused.
+schema: spicexplorer/analysis@1
+id: dc_vcm_sense
+template: dc_vcm_sense
+description: "DC CM-sense accuracy: vcm_out at VCM=0.6 with VDIFF=0.2 across the inputs."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  VDIFF: 0.2
+flags: []
+produces: [vcm_out, vos]

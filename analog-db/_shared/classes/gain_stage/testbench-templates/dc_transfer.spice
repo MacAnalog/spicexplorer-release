@@ -1,0 +1,30 @@
+** AUTHORED TEMPLATE — gain_stage/dc_transfer: full-range DC transfer sweep.
+** Sweeps the input across [VSTART, VSTOP] and reports the PEAK incremental gain magnitude
+** |dVout/dVin| (gain_dc) and the input voltage where it peaks (vin_pk = the stage's trip
+** point; cross-check against dc_op's self-biased v_trip).
+** Class port convention: vdd vout vin ibias vss (ibias sink-referenced, see metrics.yaml).
+** Bindings: DUT PORT_LINE VDD IBIAS VSTART VSTOP VSTEP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param IBIAS=${IBIAS}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias ibias vss dc {IBIAS}
+Vin  vin 0 dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  dc Vin ${VSTART} ${VSTOP} ${VSTEP}
+  let ag = abs(deriv(v(vout)))
+  meas dc gain_dc MAX ag
+  meas dc vin_pk MAX_AT ag
+  * MAX/MAX_AT meas lines carry `at=`/`with=` suffixes the result parser skips — re-print clean
+  print gain_dc vin_pk
+  write
+  quit
+.endc
+.end

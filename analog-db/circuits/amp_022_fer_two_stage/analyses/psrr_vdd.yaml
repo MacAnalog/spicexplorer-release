@@ -1,0 +1,16 @@
+# Analysis binding: positive-supply rejection in the unity-buffer config (class template).
+# Params mirror the circuit's other benches. Added with the tb-validation pass (2026-07-09).
+schema: spicexplorer/analysis@1
+id: psrr_vdd
+template: psrr_vdd
+description: "Positive-supply rejection ratio (buffer-config, DC-band floor)."
+params:
+  VDD: 1.5
+  VCM: 0.6
+  IBIAS: 20u
+  CL: 500f
+  FSTART: 1k
+  FSTOP: 1G
+  PPD: 101
+flags: []
+produces: [psrr_vdd_db]

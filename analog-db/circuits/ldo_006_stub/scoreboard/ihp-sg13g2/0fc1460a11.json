@@ -1,0 +1,71 @@
+{
+  "area": {
+    "active_gate_area_um2": 25.0,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 1,
+    "r_count": 2,
+    "r_total_ohm": 200000.0
+  },
+  "circuit": "ldo_006_stub",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 7.500005e-06,
+            "vout_dc": 1.009938
+          },
+          "status": "ok"
+        },
+        "load_regulation": {
+          "measures": {
+            "load_reg": 1.213766,
+            "vout_max": 1.009938,
+            "vout_min": -0.2038278
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T04:44:51+00:00"
+      }
+    }
+  },
+  "design_id": "0fc1460a11",
+  "metrics": {
+    "tt": {
+      "i_q": {
+        "spec": "pass",
+        "value": 7.500005e-06
+      },
+      "load_reg": {
+        "spec": "fail",
+        "value": 1.213766
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "r_bot": "100k",
+      "r_top": "100k",
+      "x_dut_xm1_l": "0.5u",
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": "50u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 25.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "load_reg": 1.213766
+    },
+    "power_w": 1.12500075e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

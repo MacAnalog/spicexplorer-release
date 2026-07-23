@@ -1,0 +1,25 @@
+** Abstract SMCNR single-ended two-stage amplifier (AnalogGym Sensing Front End).
+** AUTHORED source of truth (plan D-2). PDK-neutral model tokens (nmos/pmos + ideal R/C);
+** per-PDK device names + geometry come from circuitgraph lowering + pdk/<pdk>/ bindings.
+** Subckt port order (= circuit.yaml ports, AnalogGym convention): vss vdd vinn vinp vout
+**
+** Topology (SMCNR_SE_2st_AMP): PMOS bias-mirror bank off ONE diode (XM7; XM6 = 2x tail,
+** XM5 = 10x stage-2 load), PMOS input pair (XM0 = vinn side into the XM1 NMOS diode,
+** XM2 = vinp side into the XM3 mirror leg = stage-1 output `outn`), NMOS common-source
+** second stage (XM4, m=10) with the XM5 current-source load; single-Miller compensation
+** with nulling resistor: C0 (outn -> nzo) in series with R0 (nzo -> vout).
+** Internalized (promotion): the upstream deck's in-subckt 100 nA sink stays internal as IBS
+** (sizing knob x_ibias_val) — the DUT is fully self-biased (AnalogGym 5-port convention).
+** The long upstream channels (L = 8-10 um, subthreshold at 100 nA) are kept.
+IBS  ibias vss dc {x_ibias_val}
+XM7  ibias ibias vdd vdd pmos w=x_dut_xm7_w   l=x_dut_xm7_l m=x_dut_xm7_m
+XM6  tailp ibias vdd vdd pmos w=x_dut_xm6_w   l=x_dut_xm6_l m=x_dut_xm6_m
+XM5  vout  ibias vdd vdd pmos w=x_dut_xm5_w   l=x_dut_xm5_l m=x_dut_xm5_m
+XM0  outp  vinn  tailp vdd pmos w=x_dut_xm0_w l=x_dut_xm0_l m=x_dut_xm0_m
+XM2  outn  vinp  tailp vdd pmos w=x_dut_xm2_w l=x_dut_xm2_l m=x_dut_xm2_m
+XM1  outp  outp  vss vss nmos w=x_dut_xm1_w   l=x_dut_xm1_l m=x_dut_xm1_m
+XM3  outn  outp  vss vss nmos w=x_dut_xm3_w   l=x_dut_xm3_l m=x_dut_xm3_m
+XM4  vout  outn  vss vss nmos w=x_dut_xm4_w   l=x_dut_xm4_l m=x_dut_xm4_m
+C0   outn  nzo   c=x_c0
+R0   nzo   vout  r=x_rz
+.end

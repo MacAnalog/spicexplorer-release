@@ -1,0 +1,32 @@
+# ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
+# PROMOTED from the ferrosim_ldo reference entry: authored a device-generic abstract netlist +
+# open-PDK bindings so the mirror-loaded-OTA LDO is lowerable, assembled and simulated. The
+# original FOUNDRY 28nm/65nm ferrosim decks are retained under `references`. The upstream
+# external VREF and bias sources are INTERNALIZED (ideal Vref + Ibias inside the DUT, sizing
+# knobs) so the entry follows the ldo class's self-contained 3-port convention (ldo_004/007).
+schema: spicexplorer/circuit@1
+id: ldo_008_fer_mirror_ota
+class: ldo
+display_name: "LDO: mirror-loaded OTA error amp + PMOS pass, RC zero compensation"
+compensation: rc_zero (R_COMP + C_COMP from the pass gate to vout)
+stages: 1
+ports: [vdd, vout, vss]
+provenance:
+  source: Arcadia-1/ferrosim (imported via netlist-crawler)
+  aliases: [ldo, ferrosim_ldo, ldo-ptm180]
+  designer: Token Zhang
+  license: MIT
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, sky130, gf180mcu]
+analyses: [dc_op, load_regulation, line_regulation, psrr, dropout, tran_load_step, loop_stability, noise, tran_line_step]
+references:
+  - {tool: spectre, dir: spectre/28nm, node: 28nm}
+  - {tool: spectre, dir: spectre/65nm, node: 65nm}
+optimize:
+  budget: 2000
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

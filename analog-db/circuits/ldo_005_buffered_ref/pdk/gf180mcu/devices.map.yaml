@@ -1,0 +1,12 @@
+# Generic device kind -> gf180mcu device name. Passives (R/C) stay ideal (pass-through).
+# CHANGED 2026-07-20 from nfet_03v3/pfet_03v3 @ 1.8 V to the 6 V family @ 3.3 V. The previous
+# mapping deliberately followed "the DB's established 3.3V gf180mcu convention" even though its own
+# comment noted the source TI design used the 6 V devices. That deviation is no longer tenable: this
+# circuit now inlines the LANDED amp_033_ti_ldo_ref_selfbias and amp_032_ti_ldo_error_selfbias, both
+# of which are characterised on nfet_06v0/pfet_06v0 at 3.3 V, and the owner's drawing instantiates
+# pfet_06v0 for the pass device. Keeping 03v3 would mean the composed LDO ran devices the two
+# constituent amplifiers were never sized or verified for.
+pdk: gf180mcu
+devices:
+  nmos: {model: nfet_06v0}
+  pmos: {model: pfet_06v0}

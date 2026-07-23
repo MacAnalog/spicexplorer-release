@@ -1,0 +1,10 @@
+.subckt ldo_simple Vdd vinp vinn Vb Vss Vreg
+XM1 net1 vinp net2 Vss sky130_fd_pr__nfet_01v8 L=L_M1 W=W_M1 m=M_M1
+XM2 vout1 vinn net2 Vss sky130_fd_pr__nfet_01v8 L=L_M2 W=W_M2 m=M_M2
+XM3 vout1 net1 Vdd Vdd sky130_fd_pr__pfet_01v8 L=L_M3 W=W_M3 m=M_M3
+XM4 net1 net1 Vdd Vdd sky130_fd_pr__pfet_01v8 L=L_M4 W=W_M4 m=M_M4
+XM5 net2 Vb Vss Vss sky130_fd_pr__nfet_01v8 L=L_M5 W=W_M5 m=M_M5
+XM6 Vreg vout1 Vdd Vdd sky130_fd_pr__pfet_01v8 L=L_M6 W=W_M6 m=M_M6
+XCfb net22 Vreg sky130_fd_pr__cap_mim_m3_1 W=10 L=10 MF=M_Cfb m=M_Cfb
+XRfb net22 vout1 Vss sky130_fd_pr__res_high_po_0p35 L=3 mult=M_Rfb m=M_Rfb
+.ends ldo_simple

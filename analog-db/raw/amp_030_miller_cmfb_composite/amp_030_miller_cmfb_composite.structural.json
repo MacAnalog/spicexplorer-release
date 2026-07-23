@@ -1,0 +1,68 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "amp_030_miller_cmfb_composite",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 24,
+    "blocks_detected": 2,
+    "by_family": {
+      "current_mirror": 1,
+      "differential_pair": 1
+    },
+    "structural_roles": {
+      "XM10_CORE": "current_mirror",
+      "XM1_CORE": "differential_pair",
+      "XM2_CORE": "differential_pair",
+      "XM6_CORE": "current_mirror_reference",
+      "XM7_CORE": "current_mirror",
+      "XM8_CORE": "tail_current_source"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.nmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XM6_CORE",
+      "output_devices": [
+        "XM10_CORE",
+        "XM7_CORE",
+        "XM8_CORE"
+      ],
+      "devices": [
+        "XM10_CORE",
+        "XM6_CORE",
+        "XM7_CORE",
+        "XM8_CORE"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "core__ref",
+        "out": "voutn"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#1",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM1_CORE",
+        "XM2_CORE"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "vinp",
+        "in_n": "vinn",
+        "CM_tail": "core__tail",
+        "out_n": "core__stg1n",
+        "out_p": "core__stg1p"
+      }
+    }
+  ]
+}

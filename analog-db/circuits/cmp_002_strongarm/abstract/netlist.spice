@@ -1,0 +1,29 @@
+** Abstract StrongARM latched comparator.
+** AUTHORED source of truth (plan D-2). PDK-neutral model tokens (nmos/pmos); per-PDK device
+** names + geometry come from circuitgraph lowering + pdk/<pdk>/ bindings.
+** Subckt port order (= circuit.yaml ports): vdd voutp voutn vinp vinn clk vss
+**
+** Topology (ferrosim cmp_strongarm, plain core): clocked tail (XMTAIL), NMOS input pair into
+** the sense nodes, cross-coupled NMOS/PMOS latch (lm/lp), 4 clk-gated PMOS precharges, and a
+** CMOS inverter per output. Upstream wiring is kept: vinn drives sense_p and vinp drives
+** sense_n, so lp decides HIGH for vinp > vinn — hence voutp = inverter(lm) and
+** voutn = inverter(lp), making voutp the side that decides HIGH for vinp > vinn.
+** The latch internal nodes lm/lp (upstream ports LM/LP) are internalized; the upstream
+** offset-trim variant stays a reference binding.
+** Device widths stay per-finger (IHP lv MOS w <= ~10 um; PSP clips silently) — totals via m=.
+XMTAIL tail  clk   vss  vss nmos w=x_dut_xmtail_w  l=x_dut_xmtail_l m=x_dut_xmtail_m
+XMINN  sp    vinn  tail vss nmos w=x_dut_xminn_w  l=x_dut_xminn_l m=x_dut_xminn_m
+XMINP  sn    vinp  tail vss nmos w=x_dut_xminp_w  l=x_dut_xminp_l m=x_dut_xminp_m
+XMLEM  lm    lp    sn   vss nmos w=x_dut_xmlem_w l=x_dut_xmlem_l m=x_dut_xmlem_m
+XMLEP  lp    lm    sp   vss nmos w=x_dut_xmlep_w l=x_dut_xmlep_l m=x_dut_xmlep_m
+XMLUM  lm    lp    vdd  vdd pmos w=x_dut_xmlum_w l=x_dut_xmlum_l m=x_dut_xmlum_m
+XMLUP  lp    lm    vdd  vdd pmos w=x_dut_xmlup_w l=x_dut_xmlup_l m=x_dut_xmlup_m
+XMPC1  sp    clk   vdd  vdd pmos w=x_dut_xmpc1_w   l=x_dut_xmpc1_l m=x_dut_xmpc1_m
+XMPC2  sn    clk   vdd  vdd pmos w=x_dut_xmpc2_w   l=x_dut_xmpc2_l m=x_dut_xmpc2_m
+XMPC3  lp    clk   vdd  vdd pmos w=x_dut_xmpc3_w   l=x_dut_xmpc3_l m=x_dut_xmpc3_m
+XMPC4  lm    clk   vdd  vdd pmos w=x_dut_xmpc4_w   l=x_dut_xmpc4_l m=x_dut_xmpc4_m
+XMOBN1 voutp lm    vss  vss nmos w=x_dut_xmobn1_w  l=x_dut_xmobn1_l m=x_dut_xmobn1_m
+XMOBP1 voutp lm    vdd  vdd pmos w=x_dut_xmobp1_w  l=x_dut_xmobp1_l m=x_dut_xmobp1_m
+XMOBN2 voutn lp    vss  vss nmos w=x_dut_xmobn2_w  l=x_dut_xmobn2_l m=x_dut_xmobn2_m
+XMOBP2 voutn lp    vdd  vdd pmos w=x_dut_xmobp2_w  l=x_dut_xmobp2_l m=x_dut_xmobp2_m
+.end

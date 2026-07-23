@@ -1,0 +1,37 @@
+v {xschem version=3.4.4 file_version=1.2
+*
+* This file is part of XSCHEM,
+* a schematic capture and Spice/Vhdl/Verilog netlisting tool for circuit
+* simulation.
+* Copyright (C) 1998-2023 Stefan Frederik Schippers
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+}
+G {type=delay_eldo
+format="del@name @pinlist @del"
+template="name=d1 del=2e-9"}
+V {}
+S {}
+E {}
+L 4 -40 0 -30 0 {}
+L 4 -30 -10 -30 10 {}
+L 4 -30 10 30 10 {}
+L 4 30 -10 30 10 {}
+L 4 -30 -10 30 -10 {}
+L 4 30 -0 40 -0 {}
+B 5 -42.5 -2.5 -37.5 2.5 {name=inp dir=in}
+B 5 37.5 -2.5 42.5 2.5 {name=outp dir=out}
+T {del=@del} -27.5 -3.75 0 0 0.15 0.15 {}
+T {@name} -25 -22.5 0 0 0.2 0.2 {}

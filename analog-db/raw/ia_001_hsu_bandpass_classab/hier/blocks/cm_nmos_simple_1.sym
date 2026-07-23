@@ -1,0 +1,22 @@
+v {xschem version=3.4.6 file_version=1.2}
+G {type=subcircuit
+format="@name @pinlist @symname"
+template="name=x1"}
+V {}
+S {}
+E {}
+L 4 -90 -60 90 -60 {}
+L 4 90 -60 90 60 {}
+L 4 90 60 -90 60 {}
+L 4 -90 60 -90 -60 {}
+B 5 107.5 -22.5 112.5 -17.5 {name=dio_p dir=out}
+L 4 90 -20 110 -20 {}
+T {ref_in} 78 -20 0 0 0.16 0.16 {layer=4}
+B 5 107.5 17.5 112.5 22.5 {name=msrc_p dir=out}
+L 4 90 20 110 20 {}
+T {out} 78 20 0 0 0.16 0.16 {layer=4}
+B 5 -2.5 77.5 2.5 82.5 {name=vss dir=inout}
+L 4 0 60 0 80 {}
+T {supply} 0 60 0 0 0.16 0.16 {layer=4}
+T {cm_nmos_simple_1} -82 -52 0 0 0.3 0.3 {layer=4}
+T {@name} -82 36 0 0 0.2 0.2 {layer=4}

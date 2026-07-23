@@ -1,0 +1,29 @@
+schema: spicexplorer/circuit@1
+id: sup_001_vcm_detector
+class: support
+tier: support
+realization: transistor
+display_name: Resistive common-mode detector (Rm/Rm averager)
+ports:
+- vcm_out
+- vinp
+- vinn
+provenance:
+  source: drawings/ccia-01-YuPinHsu-bandpass-class-ab-output (hand-drawn xschem, vcm-detector-simple.sym)
+  paper: "Y.-P. Hsu, Z. Liu, M. M. Hella, \"A 1.8 uW -65 dB THD ECG Acquisition Front-End IC Using a Bandpass Instrumentation Amplifier With Class-AB Output Configuration\", IEEE TCAS-II 65(12):1859-1863, Dec. 2018"
+  aliases: [vcm-detector-simple]
+  designer: "Noorizadeh (schematic capture, after Hsu et al.)"
+  notes: >-
+    Passive resistive CM averager sensing the OTA output common mode for the CMFB
+    loop of the drawn CCIA. Floating (no supply ports); the drawn symbol Rm carried
+    no value, so the tied per-instance value knob is a free design variable
+    (high-R default to avoid loading the OTA outputs).
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/vcm-detector-simple.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+analyses: [dc_vcm_sense]
+pdks:
+- ihp-sg13g2
+status: draft

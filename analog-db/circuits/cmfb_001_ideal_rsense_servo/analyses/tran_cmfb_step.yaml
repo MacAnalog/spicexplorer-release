@@ -1,0 +1,24 @@
+# Analysis binding (plan D-4). Binds the cmfb-class tran_cmfb_step template. VSTEP is
+# 1 mV (not the real-member 50 mV): the unclamped gain-1000 macromodel turns the step
+# into a -1 V control plateau — larger steps are numerically fine but mean nothing.
+# Servo time constant rout*(cout+CL) = 10Meg*150f = 1.5 us -> plateau/settle windows
+# leave >13 tau. step_delta_v must come out NEGATIVE (inverted polarity, time-domain
+# cross-check of dc_cmfb_transfer's cmfb_slope).
+schema: spicexplorer/analysis@1
+id: tran_cmfb_step
+template: tran_cmfb_step
+description: "Sensed-CM step: signed step_delta_v (~-1 V for 1 mV step), ring_v, t_cm_settle into 50 fF."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 50f
+  VSTEP: 1m
+  TSTEP1: 20u
+  TMID: 60u
+  TSTEP2: 80u
+  TEND: 150u
+  VTOL: 1m
+  TSTEP: 50n
+  TSTOP: 160u
+flags: []
+produces: [step_delta_v, ring_v, t_cm_settle]

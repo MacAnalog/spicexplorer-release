@@ -1,0 +1,42 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# SUPERSET of cace_format 5.2. See _shared/CACE_FORMAT.md for the field-overlap mapping (O-1).
+# Numbers are the 2026-07-18/19 native-ihp campaign measurements at the drawn min-size TGs
+# (drawings/sizing-and-specs.yaml shared.capbank + shared.transmission_gate_pair;
+# DRAWING_REVIEW.md §8 finding 1). Metrics are DOCUMENTED-ONLY (no analysis binding):
+# every switch-class template assumes the single/differential pass-gate port contract
+# (port_a/port_b resp. va_p..vb_n + vctl/vctl_not), which cannot drive this bank's
+# vinp/vout/VCM + 6 static code pins — a capbank-aware C_eff-per-code template is the
+# open follow-up (do NOT bind these to dc_ron/dc_ron_diff; the assembled bench would
+# leave the code-pin gates floating).
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  vcm:    {unit: V, typical: 0.6}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  r_on:
+    display: "Series TG on-resistance at VCM (per selected bit path)"
+    description: "Composite NMOS||PMOS pass resistance of one selected (bit HIGH) transmission gate at
+      v=VCM=0.6 — campaign-measured 26.6k at the drawn min-size devices (0.15u/0.13u); in-band it only
+      adds series R ahead of the switched cap (the PGA THD bench saw no in-band penalty). Documented-only:
+      see the header note for why no switch-class bench binds"
+    unit: ohm
+    spec: {max: 50e3, unit: ohm}
+  r_on_max:
+    display: "Worst-case TG on-resistance over the signal range"
+    description: "Maximum per-TG pass resistance over the 0.1..1.1 V sweep — campaign-measured 3.4k..31.2k
+      with the classic mid-range hump at VCM (neither device strongly on) at drawn min-size. Documented-only"
+    unit: ohm
+    spec: {max: 100e3, unit: ohm}
+notes: >-
+  BINARY bank (owner decision 2026-07-19, DRAWING_REVIEW §8 finding 1 RESOLVED): all four
+  caps carry value=Cu (benches must .param Cu; campaign bench value 1p) and the weighting
+  is structural via m = 1/1/2/4 on C1/C2(D0)/C3(D1)/C4(D2), so C_eff = (1+code)*Cu.
+  Live-validated at Cu=1p: C_eff exactly 1p..8p over codes 000..111, all 8 codes distinct
+  and monotonic. Code pins are STATIC selects (complementary rails per bit), not clocks;
+  deselected bottom plates park at VCM through the second TG of each pair, so no plate
+  ever floats. 65nm re-port caveat: xvport's capa map rule carries only value->c — the
+  m=2/4 multipliers need a map extension or they silently drop in the cellview
+  (drawings/sizing-and-specs.yaml shared.capbank.spectre).

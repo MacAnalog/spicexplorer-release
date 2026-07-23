@@ -1,0 +1,44 @@
+v {xschem version=3.4.4 file_version=1.2
+*
+* This file is part of XSCHEM,
+* a schematic capture and Spice/Vhdl/Verilog netlisting tool for circuit
+* simulation.
+* Copyright (C) 1998-2023 Stefan Frederik Schippers
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+}
+G {type=switch
+format="@name @@P @@M @@CP @@CM @model @state"
+template="name=S1 model=SWMOD1 state=OFF"
+}
+V {}
+S {}
+E {}
+L 4 0 10 0 30 {}
+L 4 -10 -10 0 10 {}
+L 4 0 -30 0 -10 {}
+L 4 -40 0 -5 0 {}
+L 4 -5 -25 -5 -20 {}
+L 4 -7.5 -22.5 -2.5 -22.5 {}
+L 4 -10 0 -10 20 {}
+L 4 -40 20 -10 20 {}
+L 4 -32.5 -7.5 -32.5 -2.5 {}
+L 4 -35 -5 -30 -5 {}
+B 5 -42.5 -2.5 -37.5 2.5 {name=CP dir=in }
+B 5 -2.5 -32.5 2.5 -27.5 {name=P dir=inout }
+B 5 -2.5 27.5 2.5 32.5 {name=M dir=inout }
+B 5 -42.5 17.5 -37.5 22.5 {name=CM dir=in }
+T {@name} 5 -13 2 1 0.2 0.2 {}
+T {@model} 5 -2 0 0 0.2 0.2 {}

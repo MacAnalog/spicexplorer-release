@@ -1,0 +1,54 @@
+** AUTHORED TEMPLATE — amplifier/tran_cm_kick (CM-loop health, time domain).
+** Common-mode disturbance recovery: a CM current step ICM (0.5*ICM per side) kicks both
+** outputs from TKICK to TREL; the CM feedback loop must absorb it and re-settle vocm.
+**   cm_kick_v    settled vocm displacement while the kick is applied (at TMID) —
+**                = ICM * Zcm(0); small = stiff servo
+**   cm_resid_v   vocm at TEND minus the pre-kick level — residual after release (~0
+**                for a healthy loop; nonzero flags CM bistability/latch-up: the kick
+**                pushed the amp to another operating point)
+**   t_cm_settle  recovery time from the release edge to |vocm - vocm(TEND)| < VTOL
+** Ringing shows up as a long t_cm_settle relative to the loop bandwidth. See
+** ac_cm_reg.spice's honesty note: internal T_cm/PM_cm need a composed loop probe.
+**
+** Assumes a self-biased, differential-output DUT with a CM control loop:
+**   .subckt <id> vinp vinn voutp voutn vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CL ICM TKICK TMID TREL TEND VTOL TSTEP
+**                    TSTOP PDK_INCLUDE.  (TB0 sample of the pre-kick level is taken at
+**                    TKICK/2; choose TKICK late enough for startup to settle.)
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+.param ICM=${ICM}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+Vcm  vcm 0 dc {VCM}
+Vinp vinp vcm dc 0
+Vinn vinn vcm dc 0
+* common-mode current kick, applied TKICK..TREL (one-shot: width TREL-TKICK, per >> pw)
+Icmp 0 voutp pulse(0 {ICM/2} ${TKICK} 10n 10n {${TREL}-${TKICK}} 1)
+Icmn 0 voutn pulse(0 {ICM/2} ${TKICK} 10n 10n {${TREL}-${TKICK}} 1)
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP}
+  let vocm = (v(voutp)+v(voutn))/2
+  meas tran vocm0 FIND vocm AT={${TKICK}/2}
+  meas tran vocm_mid FIND vocm AT=${TMID}
+  meas tran vocm_end FIND vocm AT=${TEND}
+  let cm_kick_v = vocm_mid - vocm0
+  let cm_resid_v = vocm_end - vocm0
+  let verr = abs(vocm - vocm_end)
+  meas tran tcross WHEN verr=${VTOL} FALL=LAST
+  let t_cm_settle = tcross - ${TREL}
+  print cm_kick_v cm_resid_v t_cm_settle
+  write
+  quit
+.endc
+.end

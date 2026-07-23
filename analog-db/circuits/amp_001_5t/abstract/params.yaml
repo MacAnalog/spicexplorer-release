@@ -1,0 +1,26 @@
+# amp_001_5t — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit amp_001_5t --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  XM1: {l: x_dut_xm1_l, m: x_dut_xm1_m, w: x_dut_xm1_w}
+  XM2: {l: x_dut_xm2_l, m: x_dut_xm2_m, w: x_dut_xm2_w}
+  XM3: {l: x_dut_xm3_l, m: x_dut_xm3_m, w: x_dut_xm3_w}
+  XM4: {l: x_dut_xm4_l, m: x_dut_xm4_m, w: x_dut_xm4_w}
+  XM5: {l: x_dut_xm5_l, m: x_dut_xm5_m, w: x_dut_xm5_w}
+  XM6: {l: x_dut_xm6_l, m: x_dut_xm6_m, w: x_dut_xm6_w}
+groups:
+- name: input_pair
+  kind: matched_pair
+  members: [XM1, XM2]
+  tie: [w, l, m]
+  description: NMOS differential input pair - full-geometry match (XM2 tracks XM1).
+- name: load_pair
+  kind: matched_pair
+  members: [XM3, XM4]
+  tie: [w, l, m]
+  description: 'PMOS mirror-load halves - full-geometry match (XM4 tracks the diode-connected XM3). Reviewed
+    human addition: the pair detector deliberately skips diode-connected halves (generated-then-reviewed,
+    plan D-2).'

@@ -1,0 +1,27 @@
+** AUTHORED TEMPLATE — adc/dc_transfer: static input→output transfer of a converter.
+** For a 1-bit/flash slice: sweeps the analog input and reads the digital output rails
+** (v_out_high at VIN_LO, v_out_low at VIN_HI) and the decision level threshold_v (input where the
+** output crosses VMID). For a multi-bit converter this same sweep yields offset / gain-error /
+** INL/DNL from the code transfer. Port convention: vdd vin vout vss.
+** Bindings: DUT PORT_LINE VDD VIN_LO VIN_HI VIN_STEP VMID PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+
+Vdd vdd 0 dc {VDD}
+Vss vss 0 dc 0
+Vin vin 0 dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  dc Vin ${VIN_LO} ${VIN_HI} ${VIN_STEP}
+  meas dc v_out_high  FIND v(vout) AT=${VIN_LO}
+  meas dc v_out_low   FIND v(vout) AT=${VIN_HI}
+  meas dc threshold_v WHEN v(vout)=${VMID}
+  print v_out_high v_out_low threshold_v
+  write
+  quit
+.endc
+.end

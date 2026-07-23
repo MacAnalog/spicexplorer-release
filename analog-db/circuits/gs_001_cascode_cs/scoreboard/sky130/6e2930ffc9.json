@@ -1,0 +1,108 @@
+{
+  "area": {
+    "active_gate_area_um2": 32.25,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 9,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "gs_001_cascode_cs",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_gain": {
+          "measures": {
+            "f3db_hz": 846130.4,
+            "gain_ac_db": 43.00743
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 3.888079e-05,
+            "v_trip": 0.7121228
+          },
+          "status": "ok"
+        },
+        "dc_transfer": {
+          "measures": {
+            "gain_dc": 83.74705,
+            "vin_pk": 0.71
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:25:02+00:00"
+      }
+    }
+  },
+  "design_id": "6e2930ffc9",
+  "metrics": {
+    "tt": {
+      "f3db_hz": {
+        "spec": "pass",
+        "value": 846130.4
+      },
+      "gain_ac_db": {
+        "spec": "pass",
+        "value": 43.00743
+      },
+      "gain_dc": {
+        "spec": "pass",
+        "value": 83.74705
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 3.888079e-05
+      },
+      "v_trip": {
+        "spec": "pass",
+        "value": 0.7121228
+      },
+      "vin_pk": {
+        "spec": "pass",
+        "value": 0.71
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_xmnb1_m": 1,
+      "x_dut_xmnb2_l": 0.3,
+      "x_dut_xmnb2_m": 1,
+      "x_dut_xmnb2_w": 6,
+      "x_dut_xmnca_l": 0.3,
+      "x_dut_xmnca_m": 1,
+      "x_dut_xmnca_w": 4,
+      "x_dut_xmnin_m": 1,
+      "x_dut_xmnin_w": 4,
+      "x_dut_xmpb1_l": 0.5,
+      "x_dut_xmpb1_m": 1,
+      "x_dut_xmpb1_w": 16,
+      "x_dut_xmpb2_m": 1,
+      "x_dut_xmpca_m": 1,
+      "x_dut_xmpld_l": 0.5,
+      "x_dut_xmpld_m": 1,
+      "x_dut_xmpld_w": 10,
+      "x_dut_xmpnr_m": 1,
+      "x_dut_xmpnr_w": 0.5
+    }
+  },
+  "pdk": "sky130",
+  "ppa": {
+    "active_gate_area_um2": 32.25,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "f3db_hz": 846130.4,
+      "gain_dc": 83.74705
+    },
+    "power_w": 5.8321185000000006e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

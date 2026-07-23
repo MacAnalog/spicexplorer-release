@@ -1,0 +1,29 @@
+** AUTHORED TEMPLATE — ldo/tran_load_step: fast lo->hi load step into Cout; undershoot + recovery.
+** Bindings: DUT PORT_LINE VDD COUT ILOAD_LO ILOAD_HI TSTART TEDGE TPULSE TPER TSTEP TSTOP VTOL
+**   PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+CLoad vout 0 ${COUT}
+Iload vout 0 pulse(${ILOAD_LO} ${ILOAD_HI} ${TSTART} ${TEDGE} ${TEDGE} ${TPULSE} ${TPER})
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP}
+  meas tran vout_min  MIN  v(vout) from=${TSTART} to=${TSTOP}
+  meas tran vout_post FIND v(vout) AT=${TSTOP}
+  let v_undershoot = vout_post - vout_min
+  * recovery: time after the step for v(vout) to re-enter the +/-VTOL band around its final value
+  let verr = abs(v(vout) - vout_post)
+  meas tran tcross WHEN verr=${VTOL} FALL=LAST
+  let t_transient = tcross - ${TSTART}
+  print v_undershoot t_transient
+  write
+  quit
+.endc
+.end

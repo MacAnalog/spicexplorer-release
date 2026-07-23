@@ -1,0 +1,40 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# SUPERSET of cace_format 5.2. See _shared/CACE_FORMAT.md for the field-overlap mapping (O-1).
+# Spec bands are sanity targets for the signal-switch defaults in pdk/*/sizing.yaml (w=2u
+# pass devices at VDD=1.2 V), not paper numbers — Fan et al. characterize the full CCIA
+# system, not this unit switch.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  r_on:
+    display: "On-resistance at mid signal range"
+    description: "Composite NMOS||PMOS pass resistance at v(port_a)=VDD/2, switch ON"
+    unit: ohm
+    analysis: dc_ron
+    extract: {meas: r_on}
+    spec: {max: 20e3, unit: ohm}
+  r_on_max:
+    display: "Worst-case on-resistance over the signal sweep"
+    description: "Maximum of r_on(v) over the 0..VDD signal sweep (the mid-range hump where neither device is strongly on)"
+    unit: ohm
+    analysis: dc_ron
+    extract: {meas: r_on_max}
+    spec: {max: 100e3, unit: ohm}
+  q_inj_v:
+    display: "Charge-injection pedestal"
+    description: "Voltage step left on the 1 pF hold cap when the switch opens (channel charge + clock feedthrough; complementary halves partially cancel)"
+    unit: V
+    analysis: tran_chargeinj
+    extract: {meas: q_inj_v}
+    spec: {min: -50e-3, max: 50e-3, unit: V}
+  i_leak:
+    display: "Off-state leakage current"
+    description: "Average current drawn from the source into the open switch over the tail of the run"
+    unit: A
+    analysis: tran_chargeinj
+    extract: {meas: i_leak}
+    spec: {min: -1e-8, max: 1e-8, unit: A}

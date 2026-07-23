@@ -1,0 +1,288 @@
+# AUTHORED - focused Ax run for the LDO reference amp. See project.description.
+project:
+  name: AX-amp_032_ti_ldo_error_selfbias
+  description: 'Ax Bayesian sizing of the self-biased TI-LDO reference amp. The validated seed
+    already meets 11 of 12 specs (gain 74.9 dB, ugf 12.1 MHz, vos -2.5 mV, psrr 55.5 dB, cmrr
+    41.7 dB, 140 uA, icmr 3.23 V) and misses ONLY phase margin (21.0 deg vs 60) - the textbook
+    undercompensated-Miller signature. So this run frees exactly the 8 knobs that set PM in a
+    two-stage Miller amp: the compensation network (r_z, c_comp), the second-stage transconductance
+    and its current (xm5_w/l, xmbo_w), the tail current that sets gm1/UGF (xmbc_w, xm1_w), and the
+    overall bias level (xmbp_w, the power/PSRR knob). Everything else is frozen at the seed.
+    LESSON APPLIED FROM amp_032: the export-raw-project generator FREEZES r_z and c_comp by default
+    ("passives + integer counts frozen"). On amp_032 that pinned the two primary PM levers for two
+    entire optimizer passes and no sizing could reach 60 deg; unfreezing them took PM 21.9 -> 65.8
+    deg in one run. They are explicitly free here.
+    ALSO APPLIED: a focused 8-knob space beat an unbiased 18-knob space at the same 30-trial budget
+    on amp_032 (24-27/30 converged vs 21/30, and the wide run produced only unstable 6-11x-area
+    designs). Narrowing here is a deliberate, documented budget decision - not a hidden prior about
+    where the answer is.
+    SPECS TO PROTECT (all currently passing, so they carry real weight): vos <= 5 mV is this block''s
+    reason for existing (it sets the LDO output level and lands at VOUT x2 through the divider);
+    cmrr is marginal at 41.7 vs 40; dcgain >= 60 dB sets the reference-gain accuracy. ugf is given a
+    deliberately slack 2 MHz target against a 12.1 MHz seed and a low weight, because raising PM
+    means a bigger Cc and Ax must be free to spend that headroom.'
+  simulator: ngspice
+  save_sim: false
+  parallel_sim: true
+  ws_root: ../..
+  netlist: raw_optimize/_abs/amp_032/dc_op.spice
+  outdir: raw_optimize/generated/_runs/amp_032_ax_balanced
+  tech_spec:
+    name: gf180mcu
+    constraints: {}
+  dut_params:
+  # --- FREE: compensation network (the ONLY failing spec is pm; these are its primary levers) ---
+  - name: r_z
+    min_val: 100.0
+    max_val: 50000.0
+  - name: c_comp
+    min_val: 2.0e-13
+    max_val: 2.0e-11
+  # --- FREE: output stage (sets the non-dominant pole) ---
+  - name: x_dut_xm6_w
+    min_val: 2.0e-05
+    max_val: 0.0001
+  - name: x_dut_xm6_l
+    min_val: 5.0e-07
+    max_val: 4.0e-06
+  # --- FREE: stage-1 current + input device (gm1 -> UGF, which trades against pm) ---
+  - name: x_dut_xmb0_w
+    min_val: 5.0e-06
+    max_val: 4.0e-05
+  - name: x_dut_xm1_w
+    min_val: 1.0e-05
+    max_val: 0.0001
+  # --- FREE: mirror load (stage-1 gain + the branch balance that sets vos) ---
+  - name: x_dut_xm3_w
+    min_val: 1.0e-05
+    max_val: 0.0001
+  # --- FREE: overall bias level (power / PSRR trade) ---
+  - name: x_dut_xmbp_w
+    min_val: 2.0e-06
+    max_val: 3.2e-05
+  # --- FROZEN at the seed ---
+  - name: x_dut_xmbp_l
+    freeze: true
+    val: 2.0e-06
+  - name: x_dut_xmb0_l
+    freeze: true
+    val: 2.0e-06
+  - name: x_dut_xmbc_m
+    freeze: true
+    val: 1.0
+  - name: x_dut_xmbo_m
+    freeze: true
+    val: 1.0
+  - name: x_dut_xm1_l
+    freeze: true
+    val: 7.0e-07
+  - name: x_dut_xm3_l
+    freeze: true
+    val: 5.0e-07
+  - name: x_dut_xm4_w
+    freeze: true
+    val: 1.0e-05
+  - name: x_dut_xm4_l
+    freeze: true
+    val: 5.0e-07
+  - name: x_dut_xmbf_w
+    freeze: true
+    val: 5.0e-06
+  testbenches:
+  - name: dc_op
+    params: []
+    netlist: raw_optimize/_abs/amp_032/dc_op.spice
+    enable: true
+    description: 'raw deck: dc_op'
+  - name: ac_open_loop
+    params: []
+    netlist: raw_optimize/_abs/amp_032/ac_open_loop.spice
+    enable: true
+    description: 'raw deck: ac_open_loop'
+  - name: ac_closed_loop
+    params: []
+    netlist: raw_optimize/_abs/amp_032/ac_closed_loop.spice
+    enable: true
+    description: 'raw deck: ac_closed_loop'
+  - name: psrr_vdd
+    params: []
+    netlist: raw_optimize/_abs/amp_032/psrr_vdd.spice
+    enable: true
+    description: 'raw deck: psrr_vdd'
+  - name: cmrr_vcm
+    params: []
+    netlist: raw_optimize/_abs/amp_032/cmrr_vcm.spice
+    enable: true
+    description: 'raw deck: cmrr_vcm'
+  - name: noise
+    params: []
+    netlist: raw_optimize/_abs/amp_032/noise.spice
+    enable: true
+    description: 'raw deck: noise'
+  - name: tran_step
+    params: []
+    netlist: raw_optimize/_abs/amp_032/tran_step.spice
+    enable: true
+    description: 'raw deck: tran_step'
+  optimizer_config:
+    type: ax
+    random_seed: 48
+    budget: 30
+    name: AxConstraint
+    lin_variable_bounds:
+      min: 0
+      max: 100
+    log_variable_bounds:
+      min: 1
+      max: 100
+    target_specs:
+    - name: pm
+      description: THE failing spec - undercompensated at the seed (21.0 deg)
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exceed
+      target: 60
+      range: 45
+      tolerance: 5
+      weight: 8.0
+      reward_type: log
+      enable: true
+    - name: vos
+      description: systematic offset - this block sets the LDO output level, so protect the -2.5 mV seed
+      testbench: dc_op
+      sim_type: op
+      goal: minimize
+      target: 0.015
+      range: 0.05
+      tolerance: 0.0005
+      weight: 4.0
+      reward_type: log
+      enable: true
+    - name: dcgain
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exceed
+      target: 60
+      range: 40
+      tolerance: 1
+      weight: 2.0
+      reward_type: log
+      enable: true
+    - name: i(i_supply)
+      testbench: dc_op
+      sim_type: op
+      goal: minimize
+      target: 0.00015
+      range: 0.0005
+      tolerance: 1.0e-06
+      weight: 2.0
+      reward_type: log
+      enable: true
+    - name: psrr_vdd_db
+      testbench: psrr_vdd
+      sim_type: ac
+      goal: exceed
+      target: 40
+      range: 40
+      tolerance: 2
+      weight: 2.0
+      reward_type: log
+      enable: true
+    - name: cmrr_db
+      description: marginal at the seed (41.7 vs 40) - needs protecting, not just tracking
+      testbench: cmrr_vcm
+      sim_type: ac
+      goal: exceed
+      target: 40
+      range: 40
+      tolerance: 2
+      weight: 2.0
+      reward_type: log
+      enable: true
+    - name: ugf
+      description: slack target vs the 12.1 MHz seed - Ax must be free to spend UGF on phase margin
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exceed
+      target: 2000000.0
+      range: 10000000.0
+      tolerance: 100000.0
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: gain_cl
+      testbench: ac_closed_loop
+      sim_type: ac
+      goal: exact
+      target: 1.0
+      range: 0.5
+      tolerance: 0.05
+      weight: 1.0
+      reward_type: none
+      enable: true
+    - name: bw_cl
+      testbench: ac_closed_loop
+      sim_type: ac
+      goal: exceed
+      target: 1000000.0
+      range: 10000000.0
+      tolerance: 100000.0
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: v(inoise_total)
+      testbench: noise
+      sim_type: noise
+      goal: minimize
+      target: 0.0003
+      range: 0.001
+      tolerance: 1.0e-07
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: v(onoise_total)
+      testbench: noise
+      sim_type: noise
+      goal: minimize
+      target: 0.001
+      range: 0.01
+      tolerance: 1.0e-06
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: t_settle
+      testbench: tran_step
+      sim_type: tran
+      goal: minimize
+      target: 5.0e-07
+      range: 5.0e-06
+      tolerance: 1.0e-08
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: active_area
+      description: sim-free Sigma W*L*m over all 9 devices (um^2); XM2/XM4 are tied to XM1/XM3
+      testbench: dc_op
+      sim_type: op
+      goal: minimize
+      target: 250.0
+      range: 500.0
+      tolerance: 10.0
+      weight: 1.5
+      reward_type: log
+      enable: true
+      measurement:
+        derived: active_area
+        scale: 1000000000000.0
+        devices:
+        - {w: x_dut_xmbp_w, l: x_dut_xmbp_l}
+        - {w: x_dut_xmb0_w, l: x_dut_xmb0_l}
+        - {w: x_dut_xmb0_w, l: x_dut_xmb0_l, m: x_dut_xmbc_m}
+        - {w: x_dut_xmbf_w, l: x_dut_xmb0_l}
+        - {w: x_dut_xmb0_w, l: x_dut_xmb0_l, m: x_dut_xmbo_m}
+        - {w: x_dut_xm1_w, l: x_dut_xm1_l}
+        - {w: x_dut_xm1_w, l: x_dut_xm1_l}
+        - {w: x_dut_xm3_w, l: x_dut_xm3_l}
+        - {w: x_dut_xm3_w, l: x_dut_xm3_l}
+        - {w: x_dut_xm4_w, l: x_dut_xm4_l}
+        - {w: x_dut_xm6_w, l: x_dut_xm6_l}

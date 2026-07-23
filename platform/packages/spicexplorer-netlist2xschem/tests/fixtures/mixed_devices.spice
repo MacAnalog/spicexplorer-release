@@ -1,0 +1,9 @@
+* mixed_devices — tiny golden fixture exercising every v1 symbol mapping
+* one nmos, one pmos (X-prefixed IHP convention), plus R / C / V / I primitives.
+XM1 out in 0 0 sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XM2 vdd in out vdd sg13_lv_pmos w=2u l=0.13u ng=1 m=1
+R1 out vdd 10k
+C1 out 0 1p
+V1 vdd 0 1.8
+I1 vdd in 10u
+.end

@@ -1,0 +1,15 @@
+# Analysis binding (plan D-4): noise_diff template — input-referred noise density of the
+# differential path (self-biased DUT).
+schema: spicexplorer/analysis@1
+id: noise
+template: noise_diff
+description: "Input-referred noise density (vn_in)."
+params:
+  FSTART: 1
+  FSTOP: 10MEG
+  PPD: 21
+  CL: 50f
+  VCM: 0.6
+  VDD: 1.2
+flags: []
+produces: [vn_in]

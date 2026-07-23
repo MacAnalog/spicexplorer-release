@@ -1,0 +1,28 @@
+# Design variables for the ihp-sg13g2 binding — the 2026-07-20 real-5T-CMFB campaign
+# NMOS-input winner (validated secondary; drawings/SIZING_VALIDATION_REPORT.md §8;
+# machine copy drawings/sizing-and-specs.yaml shared.real_5t_cmfb.nmos_input_winner).
+# In-loop (sized amp_031 SRMC core): CM errors 3.8/4.8 mV, PM 58.9 deg, kick residual
+# 0.000 both loops. Defaults are the ROUNDED 3-sigfig values (reproduce full precision
+# exactly; match drawings/shared/amp-single-ended-5t-nmos-input.sch). Group
+# representatives only (abstract/params.yaml ties): XM2<-XM1 (pair), XM4<-XM3 (mirror),
+# RMN<-RMP.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xm1_w, description: "NMOS input pair width (XM1/XM2)", default: 0.349u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm1_l, description: "NMOS input pair length", default: 0.834u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_xm3_w, description: "PMOS mirror width (XM3 diode / XM4 output)", default: 0.218u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm3_l, description: "PMOS mirror length (long: sets output ro and the servo pole)", default: 1.19u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_xm8_w, description: "NMOS tail width (mirrors the XM5 bias diode)", default: 18u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm8_l, description: "NMOS tail length", default: 0.484u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_xm5_w, description: "Bias-string NMOS diode width", default: 1.57u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm5_l, description: "Bias-string NMOS diode length", default: 0.276u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_xm6_w, description: "Bias-string PMOS diode width (with XM5 sets the string current)", default: 0.178u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm6_l, description: "Bias-string PMOS diode length", default: 1.07u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_rmp_value, description: "CM-detector averaging resistor (RMN tied; high-R to avoid loading the sensed outputs)", default: 1Meg, min: 10k, max: 100Meg, unit: Ohm}
+  # Frozen per-device literals: defaults reproduce the drawn m=1 exactly.
+  - {name: x_dut_xm1_m, description: "XM1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm3_m, description: "XM3 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm5_m, description: "XM5 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm6_m, description: "XM6 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm8_m, description: "XM8 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

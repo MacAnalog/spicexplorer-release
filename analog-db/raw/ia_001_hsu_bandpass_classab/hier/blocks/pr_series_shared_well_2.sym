@@ -1,0 +1,19 @@
+v {xschem version=3.4.6 file_version=1.2}
+G {type=subcircuit
+format="@name @pinlist @symname"
+template="name=x1"}
+V {}
+S {}
+E {}
+L 4 -115 -60 115 -60 {}
+L 4 115 -60 115 60 {}
+L 4 115 60 -115 60 {}
+L 4 -115 60 -115 -60 {}
+B 5 132.5 -22.5 137.5 -17.5 {name=sum_n dir=out}
+L 4 115 -20 135 -20 {}
+T {a} 103 -20 0 0 0.16 0.16 {layer=4}
+B 5 132.5 17.5 137.5 22.5 {name=voutn dir=out}
+L 4 115 20 135 20 {}
+T {b} 103 20 0 0 0.16 0.16 {layer=4}
+T {pr_series_shared_well_2} -107 -52 0 0 0.3 0.3 {layer=4}
+T {@name} -107 36 0 0 0.2 0.2 {layer=4}

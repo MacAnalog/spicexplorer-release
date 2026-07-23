@@ -1,0 +1,49 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# Gain-stage metric sheet: peak DC transfer gain, bias-wrapped AC gain/bandwidth, self-biased
+# op point, power. The stage self-biases in dc_op/ac_gain (bias-wrap), so no VCM condition.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.5}
+  ibias:  {unit: uA, typical: 20}
+  cload:  {unit: F, typical: 200e-15}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  i_supply:
+    display: "Supply current (self-biased)"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {min: 5.0e-6, max: 3.0e-4, unit: A}
+  v_trip:
+    display: "Self-biased trip point (vin = vout)"
+    unit: V
+    analysis: dc_op
+    extract: {meas: v_trip}
+    spec: {min: 0.2, max: 1.3, unit: V}
+  gain_dc:
+    display: "Peak DC transfer gain |dVout/dVin|"
+    description: "Max incremental gain magnitude over the full-range input sweep."
+    unit: "V/V"
+    analysis: dc_transfer
+    extract: {meas: gain_dc}
+    spec: {min: 20, unit: "V/V"}
+  vin_pk:
+    display: "Input voltage at peak gain"
+    unit: V
+    analysis: dc_transfer
+    extract: {meas: vin_pk}
+    spec: {min: 0.2, max: 1.3, unit: V}
+  gain_ac_db:
+    display: "AC gain at the self-biased trip point"
+    unit: dB
+    analysis: ac_gain
+    extract: {meas: gain_ac_db}
+    spec: {min: 26, unit: dB}
+  f3db_hz:
+    display: "-3 dB bandwidth into CL"
+    unit: Hz
+    analysis: ac_gain
+    extract: {meas: f3db_hz}
+    spec: {min: 1.0e5, unit: Hz}

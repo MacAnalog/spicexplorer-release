@@ -1,0 +1,125 @@
+** Example of simple 5-transistor OTA noise analysis testbench
+**.subckt ota-5t_tb-noise
+*----------------------------------------------------------*
+* Testbench
+*----------------------------------------------------------*
+Vdd v_dd GND VDD
+xota v_dd v_out v_cm net1 net2 v_ena v_ss ota-5t
+Vss v_ss GND 0
+C1 v_out v_ss CL m=1
+Vcm v_cm v_ss dc VCM
+I0 v_dd net2 IBIAS
+Venable v_ena v_ss VDD
+.save v(v_cm)
+.save v(v_out)
+.save v(v_ena)
+Vin v_cm net1 dc 0 ac 1
+
+*----------------------------------------------------------*
+* Technology Library
+*----------------------------------------------------------*
+ .lib cornerMOSlv.lib mos_tt
+
+
+
+.temp 27
+*----------------------------------------------------------*
+* Control Block
+*----------------------------------------------------------*
+.control
+  echo ==================================
+  echo start of Control
+  echo ==================================
+  option sparse
+  set filetype=ascii
+  save all
+
+  echo
+  echo (C) start of Noise sim
+  echo ----------------------------------
+  noise v(v_out) Vin lin 1000 1MEG 1000MEG 1
+  print inoise_total
+  print onoise_total
+
+  echo
+  echo SAVING SIMULATION RESULTS IN THE RAW FILE
+  * ngspice's `noise` makes TWO plots: noise1 = Noise Spectral Density Curves,
+  * noise2 = Integrated Noise. Without `set appendwrite` the second bare `write`
+  * OVERWRITES the raw and only one plot survives (core spicelib.py NOISE_1/2).
+  echo NOISE 1 saving the Noise Spectral Density Curves
+  setplot noise1
+  * plot inoise_spectrum linplot
+  * plot onoise_spectrum linplot
+  remzerovec
+  write
+  set appendwrite
+
+  echo
+  echo NOISE 2 saving the Integrated Noise
+  setplot noise2
+  remzerovec
+  write
+
+  echo ==================================
+  echo END of Control
+  echo ==================================
+  quit 
+  * ^ This is needed for spicelib (uncommented)
+
+.endc
+
+
+*----------------------------------------------------------*
+* Parameter Definitions
+*----------------------------------------------------------*
+
+.param VDD=1.5
+.param VCM=0.8
+.param CL=50f
+
+.param IBIAS=20u
+
+.param x_dut_nfet_input_w=0.5u
+.param x_dut_nfet_input_l=5.0u
+
+.param x_dut_nfet_mirror_w=2.0u
+.param x_dut_nfet_mirror_l=5.0u
+
+.param x_dut_pfet_load_w=1.5u
+.param x_dut_pfet_load_l=5.0u
+
+.param x_dut_nfet_mirror_ref_w=2.0u
+.param x_dut_nfet_mirror_ref_l=5.0u
+
+
+*----------------------------------------------------------*
+* Subcircuit Definition
+*----------------------------------------------------------*
+* expanding   symbol:  ota-5t.sym # of pins=7
+** sym_path: ota-5t.sym
+** sch_path: ota-5t.sch
+.subckt ota-5t vdd vout vinp vinn ibias_20u d_ena vss
+*.ipin ibias_20u
+*.iopin vdd
+*.iopin vss
+*.ipin vinp
+*.ipin vinn
+*.opin vout
+*.ipin d_ena
+XM5 tail gate_n vss vss sg13_lv_nmos w=x_dut_nfet_mirror_w l=x_dut_nfet_mirror_l ng=1 m=1
+XM4 vout gate_p vdd vdd sg13_lv_pmos w=x_dut_pfet_load_w l=x_dut_pfet_load_l ng=1 m=1
+XM1 gate_p vinp tail vss sg13_lv_nmos w=x_dut_nfet_input_w l=x_dut_nfet_input_l ng=1 m=1
+XM2 vout vinn tail vss sg13_lv_nmos w=x_dut_nfet_input_w l=x_dut_nfet_input_l ng=1 m=1
+XM3 gate_p gate_p vdd vdd sg13_lv_pmos w=x_dut_pfet_load_w l=x_dut_pfet_load_l ng=1 m=1
+XM6 ibias_20u gate_n vss vss sg13_lv_nmos w=x_dut_nfet_mirror_ref_w l=x_dut_nfet_mirror_ref_l ng=1 m=1
+XM9 gate_n ena_n vss vss sg13_lv_nmos w=0.5u l=0.13u ng=1 m=1
+XM11 gate_p ena vdd vdd sg13_lv_pmos w=1.5u l=0.13u ng=1 m=1
+XM7 ena ena_n vss vss sg13_lv_nmos w=0.5u l=0.13u ng=1 m=1
+XM8 ena ena_n vdd vdd sg13_lv_pmos w=1.5u l=0.13u ng=1 m=1
+XM10 ibias_20u ena gate_n vss sg13_lv_nmos w=0.5u l=0.13u ng=1 m=1
+XM12 ena_n d_ena vss vss sg13_lv_nmos w=0.5u l=0.13u ng=1 m=1
+XM13 ena_n d_ena vdd vdd sg13_lv_pmos w=1.5u l=0.13u ng=1 m=1
+.ends
+
+.GLOBAL GND
+.end

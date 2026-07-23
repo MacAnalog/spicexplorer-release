@@ -1,0 +1,60 @@
+{
+  "components": [
+    {
+      "connections": {
+        "N": "vcm_out",
+        "P": "vinn"
+      },
+      "device_type": "RES",
+      "id": "RMN",
+      "params": {
+        "Value": "'x_dut_rmn_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vinp",
+        "P": "vcm_out"
+      },
+      "device_type": "RES",
+      "id": "RMP",
+      "params": {
+        "Value": "'x_dut_rmp_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    }
+  ],
+  "meta": {
+    "circuit_name": "sup_001_vcm_detector",
+    "component_count": 2,
+    "net_count": 3
+  },
+  "nets": [
+    {
+      "is_supply": false,
+      "name": "vcm_out",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vinn",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vinp",
+      "supply_type": ""
+    }
+  ]
+}

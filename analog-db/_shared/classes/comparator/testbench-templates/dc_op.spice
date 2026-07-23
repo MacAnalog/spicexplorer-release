@@ -1,0 +1,29 @@
+** AUTHORED TEMPLATE — comparator/dc_op: DC operating point + supply current (continuous-time).
+** The inverting input sits at VCM, the non-inverting input at VCM + VOD (a decided-high
+** overdrive), so the reported v_out is the HIGH output level and i_supply the decided-state
+** static draw.
+** Port convention: vdd vout vinp vinn vss (self-contained DUT, no bias port).
+** Bindings: DUT PORT_LINE VDD VCM VOD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param VOD=${VOD}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vinn vinn 0 dc {VCM}
+Vinp vinp 0 dc {VCM+VOD}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  let v_out = v(vout)
+  print i_supply v_out
+  write
+  quit
+.endc
+.end

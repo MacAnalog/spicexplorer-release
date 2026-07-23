@@ -1,0 +1,28 @@
+** AUTHORED TEMPLATE — ldo/tran_line_step: fast lo->hi->lo supply step at fixed load;
+** peak-to-peak output deviation. The time-domain complement of line_regulation's DC sweep,
+** following the vendored "Line Transient" benches (circuits/ldo_004_basic_pmos/reference/ltspice/
+** Line Transient_6p27..28.asc): the p2p window spans both supply edges, so v_line_pp includes
+** the transient spikes AND any DC line-regulation shift between the two rails — keep both
+** rails above the dropout knee.
+** Bindings: DUT PORT_LINE VDD_LO VDD_HI ILOAD COUT TSTART TEDGE TPULSE TPER TSTEP TSTOP
+**   PDK_INCLUDE.
+${PDK_INCLUDE}
+
+Vdd  vdd 0 pulse(${VDD_LO} ${VDD_HI} ${TSTART} ${TEDGE} ${TEDGE} ${TPULSE} ${TPER})
+Vss  vss 0 dc 0
+Iload vout 0 dc ${ILOAD}
+CLoad vout 0 ${COUT}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP}
+  meas tran vout_max MAX v(vout) from=${TSTART} to=${TSTOP}
+  meas tran vout_min MIN v(vout) from=${TSTART} to=${TSTOP}
+  let v_line_pp = vout_max - vout_min
+  print v_line_pp
+  write
+  quit
+.endc
+.end

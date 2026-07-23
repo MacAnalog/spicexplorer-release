@@ -1,0 +1,10 @@
+# Analysis binding: large-signal THD in the unity buffer (class template). 100 mV @ 1 MHz —
+# the same drive the P5d live proofs used (native-PSS 0.076 % == tran+FFT 0.077 % on
+# FOUNDRY-n65). ngspice runs the tran; the Spectre lane composes a native pss at F0 (HARMS).
+schema: spicexplorer/analysis@1
+id: thd
+template: thd
+description: "THD — unity-buffer large-signal sine; tran+FFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.5, VCM: 0.6, IBIAS: 20u, CL: 500f, ASIG: 0.1, F0: 1.0e6, TSTEP: 2n, TSTOP: 20u, HARMS: 7}
+flags: []
+produces: []

@@ -1,0 +1,131 @@
+{
+  "area": {
+    "active_gate_area_um2": 411.0,
+    "c_count": 1,
+    "c_total_f": 2e-12,
+    "mos_count": 12,
+    "r_count": 1,
+    "r_total_ohm": 1000.0
+  },
+  "circuit": "amp_019_ti_ldo_error",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_closed_loop": {
+          "measures": {
+            "bw_cl": 41096630.0,
+            "gain_cl": 0.9788771
+          },
+          "status": "ok"
+        },
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 40.29435,
+            "pm": 49.03196,
+            "ugf": 23506000.0
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.002320552
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.0001377816,
+            "onoise_total": 4.269569e-05
+          },
+          "status": "ok"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 6.2987e-08,
+            "tcross": 1.062987e-06,
+            "vfinal": 1.594268
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-04T01:20:16+00:00"
+      }
+    }
+  },
+  "design_id": "e337f68e9f",
+  "metrics": {
+    "tt": {
+      "bw_cl_hz": {
+        "spec": "pass",
+        "value": 41096630.0
+      },
+      "dc_gain_db": {
+        "spec": "pass",
+        "value": 40.29435
+      },
+      "gain_cl": {
+        "spec": "pass",
+        "value": 0.9788771
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 0.002320552
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 49.03196
+      },
+      "t_settle": {
+        "spec": "pass",
+        "value": 6.2987e-08
+      },
+      "ugf_hz": {
+        "spec": "pass",
+        "value": 23506000.0
+      },
+      "vn_in": {
+        "spec": "pass",
+        "value": 0.0001377816
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "c_comp": "2p",
+      "x_dut_xm7_l": "0.5u",
+      "x_dut_xm1_l": "0.7u",
+      "x_dut_xm3_l": "0.5u",
+      "x_dut_xmb0_l": "2u",
+      "x_dut_xm6_l": "2u",
+      "x_dut_xm4_l": "0.5u",
+      "x_dut_xmbo_m": "1",
+      "x_dut_xmbc_m": "1",
+      "r_z": "1k",
+      "x_dut_xm7_w": "20u",
+      "x_dut_xm1_w": "40u",
+      "x_dut_xm3_w": "40u",
+      "x_dut_xmb0_w": "20u",
+      "x_dut_xmbe_w": "5u",
+      "x_dut_xmbf_w": "5u",
+      "x_dut_xm6_w": "80u",
+      "x_dut_xm4_w": "10u"
+    }
+  },
+  "pdk": "gf180mcu",
+  "ppa": {
+    "active_gate_area_um2": 411.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 40.29435,
+      "pm_deg": 49.03196,
+      "ugf_hz": 23506000.0
+    },
+    "power_w": 0.0076578216
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

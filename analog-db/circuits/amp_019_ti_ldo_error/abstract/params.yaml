@@ -1,0 +1,44 @@
+# amp_019_ti_ldo_error — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit amp_019_ti_ldo_error --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  CC: {Value: c_comp}
+  RZ: {Value: r_z}
+  XM1: {l: x_dut_xm1_l, w: x_dut_xm1_w}
+  XM2: {l: x_dut_xm2_l, w: x_dut_xm2_w}
+  XM3: {l: x_dut_xm3_l, w: x_dut_xm3_w}
+  XM4: {l: x_dut_xm4_l, w: x_dut_xm4_w}
+  XM5: {l: x_dut_xm5_l, w: x_dut_xm5_w}
+  XM6: {l: x_dut_xm6_l, w: x_dut_xm6_w}
+  XM7: {l: x_dut_xm7_l, w: x_dut_xm7_w}
+  XMB0: {l: x_dut_xmb0_l, w: x_dut_xmb0_w}
+  XMBC: {l: x_dut_xmbc_l, m: x_dut_xmbc_m, w: x_dut_xmbc_w}
+  XMBE: {l: x_dut_xmbe_l, w: x_dut_xmbe_w}
+  XMBF: {l: x_dut_xmbf_l, w: x_dut_xmbf_w}
+  XMBO: {l: x_dut_xmbo_l, m: x_dut_xmbo_m, w: x_dut_xmbo_w}
+groups:
+- name: mirror_xmb0_l
+  kind: mirror_length
+  members: [XMB0, XMBC, XMBF, XMBE, XMBO]
+  tie: [l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): l_mirror (l).'
+- name: shared_xmb0_w
+  kind: shared_geometry
+  members: [XMB0, XMBC, XMBO]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_mirror (w).'
+- name: pair_xm1_xm2
+  kind: matched_pair
+  members: [XM1, XM2]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_in (w), l_in
+    (l).'
+- name: shared_xm3_w_l
+  kind: shared_geometry
+  members: [XM3, XM5]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_load (w),
+    l_load (l).'

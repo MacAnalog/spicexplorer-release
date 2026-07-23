@@ -1,0 +1,60 @@
+schema: spicexplorer/circuit@1
+id: ia_002_fan_chopper_simple
+class: ia
+tier: ia
+subfamily: ccia
+realization: transistor
+display_name: Fan capacitively-coupled chopper CCIA (simple, no input-impedance boost)
+stages: 2
+compensation: miller
+ports:
+- vinp
+- vinn
+- voutp
+- voutn
+- vref
+- clk_chin
+- clk_chin_not
+- clk_chfb
+- clk_chfb_not
+- clk_chout
+- clk_chout_not
+- vdd
+- vss
+provenance:
+  source: drawings/ccia-02-QinwenFan-chopper-ripple-reduction (hand-drawn xschem, ccia-dut-chopper-simple.sch)
+  paper: "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011"
+  aliases: [ccia-dut-chopper-simple]
+  designer: "Noorizadeh (schematic capture, after Fan et al.)"
+  notes: >-
+    The CCIA system entry composing the two-stage opamp core (amp_026) with the
+    input/feedback chopper network: input chopper + Cin caps into the summing
+    nodes, cap feedback (Cfb) through the feedback chopper, Rb bias resistors to
+    vref, and the core's embedded output chopper clocked from clk_chout. CHOPPER
+    NOTE (drawing fixed 2026-07-16, DRAWING_REVIEW.md §1; entry matches the
+    drawing): every chopper block (chopper-diff) is a TRUE 4-gate modulator —
+    two straight transmission gates plus two cross gates on the swapped clock
+    hookup — so the clocked bench (tran_chopper_ripple) measures real chopping
+    (modulate + demodulate through the in/fb choppers); the static benches hold
+    the clocks transparent (straight path on, cross path off), in which
+    configuration this IS a working capacitively-coupled IA with cap-ratio gain
+    Cin/Cfb. The embedded core's four formerly floating source nets (XM1/XM6/XM9
+    -> vdd, XM15 -> vss) are FIXED in the drawing (DRAWING_REVIEW.md §2) — no
+    deviation remains for that item. Drawn unsized (placeholder minimum-size
+    devices) with Vb1..Vb4 as
+    external bias ports; this entry pulls the four bias levels inside as
+    knob-driven dc sources (instantiator-owns-bias,
+    plan_hierarchical_composition D3/D4). The drawn Rb=1k placeholder would put
+    the high-pass corner at ~MHz — the 10Meg sizing default is a deliberate
+    sizing-floor choice.
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/ccia-dut-chopper-simple.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks:
+- ihp-sg13g2
+- FOUNDRY-n65
+analyses: [dc_op, tran_chopper_ripple, tran_zin_chopped,
+           pac_gain, pac_zin, pnoise_chopped]
+status: draft

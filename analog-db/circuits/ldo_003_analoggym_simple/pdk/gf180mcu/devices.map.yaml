@@ -1,0 +1,5 @@
+# Generic device kind -> gf180mcu device name. HV mapping: 6 V family (umbrella corner sections).
+pdk: gf180mcu
+devices:
+  nmos: {model: nfet_06v0}
+  pmos: {model: pfet_06v0}

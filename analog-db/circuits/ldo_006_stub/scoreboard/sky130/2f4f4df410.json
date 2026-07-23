@@ -1,0 +1,71 @@
+{
+  "area": {
+    "active_gate_area_um2": 25.0,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 1,
+    "r_count": 2,
+    "r_total_ohm": 200000.0
+  },
+  "circuit": "ldo_006_stub",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 7.500002e-06,
+            "vout_dc": 0.6505431
+          },
+          "status": "ok"
+        },
+        "load_regulation": {
+          "measures": {
+            "load_reg": 1.39117,
+            "vout_max": 0.6505431,
+            "vout_min": -0.740627
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T04:44:54+00:00"
+      }
+    }
+  },
+  "design_id": "2f4f4df410",
+  "metrics": {
+    "tt": {
+      "i_q": {
+        "spec": "pass",
+        "value": 7.500002e-06
+      },
+      "load_reg": {
+        "spec": "fail",
+        "value": 1.39117
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "r_bot": "100k",
+      "r_top": "100k",
+      "x_dut_xm1_l": 0.5,
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": 50
+    }
+  },
+  "pdk": "sky130",
+  "ppa": {
+    "active_gate_area_um2": 25.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "load_reg": 1.39117
+    },
+    "power_w": 1.1250003e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

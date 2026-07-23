@@ -1,0 +1,29 @@
+# ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
+# PROMOTED from the sfe_ptat_65_classic reference entry: authored a device-generic abstract
+# netlist + open-PDK bindings so the resistorless 4T PTAT cell is lowerable, assembled and
+# simulated. The original FOUNDRY 65nm spectre deck is retained under `references` (it must PARSE
+# but is never simulated here — no FOUNDRY models in this repo).
+schema: spicexplorer/circuit@1
+id: tsn_003_ptat_4t_xcoupled
+class: temp_sensor
+display_name: "Resistorless 4T PTAT cell (cross-coupled NMOS/PMOS pairs)"
+stages: 1
+ports: [vdd, vout, vss]
+provenance:
+  source: AnalogGym "Sensing Front End" (CODA-Team/AnalogGym)
+  aliases: [ptat_65_classic, PTAT_65_classic1, sfe_ptat_65_classic]
+  paper: "Classic 4T PTAT voltage generator (sub-threshold, resistorless)"
+  license: BSD-3-Clause
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, sky130, gf180mcu]
+analyses: [dc_op, temp_sweep, line_sweep, psrr]
+references:
+  - {tool: spectre, dir: spectre/65nm, node: 65nm}
+optimize:
+  budget: 500
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

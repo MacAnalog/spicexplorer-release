@@ -1,0 +1,12 @@
+# Analysis binding for the SELF-BIASED reference amp (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# VCM = 0.8 V is this block's TRUE in-LDO input common mode (it sits on VREF, and the divider
+# tap on vinn regulates to the same level) — NOT amp_032's 1.2 V. On gf180 6 V devices this is
+# a low CM for an NMOS input pair, so the tail-sink headroom is the thing to watch here.
+schema: spicexplorer/analysis@1
+id: psrr_vdd
+template: psrr_vdd_selfbias
+description: "PSRR+ (Adm/Add), DC-band floor. Supply ripple here propagates straight to the LDO output through v_ref_out, so this is a first-class spec for this block."
+params: {VDD: 3.3, VCM: 0.8, CL: 10p, FSTART: 1k, FSTOP: 1G, PPD: 101}
+flags: []
+produces: [psrr_vdd_db]

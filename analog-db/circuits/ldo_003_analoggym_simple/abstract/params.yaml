@@ -1,0 +1,31 @@
+# ldo_003_analoggym_simple — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit ldo_003_analoggym_simple --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  CC: {Value: c_comp}
+  RZ: {Value: r_z}
+  R_BLEED: {Value: r_bleed}
+  VB: {Value: vb_val}
+  VREF: {Value: vref_val}
+  XM1: {l: x_dut_xm1_l, w: x_dut_xm1_w}
+  XM2: {l: x_dut_xm2_l, w: x_dut_xm2_w}
+  XM3: {l: x_dut_xm3_l, w: x_dut_xm3_w}
+  XM4: {l: x_dut_xm4_l, w: x_dut_xm4_w}
+  XM5: {l: x_dut_xm5_l, w: x_dut_xm5_w}
+  XMP: {l: x_dut_xmp_l, m: x_dut_xmp_m, w: x_dut_xmp_w}
+groups:
+- name: pair_xm1_xm2
+  kind: matched_pair
+  members: [XM1, XM2]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_in (w), l_in
+    (l).'
+- name: mirror_xm4_w_l
+  kind: mirror_length
+  members: [XM4, XM3]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): w_load (w),
+    l_load (l).'

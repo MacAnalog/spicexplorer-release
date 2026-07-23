@@ -1,0 +1,92 @@
+# Functional-subcircuit template library — pseudo-resistors.
+#
+# High-value tunable pseudo-resistors: a very-high-value resistor (MΩ–TΩ) synthesized from one or a
+# few subthreshold MOSFETs, tuned by a floating-voltage generator. Used to bias low-noise TIAs and
+# handle dc leakage in capacitive-feedback front ends.
+#
+# STATUS: partial. The four SERIES-SYMMETRIC two-PMOS cells of Guglielmi 2020 Fig. 3 (a–d) are
+# drawn, netlisted, and registered below (ids per rules/pseudo_resistors.md §4.2). The remaining
+# 12 topologies of the §4 catalog (single-cell, parallel-symmetric, linearity extensions, and the
+# `fvg.*` floating-voltage generators) are still ⬜ pending schematics — add a `templates:` row per
+# topology as each lands.
+#
+# Matching notes (every registered cell carries per-template `match_bulk: true`):
+#   * The four Fig-3 cells were already PAIRWISE DISTINCT bulk-blind — they differ in which of D/G/S
+#     sits on the outer ports vs the shared internal node, not only in their bulk ties — so all four
+#     are registered.
+#   * The ISOLATED-WELL discriminator is now MATCHED, not just documented: each entry sets
+#     `match_bulk: true`, so its MOS bulk edges stay in the matcher's projection and a match asserts
+#     the drawn well wiring (bulk follows the source in all four cells — its own outer port for
+#     a/d, the shared middle node for b/c; never a supply rail — rules/pseudo_resistors.md PR3/§2).
+#     A host whose wells are strapped elsewhere (e.g. to a rail — a mirror leg, not a
+#     pseudo-resistor) no longer aliases onto the cell with the same D/G/S topology. This is also
+#     the matcher capability that unblocks the §4.1 single-cell transdiodes: their only structural
+#     separation from a plain current-mirror reference IS the isolated (non-rail) well.
+#   * The templates have NO supply port: with `match_supply=on` (default) a port net can never map
+#     to a host rail, which enforces the "neither terminal is a supply rail" rule from the note's §6
+#     for free.
+#   * The topology-only netlists omit the floating-voltage generators (an ideal V source collapses
+#     gate to source/node at netlist level) — detection keys on the pure MOS wiring skeleton.
+#
+# Topologies + signatures: Guglielmi, Toso, Zanetto, Sciortino, Mesri, Sampietro, Ferrari,
+# "High-Value Tunable Pseudo-Resistors Design," IEEE JSSC 55(8), 2020, pp. 2094-2105.
+schema: spicexplorer/subcircuit-template-library@1
+family: pseudo_resistor
+display_name: "Pseudo-resistor functional sub-circuits"
+provenance:
+  paper: "Guglielmi et al. — IEEE JSSC 55(8), 2020, pp. 2094-2105"
+  pdk: ihp-sg13g2   # netlisted with sg13_lv_pmos; matching ignores the model
+
+# Design rules — registered for tracking; consumed by humans + LLM agents (see templates/README.md).
+rules:
+  - path: rules/pseudo_resistors.md
+    title: "Pseudo-resistor cell & floating-voltage-generator taxonomy + detection notes"
+    sources: ["Guglielmi 2020"]
+
+# Ports: a / b are the two resistor terminals (port_A / port_B in the netlists). Each template
+# carries `image:` — a headless xschem render (PNG) of its `.sch`, sitting beside the schematic.
+templates:
+  # --- Series symmetric (2 mirrored PMOS cells, Guglielmi Fig. 3) --------------------------------
+  - id: pr.series.indep_well_indep_gen
+    display_name: "Series pseudo-resistor, independent wells + independent generators (Fig. 3a, 2T)"
+    class: series_indep_well_indep_gen
+    polarity: pmos
+    role: pseudo_resistor
+    netlist: simulation/pseudo-resistor-a-independant-well-generator.spice
+    image: pseudo-resistor-a-independant-well-generator.png
+    match_bulk: true   # isolated-well discriminator: match the drawn bulk wiring (see header note)
+    # Per device: gate+source(+bulk) on its own outer port, drains meet at the private middle node.
+    ports: {a: port_A, b: port_B}
+
+  - id: pr.series.shared_well_gen
+    display_name: "Series pseudo-resistor, shared well + shared generator (Fig. 3b, 2T)"
+    class: series_shared_well_gen
+    polarity: pmos
+    role: pseudo_resistor
+    netlist: simulation/pseudo-resistor-b-well-and-generator.spice
+    image: pseudo-resistor-b-well-and-generator.png
+    match_bulk: true   # isolated-well discriminator: match the drawn bulk wiring (see header note)
+    # Gates+sources(+bulks) share the private middle node, drains face the outer ports.
+    ports: {a: port_A, b: port_B}
+
+  - id: pr.series.shared_well
+    display_name: "Series pseudo-resistor, shared well + independent generators (Fig. 3c, 2T)"
+    class: series_shared_well
+    polarity: pmos
+    role: pseudo_resistor
+    netlist: simulation/pseudo-resistor-c-well-only.spice
+    image: pseudo-resistor-c-well-only.png
+    match_bulk: true   # isolated-well discriminator: match the drawn bulk wiring (see header note)
+    # Each device diode-tied (drain+gate) to its outer port; sources(+bulks) share the middle node.
+    ports: {a: port_A, b: port_B}
+
+  - id: pr.series.shared_gen
+    display_name: "Series pseudo-resistor, independent wells + shared generator (Fig. 3d, 2T)"
+    class: series_shared_gen
+    polarity: pmos
+    role: pseudo_resistor
+    netlist: simulation/pseudo-resistor-d-generator-only.spice
+    image: pseudo-resistor-d-generator-only.png
+    match_bulk: true   # isolated-well discriminator: match the drawn bulk wiring (see header note)
+    # Drains+gates share the middle node (diode toward the middle); sources(+bulks) on the outer ports.
+    ports: {a: port_A, b: port_B}

@@ -1,0 +1,24 @@
+# SUPER-DSL manifest — the full TI-application-note LDO error amplifier, imported standalone from
+# ldo_005_buffered_ref's vendored source tree (reference/ti-ldo/error_amp/error_amp.sch, decoded via
+# .sym pin-geometry resolution). ldo_005_buffered_ref deliberately abstracted this 12T amp down to a
+# proven 5T shape; this circuit is the faithful transistor-count import of the real thing:
+# level-shifted PMOS mirror load (M3m/M4 compound diode) + M7-diode->M6 second stage + Rz/Cc.
+schema: spicexplorer/circuit@1
+id: amp_019_ti_ldo_error
+class: amplifier
+display_name: "TI-LDO error amplifier (12T two-stage, level-shifted mirror load)"
+compensation: "Rz + Cc from the first-stage node to the output"
+stages: 2
+ports: [vdd, vout, vinp, vinn, ibias, vss]   # vinp=VFB (non-inv), vinn=VREF (inv); ibias = the
+                                             # source's I_error_amp_ref exposed per class convention
+provenance:
+  source: circuits/ldo_005_buffered_ref/reference/ti-ldo/error_amp/error_amp.sch
+  aliases: [error_amp, ti_ldo_error_amp]
+  designer: "Danial Noori Zadeh"
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [gf180mcu, ihp-sg13g2, sky130]
+analyses: [dc_op, ac_open_loop, ac_closed_loop, noise, tran_step, psrr_vdd, cmrr_vcm]
+status: draft

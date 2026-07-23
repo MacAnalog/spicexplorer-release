@@ -1,0 +1,79 @@
+# Landing manifest (drawings/README.md lifecycle) — bio-afe-01: Hsu/Liu/Hella,
+# "A -68 dB THD, 0.6 mm2 Active Area Biosignal Acquisition System With a 40-320 Hz
+# Duty-Cycle Controlled Filter", IEEE TCAS-I 67(1), Jan 2020 (sandbox
+# biomedical-afe-design-papers/pdf/Paper_1.pdf).
+#
+# STATUS: PARTIALLY LANDED 2026-07-19 (post B5 closure + dual-engine campaign —
+# SIZING_VALIDATION_REPORT.md). Allocated: SRMC-core-amp-w-cmfb -> amp_031_srmc_core_cmfb
+# (optimizer-SIZED binding; absorbs SRMC-core-amp as its sub-block), capbank ->
+# sw_003_binary_capbank (binary re-parameterization), PGA-ideal -> ia_005_hsu_pga_ideal.
+# Still staged: afe-ideal (BLOCKED on the P4 composition.yaml composer), ccia-ideal,
+# SRMC-ideal + SRMC (await the filter-class decision; validated numbers in
+# drawings/sizing-and-specs.yaml). The `afe` class scaffold now exists
+# (_shared/classes/afe/, no member yet).
+#
+# 2026-07-20 real-5T CMFB follow-through: the drawn ideal CMFB servos now have sized
+# transistor-level replacements (drawings/shared/cmfb-output-amp-5t-{n,p}mos-input[-inv]),
+# and a dedicated `cmfb` class was created for them — cmfb_002_5t_pmos_input +
+# cmfb_003_5t_nmos_input landed (the ideal servo re-classed sup_002 -> cmfb_001).
+# SRMC-core-amp-w-cmfb-5t is the real-CMFB consumer variant (below); the ideal
+# consumer amp_031 is unchanged. Detail: SIZING_VALIDATION_REPORT.md §8.
+#
+# The family: an ideal-block AFE chain (the paper's architecture with behavioral
+# amplifier leaves) + the transistor-level SRMC core. SRMC = Switched-R-MOSFET-C:
+# a first-order active-RC LPF whose series input switch is duty-cycled at FS (1 kHz)
+# so the effective R scales by 1/d — a 40-320 Hz corner from on-chip R/C.
+family: bio-afe-01-YuPinHsu-reconfigable-SRMC
+paper: "Hsu, Liu, Hella, IEEE TCAS-I 67(1):233-245, Jan. 2020"
+blocks:
+  afe-ideal:
+    role: top (COMPOSITE via composition.yaml once blocks land)
+    class: afe            # class scaffold landed 2026-07-19; member BLOCKED on P4 composer
+    realization: mixed
+    chain: ccia-ideal -> PGA-ideal -> SRMC-ideal
+  ccia-ideal:
+    role: block
+    class: ia
+    subfamily: ccia
+    realization: mixed    # ideal-amp-fully-diff core + real pseudo-R PMOS stacks + caps
+  PGA-ideal:
+    role: block
+    class: ia             # programmable-gain cap-feedback amp (plan reconciles PGA onto ia/ota)
+    realization: mixed
+    circuit: ia_005_hsu_pga_ideal   # LANDED 2026-07-19
+    notes: 3-bit binary cap bank x2 (capbank) sets Cin -> gain codes 1..8 (binary since 2026-07-19)
+  capbank:
+    role: block
+    class: switch         # TG-switched binary-weighted cap array
+    realization: transistor
+    circuit: sw_003_binary_capbank   # LANDED 2026-07-19 (binary: value=Cu, m=1/2/4)
+  SRMC-ideal:
+    role: block (the filter, behavioral-core variant)
+    class: support        # until a dedicated `filter` class is decided (triage bench gaps)
+    realization: mixed
+  # SRMC-ideal-switch-only: RETIRED 2026-07-18 (B6). It existed only as an orphan
+  # simulation/ export (no .sch/.sym source) whose scrambled header was the twin
+  # half of the B6 port-order trap. Removed; SRMC-ideal now carries the canonical
+  # port order (vinp vinn voutp voutn VDD VSS V_PHI V_PHI_NOT) for both variants.
+  SRMC-core-amp:
+    role: block (transistor OTA for the SRMC filter)
+    class: amplifier
+    realization: transistor
+  SRMC-core-amp-w-cmfb:
+    role: block (SRMC-core-amp + the ccia-01 CMFB macromodel block)
+    class: amplifier
+    realization: mixed
+    circuit: amp_031_srmc_core_cmfb   # LANDED 2026-07-19, optimizer-SIZED binding;
+                                      # absorbs the bare SRMC-core-amp (not its own entry)
+  SRMC-core-amp-w-cmfb-5t:
+    role: block (SRMC-core-amp + REAL sized 5T CMFB, replacing amp_031's ideal servos)
+    class: amplifier
+    realization: transistor
+    # Consumer of the real cmfb_002_5t_pmos_input (pure symbol-path swap from the ideal
+    # consumer); not separately accessioned yet (amp_032 candidate — owner call). The
+    # CMFB blocks themselves landed in the `cmfb` class (cmfb_002/cmfb_003), sized via
+    # the 2026-07-20 campaign; SIZING_VALIDATION_REPORT.md §8, sizing-and-specs.yaml.
+  SRMC.sch:
+    role: block (strategic TG-switch variant of the filter; simulation/SRMC.spice exported 2026-07-18)
+    class: support
+    realization: mixed

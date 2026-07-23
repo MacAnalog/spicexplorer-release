@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spicexplorer/composition@1",
+  "title": "Composite-circuit manifest (plan_hierarchical_composition §5.2, P4-1)",
+  "description": "AUTHORED at circuits/<id>/composition.yaml. Declares the instance DAG a composite is flattened from: which registry block, pinned topology version, block-port→parent-net map, optional taps (parent net onto a block-internal node) + omit (block device cards the parent wiring replaces — the D3 instantiator-owns-bias seam), and parent-owned sizing overrides. `analog-db generate` composes abstract/netlist.spice (flat, self-contained) + pdk/<pdk>/sizing.yaml from it; both are GENERATED + drift-guarded.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "of", "instances"],
+  "properties": {
+    "schema": { "const": "spicexplorer/composition@1" },
+    "of": {
+      "type": "string",
+      "description": "The composite circuit id — must equal circuit.yaml's id."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Authored prose emitted into the generated netlist header (design intent, sign conventions, deviations)."
+    },
+    "instances": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "block", "pin", "ports"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "Parent-unique instance name. Devices get the _<NAME-uppercased> suffix, internal nets the <name>__ prefix, free knobs the _<name> suffix."
+          },
+          "block": {
+            "type": "string",
+            "description": "A registry circuit id (the block being instantiated)."
+          },
+          "pin": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{12}$",
+            "description": "Pinned block topology version: sha256 of the block's committed abstract/topology.cgraph.json, first 12 hex chars. The compose:pins validator fails on mismatch (bump deliberately after a block change)."
+          },
+          "ports": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": { "type": "string" },
+            "description": "block port → parent net. Keys must be EXACTLY the block's circuit.yaml ports."
+          },
+          "taps": {
+            "type": "object",
+            "additionalProperties": { "type": "string" },
+            "description": "block-INTERNAL net → parent net (exposes an internal node to parent wiring, e.g. a bias node a servo drives). Key must name a non-port net of the block netlist."
+          },
+          "omit": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Block device cards to DROP (exact netlist names), e.g. the internal knob source a tapped parent connection replaces."
+          },
+          "override": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Parent-owned sizing edits: block-LOCAL sizing symbol → new default (applied to every bound PDK's materialized sizing)."
+          }
+        }
+      }
+    },
+    "nets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Composite-owned raw SPICE cards appended verbatim (coupling caps, reference sources, …). Their free symbols live in the parent namespace (declare knobs under sizing.variables)."
+    },
+    "sizing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "variables": {
+          "type": "array",
+          "items": { "type": "object" },
+          "description": "Composite-owned sizing variable rows (sizing@1 variable shape) appended to every generated pdk/<pdk>/sizing.yaml."
+        }
+      }
+    }
+  }
+}

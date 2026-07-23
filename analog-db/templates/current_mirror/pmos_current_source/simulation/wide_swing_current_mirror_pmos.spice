@@ -1,0 +1,19 @@
+** sch_path: wide_swing_current_mirror_pmos.sch
+**.subckt wide_swing_current_mirror_pmos VSS IIN VDD IOUT
+*.iopin VSS
+*.iopin IIN
+*.iopin VDD
+*.iopin IOUT
+XM1 IIN IIN net1 VSS sg13_lv_nmos w=0.15u l=0.13u ng=1 m=1
+XM2 net1 net1 VSS VSS sg13_lv_nmos w=0.15u l=0.13u ng=1 m=1
+XM3 net4 IIN net2 VSS sg13_lv_nmos w=0.15u l=0.13u ng=1 m=1
+XM4 net2 net1 VSS VSS sg13_lv_nmos w=0.15u l=0.13u ng=1 m=1
+XM5 net5 IIN net3 VSS sg13_lv_nmos w=0.15u l=0.13u ng=1 m=1
+XM6 net3 net1 VSS VSS sg13_lv_nmos w=0.15u l=0.13u ng=1 m=1
+XM7 net4 net4 VDD VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM8 net6 net5 VDD VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM9 net5 net4 net6 VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM10 net7 net5 VDD VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM11 IOUT net4 net7 VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+**.ends
+.end

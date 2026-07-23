@@ -1,0 +1,10 @@
+** sch_path: cross_coupled_pmos.sch
+**.subckt cross_coupled_pmos vinp vinn CM_tail VDD
+*.ipin vinp
+*.ipin vinn
+*.ipin CM_tail
+*.ipin VDD
+XM1 vinn vinp CM_tail VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM2 vinp vinn CM_tail VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+**.ends
+.end

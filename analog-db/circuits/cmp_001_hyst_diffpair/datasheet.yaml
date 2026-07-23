@@ -1,0 +1,40 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# Continuous-time comparator sheet: thresholds + hysteresis width, decided-state op + power.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.5}
+  vcm:    {unit: V, typical: 0.75}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  i_supply:
+    display: "Static supply current (decided high)"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {min: 1.0e-6, max: 5.0e-4, unit: A}
+  v_out:
+    display: "Decided-high output level"
+    unit: V
+    analysis: dc_op
+    extract: {meas: v_out}
+    spec: {min: 1.4, unit: V}
+  vth_rise:
+    display: "Rising threshold (ascending sweep)"
+    unit: V
+    analysis: dc_hysteresis
+    extract: {meas: vth_rise}
+    spec: {min: 0.5, max: 1.1, unit: V}
+  vth_fall:
+    display: "Falling threshold (descending sweep)"
+    unit: V
+    analysis: dc_hysteresis
+    extract: {meas: vth_fall}
+    spec: {min: 0.4, max: 1.0, unit: V}
+  v_hyst:
+    display: "Hysteresis width vth_rise - vth_fall"
+    unit: V
+    analysis: dc_hysteresis
+    extract: {meas: v_hyst}
+    spec: {min: 0.005, max: 0.5, unit: V}

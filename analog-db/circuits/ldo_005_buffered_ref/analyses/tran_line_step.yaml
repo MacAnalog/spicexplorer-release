@@ -1,0 +1,19 @@
+# Line transient (supply step) — methodology from the vendored LTspice benches
+# (circuits/ldo_004_basic_pmos/reference/ltspice/Line Transient_6p27..28.asc).
+schema: spicexplorer/analysis@1
+id: tran_line_step
+template: tran_line_step
+description: "Fast 1.6 -> 2.0 V supply step at fixed load; p2p output deviation."
+params:
+  VDD_LO: 3.1
+  VDD_HI: 3.5
+  ILOAD: 1m
+  COUT: 1u
+  TSTART: 5u
+  TEDGE: 100n
+  TPULSE: 20u
+  TPER: 50u
+  TSTEP: 50n
+  TSTOP: 45u
+flags: []
+produces: [v_line_pp]

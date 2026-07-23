@@ -1,0 +1,60 @@
+** Abstract 3-bit binary-weighted TG-switched capacitor bank — one fixed unit cap
+** plus three switched caps whose bottom plates six CMOS transmission gates route
+** to the signal input (bit HIGH) or park at VCM (bit LOW); the "capbank" block of
+** the Hsu PGA (see provenance in circuit.yaml). AUTHORED source of truth (plan
+** D-2). PDK-neutral model tokens (nmos/pmos); per-PDK device names + geometry
+** come from circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vinp vout VCM VDD VSS V_D0 V_D0_NOT V_D1 V_D1_NOT V_D2 V_D2_NOT
+**
+** Topology (from drawings/shared/capbank.sch, hand-flattened here from its six
+** transmission_gate_pair instances x1..x6 after xschem netlisting; BINARY
+** parameterization is the owner decision of 2026-07-19 — DRAWING_REVIEW.md §8
+** finding 1, RESOLVED):
+**   caps — all four carry the SAME shared unit-value symbol Cu; the binary
+**     weighting is STRUCTURAL via the capacitor multiplier m: C1 fixed m=1
+**     (always vinp<->vout), C2 (bit D0) m=1, C3 (bit D1) m=2, C4 (bit D2) m=4
+**     -> C_eff = (1+code)*Cu (live-validated: exactly 1p..8p @ Cu=1p, all 8
+**     codes distinct/monotonic).
+**   bit D0 (was x1/x2): select TG XM1 (nmos, gate V_D0, bulk VSS) + XM2 (pmos,
+**     gate V_D0_NOT, bulk VDD) routes C2's bottom plate bot0 to vinp when D0
+**     HIGH; park TG XM3 (nmos, gate V_D0_NOT) + XM4 (pmos, gate V_D0) routes
+**     bot0 to VCM when D0 LOW (swapped controls — exactly one TG of the pair
+**     conducts per code, so a deselected bottom plate never floats).
+**   bit D1 (was x3/x4): XM5/XM6 select vinp<->bot1, XM7/XM8 park bot1<->VCM.
+**   bit D2 (was x5/x6): XM9/XM10 select vinp<->bot2, XM11/XM12 park bot2<->VCM.
+**   The rails VDD/VSS appear ONLY as bulk connections — no channel current
+**   flows to either rail.
+**   deviation from the drawing: none electrically; the hierarchy is flattened
+**   (x1/XM1 -> XM1, x1/XM2 -> XM2, x2/XM1 -> XM3, x2/XM2 -> XM4, x3/XM1 -> XM5,
+**   x3/XM2 -> XM6, x4/XM1 -> XM7, x4/XM2 -> XM8, x5/XM1 -> XM9, x5/XM2 -> XM10,
+**   x6/XM1 -> XM11, x6/XM2 -> XM12; net1/net2/net3 -> bot0/bot1/bot2) and the
+**   drawn literal cap multipliers m=1/1/2/4 become FROZEN integer knobs
+**   (pdk/*/sizing.yaml) that reproduce them exactly — the weighting is
+**   topology, not sizing. TG devices keep the drawn minimum geometry
+**   (w=0.15u l=0.13u) as the sizing defaults.
+**.subckt sw_003_binary_capbank vinp vout VCM VDD VSS V_D0 V_D0_NOT V_D1 V_D1_NOT V_D2 V_D2_NOT
+* --- binary-weighted caps: shared unit value Cu, structural m weighting ---
+C1 vout vinp 'Cu' m=x_dut_c1_m
+C2 vout bot0 'Cu' m=x_dut_c2_m
+C3 vout bot1 'Cu' m=x_dut_c3_m
+C4 vout bot2 'Cu' m=x_dut_c4_m
+* --- bit D0: select TG vinp <-> bot0 (on when V_D0 HIGH) ---
+XM1 vinp V_D0 bot0 VSS nmos w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+XM2 bot0 V_D0_NOT vinp VDD pmos w=x_dut_xm2_w l=x_dut_xm2_l m=x_dut_xm2_m
+* --- bit D0: park TG VCM <-> bot0 (swapped controls, on when V_D0 LOW) ---
+XM3 VCM V_D0_NOT bot0 VSS nmos w=x_dut_xm3_w l=x_dut_xm3_l m=x_dut_xm3_m
+XM4 bot0 V_D0 VCM VDD pmos w=x_dut_xm4_w l=x_dut_xm4_l m=x_dut_xm4_m
+* --- bit D1: select TG vinp <-> bot1 (on when V_D1 HIGH) ---
+XM5 vinp V_D1 bot1 VSS nmos w=x_dut_xm5_w l=x_dut_xm5_l m=x_dut_xm5_m
+XM6 bot1 V_D1_NOT vinp VDD pmos w=x_dut_xm6_w l=x_dut_xm6_l m=x_dut_xm6_m
+* --- bit D1: park TG VCM <-> bot1 (swapped controls, on when V_D1 LOW) ---
+XM7 VCM V_D1_NOT bot1 VSS nmos w=x_dut_xm7_w l=x_dut_xm7_l m=x_dut_xm7_m
+XM8 bot1 V_D1 VCM VDD pmos w=x_dut_xm8_w l=x_dut_xm8_l m=x_dut_xm8_m
+* --- bit D2: select TG vinp <-> bot2 (on when V_D2 HIGH) ---
+XM9 vinp V_D2 bot2 VSS nmos w=x_dut_xm9_w l=x_dut_xm9_l m=x_dut_xm9_m
+XM10 bot2 V_D2_NOT vinp VDD pmos w=x_dut_xm10_w l=x_dut_xm10_l m=x_dut_xm10_m
+* --- bit D2: park TG VCM <-> bot2 (swapped controls, on when V_D2 LOW) ---
+XM11 VCM V_D2_NOT bot2 VSS nmos w=x_dut_xm11_w l=x_dut_xm11_l m=x_dut_xm11_m
+XM12 bot2 V_D2 VCM VDD pmos w=x_dut_xm12_w l=x_dut_xm12_l m=x_dut_xm12_m
+**.ends
+.end

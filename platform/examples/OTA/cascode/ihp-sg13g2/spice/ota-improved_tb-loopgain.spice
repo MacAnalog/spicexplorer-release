@@ -1,0 +1,212 @@
+** sch_path: ota-improved_tb-loopgain.sch
+**.subckt ota-improved_tb-loopgain
+*----------------------------------------------------------*
+* Testbench
+*----------------------------------------------------------*
+Vdd v_dd GND VDD
+Vss v_ss GND 0
+Vin v_in v_ss dc 0.75
+Venable v_ena v_ss VDD
+C2 vr1 v_ss CL m=1
+I1 v_dd net1 20u
+Vtest1 vf1 vr1 dc 0 ac 1
+C1 net2 v_ss CL m=1
+I2 v_dd net3 20u
+Vir1 net2 net5 0
+.save i(vir1)
+Vif1 net5 net4 0
+.save i(vif1)
+Itest1 v_ss net5 dc 0 ac 1
+C3 net6 v_ss CL m=1
+I3 v_dd net7 20u
+C4 net8 v_ss CL m=1
+I4 v_dd net9 20u
+Itest3 v_ss vmeas1 dc 0 ac 0
+Vtest2 vmeas1 net10 dc 0 ac 1
+Vimeas1 net6 net10 0
+.save i(vimeas1)
+Itest2 v_ss vmeas2 dc 0 ac 1
+Vtest3 vmeas2 net11 dc 0 ac 0
+Vimeas2 net8 net11 0
+.save i(vimeas2)
+x1 v_dd vr1 v_in vf1 net1 v_ena v_ss ota-improved
+x2 v_dd net2 v_in net4 net3 v_ena v_ss ota-improved
+x3 v_dd net6 v_in vmeas1 net7 v_ena v_ss ota-improved
+x4 v_dd net8 v_in vmeas2 net9 v_ena v_ss ota-improved
+
+*----------------------------------------------------------*
+* Technology Library
+*----------------------------------------------------------*
+.lib cornerMOSlv.lib mos_tt
+.lib cornerRES.lib res_typ
+
+
+
+.param temp=27
+.options savecurrents reltol=1e-3 abstol=1e-12 gmin=1e-15
+
+*----------------------------------------------------------*
+* Control Block
+*----------------------------------------------------------*
+.control
+
+    echo ==================================
+    echo start of Control
+    echo ==================================
+
+    save all
+
+    echo
+    echo (A) start of OP
+    echo ----------------------------------
+    run
+    remzerovec
+
+    echo
+    echo (B) start of AC Sim
+    echo ----------------------------------
+    * Middlebrook's Method
+    let tv=-v(vr1)/v(vf1)
+    let ti=-i(vir1)/i(vif1)
+    let tmb=(tv*ti - 1)/(tv + ti + 2)
+
+    * plot db(tmb) ylabel 'Magnitude - Middlebrook'
+    * plot 180/pi*cphase(tmb) ylabel 'Phase - Middlebrook'
+
+    * * Tian's Method
+    * * vtest=0, itest=1:
+    * let A=i(Vimeas2)
+    * let C=v(vmeas2)
+
+    * * vtest=1, itest=0:
+    * let B=i(Vimeas1)
+    * let D=v(vmeas1)
+    * let ttian=(A*D-B*C-A)/(2*(B*C-A*D)+A-D+1)
+
+    * plot db(ttian) ylabel 'Magnitude - Tian'
+    * plot 180/pi*cphase(ttian) ylabel 'Phase - Tian'
+
+    * Middlebrook vs. Tian
+    * plot db(tmb) db(ttian) ylabel 'Magnitude'
+    * plot 180/pi*cphase(tmb) 180/pi*cphase(ttian) ylabel 'Phase'
+
+    echo (3) measuring performance metrics
+    * magnitude
+    let out = tmb
+    let out_mag = db(out)
+    let out_phase = cphase(tmb) * 180/pi
+
+    meas ac GMAX max out_mag
+
+    meas ac DCGAIN MAX out_mag FROM=10 TO=10k
+
+    let f3db = DCGAIN-3
+    meas ac FBW WHEN out_mag=f3db FALL=1
+
+    meas ac unity_gain_phase find out_phase when out_mag=0
+    meas ac UGF when out_mag=0 fall=1
+
+    let PM = (180-unity_gain_phase) % 180
+    
+    echo ----------------------------------
+    echo END of AC sim
+    echo  ----------------------------------
+
+    echo SAVING SIMULATION RESULTS IN THE RAW FILE
+    * save out DCGAIN PM FBW UGF
+    write
+
+    echo ==================================
+    echo END of Control
+    echo ==================================
+
+    quit
+
+.endc
+
+
+*----------------------------------------------------------*
+* Parameter Definitions
+*----------------------------------------------------------*
+
+.param X_DUT_V_BIAS_1 = 0.6
+.param X_DUT_V_BIAS_2 = 0.5
+
+.param X_DUT_M5_L = 5u
+.param X_DUT_M5_W = 6u
+.param X_DUT_M5_NG = 3
+
+.param X_DUT_M6_L = 5u
+.param X_DUT_M6_W = 2u
+
+.param X_DUT_M1M2_L = .5u
+.param X_DUT_M1M2_W = 1u
+
+.param X_DUT_M1CM2C_L = .5u
+.param X_DUT_M1CM2C_W = 1u
+
+.param X_DUT_M3CM4C_L = .5u
+.param X_DUT_M3CM4C_W = 3u
+
+.param X_DUT_M3M4_L = .5u
+.param X_DUT_M3M4_W = 3u
+
+.param VDD = 1.5
+.param CL = 50f
+.param V_CM = 0.8
+
+
+.param F_AC_STEP=101
+.param F_AC_START=1
+.param F_AC_STOP=100G
+
+
+*----------------------------------------------------------*
+* ANALYSIS COMMAND (Moved to Netlist)
+*----------------------------------------------------------*
+.ac dec {F_AC_STEP} {F_AC_START} {F_AC_STOP}
+
+**** end user architecture code
+**.ends
+
+* expanding   symbol:  ota-improved.sym # of pins=7
+** sym_path: ota-improved.sym
+** sch_path: ota-improved.sch
+.subckt ota-improved vdd vout vinp vinn ibias_5u d_ena vss
+*.ipin ibias_5u
+*.iopin vdd
+*.iopin vss
+*.ipin vinp
+*.ipin vinn
+*.opin vout
+*.ipin d_ena
+XM5 net6 gate vss vss sg13_lv_nmos w=X_DUT_M5_W l=X_DUT_M5_L ng=X_DUT_M5_NG m=1
+XM4 net2 gate_p vdd vdd sg13_lv_pmos w=X_DUT_M3M4_W l=X_DUT_M3M4_L ng=1 m=1
+XM1 net4 vinp tail vss sg13_lv_nmos w=X_DUT_M1M2_W l=X_DUT_M1M2_L ng=1 m=1
+XM2 net5 vinn tail vss sg13_lv_nmos w=X_DUT_M1M2_W l=X_DUT_M1M2_L ng=1 m=1
+XM3 net3 gate_p vdd vdd sg13_lv_pmos w=X_DUT_M3M4_W l=X_DUT_M3M4_L ng=1 m=1
+XM6 net1 gate vss vss sg13_lv_nmos w=X_DUT_M6_W l=X_DUT_M6_L ng=1 m=1
+XMpd5 gate ena_n vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XMpd3 ena ena_n vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XMpd4 ena ena_n vdd vdd sg13_lv_pmos w=1u l=0.13u ng=1 m=1
+XMpd6 net1 ena gate vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XM2c vout dp_casc net5 vss sg13_lv_nmos w=X_DUT_M1CM2C_W l=X_DUT_M1CM2C_L ng=1 m=1
+XM1c gate_p dp_casc net4 vss sg13_lv_nmos w=X_DUT_M1CM2C_W l=X_DUT_M1CM2C_L ng=1 m=1
+XM4c vout gate_pc net2 vdd sg13_lv_pmos w=X_DUT_M3CM4C_W l=X_DUT_M3CM4C_L ng=1 m=1
+XM3c gate_p gate_pc net3 vdd sg13_lv_pmos w=X_DUT_M3CM4C_W l=X_DUT_M3CM4C_L ng=1 m=1
+XMpd8 gate_p ena vdd vdd sg13_lv_pmos w=1u l=0.13u ng=1 m=1
+Vmeas1 tail net6 0
+.save i(vmeas1)
+XMpd1 ena_n d_ena vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XMpd2 ena_n d_ena vdd vdd sg13_lv_pmos w=1u l=0.13u ng=1 m=1
+Vmeas4 ibias_5u net1 0
+.save i(vmeas4)
+XMpd11 vout ena_n vss vss sg13_lv_nmos w=0.5u l=0.13u ng=1 m=1
+XMdecoup1 vss gate vss vss sg13_lv_nmos w=8u l=1u ng=4 m=1
+XMdecoup3 vdd gate_pc vdd vdd sg13_lv_pmos w=12u l=0.5u ng=4 m=1
+V1 vdd gate_pc X_DUT_V_BIAS_2
+V2 dp_casc tail X_DUT_V_BIAS_1
+.ends
+
+.GLOBAL GND
+.end

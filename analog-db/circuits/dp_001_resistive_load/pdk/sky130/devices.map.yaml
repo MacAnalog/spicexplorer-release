@@ -1,0 +1,4 @@
+# Generic device kind -> sky130 device name. NMOS pair + mirror; RP/RN are ideal resistors.
+pdk: sky130
+devices:
+  nmos: {model: sky130_fd_pr__nfet_01v8}

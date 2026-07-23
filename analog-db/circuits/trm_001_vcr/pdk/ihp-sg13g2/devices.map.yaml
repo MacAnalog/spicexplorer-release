@@ -1,0 +1,4 @@
+# Generic device kind -> ihp-sg13g2 device name. The trim shunt uses the low-voltage NMOS.
+pdk: ihp-sg13g2
+devices:
+  nmos: {model: sg13_lv_nmos}

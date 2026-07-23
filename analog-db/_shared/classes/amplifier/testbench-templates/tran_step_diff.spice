@@ -1,0 +1,44 @@
+** AUTHORED TEMPLATE — amplifier/tran_step_diff (self-biased, differential-output step).
+** Unity-gain step -> slew + settling for a DUT with no external ibias port and a true
+** differential output. Closes ONE feedback path (vinn <- voutp) and steps vinp; by the
+** differential pair's own symmetry (and, for a DUT like amp_020_two_stage_miller_cmfb, its
+** internal common-mode servo) voutn tracks the complementary swing, so the DIFFERENTIAL
+** output (voutp-voutn) is the correct unity-gain-follower signal to settle on.
+**
+** Assumes a self-biased, differential-output DUT port order:
+**   .subckt <id> vinp vinn voutp voutn vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CL VSTEP TSTART TSTEP TSTOP VTOL PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+.param VSTEP=${VSTEP}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+
+* unity-gain differential follower: vinn <- voutp (single feedback wire; 0 V source = ideal
+* wire). vinp gets the step relative to the input common mode.
+Vinp vinp 0 dc {VCM} pulse({VCM} {VCM+VSTEP} ${TSTART} 1n 1n 1 1)
+Vfb  vinn voutp dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP}
+  let vodm = v(voutp) - v(voutn)
+  * settle to the FINAL differential value, not the input step size — see tran_step.spice
+  * (universal) for why: a systematic offset would otherwise keep the error band open forever.
+  meas tran vfinal FIND vodm AT=${TSTOP}
+  let verr = abs(vodm - vfinal)
+  meas tran tcross WHEN verr=${VTOL} FALL=LAST
+  let t_settle = tcross - ${TSTART}
+  print t_settle
+  write
+  quit
+.endc
+.end

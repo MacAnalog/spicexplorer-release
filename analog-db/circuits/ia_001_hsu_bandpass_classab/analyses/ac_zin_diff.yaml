@@ -1,0 +1,16 @@
+# Analysis binding: static differential input impedance (owner ask 2026-07-16 — the Zin
+# family for CCIAs/bio frontends). Cap-coupled input: expect |Zin| ~ 1/(pi*f*Cin_side).
+schema: spicexplorer/analysis@1
+id: ac_zin_diff
+template: ac_zin_diff
+description: "Differential |Zin| at FSIG, static network (voltage-driven inputs, 1 V differential)."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 50f
+  FSTART: 1
+  FSTOP: 100k
+  PPD: 21
+  FSIG: 100
+flags: []
+produces: [zin_ohm]

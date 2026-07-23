@@ -1,0 +1,12 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "ldo_006_stub",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 3,
+    "blocks_detected": 0,
+    "by_family": {},
+    "structural_roles": {}
+  },
+  "groups": []
+}

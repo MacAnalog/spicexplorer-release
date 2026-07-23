@@ -1,0 +1,132 @@
+# amp_023_fer_fd2s — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit amp_023_fer_fd2s --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  CCA: {Value: x_dut_cca_value}
+  CCB: {Value: x_dut_ccb_value}
+  CMA: {Value: x_dut_cma_value}
+  CMB: {Value: x_dut_cmb_value}
+  IB: {Value: x_ibias_val}
+  RCA: {Value: x_dut_rca_value}
+  RCB: {Value: x_dut_rcb_value}
+  RZA: {Value: x_dut_rza_value}
+  RZB: {Value: x_dut_rzb_value}
+  VCR: {Value: x_vcmr_val}
+  XM2A: {l: x_dut_xm2a_l, m: x_dut_xm2a_m, w: x_dut_xm2a_w}
+  XM2B: {l: x_dut_xm2b_l, m: x_dut_xm2b_m, w: x_dut_xm2b_w}
+  XMB1: {l: x_dut_xmb1_l, m: x_dut_xmb1_m, w: x_dut_xmb1_w}
+  XMB2: {l: x_dut_xmb2_l, m: x_dut_xmb2_m, w: x_dut_xmb2_w}
+  XMBD: {l: x_dut_xmbd_l, m: x_dut_xmbd_m, w: x_dut_xmbd_w}
+  XMCA: {l: x_dut_xmca_l, m: x_dut_xmca_m, w: x_dut_xmca_w}
+  XMCB: {l: x_dut_xmcb_l, m: x_dut_xmcb_m, w: x_dut_xmcb_w}
+  XMEA1: {l: x_dut_xmea1_l, m: x_dut_xmea1_m, w: x_dut_xmea1_w}
+  XMEA2: {l: x_dut_xmea2_l, m: x_dut_xmea2_m, w: x_dut_xmea2_w}
+  XMEAT: {l: x_dut_xmeat_l, m: x_dut_xmeat_m, w: x_dut_xmeat_w}
+  XMEPD: {l: x_dut_xmepd_l, m: x_dut_xmepd_m, w: x_dut_xmepd_w}
+  XMEPM: {l: x_dut_xmepm_l, m: x_dut_xmepm_m, w: x_dut_xmepm_w}
+  XMI1: {l: x_dut_xmi1_l, m: x_dut_xmi1_m, w: x_dut_xmi1_w}
+  XMI2: {l: x_dut_xmi2_l, m: x_dut_xmi2_m, w: x_dut_xmi2_w}
+  XMKA: {l: x_dut_xmka_l, m: x_dut_xmka_m, w: x_dut_xmka_w}
+  XMKB: {l: x_dut_xmkb_l, m: x_dut_xmkb_m, w: x_dut_xmkb_w}
+  XMLA: {l: x_dut_xmla_l, m: x_dut_xmla_m, w: x_dut_xmla_w}
+  XMLB: {l: x_dut_xmlb_l, m: x_dut_xmlb_m, w: x_dut_xmlb_w}
+  XMNA: {l: x_dut_xmna_l, m: x_dut_xmna_m, w: x_dut_xmna_w}
+  XMNB: {l: x_dut_xmnb_l, m: x_dut_xmnb_m, w: x_dut_xmnb_w}
+  XMNCD: {l: x_dut_xmncd_l, m: x_dut_xmncd_m, w: x_dut_xmncd_w}
+  XMND1: {l: x_dut_xmnd1_l, m: x_dut_xmnd1_m, w: x_dut_xmnd1_w}
+  XMPD1: {l: x_dut_xmpd1_l, m: x_dut_xmpd1_m, w: x_dut_xmpd1_w}
+  XMPD2: {l: x_dut_xmpd2_l, m: x_dut_xmpd2_m, w: x_dut_xmpd2_w}
+  XMPM1: {l: x_dut_xmpm1_l, m: x_dut_xmpm1_m, w: x_dut_xmpm1_w}
+  XMSA: {l: x_dut_xmsa_l, m: x_dut_xmsa_m, w: x_dut_xmsa_w}
+  XMSB: {l: x_dut_xmsb_l, m: x_dut_xmsb_m, w: x_dut_xmsb_w}
+  XMT: {l: x_dut_xmt_l, m: x_dut_xmt_m, w: x_dut_xmt_w}
+groups:
+- name: shared_xmbd_l
+  kind: shared_geometry
+  members: [XMBD, XMB1, XMPD1, XMB2, XMPD2, XMPM1, XMND1, XMT, XMSA, XMSB, XMKA, XMKB, XMLA, XMLB, XMEPD,
+    XMEPM, XMNCD, XMEAT]
+  tie: [l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_lb (l).'
+- name: shared_xmbd_w
+  kind: shared_geometry
+  members: [XMBD, XMB1, XMB2, XMT, XMEA1, XMEA2, XMEAT]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_bd_w (w).'
+- name: shared_xmpd1_w
+  kind: shared_geometry
+  members: [XMPD1, XMPM1]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_pd_w (w).'
+- name: shared_xmi1_l
+  kind: shared_geometry
+  members: [XMI1, XMI2, XM2A, XM2B]
+  tie: [l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_li (l).'
+- name: pair_xmi1_xmi2
+  kind: matched_pair
+  members: [XMI1, XMI2]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_pair_w (w).'
+- name: shared_xmsa_w
+  kind: shared_geometry
+  members: [XMSA, XMSB]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_psrc_w (w).'
+- name: shared_xmca_l
+  kind: shared_geometry
+  members: [XMCA, XMCB, XMNA, XMNB, XMEA1, XMEA2]
+  tie: [l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_lc (l).'
+- name: shared_xmca_w
+  kind: shared_geometry
+  members: [XMCA, XMCB]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_pcas_w (w).'
+- name: shared_xmna_w
+  kind: shared_geometry
+  members: [XMNA, XMNB]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_ncas_w (w).'
+- name: shared_xmka_w
+  kind: shared_geometry
+  members: [XMKA, XMKB]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_nsnk_w (w).'
+- name: shared_xm2a_w
+  kind: shared_geometry
+  members: [XM2A, XM2B]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_n2_w (w).'
+- name: shared_xmla_w
+  kind: shared_geometry
+  members: [XMLA, XMLB]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_p2_w (w).'
+- name: shared_xmepd_w
+  kind: shared_geometry
+  members: [XMEPD, XMEPM]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_epd_w (w).'
+- name: shared_rza_value
+  kind: shared_geometry
+  members: [RZA, RZB]
+  tie: [Value]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_rz (Value).'
+- name: shared_cca_value
+  kind: shared_geometry
+  members: [CCA, CCB]
+  tie: [Value]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_cc (Value).'
+- name: shared_rca_value
+  kind: shared_geometry
+  members: [RCA, RCB]
+  tie: [Value]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_rcm (Value).'
+- name: shared_cma_value
+  kind: shared_geometry
+  members: [CMA, CMB]
+  tie: [Value]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_ccm (Value).'

@@ -1,0 +1,118 @@
+{
+  "components": [
+    {
+      "connections": {
+        "N": "vinn",
+        "P": "vinp"
+      },
+      "device_type": "CAP",
+      "id": "CIN",
+      "params": {
+        "Value": "'cin_val'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "voutp",
+        "P": "voutn"
+      },
+      "device_type": "CAP",
+      "id": "COUT",
+      "params": {
+        "Value": "'cout_val'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "CN": "vinn",
+        "CP": "vinp",
+        "N": "voutp",
+        "P": "voutn"
+      },
+      "device_type": "VCCS",
+      "id": "GM",
+      "params": {
+        "Value": "{gm_val}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vinn",
+        "P": "vinp"
+      },
+      "device_type": "RES",
+      "id": "RIN",
+      "params": {
+        "Value": "'rin_val'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "voutp",
+        "P": "voutn"
+      },
+      "device_type": "RES",
+      "id": "ROUT",
+      "params": {
+        "Value": "'rout_val'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    }
+  ],
+  "meta": {
+    "circuit_name": "amp_028_ideal_fully_diff",
+    "component_count": 5,
+    "net_count": 4
+  },
+  "nets": [
+    {
+      "is_supply": false,
+      "name": "vinn",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vinp",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "voutn",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "voutp",
+      "supply_type": ""
+    }
+  ]
+}

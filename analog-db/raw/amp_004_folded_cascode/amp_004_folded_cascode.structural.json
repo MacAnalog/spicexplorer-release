@@ -1,0 +1,117 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "amp_004_folded_cascode",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 16,
+    "blocks_detected": 4,
+    "by_family": {
+      "current_mirror": 3,
+      "differential_pair": 1
+    },
+    "structural_roles": {
+      "XM0": "tail_current_source",
+      "XM1": "differential_pair",
+      "XM10": "current_mirror",
+      "XM11": "current_mirror_reference",
+      "XM12": "current_mirror",
+      "XM13": "current_mirror_reference",
+      "XM2": "differential_pair",
+      "XM3": "current_mirror",
+      "XM4": "current_mirror",
+      "XM7": "cascode_device",
+      "XM8": "cascode_device",
+      "XM9": "current_mirror"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.pmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XM11",
+      "output_devices": [
+        "XM0",
+        "XM12"
+      ],
+      "devices": [
+        "XM0",
+        "XM11",
+        "XM12"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "ibias",
+        "out": "tail"
+      }
+    },
+    {
+      "group_id": "cm.nmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XM13",
+      "output_devices": [
+        "XM3",
+        "XM4"
+      ],
+      "devices": [
+        "XM13",
+        "XM3",
+        "XM4"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "nbias",
+        "out": "foldp"
+      }
+    },
+    {
+      "group_id": "dp.pmos.simple#1",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "pmos",
+      "template_id": "dp.pmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM1",
+        "XM2"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "in_p": "vinp",
+        "in_n": "vinn",
+        "CM_tail": "tail",
+        "out_n": "foldn",
+        "out_p": "foldp"
+      }
+    },
+    {
+      "group_id": "cm.pmos.low_voltage_cascode#1",
+      "family": "current_mirror",
+      "mirror_class": "low_voltage_cascode",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.low_voltage_cascode",
+      "reference_device": null,
+      "output_devices": [
+        "XM8"
+      ],
+      "devices": [
+        "XM10",
+        "XM7",
+        "XM8",
+        "XM9"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "cascp",
+        "out": "vout",
+        "bias": "vb2"
+      }
+    }
+  ]
+}

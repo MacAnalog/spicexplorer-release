@@ -1,0 +1,87 @@
+** AUTHORED TEMPLATE — ia/pac_zin_chopper_diff (P3-2c: the GOLDEN chopped-Zin bench).
+** Differential INPUT IMPEDANCE of a chopper-subfamily IA measured IN OPERATION — all
+** chopper clocks RUNNING at FCHOP — via Spectre PSS+PAC in SERIES-SENSE form: stiff
+** voltage sources drive the inputs through a known series RS per side (so the
+** large-signal pss orbit sees a damped, ~T-fast input bias — every high-impedance
+** bias form (1G/300Meg resistive, ideal bias-tee) left a slow input mode the
+** shooting could not relax, live 2026-07-17), and the impedance is the wave RATIO
+**   Zin_diff = 2*RS * v(vzd)/v(vzs)   (port voltage over series drop).
+** Expect the switched-cap figure
+** Zin_chop ~ 1/(2*f_chop*Cin) (Fan JSSC 2011) — orders below the static cap impedance;
+** this is the number tran_zin_chopped's average-current method APPROXIMATES.
+** ngspice lane: no PSS — the .control runs the frozen-clock AC drive as an EYEBALL
+** check only (the static-network |Zin|, cf. ac_zin_chopper_diff).
+** Spectre lane: the platform composes `pss` + `pac`; read via the platform registry:
+**   {meas: zin_mag, analysis: pac, out: vzd, ref: vzs, scale: <2*RS>, f: F}
+**   (spot ohms at an in-band F, e.g. 100 Hz — the chopped Zin is flat in-band)
+** The 1 GOhm bias resistors give the current-driven input nets a DC path (the cap-
+** coupled inputs otherwise float); 1G >> Zin_chop, so the loading error is <1%.
+** Assumes the chopper-IA port convention (extra driven clock nets are harmless):
+**   .subckt <id> vinp vinn voutp voutn vref clk_chin clk_chin_not clk_chfb clk_chfb_not
+**                clk_chout clk_chout_not [clk_chpf clk_chpf_not] [clk_phi_1 clk_phi_2]
+**                vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CL FCHOP TEDGE RS RCM FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+.param FCHOP=${FCHOP}
+.param TCHOP={1/FCHOP}
+.param TEDGE=${TEDGE}
+.param RCM=${RCM}
+.param RS=${RS}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+Vref vref 0 dc {VCM}
+* bench-side output-CM anchor/load (P3-2c): the drawn core has NO CMFB, so its output
+* common mode has no periodic steady state on its own (pss SPCRTRF-15044 period-2
+* bounce, live 2026-07-17; core-CM closure is plan P4-4b). RCM to vref is the CM
+* reference a real CCIA gets from its CMFB AND a legitimate next-stage load: at the
+* default 30k the diff loop gain stays >> the cap-ratio 20 (closed-loop ~19 V/V) while
+* the anchor pins the per-phase output CM (tau = RCM*CL ~ 1.5 ns) so the chopped orbit
+* actually closes. A weak 10Meg tie was proven insufficient (60 nA vs ~90 uA device
+* currents — the period-2 CM dance survives it).
+Rcmp voutp vref {RCM}
+Rcmn voutn vref {RCM}
+Vcm  vcm 0 dc {VCM}
+* SERIES-SENSE drive: stiff sources through known RS per side. The `ac` markers feed
+* BOTH lanes (ngspice .ac eyeball via mag=, Spectre pac via pacmag=; the negative
+* side rides pacphase=180). RS ~ |Zin_chop| keeps the divider well-conditioned, and
+* the input bias tau = RS*Cin ~ 160 us is shooting-friendly (~T).
+Vsp srcp vcm dc 0 ac 0.5
+Vsn srcn vcm dc 0 ac -0.5
+Rsp srcp vinp {RS}
+Rsn srcn vinn {RS}
+* sense nodes (Spectre vcvs chains): vzd = the DUT-side differential port voltage;
+* vzs = the differential drop across the two RS (= 2*RS*I). Zin = 2*RS * vzd/vzs.
+Ezd vzd 0 vinp vinn 1
+Ezs1 nzs 0 srcp vinp 1
+Ezs2 vzs nzs vinn srcn 1
+
+* chopper clocks: complementary pairs, all phases aligned at FCHOP (RUNNING — the pss
+* fundamental; on the ngspice eyeball .ac they freeze at their t=0 values)
+Vck_in_a  clk_chin      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_in_b  clk_chin_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_fb_a  clk_chfb      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_fb_b  clk_chfb_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_out_a clk_chout     0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_out_b clk_chout_not 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_pf_a  clk_chpf      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_pf_b  clk_chpf_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vphi1 clk_phi_1 0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vphi2 clk_phi_2 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  * EYEBALL ONLY (frozen clocks — the static-network Zin); the golden number is PSS+PAC
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  write
+  quit
+.endc
+.end

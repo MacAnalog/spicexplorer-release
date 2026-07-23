@@ -1,0 +1,10 @@
+** Abstract NMOS track-and-hold (basic sampler). AUTHORED source of truth (plan D-2). PDK-neutral
+** model token (nmos); ideal hold cap. Subckt port order (= circuit.yaml ports): vdd vin clk vout vss
+**
+** XM0 is the sampling switch (drain=vin, gate=clk, source=vout); C0 is the hold capacitor on the
+** sampled node. clk high -> vout tracks vin; clk low -> vout holds (drooping with the switch's
+** off-leakage). The simplest verifiable member of the `sampler` class; a bootstrapped-switch
+** variant (ferrosim_sampling_bts) is the class's reference member.
+XM0 vin clk vout vss nmos w=x_dut_xm0_w l=x_dut_xm0_l m=x_dut_xm0_m
+C0  vout vss c=x_dut_c0_value
+.end

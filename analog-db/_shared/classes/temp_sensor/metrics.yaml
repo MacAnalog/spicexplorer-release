@@ -1,0 +1,34 @@
+# Temperature-sensor / sensing-front-end class — canonical metric vocabulary + owned testbench
+# templates (plan D-10). NEW class added by the promote-reference-circuits work for the AnalogGym
+# "Sensing Front End" PTAT cores (sfe_*). Validated against _shared/schema/class.schema.json (T0).
+#
+# A temp sensor's output IS the temperature signal (a PTAT voltage), so its figures of merit are
+# the temperature SLOPE (resolution), the box-method spread over the range, supply/line
+# sensitivity, low-frequency supply rejection (PSR) and the DC supply current (power) — none of
+# which overlap the amplifier/ldo vocabularies.
+schema: spicexplorer/class@1
+class: temp_sensor
+id_code: tsn            # accession-id prefix for verifiable circuits (plan_scoreboard D-1)
+description: >-
+  Sensing-front-end temperature sensors / PTAT reference cores. DC operating point (power),
+  a temperature sweep (output slope + box-method spread), a supply sweep (line sensitivity)
+  and a low-frequency supply-rejection AC.
+ppa:                      # scoreboard PPA rollup declaration (plan_scoreboard D-7)
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: sens_v_per_c, better: max}   # larger PTAT slope ⇒ better resolution
+    - {metric: line_sens_pct, better: min}
+    - {metric: psr_db, better: min}
+canonical_metrics:
+  - v_out_25c        # output voltage at 25 degC (V)
+  - sens_v_per_c     # temperature slope dVout/dT (V/degC) — the sensor's resolution
+  - tc_box_ppm       # box-method spread (Vmax-Vmin)/Vavg/range over the temp sweep (ppm/degC)
+  - line_sens_pct    # output %-change over the supply sweep (%)
+  - psr_db           # low-frequency supply→output rejection (dB, lower is better)
+  - i_supply         # DC supply current (A)
+  - v_out            # generic DC-op output voltage (V)
+templates:
+  - dc_op
+  - temp_sweep
+  - line_sweep
+  - psrr

@@ -1,0 +1,12 @@
+# Sizing for the sky130 binding — geometry re-noted to sky130's bare-µm convention (.option
+# scale=1u) and clamped to the sky130 W/L bin floor (min_w 0.42, min_l 0.15). Same abstract
+# symbols + device-strength ratios as the ihp binding; a starting point for sky130 device physics.
+schema: spicexplorer/sizing@1
+pdk: sky130
+variables:
+  - {name: x_dut_xm0_w, description: "Top (Vgs=0) device width",        default: 8, min: 0.42, max: 30, unit: m}
+  - {name: x_dut_xm0_l, description: "Top (Vgs=0) device length",       default: 0.2, min: 0.15, max: 20, unit: m}
+  - {name: x_dut_xm0_m, description: "Top device multiplier",           default: 8, is_integer: true}
+  - {name: x_dut_xm1_w, description: "Bottom diode-connected width",     default: 4, min: 0.42, max: 30, unit: m}
+  - {name: x_dut_xm1_l, description: "Bottom diode-connected length",    default: 1, min: 0.15, max: 20, unit: m}
+  - {name: x_dut_xm1_m, description: "Bottom device multiplier",         default: 8, is_integer: true}

@@ -1,0 +1,42 @@
+# Datasheet (plan D-3/D-5/D-12). Metric sheet for the CMOS-inverter 1-bit quantizer. Only the
+# 1-bit-applicable metrics (decision level + output rails) are claimed; ENOB/INL/DNL/SNDR need a
+# multi-bit converter (the class reference member ferrosim_sar).
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  v_out:
+    display: "Output at mid-input"
+    unit: V
+    analysis: dc_op
+    extract: {meas: v_out}
+    spec: {min: 0.2, max: 1.0, unit: V}
+  i_supply:
+    display: "Crossover supply current"
+    description: "Shoot-through current with the input at the switching threshold."
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 1.0e-3, unit: A}
+  v_out_high:
+    display: "Output high level"
+    unit: V
+    analysis: dc_transfer
+    extract: {meas: v_out_high}
+    spec: {min: 1.0, unit: V}
+  v_out_low:
+    display: "Output low level"
+    unit: V
+    analysis: dc_transfer
+    extract: {meas: v_out_low}
+    spec: {max: 0.2, unit: V}
+  threshold_v:
+    display: "1-bit decision level"
+    description: "Input trip point (Vth_inv) — the converter's single code boundary."
+    unit: V
+    analysis: dc_transfer
+    extract: {meas: threshold_v}
+    spec: {min: 0.35, max: 0.85, unit: V}

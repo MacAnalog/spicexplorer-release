@@ -1,0 +1,42 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "gs_001_cascode_cs",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 9,
+    "blocks_detected": 1,
+    "by_family": {
+      "current_mirror": 1
+    },
+    "structural_roles": {
+      "XMPB1": "current_mirror_reference",
+      "XMPB2": "cascode_device",
+      "XMPCA": "cascode_device",
+      "XMPLD": "current_mirror"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.pmos.cascode#1",
+      "family": "current_mirror",
+      "mirror_class": "cascode",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.cascode",
+      "reference_device": "XMPB1",
+      "output_devices": [
+        "XMPCA"
+      ],
+      "devices": [
+        "XMPB1",
+        "XMPB2",
+        "XMPCA",
+        "XMPLD"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "ibias",
+        "out": "vout"
+      }
+    }
+  ]
+}

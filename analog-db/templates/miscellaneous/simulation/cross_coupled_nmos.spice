@@ -1,0 +1,10 @@
+** sch_path: /Users/danialnoorizadeh/Code/spicexplorer-workspace/spicexplorer-platform/examples/analog-db/templates/miscellaneous/cross_coupled_nmos.sch
+**.subckt cross_coupled_nmos vinp vinn CM_tail VSS
+*.ipin vinp
+*.ipin vinn
+*.ipin CM_tail
+*.ipin VSS
+XM1 vinn vinp CM_tail VSS sg13_lv_nmos w=0.15u l=0.13u ng=1
+XM2 vinp vinn CM_tail VSS sg13_lv_nmos w=0.15u l=0.13u ng=1
+**.ends
+.end

@@ -1,0 +1,32 @@
+# ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
+# PROMOTED from the sfe_ptat_sensor_2t reference entry: authored a device-generic abstract netlist
+# + open-PDK bindings so the AnalogGym PTAT sensor core is lowerable, assembled and simulated here.
+# The original FOUNDRY-180nm AnalogGym decks are retained verbatim under the `references` binding.
+schema: spicexplorer/circuit@1
+id: tsn_001_ptat_2t
+class: temp_sensor
+display_name: "2-transistor subthreshold PTAT temperature-sensor core"
+stages: 1
+ports: [vdd, vout, vss]                 # supply, PTAT sense output, ground (= abstract subckt)
+provenance:
+  source: AnalogGym "Sensing Front End" (CODA-Team/AnalogGym)
+  aliases: [ptat_sensor_2t, PTAT_SENSOR, sfe_ptat_sensor_2t, sfe_ptat_sized_variants,
+            spectre_ptat1, spectre_ptat2, spectre_ptat3, spectre_ptat4]
+  paper: "Sub-threshold 2-transistor PTAT sensor core"
+  license: BSD-3-Clause
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, sky130, gf180mcu]              # open-PDK verifiable bindings (D-1)
+analyses: [dc_op, temp_sweep, line_sweep, psrr]
+references:                             # original proprietary-PDK decks, kept verbatim (D-9)
+  - {tool: spectre, dir: spectre/180nm, node: 180nm}
+  # ptat_1..4 sized instances of THIS 2T topology (parallel 2T legs, extracted geometry) from
+  # AnalogGym's spectre_test library — absorbed from the former sfe_ptat_sized_variants entry.
+  - {tool: spectre, dir: spectre/180nm-sized-variants, node: 180nm}
+optimize:
+  budget: 500
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft                           # DERIVED upward by the verify harness (plan §6)

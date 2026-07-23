@@ -1,0 +1,63 @@
+** AUTHORED TEMPLATE — ia/tran_zin_chopped (P3-2 remainder, owner ask 2026-07-16).
+** The CHOPPED differential input impedance — the impedance a chopper CCIA actually
+** presents in operation: every chop transition re-charges the input caps from the
+** source, so Zin_chop ~ 1/(2*f_chop*Cin) (Fan JSSC 2011), orders of magnitude below
+** the static cap impedance at signal frequencies. The ia_003-style positive-feedback
+** input boost exists precisely to raise this figure — this bench is how that claim is
+** measured.
+** Method: all chopper clocks run at FCHOP (SC phases as exact complements); the inputs
+** are held at a stiff DC differential VZ; the average input current over an integer
+** number of settled chop periods gives
+**   zin_chop_ohm = | VZ / Idiff |,  Idiff = (avg i(Vzp) - avg i(Vzn))/2  over W0..W1
+** Assumes the chopper-IA port convention (extra driven clock nets are harmless):
+**   .subckt <id> vinp vinn voutp voutn vref clk_chin clk_chin_not clk_chfb clk_chfb_not
+**                clk_chout clk_chout_not [clk_chpf clk_chpf_not] [clk_phi_1 clk_phi_2]
+**                vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CL VZ FCHOP TEDGE W0 W1 TSTEP TSTOP TMAX
+**                    PDK_INCLUDE.  W0..W1 = integer chop periods, settled; TMAX = max
+**                    internal step (~200n — TSTEP is only the print interval).
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+.param VZ=${VZ}
+.param FCHOP=${FCHOP}
+.param TCHOP={1/FCHOP}
+.param TEDGE=${TEDGE}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+Vref vref 0 dc {VCM}
+* stiff DC differential drive: the average current it sources IS the measurement
+Vzp vinp 0 dc {VCM+VZ/2}
+Vzn vinn 0 dc {VCM-VZ/2}
+
+* chopper clocks: complementary pairs, all phases aligned at FCHOP
+Vck_in_a  clk_chin      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_in_b  clk_chin_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_fb_a  clk_chfb      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_fb_b  clk_chfb_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_out_a clk_chout     0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_out_b clk_chout_not 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_pf_a  clk_chpf      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_pf_b  clk_chpf_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+* two-phase SC clock (exact complements, in phase)
+Vphi1 clk_phi_1 0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vphi2 clk_phi_2 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP} 0 ${TMAX}
+  meas tran iavgp AVG i(vzp) from=${W0} to=${W1}
+  meas tran iavgn AVG i(vzn) from=${W0} to=${W1}
+  let zin_chop_ohm = abs(2*${VZ}/(iavgp - iavgn))
+  print zin_chop_ohm
+  write
+  quit
+.endc
+.end

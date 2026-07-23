@@ -1,0 +1,212 @@
+# Functional-subcircuit template library — current mirrors.
+#
+# A catalogue of pre-defined functional sub-circuits that the circuitgraph subcircuit matcher
+# (`spicexplorer_circuitgraph.match`) overlays onto an input netlist via subgraph isomorphism.
+# Each template is a small, hand-authored netlist (netlisted from the sibling xschem `.sch` with
+# xschem) given a STABLE unique `id` — that id is what a detected match is tagged with.
+#
+# Matching is topological: instance names, internal net names, and device sizing are ignored; only
+# device type + MOS polarity + pin-level wiring matter. The one anchored name is the supply rail
+# (VSS for an nmos sink, VDD for a pmos source), matched by class when `match_supply` is on.
+#
+# Net-name convention used inside the templates (NOT matched, only for port identification):
+#   VSS / VDD = supply rail · iin = reference/input branch · iout = mirrored output · VBIAS = external bias
+#
+# Each template also carries `image:` — a net-colour-coded xschem render (PNG) of its `.sch`, sitting
+# beside the schematic, for a quick visual reference of the topology (one colour per net).
+#
+# Topologies + signatures: Aggarwal, Gupta, Gupta, "A comparative study of various current mirror
+# configurations," Microelectronics Journal 53 (2016) 134-155 (see the `current-mirrors` skill).
+schema: spicexplorer/subcircuit-template-library@1
+family: current_mirror
+display_name: "Current-mirror functional sub-circuits"
+provenance:
+  paper: "Aggarwal, Gupta, Gupta — Microelectronics Journal 53 (2016) 134-155"
+  skill: current-mirrors
+  pdk: ihp-sg13g2   # the templates are netlisted with sg13_lv_* devices; matching ignores the model
+
+# Design rules — this family's sizing/detection notes, co-located under rules/ and registered here
+# for tracking. Consumed by humans + LLM agents (NOT the matcher, which reads only `templates`);
+# the library-level index lives at templates/README.md.
+rules:
+  - path: rules/current_mirror.md
+    title: "Current-mirror sizing rules + Aggarwal detection catalog & discriminator ladder"
+    sources: ["Aggarwal 2016", "Massier 2008", "GENIE-ASI 2025"]
+
+templates:
+  # --- NMOS current sinks (sources tied to VSS) -------------------------------------------------
+  - id: cm.nmos.simple
+    display_name: "Simple NMOS current mirror (2T)"
+    class: simple
+    polarity: nmos
+    role: current_sink
+    netlist: nmos_current_sink/simulation/basic_current_mirror.spice
+    image: nmos_current_sink/basic_current_mirror.png
+    ports: {supply: VSS, ref_in: iin, out: iout}
+
+  - id: cm.nmos.cascode
+    display_name: "Cascode NMOS current mirror (4T)"
+    class: cascode
+    polarity: nmos
+    role: current_sink
+    netlist: nmos_current_sink/simulation/cascode_current_mirror.spice
+    image: nmos_current_sink/cascode_current_mirror.png
+    ports: {supply: VSS, ref_in: iin, out: iout}
+
+  - id: cm.nmos.wilson
+    display_name: "Wilson NMOS current mirror (3T)"
+    class: wilson
+    polarity: nmos
+    role: current_sink
+    netlist: nmos_current_sink/simulation/wilson_current_mirror.spice
+    image: nmos_current_sink/wilson_current_mirror.png
+    ports: {supply: VSS, ref_in: iin, out: iout}
+
+  - id: cm.nmos.improved_wilson
+    display_name: "Improved (super) Wilson NMOS current mirror (4T)"
+    class: improved_wilson
+    polarity: nmos
+    role: current_sink
+    netlist: nmos_current_sink/simulation/improved_wilson_current_mirror.spice
+    image: nmos_current_sink/improved_wilson_current_mirror.png
+    ports: {supply: VSS, ref_in: iin, out: iout}
+
+  - id: cm.nmos.high_swing_cascode
+    display_name: "High-swing (wide-swing) cascode NMOS current mirror (4T)"
+    class: high_swing_cascode
+    polarity: nmos
+    role: current_sink
+    netlist: nmos_current_sink/simulation/high_swing_cascode_current_mirror.spice
+    image: nmos_current_sink/high_swing_cascode_current_mirror.png
+    # iin2 is a SECOND on-rail reference input (the separate mirror-bias diode); it must be a declared
+    # port so the matcher lets it fan out to the host's reference current source — see ref_in below.
+    ports: {supply: VSS, ref_in: iin, out: iout, ref_in2: iin2}
+
+  - id: cm.nmos.improved_high_swing_cascode
+    display_name: "Improved high-swing cascode NMOS current mirror (5T)"
+    class: improved_high_swing_cascode
+    polarity: nmos
+    role: current_sink
+    netlist: nmos_current_sink/simulation/improved_high_swing_cascode_current_mirror.spice
+    image: nmos_current_sink/improved_high_swing_cascode_current_mirror.png
+    # iin2 = second on-rail reference input (mirror-bias diode); declared as a port so it can fan out
+    # to the host's bias current source rather than being treated as a private internal node.
+    ports: {supply: VSS, ref_in: iin, out: iout, ref_in2: iin2}
+
+  - id: cm.nmos.low_voltage_cascode
+    display_name: "Low-voltage cascode NMOS current mirror (4T + external VBIAS)"
+    class: low_voltage_cascode
+    polarity: nmos
+    role: current_sink
+    netlist: nmos_current_sink/simulation/low_voltage_cascode_current_mirror.spice
+    image: nmos_current_sink/low_voltage_cascode_current_mirror.png
+    ports: {supply: VSS, ref_in: iin, out: iout, bias: VBIAS}
+
+  - id: cm.nmos.selfbiased_high_swing_cascode
+    display_name: "Self-biased high-swing cascode NMOS current mirror (4T + R)"
+    class: selfbiased_high_swing_cascode
+    polarity: nmos
+    role: current_sink
+    netlist: nmos_current_sink/simulation/selfbiased_high_swing_cascode_current_mirror.spice
+    image: nmos_current_sink/selfbiased_high_swing_cascode_current_mirror.png
+    ports: {supply: VSS, ref_in: iin, out: iout}
+
+  - id: cm.nmos.wide_swing
+    display_name: "Wide-swing cascode NMOS current mirror (self-biased, integrated PMOS bias, 11T)"
+    class: wide_swing
+    polarity: nmos
+    role: current_sink
+    netlist: nmos_current_sink/simulation/wide_swing_current_mirror_nmos.spice
+    image: nmos_current_sink/wide_swing_current_mirror_nmos.png
+    # Fully self-contained: an on-rail PMOS mirror off the VDD rail generates the two cascode-gate
+    # biases for the NMOS wide-swing output, so IIN is the ONE external reference (no ref_in2). The
+    # template spans both rails; VDD is anchored by class automatically (is_supply by name).
+    ports: {supply: VSS, ref_in: IIN, out: IOUT}
+
+  # --- PMOS current sources (sources tied to VDD) -----------------------------------------------
+  - id: cm.pmos.simple
+    display_name: "Simple PMOS current mirror (2T)"
+    class: simple
+    polarity: pmos
+    role: current_source
+    netlist: pmos_current_source/simulation/basic_current_mirror.spice
+    image: pmos_current_source/basic_current_mirror.png
+    ports: {supply: VDD, ref_in: iin, out: iout}
+
+  - id: cm.pmos.wilson
+    display_name: "Wilson PMOS current mirror (3T)"
+    class: wilson
+    polarity: pmos
+    role: current_source
+    netlist: pmos_current_source/simulation/wilson_current_mirror.spice
+    image: pmos_current_source/wilson_current_mirror.png
+    ports: {supply: VDD, ref_in: iin, out: iout}
+
+  - id: cm.pmos.cascode
+    display_name: "Cascode PMOS current mirror (4T)"
+    class: cascode
+    polarity: pmos
+    role: current_source
+    netlist: pmos_current_source/simulation/cascode_current_mirror.spice
+    image: pmos_current_source/cascode_current_mirror.png
+    ports: {supply: VDD, ref_in: iin, out: iout}
+
+  - id: cm.pmos.improved_wilson
+    display_name: "Improved (super) Wilson PMOS current mirror (4T)"
+    class: improved_wilson
+    polarity: pmos
+    role: current_source
+    netlist: pmos_current_source/simulation/improved_wilson_current_mirror.spice
+    image: pmos_current_source/improved_wilson_current_mirror.png
+    ports: {supply: VDD, ref_in: iin, out: iout}
+
+  - id: cm.pmos.high_swing_cascode
+    display_name: "High-swing (wide-swing) cascode PMOS current mirror (4T)"
+    class: high_swing_cascode
+    polarity: pmos
+    role: current_source
+    netlist: pmos_current_source/simulation/high_swing_cascode_current_mirror.spice
+    image: pmos_current_source/high_swing_cascode_current_mirror.png
+    # iin2 = the separate mirror-bias diode's reference input (a second on-rail current input); declared
+    # as a port so it may fan out to the host bias source instead of being held internal-exact.
+    ports: {supply: VDD, ref_in: iin, out: iout, ref_in2: iin2}
+
+  - id: cm.pmos.improved_high_swing_cascode
+    display_name: "Improved high-swing cascode PMOS current mirror (5T)"
+    class: improved_high_swing_cascode
+    polarity: pmos
+    role: current_source
+    netlist: pmos_current_source/simulation/improved_high_swing_cascode_current_mirror.spice
+    image: pmos_current_source/improved_high_swing_cascode_current_mirror.png
+    # iin2 = second on-rail reference input (mirror-bias diode); declared as a port so it can fan out
+    # to the host's bias current source rather than being treated as a private internal node.
+    ports: {supply: VDD, ref_in: iin, out: iout, ref_in2: iin2}
+
+  - id: cm.pmos.low_voltage_cascode
+    display_name: "Low-voltage cascode PMOS current mirror (4T + external VBIAS)"
+    class: low_voltage_cascode
+    polarity: pmos
+    role: current_source
+    netlist: pmos_current_source/simulation/low_voltage_cascode_current_mirror.spice
+    image: pmos_current_source/low_voltage_cascode_current_mirror.png
+    ports: {supply: VDD, ref_in: iin, out: iout, bias: VBIAS}
+
+  - id: cm.pmos.selfbiased_high_swing_cascode
+    display_name: "Self-biased high-swing cascode PMOS current mirror (4T + R)"
+    class: selfbiased_high_swing_cascode
+    polarity: pmos
+    role: current_source
+    netlist: pmos_current_source/simulation/selfbiased_high_swing_cascode_current_mirror.spice
+    image: pmos_current_source/selfbiased_high_swing_cascode_current_mirror.png
+    ports: {supply: VDD, ref_in: iin, out: iout}
+
+  - id: cm.pmos.wide_swing
+    display_name: "Wide-swing cascode PMOS current mirror (self-biased, integrated NMOS bias, 11T)"
+    class: wide_swing
+    polarity: pmos
+    role: current_source
+    netlist: pmos_current_source/simulation/wide_swing_current_mirror_pmos.spice
+    image: pmos_current_source/wide_swing_current_mirror_pmos.png
+    # Polarity dual of cm.nmos.wide_swing: an on-rail NMOS mirror off VSS generates the two
+    # cascode-gate biases for the PMOS wide-swing output; IIN is the single external reference.
+    ports: {supply: VDD, ref_in: IIN, out: IOUT}

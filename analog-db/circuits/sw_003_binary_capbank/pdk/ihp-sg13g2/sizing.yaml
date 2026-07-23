@@ -1,0 +1,26 @@
+# Design variables for the ihp-sg13g2 binding (explicit `u`/`p` eng tokens; sg13 lv-MOS
+# geometry rules). TG defaults keep the DRAWN minimum geometry (w=0.15u l=0.13u) — the
+# 2026-07-18/19 campaign validated the bank at exactly this size (per-TG Ron 3.4k..31.2k
+# over the 0.1..1.1 V signal range, hump at VCM; drawings/sizing-and-specs.yaml
+# shared.transmission_gate_pair). Cu is the drawn shared unit-cap symbol (owner decision
+# 2026-07-19: value=Cu, weighting structural via m); the campaign bench value is 1p.
+# Group representatives only (see abstract/params.yaml ties): XM3/XM5/XM7/XM9/XM11<-XM1
+# (all six nmos legs), XM4/XM6/XM8/XM10/XM12<-XM2 (all six pmos legs). The n and p
+# halves stay independent (different mobility).
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xm1_w, description: "NMOS pass-device width (all 6 legs; drawn min-size)", default: 0.15u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xm1_l, description: "NMOS pass-device length (all 6 legs; drawn min-size)", default: 0.13u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_xm2_w, description: "PMOS pass-device width (all 6 legs; drawn min-size)", default: 0.15u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xm2_l, description: "PMOS pass-device length (all 6 legs; drawn min-size)", default: 0.13u, min: 0.13u, max: 2u, unit: m}
+  - {name: Cu, description: "Unit capacitor (shared by all four caps; C_eff = (1+code)*Cu)", default: 1p, min: 0.1p, max: 10p, unit: F}
+  # Frozen per-device literals: defaults reproduce the drawn m exactly; freeze keeps
+  # them out of the search space. The cap multipliers ARE the binary weighting
+  # (C_eff = (1+code)*Cu) — structural identity, never a sizing knob.
+  - {name: x_dut_xm1_m, description: "XM1 m (frozen literal; ties XM3/XM5/XM7/XM9/XM11)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm2_m, description: "XM2 m (frozen literal; ties XM4/XM6/XM8/XM10/XM12)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_c1_m, description: "C1 m (frozen structural weight: fixed always-in unit)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_c2_m, description: "C2 m (frozen structural weight: bit D0 = 1x Cu)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_c3_m, description: "C3 m (frozen structural weight: bit D1 = 2x Cu)", default: 2, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_c4_m, description: "C4 m (frozen structural weight: bit D2 = 4x Cu)", default: 4, min: 1, max: 16, freeze: true, is_integer: true}

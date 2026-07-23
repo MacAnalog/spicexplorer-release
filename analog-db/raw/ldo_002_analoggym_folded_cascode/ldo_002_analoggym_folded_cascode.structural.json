@@ -1,0 +1,40 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "ldo_002_analoggym_folded_cascode",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 16,
+    "blocks_detected": 1,
+    "by_family": {
+      "differential_pair": 1
+    },
+    "structural_roles": {
+      "XM1": "differential_pair",
+      "XM2": "differential_pair",
+      "XM9": "tail_current_source"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "dp.nmos.simple#1",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM1",
+        "XM2"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "vref",
+        "in_n": "vout",
+        "CM_tail": "n4",
+        "out_n": "n2",
+        "out_p": "n3"
+      }
+    }
+  ]
+}

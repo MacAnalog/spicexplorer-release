@@ -1,0 +1,41 @@
+schema: spicexplorer/circuit@1
+id: amp_026_fan_chopper_ota
+class: amplifier
+tier: ota
+subfamily: ota
+realization: transistor
+display_name: Fan CCIA two-stage opamp core with embedded output chopper (statically transparent)
+stages: 2
+compensation: miller
+ports: [vinp, vinn, voutp, voutn, vdd, vss]
+provenance:
+  source: drawings/ccia-02-QinwenFan-chopper-ripple-reduction (hand-drawn xschem, two-stage-opamp-core.sch, ver-B wiring)
+  paper: "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011"
+  aliases: [two-stage-opamp-core]
+  designer: "Noorizadeh (schematic capture, after Fan et al.)"
+  notes: >-
+    The CCIA's main two-stage opamp (the ia_002/ia_003 system entries compose it).
+    Drawing sync: the four formerly-floating source nets (XM1/XM6/XM9 to vdd, XM15
+    to vss) and the chopper-diff topology are FIXED IN THE DRAWING
+    (drawings/DRAWING_REVIEW.md items 1-2, 2026-07-16) — this entry matches the
+    fixed two-stage-opamp-core.sch, including the true 4-gate output chopper
+    (2 straight + 2 cross transmission gates, XM16..XM23). Static-entry decision:
+    the chopper's control nets vctl/vctl_not are wired DIRECTLY to vdd/vss in this
+    entry (held transparent = the vctl-HIGH phase): straight legs on, cross legs
+    permanently OFF (swapped static ties; they add only junction parasitics on the
+    fold/gate nodes) — the clocked characterization lives in the ia_002/ia_003
+    system entries. Drawn unsized (placeholder minimum-size devices) with Vb1..Vb4
+    as external bias ports; this entry pulls the four bias levels inside as
+    knob-driven dc sources, per the instantiator-owns-bias convention
+    (plan_hierarchical_composition D3/D4). The drawn Cm_1=1p was an unedited xschem
+    default (Cm_2 was symbolic Cm); both Miller caps are knobs tied to match. NO
+    explicit CMFB is drawn — output common mode is set by device ratioing, so vocm
+    is sizing/corner-sensitive (cf. amp_020's knife-edge note).
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/two-stage-opamp-core.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, FOUNDRY-n65]
+analyses: [ac_open_loop, dc_op, noise, tran_step]
+status: draft

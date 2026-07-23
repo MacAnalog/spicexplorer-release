@@ -1,0 +1,10 @@
+// L4_BTS_X2 variant using the validated sampling bootstrap transistor cell.
+// LB_BOOTSTRAPPER_REAL pin order: GATE GND SH VDD VIN.
+
+// Library name: SAR_11B_ZZS
+// Cell name: L4_BTS_X2
+// View name: sampling_bts_experiment
+subckt L4_BTS_X2 CLKS VBTSN VBTSP VDD VIN VIP VSS
+    I2 (VBTSN VSS CLKS VDD VIN) LB_BOOTSTRAPPER_REAL
+    I0 (VBTSP VSS CLKS VDD VIP) LB_BOOTSTRAPPER_REAL
+ends L4_BTS_X2

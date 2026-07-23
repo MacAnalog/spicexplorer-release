@@ -1,0 +1,12 @@
+simulator lang=spectre
+
+v_vss_ref (VSS 0) vsource dc=0 type=dc
+v_vdd_supply (VDD 0) vsource dc=VDD type=dc
+v_clk (CLK 0) vsource type=pulse val0=0 val1=VDD period=1/f rise=10p fall=10p
+
+x_trim_encoder (TRIM_OS\<3\> TRIM_OS\<2\> TRIM_OS\<1\> TRIM_OS\<0\>) \
+        va_d2b_encoder_4b trim_code=code vdd=VDD
+x_offset_search (CLK DCMPP VINP VINN) va_offset_search vdd=VDD vcm=Vcm \
+        step0=offset_step
+x_cmp (CLK DCMPN DCMPP LM LP TRIM_OS\<3\> TRIM_OS\<2\> TRIM_OS\<1\> \
+        TRIM_OS\<0\> VDD VINN VINP VSS) cmp_under_test

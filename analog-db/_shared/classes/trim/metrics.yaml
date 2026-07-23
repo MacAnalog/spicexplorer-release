@@ -1,0 +1,35 @@
+# Trim / calibration-DAC class — canonical metric vocabulary + owned testbench templates (D-10).
+# Validated against _shared/schema/class.schema.json by the verify harness (Tier 0).
+# NEW class added 2026-07-15 (class-registry completion) for the reference-only `ferrosim_restrim`
+# (16-step thermometer resistor trim). DEVELOPED 2026-07-16: the templates are VALIDATED live on
+# ihp-sg13g2 against the first verifiable member `trm_001_vcr` (a MOS-triode voltage-controlled trim;
+# code-sweep range 1.2 V, monotonic). Reference-only circuits skip the class xref checks
+# (verify.py `_tier0_reference_circuit`); this library completes the registry.
+#
+# Port convention (illustrative): vdd <code[0..k]> out vss — a digital trim code drives a
+# resistor/current ladder whose analog output (a voltage or resistance) is the trimmed quantity.
+schema: spicexplorer/class@1
+class: trim
+id_code: trm            # accession-id prefix -> trm_001_<slug> (plan_scoreboard D-1)
+description: >-
+  Thermometer / binary trim and calibration DACs (resistor- or current-mode). A code sweep gives
+  the static transfer — LSB step, full-scale range, INL/DNL and monotonicity — while a code-edge
+  transient gives the settling time; DC supply current is the power number.
+ppa:                      # scoreboard PPA rollup declaration (plan_scoreboard D-7)
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: inl_lsb, better: min}
+    - {metric: dnl_lsb, better: min}
+canonical_metrics:
+  - lsb_step          # per-code output step (V, ohm or A depending on trim domain)
+  - full_range        # total adjustable range across all codes (same unit as lsb_step)
+  - inl_lsb           # peak integral non-linearity (LSB)
+  - dnl_lsb           # peak differential non-linearity (LSB)
+  - monotonic         # 1 if the transfer is monotonic, else 0
+  - settling_time_s   # code-edge output settling time (s)
+  - i_supply          # supply current (A)
+  - area_um2
+  - v_out             # generic trimmed DC output (V)
+templates:
+  - dc_code_sweep     # sweep the trim code -> transfer, step, range, INL/DNL, monotonicity
+  - dc_op

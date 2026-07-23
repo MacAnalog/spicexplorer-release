@@ -1,0 +1,25 @@
+v {xschem version=3.4.6 file_version=1.2}
+G {type=subcircuit
+format="@name @pinlist @symname"
+template="name=x1"}
+V {}
+S {}
+E {}
+L 4 -90 -80 90 -80 {}
+L 4 90 -80 90 80 {}
+L 4 90 80 -90 80 {}
+L 4 -90 80 -90 -80 {}
+B 5 107.5 -42.5 112.5 -37.5 {name=foldn dir=out}
+L 4 90 -40 110 -40 {}
+T {out_2} 78 -40 0 0 0.16 0.16 {layer=4}
+B 5 107.5 -2.5 112.5 2.5 {name=foldp dir=out}
+L 4 90 0 110 0 {}
+T {out} 78 0 0 0 0.16 0.16 {layer=4}
+B 5 107.5 37.5 112.5 42.5 {name=nbias dir=out}
+L 4 90 40 110 40 {}
+T {ref_in} 78 40 0 0 0.16 0.16 {layer=4}
+B 5 -2.5 97.5 2.5 102.5 {name=vss dir=inout}
+L 4 0 80 0 100 {}
+T {supply} 0 80 0 0 0.16 0.16 {layer=4}
+T {cm_nmos_simple_1} -82 -72 0 0 0.3 0.3 {layer=4}
+T {@name} -82 56 0 0 0.2 0.2 {layer=4}

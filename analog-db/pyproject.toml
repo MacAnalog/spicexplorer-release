@@ -1,0 +1,53 @@
+[project]
+name = "spicexplorer-analog-db"
+version = "0.0.0"
+description = "SpiceXplorer analog circuit database — the canonical topology/circuit registry (super-DSL + datasheets + class libraries) and the tiered `verify` harness."
+requires-python = ">=3.10"
+dependencies = [
+    "spicexplorer-core",            # project_root() anchoring + NetlistView (the read-only netlist seam)
+    "spicexplorer-circuitgraph",    # abstract netlist -> cgraph.json + per-PDK lowering
+    "spicexplorer-netlist2xschem",  # raw export draws each DUT's xschem .sch schematic (deterministic)
+    "jsonschema>=4.18",             # validate the YAML docs against _shared/schema/*.json (the agent contract)
+    "pyyaml>=6",                    # circuit.yaml / datasheet.yaml / analyses / sizing / class loaders
+]
+
+[project.optional-dependencies]
+# netlist2tf is only needed for the symbolic cross-check tier; keep it out of the core dep set
+# so a shallow/Tier-0 consumer stays light.
+symbolic = ["spicexplorer-netlist2tf"]
+# gm/ID LUT extraction + access: numpy builds the LUT arrays; pygmid is the LUT reader
+# (its sweeper is Spectre-only, so extraction uses our ngspice decks). See _shared/GMID.md.
+gmid = ["numpy>=1.24", "pygmid>=1.2"]
+
+[project.scripts]
+analog-db = "spicexplorer_analog_db.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spicexplorer_analog_db"]
+
+[dependency-groups]
+dev = ["pytest>=8.3", "ruff>=0.8", "pyright>=1.1.380"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+markers = [
+    "slow: out-of-the-fast-gate tests (deselect with -m 'not slow') — a real ngspice simulation against the IHP PDK (needs the platform api container / base image), or the xschem-gated schematic round-trip",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "I"]
+ignore = ["E501", "E701", "E702"]
+
+[tool.pyright]
+pythonVersion = "3.10"
+typeCheckingMode = "basic"
+exclude = ["**/__pycache__", "**/.venv"]

@@ -1,0 +1,31 @@
+** AUTHORED TEMPLATE — adc/tran_conversion: clocked sample+convert transient.
+** [SKELETON - NOT VALIDATED, 2026-07-15]: well-formed but not yet exercised against a real DUT;
+** forward scaffolding for a future open-PDK promotion of this class. Develop + validate the meas
+** blocks and add the class metric reader then. See _shared/classes/TODO_new_class_testbenches.md
+** Applies a held analog input and a sampling/convert clock and captures the settled output over the
+** run; dynamic figures (ENOB/SNDR/SFDR/THD) are FFT'd from the output .raw by the harness.
+** Port convention: vdd vin clk vout vss. Bindings: DUT PORT_LINE VDD VCM VCLK TCLK TSTOP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param VCLK=${VCLK}
+.param TCLK=${TCLK}
+
+Vdd vdd 0 dc {VDD}
+Vss vss 0 dc 0
+Vin vin 0 dc {VCM}
+Vclk clk 0 dc 0 pulse(0 {VCLK} 0 {TCLK/100} {TCLK/100} {TCLK/2} {TCLK})
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran {TCLK/50} ${TSTOP}
+  let v_out = v(vout)
+  meas tran vout_final FIND v(vout) AT=${TSTOP}
+  print vout_final
+  write
+  quit
+.endc
+.end

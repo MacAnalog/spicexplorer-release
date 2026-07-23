@@ -1,0 +1,30 @@
+# Design variables for the ihp-sg13g2 binding. Validated against sizing.schema.json.
+# 28nm geometry re-noted to 130nm lv devices; widths are per-finger (totals via the abstract's
+# m= multipliers). The R tail (deliberate upstream choice) makes the pair current CM-dependent.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xmip_w,  description: "Input pair width (per finger, m=2)",  default: 10u,  min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xmip_l,  description: "Input pair + trip-shifter length",    default: 0.3u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xmpld_w, description: "PMOS mirror load width (per finger, m=4)", default: 10u, min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xmpld_l, description: "PMOS mirror load length",             default: 0.3u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xmhn_w,  description: "Trip-shifter device width",           default: 1u,   min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xmb1p_w,  description: "Inverter PMOS width (m=1/2/4 chain)", default: 5u,   min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xmb1n_w,  description: "Inverter NMOS width (m=1/2/4 chain)", default: 2u,   min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xmb1p_l,   description: "Inverter length",                     default: 0.15u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_rtail,   description: "Tail resistor (ohms)",                default: 6000, min: 500, max: 100000, unit: ohm}
+  - {name: x_dut_rhn_value,   description: "Hysteresis feedback resistor (ohms; 300k makes the few-mV upstream 3meg hysteresis measurable)", default: 3e5,  min: 1e5, max: 3e7, unit: ohm}
+  # Frozen per-device literals (P4 atomic sweep): defaults reproduce the authored
+  # netlist literals exactly; freeze keeps them out of the search space.
+  - {name: x_dut_xmip_m, description: "XMIP m (frozen literal)", default: 2, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmin_m, description: "XMIN m (frozen literal)", default: 2, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmpld_m, description: "XMPLD m (frozen literal)", default: 4, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmplm_m, description: "XMPLM m (frozen literal)", default: 4, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmhn_m, description: "XMHN m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmhp_m, description: "XMHP m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmb1p_m, description: "XMB1P m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmb1n_m, description: "XMB1N m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmb2p_m, description: "XMB2P m (frozen literal)", default: 2, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmb2n_m, description: "XMB2N m (frozen literal)", default: 2, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmb3p_m, description: "XMB3P m (frozen literal)", default: 4, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmb3n_m, description: "XMB3N m (frozen literal)", default: 4, min: 1, max: 16, freeze: true, is_integer: true}

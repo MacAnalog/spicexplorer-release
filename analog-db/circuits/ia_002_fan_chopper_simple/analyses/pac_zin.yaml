@@ -1,0 +1,38 @@
+# Analysis binding (P3-2c): pac_zin_chopper_diff template — the GOLDEN chopped input
+# impedance, measured IN OPERATION via Spectre PSS+PAC in SERIES-SENSE form (stiff
+# drive through RS per side; Zin = 2*RS * |vzd/vzs|). Theory 1/(2*fc*Cin) = 6.25 MOhm
+# at the registry 5 kHz default; tran_zin_chopped measured ~12 MOhm (feedback
+# bootstrapping helps) — this bench is that figure's golden form. ngspice lane =
+# frozen-clock (static-network) AC eyeball only. No datasheet metrics bind here on
+# purpose (cf. stb) — read via the platform registry:
+# {meas: zin_mag, analysis: pac, out: vzd, ref: vzs, scale: <2*RS>, f: 100}.
+#
+# KNOWN LIMITATION (live 2026-07-17): on THIS drawn core the pss beneath the pac does
+# NOT converge in the driven-input configuration — the no-CMFB core + TG choppers
+# leave a plateaued shooting bounce on chopper-internal nodes. Seven bias-network /
+# method variants were tried (1G / 300Meg / bias-tee-L input bias, RS 10Meg / 1Meg
+# series-sense, trap / gear2, tstab 2m / 10m, steadyratio up to 1): the gain/pnoise
+# benches converge (their inputs are stiff), Zin does not. The pac impedance READ
+# path is live-validated on an ideal chopper (platform
+# test_pac_ideal_chopper_live.py); revisit after the core-CM closure (plan P4-4b).
+schema: spicexplorer/analysis@1
+id: pac_zin
+template: pac_zin_chopper_diff
+description: "Golden chopped |Zin| — Spectre PSS+PAC, unit current drive, clocks running."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 50f
+  FCHOP: 5k
+  TEDGE: 50n
+  RCM: 30k
+  RS: 1Meg
+  FSTART: 1
+  FSTOP: 2k
+  PPD: 8
+  HARMS: 15
+  TSTAB: 10m
+  METHOD: gear2
+  MAXSB: 15
+flags: [spectre_only_payload]
+produces: []

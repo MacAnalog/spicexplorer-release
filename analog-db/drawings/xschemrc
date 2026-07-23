@@ -1,0 +1,38 @@
+# Set default PDK_ROOT
+if { ![info exists env(PDK_ROOT)] } {
+  puts stderr "Warning: PDK_ROOT env. var. not found or empty, trying to find an open_pdks install"
+  if {[file isdir /usr/share/pdk]} {set ::env(PDK_ROOT) /usr/share/pdk
+  } elseif {[file isdir /usr/local/share/pdk]} {set ::env(PDK_ROOT) /usr/local/share/pdk
+  } elseif {[file isdir $env(HOME)/share/pdk]} {set ::env(PDK_ROOT) $env(HOME)/share/pdk
+  } elseif {[file isdir $env(HOME)/.volare]} {set ::env(PDK_ROOT) $env(HOME)/.volare
+  } else {
+    puts stderr {No open_pdks installation found, set PDK_ROOT env. var. and restart xschem}
+  }
+}
+
+# Set default PDK
+if { ![info exists env(PDK)] } {
+  set ::env(PDK) ihp-sg13g2
+}
+
+# Source the PDK xschemrc file
+if {![info exists PDK]} {
+    source $env(PDK_ROOT)/$env(PDK)/libs.tech/xschem/xschemrc
+}
+
+# Add current directory to xschem library path
+append XSCHEM_LIBRARY_PATH :[file dirname [info script]]
+
+# Platform shared device-symbol library (spicexplorer-platform/docker/xschem_library).
+# It holds the custom devices/sg13_lv_*_np.sym wrappers used by the block/raw drawings.
+# It is only put on the path inside the Docker image (Dockerfile.spice-base); running
+# xschem natively needs it added here, else those symbols show as "not found".
+append XSCHEM_LIBRARY_PATH :[file normalize [file dirname [info script]]/../../../docker/xschem_library]
+
+# Set default netlist output directory (under a "netlist" folder next to this rc)
+set netlist_dir [file dirname [info script]]/netlist
+
+# Set terminal and editor
+set terminal  xterm
+set editor  gedit
+

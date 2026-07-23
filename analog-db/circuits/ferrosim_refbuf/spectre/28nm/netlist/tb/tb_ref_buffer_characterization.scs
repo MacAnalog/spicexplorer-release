@@ -1,0 +1,26 @@
+// Reference-buffer characterization testbench with ideal sources at DUT pins
+// and explicit characterization loads.
+
+Vvrefh (VREFH 0) vsource dc=1.8 type=dc
+Vvrefdes (VREFDES 0) vsource dc=1 type=dc
+Vstage_vrefm (VREFM\<1\> 0) vsource dc=1.4 type=dc
+Vstage_vrefn (VREFN\<1\> 0) vsource dc=0 type=dc
+Vbias_vrefm (VREFM\<0\> 0) vsource dc=1.4 type=dc
+Vbias_vrefn (VREFN\<0\> 0) vsource dc=0 type=dc
+
+Rsetn_bias_route (setn_bias_raw SETN) resistor r=100
+Rsetp_bias_route (setp_bias_raw SETP) resistor r=100
+
+Cstage_ref_load (VREFM\<1\> VREFN\<1\>) capacitor c=50p
+Cbias_ref_load (VREFM\<0\> VREFN\<0\>) capacitor c=50p
+Routput_load (VREFP output_load_node) resistor r=10
+Coutput_load (output_load_node VREFN\<1\>) capacitor c=750f
+
+Xref_buffer_stage2 (SETN SETP VREFM\<1\> VREFN\<1\> VREFP) \
+        ref_buffer_stage2
+Xref_buffer_bias (IBIAS setn_bias_raw setp_bias_raw VREFDES VREFH VREFM\<0\> VREFN\<0\>) \
+        ref_buffer_bias
+
+Iibias (IBIAS 0) isource dc=IBREF type=dc
+Iload_step (VREFP VREFN\<1\>) isource type=pulse delay=100p val0=0 val1=21m \
+        period=1 rise=1p fall=1p width=10p mag=1

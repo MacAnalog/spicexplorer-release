@@ -1,0 +1,43 @@
+** Abstract differential chopper modulator — four CMOS transmission gates
+** (2 straight: va_p->vb_p / va_n->vb_n, conduct when vctl HIGH; 2 cross:
+** va_p->vb_n / va_n->vb_p with swapped controls, conduct when vctl LOW) on the
+** complementary controls vctl / vctl_not; the "chopper-diff" block of Fan's
+** chopper CCIA (see provenance in circuit.yaml). AUTHORED source of truth
+** (plan D-2). PDK-neutral model tokens (nmos/pmos); per-PDK device names +
+** geometry come from circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): va_p va_n vb_p vb_n vctl vctl_not vdd vss
+**
+** Topology (from drawings/ccia-02-QinwenFan-chopper-ripple-reduction/
+** chopper-diff.sch, hand-flattened here from its four transmission_gate_pair
+** instances x1..x4 after xschem netlisting; the drawing is a TRUE 4-gate
+** modulator — DRAWING_REVIEW.md item 1 FIXED 2026-07-16, this entry matches it):
+**   straight P leg (was x1): XM1 (nmos, gate vctl, bulk vss) + XM2 (pmos, gate
+**     vctl_not, bulk vdd) in parallel between va_p and vb_p.
+**   straight N leg (was x4): XM3 (nmos) + XM4 (pmos), identically between
+**     va_n and vb_n.
+**   cross leg va_p->vb_n (was x2): XM5 (nmos, gate vctl_not) + XM6 (pmos,
+**     gate vctl) — swapped controls, conducts when vctl LOW.
+**   cross leg va_n->vb_p (was x3): XM7 (nmos, gate vctl_not) + XM8 (pmos,
+**     gate vctl) — same swapped hookup.
+**   The rails vdd/vss appear ONLY as bulk connections — no channel current
+**   flows to either rail.
+**   deviation from the drawing: none electrically; the hierarchy is flattened
+**   (x1/XM1 -> XM1, x1/XM2 -> XM2, x4/XM1 -> XM3, x4/XM2 -> XM4,
+**   x2/XM1 -> XM5, x2/XM2 -> XM6, x3/XM1 -> XM7, x3/XM2 -> XM8) and the drawn
+**   placeholder minimum geometry (w=0.15u l=0.13u) is replaced by symbolic
+**   knobs with signal-switch defaults (w=2u, l=0.13u) in pdk/*/sizing.yaml.
+**.subckt sw_002_chopper_diff va_p va_n vb_p vb_n vctl vctl_not vdd vss
+* --- straight P leg: transmission gate va_p <-> vb_p (on when vctl HIGH) ---
+XM1 va_p vctl vb_p vss nmos w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+XM2 vb_p vctl_not va_p vdd pmos w=x_dut_xm2_w l=x_dut_xm2_l m=x_dut_xm2_m
+* --- straight N leg: transmission gate va_n <-> vb_n (on when vctl HIGH) ---
+XM3 va_n vctl vb_n vss nmos w=x_dut_xm3_w l=x_dut_xm3_l m=x_dut_xm3_m
+XM4 vb_n vctl_not va_n vdd pmos w=x_dut_xm4_w l=x_dut_xm4_l m=x_dut_xm4_m
+* --- cross leg: transmission gate va_p <-> vb_n (swapped controls, on when vctl LOW) ---
+XM5 va_p vctl_not vb_n vss nmos w=x_dut_xm5_w l=x_dut_xm5_l m=x_dut_xm5_m
+XM6 vb_n vctl va_p vdd pmos w=x_dut_xm6_w l=x_dut_xm6_l m=x_dut_xm6_m
+* --- cross leg: transmission gate va_n <-> vb_p (swapped controls, on when vctl LOW) ---
+XM7 va_n vctl_not vb_p vss nmos w=x_dut_xm7_w l=x_dut_xm7_l m=x_dut_xm7_m
+XM8 vb_p vctl va_n vdd pmos w=x_dut_xm8_w l=x_dut_xm8_l m=x_dut_xm8_m
+**.ends
+.end

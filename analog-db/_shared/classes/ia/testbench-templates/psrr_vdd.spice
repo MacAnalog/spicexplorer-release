@@ -1,0 +1,34 @@
+** AUTHORED TEMPLATE — amplifier/psrr_vdd (plan D-4/D-5): positive-supply rejection.
+** The DUT is closed in a unity-gain buffer (vinn shorted to vout, vinp held at VCM with NO ac), and
+** the supply Vdd carries a 1 V AC ripple. With the signal input quiet, every AC volt at vout is
+** supply feed-through, so PSRR+ = -20·log10|vout/vdd| = -vdb(vout) (vdd ac = 1). Reported at FSTART
+** (the DC-band floor). This is the buffer-application PSRR — the meaningful number for the
+** voltage-buffer OTAs whose datasheet is closed-loop (gain_cl/bw_cl); sim-validated on the 5T
+** (ihp≈29.7, sky130≈26.8, gf180≈53.5 dB — tracks the loop gain, as expected).
+** Bindings: DUT PORT_LINE VDD VCM IBIAS CL FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD} ac 1     ; 1 V supply-ripple stimulus
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+CLoad vout 0 {CL}
+
+Vinp vinp 0 dc {VCM}         ; signal input held quiet (no ac) — isolate the supply path
+Vfb  vinn vout dc 0          ; unity-gain buffer: vinn shorted to vout
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  let psrr = -vdb(vout)
+  meas ac psrr_vdd_db FIND psrr AT=${FSTART}
+  write
+  quit
+.endc
+.end

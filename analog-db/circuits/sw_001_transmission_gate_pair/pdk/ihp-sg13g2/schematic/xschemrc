@@ -1,0 +1,12 @@
+# xschem setup for this circuit's maintained drawing (hand-drawn source of truth).
+# Child block symbols resolve from the repo-level drawings/ library (a sub-block is
+# drawn/maintained in exactly one place - plan_hierarchical_composition S6.2); this rc
+# adds both that library root and this directory to the search path.
+if { ![info exists env(PDK_ROOT)] } {
+  puts stderr {Warning: PDK_ROOT env. var. not set - PDK device symbols will not resolve}
+}
+if { ![info exists env(PDK)] } { set ::env(PDK) sg13g2 }
+catch { source $env(PDK_ROOT)/ihp-sg13g2/libs.tech/xschem/xschemrc }
+append XSCHEM_LIBRARY_PATH :[file normalize [file dirname [info script]]/../../../../../drawings]
+append XSCHEM_LIBRARY_PATH :[file dirname [info script]]
+set netlist_dir [file dirname [info script]]/netlist

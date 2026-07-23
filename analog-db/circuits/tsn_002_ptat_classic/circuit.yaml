@@ -1,0 +1,28 @@
+# ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
+# PROMOTED from the sfe_ptat_classic reference entry: authored a device-generic abstract netlist +
+# open-PDK bindings so the AnalogGym classic PTAT reference is lowerable, assembled and simulated.
+# The original TSMC-180nm AnalogGym decks are retained verbatim under the `references` binding.
+schema: spicexplorer/circuit@1
+id: tsn_002_ptat_classic
+class: temp_sensor
+display_name: "Classic PTAT reference core (NMOS pair + PMOS mirror + degeneration R)"
+stages: 1
+ports: [vdd, vout, vss]                 # supply, PTAT reference output, ground (= abstract subckt)
+provenance:
+  source: AnalogGym "Sensing Front End" (CODA-Team/AnalogGym)
+  aliases: [ptat_classic, PTAT_CLASSIC, sfe_ptat_classic]
+  paper: "Classic self-biased PTAT current reference"
+  license: BSD-3-Clause
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, sky130, gf180mcu]
+analyses: [dc_op, temp_sweep, line_sweep, psrr]
+references:
+  - {tool: spectre, dir: spectre/180nm, node: 180nm}
+optimize:
+  budget: 500
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

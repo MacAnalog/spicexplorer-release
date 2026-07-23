@@ -1,0 +1,25 @@
+# SUPER-DSL manifest (plan D-3). The CORA folded-cascode design (legacy examples/OTA/folded_cascode).
+schema: spicexplorer/circuit@1
+id: amp_004_folded_cascode
+class: amplifier
+display_name: "Folded-cascode OTA (CORA benchmark design)"
+compensation: none
+stages: 1
+ports: [vinn, vinp, vout, vdd, ibias, vss]      # = the CORA opamp port order (vin- vin+ vout vdd ib vss)
+provenance:
+  source: CORA
+  aliases: [FOLDED-CASCODE-OTA, opamp, folded_cascode, folded_cascode_ota]
+  paper: "CORA op-amp benchmark testbenches"
+  license: MIT
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+  schematic: abstract/schematic.svg
+pdks: [ihp-sg13g2, sky130, gf180mcu, tsmc-n65]
+analyses: [ac_open_loop, dc_op, noise, tran_step, psrr_vdd, cmrr_vcm]
+optimize:
+  budget: 5
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

@@ -1,0 +1,37 @@
+** Abstract real transistor-level CMFB network, CANONICAL polarity: resistive CM
+** averager (RMP/RMN) + an NMOS-input 5T OTA error amplifier with an on-cell 2-diode
+** bias string (no external bias pin). vcmfb = A*(cm_sense - vref) — canonical, for
+** INVERTING plants (B5 rule). AUTHORED source of truth (plan D-2). PDK-neutral model
+** tokens (nmos/pmos); per-PDK device names + geometry come from circuitgraph lowering
+** + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vinp vinn vcmfb vref vdd vss
+**
+** Topology (from drawings/shared/simulation/cmfb-output-amp-5t-nmos-input.spice,
+** flattened by hand after xschem netlisting: wrapper = x2 vcm-detector-simple +
+** x1 amp-single-ended-5t-nmos-input):
+**   sense — RMP/RMN resistive averager from the sensed nodes vinp/vinn to cm_sense.
+**   error amp — NMOS diff pair XM1 (gate cm_sense, + input) / XM2 (gate vref,
+**     - input) over NMOS tail XM8; PMOS mirror load XM3 (diode) -> XM4 (output
+**     side); single-ended output vcmfb at the XM2/XM4 drains. Raising cm_sense
+**     raises XM1's current -> mirror sources more into vcmfb: canonical.
+**   bias — self-contained 2-diode string vdd -> XM6 (PMOS diode) -> bias -> XM5
+**     (NMOS diode) -> vss; tail XM8 mirrors XM5.
+**   drawing conformance: none deviated — device names match the drawing's M-numbers
+**     (spiceprefix X). Sizing defaults are the 2026-07-20 optimizer winner (rounded
+**     3-sigfig == committed drawing values; reproduces the full-precision winner
+**     exactly. Full precision: drawings/sizing-and-specs.yaml
+**     shared.real_5t_cmfb.nmos_input_winner).
+**   status vs cmfb_002: the validated SECONDARY flavor (in-loop CM errors
+**     3.8/4.8 mV vs the PMOS flavor's 3.6/2.1) — kept because the flavor choice is
+**     plant-specific: pick the one whose zero-error natural output lands nearest
+**     the plant's actuator balance gates (SIZING_VALIDATION_REPORT.md §8).
+RMP cm_sense vinp 'x_dut_rmp_value'
+RMN vinn cm_sense 'x_dut_rmn_value'
+XM1 mirr cm_sense ntail vss nmos l=x_dut_xm1_l m=x_dut_xm1_m w=x_dut_xm1_w
+XM2 vcmfb vref ntail vss nmos l=x_dut_xm2_l m=x_dut_xm2_m w=x_dut_xm2_w
+XM3 mirr mirr vdd vdd pmos l=x_dut_xm3_l m=x_dut_xm3_m w=x_dut_xm3_w
+XM4 vcmfb mirr vdd vdd pmos l=x_dut_xm4_l m=x_dut_xm4_m w=x_dut_xm4_w
+XM5 bias bias vss vss nmos l=x_dut_xm5_l m=x_dut_xm5_m w=x_dut_xm5_w
+XM6 bias bias vdd vdd pmos l=x_dut_xm6_l m=x_dut_xm6_m w=x_dut_xm6_w
+XM8 ntail bias vss vss nmos l=x_dut_xm8_l m=x_dut_xm8_m w=x_dut_xm8_w
+.end

@@ -1,0 +1,111 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "cmp_001_hyst_diffpair",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 15,
+    "blocks_detected": 4,
+    "by_family": {
+      "current_mirror": 1,
+      "inverter": 3
+    },
+    "structural_roles": {
+      "XMB1N": "current_mirror",
+      "XMB1P": "current_mirror",
+      "XMB2N": "current_mirror",
+      "XMB2P": "current_mirror",
+      "XMB3N": "current_mirror",
+      "XMB3P": "current_mirror",
+      "XMPLD": "current_mirror_reference",
+      "XMPLM": "current_mirror"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.pmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XMPLD",
+      "output_devices": [
+        "XMPLM"
+      ],
+      "devices": [
+        "XMPLD",
+        "XMPLM"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "n2",
+        "out": "n1"
+      }
+    },
+    {
+      "group_id": "inv.cmos.stack#1",
+      "family": "inverter",
+      "mirror_class": "inverter",
+      "polarity": "complementary",
+      "template_id": "inv.cmos.stack",
+      "reference_device": null,
+      "output_devices": [
+        "XMB1N",
+        "XMB1P"
+      ],
+      "devices": [
+        "XMB1N",
+        "XMB1P"
+      ],
+      "ports": {
+        "supply_n": "vss",
+        "supply_p": "vdd",
+        "in": "n1",
+        "out": "b1"
+      }
+    },
+    {
+      "group_id": "inv.cmos.stack#2",
+      "family": "inverter",
+      "mirror_class": "inverter",
+      "polarity": "complementary",
+      "template_id": "inv.cmos.stack",
+      "reference_device": null,
+      "output_devices": [
+        "XMB2N",
+        "XMB2P"
+      ],
+      "devices": [
+        "XMB2N",
+        "XMB2P"
+      ],
+      "ports": {
+        "supply_n": "vss",
+        "supply_p": "vdd",
+        "in": "b1",
+        "out": "b2"
+      }
+    },
+    {
+      "group_id": "inv.cmos.stack#3",
+      "family": "inverter",
+      "mirror_class": "inverter",
+      "polarity": "complementary",
+      "template_id": "inv.cmos.stack",
+      "reference_device": null,
+      "output_devices": [
+        "XMB3N",
+        "XMB3P"
+      ],
+      "devices": [
+        "XMB3N",
+        "XMB3P"
+      ],
+      "ports": {
+        "supply_n": "vss",
+        "supply_p": "vdd",
+        "in": "b2",
+        "out": "vout"
+      }
+    }
+  ]
+}

@@ -1,0 +1,306 @@
+# 5T-OTA ADVANCED BENCH — the full amplifier characterization suite as a
+# repeatable viewer/optimizer test case: loop gain (AC), transient settling,
+# noise (density + integrated), CMRR, PSRR, DC-transfer/ICMR and THD, across a
+# 5-corner PVT set. Every rejection/distortion spec is a Tier-1 `measurement:`
+# recipe (spicexplorer_core.measurements.registry) computed from the raw waves,
+# so the same numbers appear in the optimizer score and the Analyze viewer.
+#
+# Smoke lane (what CI/an agent runs to regenerate viewer test data):
+#   POST /api/simulate/once {yaml_path: …/project_setup_advanced.yaml,
+#                            params: {x_dut_nfet_input_w: "0.5u"}, keep_raw: true}
+#   → one keep_raw run with 7 testbenches × 5 corners of raw artifacts
+#     (run_<n>_<tb>__<corner>/), openable via POST /api/waveview/open_run.
+project:
+  name: 5T-OTA-ADVANCED
+  description: Advanced amplifier bench suite (AC/tran/noise/CMRR/PSRR/DC/THD × 5 PVT corners) for the 5T OTA in ihp-sg13g2
+  simulator: ngspice
+  save_sim: False
+
+  ws_root : ..
+  netlist : spice/ota-5t_tb-loopgain.spice
+  outdir  : spice/temp_spice_out_advanced
+
+  # ------------------------
+  # Technology Specification
+  # ------------------------
+  tech_spec :
+    name : ihp-sg13g2
+    constraints:
+      max_nfet_w : 10u
+      min_nfet_w : 0.18u
+      max_nfet_l : 10u
+      min_nfet_l : 0.18u
+      max_pfet_w : 10u
+      min_pfet_w : 0.18u
+      max_pfet_l : 10u
+      min_pfet_l : 0.18u
+
+  # ------------------------
+  # PVT — 5 corners, multi mode (each trial runs testbenches × corners and the
+  # run dir carries `run_<n>_<tb>__<corner>/` artifacts the Analyze viewer's
+  # PVT mode reads).
+  # ------------------------
+  pvt:
+    mode: multi
+    score_aggregation: mean
+    active_corner: tt_27C_1V50
+
+    process_bundles:
+      tt: [ { lib_file: cornerMOSlv.lib, section: mos_tt } ]
+      ss: [ { lib_file: cornerMOSlv.lib, section: mos_ss } ]
+      ff: [ { lib_file: cornerMOSlv.lib, section: mos_ff } ]
+      sf: [ { lib_file: cornerMOSlv.lib, section: mos_sf } ]
+      fs: [ { lib_file: cornerMOSlv.lib, section: mos_fs } ]
+
+    corners:
+      - name: tt_27C_1V50
+        process: tt
+        temp: 27
+        supply: { node: VDD, value: 1.5 }
+        enabled: true
+      - name: ss_125C_1V35
+        process: ss
+        temp: 125
+        supply: { node: VDD, value: 1.35 }
+        enabled: true
+      - name: ff_m40C_1V65
+        process: ff
+        temp: -40
+        supply: { node: VDD, value: 1.65 }
+        enabled: true
+      - name: sf_85C_1V50
+        process: sf
+        temp: 85
+        supply: { node: VDD, value: 1.5 }
+        enabled: true
+      - name: fs_0C_1V50
+        process: fs
+        temp: 0
+        supply: { node: VDD, value: 1.5 }
+        enabled: true
+
+    model_lib_root: null
+
+  # ------------------------
+  # DUT Parameters
+  # ------------------------
+  dut_params :
+    - name : x_dut_nfet_input_w
+      min_val: min_nfet_w
+      max_val: max_nfet_w
+    - name : x_dut_nfet_input_l
+      min_val: min_nfet_l
+      max_val: max_nfet_l
+    - name : x_dut_nfet_mirror_w
+      min_val: min_nfet_w
+      max_val: max_nfet_w
+    - name : x_dut_nfet_mirror_l
+      min_val: min_nfet_l
+      max_val: max_nfet_l
+    - name : x_dut_nfet_mirror_ref_w
+      min_val: min_nfet_w
+      max_val: max_nfet_w
+    - name : x_dut_nfet_mirror_ref_l
+      min_val: min_nfet_l
+      max_val: max_nfet_l
+    - name : x_dut_pfet_load_w
+      min_val: min_pfet_w
+      max_val: max_pfet_w
+    - name : x_dut_pfet_load_l
+      min_val: min_pfet_l
+      max_val: max_pfet_l
+
+  # ------------------------
+  # Testbenches — the full characterization suite.
+  # ------------------------
+  testbenches :
+    - name: tb_ac
+      params:
+        - { name: CL,  description: load capacitance,          val: 50f }
+        - { name: VCM, description: input common mode voltage, val: 0.8 }
+      netlist : spice/ota-5t_tb-loopgain.spice
+      enable: True
+      description : Loop-gain AC (Middlebrook) — UGF, DC gain, PM
+
+    - name: tb_tran
+      params:
+        - { name: CL,  description: load capacitance,          val: 50f }
+        - { name: VCM, description: input common mode voltage, val: 0.8 }
+      netlist : spice/ota-5t_tb-tran.spice
+      enable: True
+      description : Transient step — settling time, slew
+
+    - name: tb_noise
+      params:
+        - { name: CL,  description: load capacitance,          val: 50f }
+        - { name: VCM, description: input common mode voltage, val: 0.8 }
+      netlist : spice/ota-5t_tb-noise.spice
+      enable: True
+      description : Noise — spectral density + integrated totals (two raw plots)
+
+    - name: tb_cmrr
+      params:
+        - { name: CL,  description: load capacitance,          val: 50f }
+        - { name: VCM, description: input common mode voltage, val: 0.8 }
+      netlist : spice/ota-5t_tb-cmrr.spice
+      enable: True
+      description : CMRR — unity buffer, unit AC riding the common mode
+
+    - name: tb_psrr
+      params:
+        - { name: CL,  description: load capacitance,          val: 50f }
+        - { name: VCM, description: input common mode voltage, val: 0.8 }
+      netlist : spice/ota-5t_tb-psrr.spice
+      enable: True
+      description : PSRR — unity buffer, unit AC riding VDD
+
+    - name: tb_dc
+      params:
+        - { name: CL,  description: load capacitance,          val: 50f }
+        - { name: VCM, description: input common mode voltage, val: 0.8 }
+      netlist : spice/ota-5t_tb-dc.spice
+      enable: True
+      description : DC transfer — buffer-connected rail-to-rail sweep (ICMR)
+
+    - name: tb_thd
+      params:
+        - { name: CL,  description: load capacitance,          val: 50f }
+        - { name: VCM, description: input common mode voltage, val: 0.8 }
+      netlist : spice/ota-5t_tb-thd.spice
+      enable: True
+      description : THD — 100 kHz sine in unity buffer, coherent-FFT distortion
+
+  # ------------------------
+  # Optimizer + target specs. Spec names match the Tier-1 registry measure
+  # names (cmrr_db, psrr_vdd_db, …) so the Analyze perf strip joins them to its
+  # chips by name and PASS/FAIL verdicts light up.
+  # ------------------------
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48
+    budget: 5
+    name: SamplingSearch
+    optimizer_kwargs:
+      sampler: Hammersley
+      scrambled: True
+      rescaled: True
+
+    lin_variable_bounds:
+      min : 0
+      max : 100
+    log_variable_bounds:
+      min : 1
+      max : 100
+
+    target_specs:
+      - name: ugf
+        description:  Unity gain frequency
+        testbench:    tb_ac
+        sim_type:     ac
+        goal:         exceed
+        target:       2e6
+        range:        1e6
+        tolerance:    2e5
+        weight:       100.0
+        error_type:   relative-sigmoid
+        enable:       True
+
+      - name: dcgain
+        description:  DC gain in dB
+        testbench:    tb_ac
+        sim_type:     ac
+        goal:         exceed
+        target:       25
+        range:        100
+        tolerance:    5
+        weight:       100.0
+        error_type:   relative-sigmoid
+        enable:       True
+
+      - name: pm
+        description:  Phase margin
+        testbench:    tb_ac
+        sim_type:     ac
+        goal:         exceed
+        target:       60
+        range:        45
+        tolerance:    5
+        weight:       100.0
+        error_type:   relative-sigmoid
+        enable:       True
+
+      - name: cmrr_db
+        description:  Common-mode rejection at low frequency
+        testbench:    tb_cmrr
+        sim_type:     ac
+        goal:         exceed
+        target:       40
+        range:        60
+        tolerance:    5
+        weight:       50.0
+        error_type:   relative-sigmoid
+        enable:       True
+        measurement:  { meas: cmrr_db, out: v(v_out) }
+
+      - name: psrr_vdd_db
+        description:  Supply rejection at low frequency
+        testbench:    tb_psrr
+        sim_type:     ac
+        goal:         exceed
+        target:       40
+        range:        60
+        tolerance:    5
+        weight:       50.0
+        error_type:   relative-sigmoid
+        enable:       True
+        measurement:  { meas: psrr_vdd_db, out: v(v_out) }
+
+      - name: icmr_range
+        description:  Input common-mode range (50 mV tracking band)
+        testbench:    tb_dc
+        sim_type:     dc
+        goal:         exceed
+        target:       0.6
+        range:        1.5
+        tolerance:    0.1
+        weight:       25.0
+        error_type:   relative-sigmoid
+        enable:       True
+        measurement:  { meas: icmr_range, out: v(v_out), vin: v(v_in), vtrack: 0.05 }
+
+      - name: thd_db
+        description:  Total harmonic distortion of a 100 kHz 100 mV sine
+        testbench:    tb_thd
+        sim_type:     tran
+        goal:         minimize
+        target:       -40
+        range:        40
+        tolerance:    5
+        weight:       25.0
+        error_type:   relative-sigmoid
+        enable:       True
+        measurement:  { meas: thd_db, out: v(v_out), f0: 100e3 }
+
+      - name: v(inoise_total)
+        description:  Total input-referred noise
+        testbench:    tb_noise
+        sim_type:     noise
+        goal:         minimize
+        target:       1.2e-3
+        range:        1e-3
+        tolerance:    1e-6
+        weight:       100.0
+        error_type:   relative-sigmoid
+        enable:       True
+
+      - name: tsettle
+        description:  Settling time after the enable step
+        testbench:    tb_tran
+        sim_type:     tran
+        goal:         minimize
+        target:       1.5e-7
+        tolerance:    1e-8
+        range:        1e-6
+        weight:       100.0
+        error_type:   relative-sigmoid
+        enable:       True

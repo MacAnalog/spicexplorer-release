@@ -1,0 +1,21 @@
+# Amplifier-class datasheet defaults (plan D-10). A circuit's datasheet.yaml inherits
+# these unless it overrides them. These are illustrative analog defaults — tune per design.
+default_conditions:
+  supply: {unit: V, typical: 1.5}
+  cload:  {unit: fF, typical: 50}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+  vcm:    {unit: V, typical: 0.8}
+# Canonical extract/spec hints reused across amplifier datasheets. A circuit's
+# datasheet.metrics entry may copy + specialise any of these.
+metric_hints:
+  dc_gain_db:  {analysis: ac_open_loop, unit: dB}
+  gbw_hz:      {analysis: ac_open_loop, unit: Hz}
+  ugf_hz:      {analysis: ac_open_loop, unit: Hz}
+  pm_deg:      {analysis: ac_open_loop, unit: deg}
+  cmrr_db:     {analysis: ac_open_loop, unit: dB}
+  psrr_vdd_db: {analysis: ac_open_loop, unit: dB}
+  vn_in:       {analysis: noise, unit: "V/sqrt(Hz)"}
+  t_settle:    {analysis: tran_step, unit: s}
+  slew_rate:   {analysis: tran_step, unit: "V/s"}
+  i_supply:    {analysis: dc_op, unit: A}

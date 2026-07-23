@@ -1,0 +1,16 @@
+.param W_M1=20 L_M1=1 M_M1=1
+.param W_M2=W_M1 L_M2=L_M1 M_M2=M_M1
+.param W_M3=30 L_M3=0.5 M_M3=1
+.param W_M4=W_M3 L_M4=L_M3 M_M4=M_M3
+.param W_M5=10 L_M5=0.5 M_M5=1
+.param W_M6=W_M5 L_M6=L_M5 M_M6=M_M5
+.param W_M7=20 L_M7=2 M_M7=1
+.param W_M8=W_M7 L_M8=L_M7 M_M8=M_M7
+.param W_M9=30 L_M9=0.5 M_M9=1
+.param W_M10=10 L_M10=0.5 M_M10=250
+.param Vb1=1
+.param Vb2=0.025
+.param M_Rfb=1
+.param M_Cfb=10
+.param M_CL=240
+

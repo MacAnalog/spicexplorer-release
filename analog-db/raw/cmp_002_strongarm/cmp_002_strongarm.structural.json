@@ -1,0 +1,89 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "cmp_002_strongarm",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 15,
+    "blocks_detected": 3,
+    "by_family": {
+      "differential_pair": 1,
+      "inverter": 2
+    },
+    "structural_roles": {
+      "XMINN": "differential_pair",
+      "XMINP": "differential_pair",
+      "XMOBN1": "current_mirror",
+      "XMOBN2": "current_mirror",
+      "XMOBP1": "current_mirror",
+      "XMOBP2": "current_mirror",
+      "XMTAIL": "tail_current_source"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "dp.nmos.simple#1",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XMINN",
+        "XMINP"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "vinp",
+        "in_n": "vinn",
+        "CM_tail": "tail",
+        "out_n": "sp",
+        "out_p": "sn"
+      }
+    },
+    {
+      "group_id": "inv.cmos.stack#1",
+      "family": "inverter",
+      "mirror_class": "inverter",
+      "polarity": "complementary",
+      "template_id": "inv.cmos.stack",
+      "reference_device": null,
+      "output_devices": [
+        "XMOBN1",
+        "XMOBP1"
+      ],
+      "devices": [
+        "XMOBN1",
+        "XMOBP1"
+      ],
+      "ports": {
+        "supply_n": "vss",
+        "supply_p": "vdd",
+        "in": "lm",
+        "out": "voutp"
+      }
+    },
+    {
+      "group_id": "inv.cmos.stack#2",
+      "family": "inverter",
+      "mirror_class": "inverter",
+      "polarity": "complementary",
+      "template_id": "inv.cmos.stack",
+      "reference_device": null,
+      "output_devices": [
+        "XMOBN2",
+        "XMOBP2"
+      ],
+      "devices": [
+        "XMOBN2",
+        "XMOBP2"
+      ],
+      "ports": {
+        "supply_n": "vss",
+        "supply_p": "vdd",
+        "in": "lp",
+        "out": "voutn"
+      }
+    }
+  ]
+}

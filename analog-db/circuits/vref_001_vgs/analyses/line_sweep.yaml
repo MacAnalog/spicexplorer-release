@@ -1,0 +1,12 @@
+# Analysis binding (plan D-4): voltage_reference line_sweep — supply (line) regulation.
+schema: spicexplorer/analysis@1
+id: line_sweep
+template: line_sweep
+description: "Supply sweep at 27 degC; line_reg_pct."
+params:
+  VDD: 1.2
+  VDD_LO: 1.0
+  VDD_HI: 1.8
+  VDD_STEP: 0.02
+flags: []
+produces: [line_reg_pct]

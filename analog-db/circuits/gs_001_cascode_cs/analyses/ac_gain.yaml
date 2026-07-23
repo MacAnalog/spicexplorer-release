@@ -1,0 +1,14 @@
+# Analysis binding (plan D-4): gain_stage ac_gain — bias-wrapped AC gain + bandwidth into CL.
+schema: spicexplorer/analysis@1
+id: ac_gain
+template: ac_gain
+description: "Bias-wrapped AC response at the self-biased trip point; gain_ac_db + f3db_hz."
+params:
+  VDD: 1.5
+  IBIAS: 20u
+  CL: 200f
+  FSTART: 100
+  FSTOP: 1G
+  PPD: 20
+flags: [bias_wrap]
+produces: [gain_ac_db, f3db_hz]

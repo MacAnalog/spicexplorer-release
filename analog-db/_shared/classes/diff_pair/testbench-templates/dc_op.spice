@@ -1,0 +1,30 @@
+** AUTHORED TEMPLATE — diff_pair/dc_op (plan D-4): DC operating point of a differential pair.
+** Biases the mirror tail from an external Ibias, sets the input common-mode, and reports the tail
+** (supply) current and the output common-mode level.
+** Bindings: DUT PORT_LINE VDD VCM IBIAS PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+
+Vdd   vdd 0 dc {VDD}
+Vss   vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+Vcm   vcm 0 dc {VCM}
+Vinp  vinp vcm dc 0
+Vinn  vinn vcm dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  let v_ocm = (v(voutp) + v(voutn)) / 2
+  print i_supply
+  print v_ocm
+  write
+  quit
+.endc
+.end

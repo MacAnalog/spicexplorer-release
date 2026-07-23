@@ -1,0 +1,63 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "ldo_003_analoggym_simple",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 11,
+    "blocks_detected": 2,
+    "by_family": {
+      "current_mirror": 1,
+      "differential_pair": 1
+    },
+    "structural_roles": {
+      "XM1": "differential_pair",
+      "XM2": "differential_pair",
+      "XM3": "current_mirror",
+      "XM4": "current_mirror_reference",
+      "XM5": "tail_current_source"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.pmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XM4",
+      "output_devices": [
+        "XM3"
+      ],
+      "devices": [
+        "XM3",
+        "XM4"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "ndiode",
+        "out": "ngate"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#1",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM1",
+        "XM2"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "vref",
+        "in_n": "vout",
+        "CM_tail": "ntail",
+        "out_n": "ndiode",
+        "out_p": "ngate"
+      }
+    }
+  ]
+}

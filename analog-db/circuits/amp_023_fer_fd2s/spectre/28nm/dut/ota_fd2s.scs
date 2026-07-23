@@ -1,0 +1,78 @@
+// Fully differential two-stage opamp, TSMC 28nm, VDD=0.9V.
+// Stage 1: NMOS-input folded cascode.
+// Stage 2: NMOS common-source with PMOS current-source load.
+// Compensation: Miller cap + nulling resistor per side.
+// CMFB: RC sense of OUTP/OUTN -> 5T error amp -> stage-1 bottom NMOS sinks.
+// Bias: single external IBIAS (20uA) generates all internal bias voltages.
+simulator lang=spectre
+
+subckt ota_fd2s INP INN OUTP OUTN VCMR IBIAS VDD VSS
+
+// ---------------- bias generation (all referenced to IBIAS = 20uA) -------
+// NMOS master diode: vbn = gate bias for tail current mirror
+mn_bias_diode  (IBIAS IBIAS VSS VSS) nch_ulvt_mac l=200n w=4u  multi=1 nf=4
+// branch 1: 20uA into PMOS diode -> vbp for stage-1 top sources & stage-2 loads
+mn_bias_mir1   (vbp   IBIAS VSS VSS) nch_ulvt_mac l=200n w=4u  multi=1 nf=4
+mp_bias_diode  (vbp   vbp   VDD VDD) pch_ulvt_mac l=200n w=6u  multi=1 nf=6
+// branch 2: 20uA into narrow PMOS diode -> vcp (PMOS cascode gate, Sooch style)
+mn_bias_mir2   (vcp   IBIAS VSS VSS) nch_ulvt_mac l=200n w=4u  multi=1 nf=4
+mp_bias_vcp    (vcp   vcp   VDD VDD) pch_ulvt_mac l=200n w=1.5u multi=1 nf=3
+// branch 3: 20uA from PMOS mirror into narrow NMOS diode -> vcn (NMOS cascode gate)
+mp_bias_mir1   (vcn   vbp   VDD VDD) pch_ulvt_mac l=200n w=6u  multi=1 nf=6
+mn_bias_vcn    (vcn   vcn   VSS VSS) nch_ulvt_mac l=200n w=750n multi=1 nf=1
+
+// ---------------- stage 1: folded cascode ---------------------------------
+// tail: 40uA (2x master diode)
+mn_tail   (tail IBIAS VSS VSS) nch_ulvt_mac l=200n w=8u  multi=1 nf=8
+// input pair (larger area for flicker noise)
+mn_in_p   (fp INP tail VSS) nch_ulvt_mac l=150n w=12u multi=1 nf=8
+mn_in_n   (fn INN tail VSS) nch_ulvt_mac l=150n w=12u multi=1 nf=8
+// top PMOS current sources: 40uA each (2x PMOS diode)
+mp_src_a  (fp vbp VDD VDD) pch_ulvt_mac l=200n w=12u multi=1 nf=8
+mp_src_b  (fn vbp VDD VDD) pch_ulvt_mac l=200n w=12u multi=1 nf=8
+// PMOS cascodes: 20uA each
+mp_cas_a  (o1a vcp fp VDD) pch_ulvt_mac l=100n w=6u  multi=1 nf=6
+mp_cas_b  (o1b vcp fn VDD) pch_ulvt_mac l=100n w=6u  multi=1 nf=6
+// NMOS cascodes: 20uA each
+mn_cas_a  (o1a vcn x1a VSS) nch_ulvt_mac l=100n w=4u multi=1 nf=4
+mn_cas_b  (o1b vcn x1b VSS) nch_ulvt_mac l=100n w=4u multi=1 nf=4
+// bottom NMOS sinks, gate driven by CMFB error amp
+mn_snk_a  (x1a vcmfb VSS VSS) nch_ulvt_mac l=200n w=3u multi=1 nf=3
+mn_snk_b  (x1b vcmfb VSS VSS) nch_ulvt_mac l=200n w=3u multi=1 nf=3
+
+// ---------------- stage 2: common source ----------------------------------
+// o1a carries the INP-side signal (inverted once); stage 2 inverts again,
+// so the drain of mn2_a is the non-inverting output OUTP.
+mn2_a (OUTP o1a VSS VSS) nch_ulvt_mac l=150n w=32u multi=1 nf=16
+mn2_b (OUTN o1b VSS VSS) nch_ulvt_mac l=150n w=32u multi=1 nf=16
+// PMOS loads: 120uA each (6x PMOS diode)
+mp2_a (OUTP vbp VDD VDD) pch_ulvt_mac l=200n w=36u multi=1 nf=12
+mp2_b (OUTN vbp VDD VDD) pch_ulvt_mac l=200n w=36u multi=1 nf=12
+
+// ---------------- Miller compensation -------------------------------------
+rz_a (o1a za) resistor r=800
+cc_a (za OUTP) capacitor c=350f
+rz_b (o1b zb) resistor r=800
+cc_b (zb OUTN) capacitor c=350f
+
+// ---------------- CMFB ------------------------------------------------------
+// RC common-mode sense
+rcm_a (OUTP vsen) resistor r=200k
+rcm_b (OUTN vsen) resistor r=200k
+ccm_a (OUTP vsen) capacitor c=150f
+ccm_b (OUTN vsen) capacitor c=150f
+// Current-mirror CMFB error amp. The single-ended output current is forced
+// into NMOS diode mn_cm_dio, which forms a 1:2 current mirror with the
+// stage-1 bottom sinks: vcmfb is an NMOS Vgs by construction, so it tracks
+// the sinks across PVT, has full pull range, and the node impedance is
+// ~1/gm which keeps the CMFB loop Miller-dominated.
+// Balanced point: I(mp_ea_mir)=2*I(ead)=20u, I(mn_ea_sen)=10u, so the diode
+// carries 10u and the sinks mirror 2x = 20uA each.
+mn_ea_ref  (ead   VCMR eatail VSS) nch_ulvt_mac l=100n w=4u multi=1 nf=4
+mn_ea_sen  (vcmfb vsen eatail VSS) nch_ulvt_mac l=100n w=4u multi=1 nf=4
+mp_ea_dio  (ead   ead VDD VDD) pch_ulvt_mac l=200n w=3u multi=1 nf=2
+mp_ea_mir  (vcmfb ead VDD VDD) pch_ulvt_mac l=200n w=6u multi=1 nf=4
+mn_cm_dio  (vcmfb vcmfb VSS VSS) nch_ulvt_mac l=200n w=1.5u multi=1 nf=1
+mn_ea_tail (eatail IBIAS VSS VSS) nch_ulvt_mac l=200n w=4u multi=1 nf=4
+
+ends ota_fd2s

@@ -1,0 +1,14 @@
+# Analysis binding (plan D-4): diff_pair gain_dc — differential DC gain about the common mode.
+schema: spicexplorer/analysis@1
+id: gain_dc
+template: gain_dc
+description: "Differential DC sweep; gain_dc = d(voutp-voutn)/d(vid) at vid=0."
+params:
+  VDD: 1.5
+  VCM: 0.75
+  IBIAS: 20u
+  VID_LO: -0.05
+  VID_HI: 0.05
+  VID_STEP: 0.002
+flags: []
+produces: [gain_dc]

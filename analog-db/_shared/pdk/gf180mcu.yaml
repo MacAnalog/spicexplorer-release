@@ -1,0 +1,75 @@
+# PDK-level registry for gf180mcu (GlobalFoundries 180nm MCU; open_pdks/volare build,
+# open_pdks c6d73a35f524070e85faff4a6a9eef49553ebc2b). The ngspice model subset is vendored at
+# docker/pdk/gf180_pdk.zip → /opt/pdk/gf180mcu/libs.tech/ngspice (on the sim sourcepath). Geometry
+# is explicit meters (NO `.option scale`, like ihp-sg13g2), but the BSIM4 device takes a PER-FINGER
+# width + `nf` (like sky130) — circuitgraph's emit divides total w across fingers + renames ng→nf.
+pdk: gf180mcu
+sim_engine: ngspice                      # native lane: open-PDK ngspice (in-library router marker)
+supply: {default: 3.3, unit: V}          # nominal 3.3 V core rail (the 03v3 devices)
+devices:
+  nmos: {core: nfet_03v3, io: nfet_06v0}
+  pmos: {core: pfet_03v3, io: pfet_06v0}
+  res:  [ppolyf_u, nplus_u, pplus_u]
+  cap:  [cap_mim_2f0fF]
+# gf180mcu's open_pdks ngspice models split the corner libs PER DEVICE (nfet_03v3_t/_f/_s/...), and
+# the device subckts (nfet_03v3/pfet_03v3) live in `fets_mm`; `design.ngspice` sets the global stat
+# switches (sw_stat_*=0 ⇒ as-extracted, no MC). So a corner = include(design) + per-device model
+# sections + the shared device-subckt section. The add-binding generator expands this per corner.
+corners:
+  lib_file: sm141064.ngspice
+  includes: [design.ngspice]             # sectionless `.include`: global stat + fnoicor switches
+  pre_sections: [noise_corner]           # BEFORE the model cards (defines the *_noia/_noib/_noic they reference)
+  post_sections: [fets_mm]               # AFTER: the nfet_03v3/pfet_03v3 device subckts
+  per_corner:
+    tt: [nfet_03v3_t, pfet_03v3_t]
+    ff: [nfet_03v3_f, pfet_03v3_f]
+    ss: [nfet_03v3_s, pfet_03v3_s]
+    sf: [nfet_03v3_sf, pfet_03v3_sf]
+    fs: [nfet_03v3_fs, pfet_03v3_fs]
+# PDK passive (R/C) models — corner-lib resolution + measured tt constants for sizing. The R/C
+# model sections live in the same sm141064.ngspice; the MIM-cap SUBCKT is in the sectionless-style
+# `cap_mim` section (like `fets_mm` for MOS), loaded after the mimcap_* model section. No sf/fs
+# passive sections exist → mapped to typical.
+passives:
+  libs:
+    res: {lib_file: sm141064.ngspice,
+          per_corner: {tt: [res_typical], ss: [res_ss], ff: [res_ff], sf: [res_typical], fs: [res_typical]}}
+    cap: {lib_file: sm141064.ngspice, post_sections: [cap_mim],
+          per_corner: {tt: [mimcap_typical], ss: [mimcap_ss], ff: [mimcap_ff], sf: [mimcap_typical], fs: [mimcap_typical]}}
+  # tt constants measured via ngspice .op/.ac on the EDA base image (R: W=1µ/L=10µ, incl. end
+  # effects; C: 10×10 µm). sheet_res in Ω/□, area_cap in F/µm². R subckts are 3-terminal
+  # (sig sig bulk) with r_width/r_length; the cap takes c_width/c_length (meters).
+  models:
+    ppolyf_u:      {kind: res, sheet_res: 381}
+    nplus_u:       {kind: res, sheet_res: 58}
+    pplus_u:       {kind: res, sheet_res: 207}
+    cap_mim_2f0fF: {kind: cap, area_cap: 2.09e-15}
+geometry: {min_l: 0.28u, min_w: 0.22u, max_l: 10u, max_w: 100u}
+# gm/ID LUT characterization defaults (Phase 6; `analog-db gmid-extract`). family=bsim4, but the
+# gf180 subckt's inner device is named `m0`, so the op-probe is `@m.xm1.m0[...]` (no {device}).
+gmid:
+  family: bsim4
+  device: nfet_03v3                      # default device (the 3.3V core nmos); --device pfet_03v3 etc.
+  corners: [tt, ss, ff]                  # `--corner all` extracts each into its own __<corner>.pkl
+  probe: "m.xm1.m0"
+  width_um: 5                            # single characterization width (µm); the LUT is per-unit-W
+  nfing: 1
+  temp_k: 300
+  sweep:
+    vgs: [0, 0.05, 3.3]                  # (start, step, stop) V — 3.3V rail
+    vds: [0, 0.2, 3.3]   # coarse VDS (the gm/ID method needs few VDS); --vds for finer
+    vsb: [0, -0.4, -0.4]                # 2 body-bias points (0, 0.4 V); --vsb for more
+    length_um: [0.28, 0.3, 0.5, 1, 2, 4]
+  info: "GlobalFoundries gf180mcu, 3.3 V, BSIM4"
+  simulator:                              # optional ngspice runtime knobs (CLI --runner/--workers override)
+    runner: auto                          # auto = host ngspice+$PDK_ROOT when available, else docker
+    workers: 8                            # parallel ngspice jobs, one per L value
+    timeout_s: 3600                       # per-job wall clock [s]
+  variants:                               # corner override per device variant (matched on device name)
+    - match: "06v0"                       # the 6V IO device: model cards reference skew params
+      corners:                            #   (nfet_06v0_tox …) only the master `typical` corner defines
+        per_corner: {tt: [typical, nfet_06v0_t, pfet_06v0_t]}  #   (typical-only in this open subset).
+        # KNOWN LIMITATION: this vendored gf180 ngspice subset does NOT characterize cleanly — the 6V
+        # `_dss` mismatch wrapper (agauss/var_vth) + a `$`-comment in `typical` abort the bare sweep.
+        # The section plumbing is correct (resolves the model); a fuller gf180 model vendoring unblocks
+        # it. Use the 3.3 V core devices for gm/ID sizing. See _shared/GMID.md.

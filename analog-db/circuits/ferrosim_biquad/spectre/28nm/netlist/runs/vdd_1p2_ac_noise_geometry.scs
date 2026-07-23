@@ -1,0 +1,3 @@
+simulator lang=spectre
+parameters VDD=1.2
+include "runs/common_ac_noise_geometry.scs"

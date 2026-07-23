@@ -1,0 +1,96 @@
+{
+  "area": {
+    "active_gate_area_um2": 412.0,
+    "c_count": 1,
+    "c_total_f": 5e-12,
+    "mos_count": 24,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "amp_003_fan_smc",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 86.00362,
+            "pm": 85.83404,
+            "ugf": 6643528.0
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "status": "disabled"
+        },
+        "noise": {
+          "status": "disabled"
+        },
+        "tran_step": {
+          "status": "disabled"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-06-11T13:59:26+00:00"
+      }
+    }
+  },
+  "design_id": "36036c3e4b",
+  "metrics": {
+    "tt": {
+      "dc_gain_db": {
+        "spec": "fail",
+        "value": 86.00362
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 85.83404
+      },
+      "ugf_hz": {
+        "spec": "pass",
+        "value": 6643528.0
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "CAPACITOR_0": "5p",
+      "CURRENT_0_BIAS": "60u",
+      "x_dut_xm10_l": "1u",
+      "x_dut_xm10_m": "8",
+      "x_dut_xm10_w": "1u",
+      "x_dut_xm11_l": "1u",
+      "x_dut_xm11_m": "32",
+      "x_dut_xm11_w": "1u",
+      "x_dut_xm14_m": "4",
+      "x_dut_xm19_l": "1u",
+      "x_dut_xm19_w": "1u",
+      "x_dut_xm21_l": "1u",
+      "x_dut_xm21_m": "4",
+      "x_dut_xm21_w": "1u",
+      "x_dut_xm23_l": "1u",
+      "x_dut_xm23_m": "16",
+      "x_dut_xm23_w": "1u",
+      "x_dut_xm7_l": "1u",
+      "x_dut_xm7_m": "16",
+      "x_dut_xm7_w": "1u",
+      "x_dut_xm9_l": "1u",
+      "x_dut_xm9_m": "4",
+      "x_dut_xm9_w": "1u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 412.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 86.00362,
+      "pm_deg": 85.83404,
+      "ugf_hz": 6643528.0
+    }
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

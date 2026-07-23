@@ -1,0 +1,22 @@
+simulator lang=spectre
+global 0
+
+parameters CL=400f A=250m f=4G IB=120u Vcm=0.45
+
+include "${PDK_ROOT}/models/spectre/toplevel_modified.scs" section=top_tt
+include "dut/l1_input_buffer_cascode.scs"
+include "tb/tb_input_buffer_cascode_pss.scs"
+
+simulatorOptions options psfversion="1.4.0" temp=27 tnom=27 scalem=1.0 \
+    scale=1.0 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 digits=5 cols=80 \
+    pivrel=1e-3 sensfile="../psf/sens.output" checklimitdest=psf
+
+pss pss fund=f harms=10 errpreset=conservative autotstab=yes saveinit=yes \
+    annotate=status
+
+modelParameter info what=models where=rawfile
+element info what=inst where=rawfile
+outputParameter info what=output where=rawfile
+designParamVals info what=parameters where=rawfile
+primitives info what=primitives where=rawfile
+subckts info what=subckts where=rawfile

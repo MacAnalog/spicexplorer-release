@@ -1,0 +1,157 @@
+{
+  "area": {
+    "active_gate_area_um2": 175.882,
+    "c_count": 1,
+    "c_total_f": 3.237621066906929e-12,
+    "mos_count": 10,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "amp_022_fer_two_stage",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 59.77625,
+            "pm": 77.59476,
+            "ugf": 5005601.0
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 47.94344
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0001674437
+          },
+          "status": "ok"
+        },
+        "iip3": {
+          "error": "amp_022_fer_two_stage/iip3@ihp-sg13g2/tt: no measures parsed:\n                             0.436172\nxdut.a                                0.507084\nxdut.c                                 1.11746\nxdut.pbias                            0.408847\nvfb#branch                          6.5196e-12\nvtwo#branch                        6.28075e-12\nvton#branch                        6.28075e-12\nvss#branch                         0.000166655\nvdd#branch                        -0.000166655\n\n Reference value :  0.0",
+          "status": "sim_error"
+        },
+        "linearity": {
+          "measures": {
+            "icmr_max": 1.335,
+            "icmr_min": 0.04,
+            "icmr_range": 1.295
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.0007696176,
+            "onoise_total": 0.001595773
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 49.59602
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "error": "amp_022_fer_two_stage/stb@ihp-sg13g2/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_022_fer_two_stage \u00d7 stb \u00d7 ihp-sg13g2 \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n Reference value :  1.00000e+03\nNo. of Data Rows : 607\nASCII raw file \"rawspice.raw\"\nngspice-45 done\nNote: Starting dynamic gmin stepping\nNote: Dynamic gmin stepping completed\n",
+          "status": "sim_error"
+        },
+        "thd": {
+          "error": "amp_022_fer_two_stage/thd@ihp-sg13g2/tt: no measures parsed:\nvalue :  1.32206e-05\n Reference value :  1.34546e-05\n Reference value :  1.37086e-05\n Reference value :  1.39286e-05\n Reference value :  1.41806e-05\n Reference value :  1.44106e-05\n Reference value :  1.46606e-05\n Reference value :  1.48806e-05\n Reference value :  1.51326e-05\n Reference value :  1.53606e-05\n Reference value :  1.56146e-05\n Reference value :  1.58446e-05\n Reference value :  1.60926e-05\n Reference value :  1.63246e-05\n R",
+          "status": "sim_error"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 1.41191e-07,
+            "tcross": 1.141191e-06,
+            "vfinal": 0.799532
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T15:36:04+00:00"
+      }
+    }
+  },
+  "design_id": "629cca606c",
+  "metrics": {
+    "tt": {
+      "cmrr_db": {
+        "spec": "pass",
+        "value": 47.94344
+      },
+      "dc_gain_db": {
+        "spec": "pass",
+        "value": 59.77625
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 0.0001674437
+      },
+      "icmr_range": {
+        "spec": "pass",
+        "value": 1.295
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 77.59476
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 49.59602
+      },
+      "t_settle": {
+        "spec": "pass",
+        "value": 1.41191e-07
+      },
+      "ugf_hz": {
+        "spec": "pass",
+        "value": 5005601.0
+      },
+      "vn_in": {
+        "spec": "pass",
+        "value": 0.0007696176
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_cc_value": 3.237621066906929e-12,
+      "x_dut_xm0_l": 6.015934828846585e-07,
+      "x_dut_xm0_m": 5,
+      "x_dut_xm0_w": 1.7246542959418973e-06,
+      "x_dut_xm2_l": 1.3308929340245787e-07,
+      "x_dut_xm2_m": 24,
+      "x_dut_xm3_l": 7.853661676662896e-06,
+      "x_dut_xm3_m": 2,
+      "x_dut_xm3_w": 2.005434192408713e-06,
+      "x_dut_xm7_l": 2.7471052213637173e-06,
+      "x_dut_xm7_m": 3,
+      "x_dut_xm7_w": 7.196108390476683e-07,
+      "x_dut_xmbd_l": 4.9317004926058854e-06,
+      "x_dut_xmbd_m": 1,
+      "x_dut_xmbd_w": 5.133423323685781e-06
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 175.882,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 59.77625,
+      "pm_deg": 77.59476,
+      "ugf_hz": 5005601.0
+    },
+    "power_w": 0.00025116555
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

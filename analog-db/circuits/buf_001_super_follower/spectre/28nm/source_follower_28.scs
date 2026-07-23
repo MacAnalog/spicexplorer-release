@@ -1,0 +1,19 @@
+// Ported from circuit-bench source-follower (feedback follower, current-biased).
+// NMOS->nch_mac PMOS->pch_mac, L 0.5u->300n, VDD 1.0V, IB 10uA.
+simulator lang=spectre
+global 0
+parameters vin=0.5
+v_vdd (VDD 0) vsource dc=1.0 type=dc
+v_in  (IN 0) vsource dc=vin type=dc
+i_ib  (0 IB) isource dc=10u type=dc
+M1  (A   IN  OUT 0) nch_mac l=300n w=64u nf=29
+M2  (OUT A   0   0) nch_mac l=300n w=64u nf=29
+CC  (A   0) capacitor c=250f
+MRN (IB  IB  0   0) nch_mac l=300n w=8u nf=4
+MNS (PD  IB  0   0) nch_mac l=300n w=8u nf=4
+MPD (PD  PD  VDD VDD) pch_mac l=300n w=16u nf=8
+MPB (A   PD  VDD VDD) pch_mac l=300n w=96u nf=43
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+dc dc param=vin start=0.3 stop=0.8 step=0.025 annotate=status
+save OUT A
+saveOptions options save=selected

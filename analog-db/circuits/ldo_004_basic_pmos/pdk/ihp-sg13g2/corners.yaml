@@ -1,0 +1,7 @@
+# Corner bundles for the ihp-sg13g2 binding (MOS + resistor corner libs).
+pdk: ihp-sg13g2
+corners:
+  tt: [{lib_file: cornerMOSlv.lib, section: mos_tt}, {lib_file: cornerRES.lib, section: res_typ}]
+  ss: [{lib_file: cornerMOSlv.lib, section: mos_ss}, {lib_file: cornerRES.lib, section: res_wcs}]
+  ff: [{lib_file: cornerMOSlv.lib, section: mos_ff}, {lib_file: cornerRES.lib, section: res_bcs}]
+default_corner: tt

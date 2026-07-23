@@ -1,0 +1,54 @@
+# Managed by the private release infra (scripts/release/repo/) — edit there,
+# not here; the next port overwrites this file.
+#
+# Per-unit CI for the platform packages. Self-skips until the platform unit
+# actually ports (no platform/ tree in the monorepo yet).
+name: platform
+
+on:
+  push:
+    branches: [main]
+    paths: ["platform/**", ".github/workflows/platform.yml"]
+  pull_request:
+    paths: ["platform/**", ".github/workflows/platform.yml"]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - spicexplorer-core
+          - spicexplorer-circuitgraph
+          - spicexplorer-netlist2xschem
+          - spicexplorer
+    steps:
+      - uses: actions/checkout@v4
+      - name: platform unit ported yet?
+        id: ported
+        run: |
+          if [ -d "platform/packages/${{ matrix.package }}" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::platform/packages/${{ matrix.package }} not in the monorepo yet — this job activates once the platform unit ports."
+          fi
+      - uses: actions/setup-python@v5
+        if: steps.ported.outputs.ok == 'true'
+        with:
+          python-version: "3.11"
+      - name: install (core + package under test)
+        if: steps.ported.outputs.ok == 'true'
+        run: |
+          pip install -e platform/packages/spicexplorer-core
+          pip install -e "platform/packages/${{ matrix.package }}" pytest
+      - name: fast test tier (no SPICE)
+        if: steps.ported.outputs.ok == 'true'
+        working-directory: platform/packages/${{ matrix.package }}
+        run: |
+          if [ -d tests ]; then
+            python -m pytest tests -q -m "not slow"
+          else
+            echo "no tests/ directory in ${{ matrix.package }} — nothing to run"
+          fi

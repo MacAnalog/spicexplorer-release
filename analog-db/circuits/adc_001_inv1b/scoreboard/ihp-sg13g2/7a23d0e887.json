@@ -1,0 +1,82 @@
+{
+  "area": {
+    "active_gate_area_um2": 0.455,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 2,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "adc_001_inv1b",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 2.256853e-05,
+            "v_out": 1.03034
+          },
+          "status": "ok"
+        },
+        "dc_transfer": {
+          "measures": {
+            "threshold_v": 0.6299049,
+            "v_out_high": 1.200001,
+            "v_out_low": 7.963124e-08
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:09:55+00:00"
+      }
+    }
+  },
+  "design_id": "7a23d0e887",
+  "metrics": {
+    "tt": {
+      "i_supply": {
+        "spec": "pass",
+        "value": 2.256853e-05
+      },
+      "threshold_v": {
+        "spec": "pass",
+        "value": 0.6299049
+      },
+      "v_out": {
+        "spec": "fail",
+        "value": 1.03034
+      },
+      "v_out_high": {
+        "spec": "pass",
+        "value": 1.200001
+      },
+      "v_out_low": {
+        "spec": "pass",
+        "value": 7.963124e-08
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_xmn_l": "0.13u",
+      "x_dut_xmn_m": 1,
+      "x_dut_xmn_w": "1.0u",
+      "x_dut_xmp_l": "0.13u",
+      "x_dut_xmp_m": 1,
+      "x_dut_xmp_w": "2.5u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 0.455,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {},
+    "power_w": 2.7082236e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

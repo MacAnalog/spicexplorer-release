@@ -1,0 +1,13 @@
+** sch_path: transmission_gate_pair.sch (xschem -n output, verbatim; regenerate with
+** endcheck.xschem_source_netlist — the netcheck source-side oracle)
+**.subckt transmission_gate_pair vctl_not VDD port_B VSS port_A vctl
+*.ipin port_A
+*.ipin port_B
+*.ipin vctl
+*.ipin VSS
+*.ipin VDD
+*.ipin vctl_not
+XM1 port_A vctl port_B VSS sg13_lv_nmos w=0.15u l=0.13u ng=1 m=1
+XM2 port_B vctl_not port_A VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+**.ends
+.end

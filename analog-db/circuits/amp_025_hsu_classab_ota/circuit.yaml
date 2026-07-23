@@ -1,0 +1,32 @@
+schema: spicexplorer/circuit@1
+id: amp_025_hsu_classab_ota
+class: amplifier
+tier: ota
+subfamily: opamp
+realization: mixed
+display_name: Hsu bandpass-IA two-stage OTA core with class-AB output (behavioral CMFB)
+stages: 2
+compensation: miller-rz
+ports: [vinp, vinn, voutp, voutn, vdd, vss]
+provenance:
+  source: drawings/ccia-01-YuPinHsu-bandpass-class-ab-output (hand-drawn xschem, two-stage-ota-core.sch)
+  paper: "Y.-P. Hsu, Z. Liu, M. M. Hella, \"A 1.8 uW -65 dB THD ECG Acquisition Front-End IC Using a Bandpass Instrumentation Amplifier With Class-AB Output Configuration\", IEEE TCAS-II 65(12):1859-1863, Dec. 2018"
+  aliases: [two-stage-ota-core]
+  designer: "Noorizadeh (schematic capture, after Hsu et al.)"
+  notes: >-
+    The class-AB OTA core of the Hsu bandpass IA (biomedical plan Paper-1 ref [8]);
+    CMFB is the drawn behavioral servo macromodel - realization: mixed per plan S3.5.
+    Entry matches the fixed drawing: CMFB servo polarity (vref on +, CM detector
+    on -; DRAWING_REVIEW item 3 FIXED), the vcmfb_ref port name (old vcmbf_ref
+    typo) and the shared Rz nulling-resistor symbol (old Rz/RZ case collision)
+    are all fixed at source (DRAWING_REVIEW item 5). Remaining entry-level wrap:
+    the drawn bias/reference ports become internal knob-driven sources
+    (instantiator owns bias).
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/two-stage-ota-core.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, tsmc-n65]
+analyses: [ac_open_loop, dc_op, noise, tran_step, ac_cm_reg, tran_cm_kick]
+status: draft

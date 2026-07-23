@@ -1,0 +1,57 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# Metric sheet for the 2T ΔVth voltage reference. Specs are the LIVE ihp-sg13g2 tt numbers with
+# corner margin (validated at 27 °C / tt; ss/ff not yet swept). Live @ 1.2 V, tt, −20…120 °C:
+#   vref ≈ 0.359 V · tc_box ≈ 26 ppm/°C · i_supply ≈ 0.14 nA · line-reg ≈ 3.4 % · PSRR ≈ −35 dB.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  cload:  {unit: pF, typical: 0.2}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  vref_v:
+    display: "Reference output"
+    description: "Reference-node voltage at the nominal condition (27 °C, nominal supply) ≈ ΔVth."
+    unit: V
+    analysis: dc_op
+    extract: {meas: vref_v}
+    spec: {min: 0.25, max: 0.45, unit: V}
+  i_supply:
+    display: "Supply current"
+    description: "Sub-threshold branch current from the supply — sub-nanoamp (picowatt reference)."
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 1.0e-6, unit: A}
+  vref_25c:
+    display: "Reference at 25 °C"
+    unit: V
+    analysis: temp_sweep
+    extract: {meas: vref_25c}
+    spec: {min: 0.25, max: 0.45, unit: V}
+  tc_ppm:
+    display: "Temperature coefficient (box)"
+    description: >-
+      (Vmax-Vmin)/Vavg/range over the temp sweep — the reference's flatness. The lv/hv ΔVth
+      compensation nulls the CTAT slope; the W-ratio tunes the residual curvature.
+    unit: "ppm/degC"
+    analysis: temp_sweep
+    extract: {meas: tc_ppm}
+    spec: {max: 150, unit: "ppm/degC"}
+  line_reg_pct:
+    display: "Line regulation"
+    description: >-
+      Output %-change over the 1.0–1.8 V supply sweep. The bare 2T core is un-cascoded (the top
+      Vgs=0 current tracks its Vds≈supply); a cascoded bias would tighten this further.
+    unit: "%"
+    analysis: line_sweep
+    extract: {meas: line_reg_pct}
+    spec: {max: 8, unit: "%"}
+  psrr_db:
+    display: "Low-frequency PSRR"
+    description: "Supply→reference gain at the low-frequency edge (dB, more negative is better)."
+    unit: dB
+    analysis: psrr
+    extract: {meas: psrr_db}
+    spec: {max: -15, unit: dB}

@@ -1,0 +1,20 @@
+# Analysis binding (plan D-4): comparator tran_decision — clocked decision transient.
+# 10 MHz clock, two periods; the SECOND rising edge (110 ns) is the measured decision.
+# TMEAS = 150 ns sits mid-evaluation (clk high 110..160 ns).
+schema: spicexplorer/analysis@1
+id: tran_decision
+template: tran_decision
+description: "Clocked decision: t_prop (clk->voutp), decided levels, period-average current."
+params:
+  VDD: 1.5
+  VCM: 0.75
+  VOD: 0.05
+  TDELAY: 10n
+  TEDGE: 1n
+  THI: 50n
+  TPER: 100n
+  TSTEP: 50p
+  TSTOP: 250n
+  TMEAS: 150n
+flags: []
+produces: [t_prop, v_out_high, v_out_low, i_supply]

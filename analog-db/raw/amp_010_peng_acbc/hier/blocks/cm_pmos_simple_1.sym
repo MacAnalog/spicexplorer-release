@@ -1,0 +1,37 @@
+v {xschem version=3.4.6 file_version=1.2}
+G {type=subcircuit
+format="@name @pinlist @symname"
+template="name=x1"}
+V {}
+S {}
+E {}
+L 4 -90 -160 90 -160 {}
+L 4 90 -160 90 160 {}
+L 4 90 160 -90 160 {}
+L 4 -90 160 -90 -160 {}
+B 5 107.5 -122.5 112.5 -117.5 {name=DM_1 dir=out}
+L 4 90 -120 110 -120 {}
+T {out_2} 78 -120 0 0 0.16 0.16 {layer=4}
+B 5 107.5 -82.5 112.5 -77.5 {name=VB3 dir=out}
+L 4 90 -80 110 -80 {}
+T {out_3} 78 -80 0 0 0.16 0.16 {layer=4}
+B 5 107.5 -42.5 112.5 -37.5 {name=VB4 dir=out}
+L 4 90 -40 110 -40 {}
+T {out} 78 -40 0 0 0.16 0.16 {layer=4}
+B 5 107.5 -2.5 112.5 2.5 {name=net013 dir=out}
+L 4 90 0 110 0 {}
+T {ref_in} 78 0 0 0 0.16 0.16 {layer=4}
+B 5 107.5 37.5 112.5 42.5 {name=net049 dir=out}
+L 4 90 40 110 40 {}
+T {out_4} 78 40 0 0 0.16 0.16 {layer=4}
+B 5 107.5 77.5 112.5 82.5 {name=net1 dir=out}
+L 4 90 80 110 80 {}
+T {out_5} 78 80 0 0 0.16 0.16 {layer=4}
+B 5 107.5 117.5 112.5 122.5 {name=net31 dir=out}
+L 4 90 120 110 120 {}
+T {out_6} 78 120 0 0 0.16 0.16 {layer=4}
+B 5 -2.5 -182.5 2.5 -177.5 {name=vdd dir=inout}
+L 4 0 -160 0 -180 {}
+T {supply} 0 -160 0 0 0.16 0.16 {layer=4}
+T {cm_pmos_simple_1} -82 -152 0 0 0.3 0.3 {layer=4}
+T {@name} -82 136 0 0 0.2 0.2 {layer=4}

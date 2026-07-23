@@ -1,0 +1,10 @@
+** Abstract LDO STUB (plan D-10) — the minimal regulator shape: NMOS source-follower pass
+** device with a resistive reference divider. NOT a real LDO design; it exists to prove the
+** class abstraction (a non-amplifier class with its own ports/metrics/templates) end-to-end.
+** Subckt port order (= circuit.yaml ports): vdd vout vss
+**.subckt ldo_006_stub vdd vout vss
+XM1 vdd vref vout vss nmos w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+R1 vdd vref r_top
+R2 vref vss r_bot
+**.ends
+.end

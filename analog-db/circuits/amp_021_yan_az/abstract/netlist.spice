@@ -1,0 +1,34 @@
+** amp_021_yan_az — AnalogGym import, PDK-neutral abstract (plan Phase 5).
+** sky130 device tokens → nmos/pmos; ports gnda→vss, vdda→vdd; role-encoded
+** design-variable symbols (MOSFET_*_<role>_<type>) + their arithmetic preserved.
+** Source: CODA-Team/AnalogGym (BSD-3-Clause). Subckt port order: vss vdd vinn vinp vout.
+**.subckt amp_021_yan_az vss vdd vinn vinp vout
+xm67 net057 VOUTN vdd vdd pmos l=x_dut_xm67_l w=x_dut_xm67_w m=x_dut_xm67_m
+xm3 net078 VB1 vdd vdd pmos l=x_dut_xm3_l w=x_dut_xm3_w m=x_dut_xm3_m
+xm13 VOUT net050 vdd vdd pmos l=x_dut_xm13_l w=x_dut_xm13_w m=x_dut_xm13_m
+xm11 net094 net050 vdd vdd pmos l=x_dut_xm11_l w=x_dut_xm11_w m=x_dut_xm11_m
+xm5 net050 VOUTN vdd vdd pmos l=x_dut_xm5_l w=x_dut_xm5_w m=x_dut_xm5_m
+xm4 VOUTN VOUTN vdd vdd pmos l=x_dut_xm4_l w=x_dut_xm4_w m=x_dut_xm4_m
+xm10 net063 VINP net019 net019 pmos l=x_dut_xm10_l w=x_dut_xm10_w m=x_dut_xm10_m
+xm9 DM_2 VINN net019 net019 pmos l=x_dut_xm9_l w=x_dut_xm9_w m=x_dut_xm9_m
+xm2 net019 VB1 vdd vdd pmos l=x_dut_xm2_l w=x_dut_xm2_w m=x_dut_xm2_m
+xm1 VB4 VB1 vdd vdd pmos l=x_dut_xm1_l w=x_dut_xm1_w m=x_dut_xm1_m
+xm0 VB1 VB1 vdd vdd pmos l=x_dut_xm0_l w=x_dut_xm0_w m=x_dut_xm0_m
+xm16 net077 DM_2 vss vss nmos l=x_dut_xm16_l w=x_dut_xm16_w m=x_dut_xm16_m
+xm17 net082 net063 vss vss nmos l=x_dut_xm17_l w=x_dut_xm17_w m=x_dut_xm17_m
+xm18 VOUT net057 vss vss nmos l=x_dut_xm18_l w=x_dut_xm18_w m=x_dut_xm18_m
+xm22 net094 net051 vss vss nmos l=x_dut_xm22_l w=x_dut_xm22_w m=x_dut_xm22_m
+xm23 net057 net094 vss vss nmos l=x_dut_xm23_l w=x_dut_xm23_w m=x_dut_xm23_m
+xm20 DM_2 VB4 vss vss nmos l=x_dut_xm20_l w=x_dut_xm20_w m=x_dut_xm20_m
+xm14 VOUTN net077 DM_2 vss nmos l=x_dut_xm14_l w=x_dut_xm14_w m=x_dut_xm14_m
+xm21 net063 VB4 vss vss nmos l=x_dut_xm21_l w=x_dut_xm21_w m=x_dut_xm21_m
+xm15 net050 net082 net063 vss nmos l=x_dut_xm15_l w=x_dut_xm15_w m=x_dut_xm15_m
+xm19 VB4 VB4 vss vss nmos l=x_dut_xm19_l w=x_dut_xm19_w m=x_dut_xm19_m
+I0 VB1 vss 'CURRENT_1_BIAS'
+C1 net051 vss 'CAPACITOR_0'
+C0 net063 VOUT 'CAPACITOR_1'
+R2 net094 net051 'RESISTOR_0'
+R1 net078 net082 'RESISTOR_2'
+R0 net078 net077 'RESISTOR_1'
+**.ends Yan_AZ_Pin_3
+.end

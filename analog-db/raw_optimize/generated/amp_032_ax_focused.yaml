@@ -1,0 +1,294 @@
+# AUTHORED - focused Ax run (8 free knobs). See project.description.
+project:
+  name: AX-amp_032_ti_ldo_error_selfbias
+  description: 'Ax Bayesian sizing, FOCUSED search. The 16-knob run wasted 30% of its budget on non-converging
+    points and showed no trend - too sparse for 30 samples. This run frees only the 8 knobs that physically
+    set the two failing specs: PM (r_z, c_comp, xm6_w/l, xm7_w) and systematic offset (xmbe_w = the ratioed
+    mirror_e sink, xmb0_w = tail scale), plus xmbp_w as the power/PSRR knob. Everything else frozen at
+    the validated seed.'
+  simulator: ngspice
+  save_sim: false
+  parallel_sim: true
+  ws_root: ../..
+  netlist: raw_optimize/_abs/amp_032/dc_op.spice
+  outdir: raw_optimize/generated/_runs/amp_032_ax_focused
+  tech_spec:
+    name: gf180mcu
+    constraints: {}
+  dut_params:
+  - name: x_dut_xmbp_w
+    min_val: 4.0e-06
+    max_val: 1.6e-05
+  - name: x_dut_xmbp_l
+    freeze: true
+    val: 2.0e-06
+  - name: x_dut_xmb0_w
+    min_val: 1.0e-05
+    max_val: 4.0e-05
+  - name: x_dut_xmb0_l
+    freeze: true
+    val: 2.0e-06
+  - name: x_dut_xmbc_m
+    freeze: true
+    val: 1.0
+  - name: x_dut_xmbo_m
+    freeze: true
+    val: 1.0
+  - name: x_dut_xm1_w
+    freeze: true
+    val: 4.0e-05
+  - name: x_dut_xm1_l
+    freeze: true
+    val: 7.0e-07
+  - name: x_dut_xm3_w
+    freeze: true
+    val: 4.0e-05
+  - name: x_dut_xm3_l
+    freeze: true
+    val: 5.0e-07
+  - name: x_dut_xm4_w
+    freeze: true
+    val: 1.0e-05
+  - name: x_dut_xm4_l
+    freeze: true
+    val: 5.0e-07
+  - name: x_dut_xm7_w
+    min_val: 1.0e-05
+    max_val: 4.0e-05
+  - name: x_dut_xm7_l
+    freeze: true
+    val: 5.0e-07
+  - name: x_dut_xm6_w
+    min_val: 4.0e-05
+    max_val: 0.0001
+  - name: x_dut_xm6_l
+    min_val: 1.0e-06
+    max_val: 4.0e-06
+  - name: r_z
+    freeze: true
+    val: 1000.0
+    min_val: 100.0
+    max_val: 50000.0
+  - name: c_comp
+    freeze: true
+    val: 2.0e-12
+    min_val: 2.0e-13
+    max_val: 2.0e-11
+  - name: x_dut_xmbe_w
+    min_val: 2.5e-06
+    max_val: 1.0e-05
+  - name: x_dut_xmbf_w
+    freeze: true
+    val: 5.0e-06
+  testbenches:
+  - name: dc_op
+    params: []
+    netlist: raw_optimize/_abs/amp_032/dc_op.spice
+    enable: true
+    description: 'raw deck: dc_op'
+  - name: ac_open_loop
+    params: []
+    netlist: raw_optimize/_abs/amp_032/ac_open_loop.spice
+    enable: true
+    description: 'raw deck: ac_open_loop'
+  - name: ac_closed_loop
+    params: []
+    netlist: raw_optimize/_abs/amp_032/ac_closed_loop.spice
+    enable: true
+    description: 'raw deck: ac_closed_loop'
+  - name: psrr_vdd
+    params: []
+    netlist: raw_optimize/_abs/amp_032/psrr_vdd.spice
+    enable: true
+    description: 'raw deck: psrr_vdd'
+  - name: cmrr_vcm
+    params: []
+    netlist: raw_optimize/_abs/amp_032/cmrr_vcm.spice
+    enable: true
+    description: 'raw deck: cmrr_vcm'
+  - name: noise
+    params: []
+    netlist: raw_optimize/_abs/amp_032/noise.spice
+    enable: true
+    description: 'raw deck: noise'
+  - name: tran_step
+    params: []
+    netlist: raw_optimize/_abs/amp_032/tran_step.spice
+    enable: true
+    description: 'raw deck: tran_step'
+  optimizer_config:
+    type: ax
+    random_seed: 48
+    budget: 30
+    name: AxConstraint
+    lin_variable_bounds:
+      min: 0
+      max: 100
+    log_variable_bounds:
+      min: 1
+      max: 100
+    target_specs:
+    - name: i(i_supply)
+      testbench: dc_op
+      sim_type: op
+      goal: minimize
+      target: 0.0003
+      range: 0.001
+      tolerance: 1.0e-06
+      weight: 2.0
+      reward_type: log
+      enable: true
+    - name: dcgain
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exceed
+      target: 40
+      range: 40
+      tolerance: 1
+      weight: 2.0
+      reward_type: log
+      enable: true
+    - name: ugf
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exceed
+      target: 10000000.0
+      range: 10000000.0
+      tolerance: 100000.0
+      weight: 2.0
+      reward_type: log
+      enable: true
+    - name: pm
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exceed
+      target: 60
+      range: 45
+      tolerance: 5
+      weight: 8.0
+      reward_type: log
+      enable: true
+    - name: gain_cl
+      testbench: ac_closed_loop
+      sim_type: ac
+      goal: exact
+      target: 1.0
+      range: 0.5
+      tolerance: 0.05
+      weight: 1.0
+      reward_type: none
+      enable: true
+    - name: bw_cl
+      testbench: ac_closed_loop
+      sim_type: ac
+      goal: exceed
+      target: 1000000.0
+      range: 10000000.0
+      tolerance: 100000.0
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: psrr_vdd_db
+      testbench: psrr_vdd
+      sim_type: ac
+      goal: exceed
+      target: 30
+      range: 40
+      tolerance: 2
+      weight: 3.0
+      reward_type: log
+      enable: true
+    - name: cmrr_db
+      testbench: cmrr_vcm
+      sim_type: ac
+      goal: exceed
+      target: 30
+      range: 40
+      tolerance: 2
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: v(inoise_total)
+      testbench: noise
+      sim_type: noise
+      goal: minimize
+      target: 0.0001
+      range: 0.001
+      tolerance: 1.0e-07
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: v(onoise_total)
+      testbench: noise
+      sim_type: noise
+      goal: minimize
+      target: 0.001
+      range: 0.01
+      tolerance: 1.0e-06
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: t_settle
+      testbench: tran_step
+      sim_type: tran
+      goal: minimize
+      target: 1.0e-06
+      range: 1.0e-05
+      tolerance: 1.0e-08
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: vos
+      description: input-referred systematic offset (caps ICMR; becomes LDO Vout error)
+      testbench: dc_op
+      sim_type: op
+      goal: minimize
+      target: 0.02
+      range: 0.1
+      tolerance: 0.002
+      weight: 6.0
+      reward_type: log
+      enable: true
+    - name: active_area
+      description: sim-free Sigma W*L*m over all 13 devices (um^2)
+      testbench: dc_op
+      sim_type: op
+      goal: minimize
+      target: 400.0
+      range: 800.0
+      tolerance: 10.0
+      weight: 1.5
+      reward_type: log
+      enable: true
+      measurement:
+        derived: active_area
+        scale: 1000000000000.0
+        devices:
+        - w: x_dut_xmbp_w
+          l: x_dut_xmbp_l
+        - w: x_dut_xmb0_w
+          l: x_dut_xmb0_l
+        - w: x_dut_xmb0_w
+          l: x_dut_xmb0_l
+          m: x_dut_xmbc_m
+        - w: x_dut_xmbf_w
+          l: x_dut_xmb0_l
+        - w: x_dut_xmbe_w
+          l: x_dut_xmb0_l
+        - w: x_dut_xmb0_w
+          l: x_dut_xmb0_l
+          m: x_dut_xmbo_m
+        - w: x_dut_xm1_w
+          l: x_dut_xm1_l
+        - w: x_dut_xm1_w
+          l: x_dut_xm1_l
+        - w: x_dut_xm3_w
+          l: x_dut_xm3_l
+        - w: x_dut_xm3_w
+          l: x_dut_xm3_l
+        - w: x_dut_xm4_w
+          l: x_dut_xm4_l
+        - w: x_dut_xm7_w
+          l: x_dut_xm7_l
+        - w: x_dut_xm6_w
+          l: x_dut_xm6_l

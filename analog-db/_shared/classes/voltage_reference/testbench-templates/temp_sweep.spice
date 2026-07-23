@@ -1,0 +1,27 @@
+** AUTHORED TEMPLATE — voltage_reference/temp_sweep: temperature coefficient (box method).
+** [VALIDATED 2026-07-16 on ihp-sg13g2 against vref_001_vgs — live ngspice, 4/4 benches pass].
+** Sweeps ambient temperature and reports the box-method TC (Vmax-Vmin)/Vavg/range (ppm/degC) and
+** the 25 degC reference level. Port convention: vdd vref vss.
+** Bindings: DUT PORT_LINE VDD TSTART TSTOP TSTEP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+
+Vdd vdd 0 dc {VDD}
+Vss vss 0 dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  dc temp ${TSTART} ${TSTOP} ${TSTEP}
+  meas dc vref_25c FIND v(vref) AT=25
+  meas dc vmax MAX v(vref) FROM=${TSTART} TO=${TSTOP}
+  meas dc vmin MIN v(vref) FROM=${TSTART} TO=${TSTOP}
+  meas dc vavg AVG v(vref) FROM=${TSTART} TO=${TSTOP}
+  let tc_ppm = (vmax - vmin) / vavg / (${TSTOP} - (${TSTART})) * 1e6
+  print tc_ppm vref_25c
+  write
+  quit
+.endc
+.end

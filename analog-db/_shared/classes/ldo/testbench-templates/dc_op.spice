@@ -1,0 +1,23 @@
+** AUTHORED TEMPLATE — ldo/dc_op: DC operating point for a regulator.
+** Superset of universal/dc_op: also reports the regulated output v(vout). The DUT generates its
+** own reference + bias internally, so the testbench only drives vdd/vss (no load = quiescent).
+** Bindings: DUT PORT_LINE VDD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  let vout_dc = v(vout)
+  print i_supply vout_dc
+  write
+  quit
+.endc
+.end

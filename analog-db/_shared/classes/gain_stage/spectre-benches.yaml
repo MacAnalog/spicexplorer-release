@@ -1,0 +1,25 @@
+# Per-TESTBENCH Spectre engine config for the GAIN_STAGE class — same wiring
+# convention as the amplifier/ia/ldo maps (see any of those headers for the schema).
+#
+# The gain_stage vocabulary mirrors the buffer trio (op anchor, input DC transfer,
+# AC response); only the metric READ differs (peak |dVout/dVin| + trip point vs the
+# follower's ~unity gain), and that lives class-side in metrics.yaml, not here.
+schema: spicexplorer/spectre-benches@1
+class: gain_stage
+benches:
+  dc_op:
+    analyses:
+      - {template: dc_op}
+    calculator: []
+  dc_transfer:
+    # sweep-only (see the buffer map note)
+    analyses:
+      - {template: dc_sweep, args: {DEV: VIN, START: $VSTART, STOP: $VSTOP, STEP: $VSTEP}}
+    calculator: []
+  ac_gain:
+    analyses:
+      - {template: dc_op}
+      - {template: ac}
+    calculator:
+      - {name: gain_ac_db, expr: gain_db_at, args: {OUT: vout, FREQ: $FSTART}}
+      - {name: f3db_hz, expr: bw_3db, args: {OUT: vout}}

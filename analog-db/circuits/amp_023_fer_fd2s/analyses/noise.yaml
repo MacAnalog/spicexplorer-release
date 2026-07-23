@@ -1,0 +1,8 @@
+# Analysis binding (plan D-4): noise_diff — input-referred noise, differential output.
+schema: spicexplorer/analysis@1
+id: noise
+template: noise_diff
+description: "Input-referred noise over the band; vn_in."
+params: {VDD: 1.5, VCM: 0.9, CL: 500f, FSTART: 1k, FSTOP: 100MEG, PPD: 50}
+flags: []
+produces: [vn_in]

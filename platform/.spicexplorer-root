@@ -1,0 +1,5 @@
+# Sentinel marking the SpiceXplorer platform workspace root.
+#
+# spicexplorer_core.project_root() walks up to the directory containing this file
+# to locate the workspace, independent of directory depth or current working dir.
+# Do not remove. Override at runtime with the SPICEXPLORER_ROOT environment variable.

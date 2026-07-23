@@ -1,0 +1,9 @@
+** sch_path: basic_current_mirror.sch
+**.subckt basic_current_mirror VDD iin iout
+*.iopin VDD
+*.iopin iin
+*.iopin iout
+XM1 iout iin VDD VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM2 iin iin VDD VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+**.ends
+.end

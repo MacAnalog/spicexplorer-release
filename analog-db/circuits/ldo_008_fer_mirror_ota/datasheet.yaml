@@ -1,0 +1,80 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# LDO metric sheet (ldo class vocabulary, as ldo_004/007): regulation, dropout, PSRR,
+# stability proxy, transients, output noise.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.8}      # input rail (Vin = vdd for this 3-port DUT)
+  vout:   {unit: V, typical: 1.2}      # target = vref * (r_top+r_bot)/r_bot = 0.6 * 2
+  vref:   {unit: V, typical: 0.6}      # internal ideal reference (sizing var x_vref_val)
+  cout:   {unit: uF, typical: 1.0}     # external output cap assumed by PSRR/transient/stability
+  iload:  {unit: mA, typical: 1.0}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  v_out:
+    display: "Regulated output (no load)"
+    unit: V
+    analysis: dc_op
+    extract: {meas: vout_dc}
+    spec: {min: 1.1, max: 1.3, unit: V}
+  i_q:
+    display: "Quiescent current (no load)"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 5.0e-4, unit: A}
+  load_reg:
+    display: "Load regulation (0 -> 10 mA)"
+    unit: V
+    analysis: load_regulation
+    extract: {meas: load_reg}
+    spec: {max: 0.1, unit: V}
+  line_reg:
+    display: "Line regulation (1.4 -> 2.0 V at 1 mA)"
+    unit: V
+    analysis: line_regulation
+    extract: {meas: line_reg}
+    spec: {max: 0.05, unit: V}
+  v_dropout:
+    display: "Dropout voltage (1 mA)"
+    unit: V
+    analysis: dropout
+    extract: {meas: v_dropout}
+    spec: {max: 0.5, unit: V}
+  psrr_vdd_db:
+    display: "PSRR at 1 kHz (1 mA, 1 uF; positive dB = rejection)"
+    unit: dB
+    analysis: psrr
+    extract: {meas: psrr_vdd_db}
+    spec: {min: 20, unit: dB}
+  zout_peak_db:
+    display: "Closed-loop Zout peaking (stability proxy)"
+    unit: dB
+    analysis: loop_stability
+    extract: {meas: zout_peak_db}
+    spec: {max: 20, unit: dB}
+  v_undershoot:
+    display: "Load-step undershoot (1 -> 10 mA)"
+    unit: V
+    analysis: tran_load_step
+    extract: {meas: v_undershoot}
+    spec: {max: 0.3, unit: V}
+  t_transient:
+    display: "Load-step recovery time"
+    unit: s
+    analysis: tran_load_step
+    extract: {meas: t_transient}
+    spec: {max: 5.0e-5, unit: s}
+  vn_out_rms:
+    display: "Integrated output noise (10 Hz - 10 MHz)"
+    unit: V
+    analysis: noise
+    extract: {meas: vn_out_rms}
+    spec: {max: 0.02, unit: V}
+  v_line_pp:
+    display: "Line-step p2p deviation (1.6 -> 2.0 V)"
+    unit: V
+    analysis: tran_line_step
+    extract: {meas: v_line_pp}
+    spec: {max: 0.2, unit: V}

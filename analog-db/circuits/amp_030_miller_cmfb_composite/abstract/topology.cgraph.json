@@ -1,0 +1,541 @@
+{
+  "components": [
+    {
+      "connections": {
+        "N": "voutp",
+        "P": "core__mill_p"
+      },
+      "device_type": "CAP",
+      "id": "C1_CORE",
+      "params": {
+        "Value": "'x_dut_c1_core_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "voutn",
+        "P": "core__mill_n"
+      },
+      "device_type": "CAP",
+      "id": "C2_CORE",
+      "params": {
+        "Value": "'x_dut_c2_core_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vref_cm",
+        "P": "servo__cm_sense"
+      },
+      "device_type": "CAP",
+      "id": "CIN_SERVO_SERVO",
+      "params": {
+        "Value": "'cin_val_servo'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vcmfb_raw",
+        "P": "vss"
+      },
+      "device_type": "CAP",
+      "id": "COUT_SERVO_SERVO",
+      "params": {
+        "Value": "'cout_val_servo'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "CN": "servo__cm_sense",
+        "CP": "vref_cm",
+        "N": "vcmfb_raw",
+        "P": "vss"
+      },
+      "device_type": "VCCS",
+      "id": "GM_SERVO_SERVO",
+      "params": {
+        "Value": "{gm_val_servo}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "core__ref",
+        "P": "vdd"
+      },
+      "device_type": "ISOURCE",
+      "id": "IBIAS_CORE",
+      "params": {
+        "Value": "dc {i_bias_core}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "core__mill_p",
+        "P": "core__stg1p"
+      },
+      "device_type": "RES",
+      "id": "R1_CORE",
+      "params": {
+        "Value": "'x_dut_r1_core_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "core__mill_n",
+        "P": "core__stg1n"
+      },
+      "device_type": "RES",
+      "id": "R2_CORE",
+      "params": {
+        "Value": "'x_dut_r2_core_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vref_cm",
+        "P": "servo__cm_sense"
+      },
+      "device_type": "RES",
+      "id": "RIN_SERVO_SERVO",
+      "params": {
+        "Value": "'rin_val_servo'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "servo__cm_sense",
+        "P": "voutn"
+      },
+      "device_type": "RES",
+      "id": "RMN_SERVO",
+      "params": {
+        "Value": "'x_dut_rmn_servo_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "voutp",
+        "P": "servo__cm_sense"
+      },
+      "device_type": "RES",
+      "id": "RMP_SERVO",
+      "params": {
+        "Value": "'x_dut_rmp_servo_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vcmfb_raw",
+        "P": "vss"
+      },
+      "device_type": "RES",
+      "id": "ROUT_SERVO_SERVO",
+      "params": {
+        "Value": "'rout_val_servo'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vcmfb_raw",
+        "P": "vbl_ctl"
+      },
+      "device_type": "VSOURCE",
+      "id": "VBL0",
+      "params": {
+        "Value": "dc {vbl0}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vss",
+        "P": "vref_cm"
+      },
+      "device_type": "VSOURCE",
+      "id": "VREFCM",
+      "params": {
+        "Value": "dc {vcm_ref}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "voutn",
+        "GATE": "core__ref",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM10_CORE",
+      "params": {
+        "l": "x_dut_xm10_core_l",
+        "m": "x_dut_xm10_core_m",
+        "w": "x_dut_xm10_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "core__stg1p",
+        "GATE": "vinp",
+        "SOURCE": "core__tail"
+      },
+      "device_type": "MOS",
+      "id": "XM1_CORE",
+      "params": {
+        "l": "x_dut_xm1_core_l",
+        "m": "x_dut_xm1_core_m",
+        "w": "x_dut_xm1_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "core__stg1n",
+        "GATE": "vinn",
+        "SOURCE": "core__tail"
+      },
+      "device_type": "MOS",
+      "id": "XM2_CORE",
+      "params": {
+        "l": "x_dut_xm2_core_l",
+        "m": "x_dut_xm2_core_m",
+        "w": "x_dut_xm2_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "core__stg1p",
+        "GATE": "vbl_ctl",
+        "SOURCE": "vdd"
+      },
+      "device_type": "MOS",
+      "id": "XM3_CORE",
+      "params": {
+        "l": "x_dut_xm3_core_l",
+        "m": "x_dut_xm3_core_m",
+        "w": "x_dut_xm3_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "core__stg1n",
+        "GATE": "vbl_ctl",
+        "SOURCE": "vdd"
+      },
+      "device_type": "MOS",
+      "id": "XM4_CORE",
+      "params": {
+        "l": "x_dut_xm4_core_l",
+        "m": "x_dut_xm4_core_m",
+        "w": "x_dut_xm4_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "voutp",
+        "GATE": "core__stg1p",
+        "SOURCE": "vdd"
+      },
+      "device_type": "MOS",
+      "id": "XM5_CORE",
+      "params": {
+        "l": "x_dut_xm5_core_l",
+        "m": "x_dut_xm5_core_m",
+        "w": "x_dut_xm5_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "core__ref",
+        "GATE": "core__ref",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM6_CORE",
+      "params": {
+        "l": "x_dut_xm6_core_l",
+        "m": "x_dut_xm6_core_m",
+        "w": "x_dut_xm6_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "voutp",
+        "GATE": "core__ref",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM7_CORE",
+      "params": {
+        "l": "x_dut_xm7_core_l",
+        "m": "x_dut_xm7_core_m",
+        "w": "x_dut_xm7_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "core__tail",
+        "GATE": "core__ref",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM8_CORE",
+      "params": {
+        "l": "x_dut_xm8_core_l",
+        "m": "x_dut_xm8_core_m",
+        "w": "x_dut_xm8_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "voutn",
+        "GATE": "core__stg1n",
+        "SOURCE": "vdd"
+      },
+      "device_type": "MOS",
+      "id": "XM9_CORE",
+      "params": {
+        "l": "x_dut_xm9_core_l",
+        "m": "x_dut_xm9_core_m",
+        "w": "x_dut_xm9_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    }
+  ],
+  "meta": {
+    "circuit_name": "amp_030_miller_cmfb_composite",
+    "component_count": 24,
+    "net_count": 16
+  },
+  "nets": [
+    {
+      "is_supply": false,
+      "name": "core__mill_n",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__mill_p",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__ref",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__stg1n",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__stg1p",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__tail",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "servo__cm_sense",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vbl_ctl",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vcmfb_raw",
+      "supply_type": ""
+    },
+    {
+      "is_supply": true,
+      "name": "vdd",
+      "supply_type": "VDD"
+    },
+    {
+      "is_supply": false,
+      "name": "vinn",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vinp",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "voutn",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "voutp",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vref_cm",
+      "supply_type": ""
+    },
+    {
+      "is_supply": true,
+      "name": "vss",
+      "supply_type": "VSS"
+    }
+  ]
+}

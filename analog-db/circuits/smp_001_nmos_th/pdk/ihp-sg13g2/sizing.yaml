@@ -1,0 +1,9 @@
+# XM0 sizing sets the on-resistance (acquisition) + charge injection (pedestal ∝ W·L); C0 is the
+# hold cap (larger C -> smaller pedestal/droop, slower acquisition).
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xm0_w,   description: "Sampling switch NMOS width",  default: 2.0u,  min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm0_l,   description: "Sampling switch NMOS length", default: 0.13u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_xm0_m,   description: "Sampling switch multiplier",  default: 1, is_integer: true}
+  - {name: x_dut_c0_value, description: "Hold capacitor",             default: 500f, min: 10f, max: 100p, unit: F}

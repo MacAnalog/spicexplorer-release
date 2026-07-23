@@ -1,0 +1,21 @@
+// Monte Carlo input-referred offset: closed-loop (gain -1) DC operating
+// point with mismatch variations. Output differential offset = 2 * Vos_in.
+simulator lang=spectre
+global 0
+parameters VSUP=0.9 VCM=0.45 IB=20u CL=1p RFB=20k vstep=0
+
+include "${PDK_ROOT}/models/spectre/toplevel_modified.scs" section=globalmc_localmc
+include "ota_fd2s.scs"
+include "tb_closedloop.scs"
+
+simulatorOptions options psfversion="1.4.0" temp=27 tnom=27 scalem=1.0 \
+    scale=1.0 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 digits=5 cols=80 \
+    pivrel=1e-3 checklimitdest=psf
+
+mc1 montecarlo numruns=200 seed=12345 variations=mismatch sampling=lds \
+    donominal=no savefamilyplots=yes savedatainseparatedir=yes {
+dcOp dc maxiters=200 annotate=status
+}
+
+save OUTP OUTN
+saveOptions options save=selected

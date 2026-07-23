@@ -1,0 +1,9 @@
+simulator lang=spectre
+global 0
+ahdl_include "chain.va"
+v_in (A 0) vsource dc=1
+x1 (A 0) chain g=1m
+simulatorOptions options temp=27 tnom=27
+dcOp dc annotate=status
+save A x1.m1 x1.m2 x1.m3 v_in:p
+saveOptions options save=selected

@@ -1,0 +1,32 @@
+schema: spicexplorer/circuit@1
+id: amp_030_miller_cmfb_composite
+class: amplifier
+tier: ota
+subfamily: ota
+realization: mixed
+display_name: "Two-stage Miller OTA + behavioral CMFB servo (COMPOSITE: amp_029 + cmfb_001_ideal_rsense_servo)"
+stages: 2
+compensation: miller
+ports: [vinp, vinn, voutp, voutn, vdd, vss]
+provenance:
+  source: composition.yaml (composer P4 — the registry's first composed entry)
+  designer: "Composition by Noorizadeh; blocks: amp_029 (Schippers drawing) + cmfb_001_ideal_rsense_servo (Hsu CMFB, hand-drawn)"
+  notes: >-
+    The CMFB-closure experiment amp_029's characterization set up: amp_029 alone
+    has NO stable interior DC operating point (its dc_cm_bias_sweep measures
+    cm_interior_pts = 0 — two cascaded gds-level knife edges); here the cmfb_001_ideal_rsense_servo
+    behavioral servo (Hsu's CMFB block; baselines in _shared/IDEAL_AMP.md)
+    senses the output common mode and drives the stage-1 load-gate bias in place
+    of the {vbl} knob (taps/omit in composition.yaml — the composite owns that
+    bias, plan D3). ACCEPTANCE: this entry's dc_cm_bias_sweep sweeps the servo
+    reference {vcm_ref} and must measure cm_interior_pts = 5 (the output CM
+    tracks the command) — the committed 0 -> 5 flip vs amp_029 is the P4
+    composition milestone's proof.
+artifacts:
+  composition: composition.yaml
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, tsmc-n65]
+analyses: [ac_open_loop, dc_op, dc_cm_bias_sweep, ac_cm_reg, tran_cm_kick, noise, tran_step]
+status: draft

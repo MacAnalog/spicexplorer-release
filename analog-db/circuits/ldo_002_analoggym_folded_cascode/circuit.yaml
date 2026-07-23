@@ -1,0 +1,25 @@
+# SUPER-DSL manifest — AnalogGym's "ldo_folded_cascode" (folded-cascode OTA + PMOS pass + Rz/Cc).
+# As with ldo_simple the subckt was never published in CODA-Team/AnalogGym; source of truth is
+# ChrisZonghaoLi/sky130_ldo_rl (Apache-2.0), ldo_folded_cascode_tb.spice subckts
+# `ldo_folded_cascode` + `diff_pair_folded_cascode`. sky130-native, 5 V devices, 2.0 V rail,
+# unity feedback, ~50 pF output mim cap. NMOS input pair folded through a self-biased PMOS
+# cascode pair (external vb2 rail) into NMOS sinks (vb1).
+schema: spicexplorer/circuit@1
+id: ldo_002_analoggym_folded_cascode
+class: ldo
+display_name: "AnalogGym folded-cascode LDO (9T folded-cascode OTA + PMOS pass, 5V devices)"
+compensation: Miller (Rz + Cc, pass gate -> vout)
+stages: 1
+ports: [vdd, vout, vss]         # upstream Vfb/Vref/Vb1/Vb2 pins folded internally (see abstract)
+provenance:
+  source: external/AnalogGym-remainder/Low Dropout Regulator/ (testbench+vars); netlist from https://github.com/ChrisZonghaoLi/sky130_ldo_rl
+  aliases: [ldo_folded_cascode, analoggym_folded_cascode_ldo]
+  license: Apache-2.0 (netlist), BSD-3-Clause (AnalogGym bench/vars)
+  upstream: https://github.com/CODA-Team/AnalogGym
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [sky130, ihp-sg13g2, gf180mcu]
+analyses: [dc_op, load_regulation, line_regulation, psrr, dropout, tran_load_step, loop_stability, noise, tran_line_step]
+status: draft

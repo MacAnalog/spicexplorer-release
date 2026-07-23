@@ -1,0 +1,104 @@
+# Optimize the COMMITTED raw export deck directly — folded-cascode OTA (see amp_001_5t.yaml
+# for the full metric↔vector / dut_param↔.param contract this file follows).
+#
+# The folded cascode has a heavily-tuned IHP baseline (its L / finger-count / cascode bias
+# voltages set the operating region), so this demo sizes only the seven device WIDTHS
+# (x_dut_xm1_w..7) and leaves L, ng, vb1/vb2, ib at their committed defaults — a search that
+# stays biased over "a few loops". Widen the set later once a gm/ID prior seeds the corners.
+project:
+  name: RAW-amp_004-folded-cascode
+  description: Size the folded-cascode OTA (widths) by driving its committed raw/ decks (ihp-sg13g2).
+  simulator: ngspice
+  save_sim: false
+  parallel_sim: true
+
+  ws_root: ..
+  netlist: raw/amp_004_folded_cascode/ihp-sg13g2/dc_op.spice
+  outdir: raw_optimize/_runs/amp_004_folded_cascode
+
+  tech_spec:
+    name: ihp-sg13g2
+    constraints:
+      max_w: 300u
+      min_w: 5u
+
+  # The seven device widths (see raw/amp_004_folded_cascode/ihp-sg13g2/_dut.spice). The cascode
+  # operating region is set by the committed lengths / gate-fingers (ng) / cascode bias
+  # (vb1/vb2) / ib, which are left at their defaults (omitted → the wrapper keeps the netlist
+  # value). Each width band is centred on its tuned default (parameterize() explores from the
+  # band midpoint), so the search stays biased over a few loops.
+  dut_params:
+    - { name: x_dut_xm1_w, min_val: 40u,  max_val: 110u }   # input pair       (default 72u)
+    - { name: x_dut_xm13_w, min_val: 60u,  max_val: 160u }   # nmos cascode legs (default 106.5u)
+    - { name: x_dut_xm6_w, min_val: 25u,  max_val: 70u }    # nmos cascode      (default 44u)
+    - { name: x_dut_xm7_w, min_val: 45u,  max_val: 120u }   # pmos cascode      (default 78u)
+    - { name: x_dut_xm9_w, min_val: 110u, max_val: 260u }   # pmos mirror top   (default 183u)
+    - { name: x_dut_xm11_w, min_val: 30u,  max_val: 80u }    # tail / bias mirror (default 50u)
+    - { name: x_dut_xm12_w, min_val: 30u,  max_val: 80u }    # bias mirror        (default 50u)
+
+  testbenches:
+    - name: ac_open_loop
+      params: []
+      netlist: raw/amp_004_folded_cascode/ihp-sg13g2/ac_open_loop.spice
+      enable: true
+      description: Open-loop AC — dcgain / ugf / pm
+    - name: dc_op
+      params: []
+      netlist: raw/amp_004_folded_cascode/ihp-sg13g2/dc_op.spice
+      enable: true
+      description: DC operating point — supply current
+
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48
+    budget: 15
+    name: NGOpt
+    lin_variable_bounds: { min: 0, max: 100 }
+    log_variable_bounds: { min: 1, max: 100 }
+
+    target_specs:
+      - name: dcgain
+        description: open-loop DC gain
+        testbench: ac_open_loop
+        sim_type: ac
+        goal: exceed
+        target: 45        # dB (cascode → higher intrinsic gain)
+        range: 40
+        tolerance: 1
+        weight: 1.0
+        reward_type: log
+        enable: true
+      - name: ugf
+        description: unity-gain frequency
+        testbench: ac_open_loop
+        sim_type: ac
+        goal: exceed
+        target: 1e6       # Hz
+        range: 10e6
+        tolerance: 1e5
+        weight: 1.0
+        reward_type: log
+        enable: true
+      - name: pm
+        description: phase margin
+        testbench: ac_open_loop
+        sim_type: ac
+        goal: exact
+        target: 60        # degrees
+        range: 45
+        tolerance: 10
+        weight: 1.0
+        reward_type: none
+        enable: true
+      # `let i_supply` is saved by ngspice as the current-typed vector `i(i_supply)` (see amp_001_5t.yaml).
+      - name: i(i_supply)
+        description: quiescent supply current
+        testbench: dc_op
+        sim_type: op
+        goal: minimize
+        target: 100e-6    # A
+        range: 300e-6
+        tolerance: 1e-6
+        weight: 1.0
+        reward_type: log
+        enable: true

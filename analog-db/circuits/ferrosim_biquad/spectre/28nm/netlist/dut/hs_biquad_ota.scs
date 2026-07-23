@@ -1,0 +1,224 @@
+subckt HS_BIQUAD_OTA AVDDH AVSS IBOTA IBOTA2 IBOTA2N VCM VIN VIP VON VOP
+C8 (VON3 VIN) cfmom_2t nr=128 lr=1u w=50n s=50n stm=1 spm=6 multi=1
+C9 (VOP3 VIP) cfmom_2t nr=128 lr=1u w=50n s=50n stm=1 spm=6 multi=1
+M223 (VBIASP IBOTA AVSS AVSS) nch_mac l=100n w=98.6u multi=1 nf=58
+M224 (IBOTA IBOTA AVSS AVSS) nch_mac l=100n w=3.4u multi=1 nf=2
+M174 (net41 net38 AVSS AVSS) nch_mac l=100n w=132.000000u multi=1 nf=88
+M173 (net41 net40 AVSS AVSS) nch_mac l=100n w=396.000000u multi=1 nf=264
+M225 (VBIASP IBOTA AVSS AVSS) nch_mac l=100n w=98.6u multi=1 nf=58
+M226 (IBOTA IBOTA AVSS AVSS) nch_mac l=100n w=3.4u multi=1 nf=2
+M142 (net44 net39 AVSS AVSS) nch_mac l=100n w=198.000000u multi=1 nf=132
+M141 (net44 net38 AVSS AVSS) nch_mac l=100n w=66.0u multi=1 nf=44
+M139 (AVSS net39 AVSS AVSS) nch_mac l=100n w=48.0u multi=1 nf=32
+M133 (net1076 VCM AVSS AVSS) nch_mac l=100n w=6u multi=1 nf=2
+M131 (net1076 net39 AVSS AVSS) nch_mac l=100n w=18.0u multi=1 nf=6
+M129 (AVSS VCM AVSS AVSS) nch_mac l=100n w=12.0u multi=1 nf=8
+M128 (AVSS net29 AVSS AVSS) nch_mac l=100n w=42.0u multi=1 nf=28
+M127 (net1277 net34 AVSS AVSS) nch_mac l=100n w=18.0u multi=1 nf=6
+M126 (net1277 VCM AVSS AVSS) nch_mac l=100n w=6u multi=1 nf=2
+M118 (net32 net29 AVSS AVSS) nch_mac l=100n w=66.0u multi=1 nf=44
+M117 (net32 net34 AVSS AVSS) nch_mac l=100n w=198.000000u multi=1 nf=132
+M86 (net28 net27 AVSS AVSS) nch_mac l=100n w=99.0u multi=1 nf=66
+M85 (net28 net29 AVSS AVSS) nch_mac l=100n w=33.0u multi=1 nf=22
+M83 (AVSS net27 AVSS AVSS) nch_mac l=100n w=24.0u multi=1 nf=16
+M77 (net1372 VCM AVSS AVSS) nch_mac l=100n w=3u multi=1 nf=1
+M76 (net1372 net27 AVSS AVSS) nch_mac l=100n w=9u multi=1 nf=3
+M75 (net1450 net16 net1450 AVSS) nch_mac l=100n w=6u multi=1 nf=4
+M74 (net1450 net14 net1450 AVSS) nch_mac l=100n w=6u multi=1 nf=4
+M38 (net21 net15 AVSS AVSS) nch_mac l=100n w=99.0u multi=1 nf=66
+M37 (net21 net23 AVSS AVSS) nch_mac l=100n w=33.0u multi=1 nf=22
+M31 (net1483 VCM AVSS AVSS) nch_mac l=100n w=3u multi=1 nf=1
+M30 (net1483 net15 AVSS AVSS) nch_mac l=100n w=9u multi=1 nf=3
+M15 (net1450 net14 AVSS AVSS) nch_mac l=100n w=45.0u multi=1 nf=30
+M14 (net1450 net16 AVSS AVSS) nch_mac l=100n w=15.0u multi=1 nf=10
+M0 (AVSS net2 AVSS AVSS) nch_mac l=100n w=24.0u multi=1 nf=16
+M59 (net1640 net2 AVSS AVSS) nch_mac l=100n w=792.000000u multi=1 nf=528
+M58 (net1640 net8 AVSS AVSS) nch_mac l=100n w=264.000000u multi=1 nf=176
+M51 (net1660 VCM AVSS AVSS) nch_mac l=100n w=24.0u multi=1 nf=8
+M50 (net1660 net2 AVSS AVSS) nch_mac l=100n w=72.0u multi=1 nf=24
+M8 (net1468 VCM AVSS AVSS) nch_mac l=100n w=3u multi=1 nf=1
+M7 (net1468 net14 AVSS AVSS) nch_mac l=100n w=9u multi=1 nf=3
+M185 (AVSS VCM AVSS AVSS) nch_mac l=100n w=24.0u multi=1 nf=16
+M184 (AVSS net38 AVSS AVSS) nch_mac l=100n w=84.0u multi=1 nf=56
+M183 (net1180 net40 AVSS AVSS) nch_mac l=100n w=36.0u multi=1 nf=12
+M182 (net1180 VCM AVSS AVSS) nch_mac l=100n w=12.0u multi=1 nf=4
+M193 (VON VOP4 AVSS AVSS) nch_ulvt_mac l=30n w=3.6e-07*4*MFI multi=1 nf=4*MFI
+M192 (VOP VOCM AVSS AVSS) nch_ulvt_mac l=30n w=3.6e-07*MFC multi=1 nf=MFC
+M191 (VON VOP AVSS AVSS) nch_ulvt_mac l=30n w=3.6e-07*MF multi=1 nf=MF
+M189 (VOP VON AVSS AVSS) nch_ulvt_mac l=30n w=3.6e-07*MF multi=1 nf=MF
+M187 (net39 net44 net44 AVSS) nch_ulvt_mac l=30n w=1.2u multi=1 nf=2
+M186 (net39 net1180 net1180 AVSS) nch_ulvt_mac l=30n w=1.2u multi=1 nf=2
+M181 (net40 VIN net1180 AVSS) nch_ulvt_mac l=30n w=4.8u multi=1 nf=4
+M180 (net40 VIP net1180 AVSS) nch_ulvt_mac l=30n w=4.8u multi=1 nf=4
+M178 (VON4 net1180 net1180 AVSS) nch_ulvt_mac l=30n w=600n multi=1 nf=2
+M260 (net55 VBIASN2 AVSS AVSS) nch_ulvt_mac l=30n w=8.64u multi=1 nf=24
+M262 (VBIASN2 VBIASN2 AVSS AVSS) nch_ulvt_mac l=30n w=2.88u multi=1 nf=8
+M259 (net54 net53 net55 AVSS) nch_ulvt_mac l=30n w=5.76u multi=1 nf=16
+M261 (VBIASP2 VCM net55 AVSS) nch_ulvt_mac l=30n w=5.76u multi=1 nf=16
+M177 (VOP4 net1180 net1180 AVSS) nch_ulvt_mac l=30n w=600n multi=1 nf=2
+M171 (VOP4 VIN net41 AVSS) nch_ulvt_mac l=30n w=47.4u multi=1 nf=158
+M170 (VOP4 VON4 net41 AVSS) nch_ulvt_mac l=30n w=4.2u multi=1 nf=2
+M169 (VON4 VIP net41 AVSS) nch_ulvt_mac l=30n w=47.4u multi=1 nf=158
+M168 (VON4 VOP4 net41 AVSS) nch_ulvt_mac l=30n w=4.2u multi=1 nf=2
+M167 (net43 VON4 net41 AVSS) nch_ulvt_mac l=30n w=600n multi=1 nf=2
+M166 (net43 VOP4 net41 AVSS) nch_ulvt_mac l=30n w=600n multi=1 nf=2
+M147 (VON4 VOP4 net44 AVSS) nch_ulvt_mac l=30n w=2.4u multi=1 nf=2
+M146 (VON4 VOP3 net44 AVSS) nch_ulvt_mac l=30n w=23.4u multi=1 nf=78
+M145 (VOP4 VON4 net44 AVSS) nch_ulvt_mac l=30n w=2.4u multi=1 nf=2
+M144 (VOP4 VON3 net44 AVSS) nch_ulvt_mac l=30n w=23.4u multi=1 nf=78
+M135 (net39 VOP3 net1076 AVSS) nch_ulvt_mac l=30n w=2.4u multi=1 nf=2
+M134 (net39 VON3 net1076 AVSS) nch_ulvt_mac l=30n w=2.4u multi=1 nf=2
+M132 (net27 net28 net28 AVSS) nch_ulvt_mac l=30n w=600n multi=1 nf=1
+M130 (net27 net1277 net1277 AVSS) nch_ulvt_mac l=30n w=600n multi=1 nf=1
+M125 (net34 VIP net1277 AVSS) nch_ulvt_mac l=30n w=2.4u multi=1 nf=2
+M124 (net34 VIN net1277 AVSS) nch_ulvt_mac l=30n w=2.4u multi=1 nf=2
+M122 (VOP3 net1277 net1277 AVSS) nch_ulvt_mac l=30n w=300n multi=1 nf=1
+M121 (VON3 net1277 net1277 AVSS) nch_ulvt_mac l=30n w=300n multi=1 nf=1
+M115 (VON3 VIP net32 AVSS) nch_ulvt_mac l=30n w=23.7u multi=1 nf=79
+M114 (VON3 VOP3 net32 AVSS) nch_ulvt_mac l=30n w=2.1u multi=1 nf=1
+M113 (VOP3 VIN net32 AVSS) nch_ulvt_mac l=30n w=23.7u multi=1 nf=79
+M112 (VOP3 VON3 net32 AVSS) nch_ulvt_mac l=30n w=2.1u multi=1 nf=1
+M111 (net36 VOP3 net32 AVSS) nch_ulvt_mac l=30n w=300n multi=1 nf=1
+M110 (net36 VON3 net32 AVSS) nch_ulvt_mac l=30n w=300n multi=1 nf=1
+M91 (VOP3 VON3 net28 AVSS) nch_ulvt_mac l=30n w=1.2u multi=1 nf=1
+M90 (VOP3 net6 net28 AVSS) nch_ulvt_mac l=30n w=11.7u multi=1 nf=39
+M89 (VON3 VOP3 net28 AVSS) nch_ulvt_mac l=30n w=1.2u multi=1 nf=1
+M88 (VON3 net3 net28 AVSS) nch_ulvt_mac l=30n w=11.7u multi=1 nf=39
+M79 (net27 net6 net1372 AVSS) nch_ulvt_mac l=30n w=1.2u multi=1 nf=1
+M78 (net27 net3 net1372 AVSS) nch_ulvt_mac l=30n w=1.2u multi=1 nf=1
+M71 (net13 net1468 net1468 AVSS) nch_ulvt_mac l=30n w=600n multi=1 nf=1
+M70 (net4 net1468 net1468 AVSS) nch_ulvt_mac l=30n w=600n multi=1 nf=1
+M69 (VON3 net1483 net1483 AVSS) nch_ulvt_mac l=30n w=600n multi=1 nf=1
+M42 (VOP3 VON3 net21 AVSS) nch_ulvt_mac l=30n w=1.2u multi=1 nf=1
+M41 (VOP3 net4 net21 AVSS) nch_ulvt_mac l=30n w=10.2u multi=1 nf=17
+M40 (VON3 VOP3 net21 AVSS) nch_ulvt_mac l=30n w=1.2u multi=1 nf=1
+M39 (VON3 net13 net21 AVSS) nch_ulvt_mac l=30n w=10.2u multi=1 nf=17
+M35 (net15 net4 net1483 AVSS) nch_ulvt_mac l=30n w=1.2u multi=1 nf=1
+M34 (net15 net13 net1483 AVSS) nch_ulvt_mac l=30n w=1.2u multi=1 nf=1
+M32 (VOP3 net1483 net1483 AVSS) nch_ulvt_mac l=30n w=600n multi=1 nf=1
+M19 (net4 net13 net1450 AVSS) nch_ulvt_mac l=30n w=600n multi=1 nf=1
+M18 (net4 net3 net1450 AVSS) nch_ulvt_mac l=30n w=4.8u multi=1 nf=8
+M17 (net13 net4 net1450 AVSS) nch_ulvt_mac l=30n w=600n multi=1 nf=1
+M16 (net13 net6 net1450 AVSS) nch_ulvt_mac l=30n w=4.8u multi=1 nf=8
+M6 (net2 net1640 net1640 AVSS) nch_ulvt_mac l=30n w=1.2u multi=1 nf=1
+M9 (net14 net3 net1468 AVSS) nch_ulvt_mac l=30n w=1.2u multi=1 nf=2
+M10 (net14 net6 net1468 AVSS) nch_ulvt_mac l=30n w=1.2u multi=1 nf=2
+M57 (net3 net6 net1640 AVSS) nch_ulvt_mac l=30n w=7.8u multi=1 nf=3
+M48 (net3 VIN net1640 AVSS) nch_ulvt_mac l=30n w=83.4u multi=1 nf=139
+M47 (net6 net3 net1640 AVSS) nch_ulvt_mac l=30n w=7.8u multi=1 nf=3
+M45 (net6 VIP net1640 AVSS) nch_ulvt_mac l=30n w=83.4u multi=1 nf=139
+M60 (net2 VIP net1660 AVSS) nch_ulvt_mac l=30n w=8.4u multi=1 nf=3
+M49 (net2 VIN net1660 AVSS) nch_ulvt_mac l=30n w=8.4u multi=1 nf=3
+M220 (net48 net3 net1640 AVSS) nch_ulvt_mac l=30n w=600n multi=1 nf=1
+M219 (net48 net6 net1640 AVSS) nch_ulvt_mac l=30n w=600n multi=1 nf=1
+M199 (VOP net64 AVSS AVSS) nch_ulvt_mac l=30n w=3.6e-07*8*MFI multi=1 nf=8*MFI
+M198 (VOP VON4 AVSS AVSS) nch_ulvt_mac l=30n w=3.6e-07*4*MFI multi=1 nf=4*MFI
+M197 (VON VOCM AVSS AVSS) nch_ulvt_mac l=30n w=3.6e-07*MFC multi=1 nf=MFC
+M196 (VON net63 AVSS AVSS) nch_ulvt_mac l=30n w=3.6e-07*8*MFI multi=1 nf=8*MFI
+M230 (net50 VBIASP AVDDH AVDDH) pch_mac l=100n w=102.000000u multi=1 nf=60
+M229 (net51 VBIASP AVDDH AVDDH) pch_mac l=100n w=102.000000u multi=1 nf=60
+M179 (net40 VBIASP AVDDH AVDDH) pch_mac l=100n w=48.0u multi=1 nf=16
+M159 (net1179 VBIASP AVDDH AVDDH) pch_mac l=100n w=528.000000u multi=1 nf=176
+M157 (AVDDH VBIASP AVDDH AVDDH) pch_mac l=100n w=48.0u multi=1 nf=16
+M156 (net1078 VBIASP AVDDH AVDDH) pch_mac l=100n w=264.000000u multi=1 nf=88
+M136 (net39 VBIASP AVDDH AVDDH) pch_mac l=100n w=24.0u multi=1 nf=8
+M123 (net34 VBIASP AVDDH AVDDH) pch_mac l=100n w=24.0u multi=1 nf=8
+M103 (net33 VBIASP AVDDH AVDDH) pch_mac l=100n w=264.000000u multi=1 nf=88
+M101 (AVDDH VBIASP AVDDH AVDDH) pch_mac l=100n w=24.0u multi=1 nf=16
+M100 (net26 VBIASP AVDDH AVDDH) pch_mac l=100n w=132.000000u multi=1 nf=44
+M80 (net27 VBIASP AVDDH AVDDH) pch_mac l=100n w=12.0u multi=1 nf=4
+M67 (net22 VBIASP AVDDH AVDDH) pch_mac l=100n w=132.000000u multi=1 nf=44
+M33 (net15 VBIASP AVDDH AVDDH) pch_mac l=100n w=12.0u multi=1 nf=4
+M28 (net1561 VBIASP AVDDH AVDDH) pch_mac l=100n w=60u multi=1 nf=20
+M1 (AVDDH VBIASP AVDDH AVDDH) pch_mac l=100n w=48.0u multi=1 nf=16
+M52 (net1644 VBIASP AVDDH AVDDH) pch_mac l=100n w=1.008m multi=1 nf=336
+M46 (net2 VBIASP AVDDH AVDDH) pch_mac l=100n w=96.0u multi=1 nf=32
+M11 (net14 VBIASP AVDDH AVDDH) pch_mac l=100n w=12.0u multi=1 nf=4
+R17 (net38 VOP4 ) rupolym l=2.54u w=1.88u m=1 multi=(1)
+
+R16 (net38 VON4 ) rupolym l=2.54u w=1.88u m=1 multi=(1)
+
+R13 (net29 VON3 ) rupolym l=2.38u w=880.0n m=1 multi=(1)
+
+R12 (net29 VOP3 ) rupolym l=2.38u w=880.0n m=1 multi=(1)
+
+R5 (net20 net4 ) rupolym l=845.00n w=100n m=1 multi=(1)
+
+R11 (net17 net13 ) rupolym l=845.00n w=100n m=1 multi=(1)
+
+R3 (net23 VOP3 ) rupolym l=845.00n w=100n m=1 multi=(1)
+
+R10 (net23 VON3 ) rupolym l=845.00n w=100n m=1 multi=(1)
+
+R1 (net16 net20 ) rupolym l=845.00n w=100n m=1 multi=(1)
+
+R7 (net16 net17 ) rupolym l=845.00n w=100n m=1 multi=(1)
+
+R9 (net8 net3 ) rupolym l=1.895u w=1.88u m=1 multi=(1)
+
+R6 (net8 net6 ) rupolym l=1.895u w=1.88u m=1 multi=(1)
+
+M153 (VON4 VOP3 net1078 AVDDH) pch_ulvt_mac l=30n w=24.0u multi=1 nf=8
+M152 (VON4 VOP4 net1078 AVDDH) pch_ulvt_mac l=30n w=2.4u multi=1 nf=2
+M151 (VOP4 VON3 net1078 AVDDH) pch_ulvt_mac l=30n w=24.0u multi=1 nf=8
+M150 (VOP4 VON4 net1078 AVDDH) pch_ulvt_mac l=30n w=2.4u multi=1 nf=2
+M109 (VON3 VOP3 net33 AVDDH) pch_ulvt_mac l=30n w=2.1u multi=1 nf=1
+M108 (VON3 VIP net33 AVDDH) pch_ulvt_mac l=30n w=24.0u multi=1 nf=8
+M107 (VOP3 VON3 net33 AVDDH) pch_ulvt_mac l=30n w=2.1u multi=1 nf=1
+M106 (VOP3 VIN net33 AVDDH) pch_ulvt_mac l=30n w=24.0u multi=1 nf=8
+M105 (net35 VOP3 net33 AVDDH) pch_ulvt_mac l=30n w=300n multi=1 nf=1
+M104 (net35 VON3 net33 AVDDH) pch_ulvt_mac l=30n w=300n multi=1 nf=1
+M228 (VBIASP VCM net50 AVDDH) pch_ulvt_mac l=30n w=20u multi=1 nf=100
+M97 (VOP3 net6 net26 AVDDH) pch_ulvt_mac l=30n w=12.0u multi=1 nf=4
+M96 (VOP3 VON3 net26 AVDDH) pch_ulvt_mac l=30n w=1.2u multi=1 nf=1
+M258 (net54 net54 AVDDH AVDDH) pch_ulvt_mac l=30n w=3.84u multi=1 nf=8
+M227 (VBIASP VCM net51 AVDDH) pch_ulvt_mac l=30n w=20u multi=1 nf=100
+M95 (VON3 net3 net26 AVDDH) pch_ulvt_mac l=30n w=12.0u multi=1 nf=4
+M94 (VON3 VOP3 net26 AVDDH) pch_ulvt_mac l=30n w=1.2u multi=1 nf=1
+M64 (VOP3 net4 net22 AVDDH) pch_ulvt_mac l=30n w=12.0u multi=1 nf=4
+M63 (VOP3 VON3 net22 AVDDH) pch_ulvt_mac l=30n w=1.2u multi=1 nf=1
+M62 (VON3 net13 net22 AVDDH) pch_ulvt_mac l=30n w=12.0u multi=1 nf=4
+M61 (VON3 VOP3 net22 AVDDH) pch_ulvt_mac l=30n w=1.2u multi=1 nf=1
+M25 (net4 net3 net1561 AVDDH) pch_ulvt_mac l=30n w=6.6u multi=1 nf=3
+M24 (net4 net13 net1561 AVDDH) pch_ulvt_mac l=30n w=600n multi=1 nf=1
+M23 (net13 net6 net1561 AVDDH) pch_ulvt_mac l=30n w=6.6u multi=1 nf=3
+M22 (net13 net4 net1561 AVDDH) pch_ulvt_mac l=30n w=600n multi=1 nf=1
+M56 (net3 VIN net1644 AVDDH) pch_ulvt_mac l=30n w=90u multi=1 nf=30
+M55 (net3 net6 net1644 AVDDH) pch_ulvt_mac l=30n w=8.4u multi=1 nf=3
+M54 (net6 VIP net1644 AVDDH) pch_ulvt_mac l=30n w=90u multi=1 nf=30
+M53 (net6 net3 net1644 AVDDH) pch_ulvt_mac l=30n w=8.4u multi=1 nf=3
+M257 (VBIASP2 VBIASP2 AVDDH AVDDH) pch_ulvt_mac l=30n w=3.84u multi=1 nf=8
+M205 (VON net62 AVDDH AVDDH) pch_ulvt_mac l=30n w=4.8e-07*8*MFI multi=1 nf=8*MFI
+M204 (VOP net65 AVDDH AVDDH) pch_ulvt_mac l=30n w=4.8e-07*8*MFI multi=1 nf=8*MFI
+M203 (VOP VOCM AVDDH AVDDH) pch_ulvt_mac l=30n w=4.8e-07*MFC multi=1 nf=MFC
+M202 (VOP VON4 AVDDH AVDDH) pch_ulvt_mac l=30n w=4.8e-07*4*MFI multi=1 nf=4*MFI
+M201 (VON VOCM AVDDH AVDDH) pch_ulvt_mac l=30n w=4.8e-07*MFC multi=1 nf=MFC
+M165 (VOP4 VON4 net1179 AVDDH) pch_ulvt_mac l=30n w=4.2u multi=1 nf=2
+M164 (VOP4 VIN net1179 AVDDH) pch_ulvt_mac l=30n w=48.0u multi=1 nf=16
+M163 (VON4 VOP4 net1179 AVDDH) pch_ulvt_mac l=30n w=4.2u multi=1 nf=2
+M162 (VON4 VIP net1179 AVDDH) pch_ulvt_mac l=30n w=48.0u multi=1 nf=16
+M161 (net42 VON4 net1179 AVDDH) pch_ulvt_mac l=30n w=600n multi=1 nf=2
+M160 (net42 VOP4 net1179 AVDDH) pch_ulvt_mac l=30n w=600n multi=1 nf=2
+M222 (net49 net3 net1644 AVDDH) pch_ulvt_mac l=30n w=600n multi=1 nf=1
+M221 (net49 net6 net1644 AVDDH) pch_ulvt_mac l=30n w=600n multi=1 nf=1
+M209 (VOP VON AVDDH AVDDH) pch_ulvt_mac l=30n w=4.8e-07*MF multi=1 nf=MF
+M207 (VON VOP AVDDH AVDDH) pch_ulvt_mac l=30n w=4.8e-07*MF multi=1 nf=MF
+M206 (VON VOP4 AVDDH AVDDH) pch_ulvt_mac l=30n w=4.8e-07*4*MFI multi=1 nf=4*MFI
+R8 (VOP VOCM) resistor r=RL
+R22 (VOCM VON) resistor r=RL
+R4 (net64 VBIASN2) resistor r=R_ac
+R0 (VBIASP2 net65) resistor r=R_ac
+R25 (net63 VBIASN2) resistor r=R_ac
+R20 (VBIASP2 net62) resistor r=R_ac
+R40 (IBOTA2 VBIASN2) resistor r=100
+R39 (net52 VOCM) resistor r=RL2
+C6 (AVSS net13) capacitor c=C2
+C7 (net4 AVSS) capacitor c=C2
+C5 (AVDDH net6) capacitor c=C1
+C4 (net3 AVDDH) capacitor c=C1
+C1 (VIN net64) capacitor c=C_ac
+C0 (VIN net65) capacitor c=C_ac
+C3 (VIP net63) capacitor c=C_ac
+C2 (VIP net62) capacitor c=C_ac
+IPRB1 (net53 net52) iprobe
+ends HS_BIQUAD_OTA

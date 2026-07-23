@@ -1,0 +1,36 @@
+# Sampler (sample-and-hold) class — canonical metric vocabulary + owned testbench templates (D-10).
+# Validated against _shared/schema/class.schema.json by the verify harness (Tier 0).
+# NEW class added 2026-07-15 (class-registry completion) for the reference-only `ferrosim_sampling_bts`
+# (bottom-plate bootstrapped sampler) and `ferrosim_sc_sample` (switched-cap sample). DEVELOPED
+# 2026-07-16: the templates are VALIDATED live on ihp-sg13g2 against `smp_001_nmos_th` (an NMOS
+# track-and-hold; pedestal ≈ −2.9 mV, small droop). Reference-only circuits skip the class xref
+# checks (verify.py `_tier0_reference_circuit`); this library completes the registry.
+#
+# Port convention (illustrative): vdd vin vout clk vss (single-ended T/H) or a differential pair of
+# in/out nodes plus a bootstrap clock. Each promoted circuit binds only the ports it has.
+schema: spicexplorer/class@1
+class: sampler
+id_code: smp            # accession-id prefix -> smp_001_<slug> (plan_scoreboard D-1)
+description: >-
+  Sample-and-hold / track-and-hold front ends (incl. bootstrapped samplers). A clocked transient
+  extracts the sampling pedestal (charge injection), hold droop and acquisition/settling time;
+  the sampling bandwidth, in-band THD/SNDR, hold leakage and DC supply current complete it.
+ppa:                      # scoreboard PPA rollup declaration (plan_scoreboard D-7)
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: sampling_bw_hz, better: max}
+    - {metric: thd_pct, better: min}
+canonical_metrics:
+  - sampling_bw_hz    # track-mode -3 dB bandwidth (Hz)
+  - thd_pct           # sampled-signal total harmonic distortion (%)
+  - sndr_db           # signal-to-noise-and-distortion ratio (dB)
+  - droop_v_per_s     # hold-mode output droop rate (V/s)
+  - pedestal_v        # sampling pedestal / charge-injection step (V)
+  - acq_time_s        # acquisition (track-to-settle) time (s)
+  - hold_leakage_a    # hold-node leakage current (A)
+  - i_supply          # supply current (A)
+  - area_um2
+  - v_out             # tracked output level (dc_op)
+templates:
+  - tran_sample       # clocked track/hold transient -> pedestal, droop, acquisition
+  - dc_op

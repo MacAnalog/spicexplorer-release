@@ -1,0 +1,33 @@
+schema: spicexplorer/circuit@1
+id: sw_003_binary_capbank
+class: switch
+tier: support
+subfamily: capbank
+realization: transistor
+display_name: "3-bit binary-weighted TG-switched cap bank"
+ports: [vinp, vout, VCM, VDD, VSS, V_D0, V_D0_NOT, V_D1, V_D1_NOT, V_D2, V_D2_NOT]
+provenance:
+  source: drawings/shared (hand-drawn xschem, capbank.sch; bio-afe-01 landing manifest drawings/bio-afe-01-YuPinHsu-reconfigable-SRMC/landing.yaml)
+  paper: "Y.-P. Hsu, Z. Liu, M. M. Hella, \"A -68 dB THD, 0.6 mm2 Active Area Biosignal Acquisition System With a 40-320 Hz Duty-Cycle Controlled Filter\", IEEE TCAS-I 67(1):233-245, Jan. 2020"
+  aliases: [capbank]
+  designer: "Noorizadeh (schematic capture, after Hsu et al.)"
+  notes: >-
+    3-bit BINARY-weighted programmable capacitor bank: one fixed unit cap C1
+    (vinp<->vout) plus three TG-switched caps C2/C3/C4 whose bottom plates the
+    six transmission_gate_pair instances route to vinp (bit HIGH) or park at
+    VCM (bit LOW) — C_eff = (1+code)*Cu. The Cin-setting gain element of the
+    Hsu PGA (ia_005_hsu_pga_ideal instantiates it twice). BINARY
+    parameterization is the owner decision of 2026-07-19 (DRAWING_REVIEW.md §8
+    finding 1, RESOLVED): every cap carries the shared unit value Cu and the
+    weighting is STRUCTURAL via the cap multiplier m (C1 fixed m=1, C2(D0)
+    m=1, C3(D1) m=2, C4(D2) m=4); live-validated C_eff exactly 1p..8p @ Cu=1p,
+    all 8 codes distinct/monotonic. Hand-flattened here from the drawing's six
+    transmission_gate_pair instances x1..x6; the rails VDD/VSS exist ONLY as
+    bulk connections.
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/capbank.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2]
+status: draft

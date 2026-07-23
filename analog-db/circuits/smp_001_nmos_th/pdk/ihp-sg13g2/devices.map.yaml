@@ -1,0 +1,3 @@
+pdk: ihp-sg13g2
+devices:
+  nmos: {model: sg13_lv_nmos}

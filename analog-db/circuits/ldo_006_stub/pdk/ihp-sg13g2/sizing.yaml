@@ -1,0 +1,11 @@
+# Design variables for the LDO stub's ihp binding.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xm1_w, description: "Pass device width",  default: 50u,  min: 0.18u, max: 200u, unit: m}
+  - {name: x_dut_xm1_l, description: "Pass device length", default: 0.5u, min: 0.13u, max: 10u,  unit: m}
+  - {name: r_top,  description: "Divider top",        default: 100k, min: 1k,    max: 1Meg, unit: ohm}
+  - {name: r_bot,  description: "Divider bottom",     default: 100k, min: 1k,    max: 1Meg, unit: ohm}
+  # Frozen per-device literals (P4 atomic sweep): defaults reproduce the authored
+  # netlist literals exactly; freeze keeps them out of the search space.
+  - {name: x_dut_xm1_m, description: "XM1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

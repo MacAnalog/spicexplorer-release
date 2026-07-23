@@ -1,0 +1,93 @@
+# Per-TESTBENCH Spectre engine config for the CCIA class — which analysis templates
+# each bench composes on the closed (Spectre) lane, and which SKILL calculator
+# expressions read its results (the OCEAN Tier-2 route).
+#
+# The analysis statement templates live in `_shared/engines/spectre/analyses.yaml`; the
+# calculator expression table in `_shared/engines/spectre/calculator.yaml`. This file only
+# WIRES them per bench. The deck *stimulus* (which source carries the AC unit, the sine
+# drive, the step) still rides in from the class testbench template — only the analyses
+# and result-reading expressions are configured here.
+#
+# Value syntax in `args:` — `$NAME` pulls from the render context (the bench's
+# `analyses/<tb>.yaml` params, UPPERCASE, plus the platform-computed extras below);
+# anything else is a literal. Unmapped template placeholders resolve directly from the
+# context by their own name (so the ac template needs no args: FSTART/FSTOP/PPD are bench
+# params already).
+#
+# Platform-computed context extras (see `spicexplorer.backends.analog_db._spectre_context`):
+#   RAIL                             — the per-PDK registry supply (closed-lane rail)
+#   IIP3_FUND, IIP3_HARMS,           — two-tone shared fundamental + harmonic budget and
+#   IIP3_N1, IIP3_N2,                  tone/IM3 harmonic indices, derived from F1/F2
+#   IIP3_NIM3A, IIP3_NIM3B             (f1=N1·fund, f2=N2·fund; IM3 at |2N1-N2|, 2N2-N1)
+schema: spicexplorer/spectre-benches@1
+class: ia
+benches:
+  # Trimmed 2026-07-17 to the benches ia MEMBERS actually bind (the map was seeded
+  # from the amplifier map; the committed-maps drift guard —
+  # test_spectre_class_maps.py — now fails on unbound rows). A future member that
+  # binds an amplifier-style bench re-adds its row from the amplifier map.
+  ac_closed_loop:
+    analyses:
+      - {template: dc_op}
+      - {template: ac}
+    calculator:
+      # gain_cl is LINEAR (V/V) — the class buffer-gain spec convention
+      - {name: gain_cl, expr: gain_lin_at, args: {OUT: vout, FREQ: $FSTART}}
+      - {name: bw_cl, expr: bw_3db, args: {OUT: vout}}
+  ac_zin_diff:
+    # differential input impedance: the deck's ac current drive rides in from the
+    # class template; the registry reads {meas: zin_mag} off the ac transfer.
+    analyses:
+      - {template: dc_op}
+      - {template: ac}
+    calculator: []
+  dc_op:
+    analyses:
+      - {template: dc_op}
+    calculator: []
+  noise:
+    analyses:
+      - {template: dc_op}
+      - {template: noise, args: {OUT: vout, IPROBE: VINP}}
+    calculator: []
+  thd:
+    # ngspice has no PSS — the open lane runs the deck's committed tran (registry FFT);
+    # the closed lane composes this native pss at the drive fundamental instead.
+    analyses:
+      - {template: pss, args: {FUND: $F0}}
+    calculator:
+      - {name: thd_pct, expr: thd_pct, args: {OUT: vout, NHARM: $HARMS}}
+      - {name: hd2_db, expr: hd2_db, args: {OUT: vout}}
+      - {name: hd3_db, expr: hd3_db, args: {OUT: vout}}
+  tran_chopper_ripple:
+    # clocked transient (running chopper clocks ride in from the deck stimulus)
+    analyses:
+      - {template: dc_op}
+      - {template: tran}
+    calculator: []
+  tran_zin_chopped:
+    analyses:
+      - {template: dc_op}
+      - {template: tran}
+    calculator: []
+  # ------------------------------------------------------------------ golden chopper
+  # benches (P3-2c): PSS+PAC / PSS+pnoise on the RUNNING-clock configuration — the
+  # in-operation figures the transient-domain benches (tran_chopper_ripple /
+  # tran_zin_chopped) approximate. Spectre-lane payloads only (ngspice has no PSS);
+  # figures ride the platform registry ({meas: gain_cl|zin_mag, analysis: pac} /
+  # {meas: onoise_pnoise_total}), so no calculator rows bind here.
+  pac_gain:
+    analyses:
+      - {template: pss, args: {FUND: $FCHOP, HARMS: $HARMS, TSTAB: $TSTAB}}
+      - {template: pac}
+    calculator: []
+  pac_zin:
+    analyses:
+      - {template: pss, args: {FUND: $FCHOP, HARMS: $HARMS, TSTAB: $TSTAB}}
+      - {template: pac}
+    calculator: []
+  pnoise_chopped:
+    analyses:
+      - {template: pss, args: {FUND: $FCHOP, HARMS: $HARMS, TSTAB: $TSTAB}}
+      - {template: pnoise, args: {OUT: voutp, REF: voutn}}
+    calculator: []

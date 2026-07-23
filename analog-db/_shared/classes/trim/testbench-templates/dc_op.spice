@@ -1,0 +1,24 @@
+** AUTHORED TEMPLATE — trim/dc_op: DC operating point + supply current of a trim/cal DAC.
+** [VALIDATED 2026-07-16 on ihp-sg13g2 against trm_001_vcr — live ngspice].
+** Parks the trim code at zero and reports the static supply draw and the trimmed output level.
+** Port convention: vdd vcode vout vss. Bindings: DUT PORT_LINE VDD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+
+Vdd vdd 0 dc {VDD}
+Vss vss 0 dc 0
+Vcode vcode 0 dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  let v_out = v(vout)
+  print i_supply v_out
+  write
+  quit
+.endc
+.end

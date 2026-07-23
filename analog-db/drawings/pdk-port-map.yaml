@@ -1,0 +1,95 @@
+# PDK port maps for `tools/port_drawing_pdk.py` — how a drawing family is retargeted from one
+# PDK to another. One entry per (src, dst) directory-name pair; `src`/`dst` are the per-PDK
+# subdirectory names inside a family (drawings/<family>/gf180 → drawings/<family>/ihp130).
+#
+# Adding a PDK pair is a YAML edit, not a code change. What each key does:
+#
+#   src_pdk / dst_pdk    labels for the report (match _shared/pdk/*.yaml `pdk:` where possible)
+#   src_symdir/dst_symdir  the PDK's xschem symbol dir under $PDK_ROOT — used ONLY by the
+#                        footprint check, which compares source/target pin geometry so a
+#                        "drop-in" swap is verified rather than assumed
+#   devices              source symbol ref → target symbol + model + geometry floor. Flavour
+#                        policy lives HERE (lvt→lvt, hvt→hvt, 06v0→hv, …)
+#   rename / drop        instance-attribute key rename, and keys to delete outright
+#   inject               per-device attrs the target symbol requires but the source lacks
+#   text_subs            regex → replacement over raw file text (model-lib cards, etc.),
+#                        applied in order, MULTILINE
+#   max_supply           target rail (V); vsources above it are reported, never auto-changed
+#
+# Geometry accepts engineering strings ('0.45u') or plain numbers in METRES.
+
+maps:
+  # ---------------------------------------------------------------- gf180mcu → ihp-sg13g2
+  #
+  # Flavour policy: gf180's 06v0 (6 V) AND 03v3 (3.3 V) devices both map to IHP's **hv**
+  # (3.3 V) flavour. IHP's lv is a 1.5 V device, so mapping 03v3→lv would put a 1.5 V
+  # transistor on a 3.3 V rail — retarget to lv only alongside a deliberate re-bias.
+  #
+  # Width convention: BOTH PDKs treat the symbol's W/w as the TOTAL width split across
+  # nf/ng fingers (each subckt passes w=w down and derives per-finger diffusions as w/nf),
+  # so W→w and nf→ng are 1:1 — no per-finger rescale.
+  - src: gf180
+    dst: ihp130
+    src_pdk: gf180mcu
+    dst_pdk: ihp-sg13g2
+    src_symdir: gf180mcuD/libs.tech/xschem
+    dst_symdir: ihp-sg13g2/libs.tech/xschem
+    max_supply: 3.3          # IHP hv rail; the gf180 tbs drive 6 V and WILL be flagged
+
+    # gf180's BSIM4 diffusion/stress knobs have no IHP counterpart — the PSP subckt computes
+    # as/ad/ps/pd itself from w, ng and its own z1/z2 layout constants.
+    rename: {L: l, W: w, nf: ng}
+    drop: [ad, as, pd, ps, nrd, nrs, sa, sb, sd]
+
+    devices:
+      # --- MOS. min_l/min_w are the target symbols' template defaults (= the PDK minimums).
+      #     Pin geometry is byte-identical to gf180's, so these swaps are truly drop-in.
+      symbols/nfet_06v0.sym: {sym: sg13g2_pr/sg13_hv_nmos.sym, model: sg13_hv_nmos, min_l: 0.45u, min_w: 0.30u}
+      symbols/pfet_06v0.sym: {sym: sg13g2_pr/sg13_hv_pmos.sym, model: sg13_hv_pmos, min_l: 0.40u, min_w: 0.30u}
+      symbols/nfet_03v3.sym: {sym: sg13g2_pr/sg13_hv_nmos.sym, model: sg13_hv_nmos, min_l: 0.45u, min_w: 0.30u}
+      symbols/pfet_03v3.sym: {sym: sg13g2_pr/sg13_hv_pmos.sym, model: sg13_hv_pmos, min_l: 0.40u, min_w: 0.30u}
+
+      # --- Resistors. NOT drop-in: gf180's poly resistors are 3-pin (P, M, **bulk**), IHP's
+      #     are 2-pin with the bulk as a `body=sub!` parameter — the footprint check reports
+      #     every instance whose bulk wire the swap leaves dangling.
+      #     sheet_res pairs (Ω/□) let the tool rescale `l` to HOLD the resistance across the
+      #     port: src_sheet_res for ppolyf_u_<N>k is its name-implied value; the rest come
+      #     from _shared/pdk/{gf180mcu,ihp-sg13g2}.yaml `passives.models`.
+      symbols/ppolyf_u_3k.sym:
+        {sym: sg13g2_pr/rhigh.sym, model: rhigh, min_l: 0.5u, min_w: 0.5u,
+         src_sheet_res: 3000, sheet_res: 1515, inject: {body: 'sub!', b: 0}}
+      symbols/ppolyf_u_2k.sym:
+        {sym: sg13g2_pr/rhigh.sym, model: rhigh, min_l: 0.5u, min_w: 0.5u,
+         src_sheet_res: 2000, sheet_res: 1515, inject: {body: 'sub!', b: 0}}
+      symbols/ppolyf_u_1k.sym:
+        {sym: sg13g2_pr/rhigh.sym, model: rhigh, min_l: 0.5u, min_w: 0.5u,
+         src_sheet_res: 1000, sheet_res: 1515, inject: {body: 'sub!', b: 0}}
+      symbols/ppolyf_u.sym:
+        {sym: sg13g2_pr/rppd.sym, model: rppd, min_l: 0.5u, min_w: 0.5u,
+         src_sheet_res: 381, sheet_res: 265, inject: {body: 'sub!', b: 0}}
+      symbols/pplus_u.sym:
+        {sym: sg13g2_pr/rppd.sym, model: rppd, min_l: 0.5u, min_w: 0.5u,
+         src_sheet_res: 207, sheet_res: 265, inject: {body: 'sub!', b: 0}}
+      symbols/nplus_u.sym:
+        {sym: sg13g2_pr/rsil.sym, model: rsil, min_l: 0.5u, min_w: 0.5u,
+         src_sheet_res: 58, sheet_res: 7.8, inject: {body: 'sub!', b: 0}}
+
+      # --- MIM cap. Different area capacitance (2.09 vs 1.52 fF/µm²) and the symbols take
+      #     different geometry keys, so this one is a placeholder: it swaps the symbol but
+      #     does NOT preserve C. Re-size any ported MIM cap by hand.
+      symbols/cap_mim_2f0fF.sym: {sym: sg13g2_pr/cap_cmim.sym, model: cap_cmim}
+
+    # gf180 splits MOS + passive corners across sections of ONE lib; IHP keeps one lib per
+    # device family. `design.ngspice` (global stat/noise switches) has no IHP counterpart, so
+    # that line is dropped. MOS cards target cornerMOShv.lib to match the hv device mapping.
+    text_subs:
+      - {pattern: '^\s*\.include\s+\$::180MCU_MODELS/design\.ngspice\s*$', repl: ''}
+      - {pattern: '\.lib\s+\$::180MCU_MODELS/sm141064\.ngspice\s+typical',
+         repl: '.lib $::SG13G2_MODELS/cornerMOShv.lib mos_tt'}
+      - {pattern: '\.lib\s+\$::180MCU_MODELS/sm141064\.ngspice\s+res_typical',
+         repl: '.lib $::SG13G2_MODELS/cornerRES.lib res_typ'}
+      - {pattern: '\.lib\s+\$::180MCU_MODELS/sm141064\.ngspice\s+res_statistical',
+         repl: '.lib $::SG13G2_MODELS/cornerRES.lib res_typ_stat'}
+      - {pattern: '\.lib\s+\$::180MCU_MODELS/sm141064\.ngspice\s+(ss|ff|sf|fs)\b',
+         repl: '.lib $::SG13G2_MODELS/cornerMOShv.lib mos_\1'}
+      - {pattern: '\$::180MCU_MODELS', repl: '$::SG13G2_MODELS'}

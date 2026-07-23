@@ -1,0 +1,43 @@
+** AUTHORED TEMPLATE — amplifier/dc_op_biaswrap: DC operating point + supply current for DUTs on
+** the AnalogGym self-bias convention (ports vss vdd vinn vinp vout; NO ibias port). Self-bias
+** companion of the universal dc_op (M4 follow-up): a high-gain multistage OTA has no stable
+** open-loop DC op point (it rails), so i_supply read open-loop is non-representative. Close the DC
+** feedback exactly as ac_open_loop_biaswrap does — Lfb DC-shorts vout back to the inverting input
+** (unity DC feedback), pinning the real quiescent operating point (vout ≈ VCM) — then read the
+** supply current there. No Cin/Vac: this is a pure DC .op (an inductor is a DC short, so the loop
+** is closed at DC).
+**
+** Assumes the AnalogGym canonical DUT port order (self-biased; NO ibias port):
+**   .subckt <id> vss vdd vinn vinp vout
+** Bindings: DUT VDD VCM PDK_INCLUDE.
+** FIXED 2026-07-20: this template used to hardcode `X1 0 vdd opout_dc opin opout ${DUT}`,
+** which silently assumed the AnalogGym port order [vss vdd vinn vinp vout] and MIS-WIRED any
+** DUT declaring a different order (e.g. the amplifier-class [vdd vout vinp vinn vss] swaps
+** vdd<->vss). It now uses ${PORT_LINE} with canonical node names, exactly like the
+** *_biaswrap_ibias sibling. For the AnalogGym DUTs this is a no-op: their vss port binds to
+** node `vss`, which `Vss vss 0 dc 0` ties to ground just as the old direct-to-0 wiring did.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vcm  vinp 0 dc {VCM}          ; common-mode bias on the non-inverting input
+Lfb  vout vinn 1T        ; 1 TH: DC short → unity feedback sets the quiescent op point
+
+${PORT_LINE} ${DUT}
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  * Input-referred systematic offset: the Lfb DC short makes this a unity-gain follower, so the
+  * settled (vout - vinp) IS the input offset. Additive metric (2026-07-20) — existing measures
+  * are untouched; a topology with a deliberately ratioed sink (e.g. the TI LDO error amp's
+  * mirror_e) shows a large vos here, which also caps its ICMR tracking band.
+  let vos = v(vout) - v(vinp)
+  print i_supply vos
+  write
+  quit
+.endc
+.end

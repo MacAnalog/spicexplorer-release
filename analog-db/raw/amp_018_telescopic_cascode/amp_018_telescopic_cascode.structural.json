@@ -1,0 +1,94 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "amp_018_telescopic_cascode",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 12,
+    "blocks_detected": 3,
+    "by_family": {
+      "current_mirror": 2,
+      "differential_pair": 1
+    },
+    "structural_roles": {
+      "XM1": "differential_pair",
+      "XM1C": "differential_pair",
+      "XM2": "differential_pair",
+      "XM2C": "differential_pair",
+      "XM3": "current_mirror",
+      "XM3C": "cascode_device",
+      "XM4": "current_mirror",
+      "XM4C": "cascode_device",
+      "XM5": "tail_current_source",
+      "XM6": "current_mirror_reference"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.nmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XM6",
+      "output_devices": [
+        "XM5"
+      ],
+      "devices": [
+        "XM5",
+        "XM6"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "ibias",
+        "out": "tail"
+      }
+    },
+    {
+      "group_id": "dp.nmos.cascode#1",
+      "family": "differential_pair",
+      "mirror_class": "cascode_differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.cascode",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM1",
+        "XM1C",
+        "XM2",
+        "XM2C"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "vinp",
+        "in_n": "vinn",
+        "CM_tail": "tail",
+        "out_n": "vout",
+        "out_p": "gate_p",
+        "cascode_bias": "casc_n"
+      }
+    },
+    {
+      "group_id": "cm.pmos.low_voltage_cascode#1",
+      "family": "current_mirror",
+      "mirror_class": "low_voltage_cascode",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.low_voltage_cascode",
+      "reference_device": null,
+      "output_devices": [
+        "XM4C"
+      ],
+      "devices": [
+        "XM3",
+        "XM3C",
+        "XM4",
+        "XM4C"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "gate_p",
+        "out": "vout",
+        "bias": "gate_pc"
+      }
+    }
+  ]
+}

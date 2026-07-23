@@ -1,0 +1,22 @@
+# Design variables (W/L/M) for the ihp-sg13g2 binding (plan §3 tree).
+# Validated against _shared/schema/sizing.schema.json. Defaults are the existing
+# examples/OTA/5t-ota starting point; bounds are the JKU lv-MOS geometry rules.
+# Keyed on the FREE atomic symbols after default tying (abstract/params.yaml, plan D-4):
+# the tied members (XM2 tracks XM1, XM4 tracks XM3) get their .param lines from the
+# generated tie block, not from rows here. Defaults/bounds numerically identical to the
+# pre-atomic knobs (nfet_input -> xm1, pfet_load -> xm3, nfet_mirror -> xm5, mirror_ref -> xm6).
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xm1_w, description: "Input pair width (XM1; XM2 tied)",        default: 10.0u, min: 0.18u, max: 10u, unit: m}
+  - {name: x_dut_xm1_l, description: "Input pair length (XM1; XM2 tied)",       default: 10.0u, min: 0.18u, max: 10u, unit: m}
+  - {name: x_dut_xm3_w, description: "PMOS mirror-load width (XM3; XM4 tied)",  default: 10.0u, min: 0.18u, max: 10u, unit: m}
+  - {name: x_dut_xm3_l, description: "PMOS mirror-load length (XM3; XM4 tied)", default: 7.0u, min: 0.18u, max: 10u, unit: m}
+  - {name: x_dut_xm5_w, description: "Tail device width",       default: 3.8u, min: 0.18u, max: 10u, unit: m}
+  - {name: x_dut_xm5_l, description: "Tail device length",      default: 1.0u, min: 0.18u, max: 10u, unit: m}
+  - {name: x_dut_xm6_w, description: "Mirror reference width",  default: 3.8u, min: 0.18u, max: 10u, unit: m}
+  - {name: x_dut_xm6_l, description: "Mirror reference length", default: 1.0u, min: 0.18u, max: 10u, unit: m}
+  - {name: x_dut_xm1_m, description: "Input pair fingers (frozen)",       default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm3_m, description: "Mirror-load fingers (frozen)",      default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm5_m, description: "Tail device fingers (frozen)",      default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm6_m, description: "Mirror reference fingers (frozen)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

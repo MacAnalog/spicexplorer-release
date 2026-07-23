@@ -1,0 +1,40 @@
+v {xschem version=3.4.4 file_version=1.2
+*
+* This file is part of XSCHEM,
+* a schematic capture and Spice/Vhdl/Verilog netlisting tool for circuit
+* simulation.
+* Copyright (C) 1998-2023 Stefan Frederik Schippers
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+}
+G {}
+K {type=probe
+vhdl_ignore=true
+spice_ignore=false
+verilog_ignore=true
+tedax_ignore=true
+template="name=r1
+devicename=M1
+devicemodel=nfet_01v8
+deviceparam=gm"}
+V {}
+S {}
+E {}
+A 15 0 0 1.875 90 360 {fill=true}
+T {tcleval([ngspice::get_node \\@m.[set path]x@devicename\\.msky130_fd_pr__@devicemodel\\\\[@deviceparam\\\\]])
+} 4.375 -8.59375 0 0 0.2 0.2 {vcenter=true layer=15}
+T {@deviceparam\\=} 4.375 -26.09375 0 0 0.2 0.2 {vcenter=true layer=15}
+T {@devicemodel} 4.375 -41.09375 0 0 0.2 0.2 {vcenter=true layer=15}
+T {@devicename} 4.375 -56.09375 0 0 0.2 0.2 {vcenter=true layer=15}

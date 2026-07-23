@@ -1,0 +1,10 @@
+simulator lang=spectre
+global 0
+ahdl_include "degsh.va"
+v_in (A 0) vsource dc=1
+x1 (A N N) degsh g=1m
+r_load (N 0) resistor r=1k
+simulatorOptions options temp=27 tnom=27
+dcOp dc annotate=status
+save N
+saveOptions options save=selected

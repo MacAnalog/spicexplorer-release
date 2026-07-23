@@ -1,0 +1,113 @@
+# Datasheet for the SELF-BIASED TI-LDO reference amp. Specs are derived from this block's ROLE in
+# ldo_005_buffered_ref, which differs from the error amp's in three ways that matter:
+#
+#   1. DC ACCURACY IS THE POINT. v_ref_out = VREF*(R1+R2)/R2 IS the LDO's regulated output (the
+#      error amp compares VOUT to it with no further divider), so this amp's input-referred offset
+#      lands at VOUT multiplied by the same factor - 2x with ldo_005's 100k/100k divider. vos is
+#      therefore the tightest spec here (<= 5 mV -> <= 10 mV at VOUT), and it is the spec this
+#      topology is ABLE to meet: unlike amp_032's deliberately ratioed mirror_e sink, the mirror
+#      load here is a plain matched pair, so there is no built-in systematic offset to fight.
+#   2. SPEED IS NOT. Downstream of this amp sits the RC filter (10k/10p in ldo_005 => ~1.6 MHz),
+#      which throws away bandwidth on purpose. UGF is specced at >= 1 MHz - enough to be well
+#      inside the filter and to settle at startup - rather than amp_032's 10 MHz.
+#   3. NOISE AND PSRR PROPAGATE. Supply ripple and noise on v_ref_out ride through to VOUT (the RC
+#      filter attenuates only above its corner), so both stay first-class targets.
+#
+# Phase margin is specced at 60 deg against the UNITY-buffer bench even though the in-system
+# closed-loop gain is 2. Unity gain is the maximum-loop-gain case, so this is the conservative
+# reading, and it leaves margin for the extra load the divider and filter present.
+schema: spicexplorer/datasheet@1
+circuit: amp_033_ti_ldo_ref_selfbias
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 3.3}
+  cload:  {unit: pF, typical: 10}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+  vcm:    {unit: V, typical: 0.8}      # = VREF; the true in-LDO input common mode
+metrics:
+  dc_gain_db:
+    display: "Open-loop DC gain"
+    description: "Sets the reference-gain accuracy: the divider ratio is realized to within
+      1/loop-gain, so 60 dB gives ~0.1% gain error on top of vos."
+    unit: dB
+    analysis: ac_open_loop
+    extract: {meas: dcgain}
+    spec: {min: 60, unit: dB}
+  ugf_hz:
+    display: "Unity-gain frequency"
+    unit: Hz
+    analysis: ac_open_loop
+    extract: {meas: ugf}
+    spec: {min: 1e6, unit: Hz}
+  pm_deg:
+    display: "Phase margin"
+    description: "Measured in the unity-buffer configuration - the conservative case, since the
+      in-LDO closed-loop gain of 2 halves the loop gain."
+    unit: deg
+    analysis: ac_open_loop
+    extract: {meas: pm}
+    spec: {min: 60, unit: deg}
+  vos:
+    display: "Input-referred systematic offset"
+    description: "Settled (vout - vinp) in the unity-gain follower. Appears at the LDO output
+      multiplied by (R1+R2)/R2 = 2, so 5 mV here is 10 mV of VOUT error. The matched mirror load
+      should make this achievable - contrast amp_032's structural ~93 mV."
+    unit: V
+    analysis: dc_op
+    extract: {meas: vos}
+    spec: {max: 5e-3, unit: V}
+  psrr_vdd_db:
+    display: "Positive supply rejection (DC-band floor)"
+    description: "Adm/Add in the unity-buffer config; self-bias bench, so it includes the on-chip
+      reference. Ripple here reaches VOUT through v_ref_out."
+    unit: dB
+    analysis: psrr_vdd
+    extract: {meas: psrr_vdd_db}
+    spec: {min: 40, unit: dB}
+  cmrr_db:
+    display: "Common-mode rejection (DC-band floor)"
+    unit: dB
+    analysis: cmrr_vcm
+    extract: {meas: cmrr_db}
+    spec: {min: 40, unit: dB}
+  i_supply:
+    display: "Quiescent supply current"
+    description: "Tighter than the error amp's 1 mA: this block is always-on overhead in the LDO's
+      quiescent budget and does not have to drive the pass device."
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 200e-6, unit: A}
+  gain_cl:
+    display: "Closed-loop buffer gain"
+    unit: V/V
+    analysis: ac_closed_loop
+    extract: {meas: gain_cl}
+    spec: {min: 0.97, max: 1.03, unit: V/V}
+  bw_cl_hz:
+    display: "Closed-loop -3 dB bandwidth"
+    unit: Hz
+    analysis: ac_closed_loop
+    extract: {meas: bw_cl}
+    spec: {min: 1e6, unit: Hz}
+  vn_in:
+    display: "Integrated input-referred noise"
+    unit: V
+    analysis: noise
+    extract: {meas: inoise_total}
+    spec: {max: 500e-6, unit: V}
+  t_settle:
+    display: "Unity-gain step settling time"
+    unit: s
+    analysis: tran_step
+    extract: {meas: t_settle}
+    spec: {max: 2e-6, unit: s}
+  icmr_range:
+    display: "Input common-mode range"
+    description: "Must comfortably contain VREF = 0.8 V. A zero here on an NMOS-input pair at this
+      low a CM is the headroom failure flagged in sizing.yaml, not a bench artifact."
+    unit: V
+    analysis: linearity
+    extract: {meas: icmr_range}
+    spec: {min: 1.0, unit: V}

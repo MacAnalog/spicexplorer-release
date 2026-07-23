@@ -1,0 +1,19 @@
+# Analysis binding: CM-loop health (time domain) — CM current-kick recovery.
+schema: spicexplorer/analysis@1
+id: tran_cm_kick
+template: tran_cm_kick
+description: "CM disturbance recovery: cm_kick_v (stiffness), cm_resid_v (latch-up flag), t_cm_settle. resistive + RC common-mode servo."
+params:
+  VDD: 1.5
+  VCM: 0.8
+  CL: 50f
+  ICM: 5u
+  TKICK: 2u
+  TMID: 5u
+  TREL: 6u
+  TEND: 19u
+  VTOL: 2m
+  TSTEP: 2n
+  TSTOP: 20u
+flags: []
+produces: [cm_kick_v, cm_resid_v, t_cm_settle]

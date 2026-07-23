@@ -1,0 +1,12 @@
+# Design variables for the sky130 binding. vref = (Vth_5v - Vth_1v8) + n·Vt·ln[(W/L)_0/(W/L)_1].
+# The 5V-IO/1.8V-core ΔVth sets the level; the W-ratio nulls the residual curvature (tuned live).
+# Long L keeps both sub-Vt branches at nano-amp currents.
+schema: spicexplorer/sizing@1
+pdk: sky130
+variables:
+  - {name: x_dut_xm0_w, description: "1.8V core (Vgs=0) source NMOS width",  default: 2.5u, min: 0.36u, max: 20u, unit: m}
+  - {name: x_dut_xm0_l, description: "1.8V core (Vgs=0) source NMOS length", default: 2.0u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm0_m, description: "1.8V source NMOS multiplier",          default: 1, is_integer: true}
+  - {name: x_dut_xm1_w, description: "5V IO diode NMOS width",               default: 1.0u, min: 0.42u, max: 20u, unit: m}
+  - {name: x_dut_xm1_l, description: "5V IO diode NMOS length",              default: 2.0u, min: 0.5u, max: 20u, unit: m}
+  - {name: x_dut_xm1_m, description: "5V IO diode NMOS multiplier",          default: 1, is_integer: true}

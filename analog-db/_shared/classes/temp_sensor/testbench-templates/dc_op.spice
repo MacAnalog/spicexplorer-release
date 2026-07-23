@@ -1,0 +1,23 @@
+** AUTHORED TEMPLATE — temp_sensor/dc_op (plan D-4): DC operating point of a PTAT sensor core.
+** Supply-only 3-terminal block (vdd vout vss); reports the DC output and the supply current
+** (power). Bindings: DUT PORT_LINE VDD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  let v_out = v(vout)
+  print i_supply
+  print v_out
+  write
+  quit
+.endc
+.end

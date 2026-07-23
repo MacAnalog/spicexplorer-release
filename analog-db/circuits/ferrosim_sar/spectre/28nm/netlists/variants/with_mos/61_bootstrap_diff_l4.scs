@@ -1,0 +1,11 @@
+// Library name: SAR_11B_ZZS
+// Cell name: L4_BTS_X2
+// View name: schematic
+// Inherited view list: spectre cmos_sch cmos.sch schematic veriloga ahdl
+// pspice dspf
+subckt L4_BTS_X2 CLKS VBTSN VBTSP VDD VIN VIP VSS
+    I2 (CLKS VBTSN VDD VIN VSS) LB_SAR_BTS
+    I0 (CLKS VBTSP VDD VIP VSS) LB_SAR_BTS
+ends L4_BTS_X2
+// End of subcircuit definition.
+

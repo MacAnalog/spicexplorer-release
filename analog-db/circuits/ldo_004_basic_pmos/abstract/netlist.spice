@@ -1,0 +1,40 @@
+** Abstract basic PMOS LDO — the minimal closed-loop regulator: a bare 4-transistor error amp
+** (NMOS input pair + PMOS mirror load, ideal tail sink, NO explicit bias-mirror transistor and
+** NO compensation network) driving a PMOS pass device directly. Imported/inspired by
+** external/conceptual_LDO_design/ltspice/LDO_basic.asc — a textbook "ideal op-amp + PMOS pass +
+** resistor divider" LDO (LTspice UniversalOpAmp, Avol=400000 GBW=10Meg Vos=0). circuitgraph's
+** device factory only types M/R/C/L/V/I/X primitives (no VCVS/E-source — see
+** device_factory.py), so a literal behavioral-op-amp macromodel can't survive `generate`; this
+** is the minimal REAL-transistor equivalent instead: the simplest working amp in the DB,
+** deliberately uncompensated (the pass gate's own parasitic C is the only pole-splitting this
+** loop gets) — a "basic/conceptual" complement to the Miller-compensated ldo_007_pmos and the
+** richer 2-stage ldo_005_buffered_ref.
+** PDK-neutral model tokens (nmos/pmos); per-PDK device names + geometry come from circuitgraph
+** lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vdd vout vss
+**
+** Loop polarity (negative feedback): vout^ -> fb^ -> egatev -> Vsg(pass)=vdd-egate^
+**   -> Ipass^ -> voutv. Regulates to fb = vref => vout = vref*(r_top+r_bot)/r_bot.
+**.subckt ldo_004_basic_pmos vdd vout vss
+**
+** --- PMOS pass device: source=vdd, gate=egate, drain=vout ---
+XMP vout egate vdd vdd pmos w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m
+**
+** --- feedback divider: vout -> fb -> vss  (vout = vref*(r_top+r_bot)/r_bot) ---
+R1 vout fb  'r_top'
+R2 fb   vss 'r_bot'
+**
+** --- internal ideal reference (sim reference, not a silicon bandgap) ---
+** NOTE: passive value fields are single-quoted and source values are braced so ngspice
+** evaluates them as .param expressions (a bare `r_top` is parsed as a model name).
+Vref  vref  vss dc {vref_val}
+**
+** --- minimal 4T error amp: NMOS input pair + PMOS mirror load, ideal tail current sink (no
+** bias-mirror transistor). Output taken directly at the mirror node -> pass gate, no 2nd stage.
+Itail etail vss dc {i_tail}
+XM1 noutm fb    etail vss nmos w=x_dut_xm1_w   l=x_dut_xm1_l
+XM2 egate vref  etail vss nmos w=x_dut_xm2_w   l=x_dut_xm2_l
+XM3 noutm noutm vdd   vdd  pmos w=x_dut_xm3_w l=x_dut_xm3_l
+XM4 egate noutm vdd   vdd  pmos w=x_dut_xm4_w l=x_dut_xm4_l
+**.ends
+.end

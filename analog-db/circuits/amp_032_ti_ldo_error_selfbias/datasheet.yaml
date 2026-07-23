@@ -1,0 +1,103 @@
+# Datasheet for the SELF-BIASED TI-LDO error amp. Specs are seeded from amp_019_ti_ldo_error's
+# measured gf180mcu tt baseline (40.29 dB / 23.5 MHz / 49.0 deg PM / 2.32 mA), with two deliberate
+# departures set by the 2026-07-20 controlled bias study:
+#   * psrr_vdd_db is a REAL target here (>= 30 dB). Unlike amp_019's ibias-port bench (which injects
+#     an ideal current source and therefore cannot see the reference at all), the selfbias bench
+#     exercises the on-chip reference, so this number is meaningful and optimizable.
+#   * i_supply is tightened to <= 1 mA. The study showed PSRR is set by bias current, not by
+#     reference quality (a beta-multiplier scored 16.6 dB vs 16.1 dB for a perfectly ideal source),
+#     so current is THE lever: 121 uA -> 33.5 dB, 548 uA -> 24.8 dB.
+# pm is raised to the conventional 60 deg because the LDO instantiating this amp closes a loop
+# around it; amp_019's landed 49 deg is the gap this entry exists to close.
+schema: spicexplorer/datasheet@1
+circuit: amp_032_ti_ldo_error_selfbias
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 3.3}
+  cload:  {unit: pF, typical: 10}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+  vcm:    {unit: V, typical: 1.2}      # in-loop common mode (VREF/VFB sit near 1.2 V in the LDO)
+metrics:
+  dc_gain_db:
+    display: "Open-loop DC gain"
+    unit: dB
+    analysis: ac_open_loop
+    extract: {meas: dcgain}
+    spec: {min: 40, unit: dB}
+  ugf_hz:
+    display: "Unity-gain frequency"
+    description: "RELAXED 10 MHz -> 5 MHz (2026-07-21). The 10 MHz figure was inherited from the
+      amp's standalone datasheet and is over-specified for this role: in ldo_005_buffered_ref the
+      regulation loop crosses near 236 kHz, so even 5 MHz leaves ~20x margin, and the error amp
+      drives the pass gate through the LDO's own dominant pole. Holding 10 MHz forced the sizer to
+      284 uA; at 5 MHz the same search reaches pm 82.7 deg and cmrr 60.1 dB on 179 uA."
+    unit: Hz
+    analysis: ac_open_loop
+    extract: {meas: ugf}
+    spec: {min: 5e6, unit: Hz}
+  pm_deg:
+    display: "Phase margin"
+    unit: deg
+    analysis: ac_open_loop
+    extract: {meas: pm}
+    spec: {min: 60, unit: deg}
+  psrr_vdd_db:
+    display: "Positive supply rejection (DC-band floor)"
+    description: "Adm/Add in the unity-buffer config; self-bias bench, so it includes the on-chip reference."
+    unit: dB
+    analysis: psrr_vdd
+    extract: {meas: psrr_vdd_db}
+    spec: {min: 30, unit: dB}
+  cmrr_db:
+    display: "Common-mode rejection (DC-band floor)"
+    description: "Adm/Acm in the unity-buffer config."
+    unit: dB
+    analysis: cmrr_vcm
+    extract: {meas: cmrr_db}
+    spec: {min: 30, unit: dB}
+  i_supply:
+    display: "Quiescent supply current"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 1e-3, unit: A}
+  vos:
+    display: "Input-referred systematic offset"
+    description: "Settled (vout - vinp) in the unity-gain follower. This topology's ratioed mirror_e
+      sink gives a large systematic offset; it also caps icmr_range, and in the LDO it propagates
+      directly into output-voltage error. Measured 2026-07-20 seed: ~+90 mV."
+    unit: V
+    analysis: dc_op
+    extract: {meas: vos}
+    spec: {max: 20e-3, unit: V}
+  gain_cl:
+    display: "Closed-loop buffer gain"
+    unit: V/V
+    analysis: ac_closed_loop
+    extract: {meas: gain_cl}
+    spec: {min: 0.97, max: 1.03, unit: V/V}
+  bw_cl_hz:
+    display: "Closed-loop -3 dB bandwidth"
+    unit: Hz
+    analysis: ac_closed_loop
+    extract: {meas: bw_cl}
+    spec: {min: 5e6, unit: Hz}
+  vn_in:
+    display: "Integrated input-referred noise"
+    unit: V
+    analysis: noise
+    extract: {meas: inoise_total}
+    spec: {max: 500e-6, unit: V}
+  t_settle:
+    display: "Unity-gain step settling time"
+    unit: s
+    analysis: tran_step
+    extract: {meas: t_settle}
+    spec: {max: 500e-9, unit: s}
+  icmr_range:
+    display: "Input common-mode range"
+    unit: V
+    analysis: linearity
+    extract: {meas: icmr_range}
+    spec: {min: 1.0, unit: V}

@@ -1,0 +1,13 @@
+// Eval-dominated BSIM-BULK microbench: fine NMOS Id-Vg sweep, single device,
+// trivial matrix -> wall-clock is dominated by the VA interpreter/JIT eval.
+// Used for interp-vs-SIMD-vs-JIT A/B (not a regression test). RDSMOD=0 default.
+simulator lang=spectre
+global 0
+ahdl_include "bsimbulk.va"
+parameters vgval=0
+vd (d 0) vsource dc=1.0
+vg (g 0) vsource dc=vgval
+x1 (d g 0 0 t1) bsimbulk TYPE=1 L=1e-6 W=1e-5
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+sw dc param=vgval start=0 stop=1.8 step=0.002
+save vd:p

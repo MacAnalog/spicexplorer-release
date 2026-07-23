@@ -1,0 +1,18 @@
+# SUPER-DSL manifest — the D-10 stub circuit proving the LDO class abstraction.
+schema: spicexplorer/circuit@1
+id: ldo_006_stub
+class: ldo
+display_name: "LDO stub (source-follower pass device)"
+stages: 1
+ports: [vdd, vout, vss]
+provenance:
+  aliases: [ldo_stub]
+  source: spicexplorer
+  license: MIT
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, sky130, gf180mcu]
+analyses: [dc_op, load_regulation]
+status: incomplete          # a STUB by design — never claims more (plan D-10)

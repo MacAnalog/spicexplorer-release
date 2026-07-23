@@ -1,0 +1,38 @@
+# SUPER-DSL manifest — AnalogGym import (plan Phase 5).
+schema: spicexplorer/circuit@1
+id: amp_012_peng_tcfc
+class: amplifier
+display_name: "3-stage OTA \u2014 TCFC compensation (Peng)"
+compensation: TCFC
+stages: 3
+ports:
+- vss
+- vdd
+- vinn
+- vinp
+- vout
+provenance:
+  source: AnalogGym
+  aliases:
+  - Peng_TCFC_Pin_3
+  - peng_tcfc_pin_3
+  paper: X. Peng & W. Sansen, IEEE JSSC 40(7):1514-1520, 2005
+  license: BSD-3-Clause
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+  reference_schematic: reference/Peng_TCFC_Pin_3.png
+pdks:
+- sky130
+- ihp-sg13g2
+- gf180mcu
+- tsmc-n65
+analyses:
+- ac_open_loop
+- dc_op
+- noise
+- tran_step
+- psrr_vdd
+- cmrr_vcm
+status: draft

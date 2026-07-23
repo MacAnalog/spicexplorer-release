@@ -1,0 +1,13 @@
+// Library name: SAR_11B_ZZS
+// Cell name: _TU_REF_GEN
+// View name: schematic
+// Inherited view list: spectre cmos_sch cmos.sch schematic veriloga ahdl
+// pspice dspf
+subckt _TU_REF_GEN VREFN VREFP
+    V31 (net1 0) vsource dc=VDD type=dc
+    V30 (net2 0) vsource dc=0 type=dc
+    R1 (VREFN net2) resistor r=0
+    R0 (VREFP net1) resistor r=0
+ends _TU_REF_GEN
+// End of subcircuit definition.
+

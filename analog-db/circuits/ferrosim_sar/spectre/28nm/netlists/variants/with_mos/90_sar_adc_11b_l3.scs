@@ -1,0 +1,33 @@
+// Library name: SAR_11B_ZZS
+// Cell name: L3_SAR_11B
+// View name: schematic
+// Inherited view list: spectre cmos_sch cmos.sch schematic veriloga ahdl
+// pspice dspf
+subckt L3_SAR_11B_schematic CLKS DOUT\<11\> DOUT\<10\> DOUT\<9\> DOUT\<8\> \
+        DOUT\<7\> DOUT\<6\> DOUT\<5\> DOUT\<4\> DOUT\<3\> DOUT\<2\> \
+        DOUT\<1\> DOUT\<0\> RSTP TRIM_OS\<3\> TRIM_OS\<2\> TRIM_OS\<1\> \
+        TRIM_OS\<0\> VDD VIN VIP VREFN VREFP VSS
+    I_CMP (CMPCK DCMPN DCMPP LM LP TRIM_OS\<3\> TRIM_OS\<2\> TRIM_OS\<1\> \
+        TRIM_OS\<0\> VDD VTOPN VTOPP VSS) L4_COMPARATOR
+    I_LOGIC (CLKS CMPCK DCMPN DCMPP DCTRLN\<11\> DCTRLN\<10\> DCTRLN\<9\> \
+        DCTRLN\<8\> DCTRLN\<7\> DCTRLN\<6\> DCTRLN\<5\> DCTRLN\<4\> \
+        DCTRLN\<3\> DCTRLN\<2\> DCTRLN\<1\> DCTRLN\<0\> DCTRLP\<11\> \
+        DCTRLP\<10\> DCTRLP\<9\> DCTRLP\<8\> DCTRLP\<7\> DCTRLP\<6\> \
+        DCTRLP\<5\> DCTRLP\<4\> DCTRLP\<3\> DCTRLP\<2\> DCTRLP\<1\> \
+        DCTRLP\<0\> DOUT\<11\> DOUT\<10\> DOUT\<9\> DOUT\<8\> DOUT\<7\> \
+        DOUT\<6\> DOUT\<5\> DOUT\<4\> DOUT\<3\> DOUT\<2\> DOUT\<1\> \
+        DOUT\<0\> RSTP VBOTN\<11\> VBOTN\<10\> VBOTN\<9\> VBOTN\<8\> \
+        VBOTN\<7\> VBOTN\<6\> VBOTN\<5\> VBOTN\<4\> VBOTN\<3\> VBOTN\<2\> \
+        VBOTN\<1\> VBOTP\<11\> VBOTP\<10\> VBOTP\<9\> VBOTP\<8\> \
+        VBOTP\<7\> VBOTP\<6\> VBOTP\<5\> VBOTP\<4\> VBOTP\<3\> VBOTP\<2\> \
+        VBOTP\<1\> VDD VREFN VREFP VSS) L4_LOGIC_SWI
+    I_CDACP (VBOTP\<11\> VBOTP\<10\> VBOTP\<9\> VBOTP\<8\> VBOTP\<7\> \
+        VBOTP\<6\> VBOTP\<5\> VBOTP\<4\> VBOTP\<3\> VBOTP\<2\> VBOTP\<1\> \
+        VDD VBTSP VIP VIN VREFP VSS VTOPP) L4_CDAC
+    I_CDACN (VBOTN\<11\> VBOTN\<10\> VBOTN\<9\> VBOTN\<8\> VBOTN\<7\> \
+        VBOTN\<6\> VBOTN\<5\> VBOTN\<4\> VBOTN\<3\> VBOTN\<2\> VBOTN\<1\> \
+        VDD VBTSN VIN VIP VREFP VSS VTOPN) L4_CDAC
+    I7 (CLKS VBTSN VBTSP VDD VIN VIP VSS) L4_BTS_X2
+ends L3_SAR_11B_schematic
+// End of subcircuit definition.
+

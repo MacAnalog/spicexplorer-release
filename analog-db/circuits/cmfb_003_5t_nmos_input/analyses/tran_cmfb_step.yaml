@@ -1,0 +1,22 @@
+# Analysis binding (plan D-4). cmfb-class tran_cmfb_step on the real NMOS-input
+# member: +20 mV sensed-CM step (stays inside the ~[0.468, 0.561] active window;
+# 50 mV would compress the plateau), 50 fF load. step_delta_v must come out POSITIVE
+# (canonical polarity, time-domain cross-check of dc_cmfb_transfer's slope).
+schema: spicexplorer/analysis@1
+id: tran_cmfb_step
+template: tran_cmfb_step
+description: "Sensed-CM step: signed step_delta_v (~+0.2 V for 20 mV), ring_v, t_cm_settle into 50 fF."
+params:
+  VDD: 1.2
+  VCM: 0.5
+  CL: 50f
+  VSTEP: 20m
+  TSTEP1: 20u
+  TMID: 60u
+  TSTEP2: 80u
+  TEND: 150u
+  VTOL: 2m
+  TSTEP: 50n
+  TSTOP: 160u
+flags: []
+produces: [step_delta_v, ring_v, t_cm_settle]

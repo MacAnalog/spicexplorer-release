@@ -1,0 +1,17 @@
+simulator lang=spectre
+
+v_vss_ref (VSS 0) vsource dc=0 type=dc
+v_vdd_supply (VDD 0) vsource dc=VDD type=dc
+v_res_bot (RES_BOT 0) vsource dc=VCM type=dc
+v_res_top (RES_TOP 0) vsource dc=VCM+VTEST type=dc
+
+x_trim_encoder (TRIM_RES\<15\> TRIM_RES\<14\> TRIM_RES\<13\> TRIM_RES\<12\> \
+        TRIM_RES\<11\> TRIM_RES\<10\> TRIM_RES\<9\> TRIM_RES\<8\> \
+        TRIM_RES\<7\> TRIM_RES\<6\> TRIM_RES\<5\> TRIM_RES\<4\> \
+        TRIM_RES\<3\> TRIM_RES\<2\> TRIM_RES\<1\> TRIM_RES\<0\>) \
+        va_thermo_encoder_16 trim_code=TRIM_R vdd=VDD
+x_rtrim (RES_BOT RES_TOP TRIM_RES\<15\> TRIM_RES\<14\> TRIM_RES\<13\> \
+        TRIM_RES\<12\> TRIM_RES\<11\> TRIM_RES\<10\> TRIM_RES\<9\> \
+        TRIM_RES\<8\> TRIM_RES\<7\> TRIM_RES\<6\> TRIM_RES\<5\> \
+        TRIM_RES\<4\> TRIM_RES\<3\> TRIM_RES\<2\> TRIM_RES\<1\> \
+        TRIM_RES\<0\> VSS) res_trim_thermo_16

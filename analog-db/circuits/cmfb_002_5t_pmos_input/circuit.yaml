@@ -1,0 +1,44 @@
+schema: spicexplorer/circuit@1
+id: cmfb_002_5t_pmos_input
+class: cmfb
+tier: support
+realization: transistor
+display_name: Real 5T CMFB (PMOS-input error amp + resistive CM detector, canonical)
+stages: 1
+ports:
+- vinp
+- vinn
+- vcmfb
+- vref
+- vdd
+- vss
+provenance:
+  source: drawings/shared (hand-drawn xschem, cmfb-output-amp-5t-pmos-input.sym = vcm-detector-simple + amp-single-ended-5t-pmos-input)
+  paper: "Y.-P. Hsu, S.-L. Liu, M. M. Hella (SRMC bio-AFE context, TCAS-I 67(1) 2020) — the CMFB itself is an owner design replacing the drawn ideal servos"
+  aliases: [cmfb-output-amp-5t-pmos-input]
+  designer: "Noorizadeh (schematic); sizing: 2026-07-20 Nevergrad campaign (report §8)"
+  notes: >-
+    The first REAL (transistor-level) member of the cmfb class — the drop-in
+    replacement for the ideal CMFB macromodels (identical pin footprint; swapping a
+    consumer is a pure symbol-path change). CANONICAL polarity: PMOS pair puts the
+    sensed CM on the + input, vcmfb = A*(cm_sense - vref) — for INVERTING plants
+    (B5 rule; the -inv wiring variant for non-inverting plants exists in drawings/
+    shared as cmfb-output-amp-5t-pmos-input-inv, not separately accessioned: same
+    topology, swapped pair gates). Self-biased via an on-cell 2-diode string — the
+    block has NO bias pin, so composition needs no bias plumbing. Chosen (over the
+    NMOS-input flavor, cmfb_003) for the SRMC core consumer: its zero-error natural
+    output sits nearest the plant's actuator balance gates and its PMOS pair is
+    comfortable at the 0.5 V sensed CM. Rail-clamped by construction — in-loop CM
+    kicks recover with zero residual (vs the unclamped macromodel's basin escapes).
+    In-loop validation (sized amp_031 SRMC core, both loops real): CM errors
+    3.6/2.1 mV, diff 54.72 dB / 76.9 MHz / PM 58.9 deg, 116.4 uA total; consumer
+    drawing SRMC-core-amp-w-cmfb-5t.sch (SIZING_VALIDATION_REPORT.md §8).
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/cmfb-output-amp-5t-pmos-input.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+analyses: [dc_cmfb_transfer, ac_servo, tran_cmfb_step]
+pdks:
+- ihp-sg13g2
+status: draft

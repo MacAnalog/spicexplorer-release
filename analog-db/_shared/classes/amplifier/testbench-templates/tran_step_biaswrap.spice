@@ -1,0 +1,46 @@
+** AUTHORED TEMPLATE — amplifier/tran_step_biaswrap: unity-gain step settling for DUTs on the
+** AnalogGym self-bias convention (ports vss vdd vinn vinp vout; NO ibias port). Single-ended
+** companion of tran_step_diff (M4 follow-up). Unlike the AC/noise bias-wraps — which AC-open the
+** loop with Lfb/Cin — a settling measurement WANTS the real closed loop: wire the inverting input
+** directly to the output (unity-gain follower) and step the non-inverting input. Settle to the
+** FINAL output value, not the input step, so a systematic offset can't hold a fixed-tolerance band
+** open forever (see universal/tran_step for the rationale). These are compensated multistage OTAs,
+** designed stable in unity feedback.
+**
+** Assumes the AnalogGym canonical DUT port order (self-biased; NO ibias port):
+**   .subckt <id> vss vdd vinn vinp vout
+** Bindings: DUT VDD VCM CL VSTEP TSTART TSTEP TSTOP VTOL PDK_INCLUDE.
+** FIXED 2026-07-20: this template used to hardcode `X1 0 vdd opout_dc opin opout ${DUT}`,
+** which silently assumed the AnalogGym port order [vss vdd vinn vinp vout] and MIS-WIRED any
+** DUT declaring a different order (e.g. the amplifier-class [vdd vout vinp vinn vss] swaps
+** vdd<->vss). It now uses ${PORT_LINE} with canonical node names, exactly like the
+** *_biaswrap_ibias sibling. For the AnalogGym DUTs this is a no-op: their vss port binds to
+** node `vss`, which `Vss vss 0 dc 0` ties to ground just as the old direct-to-0 wiring did.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+.param VSTEP=${VSTEP}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+CLoad vout 0 {CL}
+Vinp vinp 0 dc {VCM} pulse({VCM} {VCM+VSTEP} ${TSTART} 1n 1n 1 1)
+Vfb  vinn vout dc 0          ; unity-gain feedback wire (vinn <- vout; 0 V source = ideal wire)
+
+${PORT_LINE} ${DUT}
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP}
+  * settle to the FINAL value, not the input step — a follower's systematic offset would
+  * otherwise keep |vout - vfinal| outside a tight tolerance band forever.
+  meas tran vfinal FIND v(vout) AT=${TSTOP}
+  let verr = abs(v(vout) - vfinal)
+  meas tran tcross WHEN verr=${VTOL} FALL=LAST
+  let t_settle = tcross - ${TSTART}
+  print t_settle
+  write
+  quit
+.endc
+.end

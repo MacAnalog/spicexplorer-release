@@ -1,0 +1,25 @@
+spicexplorer-netlist2xschem
+===========================
+
+This package is MIT-licensed, consistent with the rest of the SpiceXplorer platform.
+
+What it does
+------------
+
+Turns a SPICE netlist into an xschem schematic (`.sch`) and, when xschem is available, renders it to
+PNG/SVG. Devices are mapped to PDK / generic xschem symbols, placed on a grid, and wired by net-name
+label; no auto-router is used (v1 = correct & functional layout).
+
+Third-party dependencies (not vendored — installed from PyPI)
+-------------------------------------------------------------
+
+  * **pydantic** — typed I/O contract (`contract.py`), feeding the REST OpenAPI/TS codegen + MCP schemas.
+
+External tool (not a Python dependency)
+---------------------------------------
+
+  * **xschem** (https://xschem.sourceforge.io) — used at runtime by `render.py` to export an image
+    from a generated `.sch`. It is invoked as a headless CLI inside the EDA Docker image; it is never
+    vendored, and `render.py` degrades gracefully (returns the `.sch` without an image) when xschem is
+    absent. The vendored xschem symbol libraries (IHP `sg13g2_pr/*.sym` and the generic `devices/*.sym`)
+    live under the platform repo's `docker/` tree and ship under their own (Apache-2.0 / GPL) licenses.

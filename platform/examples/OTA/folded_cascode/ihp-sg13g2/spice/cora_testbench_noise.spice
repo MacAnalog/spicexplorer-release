@@ -1,0 +1,122 @@
+* Example folded cascode OTA testbench from CORA dataset
+*----------------------------------------------------------*
+* Parameter Definitions
+*----------------------------------------------------------*
+.param  x_dut_W_1 = 72u
+.param  x_dut_L_1 = 2u
+.param  x_dut_NG_1 = 8
+.param  x_dut_W_2 = 106.5u
+.param  x_dut_L_2 = 2u
+.param  x_dut_NG_2 = 11
+.param  x_dut_W_3 = 44u
+.param  x_dut_L_3 = 2.5u
+.param  x_dut_NG_3 = 5
+.param  x_dut_W_4 = 78u
+.param  x_dut_L_4 = 2u
+.param  x_dut_NG_4 = 8
+.param  x_dut_W_5 = 183u
+.param  x_dut_L_5 = 4.5u
+.param  x_dut_NG_5 = 19
+.param  x_dut_W_6 = 50u
+.param  x_dut_L_6 = 3u
+.param  x_dut_NG_6 = 5
+.param  x_dut_W_7 = 50u
+.param  x_dut_L_7 = 3u
+.param  x_dut_NG_7 = 5
+
+.param x_dut_IB = 34u
+.param VCM = 900m
+.param VDD = 1.8
+.param x_dut_Vb1 = 1.225
+.param x_dut_Vb2 = 1.275
+.param CL = 5p
+.param temp = 27
+
+
+*----------------------------------------------------------*
+.option reltol=1e-5 + abstol=1e-14
+.options savecurrents
+*----------------------------------------------------------*
+* Control Block
+*----------------------------------------------------------*
+.control
+  echo ==================================
+  echo start of Control
+  echo ==================================
+
+  set filetype=ascii
+  set wr_singlescale
+  option numdgt = 3
+  * reset
+
+  echo
+  echo (C) start of Noise sim
+  echo ----------------------------------
+
+  noise v(out) V3 lin 1000 1MEG 1000MEG 1
+  echo SAVING SIMULATION RESULTS IN THE RAW FILE  
+  echo NOISE 1 saving the Integrated Noise
+  setplot noise1
+  remzerovec
+  write
+
+  echo NOISE 2 saving the Noise Spectral Density Curves
+  setplot noise2 
+  remzerovec
+  write
+
+  echo ----------------------------------
+  echo END of Noise sim
+  echo  ----------------------------------
+ 
+
+  echo ==================================
+  echo END of Control
+  echo ==================================
+  quit 
+  * ^ This is needed for spicelib (uncommented)
+.endc
+*----------------------------------------------------------*
+
+* Subcircuit Definition
+*----------------------------------------------------------*
+
+.subckt opamp vin- vin+ vout vdd ib vss
+
+XM4 net6 net2 vss vss sg13_lv_nmos w= x_dut_W_2 l= x_dut_L_2 ng= x_dut_NG_2 m=1
+XM1 net1 vin+ net7 vdd sg13_lv_pmos w= x_dut_W_1 l= x_dut_L_1 ng= x_dut_NG_1 m=1
+XM2 net1 vin- net6 vdd sg13_lv_pmos w= x_dut_W_1 l= x_dut_L_1 ng= x_dut_NG_1 m=1
+XM3 net7 net2 vss vss sg13_lv_nmos w= x_dut_W_2 l= x_dut_L_2 ng= x_dut_NG_2 m=1
+XM11 vdd ib ib vdd sg13_lv_pmos w= x_dut_W_6 l= x_dut_L_6 ng= x_dut_NG_6 m=1
+XM0 vdd ib net1 vdd sg13_lv_pmos w= x_dut_W_6 l= x_dut_L_6 ng= x_dut_NG_6 m=1
+XM6 vout vb1 net6 vss sg13_lv_nmos w= x_dut_W_3 l= x_dut_L_3 ng= x_dut_NG_3 m=1
+XM5 net3 vb1 net7 vss sg13_lv_nmos w= x_dut_W_3 l= x_dut_L_3 ng= x_dut_NG_3 m=1
+XM7 net5 vb2 net3 vdd sg13_lv_pmos w= x_dut_W_4 l= x_dut_L_4 ng= x_dut_NG_4 m=1
+XM8 net4 vb2 vout vdd sg13_lv_pmos w= x_dut_W_4 l= x_dut_L_4 ng= x_dut_NG_4 m=1
+XM9 vdd net3 net5 vdd sg13_lv_pmos w= x_dut_W_5 l= x_dut_L_5 ng= x_dut_NG_5 m=1
+XM10 vdd net3 net4 vdd sg13_lv_pmos w= x_dut_W_5 l= x_dut_L_5 ng= x_dut_NG_5 m=1
+XM12 vdd ib net2 vdd sg13_lv_pmos w= x_dut_W_7 l= x_dut_L_7 ng= x_dut_NG_7 m=1
+XM13 net2 net2 vss vss sg13_lv_nmos w= x_dut_W_2 l= x_dut_L_2 ng= x_dut_NG_2 m=1
+V1 vb1 vss x_dut_Vb1
+V2 vb2 vss x_dut_Vb2
+.ends
+
+*----------------------------------------------------------*
+
+* Technology Library
+*----------------------------------------------------------*
+.lib cornerMOSlv.lib mos_tt
+
+
+* Testbench
+*----------------------------------------------------------*
+V1 vdd GND VDD
+C2 out GND CL m=1
+V3 vin+ vin- 0 ac 1 0
+V2 vin- GND VCM
+x1 vin- vin+ out vdd ib GND opamp
+I0 ib GND x_dut_IB
+* .subckt opamp vin- vin+ vout vdd ib vss
+* .ends
+.GLOBAL GND
+.end

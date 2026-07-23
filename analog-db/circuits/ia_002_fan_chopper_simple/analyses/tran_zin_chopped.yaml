@@ -1,0 +1,22 @@
+# Analysis binding: CHOPPED differential input impedance — the impedance the CCIA
+# presents in operation (every chop transition recharges Cin from the source; Fan:
+# Zin ~ 1/(2*f_chop*Cin)). Registry chopper default FCHOP = 5 kHz. Window = 3 settled
+# integer chop periods; TMAX resolves the TG switching (see the template header).
+schema: spicexplorer/analysis@1
+id: tran_zin_chopped
+template: tran_zin_chopped
+description: "Chopped |Zin| from the average input current under running clocks."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 50f
+  VZ: 10m
+  FCHOP: 5k
+  TEDGE: 50n
+  W0: 0.4m
+  W1: 1m
+  TSTEP: 1u
+  TSTOP: 1m
+  TMAX: 200n
+flags: []
+produces: [zin_chop_ohm]

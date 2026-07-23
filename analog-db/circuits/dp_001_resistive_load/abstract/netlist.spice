@@ -1,0 +1,16 @@
+** Abstract resistively-loaded NMOS differential pair with a current-mirror tail.
+** AUTHORED source of truth (plan D-2). PDK-neutral model tokens (nmos + ideal R loads); per-PDK
+** device names + geometry come from circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vdd voutp voutn vinp vinn ibias vss
+**
+** XMP/XMN = NMOS input pair (common tail node). RP/RN = ideal resistor loads to vdd. XMT/XMR =
+** NMOS current mirror: XMR is the diode-connected reference (external Ibias into the `ibias` port),
+** XMT mirrors that into the pair's tail. Anchoring the tail on a detected mirror makes the diff
+** pair itself detectable (find_subcircuits reports a pair only when its tail is mirror-biased).
+XMP voutp vinp tail vss nmos w=x_dut_xmp_w   l=x_dut_xmp_l   m=x_dut_xmp_m
+XMN voutn vinn tail vss nmos w=x_dut_xmn_w   l=x_dut_xmn_l   m=x_dut_xmn_m
+RP  vdd voutp r=x_dut_rp_value
+RN  vdd voutn r=x_dut_rn_value
+XMT tail  ibias vss vss nmos w=x_dut_xmt_w l=x_dut_xmt_l m=x_dut_xmt_m
+XMR ibias ibias vss vss nmos w=x_dut_xmr_w  l=x_dut_xmr_l m=x_dut_xmr_m
+.end

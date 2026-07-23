@@ -1,0 +1,56 @@
+// Bottom-plate sampling linearity TB: ideal relay+vcvs bootstrap.
+
+simulator lang=spectre
+global 0
+
+parameters VDD=900m Vcm=450m A=225m CL=2p M_IN=1 M_VCM=1
+parameters N_delay=10 N_extra=2 N=256 Fs=500M k=97
+parameters t_delay=(N_delay/Fs) t_start=(t_delay + (1/Fs/2))
+parameters t_end=(t_start + ((N + N_extra)/Fs)) Fin=((k/N)*Fs)
+
+include "${PDK_ROOT}/models/spectre/toplevel_modified.scs" section=top_tt
+include "../../common/stdcell_netlist/tcbn28hpcplusbwp12t30p140lvt_170a.spi"
+include "bootstrap.scs"
+include "bottom_plate_dut.scs"
+
+subckt TB_CLOCKS CLKS CLKSE VDDC VSSC
+    V_CLKS_IN (NET2 0) vsource dc=VDD type=pulse val0=0 val1=VDD period=1/Fs \
+        delay=t_delay+50p rise=10p fall=10p width=1/4/Fs-50p
+    V_CLKSE_IN (NET4 0) vsource dc=VDD type=pulse val0=0 val1=VDD period=1/Fs \
+        delay=t_delay+50p rise=10p fall=10p width=1/4/Fs-100p
+    I_CLKS_INV0 (NET2 AMPB VDDC VSSC) INVD32BWP12T30P140LVT
+    I_CLKS_INV1 (AMPB CLKS VDDC VSSC) INVD32BWP12T30P140LVT
+    I_CLKSE_INV0 (NET4 NET3 VDDC VSSC) INVD32BWP12T30P140LVT
+    I_CLKSE_INV1 (NET3 CLKSE VDDC VSSC) INVD32BWP12T30P140LVT
+ends TB_CLOCKS
+
+V_VCM (VCM 0) vsource dc=Vcm type=dc
+V_VSSC (VSSC 0) vsource dc=0 type=dc
+V_VDDC (VDDC 0) vsource dc=VDD type=dc
+V_VSSBTS (VSSBTS 0) vsource dc=0 type=dc
+V_VDDBTS (VDDBTS 0) vsource dc=VDD type=dc
+V_INN (VINN 0) vsource dc=Vcm type=sine sinedc=Vcm ampl=A sinephase=180 freq=Fin
+V_INP (VINP 0) vsource dc=Vcm type=sine sinedc=Vcm ampl=A freq=Fin
+
+I_CLK (CLKS CLKSE VDDC VSSC) TB_CLOCKS
+I_BTS_CM (VG VSSBTS CLKSE VDDBTS VCM) LB_BOOTSTRAPPER_IDEAL
+I_BTS_N (VGN VSSBTS CLKS VDDBTS VINN) LB_BOOTSTRAPPER_IDEAL
+I_BTS_P (VGP VSSBTS CLKS VDDBTS VINP) LB_BOOTSTRAPPER_IDEAL
+I_DUT (VSP VSN VTOPP VTOPN VGP VGN VG VCM VINP VINN 0) BOTTOM_PLATE_SAMPLER
+
+simulatorOptions options psfversion="1.4.0" reltol=1e-3 vabstol=1e-6 \
+    iabstol=1e-12 temp=27 tnom=27 scalem=1.0 scale=1.0 gmin=1e-12 rforce=1 \
+    maxnotes=5 maxwarns=5 digits=5 cols=80 pivrel=1e-3 checklimitdest=psf
+tran tran stop=t_end errpreset=conservative maxstep=50p write="spectre.ic" \
+    writefinal="spectre.fc" annotate=status save=selected flushtime=30 \
+    skipstart=t_start strobeperiod=1/Fs strobeoutput=strobeonly maxiters=5
+finalTimeOP info what=oppoint where=rawfile
+modelParameter info what=models where=rawfile
+element info what=inst where=rawfile
+outputParameter info what=output where=rawfile
+designParamVals info what=parameters where=rawfile
+primitives info what=primitives where=rawfile
+subckts info what=subckts where=rawfile
+save CLKS CLKSE VINP VINN VCM VSP VSN VTOPP VTOPN VGP VGN VG
+save I_DUT.M_P:gds I_DUT.M_N:gds
+saveOptions options save=selected

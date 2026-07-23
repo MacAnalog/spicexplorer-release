@@ -1,0 +1,33 @@
+** AUTHORED TEMPLATE — diff_pair/gain_dc (plan D-4): differential DC gain of a differential pair.
+** Sweeps the differential input vid about the common-mode (vinp = vcm + vid/2, vinn = vcm - vid/2
+** via VCVSs) and extracts the small-signal differential gain d(voutp-voutn)/d(vid) from a two-point
+** slope across vid=0. Bindings: DUT PORT_LINE VDD VCM IBIAS, VID_LO VID_HI VID_STEP, PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+
+Vdd   vdd 0 dc {VDD}
+Vss   vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+Vcm   vcm 0 dc {VCM}
+Vid   vid 0 dc 0
+Einp  vinp vcm vid 0 0.5
+Einn  vinn vcm vid 0 -0.5
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  dc Vid ${VID_LO} ${VID_HI} ${VID_STEP}
+  let vdiff = v(voutp) - v(voutn)
+  meas dc vd_lo FIND vdiff AT=-0.01
+  meas dc vd_hi FIND vdiff AT=0.01
+  * magnitude of the differential gain (the pair is inverting in the p-minus-n convention)
+  let gain_dc = abs((vd_hi - vd_lo) / 0.02)
+  print gain_dc
+  write
+  quit
+.endc
+.end

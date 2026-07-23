@@ -1,0 +1,21 @@
+# CCIA-class datasheet defaults (plan D-10). A circuit's datasheet.yaml inherits
+# these unless it overrides them. Illustrative analog defaults — tune per design.
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  cload:  {unit: fF, typical: 50}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+  vcm:    {unit: V, typical: 0.6}     # servo-set input common mode (mid-rail)
+# Canonical extract/spec hints reused across CCIA datasheets. A circuit's
+# datasheet.metrics entry may copy + specialise any of these.
+metric_hints:
+  gain_cl:     {analysis: ac_closed_loop, unit: V/V}
+  gain_cl_db:  {analysis: ac_closed_loop, unit: dB}
+  bw_cl_hz:    {analysis: ac_closed_loop, unit: Hz}
+  hpf_hz:      {analysis: ac_closed_loop, unit: Hz}
+  cmrr_db:     {analysis: cmrr_vcm, unit: dB}
+  psrr_vdd_db: {analysis: psrr_vdd, unit: dB}
+  vn_in:       {analysis: noise, unit: "V/sqrt(Hz)"}
+  t_settle:    {analysis: tran_step, unit: s}
+  slew_rate:   {analysis: tran_step, unit: "V/s"}
+  i_supply:    {analysis: dc_op, unit: A}

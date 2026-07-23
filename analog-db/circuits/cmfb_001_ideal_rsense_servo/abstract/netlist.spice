@@ -1,0 +1,45 @@
+** Abstract output-CMFB servo — behavioral fully-differential amplifier comparing a
+** resistively-sensed output common mode against vref and serving the correction
+** voltage vcmfb; the CMFB block around the class-AB output stage of Hsu's bandpass
+** CCIA (see provenance in circuit.yaml). AUTHORED source of truth (plan D-2).
+** PDK-neutral: the only PDK-mappable devices are the two sense resistors; the
+** amplifier is a G/R/C macromodel leaf (realization: behavioral).
+** Subckt port order (= circuit.yaml ports): vinp vinn vcmfb vref vdd vss
+**
+** Topology (hand-flattened from drawings/ccia-01-YuPinHsu-bandpass-class-ab-output/
+** simulation/ccia-dut.spice, subckt cmfb-output-ideal-amp = x1 ideal-amp-fully-diff
+** + x2 vcm-detector-simple):
+**   sense — Rmp/Rmn resistive averager from the amplifier outputs vinp/vinn to the
+**     common-mode sense node cm_sense (the drawing's net1); Rin/Cin of the
+**     macromodel load the sense node against vref.
+**   servo — Gm_servo (VCCS) drives vcmfb from v(vref, cm_sense) into the
+**     Rout_servo/Cout_servo self-load: vcmfb = A*(vref - cm_sense), i.e. the
+**     servo OPPOSES a CM error (sensed CM above vref pulls vcmfb down); DC path
+**     gain gm*rout, dominant pole at 1/(2*pi*rout*(cout+CL)).
+**   deviations from the drawing: none electrically. The servo polarity MATCHES
+**     the FIXED drawing (DRAWING_REVIEW item 3 FIXED: owner re-routed
+**     cmfb-output-ideal-amp so vref drives the + input and the CM detector the
+**     - input); the macromodel's voutn output is tied to vss AS DRAWN
+**     (single-ended use of the differential leaf — only voutp=vcmfb serves;
+**     the drawing keeps that rest node too — ia_001 instead rests it at
+**     vcmfb_ref, an entry-level choice there). The leaf's value symbols
+**     gm_val/rout_val/rin_val/cout_val/cin_val MATCH the drawing (normalized
+**     at source, DRAWING_REVIEW item 5); net1 renamed cm_sense. vdd is a
+**     no-connect as drawn (the macromodel leaf has no supply pins; the drawn
+**     leaf marks VDD/VSS noconn). Baseline parameter sets for this leaf live
+**     in _shared/IDEAL_AMP.md — this entry's defaults are the gain-1000
+**     ideal-ota values (with a 100f cout); the servo-grade baseline
+**     (gain 10, rout 100k) is the recommended alternative for composed CM loops.
+**.subckt cmfb_001_ideal_rsense_servo vinp vinn vcmfb vref vdd vss
+* --- behavioral servo amplifier (ideal-amp-fully-diff leaf; voutn -> vss as drawn;
+* --- control pair (vref, cm_sense) = the fixed drawing's +/- hookup) ---
+Gm_servo vss vcmfb vref cm_sense {gm_val}
+Rout_servo vss vcmfb 'rout_val'
+Cout_servo vss vcmfb 'cout_val'
+Rin_servo cm_sense vref 'rin_val'
+Cin_servo cm_sense vref 'cin_val'
+* --- resistive common-mode detector (vcm-detector-simple leaf) ---
+Rmp cm_sense vinp 'x_dut_rmp_value'
+Rmn vinn cm_sense 'x_dut_rmn_value'
+**.ends
+.end

@@ -1,0 +1,51 @@
+** Abstract AnalogGym Basic_LDO — verbatim transcription of CODA-Team/AnalogGym's
+** "Low Dropout Regulator/spice_netlist/LDO_netlist.txt" (BSD-3-Clause; sky130-native, the LDO
+** used by the AnalogGym RGNN_RL example). Two-stage: PMOS bias-mirror rail (xm0 diode + 6
+** mirrors), PMOS input pair (xm8/xm9) into a cascoded NMOS load (vb3/vb4 self-biased rails),
+** a pfet gm2 stage (xm10) riding the pass-gate node, the power PMOS (xm11), an internal
+** r_top/r_bot feedback divider and a Miller cap c_comp (upstream: mim-cap XC0, M_C0=34).
+** 3-port wrap per the LDO class: the upstream external pins fold in as
+**   vinn -> internal ideal Vref, vinp -> tied to the divider tap vfb (upstream TB ties them via
+**   a 1T inductor), Ib -> internal ideal bias sink (upstream i0/current_0_bias).
+** Upstream role-encoded design-variable names + m-multiplier arithmetic preserved (fan_smc style).
+**.subckt ldo_001_analoggym_basic vdd vout vss
+** PMOS bias-mirror rail (gates on ib)
+xm0  ib    ib    vdd vdd pmos l=x_dut_xm0_l w=x_dut_xm0_w m=x_dut_xm0_m
+xm1  vb4   ib    vdd vdd pmos l=x_dut_xm1_l w=x_dut_xm1_w m=x_dut_xm1_m
+xm2  dm_1  ib    vdd vdd pmos l=x_dut_xm2_l w=x_dut_xm2_w m=x_dut_xm2_m
+xm3  vb3   ib    vdd vdd pmos l=x_dut_xm3_l w=x_dut_xm3_w m=x_dut_xm3_m
+xm4  net20 ib    vdd vdd pmos l=x_dut_xm4_l w=x_dut_xm4_w m=x_dut_xm4_m
+xm7  net7  ib    vdd vdd pmos l=x_dut_xm7_l w=x_dut_xm7_w m=x_dut_xm7_m
+xm24 net1  ib    vdd vdd pmos l=x_dut_xm24_l w=x_dut_xm24_w m=x_dut_xm24_m
+** PMOS mirror pair off the first-stage output (voutn)
+xm5  voutn voutn vdd vdd pmos l=x_dut_xm5_l w=x_dut_xm5_w m=x_dut_xm5_m
+xm6  net10 voutn vdd vdd pmos l=x_dut_xm6_l w=x_dut_xm6_w m=x_dut_xm6_m
+** input pair (upstream: xm8 g=vinp -> vfb tie, xm9 g=vinn -> internal vref)
+xm8  dm_2   vfb  net20 net20 pmos l=x_dut_xm8_l w=x_dut_xm8_w m=x_dut_xm8_m
+xm9  net106 vref net20 net20 pmos l=x_dut_xm9_l w=x_dut_xm9_w m=x_dut_xm9_m
+** gm2 stage (upstream pfet_01v8_lvt — generic pmos token here; see README)
+xm10 net12 net10 net1 net1 pmos l=x_dut_xm10_l w=x_dut_xm10_w m=x_dut_xm10_m
+** power pass device
+xm11 vout net1 vdd vdd pmos l=x_dut_xm11_l w=x_dut_xm11_w m=x_dut_xm11_m
+** cascoded NMOS load / bias rails (vb3 = diode, vb4 = mirrored cascode feet)
+xm14 vb3    vb3 vss    vss nmos l=x_dut_xm14_l w=x_dut_xm14_w m=x_dut_xm14_m
+xm12 vb4    vb3 net28  vss nmos l=x_dut_xm12_l w=x_dut_xm12_w m=x_dut_xm12_m
+xm13 dm_1   vb3 net31  vss nmos l=x_dut_xm13_l w=x_dut_xm13_w m=x_dut_xm13_m
+xm15 voutn  vb3 dm_2   vss nmos l=x_dut_xm15_l w=x_dut_xm15_w m=x_dut_xm15_m
+xm16 net10  vb3 net106 vss nmos l=x_dut_xm16_l w=x_dut_xm16_w m=x_dut_xm16_m
+xm17 net28  vb4 vss    vss nmos l=x_dut_xm17_l w=x_dut_xm17_w m=x_dut_xm17_m
+xm18 net31  vb4 vss    vss nmos l=x_dut_xm18_l w=x_dut_xm18_w m=x_dut_xm18_m
+xm19 dm_2   vb4 vss    vss nmos l=x_dut_xm19_l w=x_dut_xm19_w m=x_dut_xm19_m
+xm20 net106 vb4 vss    vss nmos l=x_dut_xm20_l w=x_dut_xm20_w m=x_dut_xm20_m
+** second-stage NMOS load mirror
+xm21 net12 net7 vss vss nmos l=x_dut_xm21_l w=x_dut_xm21_w m=x_dut_xm21_m
+xm22 net7  net7 vss vss nmos l=x_dut_xm22_l w=x_dut_xm22_w m=x_dut_xm22_m
+** feedback divider + Miller compensation (upstream r1/r0 + mim XC0)
+R1 vout vfb 'r_top'
+R2 vfb  vss 'r_bot'
+C0 net106 vout 'c_comp'
+** internal ideal reference + bias (3-port fold of upstream vinn / Ib pins)
+Vref  vref vss dc {vref_val}
+Ibias ib   vss dc {i_bias}
+**.ends
+.end

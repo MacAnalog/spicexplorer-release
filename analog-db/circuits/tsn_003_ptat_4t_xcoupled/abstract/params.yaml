@@ -1,0 +1,23 @@
+# tsn_003_ptat_4t_xcoupled — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit tsn_003_ptat_4t_xcoupled --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  XM0: {l: x_dut_xm0_l, m: x_dut_xm0_m, w: x_dut_xm0_w}
+  XM1: {l: x_dut_xm1_l, m: x_dut_xm1_m, w: x_dut_xm1_w}
+  XM3: {l: x_dut_xm3_l, m: x_dut_xm3_m, w: x_dut_xm3_w}
+  XM4: {l: x_dut_xm4_l, m: x_dut_xm4_m, w: x_dut_xm4_w}
+groups:
+- name: mirror_xm1_l
+  kind: mirror_length
+  members: [XM1, XM0]
+  tie: [l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_n_l (l).'
+- name: mirror_xm3_w_l
+  kind: mirror_length
+  members: [XM3, XM4]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_p_w (w), x_p_l
+    (l).'

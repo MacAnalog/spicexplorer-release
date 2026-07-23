@@ -1,0 +1,84 @@
+schema: spicexplorer/datasheet@1
+cace_format: '5.2'
+default_conditions:
+  supply:
+    unit: V
+    typical: 1.5
+  vcm:
+    unit: V
+    typical: 0.9
+  cload:
+    unit: fF
+    typical: 500
+  corner:
+    typical: tt
+  temp:
+    unit: degC
+    typical: 27
+metrics:
+  dc_gain_db:
+    display: DC open-loop differential gain
+    description: Differential DC gain, db(voutp - voutn).
+    unit: dB
+    analysis: ac_open_loop
+    extract:
+      meas: dcgain
+    spec:
+      min: 50
+      unit: dB
+  ugf_hz:
+    display: Unity-gain frequency
+    unit: Hz
+    analysis: ac_open_loop
+    extract:
+      meas: ugf
+    spec:
+      unit: Hz
+      min: 5000000.0
+  pm_deg:
+    display: Phase margin
+    unit: deg
+    analysis: ac_open_loop
+    extract:
+      meas: pm
+    spec:
+      unit: deg
+      min: 60.0
+      max: 90
+  vos:
+    display: Output offset (voutp - voutn, matched inputs)
+    description: The residual of the RC-CMFB servo at matched DC inputs.
+    unit: V
+    analysis: dc_op
+    extract:
+      meas: vos
+    spec:
+      max: 0.05
+      unit: V
+  i_supply:
+    display: Supply current
+    unit: A
+    analysis: dc_op
+    extract:
+      meas: i_supply
+    spec:
+      max: 0.001
+      unit: A
+  vn_in:
+    display: Input-referred noise
+    unit: V/sqrt(Hz)
+    analysis: noise
+    extract:
+      meas: inoise_total
+    spec:
+      max: 0.001
+      unit: V/sqrt(Hz)
+  t_settle:
+    display: Unity-gain differential step settling (0.2 V)
+    unit: s
+    analysis: tran_step
+    extract:
+      meas: t_settle
+    spec:
+      max: 2.0e-06
+      unit: s

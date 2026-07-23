@@ -1,0 +1,6 @@
+# Generic device kind -> ihp-sg13g2 device name. Passives (R/C) stay ideal (pass-through).
+# The built-in circuitgraph default per polarity is exactly right for this topology.
+pdk: ihp-sg13g2
+devices:
+  nmos: {model: sg13_lv_nmos}
+  pmos: {model: sg13_lv_pmos}

@@ -1,0 +1,20 @@
+** Abstract resistive common-mode detector — two matched resistors averaging the OTA
+** output pair onto a single sense node (vcm_out = (vinp+vinn)/2 into a high-Z load).
+** The CM-sense leaf of Hsu's bandpass CCIA class-AB output stage (see provenance in
+** circuit.yaml). AUTHORED source of truth (plan D-2). Passive-only and FLOATING: no
+** supply ports — the bench's vdd/vss sources are simply unused (plan S4.2 support tier).
+** Subckt port order (= circuit.yaml ports): vcm_out vinp vinn
+**
+** Topology (from drawings/ccia-01-YuPinHsu-bandpass-class-ab-output/
+** vcm-detector-simple.sch, normalized here after xschem netlisting):
+**   Rmp vinp -> vcm_out and Rmn vcm_out -> vinn, equal value Rm: the classic
+**   resistive CM averager. Matching sets the CM sense error; absolute value only
+**   sets the loading on the driving OTA outputs (keep high-R).
+**   deviation from the drawing: none electrically; net vcm renamed vcm_out and the
+**     drawn symbol Rm (no value carried) becomes the per-instance value knobs
+**     x_dut_rmp_value / x_dut_rmn_value (tied in abstract/params.yaml).
+**.subckt sup_001_vcm_detector vcm_out vinp vinn
+Rmp vcm_out vinp 'x_dut_rmp_value'
+Rmn vinn vcm_out 'x_dut_rmn_value'
+**.ends
+.end

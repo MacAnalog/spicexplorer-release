@@ -1,0 +1,18 @@
+// Interactive.13 preserved-MOS-parameter SAR ADC with sampling-reference BTS.
+// Only the L4_BTS_X2 implementation is swapped.
+
+include "variants/with_mos/00_corner_and_models.scs"
+include "variants/with_mos/10_refgen_ideal.scs"
+include "variants/with_mos/20_comparator_dynamic_l4.scs"
+include "variants/with_mos/30_bottom_plate_switch_l5.scs"
+include "variants/with_mos/40_sar_latch_cell_l5.scs"
+include "variants/with_mos/41_sar_latch_lsb_l5.scs"
+include "variants/with_mos/42_sar_logic_switch_l4.scs"
+include "variants/with_mos/50_cap_unit_x1.scs"
+include "variants/with_mos/51_cap_unit_x3.scs"
+include "variants/with_mos/52_cap_array_l5.scs"
+include "variants/with_mos/53_cdac_sampler_l4.scs"
+include "../../sampling_bootstrap_linearity/netlists/bootstrap.scs"
+include "sampling_bootstrap_l4_bts_x2.scs"
+include "variants/with_mos/90_sar_adc_11b_l3.scs"
+include "variants/with_mos/99_tb_sar_adc_11b_interactive13.scs"

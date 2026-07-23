@@ -1,0 +1,31 @@
+// Ported lfsr8 — real TSMC28 std cells, VDD 0.9V. Function: 8-bit LFSR state sequences on CLK.
+simulator lang=spectre
+global 0
+include "../common/stdcell_netlist/tcbn28hpcplusbwp12t30p140_170a.spi"
+
+simulator lang=spectre
+
+subckt lfsr8 CLK_IN RST STATE\<7\> STATE\<6\> STATE\<5\> STATE\<4\> STATE\<3\> STATE\<2\> STATE\<1\> STATE\<0\> VDD VSS
+reset_inv (RST reset_n VDD VSS) CKND0BWP12T30P140
+fb_xor0 (STATE\<7\> STATE\<5\> VSS fb_xor0 VDD VSS) IAO21D1BWP12T30P140
+fb_xor1 (fb_xor0 STATE\<4\> VSS fb_xor1 VDD VSS) IAO21D1BWP12T30P140
+fb_xor2 (fb_xor1 STATE\<3\> VSS fb_xor2 VDD VSS) IAO21D1BWP12T30P140
+feedback_inv (fb_xor2 feedback_xnor VDD VSS) INVD1BWP12T30P140
+bit0_reg (feedback_xnor CLK_IN reset_n STATE\<0\> VDD VSS) DFCNQD1BWP12T30P140
+bit1_reg (STATE\<0\> CLK_IN reset_n STATE\<1\> VDD VSS) DFCNQD1BWP12T30P140
+bit2_reg (STATE\<1\> CLK_IN reset_n STATE\<2\> VDD VSS) DFCNQD1BWP12T30P140
+bit3_reg (STATE\<2\> CLK_IN reset_n STATE\<3\> VDD VSS) DFCNQD1BWP12T30P140
+bit4_reg (STATE\<3\> CLK_IN reset_n STATE\<4\> VDD VSS) DFCNQD1BWP12T30P140
+bit5_reg (STATE\<4\> CLK_IN reset_n STATE\<5\> VDD VSS) DFCNQD1BWP12T30P140
+bit6_reg (STATE\<5\> CLK_IN reset_n STATE\<6\> VDD VSS) DFCNQD1BWP12T30P140
+bit7_reg (STATE\<6\> CLK_IN reset_n STATE\<7\> VDD VSS) DFCNQD1BWP12T30P140
+ends lfsr8
+
+v_vdd (VDD 0) vsource dc=0.9 type=dc
+v_clk (CLK_IN 0) vsource type=pulse val0=0 val1=0.9 delay=2n rise=50p fall=50p width=0.45n period=1n
+v_rst (RST 0) vsource type=pulse val0=0.9 val1=0 delay=1.5n rise=50p fall=50p width=100n period=200n
+x_dut (CLK_IN RST STATE\<7\> STATE\<6\> STATE\<5\> STATE\<4\> STATE\<3\> STATE\<2\> STATE\<1\> STATE\<0\> VDD 0) lfsr8
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+tr tran stop=12n errpreset=conservative
+save STATE\<0\> STATE\<1\> STATE\<2\> STATE\<3\> STATE\<7\>
+saveOptions options save=selected

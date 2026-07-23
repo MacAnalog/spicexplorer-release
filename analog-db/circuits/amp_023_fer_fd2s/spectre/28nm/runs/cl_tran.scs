@@ -1,0 +1,20 @@
+// Closed-loop transient: differential step (slew rate, settling) and
+// common-mode disturbance recovery (CMFB loop stability check).
+simulator lang=spectre
+global 0
+parameters VSUP=0.9 VCM=0.45 IB=20u CL=1p RFB=20k vstep=0.2
+
+include "${PDK_ROOT}/models/spectre/toplevel.scs" section=TOP_TT
+include "ota_fd2s.scs"
+include "tb_closedloop.scs"
+
+simulatorOptions options psfversion="1.4.0" temp=27 tnom=27 scalem=1.0 \
+    scale=1.0 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 digits=5 cols=80 \
+    pivrel=1e-3 checklimitdest=psf
+
+dcOp dc maxiters=150 maxsteps=10000 annotate=status
+
+tran tran stop=350n errpreset=conservative maxstep=50p annotate=status
+
+save OUTP OUTN INP INN srcp srcn v_vdd:p x_ota.vcmfb x_ota.vsen
+saveOptions options save=selected

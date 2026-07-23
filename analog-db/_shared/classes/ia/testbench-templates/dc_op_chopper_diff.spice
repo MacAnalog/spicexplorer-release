@@ -1,0 +1,46 @@
+** AUTHORED TEMPLATE — ia/dc_op_chopper_diff (plan_hierarchical_composition P3).
+** DC operating point for a chopper-subfamily IA with every chopper clock HELD in the
+** transparent state (clk high / clk_not low): the network freezes to its
+** straight-through configuration, giving a defined OP for i_supply / vos / vocm.
+** (The clocked figures — ripple, residual offset, chopped gain — belong to
+** tran_chopper_ripple; this bench only anchors the static bias point.)
+**
+** Assumes the chopper-IA port convention (extra driven clock nets are harmless):
+**   .subckt <id> vinp vinn voutp voutn vref clk_chin clk_chin_not clk_chfb clk_chfb_not
+**                clk_chout clk_chout_not [clk_chpf clk_chpf_not] vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vref vref 0 dc {VCM}
+Vcm  vcm 0 dc {VCM}
+Vinp vinp vcm dc 0
+Vinn vinn vcm dc 0
+
+* clocks held transparent
+Vck_in_a  clk_chin      0 dc {VDD}
+Vck_in_b  clk_chin_not  0 dc 0
+Vck_fb_a  clk_chfb      0 dc {VDD}
+Vck_fb_b  clk_chfb_not  0 dc 0
+Vck_out_a clk_chout     0 dc {VDD}
+Vck_out_b clk_chout_not 0 dc 0
+Vck_pf_a  clk_chpf      0 dc {VDD}
+Vck_pf_b  clk_chpf_not  0 dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  let vos = v(voutp) - v(voutn)
+  let vocm = (v(voutp) + v(voutn))/2
+  print i_supply vos vocm
+  write
+  quit
+.endc
+.end

@@ -1,0 +1,17 @@
+// 65nm port — bare nch/pch, VDD 1.2V. // Ported from circuit-bench differential-pair (R-loaded NMOS diff pair).
+// Topology preserved; devices -> TSMC28 nch, VDD 1.0V, L 180n->150n.
+simulator lang=spectre
+global 0
+parameters vcm=0.6 vid=0
+v_vdd (VDD 0) vsource dc=1.2 type=dc
+v_inp (INP 0) vsource dc=vcm+vid/2 type=dc
+v_inn (INN 0) vsource dc=vcm-vid/2 type=dc
+RP (VDD OUTP) resistor r=22k
+RN (VDD OUTN) resistor r=22k
+MP (OUTP INP TAIL 0) nch l=150n w=12u multi=1 nf=6
+MN (OUTN INN TAIL 0) nch l=150n w=12u multi=1 nf=6
+RTAIL (TAIL 0) resistor r=12k
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+dc dc param=vid start=-0.15 stop=0.15 step=0.01 annotate=status
+save OUTP OUTN TAIL
+saveOptions options save=selected

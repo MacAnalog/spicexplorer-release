@@ -1,0 +1,102 @@
+{
+  "area": {
+    "active_gate_area_um2": 38.4,
+    "c_count": 1,
+    "c_total_f": 2.5e-13,
+    "mos_count": 6,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "buf_001_super_follower",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_gain": {
+          "measures": {
+            "f3db_hz": 984876600.0,
+            "gain_ac_db": -2.291359
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0001332791,
+            "v_offset": -0.405297,
+            "v_out": 0.254703
+          },
+          "status": "ok"
+        },
+        "dc_transfer": {
+          "measures": {
+            "gain_dc": 0.8364131,
+            "v_offset": -0.405276,
+            "v_out_mid": 0.2547244
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-05T14:49:52+00:00"
+      }
+    }
+  },
+  "design_id": "3880ac5e87",
+  "metrics": {
+    "tt": {
+      "f3db_hz": {
+        "spec": "pass",
+        "value": 984876600.0
+      },
+      "gain_ac_db": {
+        "spec": "pass",
+        "value": -2.291359
+      },
+      "gain_dc": {
+        "spec": "pass",
+        "value": 0.8364131
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 0.0001332791
+      },
+      "v_offset": {
+        "spec": "pass",
+        "value": -0.405297
+      },
+      "v_out": {
+        "spec": "pass",
+        "value": 0.254703
+      }
+    }
+  },
+  "parameters": {
+    "analysis_params": {
+      "VCM": 0.66
+    },
+    "sizing": {
+      "x_cc": "250e-15",
+      "x_dut_xm1_l": "0.3u",
+      "x_dut_xm2_w": "8u",
+      "x_dut_xm1_w": "8u",
+      "x_dut_xmrn_w": "4u",
+      "x_dut_xmpd_l": "0.3u",
+      "x_dut_xmpb_w": "8u",
+      "x_dut_xmpd_w": "8u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 38.4,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "f3db_hz": 984876600.0,
+      "gain_dc": 0.8364131
+    },
+    "power_w": 0.00019991865
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

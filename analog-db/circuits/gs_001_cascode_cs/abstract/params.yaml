@@ -1,0 +1,44 @@
+# gs_001_cascode_cs — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit gs_001_cascode_cs --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  XMNB1: {l: x_dut_xmnb1_l, m: x_dut_xmnb1_m, w: x_dut_xmnb1_w}
+  XMNB2: {l: x_dut_xmnb2_l, m: x_dut_xmnb2_m, w: x_dut_xmnb2_w}
+  XMNCA: {l: x_dut_xmnca_l, m: x_dut_xmnca_m, w: x_dut_xmnca_w}
+  XMNIN: {l: x_dut_xmnin_l, m: x_dut_xmnin_m, w: x_dut_xmnin_w}
+  XMPB1: {l: x_dut_xmpb1_l, m: x_dut_xmpb1_m, w: x_dut_xmpb1_w}
+  XMPB2: {l: x_dut_xmpb2_l, m: x_dut_xmpb2_m, w: x_dut_xmpb2_w}
+  XMPCA: {l: x_dut_xmpca_l, m: x_dut_xmpca_m, w: x_dut_xmpca_w}
+  XMPLD: {l: x_dut_xmpld_l, m: x_dut_xmpld_m, w: x_dut_xmpld_w}
+  XMPNR: {l: x_dut_xmpnr_l, m: x_dut_xmpnr_m, w: x_dut_xmpnr_w}
+groups:
+- name: shared_xmpb1_l
+  kind: shared_geometry
+  members: [XMPB1, XMPB2, XMPNR]
+  tie: [l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_pbias_l (l).'
+- name: shared_xmpb1_w
+  kind: shared_geometry
+  members: [XMPB1, XMPB2]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_pbias_w (w).'
+- name: shared_xmnb2_w_l
+  kind: shared_geometry
+  members: [XMNB2, XMNB1]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_nbias_w (w),
+    x_nbias_l (l).'
+- name: shared_xmpld_w_l
+  kind: shared_geometry
+  members: [XMPLD, XMPCA]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_pload_w (w),
+    x_pload_l (l).'
+- name: shared_xmnca_l
+  kind: shared_geometry
+  members: [XMNCA, XMNIN]
+  tie: [l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_nin_l (l).'

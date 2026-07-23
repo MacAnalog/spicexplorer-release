@@ -1,0 +1,11 @@
+schema: spicexplorer/analysis@1
+id: load_regulation
+template: load_regulation
+description: "DC load sweep 0 -> 10m (upstream heavy load); delta-Vout across the range."
+params:
+  VDD: 2.0
+  ILOAD_START: 0
+  ILOAD_STOP: 10m
+  ILOAD_STEP: 0.5m
+flags: []
+produces: [load_reg]

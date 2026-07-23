@@ -1,0 +1,15 @@
+# Analysis binding (plan D-4): noise_diff template — input-referred noise of the closed-loop
+# differential path over the ECG signal band (self-biased DUT).
+schema: spicexplorer/analysis@1
+id: noise
+template: noise_diff
+description: "Input-referred noise integrated over 1 Hz - 100 kHz (vn_in)."
+params:
+  FSTART: 1
+  FSTOP: 100k
+  PPD: 21
+  CL: 50f
+  VCM: 0.6
+  VDD: 1.2
+flags: []
+produces: [vn_in]

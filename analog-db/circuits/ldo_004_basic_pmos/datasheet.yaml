@@ -1,0 +1,109 @@
+# Datasheet for the basic PMOS LDO. Validated against _shared/schema/datasheet.schema.json.
+# UNITS NOTE (matches ldo_007_pmos): load_reg / line_reg are a plain delta-Vout in VOLTS, not a slope.
+#
+# SPECS CHARACTERIZED ON ihp-sg13g2 (the native binding) by real ngspice runs — see
+# results/ihp-sg13g2__tt.json. The 4T error amp has no explicit bias-mirror transistor and no
+# compensation network, so specs here are deliberately looser than ldo_007_pmos's — this circuit is
+# the "basic/conceptual" floor of the LDO class, not a tuned design. The finite (uncascoded,
+# single-stage) loop gain leaves a real ~9% DC error above the ideal vref*(r_top+r_bot)/r_bot =
+# 1.2 V target — measured 1.307 V no-load on ihp-sg13g2 — an honest property of the topology,
+# not a bug; specs below bracket the measured value rather than the ideal target.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.8}      # input rail (Vin=vdd for this 3-port DUT)
+  vout:   {unit: V, typical: 1.3}      # measured no-load output (ideal target is vref*(r_top+r_bot)/r_bot = 1.2 V)
+  vref:   {unit: V, typical: 0.6}      # internal reference (sizing var vref_val)
+  cout:   {unit: uF, typical: 1.0}     # external output cap assumed by PSRR/transient/stability
+  iload:  {unit: mA, typical: 1.0}     # nominal load current
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  v_out:
+    display: "Regulated output voltage"
+    description: >-
+      DC output at no load. Ideal target is vref*(r_top+r_bot)/r_bot = 1.2 V; the uncascoded 4T
+      amp's finite loop gain leaves a real ~9% DC error above that (measured 1.307 V).
+    unit: V
+    analysis: dc_op
+    extract: {meas: vout_dc}
+    spec: {min: 1.25, typ: 1.3, max: 1.35, unit: V}
+  i_q:
+    display: "Quiescent current"
+    description: "Total supply current at no load (amp tail current + divider bleed)."
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 2.5e-4, unit: A}
+  load_reg:
+    display: "Load regulation"
+    description: >-
+      delta-Vout across the 0 -> 10 mA DC load sweep (volts, not a slope). No 2nd stage / Miller
+      comp means this loop's gain (and thus regulation) is much weaker than ldo_007_pmos's.
+    unit: V
+    analysis: load_regulation
+    extract: {meas: load_reg}
+    spec: {max: 0.15, unit: V}
+  line_reg:
+    display: "Line regulation"
+    description: "delta-Vout across the Vin sweep at fixed load (volts, not a slope)."
+    unit: V
+    analysis: line_regulation
+    extract: {meas: line_reg}
+    spec: {max: 0.03, unit: V}
+  v_dropout:
+    display: "Dropout voltage"
+    description: "Vin - Vout at which Vout has fallen to VOUT_THRESH under heavy load."
+    unit: V
+    analysis: dropout
+    extract: {meas: v_dropout}
+    spec: {max: 0.3, unit: V}
+  psrr_vdd_db:
+    display: "PSRR (Vdd -> Vout)"
+    description: "Supply rejection at FMEAS (1 kHz) at nominal load + Cout."
+    unit: dB
+    analysis: psrr
+    extract: {meas: psrr_vdd_db}
+    spec: {min: 20, unit: dB}
+  zout_peak_db:
+    display: "Closed-loop Zout peaking"
+    description: >-
+      Peaking of the closed-loop output impedance above its DC value (dB) — a stability proxy
+      measurable from the [vdd,vout,vss] ports. With no explicit compensation, this loop relies
+      solely on the pass-gate parasitic C for pole-splitting — expect more peaking than the
+      Miller-compensated ldo_007_pmos.
+    unit: dB
+    analysis: loop_stability
+    extract: {meas: zout_peak_db}
+    spec: {max: 15, unit: dB}
+  v_undershoot:
+    display: "Load-step undershoot"
+    description: "Peak Vout droop on a fast lo->hi load step (volts)."
+    unit: V
+    analysis: tran_load_step
+    extract: {meas: v_undershoot}
+    spec: {max: 0.15, unit: V}
+  t_transient:
+    display: "Load-step recovery time"
+    description: "Time for Vout to settle back within VTOL after the load step."
+    unit: s
+    analysis: tran_load_step
+    extract: {meas: t_transient}
+    spec: {max: 3.0e-5, unit: s}
+  vn_out_rms:
+    display: "Integrated output noise"
+    description: "Closed-loop output noise integrated 10 Hz - 10 MHz at nominal load + Cout (V rms)."
+    unit: V
+    analysis: noise
+    extract: {meas: vn_out_rms}
+    spec: {max: 0.02, unit: V}          # ihp-sg13g2 measured 11.7 mVrms
+  v_line_pp:
+    display: "Line-transient deviation"
+    description: >-
+      Peak-to-peak Vout deviation over a fast 1.6 -> 2.0 V supply step at nominal load. Larger
+      than ldo_007_pmos's — the single uncompensated gain stage leaves less loop gain to fight the
+      supply step.
+    unit: V
+    analysis: tran_line_step
+    extract: {meas: v_line_pp}
+    spec: {max: 0.01, unit: V}          # ihp-sg13g2 measured 3.7 mV p2p

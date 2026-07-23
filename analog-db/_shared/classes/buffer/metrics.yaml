@@ -1,0 +1,30 @@
+# Buffer class — canonical metric vocabulary + owned testbench templates (plan D-10).
+# Validated against _shared/schema/class.schema.json by the verify harness (Tier 0).
+# Voltage buffers / followers: near-unity non-inverting gain, level-shifted output, low Zout.
+#
+# Port convention (all class templates assume these port NAMES): vdd vout vin ibias vss.
+# `ibias` is SOURCE-referenced like the amplifier class: the DUT holds an NMOS diode at the
+# ibias node and the bench pushes the bias current into it from vdd (`Ibias vdd ibias`).
+schema: spicexplorer/class@1
+class: buffer
+id_code: buf            # accession-id prefix for verifiable circuits (plan_scoreboard D-1)
+description: >-
+  Voltage buffers (source followers, super/feedback followers). DC transfer sweep for
+  peak incremental gain (~1) + level shift, DC operating point, biased AC bandwidth.
+ppa:
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: gain_dc, better: max}
+    - {metric: f3db_hz, better: max}
+canonical_metrics:
+  - gain_dc          # peak dVout/dVin over the DC transfer sweep (~1 for a follower), V/V
+  - v_offset         # vout - vin at the nominal VCM (the follower's level shift), V
+  - v_out_mid        # output level with the input at the nominal VCM
+  - gain_ac_db       # low-frequency AC gain at the VCM bias point, dB (~0 dB)
+  - f3db_hz          # -3 dB bandwidth of the biased buffer into CL
+  - i_supply
+  - v_out
+templates:
+  - dc_op
+  - dc_transfer
+  - ac_gain

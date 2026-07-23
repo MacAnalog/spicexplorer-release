@@ -1,0 +1,13 @@
+# Dropout: sweep Vin upward at heavy load; Vin - Vout at the regulation threshold.
+schema: spicexplorer/analysis@1
+id: dropout
+template: dropout
+description: "Vin swept 1.0 -> 1.8 V at 10 mA; dropout = Vin - Vout when Vout crosses VOUT_THRESH."
+params:
+  ILOAD: 10m
+  VDD_START: 1.0
+  VDD_STOP: 1.8
+  VDD_STEP: 0.01
+  VOUT_THRESH: 1.176        # 0.98 * 1.2 V target
+flags: []
+produces: [v_dropout]

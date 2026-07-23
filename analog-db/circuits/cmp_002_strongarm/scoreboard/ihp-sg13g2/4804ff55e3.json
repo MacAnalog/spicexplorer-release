@@ -1,0 +1,75 @@
+{
+  "area": {
+    "active_gate_area_um2": 10.35,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 15,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "cmp_002_strongarm",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "tran_decision": {
+          "measures": {
+            "i_supply": 1.799643e-06,
+            "t_prop": 1.626987e-10,
+            "v_out_high": 1.5,
+            "v_out_low": 9.377688e-08
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-05T14:54:49+00:00"
+      }
+    }
+  },
+  "design_id": "4804ff55e3",
+  "metrics": {
+    "tt": {
+      "i_supply": {
+        "spec": "pass",
+        "value": 1.799643e-06
+      },
+      "t_prop": {
+        "spec": "pass",
+        "value": 1.626987e-10
+      },
+      "v_out_high": {
+        "spec": "pass",
+        "value": 1.5
+      },
+      "v_out_low": {
+        "spec": "pass",
+        "value": 9.377688e-08
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_xmobn1_w": "1.5u",
+      "x_dut_xmobp1_w": "3u",
+      "x_dut_xmtail_l": "0.15u",
+      "x_dut_xmlem_w": "4u",
+      "x_dut_xminn_w": "8u",
+      "x_dut_xmpc1_w": "2u",
+      "x_dut_xmtail_w": "4u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 10.35,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "t_prop": 1.626987e-10
+    },
+    "power_w": 2.6994645e-06
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

@@ -1,0 +1,12 @@
+// BJT calibration check: diode-connected npn (E grounded), force Ic into C=B, read Vbe=V(C).
+simulator lang=spectre
+global 0
+parameters iref=1u
+i_1 (0 C1) isource dc=iref type=dc
+q1 (C1 C1 0) npn
+i_8 (0 C8) isource dc=iref type=dc
+q8 (C8 C8 0) npn area=8
+simulatorOptions options temp=27 tnom=27 gmin=1e-15
+dc dc param=iref start=1u stop=10u step=1u annotate=status
+save C1 C8
+saveOptions options save=selected

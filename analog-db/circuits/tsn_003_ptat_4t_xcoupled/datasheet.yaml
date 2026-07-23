@@ -1,0 +1,58 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# Temp-sensor metric sheet (temp_sensor class vocabulary, as tsn_001/tsn_002).
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.5}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  v_out:
+    display: "DC output (PTAT node)"
+    unit: V
+    analysis: dc_op
+    extract: {meas: v_out}
+    spec: {min: 0.02, max: 1.3, unit: V}
+  i_supply:
+    display: "Supply current"
+    description: "Sub-threshold loop current — the sensor's power."
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 1.0e-4, unit: A}
+  v_out_25c:
+    display: "Output at 25 degC"
+    unit: V
+    analysis: temp_sweep
+    extract: {meas: v_out_25c}
+    spec: {min: 0.02, max: 1.3, unit: V}
+  sens_v_per_c:
+    display: "Temperature slope"
+    description: "dVout/dT over the sweep. Positive for a PTAT output."
+    unit: "V/degC"
+    analysis: temp_sweep
+    extract: {meas: sens_v_per_c}
+    spec: {min: 1.0e-4, unit: "V/degC"}
+  tc_box_ppm:
+    display: "Box-method spread"
+    description: "(Vmax-Vmin)/Vavg/range over the temp sweep — informational."
+    unit: "ppm/degC"
+    analysis: temp_sweep
+    extract: {meas: tc_box_ppm}
+    spec: {min: any}
+  line_sens_pct:
+    display: "Line sensitivity (1.3 -> 1.7 V)"
+    description: >-
+      An UNCASCODED cross-coupled cell is inherently supply-sensitive (every leg's Vds tracks
+      vdd); the 65nm original leans on a lower vdd/vth ratio. 34% (ihp) / 75% (sky130, deeper
+      sub-Vt) measured — cascoding is the real fix, out of scope for a faithful promotion.
+    unit: "%"
+    analysis: line_sweep
+    extract: {meas: line_sens_pct}
+    spec: {max: 80, unit: "%"}
+  psr_db:
+    display: "Supply rejection at 1 kHz"
+    unit: dB
+    analysis: psrr
+    extract: {meas: psr_db}
+    spec: {max: -10, unit: dB}

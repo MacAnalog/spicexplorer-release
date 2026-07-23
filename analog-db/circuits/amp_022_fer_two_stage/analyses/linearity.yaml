@@ -1,0 +1,11 @@
+# Analysis binding: ICMR via the buffer-connected DC sweep (class template). ENABLED with
+# the tb-validation pass (2026-07-09): the 20 mV tracking threshold reviewed against live
+# sweeps on ihp-sg13g2 (ngspice) and tsmc-n65 (Spectre) — the buffer tracks well inside
+# 20 mV across the band and the band edges are supply/threshold-limited, not glitchy.
+schema: spicexplorer/analysis@1
+id: linearity
+template: linearity
+description: "ICMR via buffer-connected DC sweep (widest contiguous tracking band)."
+params: {VDD: 1.5, VCM: 0.6, IBIAS: 20u, CL: 500f, VTRACK: 20m, VSWEEP_STEP: 0.005}
+flags: []
+produces: [icmr_min, icmr_max, icmr_range]

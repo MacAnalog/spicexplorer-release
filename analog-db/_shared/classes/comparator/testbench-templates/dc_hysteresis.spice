@@ -1,0 +1,33 @@
+** AUTHORED TEMPLATE — comparator/dc_hysteresis: threshold + hysteresis via up/down DC sweeps.
+** The inverting input holds VCM while the non-inverting input sweeps up then down; the output
+** crossing of VDD/2 on each direction gives vth_rise / vth_fall, and their difference the
+** hysteresis width (0 for a hysteresis-free comparator). The rising threshold is stashed in a
+** shell variable ($&) because each `dc` command starts a new plot.
+** Port convention: vdd vout vinp vinn vss (self-contained DUT, no bias port).
+** Bindings: DUT PORT_LINE VDD VCM VSTART VSTOP VSTEP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vinn vinn 0 dc {VCM}
+Vinp vinp 0 dc {VCM}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  let vmid = ${VDD}/2
+  dc Vinp ${VSTART} ${VSTOP} ${VSTEP}
+  meas dc vth_rise WHEN v(vout)=vmid RISE=1
+  set vthr = $&vth_rise
+  dc Vinp ${VSTOP} ${VSTART} -${VSTEP}
+  meas dc vth_fall WHEN v(vout)=vmid FALL=1
+  let v_hyst = $vthr - vth_fall
+  print v_hyst
+  write
+  quit
+.endc
+.end

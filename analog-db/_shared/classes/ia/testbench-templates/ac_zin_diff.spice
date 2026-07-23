@@ -1,0 +1,37 @@
+** AUTHORED TEMPLATE — ia/ac_zin_diff (P3-2 remainder, owner ask 2026-07-16: "Zin
+** analysis for ccia and bio frontends"). Differential INPUT IMPEDANCE vs frequency of
+** a capacitively-coupled IA, static network (no clock ports — the chopper subfamily
+** uses ac_zin_chopper_diff; the CHOPPED input impedance, which is what a chopper CCIA
+** presents in operation, is tran_zin_chopped's job).
+** Both inputs are voltage-driven (+/-0.5 V AC around VCM, 1 V differential), so
+**   Zin_diff(f) = 1 V / Idiff(f),  Idiff = (i(Vinp) - i(Vinn))/2
+**   zin_ohm = |Zin_diff| at FSIG (for a cap-coupled input, expect ~1/(pi*f*CIN_side))
+** Assumes the plain fully-differential IA port order:
+**   .subckt <id> vinp vinn voutp voutn vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CL FSTART FSTOP PPD FSIG PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+Vcm  vcm 0 dc {VCM}
+Vinp vinp vcm dc 0 ac 0.5
+Vinn vinn vcm dc 0 ac -0.5
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  let idiff = (i(vinp) - i(vinn))/2
+  let zin = 1/mag(idiff)
+  meas ac zin_ohm FIND zin AT=${FSIG}
+  write
+  quit
+.endc
+.end

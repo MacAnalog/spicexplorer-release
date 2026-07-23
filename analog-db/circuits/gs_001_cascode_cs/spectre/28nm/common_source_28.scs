@@ -1,0 +1,22 @@
+// Ported from circuit-bench common-source-amplifier-ptm180-scs (cascode CS + bias).
+// pmos_180->pch_mac nmos_180->nch_mac, L 720n->300n/360n->100n, VDD 1.0V, IBIAS 20uA.
+simulator lang=spectre
+global 0
+parameters vin=0.5
+v_vdd (VDD 0) vsource dc=1.0 type=dc
+i_bias (IBIAS 0) isource dc=20u type=dc
+v_in  (IN 0) vsource dc=vin type=dc
+c_load (OUT 0) capacitor c=200f
+mpb1   (pbias1 pbias1 VDD VDD) pch_mac l=300n w=32u nf=15
+mpb2   (IBIAS  IBIAS  pbias1 VDD) pch_mac l=300n w=32u nf=15
+mpnref (nbias2 IBIAS  VDD    VDD) pch_mac l=300n w=32u nf=15
+mnb2   (nbias2 nbias2 nbias1 0) nch_mac l=100n w=12u nf=6
+mnb1   (nbias1 nbias1 0      0) nch_mac l=100n w=12u nf=6
+mpload (pint   pbias1 VDD VDD) pch_mac l=300n w=20u nf=9
+mpcas  (OUT    IBIAS  pint VDD) pch_mac l=300n w=20u nf=9
+mncasc (OUT    nbias2 nint 0) nch_mac l=100n w=2u
+mnin   (nint   IN     0    0) nch_mac l=100n w=2u
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+dc dc param=vin start=0.3 stop=0.7 step=0.005 annotate=status
+save OUT
+saveOptions options save=selected

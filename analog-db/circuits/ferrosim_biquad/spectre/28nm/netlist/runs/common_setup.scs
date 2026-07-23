@@ -1,0 +1,42 @@
+simulator lang=spectre
+global 0
+
+parameters MFC=(48 - MF) MFI=8 NFCM=16 IB1=120u VICM=600m RL2=0 RL=400 \
+    C2=800f C1=1.6p MF=24 amp=125m beta=1.25 C_ac=1p CL=100f Cpar=0 \
+    f=1072265625 f0=1.2G fs=9G IB2=800u NC1=0 NC2=0 Nshort=0 Q=1 R1=100 \
+    R2=50 R_ac=10k VCM=600m vdc=0
+
+paramSet1tran paramset {
+time  maxstep  reltol
+0     1p       1E-4
+}
+
+include "${PDK_ROOT}/models/spectre/toplevel_modified.scs" section=top_ss
+include "${CADENCE_ROOT}/tools/dfII/etc/cdslib/artist/analogLib/diffstbprobe/diffstbprobe.scs"
+include "dut/hs_biquad_ota.scs"
+include "tb/tb_biquad_exp.scs"
+
+simulatorOptions options psfversion="1.4.0" temp=-25 tnom=27 scalem=1.0 \
+    scale=1.0 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 digits=5 cols=80 \
+    pivrel=1e-3 sensfile="../psf/sens.output" checklimitdest=psf
+
+stb stb start=1K stop=100G dec=100 probe=I34.IPRB_DM localgnd=vcm \
+    annotate=status
+
+tran tran stop=100n noisefmax=20G noiseseed=1 noisetmin=1 \
+    paramset=paramSet1tran maxstep=250f write="spectre.ic" \
+    writefinal="spectre.fc" savetime=[600] savefile="spectre.tran.save" \
+    annotate=status flushtime=30
+
+finalTimeOP info what=oppoint where=rawfile
+dcOp dc write="spectre.dc" maxiters=150 maxsteps=10000 annotate=status
+dcOpInfo info what=oppoint where=rawfile
+modelParameter info what=models where=rawfile
+element info what=inst where=rawfile
+outputParameter info what=output where=rawfile
+designParamVals info what=parameters where=rawfile
+primitives info what=primitives where=rawfile
+subckts info what=subckts where=rawfile
+
+save vop von I32.VOP4 I32.VON4 OINN OINP I32.VOCM
+saveOptions options save=selected

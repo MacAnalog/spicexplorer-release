@@ -1,0 +1,29 @@
+** Abstract continuous-time hysteretic comparator.
+** AUTHORED source of truth (plan D-2). PDK-neutral model tokens (nmos/pmos + ideal Rs);
+** per-PDK device names + geometry come from circuitgraph lowering + pdk/<pdk>/ bindings.
+** Subckt port order (= circuit.yaml ports): vdd vout vinp vinn vss
+**
+** Topology (ferrosim / circuit-bench "dual-hysteresis-comparator", one core):
+**   XMIP/XMIN = NMOS input pair with a RESISTOR tail (RT — the input common-mode sets the
+**   bias current; deliberately kept from the upstream design, so no tail mirror exists for
+**   the diff-pair detector to anchor on). XMPLD/XMPLM = PMOS mirror load (single-ended at n1).
+**   XMHN+RHN / XMHP+RHP = output-fed trip-point shifters: vout drags n1 up or down through
+**   3 Mohm, moving the threshold — the hysteresis. XMB1..XMB3 = 3-stage inverter chain
+**   (m = 1/2/4 progression) squaring n1 up to rail-to-rail vout.
+** Device widths stay per-finger (IHP lv MOS w <= ~10 um; PSP clips silently) — totals via m=.
+XMIP  n1 vinp tail vss nmos w=x_dut_xmip_w l=x_dut_xmip_l m=x_dut_xmip_m
+XMIN  n2 vinn tail vss nmos w=x_dut_xmin_w l=x_dut_xmin_l m=x_dut_xmin_m
+RT    tail vss r=x_rtail
+XMPLD n2 n2 vdd vdd pmos w=x_dut_xmpld_w l=x_dut_xmpld_l m=x_dut_xmpld_m
+XMPLM n1 n2 vdd vdd pmos w=x_dut_xmplm_w l=x_dut_xmplm_l m=x_dut_xmplm_m
+XMHN  hn vout vss vss nmos w=x_dut_xmhn_w l=x_dut_xmhn_l m=x_dut_xmhn_m
+RHN   n1 hn r=x_dut_rhn_value
+XMHP  hp vout vdd vdd pmos w=x_dut_xmhp_w l=x_dut_xmhp_l m=x_dut_xmhp_m
+RHP   n1 hp r=x_dut_rhp_value
+XMB1P b1 n1 vdd vdd pmos w=x_dut_xmb1p_w l=x_dut_xmb1p_l m=x_dut_xmb1p_m
+XMB1N b1 n1 vss vss nmos w=x_dut_xmb1n_w l=x_dut_xmb1n_l m=x_dut_xmb1n_m
+XMB2P b2 b1 vdd vdd pmos w=x_dut_xmb2p_w l=x_dut_xmb2p_l m=x_dut_xmb2p_m
+XMB2N b2 b1 vss vss nmos w=x_dut_xmb2n_w l=x_dut_xmb2n_l m=x_dut_xmb2n_m
+XMB3P vout b2 vdd vdd pmos w=x_dut_xmb3p_w l=x_dut_xmb3p_l m=x_dut_xmb3p_m
+XMB3N vout b2 vss vss nmos w=x_dut_xmb3n_w l=x_dut_xmb3n_l m=x_dut_xmb3n_m
+.end

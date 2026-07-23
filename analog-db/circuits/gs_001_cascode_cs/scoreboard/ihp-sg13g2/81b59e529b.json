@@ -1,0 +1,108 @@
+{
+  "area": {
+    "active_gate_area_um2": 32.25,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 9,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "gs_001_cascode_cs",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_gain": {
+          "measures": {
+            "f3db_hz": 3824815.0,
+            "gain_ac_db": 32.03439
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 5.339003e-05,
+            "v_trip": 0.3731433
+          },
+          "status": "ok"
+        },
+        "dc_transfer": {
+          "measures": {
+            "gain_dc": 96.25478,
+            "vin_pk": 0.37
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:24:58+00:00"
+      }
+    }
+  },
+  "design_id": "81b59e529b",
+  "metrics": {
+    "tt": {
+      "f3db_hz": {
+        "spec": "pass",
+        "value": 3824815.0
+      },
+      "gain_ac_db": {
+        "spec": "pass",
+        "value": 32.03439
+      },
+      "gain_dc": {
+        "spec": "pass",
+        "value": 96.25478
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 5.339003e-05
+      },
+      "v_trip": {
+        "spec": "pass",
+        "value": 0.3731433
+      },
+      "vin_pk": {
+        "spec": "pass",
+        "value": 0.37
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_xmnb1_m": 1,
+      "x_dut_xmnb2_l": "0.3u",
+      "x_dut_xmnb2_m": 1,
+      "x_dut_xmnb2_w": "6u",
+      "x_dut_xmnca_l": "0.3u",
+      "x_dut_xmnca_m": 1,
+      "x_dut_xmnca_w": "4u",
+      "x_dut_xmnin_m": 1,
+      "x_dut_xmnin_w": "4u",
+      "x_dut_xmpb1_l": "0.5u",
+      "x_dut_xmpb1_m": 1,
+      "x_dut_xmpb1_w": "16u",
+      "x_dut_xmpb2_m": 1,
+      "x_dut_xmpca_m": 1,
+      "x_dut_xmpld_l": "0.5u",
+      "x_dut_xmpld_m": 1,
+      "x_dut_xmpld_w": "10u",
+      "x_dut_xmpnr_m": 1,
+      "x_dut_xmpnr_w": "0.5u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 32.25,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "f3db_hz": 3824815.0,
+      "gain_dc": 96.25478
+    },
+    "power_w": 8.0085045e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

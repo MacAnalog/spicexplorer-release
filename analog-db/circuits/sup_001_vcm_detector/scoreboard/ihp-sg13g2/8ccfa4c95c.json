@@ -1,0 +1,56 @@
+{
+  "area": {
+    "active_gate_area_um2": 0.0,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 0,
+    "r_count": 2,
+    "r_total_ohm": 2000000.0
+  },
+  "circuit": "sup_001_vcm_detector",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_vcm_sense": {
+          "measures": {
+            "vcm_out": 0.6,
+            "vos": -1.11022e-16
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:28:46+00:00"
+      }
+    }
+  },
+  "design_id": "8ccfa4c95c",
+  "metrics": {
+    "tt": {
+      "vcm_out": {
+        "spec": "pass",
+        "value": 0.6
+      },
+      "vos": {
+        "spec": "pass",
+        "value": -1.11022e-16
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_rmp_value": "1Meg"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 0.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {}
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

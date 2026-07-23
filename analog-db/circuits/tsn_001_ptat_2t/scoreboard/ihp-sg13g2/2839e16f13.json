@@ -1,0 +1,111 @@
+{
+  "area": {
+    "active_gate_area_um2": 44.8,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 2,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "tsn_001_ptat_2t",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 9.915296e-09,
+            "v_out": 0.03001606
+          },
+          "status": "ok"
+        },
+        "line_sweep": {
+          "measures": {
+            "line_sens_pct": 21.19526,
+            "v_at_hi": 0.03292377,
+            "v_at_lo": 0.02656153,
+            "v_at_nom": 0.03001728
+          },
+          "status": "ok"
+        },
+        "psrr": {
+          "measures": {
+            "psr_db": -39.61805
+          },
+          "status": "ok"
+        },
+        "temp_sweep": {
+          "measures": {
+            "sens_v_per_c": 0.0001523183,
+            "tc_box_ppm": 4490.876,
+            "v_hi": 0.04560839,
+            "v_lo": 0.02428383,
+            "v_out_25c": 0.029735
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-05T15:45:14+00:00"
+      }
+    }
+  },
+  "design_id": "2839e16f13",
+  "metrics": {
+    "tt": {
+      "i_supply": {
+        "spec": "pass",
+        "value": 9.915296e-09
+      },
+      "line_sens_pct": {
+        "spec": "pass",
+        "value": 21.19526
+      },
+      "psr_db": {
+        "spec": "pass",
+        "value": -39.61805
+      },
+      "sens_v_per_c": {
+        "spec": "pass",
+        "value": 0.0001523183
+      },
+      "tc_box_ppm": {
+        "spec": "none",
+        "value": 4490.876
+      },
+      "v_out": {
+        "spec": "pass",
+        "value": 0.03001606
+      },
+      "v_out_25c": {
+        "spec": "pass",
+        "value": 0.029735
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_xm0_l": "0.2u",
+      "x_dut_xm0_m": 8,
+      "x_dut_xm0_w": "8.0u",
+      "x_dut_xm1_l": "1.0u",
+      "x_dut_xm1_m": 8,
+      "x_dut_xm1_w": "4.0u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 44.8,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "line_sens_pct": 21.19526,
+      "psr_db": -39.61805,
+      "sens_v_per_c": 0.0001523183
+    },
+    "power_w": 1.1898355199999999e-08
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

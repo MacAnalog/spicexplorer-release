@@ -1,0 +1,45 @@
+# LDO class — canonical regulation vocabulary + owned testbench templates (plan D-10).
+# An LDO's vocabulary is regulation-centric — none of these overlap the amplifier templates.
+# The class file lists canonical metric NAMES + template NAMES; full metric definitions
+# (unit/analysis/extract/spec) live per-circuit in datasheet.yaml (see circuits/ldo_007_pmos).
+schema: spicexplorer/class@1
+class: ldo
+id_code: ldo            # accession-id prefix for verifiable circuits (plan_scoreboard D-1)
+description: >-
+  Low-dropout regulators. Load/line regulation, dropout voltage, quiescent current, PSRR vs
+  supply, load-step and line-step transients, integrated output noise, and a closed-loop
+  output-impedance stability proxy.
+ppa:                      # scoreboard PPA rollup declaration (plan_scoreboard D-7)
+  power: {metric: i_q, times_vdd: true}
+  performance:
+    - {metric: load_reg, better: min}
+    - {metric: v_dropout, better: min}
+    - {metric: psrr_vdd_db, better: max}
+    - {metric: v_undershoot, better: min}
+canonical_metrics:
+  - v_out
+  - load_reg         # delta-Vout over the load sweep (volts, not a slope)
+  - line_reg         # delta-Vout over the supply sweep (volts, not a slope)
+  - v_dropout
+  - i_q              # quiescent current
+  - psrr_vdd_db
+  - zout_peak_db     # closed-loop Zout peaking — stability proxy (low = well-damped)
+  - loopgain_db      # ac_loopgain: regulation-loop gain at FSTART (DC-band loop gain)
+  - ugf_loop_hz      # ac_loopgain: loop unity-gain frequency (regulation bandwidth)
+  - pm_loop_deg      # ac_loopgain: TRUE loop phase margin (zout_peak_db is only a proxy for this)
+  - gm_loop_db       # ac_loopgain: loop gain margin; NaN = phase never reaches 0 (unconditionally stable)
+  - v_undershoot     # load-step droop
+  - t_transient      # load-step recovery
+  - vn_out_rms       # integrated closed-loop output noise over the analysis band (V rms)
+  - v_line_pp        # supply-step p2p output deviation (line transient, volts)
+templates:
+  - dc_op
+  - load_regulation
+  - line_regulation
+  - dropout
+  - psrr
+  - tran_load_step
+  - loop_stability   # closed-loop Zout peaking (proxy; needs no DUT support)
+  - ac_loopgain      # TRUE loop gain/PM/GM by Middlebrook injection (needs a 0 V lp_brk marker in the DUT)
+  - noise
+  - tran_line_step

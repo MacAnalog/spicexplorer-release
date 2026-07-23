@@ -1,0 +1,22 @@
+** Abstract feedback ("super") source follower with current-mirror bias.
+** AUTHORED source of truth (plan D-2). PDK-neutral model tokens (nmos/pmos + an ideal C);
+** per-PDK device names + geometry come from circuitgraph lowering + pdk/<pdk>/ bindings.
+** Subckt port order (= circuit.yaml ports): vdd vout vin ibias vss
+**
+** Topology (ferrosim / circuit-bench "source-follower": feedback follower, current-biased):
+**   XM1 = NMOS input follower (gate vin, source vout); its drain node `na` drives the gate of
+**   XM2, which sinks the output current — shunt feedback that lowers Zout and holds XM1's
+**   Vgs (and hence the level shift) nearly constant ("super source follower").
+**   Bias: XMRN = NMOS diode at the ibias port (bench pushes IBIAS in from vdd, class
+**   convention); XMNS mirrors it; XMPD/XMPB = PMOS mirror sourcing the feedback-node current
+**   into na. XCC compensates the local feedback loop.
+** Device widths stay per-finger (open-PDK geometry envelopes, e.g. IHP lv MOS w <= ~10 um,
+** are enforced by silent PSP parameter clipping) — total width scales via the m= multiplier.
+XM1  na    vin   vout vss nmos w=x_dut_xm1_w  l=x_dut_xm1_l m=x_dut_xm1_m
+XM2  vout  na    vss  vss nmos w=x_dut_xm2_w  l=x_dut_xm2_l m=x_dut_xm2_m
+CC   na    vss   c=x_cc
+XMRN ibias ibias vss  vss nmos w=x_dut_xmrn_w l=x_dut_xmrn_l m=x_dut_xmrn_m
+XMNS pd    ibias vss  vss nmos w=x_dut_xmns_w l=x_dut_xmns_l m=x_dut_xmns_m
+XMPD pd    pd    vdd  vdd pmos w=x_dut_xmpd_w l=x_dut_xmpd_l m=x_dut_xmpd_m
+XMPB na    pd    vdd  vdd pmos w=x_dut_xmpb_w l=x_dut_xmpb_l m=x_dut_xmpb_m
+.end

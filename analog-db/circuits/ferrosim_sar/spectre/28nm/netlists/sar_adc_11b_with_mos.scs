@@ -1,0 +1,18 @@
+// Hierarchical wrapper for Maestro Interactive.13 golden SAR ADC netlist.
+// Keep subckt names unchanged; only split into semantic files.
+
+include "variants/with_mos/00_corner_and_models.scs"
+include "variants/with_mos/10_refgen_ideal.scs"
+include "variants/with_mos/20_comparator_dynamic_l4.scs"
+include "variants/with_mos/30_bottom_plate_switch_l5.scs"
+include "variants/with_mos/40_sar_latch_cell_l5.scs"
+include "variants/with_mos/41_sar_latch_lsb_l5.scs"
+include "variants/with_mos/42_sar_logic_switch_l4.scs"
+include "variants/with_mos/50_cap_unit_x1.scs"
+include "variants/with_mos/51_cap_unit_x3.scs"
+include "variants/with_mos/52_cap_array_l5.scs"
+include "variants/with_mos/53_cdac_sampler_l4.scs"
+include "variants/with_mos/60_bootstrap_core_lb.scs"
+include "variants/with_mos/61_bootstrap_diff_l4.scs"
+include "variants/with_mos/90_sar_adc_11b_l3.scs"
+include "variants/with_mos/99_tb_sar_adc_11b_interactive13.scs"

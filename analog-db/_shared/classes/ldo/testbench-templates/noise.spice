@@ -1,0 +1,27 @@
+** AUTHORED TEMPLATE — ldo/noise: closed-loop output noise, integrated over a band.
+** Methodology from the LDO literature benches vendored at circuits/ldo_004_basic_pmos/reference/
+** ltspice/Noise_6p38..42.asc (`.noise v(vout)` + integrated output noise). ngspice's `.noise`
+** needs an independent source as its "input"; the supply Vdd serves (the DUT's reference is
+** internal to the 3-port subckt), so only the OUTPUT-referred noise is meaningful here:
+** vn_out_rms = sqrt(onoise_total) over FSTART..FSTOP.
+** Bindings: DUT PORT_LINE VDD ILOAD COUT FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+
+Vdd  vdd 0 dc {VDD} ac 1
+Vss  vss 0 dc 0
+Iload vout 0 dc ${ILOAD}
+CLoad vout 0 ${COUT}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  noise v(vout) Vdd dec ${PPD} ${FSTART} ${FSTOP}
+  let vn_out_rms = sqrt(onoise_total)
+  print onoise_total vn_out_rms
+  write
+  quit
+.endc
+.end

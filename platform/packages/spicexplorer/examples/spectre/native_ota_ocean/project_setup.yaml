@@ -1,0 +1,63 @@
+# Native-Spectre project with canonical OCEAN metrics — a TEMPLATE.
+#
+# Shape is intentionally the SAME as an ngspice project: each testbench is a netlist FILE
+# (`netlist: …`), here a hand-written Spectre `.scs` instead of an ngspice `.spice`. The
+# only Spectre-specific additions are `sim_engine: spectre` and, per target_spec, a
+# declarative `measurement:` OCEAN recipe.
+#
+# How injection works: the deck's `parameters` line carries the design variables; the
+# optimizer rewrites it per candidate (the bridge runs a fixed file per run and, in local
+# mode, ignores its params arg — so injection happens on our side). Requires the research
+# server (Cadence Spectre + TSMC-65 PDK + virtuoso-bridge) to actually run; on a PDK-less
+# host it loads/validates but can't simulate. Point the corner's `lib_file` at your TSMC-65
+# models (never commit the path) + set VB_CADENCE_CSHRC. See this folder's README.md.
+project:
+  name: native-5t-ota-ocean
+  description: 5T-OTA on native Spectre, scored with canonical OCEAN measurements
+  simulator: spectre          # (path field; unused by the Spectre backend)
+  sim_engine: spectre         # <-- select the Spectre backend
+  ws_root: .
+  netlist: dut/ota_5t.scs     # DUT subckt, referenced by the testbench deck's `include`
+  outdir: out
+
+  tech_spec:
+    name: tsmc-n65
+    constraints: {min_w: 0.12u, max_w: 10u, min_l: 0.06u, max_l: 10u}
+
+  dut_params:
+    - {name: w_in,  min_val: min_w, max_val: max_w}
+    - {name: l_in,  min_val: min_l, max_val: max_l}
+    - {name: w_tail, min_val: min_w, max_val: max_w}
+
+  testbenches:
+    # a native Spectre `.scs` deck — exactly like an ngspice testbench's `.spice`.
+    # its `parameters` line declares w_in / l_in / w_tail (lowercase — the injected
+    # namespace); each candidate overrides them.
+    - {name: tb_ac, netlist: spice/ota_5t_tb_ac.scs, params: []}
+
+  # A single PVT corner supplies the model include + supply + temp (its section includes
+  # replace the deck's default include at render). Set lib_file to YOUR TSMC-65 models.
+  pvt:
+    mode: single
+    active_corner: tt_27C_1V20
+    corners:
+      - name: tt_27C_1V20
+        enabled: true
+        model_includes: [{lib_file: /path/to/tsmc65/models.scs, section: tt_lvt}]
+        supply: {node: vdd, value: 1.2}
+        temp: 27
+
+  optimizer_config:
+    name: SamplingSearch
+    type: nevergrad
+    budget: 20
+    random_seed: 1
+    target_specs:
+      # raw OCEAN form: {result, expr}. `result` is the OCEAN result group the analysis lands in.
+      - {name: dcgain_db, testbench: tb_ac, sim_type: ac, goal: exceed, target: 30, range: 40,
+         measurement: {result: ac, expr: 'dB20(value(v("v_out") 1e3))'}}
+      - {name: ugbw, testbench: tb_ac, sim_type: ac, goal: exceed, target: 5e6, range: 1e7,
+         measurement: {builder: ac_gain_bw_product, signal: v_out}}
+      # builder form: a named ocean_metrics constructor + its args (validated at load).
+      - {name: id_gm_in, testbench: tb_ac, sim_type: op, goal: exceed, target: 1e-4, range: 1e-3,
+         measurement: {builder: device_op_param, instance: xota.XM1, param: gm}}

@@ -1,0 +1,16 @@
+# Analysis binding (plan D-4). cmfb-class ac_servo on the real NMOS-input member:
+# small-signal about the zero-error point (sensed == vref == 0.5), 50 fF actuator-gate
+# proxy load.
+schema: spicexplorer/analysis@1
+id: ac_servo
+template: ac_servo
+description: "CM servo transfer: gain_servo_db (~20 dB) + bw_servo_hz + ugf_servo_hz into 50 fF."
+params:
+  VDD: 1.2
+  VCM: 0.5
+  CL: 50f
+  FSTART: 10
+  FSTOP: 1G
+  PPD: 61
+flags: []
+produces: [gain_servo_db, bw_servo_hz, ugf_servo_hz]

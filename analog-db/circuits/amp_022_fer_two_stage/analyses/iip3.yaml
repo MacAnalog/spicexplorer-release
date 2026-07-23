@@ -1,0 +1,10 @@
+# Analysis binding: two-tone IIP3 in the unity buffer (class template). 50 mV tones at
+# 0.9/1.0 MHz share the 100 kHz fundamental (n1=9, n2=10; IM3 at 0.8/1.1 MHz). TSTOP covers
+# 10 beat periods. ngspice runs the tran; the Spectre lane composes a native pss at 100 kHz.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3
+description: "IIP3 — two-tone intermodulation intercept; tran+FFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.5, VCM: 0.6, IBIAS: 20u, CL: 500f, ASIG: 0.05, F1: 0.9e6, F2: 1.0e6, TSTEP: 25n, TSTOP: 100u}
+flags: []
+produces: []

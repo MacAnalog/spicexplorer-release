@@ -1,0 +1,108 @@
+** Abstract 3-bit binary cap-feedback programmable-gain amplifier (PGA) with a
+** behavioral ideal-amp core — the PGA stage of the Hsu bio-AFE chain
+** (ccia -> PGA -> SRMC; see provenance in circuit.yaml). AUTHORED source of truth
+** (plan D-2). PDK-neutral model tokens (pmos/nmos); per-PDK device names + geometry
+** come from circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vinp vinn voutp voutn VDD VSS VCM V_D0 V_D0_NOT V_D1 V_D1_NOT V_D2 V_D2_NOT
+**
+** Topology (from drawings/bio-afe-01-YuPinHsu-reconfigable-SRMC/PGA-ideal.sch,
+** normalized here after xschem netlisting + machine flattening of the
+** capbank x2 / ideal-amp-fully-diff hierarchy):
+**   gain network — two 3-bit BINARY capbank instances (= sw_003_binary_capbank;
+**     owner decision 2026-07-19, DRAWING_REVIEW.md §8 finding 1) set Cin per side:
+**     bank A couples vinp onto the amp summing node sum_p, bank B couples vinn
+**     onto sum_n; all bank caps share the unit-value symbol Cu with STRUCTURAL
+**     m weighting (fixed m=1 + switched m=1/2/4 per bit) -> Cin = (1+code)*Cu.
+**     Feedback caps CF1/CF2 close each summing node on its output
+**     (sum_p<-voutp, sum_n<-voutn). Mid-band gain = -(1+code)*Cu/Cf —
+**     INVERTING, the family's cap-feedback convention, wired exactly as the
+**     export (validated: -0.08..17.98 dB over codes 000..111 @ Cu=Cf=1p vs
+**     ideal (1+code) = 0..18.06 dB).
+**   pseudo-resistor bias — XM1+XM2 / XM3+XM4: two ANTI-SERIES diode-connected
+**     pmos per side (shared mid node = both sources+bulks) in parallel with each
+**     CF, giving the summing nodes their DC path to the output CM and the HP
+**     corner 1/(2*pi*Rpseudo*Cf) (validated 2.17 Hz, code-INDEPENDENT — the
+**     pseudo-R/Cf corner does not move with the bank code).
+**   ideal-amp core (the drawn shared/ideal/ideal-amp-fully-diff leaf, flattened
+**     here the way amp_028 lands it; realization: mixed) — VCCS Gm (gm_val)
+**     into Rout||Cout across the outputs sets A = gm*rout (60 dB @ defaults)
+**     and the dominant pole; Rin||Cin across the summing nodes. The closed-loop
+**     LP corner is beta*GBW (validated 1.08-3.4 MHz, falls with gain).
+**   code pins V_D0..V_D2_NOT are STATIC selects (complementary rails per bit),
+**     not clocks; deselected bank bottom plates park at VCM so no plate floats.
+**   drawing conformance + entry-level deviations:
+**     - nets renamed for readability (net1->sum_p, net2->sum_n, net3->pr_mid_p,
+**       net4->pr_mid_n; bank-internal net1..net3 -> bota0/bota1/bota2 resp.
+**       botb0/botb1/botb2).
+**     - hierarchy flattened: x_ci_1 (bank A) x1/XM1 -> XMA1, x1/XM2 -> XMA2,
+**       x2 -> XMA3/XMA4, x3 -> XMA5/XMA6, x4 -> XMA7/XMA8, x5 -> XMA9/XMA10,
+**       x6 -> XMA11/XMA12, caps C1..C4 -> CA1..CA4; x_ci_2 (bank B) likewise
+**       -> XMB1..XMB12 / CB1..CB4; x_amp_1 Gm/Rout/Rin/Cout/Cin keep their
+**       drawn names (note the drawn amp port order vinp vinn voutn voutp — its
+**       voutn pin lands on voutp here, exactly as the export wires the
+**       inverting loop); top-level pseudo-Rs keep the drawn XM1..XM4.
+**     - the drawn literal cap multipliers m=1/1/2/4 per bank become FROZEN
+**       integer knobs tied across banks (abstract/params.yaml) — the binary
+**       weighting is topology, not sizing; the drawn Cf1/Cf2 literal 1p is
+**       atomized as x_dut_cf1_value/x_dut_cf2_value and tied (their m=1 is
+**       dropped as non-load-bearing, like ia_001's passives).
+**     - TG + pseudo-resistor devices keep the drawn minimum geometry
+**       (w=0.15u l=0.13u) as sizing defaults — the full 8-code validation ran
+**       at exactly these sizes (pseudo-R ~73G at min-size -> HP 2.17 Hz).
+**.subckt ia_005_hsu_pga_ideal vinp vinn voutp voutn VDD VSS VCM V_D0 V_D0_NOT V_D1 V_D1_NOT V_D2 V_D2_NOT
+* --- behavioral ideal-amp core (flattened leaf; drawn wiring kept — inverting loop) ---
+Gm voutp voutn sum_p sum_n {gm_val}
+Rout voutp voutn 'rout_val'
+Rin sum_p sum_n 'rin_val'
+Cout voutp voutn 'cout_val'
+Cin sum_p sum_n 'cin_val'
+* --- feedback caps: close each summing node on its output ---
+CF1 voutp sum_p 'x_dut_cf1_value'
+CF2 voutn sum_n 'x_dut_cf2_value'
+* --- pseudo-resistor DC servo: anti-series diode pmos pairs across each CF ---
+XM1 sum_p sum_p pr_mid_p pr_mid_p pmos w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+XM2 voutp voutp pr_mid_p pr_mid_p pmos w=x_dut_xm2_w l=x_dut_xm2_l m=x_dut_xm2_m
+XM3 voutn voutn pr_mid_n pr_mid_n pmos w=x_dut_xm3_w l=x_dut_xm3_l m=x_dut_xm3_m
+XM4 sum_n sum_n pr_mid_n pr_mid_n pmos w=x_dut_xm4_w l=x_dut_xm4_l m=x_dut_xm4_m
+* --- bank A (vinp -> sum_p): binary-weighted caps, shared unit Cu ---
+CA1 sum_p vinp 'Cu' m=x_dut_ca1_m
+CA2 sum_p bota0 'Cu' m=x_dut_ca2_m
+CA3 sum_p bota1 'Cu' m=x_dut_ca3_m
+CA4 sum_p bota2 'Cu' m=x_dut_ca4_m
+* --- bank A bit D0: select TG vinp <-> bota0 / park TG VCM <-> bota0 ---
+XMA1 vinp V_D0 bota0 VSS nmos w=x_dut_xma1_w l=x_dut_xma1_l m=x_dut_xma1_m
+XMA2 bota0 V_D0_NOT vinp VDD pmos w=x_dut_xma2_w l=x_dut_xma2_l m=x_dut_xma2_m
+XMA3 VCM V_D0_NOT bota0 VSS nmos w=x_dut_xma3_w l=x_dut_xma3_l m=x_dut_xma3_m
+XMA4 bota0 V_D0 VCM VDD pmos w=x_dut_xma4_w l=x_dut_xma4_l m=x_dut_xma4_m
+* --- bank A bit D1 ---
+XMA5 vinp V_D1 bota1 VSS nmos w=x_dut_xma5_w l=x_dut_xma5_l m=x_dut_xma5_m
+XMA6 bota1 V_D1_NOT vinp VDD pmos w=x_dut_xma6_w l=x_dut_xma6_l m=x_dut_xma6_m
+XMA7 VCM V_D1_NOT bota1 VSS nmos w=x_dut_xma7_w l=x_dut_xma7_l m=x_dut_xma7_m
+XMA8 bota1 V_D1 VCM VDD pmos w=x_dut_xma8_w l=x_dut_xma8_l m=x_dut_xma8_m
+* --- bank A bit D2 ---
+XMA9 vinp V_D2 bota2 VSS nmos w=x_dut_xma9_w l=x_dut_xma9_l m=x_dut_xma9_m
+XMA10 bota2 V_D2_NOT vinp VDD pmos w=x_dut_xma10_w l=x_dut_xma10_l m=x_dut_xma10_m
+XMA11 VCM V_D2_NOT bota2 VSS nmos w=x_dut_xma11_w l=x_dut_xma11_l m=x_dut_xma11_m
+XMA12 bota2 V_D2 VCM VDD pmos w=x_dut_xma12_w l=x_dut_xma12_l m=x_dut_xma12_m
+* --- bank B (vinn -> sum_n): binary-weighted caps, shared unit Cu ---
+CB1 sum_n vinn 'Cu' m=x_dut_cb1_m
+CB2 sum_n botb0 'Cu' m=x_dut_cb2_m
+CB3 sum_n botb1 'Cu' m=x_dut_cb3_m
+CB4 sum_n botb2 'Cu' m=x_dut_cb4_m
+* --- bank B bit D0 ---
+XMB1 vinn V_D0 botb0 VSS nmos w=x_dut_xmb1_w l=x_dut_xmb1_l m=x_dut_xmb1_m
+XMB2 botb0 V_D0_NOT vinn VDD pmos w=x_dut_xmb2_w l=x_dut_xmb2_l m=x_dut_xmb2_m
+XMB3 VCM V_D0_NOT botb0 VSS nmos w=x_dut_xmb3_w l=x_dut_xmb3_l m=x_dut_xmb3_m
+XMB4 botb0 V_D0 VCM VDD pmos w=x_dut_xmb4_w l=x_dut_xmb4_l m=x_dut_xmb4_m
+* --- bank B bit D1 ---
+XMB5 vinn V_D1 botb1 VSS nmos w=x_dut_xmb5_w l=x_dut_xmb5_l m=x_dut_xmb5_m
+XMB6 botb1 V_D1_NOT vinn VDD pmos w=x_dut_xmb6_w l=x_dut_xmb6_l m=x_dut_xmb6_m
+XMB7 VCM V_D1_NOT botb1 VSS nmos w=x_dut_xmb7_w l=x_dut_xmb7_l m=x_dut_xmb7_m
+XMB8 botb1 V_D1 VCM VDD pmos w=x_dut_xmb8_w l=x_dut_xmb8_l m=x_dut_xmb8_m
+* --- bank B bit D2 ---
+XMB9 vinn V_D2 botb2 VSS nmos w=x_dut_xmb9_w l=x_dut_xmb9_l m=x_dut_xmb9_m
+XMB10 botb2 V_D2_NOT vinn VDD pmos w=x_dut_xmb10_w l=x_dut_xmb10_l m=x_dut_xmb10_m
+XMB11 VCM V_D2_NOT botb2 VSS nmos w=x_dut_xmb11_w l=x_dut_xmb11_l m=x_dut_xmb11_m
+XMB12 botb2 V_D2 VCM VDD pmos w=x_dut_xmb12_w l=x_dut_xmb12_l m=x_dut_xmb12_m
+**.ends
+.end

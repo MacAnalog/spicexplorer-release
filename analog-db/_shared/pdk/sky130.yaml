@@ -1,0 +1,45 @@
+# PDK-level registry for sky130 (plan Phase 1). Corner-lib catalog, device-class map,
+# nominal supply + geometry rules.
+pdk: sky130
+sim_engine: ngspice                      # native lane: open-PDK ngspice (in-library router marker)
+supply: {default: 1.8, unit: V}          # nominal 1.8 V core rail
+devices:
+  nmos: {core: sky130_fd_pr__nfet_01v8, io: sky130_fd_pr__nfet_g5v0d10v5}
+  pmos: {core: sky130_fd_pr__pfet_01v8, io: sky130_fd_pr__pfet_g5v0d10v5}
+  res:  [sky130_fd_pr__res_high_po]
+  cap:  [sky130_fd_pr__cap_mim_m3_1]
+corners:
+  lib_file: sky130.lib.spice
+  sections: [tt, ss, ff, sf, fs]
+# PDK passive (R/C) models. sky130 needs NO extra corner-lib lines: every MOS corner section of
+# sky130.lib.spice already includes the typical R+C models (r+c/res_typical__cap_typical.spice),
+# so a netlist instancing a PDK resistor/cap just works. (RC-skew exists as separate combined
+# sections — res_high__cap_high etc. — if ever needed.) `models` = measured tt constants for
+# sizing (ngspice .op/.ac on the base image; R: W=1/L=10 bare-µm incl. end effects; C: 10×10 µm).
+# sheet_res in Ω/□, area_cap in F/µm². The R subckt is 3-terminal (sig sig bulk).
+passives:
+  libs: {}
+  models:
+    sky130_fd_pr__res_high_po:  {kind: res, sheet_res: 355}
+    sky130_fd_pr__cap_mim_m3_1: {kind: cap, area_cap: 2.07e-15}
+geometry: {min_l: 0.15u, min_w: 0.42u, max_l: 20u, max_w: 30u}
+# gm/ID LUT characterization defaults (Phase 6; `analog-db gmid-extract`). family=bsim4 → the
+# op-probe is the inner BSIM4 device `@m.xm1.m<model>[...]`. All knobs overridable on the CLI.
+gmid:
+  family: bsim4
+  device: sky130_fd_pr__nfet_01v8        # default device (the 1.8V core nmos); --device for others
+  corners: [tt, ss, ff]                  # `--corner all` extracts each into its own __<corner>.pkl
+  probe: "m.xm1.m{device}"
+  width_um: 5                            # single characterization width (µm); the LUT is per-unit-W
+  nfing: 1
+  temp_k: 300
+  sweep:
+    vgs: [0, 0.05, 1.8]                  # (start, step, stop) V
+    vds: [0, 0.2, 1.8]   # coarse VDS (the gm/ID method needs few VDS); --vds for finer
+    vsb: [0, -0.4, -0.4]                # 2 body-bias points (0, 0.4 V); --vsb for more
+    length_um: [0.15, 0.18, 0.2, 0.3, 0.5, 1, 2, 4]
+  info: "SkyWater sky130, 1.8 V core, BSIM4"
+  simulator:                              # optional ngspice runtime knobs (CLI --runner/--workers override)
+    runner: auto                          # auto = host ngspice+$PDK_ROOT when available, else docker
+    workers: 8                            # parallel ngspice jobs, one per L value
+    timeout_s: 3600                       # per-job wall clock [s]

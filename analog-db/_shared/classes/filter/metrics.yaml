@@ -1,0 +1,37 @@
+# Filter class — canonical metric vocabulary + owned testbench templates (plan D-10).
+# Validated against _shared/schema/class.schema.json by the verify harness (Tier 0).
+# NEW class added 2026-07-15 (class-registry completion) for the reference-only `ferrosim_biquad`
+# (high-speed OTA biquad) and `ferrosim_sc_integrator` (switched-cap integrator). No verifiable
+# (open-PDK) member yet — FORWARD SCAFFOLDING for a future promoted filter. Reference-only circuits
+# skip the class xref checks (verify.py `_tier0_reference_circuit`); this completes the registry.
+#
+# Port convention (illustrative): vdd vinp vinn voutp voutn vss (fully-diff) or vdd vin vout vss
+# (single-ended); switched-cap variants additionally take a clk/phi port. Each circuit binds its own.
+schema: spicexplorer/class@1
+class: filter
+id_code: flt            # accession-id prefix -> flt_001_<slug> (plan_scoreboard D-1)
+description: >-
+  Continuous-time and switched-capacitor filters (biquads, integrators). Small-signal AC response
+  (corner/center frequency, passband gain, Q, stopband rejection, ripple, group delay), DC
+  operating point, and a transient step; large-signal THD and dynamic range as the linearity FoM.
+ppa:                      # scoreboard PPA rollup declaration (plan_scoreboard D-7)
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: dynamic_range_db, better: max}
+    - {metric: thd_pct, better: min}
+canonical_metrics:
+  - fc_hz             # -3 dB corner (LP/HP) or center frequency (BP), Hz
+  - passband_gain_db  # in-band gain (dB)
+  - q_factor          # pole/resonator quality factor
+  - stopband_atten_db # out-of-band rejection (dB)
+  - ripple_db         # passband ripple (dB)
+  - group_delay_s     # in-band group delay (s)
+  - thd_pct           # large-signal total harmonic distortion (%)
+  - dynamic_range_db  # SFDR/DR (dB)
+  - i_supply          # supply current (A)
+  - area_um2
+  - v_out             # generic single-ended DC/AC output node (V)
+templates:
+  - ac_response       # magnitude/phase -> fc, passband gain, -3 dB bandwidth
+  - dc_op
+  - tran_step

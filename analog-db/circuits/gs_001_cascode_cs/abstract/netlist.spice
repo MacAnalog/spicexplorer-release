@@ -1,0 +1,22 @@
+** Abstract cascode common-source stage with a self-contained bias ladder.
+** AUTHORED source of truth (plan D-2). PDK-neutral model tokens (nmos/pmos); per-PDK device
+** names + geometry come from circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vdd vout vin ibias vss
+**
+** Topology (ferrosim / circuit-bench "common-source-amplifier": cascode CS + bias):
+**   Bias ladder: XMPB1/XMPB2 = stacked PMOS diodes from vdd carrying the EXTERNAL sink current
+**     pulled out of `ibias` (class sink convention); pbias1 gates the PMOS current-source load,
+**     ibias gates the PMOS cascode. XMPNR + XMNB2/XMNB1 derive the NMOS cascode gate (nbias2 =
+**     a 2-Vgs NMOS diode stack fed from a PMOS referenced to the ladder).
+**   Signal path: XMNIN = NMOS common-source input; XMNCA = NMOS cascode; XMPLD/XMPCA = cascode
+**     PMOS current-source load. High |gain| from the doubly-cascoded output node.
+XMPB1 pbias1 pbias1 vdd    vdd pmos w=x_dut_xmpb1_w l=x_dut_xmpb1_l m=x_dut_xmpb1_m
+XMPB2 ibias  ibias  pbias1 vdd pmos w=x_dut_xmpb2_w l=x_dut_xmpb2_l m=x_dut_xmpb2_m
+XMPNR nbias2 ibias  vdd    vdd pmos w=x_dut_xmpnr_w l=x_dut_xmpnr_l m=x_dut_xmpnr_m
+XMNB2 nbias2 nbias2 nbias1 vss nmos w=x_dut_xmnb2_w l=x_dut_xmnb2_l m=x_dut_xmnb2_m
+XMNB1 nbias1 nbias1 vss    vss nmos w=x_dut_xmnb1_w l=x_dut_xmnb1_l m=x_dut_xmnb1_m
+XMPLD pint   pbias1 vdd    vdd pmos w=x_dut_xmpld_w l=x_dut_xmpld_l m=x_dut_xmpld_m
+XMPCA vout   ibias  pint   vdd pmos w=x_dut_xmpca_w l=x_dut_xmpca_l m=x_dut_xmpca_m
+XMNCA vout   nbias2 nint   vss nmos w=x_dut_xmnca_w  l=x_dut_xmnca_l   m=x_dut_xmnca_m
+XMNIN nint   vin    vss    vss nmos w=x_dut_xmnin_w   l=x_dut_xmnin_l   m=x_dut_xmnin_m
+.end

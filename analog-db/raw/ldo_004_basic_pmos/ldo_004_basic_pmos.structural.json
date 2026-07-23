@@ -1,0 +1,38 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "ldo_004_basic_pmos",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 9,
+    "blocks_detected": 1,
+    "by_family": {
+      "current_mirror": 1
+    },
+    "structural_roles": {
+      "XM3": "current_mirror_reference",
+      "XM4": "current_mirror"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.pmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XM3",
+      "output_devices": [
+        "XM4"
+      ],
+      "devices": [
+        "XM3",
+        "XM4"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "noutm",
+        "out": "egate"
+      }
+    }
+  ]
+}

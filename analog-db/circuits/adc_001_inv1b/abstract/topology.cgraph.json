@@ -1,0 +1,73 @@
+{
+  "components": [
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "vout",
+        "GATE": "vin",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XMN",
+      "params": {
+        "l": "x_dut_xmn_l",
+        "m": "x_dut_xmn_m",
+        "w": "x_dut_xmn_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "vout",
+        "GATE": "vin",
+        "SOURCE": "vdd"
+      },
+      "device_type": "MOS",
+      "id": "XMP",
+      "params": {
+        "l": "x_dut_xmp_l",
+        "m": "x_dut_xmp_m",
+        "w": "x_dut_xmp_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    }
+  ],
+  "meta": {
+    "circuit_name": "adc_001_inv1b",
+    "component_count": 2,
+    "net_count": 4
+  },
+  "nets": [
+    {
+      "is_supply": true,
+      "name": "vdd",
+      "supply_type": "VDD"
+    },
+    {
+      "is_supply": false,
+      "name": "vin",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vout",
+      "supply_type": ""
+    },
+    {
+      "is_supply": true,
+      "name": "vss",
+      "supply_type": "VSS"
+    }
+  ]
+}

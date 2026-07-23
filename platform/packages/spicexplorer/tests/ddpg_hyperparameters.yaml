@@ -1,0 +1,21 @@
+actor:
+  lr: 0.0005
+  hidden_units: [256, 128]
+critic:
+  lr: 0.001
+  weight_decay: 0.0001
+  grad_clip: 1.0
+  hidden_units: [256, 128]
+noise:
+  type: gaussian
+  sigma_initial: 0.3
+  sigma_min: 0.05
+  sigma_decay: 0.99
+memory:
+  buffer_size: 500000
+  batch_size: 128
+training:
+  gamma: 0.99
+  tau: 0.001
+  update_every: 1
+  initial_random_steps: 2000

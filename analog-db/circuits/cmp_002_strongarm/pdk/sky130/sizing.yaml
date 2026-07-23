@@ -1,0 +1,30 @@
+# Sizing for the sky130 binding — geometry re-noted to sky130's bare-µm convention
+# (.option scale=1u) and clamped to the sky130 W/L bin floor (min_w 0.42, min_l 0.15).
+# Same symbols + ratios as the ihp binding.
+schema: spicexplorer/sizing@1
+pdk: sky130
+variables:
+  - {name: x_dut_xmtail_w,  description: "Clocked tail switch width",           default: 4,   min: 0.42, max: 100, unit: m}
+  - {name: x_dut_xminn_w,  description: "Input pair width (per finger, m=2)",  default: 8,   min: 0.42, max: 100, unit: m}
+  - {name: x_dut_xmlem_w, description: "Latch device width (n + p)",          default: 4,   min: 0.42, max: 100, unit: m}
+  - {name: x_dut_xmpc1_w,   description: "Precharge PMOS width",                default: 2,   min: 0.42, max: 100, unit: m}
+  - {name: x_dut_xmobn1_w,  description: "Output inverter NMOS width",          default: 1.5, min: 0.42, max: 100, unit: m}
+  - {name: x_dut_xmobp1_w,  description: "Output inverter PMOS width",          default: 3,   min: 0.42, max: 100, unit: m}
+  - {name: x_dut_xmtail_l,       description: "Core device length",                  default: 0.15, min: 0.15, max: 20, unit: m}
+  # Frozen per-device literals (P4 atomic sweep): defaults reproduce the authored
+  # netlist literals exactly; freeze keeps them out of the search space.
+  - {name: x_dut_xmtail_m, description: "XMTAIL m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xminn_m, description: "XMINN m (frozen literal)", default: 2, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xminp_m, description: "XMINP m (frozen literal)", default: 2, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmlem_m, description: "XMLEM m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmlep_m, description: "XMLEP m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmlum_m, description: "XMLUM m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmlup_m, description: "XMLUP m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmpc1_m, description: "XMPC1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmpc2_m, description: "XMPC2 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmpc3_m, description: "XMPC3 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmpc4_m, description: "XMPC4 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmobn1_m, description: "XMOBN1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmobp1_m, description: "XMOBP1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmobn2_m, description: "XMOBN2 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmobp2_m, description: "XMOBP2 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

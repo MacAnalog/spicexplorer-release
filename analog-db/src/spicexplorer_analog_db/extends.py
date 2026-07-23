@@ -1,0 +1,132 @@
+"""The optimizer projection: thin AUTHORED source → full GENERATED config.
+
+``circuits/<id>/optimizer/projection.yaml`` is the thin view: ``extends: ../circuit.yaml``
+plus only the optimizer-specific wiring (paths, testbenches, pvt, tech constraints, the
+optimizer algorithm). The generator merges in:
+  - ``dut_params``   ← ``pdk/<pdk>/sizing.yaml`` (knobs: bounds, integer flags, freeze+val)
+  - ``target_specs`` ← ``datasheet.yaml`` metrics' ``optimize`` blocks (the projection fields)
+
+and writes the full, ``Project_Setup.from_yaml``-loadable ``circuits/<id>/project_setup.yaml``
+(GENERATED, drift-guarded by Tier 1). The optimizer config is thus *derived, not
+hand-maintained* — while staying loadable by the existing optimizer/api with zero changes there.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+
+class ExtendsError(ValueError):
+    pass
+
+
+def resolve_extends(project_setup_path: Path) -> dict[str, Any]:
+    """Load a project_setup.yaml and resolve its ``extends:`` target.
+
+    Returns a dict with the parsed projection plus a ``_resolved`` block carrying the referenced
+    circuit manifest and the knobs/targets pointers. Raises ``ExtendsError`` if the projection
+    has no ``extends`` or the target is missing/invalid.
+    """
+    with project_setup_path.open() as fh:
+        proj = yaml.safe_load(fh) or {}
+    ext = proj.get("extends")
+    if not ext:
+        raise ExtendsError(f"{project_setup_path}: no `extends:` key")
+    target = (project_setup_path.parent / ext).resolve()
+    if not target.is_file():
+        raise ExtendsError(f"{project_setup_path}: extends target {ext!r} not found at {target}")
+    with target.open() as fh:
+        circuit = yaml.safe_load(fh) or {}
+    opt = circuit.get("optimize", {})
+    knobs = opt.get("knobs_from")
+    targets = opt.get("targets_from")
+    if not knobs or not targets:
+        raise ExtendsError(
+            f"{target}: `optimize.knobs_from`/`optimize.targets_from` missing — "
+            "the projection has nothing to pull"
+        )
+    return {
+        **proj,
+        "_resolved": {"circuit": circuit, "knobs_from": knobs, "targets_from": targets},
+    }
+
+
+def _dut_params(sizing: dict[str, Any]) -> list[dict[str, Any]]:
+    """sizing.yaml variables → the optimizer ``dut_params`` list."""
+    params: list[dict[str, Any]] = []
+    for var in sizing.get("variables", []):
+        p: dict[str, Any] = {"name": var["name"], "min_val": var.get("min"), "max_val": var.get("max")}
+        if var.get("is_integer"):
+            p["is_integer"] = True
+        if var.get("freeze"):
+            p["freeze"] = True
+            p["val"] = var.get("default")
+        params.append(p)
+    return params
+
+
+def _target_specs(datasheet: dict[str, Any]) -> list[dict[str, Any]]:
+    """datasheet metrics' ``optimize`` blocks → the optimizer ``target_specs`` list.
+
+    Each block carries the projection fields verbatim (spec_name = the testbench vector name,
+    e.g. ``v(inoise_total)``; the canonical metric id stays in the datasheet).
+    """
+    specs: list[dict[str, Any]] = []
+    for metric_id, spec in datasheet.get("metrics", {}).items():
+        opt = spec.get("optimize")
+        if not opt or not opt.get("testbench"):
+            continue  # not part of the optimization projection (e.g. a pure-spec metric)
+        entry = {
+            "name": opt.get("spec_name", metric_id),
+            "description": spec.get("description", spec.get("display", metric_id)),
+            **{k: v for k, v in opt.items() if k != "spec_name"},
+        }
+        specs.append(entry)
+    return specs
+
+
+def generate_project_setup(circuit_dir: Path, pdk: str | None = None) -> str:
+    """Render the full GENERATED project_setup.yaml text for one circuit.
+
+    Reads ``optimizer/projection.yaml`` (thin), the circuit manifest, the per-PDK sizing and
+    the datasheet, and merges them into a complete optimizer config. ``pdk`` defaults to the
+    projection's ``pdk:`` key, else the circuit's first binding.
+    """
+    proj_path = circuit_dir / "optimizer" / "projection.yaml"
+    if not proj_path.is_file():
+        raise ExtendsError(f"{circuit_dir.name}: optimizer/projection.yaml missing")
+    resolved = resolve_extends(proj_path)
+    circuit = resolved["_resolved"]["circuit"]
+    pdk = pdk or resolved.get("pdk") or circuit["pdks"][0]
+    if not pdk:
+        raise ExtendsError(f"{circuit_dir.name}: no pdk for the projection (set projection.pdk)")
+
+    with (circuit_dir / "pdk" / str(pdk) / "sizing.yaml").open() as fh:
+        sizing = yaml.safe_load(fh)
+    with (circuit_dir / "datasheet.yaml").open() as fh:
+        datasheet = yaml.safe_load(fh)
+
+    project = dict(resolved.get("project", {}))
+    project["dut_params"] = _dut_params(sizing)
+    optimizer_config = dict(project.get("optimizer_config", {}))
+    optimizer_config["target_specs"] = _target_specs(datasheet)
+    project["optimizer_config"] = optimizer_config
+
+    header = (
+        f"# GENERATED by `analog-db generate` — DO NOT EDIT.\n"
+        f"# Source: optimizer/projection.yaml (extends circuit.yaml)\n"
+        f"#   + pdk/{pdk}/sizing.yaml (dut_params) + datasheet.yaml (target_specs).\n"
+    )
+    return header + yaml.safe_dump({"project": project}, sort_keys=False, width=110)
+
+
+def write_project_setup(circuit_dir: Path) -> Path | None:
+    """Write the generated project_setup.yaml; None if the circuit has no projection."""
+    if not (circuit_dir / "optimizer" / "projection.yaml").is_file():
+        return None
+    out = circuit_dir / "project_setup.yaml"
+    out.write_text(generate_project_setup(circuit_dir))
+    return out

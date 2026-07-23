@@ -1,0 +1,21 @@
+# Analysis binding: loop-gain / stability probe in the unity buffer (class template).
+# Params mirror the circuit's other AC benches (VCM 0.6, IBIAS 20u, CL 500f). ngspice
+# lane = closed-loop AC only (no stb in ngspice); Spectre lane composes a native
+# `stb stb probe=VIPRB` off the template's VIPRB loop-probe marker -> loopGain PSF
+# (pm_loop / gain-margin). No datasheet metrics bind here on purpose — loop-gain
+# figures are closed-lane-only, so they ride the registry/calculator route instead of
+# datasheet conformance (which must stay engine-neutral).
+schema: spicexplorer/analysis@1
+id: stb
+template: stb
+description: "Loop gain (stb) of the unity buffer — Spectre-lane pm_loop/gain-margin; ngspice sees the closed-loop AC only."
+params:
+  VDD: 1.5
+  VCM: 0.6
+  IBIAS: 20u
+  CL: 500f
+  FSTART: 1k
+  FSTOP: 1G
+  PPD: 101
+flags: [spectre_only_payload]
+produces: []

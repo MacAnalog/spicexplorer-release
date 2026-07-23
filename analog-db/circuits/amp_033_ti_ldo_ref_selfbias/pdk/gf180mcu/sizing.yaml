@@ -1,0 +1,134 @@
+# Native gf180mcu binding for the SELF-BIASED TI-LDO reference amp (nfet_06v0/pfet_06v0, 3.3 V).
+# SIZED 2026-07-20 by Ax Bayesian search (30 trials, 8 physics-narrowed free knobs). Landed point
+# = trial 27, which meets ALL 12 datasheet specs on the class benches:
+#   dcgain 74.12 dB · ugf 7.29 MHz · pm 73.9 deg · vos -3.80 mV · psrr 54.07 dB · cmrr 43.17 dB
+#   i_supply 118.3 uA · gain_cl 1.0068 · bw_cl 10.39 MHz · vn_in 191 uV · t_settle 219 ns
+#   icmr_range 2.98 V (corrected metric - see below)
+# vs the seed: pm 21.0 -> 73.9 deg (the ONLY spec the seed missed), noise 325 -> 191 uV,
+# settling 311 -> 219 ns, at +21 uA and +9 dB gain. Rz/Cc moved 1k/1p -> 30.9k/4.5p, which is
+# the whole compensation story: the export-raw-project generator FREEZES those two by default and
+# unfreezing them is what makes 60+ deg reachable (same lesson as amp_032).
+#
+# SELECTED BY SPEC COMPLIANCE, NOT BY SCORE. The best-scoring trial (2, score -2.174) FAILS vos at
+# -11.5 mV against the 5 mV spec; trial 27 scored -4.054 but passes every spec. The weighted
+# aggregate keeps pushing `minimize` goals past the point where they matter and trades away a spec
+# that is already satisfied, so the datasheet is the arbiter. Runner-up trial 25 also passes 12/12
+# (pm 89.7, cmrr 48.3, 112.8 uA) but costs 43% more input noise and 2.2x the settling time; it is
+# the higher-CMRR-margin fallback if PVT later squeezes cmrr (trial 27 has only ~3 dB there).
+#
+# ORIGINAL SEED NOTE: a hand two-stage-Miller starting point, not a result.
+#   - Bias level (XMBP) carried over from amp_032's landed 4.771u/2u, which delivered ~127 uA total
+#     on the same rail and the same device family — a known-good operating current for this PDK.
+#   - Input pair seeded at amp_032's landed 40u/0.7u for the same reason.
+#   - XMBO seeded 2x XMBC: a two-stage Miller amp wants more current in stage 2 than in the tail
+#     (gm5 sets the non-dominant pole, gm1 sets UGF).
+#   - Rz/Cc seeded near a textbook split and left FREE. On amp_032 these two knobs were frozen by
+#     the raw-project generator for two whole optimizer passes; unfreezing them is what moved phase
+#     margin 21.9 -> 65.8 deg. They must stay free here.
+#
+# WATCH ITEM RESOLVED: the in-LDO input common mode is VREF = 0.8 V, which looked low for an NMOS
+# pair on gf180's 6 V devices (Vth ~0.7 V) — the worry was the tail sink XMBC being squeezed into
+# triode. Simulation says it is fine: the corrected ICMR bench gives a 2.98 V tracking band, so
+# 0.8 V sits comfortably inside it. No topology change needed.
+#
+# ICMR METRIC NOTE: icmr_range here is measured with the CORRECTED definition (2026-07-20), which
+# adds an activity criterion |dvout/dvin - 1| <= SLOPE_TOL on top of |vout - vin| <= VTRACK. The
+# old threshold-only test reported 3.23 V for this amp by counting the cut-off region near vss,
+# where vout is pinned at the rail and vin happens to sit near it too — rail coincidence, not
+# tracking. See the amplifier class linearity template header.
+schema: spicexplorer/sizing@1
+pdk: gf180mcu
+variables:
+- name: x_dut_xmbp_w
+  default: 10.844u
+  min: 2u
+  max: 64u
+  unit: m
+  description: On-chip reference PMOS (diode, vdd->ibias). Primary power/PSRR trade knob.
+- name: x_dut_xmbp_l
+  default: 2u
+  min: 0.5u
+  max: 10u
+  unit: m
+  description: Reference PMOS length; longer = lower current, better matching.
+- name: x_dut_xmb0_w
+  default: 12u
+  min: 2u
+  max: 100u
+  unit: m
+  description: Bias-mirror NMOS diode (the mirror-rail unit device).
+- name: x_dut_xmb0_l
+  default: 2u
+  min: 0.5u
+  max: 10u
+  unit: m
+  description: Mirror-rail channel length (shared by XMBC/XMBO for matching).
+- name: x_dut_xmbc_w
+  default: 8.316u
+  min: 2u
+  max: 100u
+  unit: m
+  description: Tail sink (stage-1 current). With XMBO this sets the gm1/gm5 balance.
+- name: x_dut_xmbc_m
+  default: '1'
+  is_integer: true
+  min: 1
+  max: 8
+  description: Tail mirror multiplicity (the drawing uses nf=2 here).
+- name: x_dut_xmbo_w
+  default: 4u
+  min: 2u
+  max: 100u
+  unit: m
+  description: Stage-2 sink (output-stage current). Seeded 2x the tail.
+- name: x_dut_xmbo_m
+  default: '1'
+  is_integer: true
+  min: 1
+  max: 8
+  description: Output-sink multiplicity.
+- name: x_dut_xm1_w
+  default: 86.42u
+  min: 4u
+  max: 100u
+  unit: m
+  description: Input pair (XM2 tied to it - matched pair).
+- name: x_dut_xm1_l
+  default: 0.7u
+  min: 0.28u
+  max: 10u
+  unit: m
+- name: x_dut_xm3_w
+  default: 20u
+  min: 2u
+  max: 100u
+  unit: m
+  description: PMOS mirror load (XM4 tied to it - matched mirror; mismatch here IS offset).
+- name: x_dut_xm3_l
+  default: 1u
+  min: 0.28u
+  max: 10u
+  unit: m
+- name: x_dut_xm5_w
+  default: 37.76u
+  min: 4u
+  max: 100u
+  unit: m
+  description: Stage-2 common-source PMOS driver.
+- name: x_dut_xm5_l
+  default: 2.646u
+  min: 0.28u
+  max: 10u
+  unit: m
+- name: r_z
+  default: 30.853k
+  min: 100
+  max: 50k
+  unit: ohm
+  description: Nulling resistor. MUST stay free - see header.
+- name: c_comp
+  default: 4.508p
+  min: 0.2p
+  max: 20p
+  unit: F
+  description: Miller capacitor. MUST stay free - see header.

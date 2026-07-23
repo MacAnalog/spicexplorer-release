@@ -1,0 +1,17 @@
+# Analysis binding (plan D-4). Binds the cmfb-class ac_servo template (common-mode
+# AC drive on both sense inputs -> vcmfb transfer) to this circuit's conditions.
+# FSTOP raised 100MEG -> 1G for the ugf_servo_hz measure (single-pole 60 dB servo:
+# UGF ~ gain*pole ~ 106 MHz sat right at the old sweep edge).
+schema: spicexplorer/analysis@1
+id: ac_servo
+template: ac_servo
+description: "CM servo transfer: gain_servo_db + bw_servo_hz + ugf_servo_hz into a 50 fF control load."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 50f
+  FSTART: 10
+  FSTOP: 1G
+  PPD: 61
+flags: []
+produces: [gain_servo_db, bw_servo_hz, ugf_servo_hz]

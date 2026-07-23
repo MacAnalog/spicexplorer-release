@@ -1,0 +1,26 @@
+# ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
+# The first VERIFIABLE member of the voltage_reference class — a worked example authored to promote
+# the class from scaffolding to a live open-PDK accession (its class testbenches are validated here).
+schema: spicexplorer/circuit@1
+id: vref_001_vgs
+class: voltage_reference
+display_name: "2-transistor ΔVth voltage reference (mixed-flavor sub-Vt core)"
+stages: 1
+ports: [vdd, vref, vss]                 # supply, reference output, ground (= abstract subckt)
+provenance:
+  source: analog-circuit-design
+  aliases: [delta_vth_reference, two_transistor_vref, vgs_reference]
+  paper: "2-transistor sub-threshold ΔVth voltage reference (Vth-difference core)"
+  license: Apache-2.0
+  designer: "SpiceXplorer (worked example for the voltage_reference class)"
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2]             # open-PDK verifiable bindings (D-1); sky130 to follow
+analyses: [dc_op, temp_sweep, line_sweep, psrr]
+optimize:
+  budget: 500
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft                            # DERIVED upward by the verify harness (plan §6)

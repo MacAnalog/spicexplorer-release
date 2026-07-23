@@ -1,0 +1,30 @@
+// Ported from circuit-bench bandgap-core. PMOS->pch_mac NMOS->nch_mac,
+// NPN->va/bjt.va (calibrated), L 0.5u->300n, VDD 1.2V. Brokaw-ish: amp forces VA=VB,
+// dVbe across R0 sets PTAT current mirrored to VREF.
+simulator lang=spectre
+global 0
+v_vdd (VDD 0) vsource dc=1.2 type=dc
+M0 (VA PCTRL VDD VDD) pch_mac l=300n w=36u nf=16
+M1 (VB PCTRL VDD VDD) pch_mac l=300n w=36u nf=16
+M2 (VREF PCTRL VDD VDD) pch_mac l=300n w=72u nf=32
+Q0 (VA VA 0) npn area=1
+R0 (VB N1) resistor r=10k tc1=0.002092 tc2=7843.8e-9   // real TSMC28 rnwsti (n-well) TC
+Q1 (N1 N1 0) npn area=8
+R3 (VREF 0) resistor r=132k tc1=0.000256 tc2=66.5e-9   // real TSMC28 rupolym (poly) TC
+CREF (VREF 0) capacitor c=2p
+RBIAS (VDD NBIAS) resistor r=300k
+MNBIAS (NBIAS NBIAS 0 0) nch_mac l=300n w=8u nf=4
+MTAIL (TAIL NBIAS 0 0) nch_mac l=300n w=24u nf=11
+MINA (PCTRL VA TAIL 0) nch_mac l=300n w=18u nf=8
+MINB (NOUT VB TAIL 0) nch_mac l=300n w=18u nf=8
+MLOAD0 (NOUT NOUT VDD VDD) pch_mac l=300n w=24u nf=11
+MLOAD1 (PCTRL NOUT VDD VDD) pch_mac l=300n w=24u nf=11
+CCOMP (PCTRL 0) capacitor c=1p
+MPST (ST VREF VDD VDD) pch_mac l=300n w=1u nf=1
+MNST (ST VREF 0 0) nch_mac l=300n w=32u nf=15
+MNSTART (PCTRL ST 0 0) nch_mac l=300n w=0.5u nf=1
+RSTLEAK (ST 0) resistor r=20meg
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+op dc
+save VREF VA VB N1 PCTRL
+saveOptions options save=selected

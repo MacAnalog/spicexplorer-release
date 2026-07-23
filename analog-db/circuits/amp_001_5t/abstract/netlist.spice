@@ -1,0 +1,23 @@
+** Abstract 5-transistor OTA — NMOS input pair, PMOS current-mirror load, NMOS tail.
+** AUTHORED source of truth (plan D-2). PDK-neutral model tokens (nmos/pmos); per-PDK
+** device names + geometry come from circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vdd vout vinp vinn ibias vss
+**
+** This is the canonical 5T core. PDK-specific implementation details (enable/power-down
+** network, decoupling, bias buffering) live ONLY in the pdk/<pdk>/ binding, not here.
+** Devices are XM* (subckt-instance cards): PDK MOS devices (IHP PSP/OSDI, sky130) are
+** .subckt wrappers, so the lowered netlist must instantiate them with X cards.
+**
+** ATOMIC parameterization (plan_parameterization D-1): every instance carries its own
+** mechanically-derived x_dut_<id>_<field> symbols — pure topology, no design opinion.
+** The sharing decisions (input pair, mirror-load pair) live in abstract/params.yaml
+** (groups/ratios) and lower to a generated .param tie block in the exported decks.
+**.subckt ota_5t vdd vout vinp vinn ibias vss
+XM1 outm vinp tail vss nmos w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+XM2 vout vinn tail vss nmos w=x_dut_xm2_w l=x_dut_xm2_l m=x_dut_xm2_m
+XM3 outm outm vdd  vdd pmos w=x_dut_xm3_w l=x_dut_xm3_l m=x_dut_xm3_m
+XM4 vout outm vdd  vdd pmos w=x_dut_xm4_w l=x_dut_xm4_l m=x_dut_xm4_m
+XM5 tail ibias vss vss nmos w=x_dut_xm5_w l=x_dut_xm5_l m=x_dut_xm5_m
+XM6 ibias ibias vss vss nmos w=x_dut_xm6_w l=x_dut_xm6_l m=x_dut_xm6_m
+**.ends
+.end

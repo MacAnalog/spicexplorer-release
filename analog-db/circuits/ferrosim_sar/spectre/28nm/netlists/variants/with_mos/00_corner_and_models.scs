@@ -1,0 +1,26 @@
+// Point Netlist Generated on: Jun 11 17:38:16 2026
+// Generated for: spectre
+// Design Netlist Generated on: Jun 11 17:37:32 2026
+// Design library name: SAR_11B_ZZS
+// Design cell name: _TB_SAR
+// Design view name: config
+simulator lang=spectre
+global 0
+parameters _EXPR_14=4e-09 _EXPR_15=4e-09 C=2f AIN1=0.85 Fs=250M N=64 \
+    N_extra=5 TRIM_OS=7 VDD=0.9 VTEST=0.9 cycle=7 t_end=((N + N_extra) / \
+    Fs)
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=pre_simu
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=noise_worst
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=ttmacro_mos_moscap
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=tt_res_bip_dio_disres
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=tt_mom
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=tt_ind_jvar
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=tt_r_metal
+include "../../../../common/stdcell_netlist/tcbn28hpcplusbwp12t30p140_170a.spi"
+include "../../../../common/stdcell_netlist/tcbn28hpcplusbwp12t30p140lvt_170a.spi"
+
+// Library name: SAR_11B_ZZS
+// Cell name: _TU_REF_GEN
+// View name: schematic
+// Inherited view list: spectre cmos_sch cmos.sch schematic veriloga ahdl
+// pspice dspf

@@ -1,0 +1,30 @@
+// Monte Carlo transient input-offset search using the plain StrongARM comparator.
+simulator lang=spectre
+global 0
+parameters vdd=0.9 code=7 f=1G Vcm=0.45 VDD=0.9 offset_step=50m
+include "${PDK_ROOT}/models/spectre/toplevel_modified.scs" section=globalmc_localmc
+include "dut/cmp_strongarm.scs"
+include "dut/cmp_under_test_plain.scs"
+include "tb/tb_cmp_offset_search.scs"
+
+simulatorOptions options psfversion="1.4.0" temp=27 tnom=27 scalem=1.0 \
+    scale=1.0 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 digits=5 cols=80 \
+    pivrel=1e-3 sensfile="../psf/sens.output" checklimitdest=psf
+mc1 montecarlo numruns=100 seed=12345 variations=mismatch sampling=lds \
+    donominal=no scalarfile="../monteCarlo/mcdata" \
+    paramfile="../monteCarlo/mcparam" savemismatchparams=no \
+    savefamilyplots=yes savedatainseparatedir=yes wfseparation=yes {
+tran tran stop=40n maxstep=5p write="spectre.ic" writefinal="spectre.fc" \
+    annotate=status save=selected
+finalTimeOP info what=oppoint where=rawfile
+modelParameter info what=models where=rawfile
+element info what=inst where=rawfile
+outputParameter info what=output where=rawfile
+designParamVals info what=parameters where=rawfile
+primitives info what=primitives where=rawfile
+subckts info what=subckts where=rawfile
+}
+save CLK VINP VINN DCMPP DCMPN LP LM
+saveOptions options save=selected
+ahdl_include "va/va_d2b_encoder_4b.va"
+ahdl_include "va/va_offset_search.va"

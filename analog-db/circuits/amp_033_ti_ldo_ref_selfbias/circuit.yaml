@@ -1,0 +1,45 @@
+# SUPER-DSL manifest — the TI-application-note LDO REFERENCE amplifier in its self-biased form:
+# a 9-transistor two-stage Miller OTA (NMOS pair, matched PMOS mirror load, PMOS common-source
+# output) that buffers and gains the LDO's internal reference. Companion accession to
+# amp_032_ti_ldo_error_selfbias; together they are the two active blocks of ldo_005_buffered_ref.
+#
+# In the LDO this amp is wired as a NON-INVERTING GAIN STAGE (outer R1/R2 divider into vinn), so
+# v_ref_out = VREF*(R1+R2)/R2 and — because the error amp compares VOUT to the filtered v_ref_out
+# with no further divider — this block sets the LDO's output level AND its DC accuracy. Its
+# input-referred offset lands at VOUT multiplied by the same (R1+R2)/R2. That is why the plain
+# matched mirror load was kept here rather than the error amp's level-shifted ratioed variant.
+#
+# Bench convention: the amplifier class benches wrap the DUT as a UNITY buffer. That is the
+# conservative stability case (maximum loop gain) and it exercises the true in-LDO input common
+# mode (VCM = VREF = 0.8 V from ldo_005's sizing), so it is the right harness even though the
+# in-system closed-loop gain is 2.
+schema: spicexplorer/circuit@1
+id: amp_033_ti_ldo_ref_selfbias
+class: amplifier
+display_name: "TI-LDO reference amplifier, self-biased (9T two-stage Miller, matched mirror load)"
+compensation: "Rz + Cc from the first-stage node to the output"
+stages: 2
+subfamily: ota
+realization: transistor
+ports: [vdd, vout, vinp, vinn, vss]   # vinp=VREF (non-inv), vinn=divider tap (inv)
+provenance:
+  source: drawings/ldo-005-ti-ldo-buffer-ref/gf180/ref_amp/ref_amp.sch
+  aliases: [ref_amp, ti_ldo_ref_amp, ref_amp_selfbias]
+  designer: "Danial Noori Zadeh"
+  notes: >-
+    Distinct from amp_029_two_stage_miller_comp (fully differential, current-source loads,
+    external ibias) and from amp_032 (level-shifted ratioed mirror). The drawing's real
+    ppolyf_u_3k nulling resistor is abstracted to the ideal Rz knob r_z — a layout-time mapping,
+    not a topology change; keeping Rz/Cc continuous is what made amp_032's PM reachable.
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+  schematic: pdk/gf180mcu/schematic/ref_amp.sch
+pdks: [gf180mcu]
+analyses: [dc_op, ac_open_loop, ac_closed_loop, psrr_vdd, cmrr_vcm, noise, tran_step, linearity]
+optimize:
+  budget: 30
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

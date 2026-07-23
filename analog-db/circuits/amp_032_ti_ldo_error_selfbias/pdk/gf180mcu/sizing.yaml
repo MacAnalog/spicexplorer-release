@@ -1,0 +1,119 @@
+# Native gf180mcu binding for the BALANCED TI-LDO error amp (nfet_06v0/pfet_06v0 at 3.3 V).
+# Knob set = amp_032's MINUS x_dut_xm7_w/x_dut_xm7_l (the deleted stage-2 diode) and
+# x_dut_xmbe_w (that diode's bias sink). Everything else is seeded at amp_032's landed values so
+# the topology change is measured in isolation; at those exact numbers this variant already gives
+# vos 9.74 mV (vs 87.1), dcgain 72.32 dB (vs 54.32), psrr 38.73 dB (vs 31.61), vn_in 178 uV
+# (vs 227) and 195 uA (vs 213).
+#
+# RE-COMPENSATED 2026-07-20 by Ax (30 trials, 8 physics-narrowed free knobs incl. r_z/c_comp).
+# Landed point = trial 28 (re-landed 2026-07-21 after the ugf spec was relaxed 10 -> 5 MHz;
+# trial 25 was the previous pick and is kept as a registered design point). Passes ALL 12 specs:
+#   dcgain 61.77 dB · ugf 7.07 MHz · pm 82.69 deg · vos -16.21 mV · psrr 38.89 dB · cmrr 60.07 dB
+#   i_supply 179 uA · gain_cl 0.9978 · bw_cl 8.34 MHz · vn_in 184 uV · t_settle 239 ns · icmr 2.15 V
+# The seed's only miss was pm (13.4 deg) because r_z/c_comp still held amp_032's values, tuned
+# against the old stacked-diode stage 2; 401.8 ohm/0.229 pF -> 32.06 kohm/9.98 pF fixed it.
+#
+# SELECTED BY SPEC COMPLIANCE, NOT BY SCORE (same call as amp_033) — with the caveat that trial 28
+# IS also the best-scoring trial here, once ugf is specced at a level this role actually needs.
+# Against trial 25 (the 10 MHz-ugf pick) it trades 9.25 MHz of unity-gain frequency, which the LDO
+# cannot use, for 37% less supply current (284 -> 179 uA), +11.3 dB CMRR and +7 deg phase margin.
+schema: spicexplorer/sizing@1
+pdk: gf180mcu
+variables:
+- name: x_dut_xmbp_w
+  default: 6.3111u
+  min: 2u
+  max: 64u
+  unit: m
+  description: On-chip reference PMOS (diode-connected, vdd->ibias). PRIMARY power/PSRR trade knob.
+- name: x_dut_xmbp_l
+  default: 2u
+  min: 0.5u
+  max: 10u
+  unit: m
+  description: Reference PMOS length; longer = lower current, better matching.
+- name: x_dut_xmb0_w
+  default: 34.533u
+  min: 2u
+  max: 100u
+  unit: m
+  description: Bias-mirror NMOS unit
+- name: x_dut_xmb0_l
+  default: 2u
+  min: 0.5u
+  max: 10u
+  unit: m
+- name: x_dut_xmbc_m
+  default: '1'
+  is_integer: true
+  min: 1
+  max: 8
+  description: Tail mirror multiplicity
+- name: x_dut_xmbo_m
+  default: '1'
+  is_integer: true
+  min: 1
+  max: 8
+  description: Output sink multiplicity
+- name: x_dut_xm1_w
+  default: 68.542u
+  min: 4u
+  max: 100u
+  unit: m
+  description: Input pair
+- name: x_dut_xm1_l
+  default: 0.7u
+  min: 0.28u
+  max: 10u
+  unit: m
+- name: x_dut_xm3_w
+  default: 69.545u
+  min: 4u
+  max: 100u
+  unit: m
+  description: Level-shifted PMOS mirror (M3m/M5)
+- name: x_dut_xm3_l
+  default: 0.5u
+  min: 0.28u
+  max: 10u
+  unit: m
+- name: x_dut_xm4_w
+  default: 10u
+  min: 2u
+  max: 100u
+  unit: m
+  description: M4 compound-diode level shifter (~zero DC current by design)
+- name: x_dut_xm4_l
+  default: 0.5u
+  min: 0.28u
+  max: 10u
+  unit: m
+- name: x_dut_xm6_w
+  default: 20u
+  min: 8u
+  max: 100u
+  unit: m
+  description: M6 output PMOS
+- name: x_dut_xm6_l
+  default: 3.8349u
+  min: 0.28u
+  max: 10u
+  unit: m
+- name: r_z
+  default: 28.429k
+  min: 100
+  max: 50k
+  unit: ohm
+  description: Nulling resistor (Miller compensation)
+- name: c_comp
+  default: 6.7168p
+  min: 0.2p
+  max: 20p
+  unit: F
+  description: Miller capacitor
+- name: x_dut_xmbf_w
+  default: 5u
+  min: 1u
+  max: 40u
+  unit: m
+  description: M_mirror_f sink (level-shifter anchor; carries ~0 by design)

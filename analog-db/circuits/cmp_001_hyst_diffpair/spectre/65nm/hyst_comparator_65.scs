@@ -1,0 +1,27 @@
+// 65nm port — bare nch/pch, VDD 1.2V. // Ported from circuit-bench dual-hysteresis-comparator (one core).
+// sky130 -> nch/pch, L 0.5u->300n 0.15u->150n 2u->300n, VDD 1.0V.
+simulator lang=spectre
+global 0
+parameters vin=0.5
+v_vdd (VDD 0) vsource dc=1.2 type=dc
+v_inn (INN 0) vsource dc=0.5 type=dc
+v_inp (INP 0) vsource dc=vin type=dc
+MIP (N1 INP TAIL 0) nch l=300n w=20u nf=9
+MIN (N2 INN TAIL 0) nch l=300n w=20u nf=9
+R_TAIL (TAIL 0) resistor r=6k
+MPLD (N2 N2 VDD VDD) pch l=300n w=80u nf=36
+MPLM (N1 N2 VDD VDD) pch l=300n w=80u nf=36
+MHN (HYST_N OUT 0 0) nch l=300n w=1u
+R_HN (N1 HYST_N) resistor r=3meg
+MHP (HYST_P OUT VDD VDD) pch l=300n w=1u
+R_HP (N1 HYST_P) resistor r=3meg
+MB1P (B1 N1 VDD VDD) pch l=150n w=20u nf=9
+MB1N (B1 N1 0 0) nch l=150n w=8u nf=4
+MB2P (B2 B1 VDD VDD) pch l=150n w=40u nf=18
+MB2N (B2 B1 0 0) nch l=150n w=20u nf=9
+MB3P (OUT B2 VDD VDD) pch l=150n w=80u nf=36
+MB3N (OUT B2 0 0) nch l=150n w=40u nf=18
+simulatorOptions options temp=27 tnom=27 gmin=1e-12
+dc dc param=vin start=0.3 stop=0.7 step=0.005 annotate=status
+save OUT N1
+saveOptions options save=selected

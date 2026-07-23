@@ -1,0 +1,42 @@
+// Library name: SAR_11B_ZZS
+// Cell name: L4_CDAC
+// View name: schematic
+// Inherited view list: spectre cmos_sch cmos.sch schematic veriloga ahdl
+// pspice dspf
+subckt L4_CDAC VBOT\<11\> VBOT\<10\> VBOT\<9\> VBOT\<8\> VBOT\<7\> \
+        VBOT\<6\> VBOT\<5\> VBOT\<4\> VBOT\<3\> VBOT\<2\> VBOT\<1\> VDD \
+        VGBTS VIN VINB VREFP VSS VTOP
+    M5 (net2 VDD VSS VSS) nch_ulvt_mac l=30n w=4u multi=1 nf=8 sd=100n \
+        ad=2e-13 as=2.25e-13 pd=4.8u ps=5.9u nrd=0.135370 nrs=0.135370 \
+        sa=295.835n sb=295.835n sa1=149.315n sa2=274.565n sa3=507.343n \
+        sa4=281.096n sb1=149.315n sb2=274.565n sb3=507.343n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=142.36n sapb=158.808n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M2 (net1 VDD net2 VSS) nch_ulvt_mac l=30n w=4u multi=1 nf=8 sd=100n \
+        ad=2e-13 as=2.25e-13 pd=4.8u ps=5.9u nrd=0.135370 nrs=0.135370 \
+        sa=295.835n sb=295.835n sa1=149.315n sa2=274.565n sa3=507.343n \
+        sa4=281.096n sb1=149.315n sb2=274.565n sb3=507.343n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=142.36n sapb=158.808n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M4 (VTOP net1 VINB VSS) nch_mac l=30n w=5u multi=1 nf=10 sd=100n \
+        ad=2.5e-13 as=2.75e-13 pd=6u ps=7.1u nrd=0.110293 nrs=0.110293 \
+        sa=349.754n sb=349.754n sa1=161.047n sa2=316.499n sa3=575.493n \
+        sa4=331.707n sb1=161.047n sb2=316.499n sb3=575.493n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=150.407n sapb=165.494n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M3 (VTOP VGBTS VIN VSS) nch_mac l=30n w=5u multi=1 nf=10 sd=100n \
+        ad=2.5e-13 as=2.75e-13 pd=6u ps=7.1u nrd=0.110293 nrs=0.110293 \
+        sa=349.754n sb=349.754n sa1=161.047n sa2=316.499n sa3=575.493n \
+        sa4=331.707n sb1=161.047n sb2=316.499n sb3=575.493n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=150.407n sapb=165.494n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    I93 (VBOT\<11\> VBOT\<10\> VBOT\<9\> VBOT\<8\> VBOT\<7\> VBOT\<6\> \
+        VBOT\<5\> VBOT\<4\> VBOT\<3\> VBOT\<2\> VBOT\<1\> VREFP VTOP) \
+        L5_CAP_ARRAY
+ends L4_CDAC
+// End of subcircuit definition.
+

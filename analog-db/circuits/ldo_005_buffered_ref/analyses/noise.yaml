@@ -1,0 +1,15 @@
+# Closed-loop output noise — methodology from the vendored LTspice noise benches
+# (circuits/ldo_004_basic_pmos/reference/ltspice/Noise_6p38..42.asc).
+schema: spicexplorer/analysis@1
+id: noise
+template: noise
+description: "Integrated closed-loop output noise, 10 Hz - 10 MHz, at nominal load + Cout."
+params:
+  VDD: 3.3
+  ILOAD: 1m
+  COUT: 1u
+  FSTART: 10
+  FSTOP: 10meg
+  PPD: 10
+flags: []
+produces: [vn_out_rms]

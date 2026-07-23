@@ -1,0 +1,11 @@
+# Analysis binding (plan D-4): diff_pair dc_op — tail current + output common-mode.
+schema: spicexplorer/analysis@1
+id: dc_op
+template: dc_op
+description: "DC operating point; i_supply (tail) + v_ocm."
+params:
+  VDD: 1.5
+  VCM: 0.75
+  IBIAS: 20u
+flags: []
+produces: [i_supply, v_ocm]

@@ -1,0 +1,34 @@
+** AUTHORED TEMPLATE — switch/dc_ron (plan_hierarchical_composition P3).
+** On-resistance of a single pass gate vs signal level: a test current ITEST is pulled
+** from port_b while port_a sweeps 0..VDD with the switch ON (vctl=VDD, vctl_not=0);
+** r_on(v) = (v(port_a)-v(port_b))/ITEST. Reports mid-range r_on and the sweep maximum.
+**
+** Assumes the transmission-gate port order:
+**   .subckt <id> port_a port_b vctl vctl_not vdd vss
+** Required bindings: DUT PORT_LINE VDD VMID ITEST VSWEEP_STEP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param ITEST=${ITEST}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vctl  vctl 0 dc {VDD}
+Vctln vctl_not 0 dc 0
+Va   port_a 0 dc 0
+Isense port_b 0 dc {ITEST}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  dc Va 0 ${VDD} ${VSWEEP_STEP}
+  let ron_v = (v(port_a) - v(port_b))/(${ITEST})
+  meas dc r_on FIND ron_v AT=${VMID}
+  meas dc r_on_max MAX ron_v
+  * MAX meas lines carry an `at=` suffix the result parser skips - re-print clean
+  print r_on_max
+  write
+  quit
+.endc
+.end

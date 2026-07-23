@@ -1,0 +1,63 @@
+** AUTHORED TEMPLATE — afe/ac_chain_static (end-to-end chain AC, static phases/codes).
+** [PATTERN VALIDATED 2026-07-18 live ihp tt on the drawings afe-ideal chain
+**  (ccia -> PGA -> SRMC): +11.74 dB @ old code 111, HP 3.37 Hz, LP 2.41 MHz — but the
+**  TEMPLATE itself is UNTESTED against a landed member (the afe class has none: the
+**  first, afe-ideal, is blocked on the P4 composition.yaml composer). Re-validate on
+**  first binding.]
+** Differential AC through the whole front-end chain with every switch STATIC: phase
+** clocks pinned (V_PHI=VDD transparent, V_PHI_NOT=0) and the 3-bit gain code pinned at
+** rails per the bound CODE bits. Measures the chain's midband gain at MIDF, the
+** high-pass corner (input-cap/pseudo-R servo), and the low-pass corner (filter/beta*GBW)
+** as the -3 dB crossings around the midband reference.
+** Clocked behavior (duty-cycled corner, notch/aliasing, chopped noise) is explicitly
+** OUT of this bench — those are the class's tracked open templates
+** (_shared/classes/TODO_new_class_testbenches.md, bio-afe bench-gaps).
+** CM caveat: chains whose internal amplifier leaves are diff-only macromodels with no
+** CM definition need their composed entry to close CM (CMFB'd cores or entry-level tie
+** resistors INSIDE the DUT netlist) — this bench ties only the external outputs (1 G to
+** VCM), which cannot fix a floating INTERNAL stage.
+** Assumes the family port convention:
+**   .subckt <id> vinp vinn voutp voutn VDD VSS VCM V_D0 V_D0_NOT V_D1 V_D1_NOT
+**                V_D2 V_D2_NOT V_PHI V_PHI_NOT
+** (members without some pins: bind a reduced PORT_LINE — assemble wires by name).
+** Required bindings: DUT PORT_LINE VDD VCM D0 D1 D2 MIDF FSTART FSTOP PPD PDK_INCLUDE.
+** (D0/D1/D2 are 0/1; the template derives the rail drives and their complements.)
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vcmn vcm 0 dc {VCM}
+Vinp vinp vcm dc 0 ac 0.5
+Vinn vinn vcm dc 0 ac -0.5
+* static gain code (rails) + complements
+Vd0  v_d0     0 dc {${D0}*${VDD}}
+Vd0n v_d0_not 0 dc {(1-${D0})*${VDD}}
+Vd1  v_d1     0 dc {${D1}*${VDD}}
+Vd1n v_d1_not 0 dc {(1-${D1})*${VDD}}
+Vd2  v_d2     0 dc {${D2}*${VDD}}
+Vd2n v_d2_not 0 dc {(1-${D2})*${VDD}}
+* phases held transparent
+Vphi  v_phi     0 dc {VDD}
+Vphin v_phi_not 0 dc 0
+* external output CM reference (weak)
+Rtp voutp vcm 1G
+Rtn voutn vcm 1G
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  let gdb = db(mag(v(voutp)-v(voutn)))
+  meas ac gain_cl_db FIND gdb AT=${MIDF}
+  let gtarget = gain_cl_db - 3
+  meas ac hpf_hz WHEN gdb=gtarget RISE=1
+  meas ac bw_cl_hz WHEN gdb=gtarget FALL=1
+  print gain_cl_db
+  write
+  quit
+.endc
+.end

@@ -1,0 +1,18 @@
+# Per-TESTBENCH Spectre engine config for the DIFF_PAIR class — same wiring
+# convention as the amplifier/ia/ldo maps (see any of those headers for the schema).
+#
+# gain_dc sweeps the differential drive source Vid (the deck's VCVS pair splits it
+# ±vid/2 about VCM); the two-point slope read d(voutp−voutn)/d(vid) lives class-side
+# in metrics.yaml.
+schema: spicexplorer/spectre-benches@1
+class: diff_pair
+benches:
+  dc_op:
+    analyses:
+      - {template: dc_op}
+    calculator: []
+  gain_dc:
+    # sweep-only (see the buffer map note)
+    analyses:
+      - {template: dc_sweep, args: {DEV: VID, START: $VID_LO, STOP: $VID_HI, STEP: $VID_STEP}}
+    calculator: []

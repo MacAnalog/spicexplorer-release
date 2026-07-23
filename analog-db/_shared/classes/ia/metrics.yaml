@@ -1,0 +1,120 @@
+# IA class — precision instrumentation amplifiers (plan D-10; renamed from `ccia`,
+# plan_hierarchical_composition P-1 / §8 ia-adopt: the class generalizes to the IA
+# tier and CCIA becomes a soft `subfamily: ccia` label on member circuits).
+# Canonical metric vocabulary + owned testbench templates. Validated against
+# _shared/schema/class.schema.json by the verify harness (Tier 0).
+#
+# An IA is a CLOSED-LOOP composite: mid-band gain is set by a component-ratio
+# feedback (capacitively-coupled subfamily: input/feedback capacitor ratio Cin/Cfb),
+# a DC-servo / pseudo-resistor sets the input common mode and a high-pass corner
+# (hpf_hz), and one or more internal OTAs / gain stages provide the loop gain. It
+# mirrors the `amplifier` class's benches but headlines the instrumentation-amp
+# figures: closed-loop gain, CMRR, and input-referred noise (NEF). The full
+# amplifier template suite is copied in so any constituent block (OTA, gain stage)
+# can still be characterised open-loop. The chopper subfamily additionally owns the
+# CLOCKED bench family (output ripple / residual offset under chopping) — a static
+# .ac/.noise on the frozen network is the wrong analysis for those figures
+# (plan §4.6). This is now ENFORCED, not just advised: a circuit that exposes a
+# chopper/SC clock port (clk_*/phi*) is `clocked`, and declaring an `ac_*` / `.noise`
+# analysis on it is refused at assemble() and flagged by verify Tier-0
+# (xref:no_frozen_ss_on_clocked). The chopper-specific AC templates were removed; the
+# in-operation replacements are the transient benches (native) and pac_*/pnoise_* (Spectre).
+schema: spicexplorer/class@1
+class: ia
+id_code: ia             # accession-id prefix -> ia_001_<slug> (plan_scoreboard D-1)
+description: >-
+  Capacitively-coupled instrumentation amplifiers. Closed-loop AC (cap-ratio gain +
+  bandwidth + high-pass corner), CMRR/PSRR, input-referred noise (NEF), DC operating
+  point, transient settling, and large-signal linearity; loop stability via the
+  internal amplifier's loop-gain probe.
+ppa:                      # scoreboard PPA rollup declaration (plan_scoreboard D-7)
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: gain_cl, better: max}   # closed-loop cap-ratio gain (V/V)
+    - {metric: cmrr_db, better: max}   # the defining IA figure
+    - {metric: vn_in, better: min}     # input-referred noise (biopotential CCIAs)
+canonical_metrics:
+  # --- CCIA headline figures ---
+  - gain_cl          # closed-loop (cap-ratio) gain, V/V
+  - gain_cl_db       # …the same in dB (IA convention)
+  - bw_cl_hz         # closed-loop -3 dB bandwidth
+  - hpf_hz           # low-frequency high-pass corner (DC-servo / pseudo-resistor)
+  - gain_peak_db     # worst-case gain over the sweep (MAX), the shape-guard reference
+  - peaking_db       # gain_peak_db - gain_cl_db. ~0 on a flat band-pass; large means the
+                     #   AC response is PEAKED, so gain_cl_db/hpf_hz/bw_cl_hz are not
+                     #   flat-band figures (an under-damped or positive-feedback loop)
+  - cmrr_db
+  - psrr_vdd_db
+  - psrr_vss_db
+  - vn_in            # input-referred noise density
+  - nef              # noise efficiency factor (needs a circuit-supplied extractor)
+  - pef              # power efficiency factor (NEF^2 * VDD)
+  - icmr_range       # input common-mode range
+  - icmr_min
+  - icmr_max
+  - vos              # input-referred offset
+  - i_supply
+  - slew_rate
+  - t_settle
+  - thd_pct
+  - iip3_dbv
+  - im3_dbc
+  - tc_ppm
+  - area_um2
+  - fom_s
+  - fom_l
+  # --- chopper subfamily (clocked benches; plan §4.6 "ia · chopper") ---
+  - v_ripple_pp      # chopper output ripple, peak-to-peak, at f_chop
+  - v_ripple0_pp     # ...at ZERO input (window A) — the RRL-nulled up-modulated offset (P4)
+  - zin_ohm          # differential input impedance |Zin| at FSIG, static network
+  - zin_chop_ohm     # CHOPPED differential input impedance (avg input current under clocking)
+  - vos_residual     # residual input-referred offset under chopping
+  - f_chop_hz        # chopping frequency the clocked figures were measured at
+  # --- open-loop figures of the internal amplifier (constituent-block char.) ---
+  - dc_gain_db
+  - gbw_hz
+  - ugf_hz
+  - pm_deg
+  - gm_deg
+templates:
+  # closed-loop / instrumentation benches (the IA proper)
+  - ac_closed_loop           # cap-ratio gain + bandwidth (single-ended-out DUTs; CONTINUOUS IAs only)
+  - ac_closed_loop_diff      # fully-differential IA: gain_cl(_db) + hpf_hz + bw_cl_hz (continuous only)
+  # (no ac_closed_loop_chopper_* template: a frozen-switch .ac is invalid on a chopper —
+  #  the closed-lane PSS+PAC bench pac_gain is the baseband-gain replacement. Guard: a clocked
+  #  circuit that declares an ac_* / .noise analysis is refused at assemble() + verify Tier-0.)
+  - thd_diff                 # fully-differential large-signal distortion (in-deck coherent DFT)
+  - tran_chopper_ripple      # chopper subfamily CLOCKED bench: v_ripple_pp + gain_cl + vos_residual
+  - tran_chopper_ripple_rrl  # ...same + driven clk_phi_1/2 pair, for composites with an RRL (P4)
+  - ac_zin_diff              # static differential input impedance (plain IA port order; CONTINUOUS only)
+  # (no ac_zin_chopper_diff template: frozen-switch .ac is invalid on a chopper — use
+  #  pac_zin (closed lane) or tran_zin_chopped (native) for the chopped input impedance.)
+  - tran_zin_chopped         # CHOPPED input impedance under running clocks (Fan Zin ~ 1/(2*fc*Cin))
+  - pac_gain                 # analysis id for pac_gain_chopper_diff (P3-2c golden PSS+PAC baseband-gain bench; closed-lane only)
+  - pac_gain_chopper_diff    #   ...its template file
+  - pac_zin                  # analysis id for pac_zin_chopper_diff (P3-2c chopped input impedance)
+  - pac_zin_chopper_diff     #   ...its template file
+  - pnoise_chopped           # analysis id for pnoise_chopped_diff (P3-2c chopped input-referred noise)
+  - pnoise_chopped_diff      #   ...its template file
+  - dc_op_chopper_diff       # chopper subfamily OP with clocks held transparent
+  - cmrr_vcm                 # common-mode rejection in the buffer/closed config
+  - cmrr_vcm_selfbias        # …for self-biased DUTs (no ibias port)
+  - psrr_vdd                 # positive-supply rejection (PSRR+)
+  - psrr_vdd_selfbias        # …for self-biased DUTs
+  - noise                    # input-referred noise (resolves from _shared/testbench-templates)
+  - noise_diff               # differential-output, self-biased input-referred noise
+  - dc_op
+  - dc_op_diff
+  - dc_sweep
+  - tran_step                # settling / slew (resolves from shared)
+  - tran_step_diff
+  - thd                      # large-signal harmonic distortion (buffer sine; PSS on Spectre)
+  - iip3                     # two-tone intercept (common-fundamental tones; PSS on Spectre)
+  - linearity
+  - stb                      # loop-gain probe (VIPRB -> iprobe; stb analysis on Spectre)
+  # open-loop benches for characterising the internal OTA / gain-stage blocks
+  - ac_open_loop
+  - ac_open_loop_biaswrap    # open-loop gain in closed-loop bias (Lfb/Cin trick)
+  - ac_open_loop_biaswrap_ibias
+  - ac_open_loop_diff
+  - noise_biaswrap_ibias

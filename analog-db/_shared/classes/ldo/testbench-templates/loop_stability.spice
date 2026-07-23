@@ -1,0 +1,29 @@
+** AUTHORED TEMPLATE — ldo/loop_stability: closed-loop output-impedance peaking (stability proxy).
+** Drive an AC current of 1 A into vout; v(vout) = Zout(f). A resonant peak above the DC value =
+** ringing / low phase margin. This is the honest stability metric reachable from the
+** [vdd,vout,vss] ports — a true loop-gain phase margin needs an internal loop-break node (a future
+** ac_loopgain probe), since this LDO's regulation loop is entirely inside the subckt.
+** Bindings: DUT PORT_LINE VDD ILOAD COUT PPD FSTART FSTOP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Iload vout 0 dc ${ILOAD}
+CLoad vout 0 ${COUT}
+Iac  vout 0 dc 0 ac 1
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  meas ac zout_dc  FIND vdb(vout) AT=${FSTART}
+  meas ac zout_max MAX  vdb(vout)
+  let zout_peak_db = zout_max - zout_dc
+  print zout_peak_db
+  write
+  quit
+.endc
+.end

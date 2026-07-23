@@ -1,0 +1,141 @@
+# ==============================================================================
+# NEVERGRAD OPTIMIZER REGISTRY REFERENCE
+# ==============================================================================
+# This file categorizes the available registry keys for the 'name' field.
+# Use these strings directly in: optimizer_config.name
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. DIFFERENTIAL EVOLUTION (DE) FAMILY
+# Best for: Robust global search, mixed integer/continuous, non-smooth landscapes.
+# ------------------------------------------------------------------------------
+Differential_Evolution:
+  Standard:
+    - DE                  # Standard implementation
+    - TwoPointsDE         # (Recommended) Excellent default, uses 2-point crossover
+    - OnePointDE          # Classic genetic crossover
+    - LhsDE               # DE initialized with Latin Hypercube Sampling
+  
+  Specialized:
+    - NoisyDE             # Optimized for noisy fitness functions
+    - DiscreteDE          # Specialized for integer/discrete parameters
+    - GeneticDE           # More "genetic algorithm" style mutation
+    - MiniDE              # Low budget variant
+    - TinyDE              # Very low budget variant
+  
+  Rotation_Invariant:     # Good if parameters are highly correlated
+    - RotatedTwoPointsDE
+    - RotationInvariantDE
+    - AlmostRotationInvariantDE
+
+# ------------------------------------------------------------------------------
+# 2. CMA-ES FAMILY (Covariance Matrix Adaptation)
+# Best for: Continuous problems, high precision, local convergence, "difficult" functions.
+# ------------------------------------------------------------------------------
+CMA_ES:
+  Standard:
+    - CMA                 # The gold standard for continuous optimization
+    - DiagonalCMA         # (Recommended for High Dim) Ignores correlations, faster (O(N) vs O(N^2))
+    - ParametrizedCMA     # The generic family wrapper
+  
+  Variants:
+    - MetaCMA             # Adapts CMA settings dynamically
+    - DoubleFastGADiscreteOnePlusOne # (Often beats CMA on discrete problems)
+    - FCMA                # Fast CMA
+    - EDA                 # Estimation of Distribution Algorithm (CMA ancestor)
+  
+  Population_Sizes:
+    - LargeCMA            # Large population (more global)
+    - TinyCMA             # Small population (faster convergence)
+    - MicroCMA            # Very small population
+
+# ------------------------------------------------------------------------------
+# 3. AUTO-ML & META-OPTIMIZERS
+# Best for: "Set and forget". These automatically switch strategies based on budget/dimension.
+# ------------------------------------------------------------------------------
+AutoML:
+  NGOpt_Series:           # (Highly Recommended) Nevergrad's flagship meta-optimizers
+    - NGOpt               # The main entry point (adapts to everything)
+    - NGOpt4, NGOpt8      # Variants for specific scenarios
+    - NGOptRW             # Real-world optimized
+  
+  Portfolios:             # Runs multiple algorithms in parallel/sequence
+    - Portfolio
+    - ParaPortfolio       # Parallel portfolio
+    - Shiwa               # "She wa" - Adapts to noise and conditioning
+    - CMandAS2            # CMA and Algorithm Selection
+
+# ------------------------------------------------------------------------------
+# 4. ONE PLUS ONE (1+1) FAMILY
+# Best for: Simple hill climbing, low budgets, discrete parameters, debug.
+# ------------------------------------------------------------------------------
+One_Plus_One:
+  Standard:
+    - OnePlusOne          # Simple mutation-only hill climber
+  
+  Discrete_Integer:       # Excellent for purely discrete search spaces
+    - DiscreteOnePlusOne
+    - OptimisticDiscreteOnePlusOne
+    - DoubleFastGADiscreteOnePlusOne # Current SOTA for many discrete tasks
+  
+  Noisy:
+    - NoisyOnePlusOne
+    - OptimisticNoisyOnePlusOne
+
+# ------------------------------------------------------------------------------
+# 5. SAMPLING & QUASI-RANDOM
+# Best for: Initial exploration, finding valid starting points, sweeping.
+# ------------------------------------------------------------------------------
+Sampling:
+  Random:
+    - RandomSearch
+    - RandomSearchPlusMiddlePoint # Checks the center (0,0) first
+  
+  Low_Discrepancy:        # (Recommended over Random)
+    - HaltonSearch
+    - ScrHaltonSearch     # Scrambled Halton (Better for high dimensions)
+    - HammersleySearch
+    - ScrHammersleySearch # Scrambled Hammersley (Best for fixed budget)
+    - LHSSearch           # Latin Hypercube Sampling
+
+# ------------------------------------------------------------------------------
+# 6. PARTICLE SWARM OPTIMIZATION (PSO)
+# Best for: Specific engineering problems, "flocking" behavior.
+# ------------------------------------------------------------------------------
+PSO:
+  - PSO                   # Standard Particle Swarm
+  - ConfPSO               # Configurable PSO
+  - RealSpacePSO          # PSO adapted for real-space (R^n)
+  - SQOPSO                # Scrambled Quasi-Oppositional PSO
+
+# ------------------------------------------------------------------------------
+# 7. GRADIENT-BASED & SCIPY WRAPPERS
+# Best for: Smooth, differentiable functions where you want to fine-tune a result.
+# ------------------------------------------------------------------------------
+Gradient_Based:
+  Scipy:
+    - NelderMead          # Gradient-free simplex method
+    - BFGS                # Quasi-Newton method
+    - LBFGSB              # Limited-memory BFGS with Bounds
+    - Cobyla              # Constrained optimization
+    - SQP                 # Sequential Quadratic Programming
+    - Powell              # Powell's conjugate direction method
+
+# ------------------------------------------------------------------------------
+# 8. BAYESIAN OPTIMIZATION
+# Best for: Very expensive functions (minutes/hours per run), low dimension (< 20).
+# ------------------------------------------------------------------------------
+Bayesian:
+  - BO                    # Standard Bayesian Optimization
+  - BayesOptimBO
+  - PCABO                 # BO with PCA (good for higher dimensions)
+  - NoisyBandit           # Upper Confidence Bound (UCB) approach
+
+# ------------------------------------------------------------------------------
+# 9. OTHER FAMILIES
+# ------------------------------------------------------------------------------
+Others:
+  - SPSA                  # Simultaneous Perturbation Stochastic Approximation (Gradient approx)
+  - TBPSA                 # Test-Based Population Size Adaptation
+  - VoronoiDE             # Voronoi-based DE
+  - AX, AXP               # Wrappers for Ax platform (Facebook)

@@ -1,0 +1,31 @@
+# Per-TESTBENCH Spectre engine config for the TEMP_SENSOR class — same wiring
+# convention as the amplifier/ia/ldo maps (see any of those headers for the schema).
+#
+# temp_sweep uses the dedicated `temp_sweep` engine template (`dc param=temp` — no
+# dev= source; abscissa = °C). line_sweep is a supply sweep like the ldo line
+# benches. psrr follows the ldo psrr shape (ac marker on Vdd in the deck), but the
+# calculator row is the SIGNED supply→output gain (`psr_db`, more-negative = better
+# rejection — the class metric convention), not the ldo's negated PSRR.
+schema: spicexplorer/spectre-benches@1
+class: temp_sensor
+benches:
+  dc_op:
+    analyses:
+      - {template: dc_op}
+    calculator: []
+  temp_sweep:
+    # sweep-only (see the buffer map note); TSTART/TSTOP/TSTEP resolve from the
+    # bench params by name
+    analyses:
+      - {template: temp_sweep}
+    calculator: []
+  line_sweep:
+    analyses:
+      - {template: dc_sweep, args: {DEV: VDD, START: $VDD_LO, STOP: $VDD_HI, STEP: $VDD_STEP}}
+    calculator: []
+  psrr:
+    analyses:
+      - {template: dc_op}
+      - {template: ac}
+    calculator:
+      - {name: psr_db, expr: gain_db_at, args: {OUT: vout, FREQ: $FSTART}}

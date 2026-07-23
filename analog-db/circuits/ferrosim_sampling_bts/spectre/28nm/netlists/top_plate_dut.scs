@@ -1,0 +1,27 @@
+// Top-plate differential sampler from
+// PLAYGROUND_LLM/TB_SAMPLING_BTS_TOP_DIFF Interactive.26.RO.
+//
+// Evaluated output:
+//   VOUT = value(VSP - VSN, 0.5ns, period=1/Fs)
+
+subckt TOP_PLATE_SAMPLER VSP VSN VGP VGN VINP VINN VSS
+
+    M_N (VSN VGN VINN VSS) nch_ulvt_mac l=30n w=5u multi=4 nf=10 sd=100n \
+        ad=2.5e-13 as=2.75e-13 pd=6u ps=7.1u nrd=0.110293 nrs=0.110293 \
+        sa=349.754n sb=349.754n sa1=161.047n sa2=316.499n sa3=575.493n \
+        sa4=331.707n sb1=161.047n sb2=316.499n sb3=575.493n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=150.407n sapb=165.494n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M_P (VSP VGP VINP VSS) nch_ulvt_mac l=30n w=5u multi=4 nf=10 sd=100n \
+        ad=2.5e-13 as=2.75e-13 pd=6u ps=7.1u nrd=0.110293 nrs=0.110293 \
+        sa=349.754n sb=349.754n sa1=161.047n sa2=316.499n sa3=575.493n \
+        sa4=331.707n sb1=161.047n sb2=316.499n sb3=575.493n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=150.407n sapb=165.494n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+
+    C_P (VSP VSS) capacitor c=100f
+    C_N (VSN VSS) capacitor c=100f
+
+ends TOP_PLATE_SAMPLER

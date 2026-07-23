@@ -1,0 +1,17 @@
+# Analysis binding (plan D-4): tran_step_diff template — unity-gain differential-follower
+# step response (vinn <- voutp feedback); settling time on the differential output.
+schema: spicexplorer/analysis@1
+id: tran_step
+template: tran_step_diff
+description: "Unity-gain differential-follower step response; settling time."
+params:
+  VDD: 1.5
+  VCM: 0.8
+  CL: 50f
+  VSTEP: 0.2
+  VTOL: 2m          # settle band: |vodm - vfinal| < 2 mV (1% of the step)
+  TSTART: 1u
+  TSTEP: 1n
+  TSTOP: 5u
+flags: []
+produces: [t_settle]

@@ -1,0 +1,41 @@
+** AUTHORED TEMPLATE — amplifier/noise_biaswrap: input-referred noise for DUTs on the AnalogGym
+** self-bias convention (ports vss vdd vinn vinp vout; NO ibias port). Self-bias companion of
+** noise_biaswrap_ibias (M4 follow-up): a high-gain multistage OTA driven OPEN-LOOP at a fixed VCM
+** rails the output, so a plain (unwrapped) noise bench takes its input-referred noise at a
+** non-representative bias. Same 1 TH / 1 TF bias-wrap as ac_open_loop_biaswrap: Lfb DC-shorts
+** vout back to the INVERTING input to set the high-gain operating point, while Cin AC-opens that
+** loop and injects the noise input source Vac; input-referred noise is w.r.t. Vac (at the noise
+** band Cin is a short + Lfb an open, so the small-signal input path is the inverting node).
+**
+** Assumes the AnalogGym canonical DUT port order (self-biased; NO ibias port):
+**   .subckt <id> vss vdd vinn vinp vout
+** Bindings: DUT VDD VCM CL FSTART FSTOP PPD PDK_INCLUDE.
+** FIXED 2026-07-20: this template used to hardcode `X1 0 vdd opout_dc opin opout ${DUT}`,
+** which silently assumed the AnalogGym port order [vss vdd vinn vinp vout] and MIS-WIRED any
+** DUT declaring a different order (e.g. the amplifier-class [vdd vout vinp vinn vss] swaps
+** vdd<->vss). It now uses ${PORT_LINE} with canonical node names, exactly like the
+** *_biaswrap_ibias sibling. For the AnalogGym DUTs this is a no-op: their vss port binds to
+** node `vss`, which `Vss vss 0 dc 0` ties to ground just as the old direct-to-0 wiring did.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vcm  vinp 0 dc {VCM}          ; common-mode bias on the non-inverting input
+Vac  sigin 0 dc 0 ac 1        ; noise input source (input-referral reference)
+Lfb  vout vinn 1T        ; 1 TH: DC short (bias), AC open
+Cin  vinn sigin 1T        ; 1 TF: DC open, AC inject into the inverting node
+CLoad vout 0 {CL}
+
+${PORT_LINE} ${DUT}
+.control
+  set filetype=ascii
+  noise v(vout) Vac dec ${PPD} ${FSTART} ${FSTOP}
+  print inoise_total onoise_total
+  write
+  quit
+.endc
+.end

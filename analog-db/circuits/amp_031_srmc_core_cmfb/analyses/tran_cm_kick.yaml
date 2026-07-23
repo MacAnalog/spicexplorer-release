@@ -1,0 +1,24 @@
+# Analysis binding: CM-loop health (time domain) — CM current-kick recovery on the
+# OUTPUT CM (loop 2). Campaign-verified at this sizing: loop-2 kick residual ~0
+# (PASS). The STAGE-1 loop (loop 1) is NOT covered by this bench (its sense nodes are
+# internal) and is only LOCALLY stable — a kick on the stage-1 nodes escapes the
+# unclamped ideal-servo basin (documented; rail-clamped servo variant is the open
+# follow-up). Windows sized for the ~us servo/plant dynamics at this sizing.
+schema: spicexplorer/analysis@1
+id: tran_cm_kick
+template: tran_cm_kick
+description: "Output-CM disturbance recovery: cm_kick_v, cm_resid_v, t_cm_settle (loop-2 only; loop-1 caveat in header)."
+params:
+  VDD: 1.2
+  VCM: 0.5
+  CL: 50f
+  ICM: 200n
+  TKICK: 50u
+  TMID: 52u
+  TREL: 54u
+  TEND: 380u
+  VTOL: 2m
+  TSTEP: 200n
+  TSTOP: 400u
+flags: []
+produces: [cm_kick_v, cm_resid_v, t_cm_settle]

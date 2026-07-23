@@ -1,0 +1,33 @@
+# ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
+# PROMOTED from the ferrosim_two_stage_opamp reference entry: authored a device-generic abstract
+# netlist + open-PDK bindings so the classic Miller two-stage is lowerable, assembled and
+# simulated. The original TSMC 28nm/65nm ferrosim decks are retained under `references`.
+# The upstream deck bias-refers to a PMOS diode with an external SINK; the promotion adds an
+# NMOS diode+mirror front-end (XMBD/XMBS) so the entry follows the amplifier class's
+# ibias-port convention (current pushed vdd -> ibias, as in amp_001/amp_018).
+schema: spicexplorer/circuit@1
+id: amp_022_fer_two_stage
+class: amplifier
+display_name: "Two-stage Miller opamp (PMOS input pair, NMOS-CS second stage)"
+compensation: miller
+stages: 2
+ports: [vdd, vout, vinp, vinn, ibias, vss]
+provenance:
+  source: Arcadia-1/ferrosim (imported via netlist-crawler)
+  aliases: [two_stage_opamp, ferrosim_two_stage_opamp, two-stage-opamp]
+  designer: Token Zhang
+  license: MIT
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, sky130, tsmc-n65, gf180mcu]
+analyses: [ac_open_loop, dc_op, noise, tran_step, psrr_vdd, cmrr_vcm, linearity, thd, iip3, stb]
+references:
+  - {tool: spectre, dir: spectre/28nm, node: 28nm}
+  - {tool: spectre, dir: spectre/65nm, node: 65nm}
+optimize:
+  budget: 2000
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

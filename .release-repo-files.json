@@ -2,6 +2,7 @@
   ".github/workflows/analog-db.yml",
   ".github/workflows/lint.yml",
   ".github/workflows/platform.yml",
+  ".gitignore",
   "README.md",
   "platform/pyproject.toml"
 ]

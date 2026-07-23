@@ -21,8 +21,8 @@ jobs:
     # docs must at least parse.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - run: pip install pyyaml
@@ -48,7 +48,7 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: platform packages ported yet?
         id: deps
         run: |
@@ -58,7 +58,7 @@ jobs:
             echo "ok=false" >> "$GITHUB_OUTPUT"
             echo "::notice::spicexplorer platform packages are not in this monorepo yet — the analog-db test tier activates once they port."
           fi
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         if: steps.deps.outputs.ok == 'true'
         with:
           python-version: "3.11"

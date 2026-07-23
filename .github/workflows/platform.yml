@@ -38,11 +38,29 @@ jobs:
         if: steps.ported.outputs.ok == 'true'
         with:
           python-version: "3.11"
-      - name: install (core + package under test)
+      - name: install (workspace siblings + package under test)
         if: steps.ported.outputs.ok == 'true'
+        # Siblings first so pip satisfies the cross-package deps from the
+        # monorepo, never PyPI. pyyaml: the workspace-root conftest imports it
+        # at collection and core does not declare it.
         run: |
-          pip install -e platform/packages/spicexplorer-core
-          pip install -e "platform/packages/${{ matrix.package }}" pytest
+          pip install -e platform/packages/spicexplorer-core \
+                      -e platform/packages/spicexplorer-circuitgraph \
+                      -e platform/packages/spicexplorer-netlist2xschem
+          pip install -e "platform/packages/${{ matrix.package }}" pytest pyyaml
+      - name: wire the analog-db corpus (templates + examples)
+        if: steps.ported.outputs.ok == 'true'
+        # circuitgraph's template library and some example YAMLs resolve the
+        # analog-db tree via <platform root>/examples/analog-db (a submodule in
+        # the private repo); in the monorepo it lives at ./analog-db.
+        run: |
+          if [ -d analog-db ]; then
+            mkdir -p platform/examples
+            ln -sfn "$GITHUB_WORKSPACE/analog-db" platform/examples/analog-db
+            echo "SPICEXPLORER_ANALOG_DB=$GITHUB_WORKSPACE/analog-db" >> "$GITHUB_ENV"
+          else
+            echo "::notice::analog-db unit not in the monorepo — corpus-dependent tests will skip or fail until it ports."
+          fi
       - name: fast test tier (no SPICE)
         if: steps.ported.outputs.ok == 'true'
         working-directory: platform/packages/${{ matrix.package }}

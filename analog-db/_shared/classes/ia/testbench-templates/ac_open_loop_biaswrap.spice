@@ -1,0 +1,37 @@
+** AUTHORED TEMPLATE — amplifier/ac_open_loop_biaswrap (plan D-4; the AnalogGym bias-wrap).
+** Open-loop gain measured in closed-loop bias (analoggym-amplifiers skill §5): a 1 TH inductor
+** DC-shorts the output back to the inverting input — setting the high-gain operating point —
+** while a 1 TF cap AC-opens that feedback and injects the AC input. This is the only way a
+** high-gain 3-stage amp biases stably while still exposing its open-loop AC response.
+**
+** Assumes the AnalogGym canonical DUT port order (self-biased; NO ibias port):
+**   .subckt <id> vss vdd vinn vinp vout
+** Bindings: DUT VDD VCM CL FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vcm  opin 0 dc {VCM}          ; common-mode bias on the non-inverting input
+Vac  sigin 0 dc 0 ac 1        ; AC stimulus
+Lfb  opout opout_dc 1T        ; 1 TH: DC short (bias), AC open
+Cin  opout_dc sigin 1T        ; 1 TF: DC open, AC inject into the inverting node
+CLoad opout 0 {CL}
+
+* DUT: ports vss vdd vinn vinp vout — vinn=opout_dc (feedback), vinp=opin (CM), vout=opout
+X1 0 vdd opout_dc opin opout ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  meas ac dcgain FIND vdb(opout) AT=${FSTART}
+  meas ac ugf    WHEN vdb(opout)=0 FALL=1
+  let phc = cph(opout)*180/3.14159265
+  let ph  = 180 + phc - phc[0]
+  meas ac pm     FIND ph WHEN vdb(opout)=0 FALL=1
+  write
+  quit
+.endc
+.end

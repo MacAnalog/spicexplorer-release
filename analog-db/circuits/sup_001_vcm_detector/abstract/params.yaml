@@ -1,0 +1,16 @@
+# sup_001_vcm_detector — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit sup_001_vcm_detector --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  RMN: {Value: x_dut_rmn_value}
+  RMP: {Value: x_dut_rmp_value}
+groups:
+- name: averager_rmp_rmn
+  kind: shared_geometry
+  members: [RMP, RMN]
+  tie: [Value]
+  description: Matched CM-averager halves — the drawn symbol Rm on both; mismatch is directly the common-mode
+    sense error, absolute value only sets OTA-output loading.

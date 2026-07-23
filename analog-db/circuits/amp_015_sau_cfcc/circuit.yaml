@@ -1,0 +1,38 @@
+# SUPER-DSL manifest — AnalogGym import (plan Phase 5).
+schema: spicexplorer/circuit@1
+id: amp_015_sau_cfcc
+class: amplifier
+display_name: "3-stage OTA \u2014 CFCC compensation (Sau)"
+compensation: CFCC
+stages: 3
+ports:
+- vss
+- vdd
+- vinn
+- vinp
+- vout
+provenance:
+  source: AnalogGym
+  aliases:
+  - Sau_CFCC_Pin_3
+  - sau_cfcc_pin_3
+  paper: S.S. Chong & P.K. Chan, IEEE JSSC 47(9):2227-2234, 2012
+  license: BSD-3-Clause
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+  reference_schematic: reference/Sau_CFCC_Pin_3.png
+pdks:
+- sky130
+- ihp-sg13g2
+- gf180mcu
+- FOUNDRY-n65
+analyses:
+- ac_open_loop
+- dc_op
+- noise
+- tran_step
+- psrr_vdd
+- cmrr_vcm
+status: draft

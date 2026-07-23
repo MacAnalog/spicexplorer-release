@@ -1,0 +1,8 @@
+** sch_path: pseudo-resistor-b-well-and-generator.sch
+**.subckt pseudo-resistor-b-well-and-generator port_A port_B
+*.ipin port_A
+*.ipin port_B
+XM1 port_B net1 net1 net1 sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM2 port_A net1 net1 net1 sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+**.ends
+.end

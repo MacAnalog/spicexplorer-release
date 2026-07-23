@@ -1,0 +1,37 @@
+** sch_path: ota-improved.sch
+**.subckt ota-improved vdd vout vinp vinn ibias_5u d_ena vss
+*.ipin ibias_5u
+*.iopin vdd
+*.iopin vss
+*.ipin vinp
+*.ipin vinn
+*.opin vout
+*.ipin d_ena
+XM5 net6 gate vss vss sg13_lv_nmos w=X_DUT_M5_W l=X_DUT_M5_L ng=X_DUT_M5_NG m=1
+XM4 net2 gate_p vdd vdd sg13_lv_pmos w=X_DUT_M3M4_W l=X_DUT_M3M4_L ng=1 m=1
+XM1 net4 vinp tail vss sg13_lv_nmos w=X_DUT_M1M2_W l=X_DUT_M1M2_L ng=1 m=1
+XM2 net5 vinn tail vss sg13_lv_nmos w=X_DUT_M1M2_W l=X_DUT_M1M2_L ng=1 m=1
+XM3 net3 gate_p vdd vdd sg13_lv_pmos w=X_DUT_M3M4_W l=X_DUT_M3M4_L ng=1 m=1
+XM6 net1 gate vss vss sg13_lv_nmos w=X_DUT_M6_W l=X_DUT_M6_L ng=1 m=1
+XMpd5 gate ena_n vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XMpd3 ena ena_n vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XMpd4 ena ena_n vdd vdd sg13_lv_pmos w=1u l=0.13u ng=1 m=1
+XMpd6 net1 ena gate vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XM2c vout dp_casc net5 vss sg13_lv_nmos w=X_DUT_M1CM2C_W l=X_DUT_M1CM2C_L ng=1 m=1
+XM1c gate_p dp_casc net4 vss sg13_lv_nmos w=X_DUT_M1CM2C_W l=X_DUT_M1CM2C_L ng=1 m=1
+XM4c vout gate_pc net2 vdd sg13_lv_pmos w=X_DUT_M3CM4C_W l=X_DUT_M3PCM4C_L ng=1 m=1
+XM3c gate_p gate_pc net3 vdd sg13_lv_pmos w=X_DUT_M3CM4C_W l=X_DUT_M3CM4C_L ng=1 m=1
+XMpd8 gate_p ena vdd vdd sg13_lv_pmos w=1u l=0.13u ng=1 m=1
+Vmeas1 tail net6 0
+.save i(vmeas1)
+XMpd1 ena_n d_ena vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XMpd2 ena_n d_ena vdd vdd sg13_lv_pmos w=1u l=0.13u ng=1 m=1
+Vmeas4 ibias_5u net1 0P
+.save i(vmeas4)
+XMpd11 vout ena_n vss vss sg13_lv_nmos w=0.5u l=0.13u ng=1 m=1
+XMdecoup1 vss gate vss vss sg13_lv_nmos w=8u l=1u ng=4 m=1
+XMdecoup3 vdd gate_pc vdd vdd sg13_lv_pmos w=12u l=0.5u ng=4 m=1
+V1 vdd gate_pc X_DUT_V_BIAS_2
+V2 dp_casc tail X_DUT_V_BIAS_1
+**.ends
+.end

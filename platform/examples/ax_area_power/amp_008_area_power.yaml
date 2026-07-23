@@ -1,0 +1,130 @@
+# Ax-revival + area/power demo — SECOND topology, WITH active-area + power as first-class metrics.
+#
+# Identical circuit/search to `amp_008_baseline.yaml` (three-stage NMCF op-amp), plus:
+#   • power       — Tier-1 op-point measurement |I_supply|·VDD (µW), from the dc_op deck (VDD 1.8).
+#   • active_area — PARAM-DERIVED Σ W·L·m over the 7 sized device groups (µm²); NO simulation.
+# Both are scored EXACTLY like gain/ugf/pm — same per-spec `range` normalization + reward/penalty
+# aggregation into the single objective. Aggressive `minimize` targets keep downward pressure so
+# the demo visibly trades area/power against performance on the wider 3-stage search space.
+project:
+  name: amp_008 + area & power
+  description: Three-stage NMCF op-amp — gain/ugf/pm PLUS active-area & power as first-class metrics
+  simulator: ngspice
+  save_sim: false
+  parallel_sim: true
+  ws_root: ../analog-db/raw/amp_008_leung_nmcf/ihp-sg13g2
+  netlist: ac_open_loop.spice
+  outdir: scratch
+  tech_spec:
+    name: ihp-sg13g2
+    constraints: {}
+  dut_params:
+  # 7 free device groups (searched) — {w,l}
+  - {name: x_dut_xm7_w,  min_val: 5.0e-07, max_val: 2.0e-06}
+  - {name: x_dut_xm7_l,  min_val: 3.0e-07, max_val: 1.5e-06}
+  - {name: x_dut_xm9_w,  min_val: 5.0e-07, max_val: 2.0e-06}
+  - {name: x_dut_xm9_l,  min_val: 3.0e-07, max_val: 1.5e-06}
+  - {name: x_dut_xm10_w, min_val: 5.0e-07, max_val: 2.0e-06}
+  - {name: x_dut_xm10_l, min_val: 3.0e-07, max_val: 1.5e-06}
+  - {name: x_dut_xm11_w, min_val: 5.0e-07, max_val: 2.0e-06}
+  - {name: x_dut_xm11_l, min_val: 3.0e-07, max_val: 1.5e-06}
+  - {name: x_dut_xm14_w, min_val: 5.0e-07, max_val: 2.0e-06}
+  - {name: x_dut_xm14_l, min_val: 3.0e-07, max_val: 1.5e-06}
+  - {name: x_dut_xm21_w, min_val: 5.0e-07, max_val: 2.0e-06}
+  - {name: x_dut_xm21_l, min_val: 3.0e-07, max_val: 1.5e-06}
+  - {name: x_dut_xm23_w, min_val: 5.0e-07, max_val: 2.0e-06}
+  - {name: x_dut_xm23_l, min_val: 3.0e-07, max_val: 1.5e-06}
+  # bias current (searched)
+  - {name: CURRENT_0_BIAS, min_val: 1.0e-05, max_val: 4.0e-05}
+  # frozen m-counts (integer device bins) — declared so the active_area recipe can look them up
+  # via `_frozen_param_defaults()` on every eval path (they stay at the deck's default of 4).
+  - {name: x_dut_xm7_m,  freeze: true, val: 4.0}
+  - {name: x_dut_xm9_m,  freeze: true, val: 4.0}
+  - {name: x_dut_xm10_m, freeze: true, val: 4.0}
+  - {name: x_dut_xm11_m, freeze: true, val: 4.0}
+  - {name: x_dut_xm14_m, freeze: true, val: 4.0}
+  - {name: x_dut_xm21_m, freeze: true, val: 4.0}
+  - {name: x_dut_xm23_m, freeze: true, val: 4.0}
+  testbenches:
+  - name: ac_open_loop
+    params: []
+    netlist: ac_open_loop.spice
+    enable: true
+    description: 'raw deck: ac_open_loop (open-loop gain in closed-loop bias)'
+  - name: dc_op
+    params: []
+    netlist: dc_op.spice
+    enable: true
+    description: 'raw deck: dc_op (operating point, supply current)'
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48
+    budget: 15
+    name: NGOpt
+    lin_variable_bounds: {min: 0, max: 100}
+    log_variable_bounds: {min: 1, max: 100}
+    target_specs:
+    # ── amplifier performance (bare-name reads of the deck's `.meas` results) ──
+    - name: dcgain
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exceed
+      target: 40
+      range: 40
+      tolerance: 1
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: ugf
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exceed
+      target: 1000000.0
+      range: 10000000.0
+      tolerance: 100000.0
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: pm
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exact
+      target: 60
+      range: 45
+      tolerance: 10
+      weight: 1.0
+      reward_type: none
+      enable: true
+    # ── power: Tier-1 op-point measurement |I_supply|·VDD (µW). dc_op deck rail is VDD=1.8 ──
+    - name: power
+      testbench: dc_op
+      sim_type: op
+      goal: minimize
+      target: 300.0        # µW — below the ~520 µW center/default draw, so it is pushed down
+      range: 500.0
+      tolerance: 10.0
+      weight: 1.0
+      reward_type: none
+      enable: true
+      measurement: {meas: power_uw, probe: i(i_supply), vdd: 1.8}
+    # ── active area: PARAM-DERIVED Σ W·L·m over the 7 sized device groups (µm²); no simulation ──
+    - name: active_area
+      testbench: dc_op          # ignored for a derived spec (no sim read); a valid tb name
+      sim_type: op              # ignored for a derived spec; a valid sim_type
+      goal: minimize
+      target: 80.0             # µm² — below the ~236 µm² default (all 24 devices, m up to ×32), so minimized
+      range: 200.0
+      tolerance: 0.5
+      weight: 1.0
+      reward_type: none
+      enable: true
+      measurement:
+        derived: active_area
+        scale: 1.0e12           # m² → µm²
+        # No `devices:` list — active area is computed by the RECURSIVE NETLIST WALK
+        # (spicexplorer_core.measurements.area): all 24 transistors (XM0–XM23) are summed
+        # Σ W·L·m with each multiplier resolved from the deck's `.param` ties (e.g.
+        # x_dut_xm19_m = {x_dut_xm14_m*8} → ×32). The old 7-group hand list undercounted the
+        # true silicon by ~10× (it saw 7 of 24 devices). Verify with:
+        #   python -m spicexplorer_core.measurements.area \
+        #     examples/analog-db/raw/amp_008_leung_nmcf/ihp-sg13g2/ac_open_loop.spice --table

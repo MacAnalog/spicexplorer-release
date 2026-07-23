@@ -1,0 +1,19 @@
+# Datasheet for the LDO class stub (plan D-10) — regulation vocabulary, not amplifier metrics.
+schema: spicexplorer/datasheet@1
+default_conditions:
+  supply: {unit: V, typical: 1.5}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  i_q:
+    display: "Quiescent current"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 1.0e-3, unit: A}
+  load_reg:
+    display: "Load regulation"
+    unit: V
+    analysis: load_regulation
+    extract: {meas: load_reg}
+    spec: {max: 0.2, unit: V}

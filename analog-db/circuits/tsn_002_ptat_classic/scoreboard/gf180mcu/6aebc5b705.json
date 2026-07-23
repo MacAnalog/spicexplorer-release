@@ -1,0 +1,118 @@
+{
+  "area": {
+    "active_gate_area_um2": 14.0,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 4,
+    "r_count": 1,
+    "r_total_ohm": 20000.0
+  },
+  "circuit": "tsn_002_ptat_classic",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 1.221628e-05,
+            "v_out": 0.1231866
+          },
+          "status": "ok"
+        },
+        "line_sweep": {
+          "measures": {
+            "line_sens_pct": 32.32855,
+            "v_at_hi": 0.1275881,
+            "v_at_lo": 0.08776246,
+            "v_at_nom": 0.1231903
+          },
+          "status": "ok"
+        },
+        "psrr": {
+          "measures": {
+            "psr_db": -25.37032
+          },
+          "status": "ok"
+        },
+        "temp_sweep": {
+          "measures": {
+            "sens_v_per_c": 0.000211445,
+            "tc_box_ppm": 1660.325,
+            "v_hi": 0.139743,
+            "v_lo": 0.1101407,
+            "v_out_25c": 0.1226649,
+            "vavg": 0.1273516,
+            "vmax": 0.139743,
+            "vmin": 0.1101407
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:29:13+00:00"
+      }
+    }
+  },
+  "design_id": "6aebc5b705",
+  "metrics": {
+    "tt": {
+      "i_supply": {
+        "spec": "pass",
+        "value": 1.221628e-05
+      },
+      "line_sens_pct": {
+        "spec": "pass",
+        "value": 32.32855
+      },
+      "psr_db": {
+        "spec": "pass",
+        "value": -25.37032
+      },
+      "sens_v_per_c": {
+        "spec": "pass",
+        "value": 0.000211445
+      },
+      "tc_box_ppm": {
+        "spec": "none",
+        "value": 1660.325
+      },
+      "v_out": {
+        "spec": "pass",
+        "value": 0.1231866
+      },
+      "v_out_25c": {
+        "spec": "pass",
+        "value": 0.1226649
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_xm0_l": "1u",
+      "x_dut_xm0_m": 1,
+      "x_dut_xm0_w": "8u",
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": "2u",
+      "x_dut_xm3_l": "1u",
+      "x_dut_xm3_m": 1,
+      "x_dut_xm3_w": "2u",
+      "x_dut_xm4_m": 1,
+      "x_r0": 20000
+    }
+  },
+  "pdk": "gf180mcu",
+  "ppa": {
+    "active_gate_area_um2": 14.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "line_sens_pct": 32.32855,
+      "psr_db": -25.37032,
+      "sens_v_per_c": 0.000211445
+    },
+    "power_w": 1.832442e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

@@ -1,0 +1,21 @@
+[project]
+name = "spicexplorer-circuitgraph"
+version = "0.0.0"
+description = "SpiceXplorer circuit-graph tool — build a typed bipartite graph (nets ⟷ components) from a netlist, with serialization views and round-trip."
+requires-python = ">=3.10"
+dependencies = [
+    "spicexplorer-core",   # NetlistView (the read-only netlist seam); never a peer tool
+    "networkx>=3.0",       # the bipartite MultiGraph container
+    "pydantic>=2",         # typed I/O contract (contract.py) — feeds OpenAPI/TS codegen + MCP schemas
+    "pyyaml>=6.0",         # subcircuit-template-library manifest (templates.py)
+]
+
+# NOTE: a `[viz]` matplotlib extra will be re-added when the debug-visualization helpers are
+# ported (deferred — the prototype's were mis-decorated; see Appendix A item 8 of the plan).
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spicexplorer_circuitgraph"]

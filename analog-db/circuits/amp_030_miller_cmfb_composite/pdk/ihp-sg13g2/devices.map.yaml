@@ -1,0 +1,7 @@
+# Generic device kind -> ihp-sg13g2 device name (composite: union of the blocks' maps —
+# amp_029 + cmfb_001_ideal_rsense_servo both use the built-in per-polarity default; passives/behavioral
+# leaves pass through).
+pdk: ihp-sg13g2
+devices:
+  nmos: {model: sg13_lv_nmos}
+  pmos: {model: sg13_lv_pmos}

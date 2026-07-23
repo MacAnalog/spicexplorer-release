@@ -1,0 +1,67 @@
+# AnalogGym design variables (role-encoded). W/L in um, M integer; the netlist scales
+# them (e.g. m='4*<M>'). Defaults are the committed AnalogGym values.
+schema: spicexplorer/sizing@1
+pdk: sky130
+variables:
+- name: CAPACITOR_0
+  default: 0.5p
+- name: CAPACITOR_1
+  default: 1.1p
+- name: CURRENT_0_BIAS
+  default: 1.25u
+- name: x_dut_xm7_l
+  default: '1'
+- name: x_dut_xm65_m
+  default: '4'
+- name: x_dut_xm7_w
+  default: '1'
+- name: x_dut_xm10_l
+  default: '0.350'
+- name: x_dut_xm10_m
+  default: '24'
+- name: x_dut_xm10_w
+  default: '1'
+- name: x_dut_xm11_l
+  default: '0.350'
+- name: x_dut_xm11_m
+  default: '9'
+- name: x_dut_xm11_w
+  default: '1'
+- name: x_dut_xm19_l
+  default: '0.350'
+- name: x_dut_xm14_m
+  default: '2'
+- name: x_dut_xm19_w
+  default: '1'
+- name: x_dut_xm23_l
+  default: '0.350'
+- name: x_dut_xm23_m
+  default: '3'
+- name: x_dut_xm23_w
+  default: '1'
+- name: x_dut_xm66_l
+  default: '1'
+- name: x_dut_xm66_m
+  default: '16'
+- name: x_dut_xm66_w
+  default: '1'
+- name: x_dut_xm68_l
+  default: '0.350'
+- name: x_dut_xm68_m
+  default: '3'
+- name: x_dut_xm68_w
+  default: '1'
+- name: x_dut_xm70_l
+  default: '0.350'
+- name: x_dut_xm70_m
+  default: '3'
+- name: x_dut_xm70_w
+  default: '1'
+- name: x_dut_xm9_l
+  default: '0.350'
+- name: x_dut_xm9_m
+  default: '3'
+- name: x_dut_xm9_w
+  default: '1'
+- name: RESISTOR_0
+  default: 750k

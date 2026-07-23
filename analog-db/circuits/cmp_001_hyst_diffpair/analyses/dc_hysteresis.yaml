@@ -1,0 +1,13 @@
+# Analysis binding (plan D-4): comparator dc_hysteresis — thresholds + hysteresis width.
+schema: spicexplorer/analysis@1
+id: dc_hysteresis
+template: dc_hysteresis
+description: "Up/down DC sweeps of vinp about VCM; vth_rise, vth_fall, v_hyst."
+params:
+  VDD: 1.5
+  VCM: 0.75
+  VSTART: 0.3
+  VSTOP: 1.2
+  VSTEP: 0.001
+flags: []
+produces: [vth_rise, vth_fall, v_hyst]

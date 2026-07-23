@@ -1,0 +1,26 @@
+# Design variables for the ihp-sg13g2 binding. Validated against sizing.schema.json.
+# sky130 binding: bare-µm convention (.option scale=1u), W/L floor 0.42/0.15. Upstream geometry kept (long channels, subthreshold at 100 nA): mirrors
+# W = 0.25u / L = 10u with the 1:2:10 m-bank, big-area input pair for 1/f noise.
+schema: spicexplorer/sizing@1
+pdk: sky130
+variables:
+  - {name: x_dut_xm7_w,   description: "PMOS bias-bank unit width (m = 1/2/10)", default: 0.42, min: 0.42, max: 20, unit: m}
+  - {name: x_dut_xm7_l,   description: "PMOS bias-bank length",                 default: 10,  min: 0.15, max: 20, unit: m}
+  - {name: x_dut_xm0_w, description: "PMOS input pair width",                 default: 7.5, min: 0.42, max: 20, unit: m}
+  - {name: x_dut_xm0_l, description: "PMOS input pair length",                default: 8,   min: 0.15, max: 20, unit: m}
+  - {name: x_dut_xm1_w,   description: "NMOS mirror-load width",                default: 1.5, min: 0.42, max: 20, unit: m}
+  - {name: x_dut_xm1_l,   description: "NMOS load / CS length",                 default: 10,  min: 0.15, max: 20, unit: m}
+  - {name: x_dut_xm4_w,   description: "Stage-2 NMOS CS unit width (m=10)",     default: 1.5, min: 0.42, max: 20, unit: m}
+  - {name: x_rz,     description: "Nulling resistor (ohms)",               default: 1e5,  min: 1e3, max: 1e6, unit: ohm}
+  - {name: x_c0,     description: "Single-Miller cap (F)",                 default: 2e-12, min: 1e-13, max: 1e-11, unit: F}
+  - {name: x_ibias_val, description: "Internal bias sink current (A)",     default: 1e-7, min: 1e-8, max: 1e-5, unit: A, freeze: true}
+  # Frozen per-device literals (P4 atomic sweep): defaults reproduce the authored
+  # netlist literals exactly; freeze keeps them out of the search space.
+  - {name: x_dut_xm7_m, description: "XM7 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm6_m, description: "XM6 m (frozen literal)", default: 2, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm5_m, description: "XM5 m (frozen literal)", default: 10, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm0_m, description: "XM0 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm2_m, description: "XM2 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm1_m, description: "XM1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm3_m, description: "XM3 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm4_m, description: "XM4 m (frozen literal)", default: 10, min: 1, max: 16, freeze: true, is_integer: true}

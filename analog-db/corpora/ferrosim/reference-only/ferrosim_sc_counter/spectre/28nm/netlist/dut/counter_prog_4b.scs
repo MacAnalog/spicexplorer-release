@@ -1,0 +1,37 @@
+simulator lang=spectre
+
+subckt counter_prog_4b CLK_IN RST CFG_MAX\<3\> CFG_MAX\<2\> CFG_MAX\<1\> \
+        CFG_MAX\<0\> COUNT\<3\> COUNT\<2\> COUNT\<1\> COUNT\<0\> VDD VSS
+wrap_count0_gate (terminal_count COUNT\<0\> next_count0 VDD VSS) \
+        NR2D1BWP12T30P140
+count01_and_gate (count1_bar count0_bar count01_and VDD VSS) NR2D1BWP12T30P140
+count012_and_gate (count01_not count2_bar count012_and VDD VSS) \
+        NR2D1BWP12T30P140
+count3_inv (COUNT\<3\> count3_bar VDD VSS) INVD1BWP12T30P140
+count1_inv (COUNT\<1\> count1_bar VDD VSS) INVD1BWP12T30P140
+count2_inv (COUNT\<2\> count2_bar VDD VSS) INVD1BWP12T30P140
+count01_inv (count01_and count01_not VDD VSS) INVD1BWP12T30P140
+reset_inv (RST reset_n VDD VSS) CKND0BWP12T30P140
+count0_inv (COUNT\<0\> count0_bar VDD VSS) CKND1BWP12T30P140
+count1_reg (next_count1 CLK_IN reset_n COUNT\<1\> VDD VSS) DFCNQD1BWP12T30P140
+count2_reg (next_count2 CLK_IN reset_n COUNT\<2\> VDD VSS) DFCNQD1BWP12T30P140
+count3_reg (next_count3 CLK_IN reset_n COUNT\<3\> VDD VSS) DFCNQD1BWP12T30P140
+count0_reg (next_count0 CLK_IN reset_n COUNT\<0\> VDD VSS) DFCNQD1BWP12T30P140
+count3_next_gate (COUNT\<3\> count012_and terminal_count next_count3 VDD VSS) \
+        IAO21D1BWP12T30P140
+count1_next_gate (count0_bar count1_bar terminal_count count01_and next_count1 \
+        VDD VSS) AOI211D1BWP12T30P140
+count2_next_gate (count01_not count2_bar terminal_count count012_and next_count2 \
+        VDD VSS) AOI211D1BWP12T30P140
+cfg012_match_gate (cfg01_compare cfg12_compare count2_bar CFG_MAX\<2\> \
+        cfg012_compare VDD VSS) \
+        MAOI22D1BWP12T30P140
+terminal_count_gate (count3_bar CFG_MAX\<3\> cfg012_compare terminal_count \
+        VDD VSS) MAOI222D1BWP12T30P140
+cfg01_match_gate (CFG_MAX\<1\> count1_bar count0_bar CFG_MAX\<0\> cfg01_compare \
+        VDD VSS) \
+        OAI211D1BWP12T30P140
+cfg12_match_gate (count2_bar CFG_MAX\<2\> count1_bar CFG_MAX\<1\> cfg12_compare \
+        VDD VSS) \
+        AOI22D1BWP12T30P140
+ends counter_prog_4b

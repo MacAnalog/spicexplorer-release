@@ -1,0 +1,45 @@
+# ADC (data-converter) class — canonical metric vocabulary + owned testbench templates (plan D-10).
+# Validated against _shared/schema/class.schema.json by the verify harness (Tier 0).
+# NEW class added 2026-07-15 (class-registry completion) so the reference-only `ferrosim_sar`
+# (an 11-bit SAR) resolves to a real class library instead of a dangling label. DEVELOPED 2026-07-16:
+# dc_op + dc_transfer are VALIDATED live on ihp-sg13g2 against `adc_001_inv1b` (a CMOS-inverter 1-bit
+# quantizer — the degenerate flash slice; decision level 0.63 V, rail-to-rail). The multi-bit metrics
+# (ENOB/INL/DNL/SNDR) + the tran_conversion bench still await a multi-bit member (see ferrosim_sar).
+# Reference-only circuits skip the class xref checks (verify.py `_tier0_reference_circuit`).
+#
+# Port convention (illustrative): vdd vinp vinn clk <code...> vss for a Nyquist converter, or
+# vdd vin clk dout vss for a single-ended core; each promoted circuit binds only what it has.
+schema: spicexplorer/class@1
+class: adc
+id_code: adc            # accession-id prefix -> adc_001_<slug> (plan_scoreboard D-1)
+description: >-
+  Analog-to-digital converters (SAR, and later pipeline/sigma-delta). Static transfer (offset,
+  gain error, INL/DNL from a code sweep), a clocked conversion transient, and dynamic figures
+  (ENOB/SNDR/SFDR/THD) with the Walden energy figure of merit.
+ppa:                      # scoreboard PPA rollup declaration (plan_scoreboard D-7)
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: enob, better: max}
+    - {metric: fom_walden, better: min}
+canonical_metrics:
+  - resolution_bits  # nominal resolution N (bits)
+  - fs_hz            # sample rate (Hz)
+  - enob             # effective number of bits, from SNDR
+  - sndr_db          # signal-to-noise-and-distortion ratio (dB)
+  - sfdr_db          # spurious-free dynamic range (dB)
+  - thd_db           # total harmonic distortion (dB)
+  - inl_lsb          # peak integral non-linearity (LSB)
+  - dnl_lsb          # peak differential non-linearity (LSB)
+  - offset_lsb       # input-referred offset (LSB)
+  - gain_error_lsb   # endpoint gain error (LSB)
+  - i_supply         # average supply current (A)
+  - fom_walden       # energy per conversion step (J/conv-step) — lower is better
+  - area_um2
+  - v_out            # generic single-ended DC output (V)
+  - threshold_v      # 1-bit/flash comparator decision level (input trip point, V)
+  - v_out_high       # digital output high level (V)
+  - v_out_low        # digital output low level (V)
+templates:
+  - dc_op
+  - dc_transfer      # static code/output transfer -> offset, gain error, INL/DNL
+  - tran_conversion  # clocked sample+convert transient

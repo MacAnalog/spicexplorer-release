@@ -1,0 +1,68 @@
+{
+  "components": [
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "vdd",
+        "GATE": "vref",
+        "SOURCE": "vref"
+      },
+      "device_type": "MOS",
+      "id": "XM0",
+      "params": {
+        "l": "x_dut_xm0_l",
+        "m": "x_dut_xm0_m",
+        "w": "x_dut_xm0_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "vref",
+        "GATE": "vref",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM1",
+      "params": {
+        "l": "x_dut_xm1_l",
+        "m": "x_dut_xm1_m",
+        "w": "x_dut_xm1_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos_hv",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    }
+  ],
+  "meta": {
+    "circuit_name": "vref_001_vgs",
+    "component_count": 2,
+    "net_count": 3
+  },
+  "nets": [
+    {
+      "is_supply": true,
+      "name": "vdd",
+      "supply_type": "VDD"
+    },
+    {
+      "is_supply": false,
+      "name": "vref",
+      "supply_type": ""
+    },
+    {
+      "is_supply": true,
+      "name": "vss",
+      "supply_type": "VSS"
+    }
+  ]
+}

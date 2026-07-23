@@ -1,0 +1,48 @@
+** Abstract two-stage Miller-compensated fully-differential OTA WITHOUT common-mode
+** control — the plain-Miller sibling of amp_020 (which adds the resistive CM servo).
+** AUTHORED source of truth (plan D-2). PDK-neutral model tokens (nmos/pmos); per-PDK
+** device names + geometry via circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vinp vinn voutp voutn vdd vss
+**
+** Topology (from drawings/OTA-Two-Stage/two-stage-miller-comp.sch, normalized after
+** xschem netlisting):
+**   stage 1 — NMOS diff pair XM1/XM2 (tail XM8, mirrored from the ref diode) with
+**     PMOS current-source loads XM3/XM4.
+**   stage 2 — per-side PMOS common-source drivers XM5/XM9 against NMOS sinks
+**     XM7/XM10 (mirrored from ref). Common-source output = high-Zout -> an OTA
+**     (subfamily: ota), NOT an op-amp.
+**   compensation — per-side Miller R+C (R1+C1: stg1p->voutp, R2+C2: stg1n->voutn).
+**   bias — Ibias into diode XM6 (node ref) mirrors to the tail and output sinks.
+** Deviations from the drawing (documented per drawings/OTA-Two-Stage/landing.yaml):
+**   - the drawing's first-stage load-gate net `X` connects to NOTHING else (floating
+**     bias) — here it becomes the internal knob-driven source Vbl {vbl}
+**     (instantiator-owns-bias, plan D3/D4);
+**   - the drawn I0=1m literal becomes the {i_bias} knob.
+** NO CMFB anywhere: stage-1 common mode balances XM3/XM4 (gate vbl) against tail/2 at
+** gds level — vbl is a knife-edge knob (same class of sensitivity as amp_026); the
+** output common mode is set by the XM5/XM9-vs-sink current balance through the Miller
+** DC path. Expect vocm/vos corner fragility; amp_020 is the CM-controlled variant.
+**.subckt amp_029_two_stage_miller_comp vinp vinn voutp voutn vdd vss
+* --- stage 1: NMOS input pair + PMOS current-source loads ---
+XM1 stg1p vinp tail vss nmos w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+XM2 stg1n vinn tail vss nmos w=x_dut_xm2_w l=x_dut_xm2_l m=x_dut_xm2_m
+XM3 stg1p vbl vdd vdd pmos w=x_dut_xm3_w l=x_dut_xm3_l m=x_dut_xm3_m
+XM4 stg1n vbl vdd vdd pmos w=x_dut_xm4_w l=x_dut_xm4_l m=x_dut_xm4_m
+* --- stage 2: common-source drivers + mirrored sinks ---
+XM5 voutp stg1p vdd vdd pmos w=x_dut_xm5_w l=x_dut_xm5_l m=x_dut_xm5_m
+XM9 voutn stg1n vdd vdd pmos w=x_dut_xm9_w l=x_dut_xm9_l m=x_dut_xm9_m
+XM7 voutp ref vss vss nmos w=x_dut_xm7_w l=x_dut_xm7_l m=x_dut_xm7_m
+XM10 voutn ref vss vss nmos w=x_dut_xm10_w l=x_dut_xm10_l m=x_dut_xm10_m
+* --- bias: diode reference + tail mirror ---
+XM6 ref ref vss vss nmos w=x_dut_xm6_w l=x_dut_xm6_l m=x_dut_xm6_m
+XM8 tail ref vss vss nmos w=x_dut_xm8_w l=x_dut_xm8_l m=x_dut_xm8_m
+Ibias vdd ref dc {i_bias}
+* --- first-stage load-gate bias (the drawing's floating net X; see header) ---
+Vbl vbl vss dc {vbl}
+* --- per-side Miller compensation ---
+R1 stg1p mill_p 'x_dut_r1_value'
+C1 mill_p voutp 'x_dut_c1_value'
+R2 stg1n mill_n 'x_dut_r2_value'
+C2 mill_n voutn 'x_dut_c2_value'
+**.ends
+.end

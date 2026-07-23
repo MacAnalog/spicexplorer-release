@@ -1,0 +1,54 @@
+** Abstract fully-differential two-stage opamp (ota_fd2s).
+** AUTHORED source of truth (plan D-2). PDK-neutral model tokens (nmos/pmos + ideal R/C);
+** per-PDK device names + geometry come from circuitgraph lowering + pdk/<pdk>/ bindings.
+** Subckt port order (= circuit.yaml ports): vinp vinn voutp voutn vdd vss
+**
+** Topology (ferrosim ota_fd2s): stage 1 = NMOS-input folded cascode (pair XMI1/XMI2 into the
+** folded PMOS sources XMSA/XMSB, cascodes XMCA/XMCB + XMNA/XMNB, CMFB-driven bottom sinks
+** XMKA/XMKB); stage 2 = NMOS common-source (XM2A/XM2B) with PMOS current-source loads
+** (XMLA/XMLB); Miller + nulling-R per side (RZA/CCA, RZB/CCB); RC common-mode sense
+** (RCA/RCB + CMA/CMB) into a 5T CMFB error amp whose output current is forced into the NMOS
+** diode XMNCD -> vcmfb is an NMOS Vgs by construction (tracks the sinks across PVT).
+** Bias: Sooch-style ladder off ONE reference (XMBD diode; vbp/vcp/vcn rails).
+** Internalized (promotion): IBIAS -> ideal source IB (x_ibias_val); VCMR -> ideal source VCR
+** (x_vcmr_val) — the upstream deck drove both from the testbench.
+** Device widths stay per-finger (IHP lv MOS w <= ~10 um; PSP clips silently) — totals via m=.
+IB   vdd   ibias dc {x_ibias_val}
+VCR  vcmr  vss   dc {x_vcmr_val}
+XMBD ibias ibias vss vss nmos w=x_dut_xmbd_w   l=x_dut_xmbd_l m=x_dut_xmbd_m
+XMB1 vbp   ibias vss vss nmos w=x_dut_xmb1_w   l=x_dut_xmb1_l m=x_dut_xmb1_m
+XMPD1 vbp  vbp   vdd vdd pmos w=x_dut_xmpd1_w   l=x_dut_xmpd1_l m=x_dut_xmpd1_m
+XMB2 vcp   ibias vss vss nmos w=x_dut_xmb2_w   l=x_dut_xmb2_l m=x_dut_xmb2_m
+XMPD2 vcp  vcp   vdd vdd pmos w=x_dut_xmpd2_w  l=x_dut_xmpd2_l m=x_dut_xmpd2_m
+XMPM1 vcn  vbp   vdd vdd pmos w=x_dut_xmpm1_w   l=x_dut_xmpm1_l m=x_dut_xmpm1_m
+XMND1 vcn  vcn   vss vss nmos w=x_dut_xmnd1_w  l=x_dut_xmnd1_l m=x_dut_xmnd1_m
+XMT  tail  ibias vss vss nmos w=x_dut_xmt_w   l=x_dut_xmt_l m=x_dut_xmt_m
+XMI1 fp    vinp  tail vss nmos w=x_dut_xmi1_w l=x_dut_xmi1_l m=x_dut_xmi1_m
+XMI2 fn    vinn  tail vss nmos w=x_dut_xmi2_w l=x_dut_xmi2_l m=x_dut_xmi2_m
+XMSA fp    vbp   vdd vdd pmos w=x_dut_xmsa_w l=x_dut_xmsa_l m=x_dut_xmsa_m
+XMSB fn    vbp   vdd vdd pmos w=x_dut_xmsb_w l=x_dut_xmsb_l m=x_dut_xmsb_m
+XMCA o1a   vcp   fp  vdd pmos w=x_dut_xmca_w l=x_dut_xmca_l m=x_dut_xmca_m
+XMCB o1b   vcp   fn  vdd pmos w=x_dut_xmcb_w l=x_dut_xmcb_l m=x_dut_xmcb_m
+XMNA o1a   vcn   x1a vss nmos w=x_dut_xmna_w l=x_dut_xmna_l m=x_dut_xmna_m
+XMNB o1b   vcn   x1b vss nmos w=x_dut_xmnb_w l=x_dut_xmnb_l m=x_dut_xmnb_m
+XMKA x1a   vcmfb vss vss nmos w=x_dut_xmka_w l=x_dut_xmka_l m=x_dut_xmka_m
+XMKB x1b   vcmfb vss vss nmos w=x_dut_xmkb_w l=x_dut_xmkb_l m=x_dut_xmkb_m
+XM2A voutp o1a   vss vss nmos w=x_dut_xm2a_w   l=x_dut_xm2a_l m=x_dut_xm2a_m
+XM2B voutn o1b   vss vss nmos w=x_dut_xm2b_w   l=x_dut_xm2b_l m=x_dut_xm2b_m
+XMLA voutp vbp   vdd vdd pmos w=x_dut_xmla_w   l=x_dut_xmla_l m=x_dut_xmla_m
+XMLB voutn vbp   vdd vdd pmos w=x_dut_xmlb_w   l=x_dut_xmlb_l m=x_dut_xmlb_m
+RZA  o1a za  r=x_dut_rza_value
+CCA  za  voutp c=x_dut_cca_value
+RZB  o1b zb  r=x_dut_rzb_value
+CCB  zb  voutn c=x_dut_ccb_value
+RCA  voutp vsen r=x_dut_rca_value
+RCB  voutn vsen r=x_dut_rcb_value
+CMA  voutp vsen c=x_dut_cma_value
+CMB  voutn vsen c=x_dut_cmb_value
+XMEA1 ead   vcmr eatail vss nmos w=x_dut_xmea1_w  l=x_dut_xmea1_l m=x_dut_xmea1_m
+XMEA2 vcmfb vsen eatail vss nmos w=x_dut_xmea2_w  l=x_dut_xmea2_l m=x_dut_xmea2_m
+XMEPD ead   ead  vdd vdd pmos w=x_dut_xmepd_w  l=x_dut_xmepd_l m=x_dut_xmepd_m
+XMEPM vcmfb ead  vdd vdd pmos w=x_dut_xmepm_w  l=x_dut_xmepm_l m=x_dut_xmepm_m
+XMNCD vcmfb vcmfb vss vss nmos w=x_dut_xmncd_w l=x_dut_xmncd_l m=x_dut_xmncd_m
+XMEAT eatail ibias vss vss nmos w=x_dut_xmeat_w l=x_dut_xmeat_l m=x_dut_xmeat_m
+.end

@@ -1,0 +1,9 @@
+.param W_M1=2 L_M1=2 M_M1=1
+.param W_M2=W_M1 L_M2=L_M1 M_M2=M_M1
+.param W_M3=80 L_M3=0.5 M_M3=1
+.param W_M4=W_M3 L_M4=L_M3 M_M4=M_M3
+.param W_M5=100 L_M5=0.5 M_M5=1
+.param W_M6=20 L_M6=0.5 M_M6=360
+.param Vb=1.2
+.param M_Rfb=1 M_Cfb=5
+.param M_CL=250

@@ -1,0 +1,5 @@
+# Generic device kind -> gf180mcu device name. Passives (R/C) stay ideal (pass-through).
+pdk: gf180mcu
+devices:
+  nmos: {model: nfet_03v3}
+  pmos: {model: pfet_03v3}

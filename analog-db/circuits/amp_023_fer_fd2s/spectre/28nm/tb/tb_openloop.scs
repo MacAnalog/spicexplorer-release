@@ -1,0 +1,24 @@
+// Open-loop testbench for the fully differential two-stage opamp.
+// The netlist is perfectly symmetric, so the differential systematic offset
+// is zero and the inputs can be tied directly to the common-mode level.
+//
+// AC excitation is selected by run-file parameters:
+//   acdm  - differential-mode magnitude (split +/- 0.5 between the inputs)
+//   accm  - common-mode magnitude (input CM source)
+//   acvdd - supply magnitude (for PSRR)
+// DC sweep uses parameter vid (differential input voltage).
+simulator lang=spectre
+
+v_vdd (VDD 0) vsource dc=VSUP mag=acvdd type=dc
+v_vss (VSS 0) vsource dc=0 type=dc
+v_cmr (VCMR 0) vsource dc=VCM type=dc
+i_bias (VDD IBIAS) isource dc=IB type=dc
+
+v_icm (vicm 0) vsource dc=VCM mag=accm type=dc
+v_ip (INP vicm) vsource dc=vid*0.5  mag=acdm*0.5  type=dc
+v_in (INN vicm) vsource dc=-vid*0.5 mag=-acdm*0.5 type=dc
+
+c_load_p (OUTP 0) capacitor c=CL
+c_load_n (OUTN 0) capacitor c=CL
+
+x_ota (INP INN OUTP OUTN VCMR IBIAS VDD VSS) ota_fd2s

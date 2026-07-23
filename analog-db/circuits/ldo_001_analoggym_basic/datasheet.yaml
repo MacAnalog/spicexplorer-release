@@ -1,0 +1,82 @@
+# Datasheet — AnalogGym Basic_LDO (2-stage, capless, vout=4*vref)
+# Characterized on sky130 (the upstream-native PDK); PROVISIONAL specs bracketing first
+# recorded baselines — see results/. load_reg/line_reg are plain delta-Vout in VOLTS.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.8}
+  vout:   {unit: V, typical: 1.6}
+  vref:   {unit: V, typical: 0.4}
+  cout:   {unit: pF, typical: 50}      # upstream mim output cap (~50 pF) — a CAPLESS-class LDO
+  iload:  {unit: mA, typical: 5.0}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  v_out:
+    display: "Regulated output voltage"
+    unit: V
+    analysis: dc_op
+    extract: {meas: vout_dc}
+    spec: {min: 1.5, typ: 1.6, max: 1.7, unit: V}
+  i_q:
+    display: "Quiescent current"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 1.0e-4, unit: A}          # sky130 measured 19 uA
+  load_reg:
+    display: "Load regulation"
+    description: "delta-Vout across the 0 -> heavy-load DC sweep (volts)."
+    unit: V
+    analysis: load_regulation
+    extract: {meas: load_reg}
+    spec: {max: 0.8, unit: V}             # sky130 measured 0.69 over the full 0->55 mA heavy sweep (ihp: 0.02)
+  line_reg:
+    display: "Line regulation"
+    unit: V
+    analysis: line_regulation
+    extract: {meas: line_reg}
+    spec: {max: 0.3, unit: V}             # sky130 measured 0.24 (ihp: 0.003)
+  v_dropout:
+    display: "Dropout voltage"
+    unit: V
+    analysis: dropout
+    extract: {meas: v_dropout}
+    spec: {max: 0.3, unit: V}
+  psrr_vdd_db:
+    display: "PSRR (Vdd -> Vout)"
+    unit: dB
+    analysis: psrr
+    extract: {meas: psrr_vdd_db}
+    spec: {min: 5, unit: dB}              # sky130 measured 8.9 dB at 1 kHz (gf180: 53.5)
+  zout_peak_db:
+    display: "Closed-loop Zout peaking"
+    unit: dB
+    analysis: loop_stability
+    extract: {meas: zout_peak_db}
+    spec: {max: 35, unit: dB}             # sky130 measured 31.1 (underdamped capless baseline)
+  v_undershoot:
+    display: "Load-step undershoot"
+    description: "Peak droop on the fast load step into only ~50 pF (capless-class — expect much more than a 1 uF-cap LDO)."
+    unit: V
+    analysis: tran_load_step
+    extract: {meas: v_undershoot}
+    spec: {max: 1.5, unit: V}             # sky130 measured 1.24 on the 5->55 mA step into 50 pF
+  t_transient:
+    display: "Load-step recovery time"
+    unit: s
+    analysis: tran_load_step
+    extract: {meas: t_transient}
+    spec: {max: 3.0e-5, unit: s}
+  vn_out_rms:
+    display: "Integrated output noise"
+    unit: V
+    analysis: noise
+    extract: {meas: vn_out_rms}
+    spec: {max: 0.02, unit: V}
+  v_line_pp:
+    display: "Line-transient deviation"
+    unit: V
+    analysis: tran_line_step
+    extract: {meas: v_line_pp}
+    spec: {max: 0.3, unit: V}             # sky130 measured 0.26

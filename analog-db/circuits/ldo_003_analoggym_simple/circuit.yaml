@@ -1,0 +1,24 @@
+# SUPER-DSL manifest — AnalogGym's "ldo_simple" (5T OTA + PMOS pass + Rz/Cc). The subckt itself
+# was never published in CODA-Team/AnalogGym (only testbench/variable shells); source of truth is
+# the companion repo the AnalogGym RL example builds on: ChrisZonghaoLi/sky130_ldo_rl
+# (Apache-2.0), ldo_tb.spice subckts `ldo` + `diff_pair`. sky130-native with 5 V devices at a
+# 2.0 V rail, UNITY feedback (vout = vref directly, no divider), ~50 pF output mim cap.
+schema: spicexplorer/circuit@1
+id: ldo_003_analoggym_simple
+class: ldo
+display_name: "AnalogGym simple LDO (5T OTA + PMOS pass, unity feedback, 5V devices)"
+compensation: Miller (Rz + Cc, pass gate -> vout)
+stages: 1
+ports: [vdd, vout, vss]         # upstream Vfb/Vref/Vb pins folded internally (see abstract)
+provenance:
+  source: external/AnalogGym-remainder/Low Dropout Regulator/ (testbench+vars); netlist from https://github.com/ChrisZonghaoLi/sky130_ldo_rl
+  aliases: [ldo_simple, ldo, analoggym_simple_ldo]
+  license: Apache-2.0 (netlist), BSD-3-Clause (AnalogGym bench/vars)
+  upstream: https://github.com/CODA-Team/AnalogGym
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [sky130, ihp-sg13g2, gf180mcu]
+analyses: [dc_op, load_regulation, line_regulation, psrr, dropout, tran_load_step, loop_stability, noise, tran_line_step]
+status: draft

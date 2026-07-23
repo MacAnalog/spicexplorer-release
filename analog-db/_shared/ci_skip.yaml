@@ -1,0 +1,50 @@
+# T3 ngspice sweep exclusions for CI (test_T3_every_raw_deck_runs_and_extracts_or_floors).
+#
+# Each rule matches on any combination of three optional keys:
+#   pdk       — the PDK directory component (e.g. FOUNDRY-n65)
+#   circuit   — the circuit directory component (e.g. amp_022_fer_two_stage)
+#   testbench — the bare testbench name without .spice (e.g. tran_step)
+#
+# Omitted keys match everything.  A deck is excluded when ALL specified keys
+# in a rule match — so a rule with only `pdk` excludes every deck under that
+# PDK; a rule with `circuit + testbench` excludes that testbench on every PDK
+# for that circuit; a rule with all three excludes exactly one deck.
+#
+# `reason` is required: it documents WHY the exclusion exists and is logged at
+# collection time so CI output stays readable.
+#
+# NOTE: the gf180mcu PDK is handled separately by a runtime probe
+# (_base_image_has_gf180) because it IS available in the base image when
+# built with the gf180 profile — that is a dynamic exclusion, not a static
+# one.  Add a rule here only for exclusions that are always true in CI.
+
+exclude:
+  - pdk: FOUNDRY-n65
+    reason: >-
+      NDA-protected PDK; never in the open-source base image.  Simulation uses
+      Spectre via virtuoso-bridge (see _shared/pdk/FOUNDRY-n65.yaml), not the
+      open-PDK ngspice path.
+
+  # Exclude every deck for a specific circuit across all PDKs:
+  # - circuit: amp_022_fer_two_stage
+  #   reason: "pending re-sizing — baseline does not converge on any PDK"
+
+  # Exclude one circuit on one PDK (all its testbenches):
+  # - circuit: amp_001_5t
+  #   pdk: gf180mcu
+  #   reason: "IHP-tuned sizing falls outside the gf180mcu bin — pending cross-PDK sizing pass"
+
+  # Exclude one testbench across every circuit and PDK that has it:
+  # - testbench: tran_step
+  #   reason: "transient decks require longer sim budget — pending timeout parameter"
+
+  # Exclude one testbench for a specific circuit across all its PDKs:
+  # - circuit: amp_020_two_stage_miller_cmfb
+  #   testbench: cmrr_vcm
+  #   reason: "CMRR bench needs VCMFB loop closed — testbench template under revision"
+
+  # Exclude exactly one deck (circuit + pdk + testbench triple):
+  # - circuit: amp_004_folded_cascode
+  #   pdk: sky130
+  #   testbench: noise
+  #   reason: "noise floor extraction returns NaN on sky130 at this sizing — known numerical issue"

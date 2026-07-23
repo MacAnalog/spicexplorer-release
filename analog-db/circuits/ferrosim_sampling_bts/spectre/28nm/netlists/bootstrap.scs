@@ -1,0 +1,127 @@
+// Shared bootstrap definitions for sampling linearity references.
+// Includes the Maestro ideal relay+vcvs bootstrap, the Maestro transistor
+// bootstrap, and the older SAR bootstrap kept for bottom-plate comparison.
+
+subckt LB_BOOTSTRAPPER_IDEAL GATE GND SH VDD VIN
+    W_RESET (GATE GND VDD SH) relay vt1=0 vt2=900m ropen=10T rclosed=10
+    W_TRACK (NET3 GATE SH GND) relay vt1=0 vt2=900m ropen=10T rclosed=10
+    E_VIN   (NET1 GND VIN GND) vcvs gain=1.0
+    E_BOOST (NET3 NET1 VDD GND) vcvs gain=1.0
+ends LB_BOOTSTRAPPER_IDEAL
+
+subckt LB_BOOTSTRAPPER_REAL GATE GND SH VDD VIN
+    M7 (GATE VDD net2 GND) nch_ulvt_mac l=30n w=2u multi=1 nf=4 sd=100n \
+        ad=1e-13 as=1.25e-13 pd=2.4u ps=3.5u nrd=0.248269 nrs=0.248269 \
+        sa=179.203n sb=179.203n sa1=118.069n sa2=174.76n sa3=310.76n \
+        sa4=171.966n sb1=118.069n sb2=174.76n sb3=310.76n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=120.952n sapb=140.537n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M3 (net2 PHIE GND GND) nch_ulvt_mac l=30n w=2u multi=1 nf=4 sd=100n \
+        ad=1e-13 as=1.25e-13 pd=2.4u ps=3.5u nrd=0.248269 nrs=0.248269 \
+        sa=179.203n sb=179.203n sa1=118.069n sa2=174.76n sa3=310.76n \
+        sa4=171.966n sb1=118.069n sb2=174.76n sb3=310.76n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=120.952n sapb=140.537n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M0 (VIN GATE BOT GND) nch_ulvt_mac l=30n w=2u multi=1 nf=4 sd=100n \
+        ad=1e-13 as=1.25e-13 pd=2.4u ps=3.5u nrd=0.248269 nrs=0.248269 \
+        sa=179.203n sb=179.203n sa1=118.069n sa2=174.76n sa3=310.76n \
+        sa4=171.966n sb1=118.069n sb2=174.76n sb3=310.76n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=120.952n sapb=140.537n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M124 (net1 GATE BOT GND) nch_ulvt_mac l=30n w=1u multi=1 nf=2 sd=100n \
+        ad=5e-14 as=7.5e-14 pd=1.2u ps=2.3u nrd=0.425847 nrs=0.425847 \
+        sa=112.742n sb=112.742n sa1=93.6047n sa2=112.078n sa3=163.715n \
+        sa4=110.059n sb1=93.6047n sb2=112.078n sb3=163.715n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=104.359n sapb=125.813n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M8 (net1 CLKBUF BOT GND) nch_ulvt_mac l=30n w=800n multi=1 nf=2 \
+        sd=100n ad=4e-14 as=6e-14 pd=1u ps=1.9u nrd=0.576527 nrs=0.576527 \
+        sa=112.742n sb=112.742n sa1=93.6047n sa2=112.078n sa3=163.715n \
+        sa4=110.059n sb1=93.6047n sb2=112.078n sb3=163.715n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=104.359n sapb=125.813n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M11 (CLKBUF PHIE GND GND) nch_ulvt_mac l=30n w=800n multi=1 nf=2 \
+        sd=100n ad=4e-14 as=6e-14 pd=1u ps=1.9u nrd=0.576527 nrs=0.576527 \
+        sa=112.742n sb=112.742n sa1=93.6047n sa2=112.078n sa3=163.715n \
+        sa4=110.059n sb1=93.6047n sb2=112.078n sb3=163.715n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=104.359n sapb=125.813n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M5 (PHIE SH GND GND) nch_ulvt_mac l=30n w=800n multi=1 nf=2 sd=100n \
+        ad=4e-14 as=6e-14 pd=1u ps=1.9u nrd=0.576527 nrs=0.576527 \
+        sa=112.742n sb=112.742n sa1=93.6047n sa2=112.078n sa3=163.715n \
+        sa4=110.059n sb1=93.6047n sb2=112.078n sb3=163.715n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=104.359n sapb=125.813n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M1 (BOT PHIE GND GND) nch_ulvt_mac l=30n w=1u multi=1 nf=2 sd=100n \
+        ad=5e-14 as=7.5e-14 pd=1.2u ps=2.3u nrd=0.425847 nrs=0.425847 \
+        sa=112.742n sb=112.742n sa1=93.6047n sa2=112.078n sa3=163.715n \
+        sa4=110.059n sb1=93.6047n sb2=112.078n sb3=163.715n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=104.359n sapb=125.813n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    C0 (TOP BOT) cfmom_2t nr=84 lr=4u w=50n s=50n stm=2 spm=7 multi=1
+    M4 (TOP GATE VDD TOP) pch_ulvt_mac l=30n w=1u multi=1 nf=2 sd=100n \
+        ad=5e-14 as=7.5e-14 pd=1.2u ps=2.3u nrd=0.212518 nrs=0.212518 \
+        sa=112.742n sb=112.742n sa1=93.6047n sa2=112.078n sa3=163.715n \
+        sa4=110.059n sb1=93.6047n sb2=112.078n sb3=163.715n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=104.359n sapb=125.813n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M2 (GATE net1 TOP TOP) pch_ulvt_mac l=30n w=2u multi=1 nf=4 sd=100n \
+        ad=1e-13 as=1.25e-13 pd=2.4u ps=3.5u nrd=0.112393 nrs=0.112393 \
+        sa=179.203n sb=179.203n sa1=118.069n sa2=174.76n sa3=310.76n \
+        sa4=171.966n sb1=118.069n sb2=174.76n sb3=310.76n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=120.952n sapb=140.537n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M9 (net1 CLKBUF VDD VDD) pch_ulvt_mac l=30n w=1.04u multi=1 nf=2 \
+        sd=100n ad=5.2e-14 as=7.8e-14 pd=1.24u ps=2.38u nrd=0.214709 \
+        nrs=0.214709 sa=112.742n sb=112.742n sa1=93.6047n sa2=112.078n \
+        sa3=163.715n sa4=110.059n sb1=93.6047n sb2=112.078n sb3=163.715n \
+        spa=100n spa1=100n spa2=100n spa3=100n sap=104.359n sapb=125.813n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M12 (CLKBUF PHIE VDD VDD) pch_ulvt_mac l=30n w=1.04u multi=1 nf=2 \
+        sd=100n ad=5.2e-14 as=7.8e-14 pd=1.24u ps=2.38u nrd=0.214709 \
+        nrs=0.214709 sa=112.742n sb=112.742n sa1=93.6047n sa2=112.078n \
+        sa3=163.715n sa4=110.059n sb1=93.6047n sb2=112.078n sb3=163.715n \
+        spa=100n spa1=100n spa2=100n spa3=100n sap=104.359n sapb=125.813n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M6 (PHIE SH VDD VDD) pch_ulvt_mac l=30n w=1.04u multi=1 nf=2 sd=100n \
+        ad=5.2e-14 as=7.8e-14 pd=1.24u ps=2.38u nrd=0.214709 nrs=0.214709 \
+        sa=112.742n sb=112.742n sa1=93.6047n sa2=112.078n sa3=163.715n \
+        sa4=110.059n sb1=93.6047n sb2=112.078n sb3=163.715n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=104.359n sapb=125.813n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+ends LB_BOOTSTRAPPER_REAL
+
+subckt LB_SAR_BTS CLK VBST VDD VIN VSS
+
+    M_INVCLKN_P  (CLKN CLK  VDD VDD) pch_ulvt_mac l=30n w=2u multi=1 nf=4
+    M_INVCLKN_N  (CLKN CLK  VSS VSS) nch_ulvt_mac l=30n w=2u multi=1 nf=4
+    M_INVCLKP_P  (CLKP CLKN VDD VDD) pch_mac      l=30n w=1u multi=1 nf=2
+    M_INVCLKP_N  (CLKP CLKN VSS VSS) nch_ulvt_mac l=30n w=4u multi=1 nf=8
+
+    C_BOOT (CBOOT_TOP CBOOT_BOT) cfmom_2t nr=80 lr=5u w=50n s=50n stm=2 spm=6 multi=1
+
+    M_DCHG_CBOOT_BOT     (CBOOT_BOT CLKN VSS VSS) nch_mac       l=30n w=1u multi=1 nf=2
+    M_PCHG_CBOOST_GATE   (CBOOST_GATE CLKP VDD VDD) pch_mac     l=30n w=1u multi=1 nf=2
+    M_LIM_CBOOT_TOP      (VDD VBST CBOOT_TOP CBOOT_TOP) pch_mac l=30n w=1u multi=1 nf=2
+
+    M_VBST_PREBOOST      (VDD CLK VBST VSS) nch_mac l=30n w=2u multi=1 nf=4
+    M_CBOOST_GATE_TRACK  (CBOOST_GATE CLKP CBOOT_BOT VSS) nch_mac l=30n w=1u multi=1 nf=2
+    M_BOOST_PASS         (VBST CBOOST_GATE CBOOT_TOP CBOOT_TOP) pch_ulvt_mac l=30n w=4u multi=1 nf=8
+    M_PASS_VIN           (CBOOT_BOT VBST VIN VSS) nch_ulvt_mac l=30n w=4u multi=1 nf=8
+
+    M_CASC_VBST          (VBST VDD CLKP VSS) nch_ulvt_mac l=30n w=4u multi=1 nf=8
+
+ends LB_SAR_BTS

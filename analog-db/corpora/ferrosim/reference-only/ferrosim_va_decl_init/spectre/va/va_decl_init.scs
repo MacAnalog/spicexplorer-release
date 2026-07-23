@@ -1,0 +1,34 @@
+// Drives the two decl-init decoders at several trim codes; each output bus is
+// loaded to ground so the dc op-point reads back the decoded bits.
+simulator lang=spectre
+global 0
+parameters VDD=1.0
+ahdl_include "va_decl_init.va"
+
+// main-flow variant at codes 5 and 10
+Xm5 (M5_3 M5_2 M5_1 M5_0) decl_init_main trim_code=5 vdd=VDD
+Xm10 (M10_3 M10_2 M10_1 M10_0) decl_init_main trim_code=10 vdd=VDD
+// @(initial_step) variant at codes 7 and 12
+Xe7 (E7_3 E7_2 E7_1 E7_0) decl_init_event trim_code=7 vdd=VDD
+Xe12 (E12_3 E12_2 E12_1 E12_0) decl_init_event trim_code=12 vdd=VDD
+
+R0 (M5_3 0) resistor r=1G
+R1 (M5_2 0) resistor r=1G
+R2 (M5_1 0) resistor r=1G
+R3 (M5_0 0) resistor r=1G
+R4 (M10_3 0) resistor r=1G
+R5 (M10_2 0) resistor r=1G
+R6 (M10_1 0) resistor r=1G
+R7 (M10_0 0) resistor r=1G
+R8 (E7_3 0) resistor r=1G
+R9 (E7_2 0) resistor r=1G
+R10 (E7_1 0) resistor r=1G
+R11 (E7_0 0) resistor r=1G
+R12 (E12_3 0) resistor r=1G
+R13 (E12_2 0) resistor r=1G
+R14 (E12_1 0) resistor r=1G
+R15 (E12_0 0) resistor r=1G
+
+dcOp dc
+save M5_3 M5_2 M5_1 M5_0 M10_3 M10_2 M10_1 M10_0
+save E7_3 E7_2 E7_1 E7_0 E12_3 E12_2 E12_1 E12_0

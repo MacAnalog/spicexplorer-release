@@ -1,0 +1,6 @@
+# Generic device kind -> ihp-sg13g2 device name. TWO NMOS flavors: the low-Vt lv NMOS (Vgs=0
+# current source) and the high-Vt hv NMOS (diode) — their threshold difference sets the reference.
+pdk: ihp-sg13g2
+devices:
+  nmos:    {model: sg13_lv_nmos}
+  nmos_hv: {model: sg13_hv_nmos}

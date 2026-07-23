@@ -1,0 +1,16 @@
+** Abstract 2-transistor ΔVth voltage reference (mixed-flavor sub-threshold core).
+** AUTHORED source of truth (plan D-2). PDK-neutral model tokens (nmos = low-Vt, nmos_hv = high-Vt);
+** per-PDK device names + geometry come from circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vdd vref vss
+**
+** Topology (a ΔVth reference): XM0 is a LOW-Vt NMOS with gate tied to its own source (Vgs=0) — a
+** sub-threshold current source from the supply into the sense node. XM1 is a HIGH-Vt NMOS,
+** diode-connected from the sense node to ground. Matching the two sub-threshold currents gives
+**     vref = (Vth_hv - Vth_lv) + n·Vt·ln[(W/L)_0 / (W/L)_1].
+** The ΔVth term is ~temperature-independent (the two thresholds share a CTAT slope that cancels in
+** the difference); the second term is PTAT and is nulled by sizing (W/L)_0/(W/L)_1 ≈ 1, so a flat,
+** low reference (~a few hundred mV) results. Always-on sub-threshold conduction ⇒ one stable
+** operating point, no startup. Uses TWO NMOS flavors via the per-PDK devices.map (nmos, nmos_hv).
+XM0 vdd  vref vref vss nmos    w=x_dut_xm0_w l=x_dut_xm0_l m=x_dut_xm0_m
+XM1 vref vref vss  vss nmos_hv w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+.end

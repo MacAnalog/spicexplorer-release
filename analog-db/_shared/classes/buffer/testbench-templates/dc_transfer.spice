@@ -1,0 +1,32 @@
+** AUTHORED TEMPLATE — buffer/dc_transfer: full-range DC transfer sweep.
+** Sweeps the input across [VSTART, VSTOP] and reports the PEAK incremental gain dVout/dVin
+** (gain_dc, ~1 for a working follower), the output level and the level shift (v_offset =
+** vout - vin) at the nominal VCM.
+** Class port convention: vdd vout vin ibias vss (ibias source-referenced, see metrics.yaml).
+** Bindings: DUT PORT_LINE VDD VCM IBIAS VSTART VSTOP VSTEP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+Vin  vin 0 dc {VCM}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  dc Vin ${VSTART} ${VSTOP} ${VSTEP}
+  let g = deriv(v(vout))
+  meas dc gain_dc MAX g
+  meas dc v_out_mid FIND v(vout) AT=${VCM}
+  let v_offset = v_out_mid - ${VCM}
+  * MAX meas lines carry an `at=` suffix the result parser skips — re-print clean
+  print gain_dc v_offset
+  write
+  quit
+.endc
+.end

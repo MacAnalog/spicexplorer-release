@@ -1,0 +1,29 @@
+# Analysis binding (plan D-4): tran_chopper_ripple template — the CLOCKED bench: all chopper
+# clock pairs run at FCHOP; windows A (0 input, 3m..4m) and B (VIN_DC input, 7m..8m)
+# each span 5 integer chop periods (FCHOP=5k default -> TCHOP=200u), settled after the input change
+# at T1. NOTE (see the netlist CHOPPER NOTE): the choppers are true 4-gate modulators
+# (drawing fixed 2026-07-16, DRAWING_REVIEW.md §1), so this bench measures real chopping.
+# Live caveat (tt/27): the drawn core has NO CMFB, and under the running clocks its
+# ratioed output common mode is bistable (a ~0.7 ms relaxation oscillation through the
+# cap network), so the windowed gain_cl underreads the cap-ratio gain the diff loop
+# transiently reaches — recorded honestly.
+schema: spicexplorer/analysis@1
+id: tran_chopper_ripple
+template: tran_chopper_ripple
+description: "Clocked transient at FCHOP; v_ripple_pp + gain_cl + vos_residual."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 50f
+  FCHOP: 5k
+  TEDGE: 50n
+  VIN_DC: 10m
+  T1: 4m
+  WA0: 3m
+  WA1: 4m
+  WB0: 7m
+  WB1: 8m
+  TSTEP: 1u
+  TSTOP: 8m
+flags: []
+produces: [v_ripple_pp, gain_cl, vos_residual]

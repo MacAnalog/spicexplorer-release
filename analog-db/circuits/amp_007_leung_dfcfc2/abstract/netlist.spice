@@ -1,0 +1,36 @@
+** amp_007_leung_dfcfc2 — AnalogGym import, PDK-neutral abstract (plan Phase 5).
+** sky130 device tokens → nmos/pmos; ports gnda→vss, vdda→vdd; role-encoded
+** design-variable symbols (MOSFET_*_<role>_<type>) + their arithmetic preserved.
+** Source: CODA-Team/AnalogGym (BSD-3-Clause). Subckt port order: vss vdd vinn vinp vout.
+**.subckt amp_007_leung_dfcfc2 vss vdd vinn vinp vout
+xm12 VOUT net050 vdd vdd pmos l=x_dut_xm12_l w=x_dut_xm12_w m=x_dut_xm12_m
+xm7 net049 net1 vdd vdd pmos l=x_dut_xm7_l w=x_dut_xm7_w m=x_dut_xm7_m
+xm11 net043 net050 vdd vdd pmos l=x_dut_xm11_l w=x_dut_xm11_w m=x_dut_xm11_m
+xm10 net2 net050 vdd vdd pmos l=x_dut_xm10_l w=x_dut_xm10_w m=x_dut_xm10_m
+xm6 net050 VOUTN vdd vdd pmos l=x_dut_xm6_l w=x_dut_xm6_w m=x_dut_xm6_m
+xm5 VOUTN VOUTN vdd vdd pmos l=x_dut_xm5_l w=x_dut_xm5_w m=x_dut_xm5_m
+xm9 net063 VINP net31 net31 pmos l=x_dut_xm9_l w=x_dut_xm9_w m=x_dut_xm9_m
+xm8 DM_2 VINN net31 net31 pmos l=x_dut_xm8_l w=x_dut_xm8_w m=x_dut_xm8_m
+xm4 net31 net1 vdd vdd pmos l=x_dut_xm4_l w=x_dut_xm4_w m=x_dut_xm4_m
+xm3 VB3 net1 vdd vdd pmos l=x_dut_xm3_l w=x_dut_xm3_w m=x_dut_xm3_m
+xm2 DM_1 net1 vdd vdd pmos l=x_dut_xm2_l w=x_dut_xm2_w m=x_dut_xm2_m
+xm1 VB4 net1 vdd vdd pmos l=x_dut_xm1_l w=x_dut_xm1_w m=x_dut_xm1_m
+xm0 net1 net1 vdd vdd pmos l=x_dut_xm0_l w=x_dut_xm0_w m=x_dut_xm0_m
+xm25 VOUT net049 vss vss nmos l=x_dut_xm25_l w=x_dut_xm25_w m=x_dut_xm25_m
+xm24 net049 net043 vss vss nmos l=x_dut_xm24_l w=x_dut_xm24_w m=x_dut_xm24_m
+xm23 net043 net043 vss vss nmos l=x_dut_xm23_l w=x_dut_xm23_w m=x_dut_xm23_m
+xm20 DM_2 VB4 vss vss nmos l=x_dut_xm20_l w=x_dut_xm20_w m=x_dut_xm20_m
+xm16 VOUTN VB3 DM_2 vss nmos l=x_dut_xm16_l w=x_dut_xm16_w m=x_dut_xm16_m
+xm21 net063 VB4 vss vss nmos l=x_dut_xm21_l w=x_dut_xm21_w m=x_dut_xm21_m
+xm17 net050 VB3 net063 vss nmos l=x_dut_xm17_l w=x_dut_xm17_w m=x_dut_xm17_m
+xm18 net54 VB4 vss vss nmos l=x_dut_xm18_l w=x_dut_xm18_w m=x_dut_xm18_m
+xm22 net2 VB4 vss vss nmos l=x_dut_xm22_l w=x_dut_xm22_w m=x_dut_xm22_m
+xm15 VB3 VB3 vss vss nmos l=x_dut_xm15_l w=x_dut_xm15_w m=x_dut_xm15_m
+xm13 VB4 VB3 net54 vss nmos l=x_dut_xm13_l w=x_dut_xm13_w m=x_dut_xm13_m
+xm19 net56 VB4 vss vss nmos l=x_dut_xm19_l w=x_dut_xm19_w m=x_dut_xm19_m
+xm14 DM_1 VB3 net56 vss nmos l=x_dut_xm14_l w=x_dut_xm14_w m=x_dut_xm14_m
+I0 net1 vss 'CURRENT_0_BIAS'
+C1 net050 VOUT 'CAPACITOR_0'
+C2 net050 net2 'CAPACITOR_1'
+**.ends Leung_DFCFC2_Pin_3
+.end

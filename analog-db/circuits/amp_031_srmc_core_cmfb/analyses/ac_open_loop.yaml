@@ -1,0 +1,16 @@
+# Analysis binding (plan D-4). Binds the amplifier-class ac_open_loop_diff template
+# (differential output, self-biased — the drawn VB2/V_REF_CMFB ports are internal
+# knob-driven sources) at the SRMC system CM (0.5 V).
+schema: spicexplorer/analysis@1
+id: ac_open_loop
+template: ac_open_loop_diff
+description: "Open-loop differential AC gain/phase for dc_gain_db, ugf_hz, pm_deg."
+params:
+  FSTART: 10
+  FSTOP: 1G
+  PPD: 101
+  CL: 50f
+  VCM: 0.5
+  VDD: 1.2
+flags: []
+produces: [dc_gain_db, ugf_hz, pm_deg]

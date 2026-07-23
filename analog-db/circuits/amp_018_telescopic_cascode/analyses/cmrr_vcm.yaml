@@ -1,0 +1,9 @@
+# Analysis analysis binding (cmrr_vcm) — common-mode rejection
+# (design-review 2026-07-05 rollout; unity-buffer config).
+schema: spicexplorer/analysis@1
+id: cmrr_vcm
+template: cmrr_vcm
+description: "CMRR — 1 V AC common-mode on both inputs of the unity buffer, DC-band floor."
+params: {VDD: 1.5, VCM: 0.8, IBIAS: 5u, CL: 50f, FSTART: 1k, FSTOP: 1G, PPD: 101}
+flags: []
+produces: [cmrr_db]

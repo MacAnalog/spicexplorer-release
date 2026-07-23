@@ -1,0 +1,60 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "buf_001_super_follower",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 7,
+    "blocks_detected": 2,
+    "by_family": {
+      "current_mirror": 2
+    },
+    "structural_roles": {
+      "XMNS": "current_mirror",
+      "XMPB": "current_mirror",
+      "XMPD": "current_mirror_reference",
+      "XMRN": "current_mirror_reference"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.pmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XMPD",
+      "output_devices": [
+        "XMPB"
+      ],
+      "devices": [
+        "XMPB",
+        "XMPD"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "pd",
+        "out": "na"
+      }
+    },
+    {
+      "group_id": "cm.nmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XMRN",
+      "output_devices": [
+        "XMNS"
+      ],
+      "devices": [
+        "XMNS",
+        "XMRN"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "ibias",
+        "out": "pd"
+      }
+    }
+  ]
+}

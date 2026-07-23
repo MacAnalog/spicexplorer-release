@@ -1,0 +1,28 @@
+v {xschem version=3.4.6 file_version=1.2}
+G {type=subcircuit
+format="@name @pinlist @symname"
+template="name=x1"}
+V {}
+S {}
+E {}
+L 4 -135 -100 135 -100 {}
+L 4 135 -100 135 100 {}
+L 4 135 100 -135 100 {}
+L 4 -135 100 -135 -100 {}
+B 5 152.5 -62.5 157.5 -57.5 {name=o1a dir=out}
+L 4 135 -60 155 -60 {}
+T {out} 123 -60 0 0 0.16 0.16 {layer=4}
+B 5 152.5 -22.5 157.5 -17.5 {name=o1b dir=out}
+L 4 135 -20 155 -20 {}
+T {out_2} 123 -20 0 0 0.16 0.16 {layer=4}
+B 5 152.5 17.5 157.5 22.5 {name=vcmfb dir=out}
+L 4 135 20 155 20 {}
+T {ref_in2} 123 20 0 0 0.16 0.16 {layer=4}
+B 5 152.5 57.5 157.5 62.5 {name=vcn dir=out}
+L 4 135 60 155 60 {}
+T {ref_in} 123 60 0 0 0.16 0.16 {layer=4}
+B 5 -2.5 117.5 2.5 122.5 {name=vss dir=inout}
+L 4 0 100 0 120 {}
+T {supply} 0 100 0 0 0.16 0.16 {layer=4}
+T {cm_nmos_high_swing_cascode_1} -127 -92 0 0 0.3 0.3 {layer=4}
+T {@name} -127 76 0 0 0.2 0.2 {layer=4}

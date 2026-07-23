@@ -1,0 +1,8 @@
+# Analysis binding (plan D-4): tran_step_diff — unity-gain differential step settling.
+schema: spicexplorer/analysis@1
+id: tran_step
+template: tran_step_diff
+description: "Unity-gain differential-follower step response; t_settle."
+params: {VDD: 1.5, VCM: 0.9, CL: 500f, VSTEP: 0.2, VTOL: 2m, TSTART: 1u, TSTEP: 1n, TSTOP: 5u}
+flags: []
+produces: [t_settle]

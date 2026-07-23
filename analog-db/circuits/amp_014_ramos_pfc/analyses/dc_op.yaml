@@ -1,0 +1,9 @@
+# AnalogGym analysis binding (dc_op).
+schema: spicexplorer/analysis@1
+id: dc_op
+template: dc_op_biaswrap
+description: "DC operating point + supply current via the self-bias bias-wrap."
+enabled: true
+params: {VDD: 1.8, VCM: 400m}
+flags: []
+produces: [i_supply]

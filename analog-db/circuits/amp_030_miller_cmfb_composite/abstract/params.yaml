@@ -1,0 +1,75 @@
+# amp_030_miller_cmfb_composite — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit amp_030_miller_cmfb_composite --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  C1_CORE: {Value: x_dut_c1_core_value}
+  C2_CORE: {Value: x_dut_c2_core_value}
+  CIN_SERVO_SERVO: {Value: cin_val_servo}
+  COUT_SERVO_SERVO: {Value: cout_val_servo}
+  GM_SERVO_SERVO: {Value: gm_val_servo}
+  IBIAS_CORE: {Value: i_bias_core}
+  R1_CORE: {Value: x_dut_r1_core_value}
+  R2_CORE: {Value: x_dut_r2_core_value}
+  RIN_SERVO_SERVO: {Value: rin_val_servo}
+  RMN_SERVO: {Value: x_dut_rmn_servo_value}
+  RMP_SERVO: {Value: x_dut_rmp_servo_value}
+  ROUT_SERVO_SERVO: {Value: rout_val_servo}
+  VBL0: {Value: vbl0}
+  VREFCM: {Value: vcm_ref}
+  XM10_CORE: {l: x_dut_xm10_core_l, m: x_dut_xm10_core_m, w: x_dut_xm10_core_w}
+  XM1_CORE: {l: x_dut_xm1_core_l, m: x_dut_xm1_core_m, w: x_dut_xm1_core_w}
+  XM2_CORE: {l: x_dut_xm2_core_l, m: x_dut_xm2_core_m, w: x_dut_xm2_core_w}
+  XM3_CORE: {l: x_dut_xm3_core_l, m: x_dut_xm3_core_m, w: x_dut_xm3_core_w}
+  XM4_CORE: {l: x_dut_xm4_core_l, m: x_dut_xm4_core_m, w: x_dut_xm4_core_w}
+  XM5_CORE: {l: x_dut_xm5_core_l, m: x_dut_xm5_core_m, w: x_dut_xm5_core_w}
+  XM6_CORE: {l: x_dut_xm6_core_l, m: x_dut_xm6_core_m, w: x_dut_xm6_core_w}
+  XM7_CORE: {l: x_dut_xm7_core_l, m: x_dut_xm7_core_m, w: x_dut_xm7_core_w}
+  XM8_CORE: {l: x_dut_xm8_core_l, m: x_dut_xm8_core_m, w: x_dut_xm8_core_w}
+  XM9_CORE: {l: x_dut_xm9_core_l, m: x_dut_xm9_core_m, w: x_dut_xm9_core_w}
+groups:
+- name: mirror_xm6_core_l
+  kind: mirror_length
+  members: [XM6_CORE, XM10_CORE, XM7_CORE, XM8_CORE]
+  tie: [l]
+  description: Bias diode XM6 mirrors to the output sinks XM7/XM10 and the tail XM8 — same L for mirror
+    accuracy (inherited from amp_029's authored tying through the composer rename).
+- name: pair_xm1_core_xm2_core
+  kind: matched_pair
+  members: [XM1_CORE, XM2_CORE]
+  tie: [w, l, m]
+  description: NMOS input differential pair (structural detection; == amp_029's pair_xm1_xm2).
+- name: pair_xm3_core_xm4_core
+  kind: matched_pair
+  members: [XM3_CORE, XM4_CORE]
+  tie: [w, l, m]
+  description: PMOS current-source loads of stage 1 — must match for stage-1 balance; their shared gate
+    is the vbl_ctl node the cmfb_001_ideal_rsense_servo servo now DRIVES (amp_029's knife-edge knob, closed by composition).
+- name: pair_xm5_core_xm9_core
+  kind: matched_pair
+  members: [XM5_CORE, XM9_CORE]
+  tie: [w, l, m]
+  description: Per-side stage-2 PMOS common-source drivers (== amp_029's pair_xm5_xm9).
+- name: pair_xm7_core_xm10_core
+  kind: matched_pair
+  members: [XM7_CORE, XM10_CORE]
+  tie: [w, m]
+  description: Output current sinks (gates on core__ref); W/m matched, L tied through mirror_xm6_core_l.
+- name: miller_r_core
+  kind: shared_geometry
+  members: [R1_CORE, R2_CORE]
+  tie: [Value]
+  description: Per-side Miller zero-nulling resistors (== amp_029's miller_r).
+- name: miller_c_core
+  kind: shared_geometry
+  members: [C1_CORE, C2_CORE]
+  tie: [Value]
+  description: Per-side Miller compensation capacitors (== amp_029's miller_c).
+- name: pair_rmp_rmn_servo
+  kind: shared_geometry
+  members: [RMP_SERVO, RMN_SERVO]
+  tie: [Value]
+  description: CM-detector averaging resistors — equal values so cm_sense sits at the true output midpoint
+    (== cmfb_001_ideal_rsense_servo's pair_rmp_rmn).

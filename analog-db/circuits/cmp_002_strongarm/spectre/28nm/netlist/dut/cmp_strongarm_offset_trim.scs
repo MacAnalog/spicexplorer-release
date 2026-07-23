@@ -1,0 +1,44 @@
+simulator lang=spectre
+
+subckt cmp_strongarm_offset_trim CLK DCMPN DCMPP LM LP TRIM_OS\<3\> TRIM_OS\<2\> \
+        TRIM_OS\<1\> TRIM_OS\<0\> VDD VINN VINP VSS
+mn_tail_clk (tail_src CLK VSS VSS) nch_ulvt_mac l=30n w=2u multi=1 nf=4
+mn_out_buff_dcmpp_stage1 (out_buff_dcmpp_mid LM VSS VSS) nch_ulvt_mac l=30n w=500n multi=1 nf=1
+mn_input_vinp_trim3 (sense_n VINP vinp_trim3_src VSS) nch_ulvt_mac l=30n w=4u multi=1 nf=8
+mn_input_vinp_trim2 (sense_n VINP vinp_trim2_src VSS) nch_ulvt_mac l=30n w=2u multi=1 nf=4
+mn_input_vinp_trim0 (sense_n VINP vinp_trim0_src VSS) nch_ulvt_mac l=30n w=500n multi=1 nf=1
+mn_out_buff_dcmpn_stage1 (out_buff_dcmpn_mid LP VSS VSS) nch_ulvt_mac l=30n w=500n multi=1 nf=1
+mn_input_vinn_main (sense_p VINN tail_src VSS) nch_ulvt_mac l=30n w=16.0u multi=1 nf=32
+mn_input_vinp_trim1 (sense_n VINP vinp_trim1_src VSS) nch_ulvt_mac l=30n w=1u multi=1 nf=2
+mn_vinp_trim1_switch (vinp_trim1_src TRIM_OS\<1\> tail_src VSS) nch_ulvt_mac l=30n w=1u multi=1 nf=2
+mn_vinp_trim2_switch (vinp_trim2_src TRIM_OS\<2\> tail_src VSS) nch_ulvt_mac l=30n w=2u multi=1 nf=4
+mn_input_vinp_main (sense_n VINP tail_src VSS) nch_ulvt_mac l=30n w=16.0u multi=1 nf=32
+mn_latch_lm_eval (LM LP sense_n VSS) nch_ulvt_mac l=30n w=4u multi=1 nf=8
+mn_latch_lp_eval (LP LM sense_p VSS) nch_ulvt_mac l=30n w=4u multi=1 nf=8
+mn_vinp_trim3_switch (vinp_trim3_src TRIM_OS\<3\> tail_src VSS) nch_ulvt_mac l=30n w=4u multi=1 nf=8
+mn_vinp_trim0_switch (vinp_trim0_src TRIM_OS\<0\> tail_src VSS) nch_ulvt_mac l=30n w=500n multi=1 nf=1
+mn_input_vinn_trim0 (sense_p VINN vinn_trim0_src VSS) nch_ulvt_mac l=30n w=500n multi=1 nf=1
+mn_vinn_trim0_tie_on (vinn_trim0_src VDD tail_src VSS) nch_ulvt_mac l=30n w=500n multi=1 nf=1
+mn_vinn_trim1_tie_on (vinn_trim1_src VDD tail_src VSS) nch_ulvt_mac l=30n w=1u multi=1 nf=2
+mn_out_buff_dcmpn_stage2 (DCMPN out_buff_dcmpn_mid VSS VSS) nch_ulvt_mac l=30n w=1.5u multi=1 nf=3
+mn_vinn_trim2_tie_on (vinn_trim2_src VDD tail_src VSS) nch_ulvt_mac l=30n w=2u multi=1 nf=4
+mn_vinn_trim3_tie_off (vinn_trim3_src VSS tail_src VSS) nch_ulvt_mac l=30n w=4u multi=1 nf=8
+mn_input_vinn_trim3 (sense_p VINN vinn_trim3_src VSS) nch_ulvt_mac l=30n w=4u multi=1 nf=8
+mn_input_vinn_trim2 (sense_p VINN vinn_trim2_src VSS) nch_ulvt_mac l=30n w=2u multi=1 nf=4
+mn_out_buff_dcmpp_stage2 (DCMPP out_buff_dcmpp_mid VSS VSS) nch_ulvt_mac l=30n w=1.5u multi=1 nf=3
+mn_input_vinn_trim1 (sense_p VINN vinn_trim1_src VSS) nch_ulvt_mac l=30n w=1u multi=1 nf=2
+mn_sense_n_gatecap (VSS sense_n VSS VSS) nch_ehvt_mac l=1u w=500n multi=1 nf=1
+mn_sense_p_gatecap (VSS sense_p VSS VSS) nch_ehvt_mac l=1u w=500n multi=1 nf=1
+mp_out_buff_dcmpp_stage2 (DCMPP out_buff_dcmpp_mid VDD VDD) pch_ulvt_mac l=30n w=1.5u multi=1 nf=3
+mp_out_buff_dcmpn_stage2 (DCMPN out_buff_dcmpn_mid VDD VDD) pch_ulvt_mac l=30n w=1.5u multi=1 nf=3
+mp_latch_equalize (LP CLK LM VDD) pch_ulvt_mac l=30n w=500n multi=1 nf=1
+mp_precharge_sense_p (sense_p CLK VDD VDD) pch_ulvt_mac l=30n w=2u multi=1 nf=4
+mp_precharge_sense_n (sense_n CLK VDD VDD) pch_ulvt_mac l=30n w=2u multi=1 nf=4
+mp_precharge_lp (LP CLK VDD VDD) pch_ulvt_mac l=30n w=2u multi=1 nf=4
+mp_precharge_lm (LM CLK VDD VDD) pch_ulvt_mac l=30n w=2u multi=1 nf=4
+mp_latch_lm_pullup (LM LP VDD VDD) pch_ulvt_mac l=30n w=4u multi=1 nf=8
+mp_latch_lp_pullup (LP LM VDD VDD) pch_ulvt_mac l=30n w=4u multi=1 nf=8
+mp_out_buff_dcmpp_stage1 (out_buff_dcmpp_mid LM VDD VDD) pch_ulvt_mac l=30n w=500n multi=1 nf=1
+mp_out_buff_dcmpn_stage1 (out_buff_dcmpn_mid LP VDD VDD) pch_ulvt_mac l=30n w=500n multi=1 nf=1
+ends cmp_strongarm_offset_trim
+// End of subcircuit definition.

@@ -1,0 +1,15 @@
+# Design variables for the ihp-sg13g2 binding (explicit `u` tokens; sg13 lv-MOS geometry
+# rules). The drawing uses placeholder minimum devices (w=0.15u l=0.13u); defaults here are
+# a signal-switch starting point (w=2u, min L) — sized for on-resistance, not min leakage.
+# No ties: the n and p halves are NOT matched (different mobility), both stay free.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xm1_w, description: "NMOS pass-device width", default: 2u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xm1_l, description: "NMOS pass-device length", default: 0.13u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_xm2_w, description: "PMOS pass-device width", default: 2u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xm2_l, description: "PMOS pass-device length", default: 0.13u, min: 0.13u, max: 2u, unit: m}
+  # Frozen per-device literals: defaults reproduce the drawn m=1 exactly; freeze keeps
+  # them out of the search space.
+  - {name: x_dut_xm1_m, description: "XM1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm2_m, description: "XM2 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

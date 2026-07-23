@@ -1,0 +1,4 @@
+pdk: gf180mcu
+devices:
+  nmos: {model: nfet_06v0}
+  pmos: {model: pfet_06v0}

@@ -1,0 +1,14 @@
+# Design variables for the ihp-sg13g2 binding (explicit eng tokens). The drawn symbols
+# carried no values (GM/ROUT/... placeholders); these defaults give a textbook CMFB
+# servo point — gm*rout = 100u*10Meg -> 60 dB path gain, dominant pole at
+# 1/(2*pi*rout*(cout+CL)) ~ 106 kHz into the bench's 50 fF load. Group representative
+# only for the sense pair: RMN<-RMP (see abstract/params.yaml).
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: gm_val, description: "Servo amplifier transconductance (behavioral VCCS)", default: 100u, min: 1u, max: 10m, unit: S}
+  - {name: rout_val, description: "Servo amplifier output resistance (DC gain = gm_val*rout_val)", default: 10Meg, min: 100k, max: 1G, unit: Ohm}
+  - {name: cout_val, description: "Servo amplifier output capacitance (dominant pole with rout_val + CL)", default: 100f, min: 1f, max: 10p, unit: F}
+  - {name: rin_val, description: "Servo amplifier differential input resistance (near-ideal sense load)", default: 1e12, min: 1Meg, max: 1e14, unit: Ohm}
+  - {name: cin_val, description: "Servo amplifier differential input capacitance", default: 10f, min: 1f, max: 1p, unit: F}
+  - {name: x_dut_rmp_value, description: "CM-detector averaging resistor (RMN tied; high-R to avoid loading the sensed outputs)", default: 1Meg, min: 10k, max: 100Meg, unit: Ohm}

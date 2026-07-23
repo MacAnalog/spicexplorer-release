@@ -1,0 +1,15 @@
+# AC supply rejection (Vdd -> Vout), closed loop, at nominal load + Cout.
+schema: spicexplorer/analysis@1
+id: psrr
+template: psrr
+description: "AC PSRR from Vdd to Vout; reported at FMEAS = 1 kHz."
+params:
+  VDD: 3.3
+  ILOAD: 1m
+  COUT: 1u
+  PPD: 20
+  FSTART: 10
+  FSTOP: 10meg
+  FMEAS: 1k
+flags: []
+produces: [psrr_vdd_db]

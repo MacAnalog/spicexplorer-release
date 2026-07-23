@@ -1,0 +1,175 @@
+{
+  "area": {
+    "active_gate_area_um2": 105.12,
+    "c_count": 8,
+    "c_total_f": 3.7200000000000005e-11,
+    "mos_count": 47,
+    "r_count": 2,
+    "r_total_ohm": 20000000.0
+  },
+  "circuit": "ia_003_fan_chopper_pf",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_closed_loop": {
+          "measures": {
+            "bw_cl_hz": 2100179.0,
+            "gain_cl": 19.31346,
+            "gain_cl_db": 25.7172,
+            "hpf_hz": 31.85298
+          },
+          "status": "ok"
+        },
+        "ac_zin_diff": {
+          "measures": {
+            "zin_ohm": 612208900.0
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0001463952,
+            "vocm": 0.6096375,
+            "vos": -5.37122e-06
+          },
+          "status": "ok"
+        },
+        "tran_chopper_ripple": {
+          "measures": {
+            "gain_cl": 6.946581,
+            "v_ripple_pp": 0.2198775,
+            "vavga": 2.790771e-10,
+            "vavgb": 0.06946581,
+            "vdmax": 0.2205811,
+            "vdmin": 0.0007035931,
+            "vos_residual": 4.017474e-11
+          },
+          "status": "ok"
+        },
+        "tran_zin_chopped": {
+          "measures": {
+            "iavgn": 2.860368e-11,
+            "iavgp": -8.139656e-10,
+            "zin_chop_ohm": 23736920.0
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:26:23+00:00"
+      }
+    }
+  },
+  "design_id": "ec4ede83ce",
+  "metrics": {
+    "tt": {
+      "bw_cl_hz": {
+        "spec": "pass",
+        "value": 2100179.0
+      },
+      "gain_cl": {
+        "spec": "pass",
+        "value": 6.946581
+      },
+      "gain_cl_db": {
+        "spec": "pass",
+        "value": 25.7172
+      },
+      "hpf_hz": {
+        "spec": "pass",
+        "value": 31.85298
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 0.0001463952
+      },
+      "v_ripple_pp": {
+        "spec": "fail",
+        "value": 0.2198775
+      },
+      "vos": {
+        "spec": "pass",
+        "value": -5.37122e-06
+      },
+      "vos_residual": {
+        "spec": "pass",
+        "value": 4.017474e-11
+      },
+      "zin_chop_ohm": {
+        "spec": "pass",
+        "value": 23736920.0
+      },
+      "zin_ohm": {
+        "spec": "pass",
+        "value": 612208900.0
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "vb1": 0.5,
+      "vb2": 0.75,
+      "vb3": 0.45,
+      "vb4": 0.55,
+      "x_dut_cfb1_value": "0.8p",
+      "x_dut_cin1_value": "16p",
+      "x_dut_cm1_value": "1p",
+      "x_dut_cpf1_value": "0.8p",
+      "x_dut_rb1_value": "10Meg",
+      "x_dut_xm10_l": "0.3u",
+      "x_dut_xm10_m": 1,
+      "x_dut_xm10_w": "10u",
+      "x_dut_xm12_l": "0.3u",
+      "x_dut_xm12_m": 1,
+      "x_dut_xm12_w": "5u",
+      "x_dut_xm14_l": "0.5u",
+      "x_dut_xm14_m": 1,
+      "x_dut_xm14_w": "6u",
+      "x_dut_xm16_l": "0.13u",
+      "x_dut_xm16_m": 1,
+      "x_dut_xm16_w": "2u",
+      "x_dut_xm17_l": "0.13u",
+      "x_dut_xm17_m": 1,
+      "x_dut_xm17_w": "2u",
+      "x_dut_xm1_l": "1u",
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": "20u",
+      "x_dut_xm20_l": "0.13u",
+      "x_dut_xm20_m": 1,
+      "x_dut_xm20_w": "2u",
+      "x_dut_xm21_l": "0.13u",
+      "x_dut_xm21_m": 1,
+      "x_dut_xm21_w": "2u",
+      "x_dut_xm24_l": "0.13u",
+      "x_dut_xm24_m": 1,
+      "x_dut_xm24_w": "2u",
+      "x_dut_xm25_l": "0.13u",
+      "x_dut_xm25_m": 1,
+      "x_dut_xm25_w": "2u",
+      "x_dut_xm2_l": "0.5u",
+      "x_dut_xm2_m": 1,
+      "x_dut_xm2_w": "20u",
+      "x_dut_xm4_l": "1u",
+      "x_dut_xm4_m": 1,
+      "x_dut_xm4_w": "4.7u",
+      "x_dut_xm6_m": 1,
+      "x_dut_xm6_w": "10u",
+      "x_dut_xm8_m": 1,
+      "x_dut_xm8_w": "6.2u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 105.12,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "gain_cl": 6.946581
+    },
+    "power_w": 0.00017567424
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

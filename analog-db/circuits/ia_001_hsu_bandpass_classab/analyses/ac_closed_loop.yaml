@@ -1,0 +1,17 @@
+# Analysis binding (plan D-4). Validated against _shared/schema/analysis.schema.json.
+# Binds the ia-class ac_closed_loop_diff template: the DUT closes its own cap-ratio loop,
+# so the bench just drives a balanced differential AC stimulus about VCM and reads the
+# bandpass response (mid-band gain, low-side HPF corner, high-side -3 dB bandwidth).
+schema: spicexplorer/analysis@1
+id: ac_closed_loop
+template: ac_closed_loop_diff
+description: "Closed-loop differential AC bandpass response: gain_cl_db + hpf_hz + bw_cl_hz."
+params:
+  FSTART: 0.1
+  FSTOP: 10MEG
+  PPD: 41
+  CL: 50f
+  VCM: 0.6
+  VDD: 1.2
+flags: []
+produces: [gain_cl, gain_peak_db, peaking_db, hpf_hz, bw_cl_hz]

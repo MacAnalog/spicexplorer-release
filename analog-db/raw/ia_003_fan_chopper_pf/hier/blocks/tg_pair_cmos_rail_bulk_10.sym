@@ -1,0 +1,31 @@
+v {xschem version=3.4.6 file_version=1.2}
+G {type=subcircuit
+format="@name @pinlist @symname"
+template="name=x1"}
+V {}
+S {}
+E {}
+L 4 -125 -60 125 -60 {}
+L 4 125 -60 125 60 {}
+L 4 125 60 -125 60 {}
+L 4 -125 60 -125 -60 {}
+B 5 -147.5 -22.5 -142.5 -17.5 {name=clk_chout dir=in}
+L 4 -125 -20 -145 -20 {}
+T {ctl_p} -113 -20 0 0 0.16 0.16 {layer=4}
+B 5 -147.5 17.5 -142.5 22.5 {name=clk_chout_not dir=in}
+L 4 -125 20 -145 20 {}
+T {ctl_n} -113 20 0 0 0.16 0.16 {layer=4}
+B 5 142.5 -22.5 147.5 -17.5 {name=g2_n dir=out}
+L 4 125 -20 145 -20 {}
+T {b} 113 -20 0 0 0.16 0.16 {layer=4}
+B 5 142.5 17.5 147.5 22.5 {name=out1_p dir=out}
+L 4 125 20 145 20 {}
+T {a} 113 20 0 0 0.16 0.16 {layer=4}
+B 5 -2.5 -82.5 2.5 -77.5 {name=vdd dir=inout}
+L 4 0 -60 0 -80 {}
+T {vdd} 0 -60 0 0 0.16 0.16 {layer=4}
+B 5 -2.5 77.5 2.5 82.5 {name=vss dir=inout}
+L 4 0 60 0 80 {}
+T {vss} 0 60 0 0 0.16 0.16 {layer=4}
+T {tg_pair_cmos_rail_bulk_10} -117 -52 0 0 0.3 0.3 {layer=4}
+T {@name} -117 36 0 0 0.2 0.2 {layer=4}

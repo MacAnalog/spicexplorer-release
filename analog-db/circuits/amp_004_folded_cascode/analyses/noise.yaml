@@ -1,0 +1,7 @@
+schema: spicexplorer/analysis@1
+id: noise
+template: noise
+description: "Input-referred noise."
+params: {VDD: 1.8, VCM: 0.9, IBIAS: -34u, CL: 5p, FSTART: 1k, FSTOP: 100MEG, PPD: 101}
+flags: []
+produces: [vn_in]

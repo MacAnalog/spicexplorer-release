@@ -1,0 +1,160 @@
+{
+  "area": {
+    "active_gate_area_um2": 216.0,
+    "c_count": 2,
+    "c_total_f": 6.005e-11,
+    "mos_count": 7,
+    "r_count": 3,
+    "r_total_ohm": 200001.0
+  },
+  "circuit": "ldo_007_pmos",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0002065897,
+            "vout_dc": 1.201423
+          },
+          "status": "ok"
+        },
+        "dropout": {
+          "error": "ldo_007_pmos/dropout@gf180mcu/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 ldo_007_pmos \u00d7 dropout \u00d7 gf180mcu \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nNo. of Data Rows : 81\n\nError: measure  vin_at  when(WHEN) : out of interval\nWarning from checkvalid: vector vin_at is not available or has zero length.\nError: RHS \"vin_at - 1.176\" invalid\nWarning from checkvalid: vector v_dropout is not ",
+          "status": "sim_error"
+        },
+        "line_regulation": {
+          "measures": {
+            "line_reg": 0.1045
+          },
+          "status": "ok"
+        },
+        "load_regulation": {
+          "measures": {
+            "load_reg": 0.028549
+          },
+          "status": "ok"
+        },
+        "loop_stability": {
+          "measures": {
+            "zout_dc": 84.00561,
+            "zout_peak_db": 0.0
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "onoise_total": 1.443765e-06,
+            "vn_out_rms": 0.001201568
+          },
+          "status": "ok"
+        },
+        "psrr": {
+          "measures": {
+            "psrr_vdd_db": 104.3774,
+            "vout_db": -104.3774
+          },
+          "status": "ok"
+        },
+        "tran_line_step": {
+          "measures": {
+            "v_line_pp": 0.0
+          },
+          "status": "ok"
+        },
+        "tran_load_step": {
+          "measures": {
+            "t_transient": 1.989857e-05,
+            "tcross": 2.489857e-05,
+            "v_undershoot": 0.0,
+            "vout_post": -191.3045
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-04T00:17:05+00:00"
+      }
+    }
+  },
+  "design_id": "c4901c4c6a",
+  "metrics": {
+    "tt": {
+      "i_q": {
+        "spec": "pass",
+        "value": 0.0002065897
+      },
+      "line_reg": {
+        "spec": "fail",
+        "value": 0.1045
+      },
+      "load_reg": {
+        "spec": "fail",
+        "value": 0.028549
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 104.3774
+      },
+      "t_transient": {
+        "spec": "pass",
+        "value": 1.989857e-05
+      },
+      "v_line_pp": {
+        "spec": "pass",
+        "value": 0.0
+      },
+      "v_out": {
+        "spec": "pass",
+        "value": 1.201423
+      },
+      "v_undershoot": {
+        "spec": "pass",
+        "value": 0.0
+      },
+      "vn_out_rms": {
+        "spec": "pass",
+        "value": 0.001201568
+      },
+      "zout_peak_db": {
+        "spec": "pass",
+        "value": 0.0
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "c_comp": "0.05p",
+      "c_ff": "60p",
+      "i_tail": "200u",
+      "x_dut_xm1_l": "0.5u",
+      "x_dut_xm3_l": "0.5u",
+      "x_dut_xmp_l": "0.5u",
+      "x_dut_xm6_l": "1.0u",
+      "x_dut_xmp_m": 20,
+      "r_bot": "100k",
+      "r_top": "100k",
+      "r_z": 1,
+      "vref_val": 0.6,
+      "x_dut_xm1_w": "4u",
+      "x_dut_xm3_w": "4u",
+      "x_dut_xmp_w": "20u",
+      "x_dut_xm6_w": "4u"
+    }
+  },
+  "pdk": "gf180mcu",
+  "ppa": {
+    "active_gate_area_um2": 216.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "load_reg": 0.028549,
+      "psrr_vdd_db": 104.3774,
+      "v_undershoot": 0.0
+    },
+    "power_w": 0.00037186146
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

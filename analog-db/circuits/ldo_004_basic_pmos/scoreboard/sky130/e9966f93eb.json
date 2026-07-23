@@ -1,0 +1,163 @@
+{
+  "area": {
+    "active_gate_area_um2": 108.0,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 5,
+    "r_count": 2,
+    "r_total_ohm": 200000.0
+  },
+  "circuit": "ldo_004_basic_pmos",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0002061991,
+            "vout_dc": 1.23983
+          },
+          "status": "ok"
+        },
+        "dropout": {
+          "error": "ldo_004_basic_pmos/dropout@sky130/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 ldo_004_basic_pmos \u00d7 dropout \u00d7 sky130 \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n Reference value :  1.00000e+00\nNo. of Data Rows : 81\nASCII raw file \"rawspice.raw\"\nngspice-45 done\nError: argument out of range for divide\n  in term: 0/0\n\nError: Can't evaluate \"0/0\"\nWarning from checkvalid: vector v_drop",
+          "status": "sim_error"
+        },
+        "line_regulation": {
+          "measures": {
+            "line_reg": 0.131582,
+            "vout_max": 1.347551,
+            "vout_min": 1.215969
+          },
+          "status": "ok"
+        },
+        "load_regulation": {
+          "measures": {
+            "load_reg": 0.137609,
+            "vout_max": 1.23983,
+            "vout_min": 1.102221
+          },
+          "status": "ok"
+        },
+        "loop_stability": {
+          "measures": {
+            "zout_dc": 17.36879,
+            "zout_max": 17.36879,
+            "zout_peak_db": 0.0
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "onoise_total": 0.0001616915,
+            "vn_out_rms": 0.0127158
+          },
+          "status": "ok"
+        },
+        "psrr": {
+          "measures": {
+            "psrr_vdd_db": 30.23527,
+            "vout_db": -30.23527
+          },
+          "status": "ok"
+        },
+        "tran_line_step": {
+          "measures": {
+            "v_line_pp": 0.016775,
+            "vout_max": 1.235911,
+            "vout_min": 1.219136
+          },
+          "status": "ok"
+        },
+        "tran_load_step": {
+          "measures": {
+            "t_transient": 2.481311e-05,
+            "tcross": 2.981311e-05,
+            "v_undershoot": 0.032684,
+            "vout_min": 1.15565,
+            "vout_post": 1.188334
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T04:44:46+00:00"
+      }
+    }
+  },
+  "design_id": "e9966f93eb",
+  "metrics": {
+    "tt": {
+      "i_q": {
+        "spec": "pass",
+        "value": 0.0002061991
+      },
+      "line_reg": {
+        "spec": "fail",
+        "value": 0.131582
+      },
+      "load_reg": {
+        "spec": "pass",
+        "value": 0.137609
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 30.23527
+      },
+      "t_transient": {
+        "spec": "pass",
+        "value": 2.481311e-05
+      },
+      "v_line_pp": {
+        "spec": "fail",
+        "value": 0.016775
+      },
+      "v_out": {
+        "spec": "fail",
+        "value": 1.23983
+      },
+      "v_undershoot": {
+        "spec": "pass",
+        "value": 0.032684
+      },
+      "vn_out_rms": {
+        "spec": "pass",
+        "value": 0.0127158
+      },
+      "zout_peak_db": {
+        "spec": "pass",
+        "value": 0.0
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "i_tail": "200u",
+      "r_bot": "100k",
+      "r_top": "100k",
+      "vref_val": 0.6,
+      "x_dut_xm1_l": 0.5,
+      "x_dut_xm1_w": 4,
+      "x_dut_xm3_l": 0.5,
+      "x_dut_xm3_w": 4,
+      "x_dut_xmp_l": 0.5,
+      "x_dut_xmp_m": 20,
+      "x_dut_xmp_w": 10
+    }
+  },
+  "pdk": "sky130",
+  "ppa": {
+    "active_gate_area_um2": 108.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "load_reg": 0.137609,
+      "psrr_vdd_db": 30.23527,
+      "v_undershoot": 0.032684
+    },
+    "power_w": 0.00037115838
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

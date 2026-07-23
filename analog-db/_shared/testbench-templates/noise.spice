@@ -1,0 +1,28 @@
+** AUTHORED TEMPLATE — universal/noise (plan D-4): input-referred noise over a band.
+** Bindings: DUT PORT_LINE VDD VCM IBIAS CL
+**   FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+CLoad vout 0 {CL}
+Vcm  vcm 0 dc {VCM}
+Vinp vinp vcm dc 0 ac 1
+Vinn vinn vcm dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  noise v(vout) Vinp dec ${PPD} ${FSTART} ${FSTOP}
+  print inoise_total onoise_total
+  write
+  quit
+.endc
+.end

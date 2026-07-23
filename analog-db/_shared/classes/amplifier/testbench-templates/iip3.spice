@@ -1,0 +1,37 @@
+** AUTHORED TEMPLATE — amplifier/iip3: two-tone third-order intercept in the unity buffer.
+** Two equal-amplitude tones (ASIG at F1 and F2, series-stacked on the input, offset VCM)
+** intermodulate through the DUT; the IM3 products at 2F1-F2 / 2F2-F1 set the intercept.
+** F1/F2 MUST share a common fundamental F0 = gcd(F1,F2) (e.g. 0.9/1.0 MHz -> 100 kHz):
+** ngspice lane: plain tran written to the raw — the platform registry computes
+** {meas: iip3_dbv, f1, f2, ampl_in} by coherent FFT at F0 (tones + IM3 are exact bins).
+** Spectre lane: the platform composes a NATIVE pss at F0 instead (tones + IM3 are plain
+** harmonics of the fd-PSF -> {meas: iip3_pss_*}); ngspice has no PSS. The record must
+** capture whole beat periods: TSTOP >= a few / F0.
+** Bindings: DUT PORT_LINE VDD VCM IBIAS CL ASIG F1 F2 TSTEP TSTOP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+.param CL=${CL}
+.param ASIG=${ASIG}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+CLoad vout 0 {CL}
+
+* unity buffer; two series-stacked tones — the lower source carries the VCM offset
+Vton vinp mid sin(0 {ASIG} ${F1})
+Vtwo mid  0   sin({VCM} {ASIG} ${F2})
+Vfb  vinn vout dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP}
+  write
+  quit
+.endc
+.end

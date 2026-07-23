@@ -1,0 +1,27 @@
+# Analysis binding (P3-2c): pac_gain_chopper_diff template — the GOLDEN closed-loop
+# gain, measured IN OPERATION via Spectre PSS+PAC (clocks running at FCHOP). The figure
+# tran_chopper_ripple's windowed average approximates. ngspice lane = frozen-clock AC
+# eyeball only. TSTAB spans the ~0.7 ms no-CMFB output-CM relaxation (see the netlist
+# CHOPPER NOTE) so the pss shooting starts near a settled orbit. No datasheet metrics
+# bind here on purpose (conformance stays engine-neutral, cf. stb) — read via the
+# platform registry: {meas: gain_cl|dcgain, analysis: pac, out: vout}.
+schema: spicexplorer/analysis@1
+id: pac_gain
+template: pac_gain_chopper_diff
+description: "Golden chopped closed-loop gain — Spectre PSS+PAC baseband, clocks running."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 50f
+  FCHOP: 5k
+  TEDGE: 50n
+  RCM: 30k
+  FSTART: 1
+  FSTOP: 2k
+  PPD: 8
+  HARMS: 15
+  TSTAB: 10m
+  METHOD: gear2
+  MAXSB: 15
+flags: [spectre_only_payload]
+produces: []

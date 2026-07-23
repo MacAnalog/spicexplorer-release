@@ -1,0 +1,78 @@
+# amp_027_fan_rrl_ota — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit amp_027_fan_rrl_ota --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  VB1: {Value: vb1}
+  VB2: {Value: vb2}
+  VB3: {Value: vb3}
+  VB4: {Value: vb4}
+  XM1: {l: x_dut_xm1_l, m: x_dut_xm1_m, w: x_dut_xm1_w}
+  XM10: {l: x_dut_xm10_l, m: x_dut_xm10_m, w: x_dut_xm10_w}
+  XM11: {l: x_dut_xm11_l, m: x_dut_xm11_m, w: x_dut_xm11_w}
+  XM12: {l: x_dut_xm12_l, m: x_dut_xm12_m, w: x_dut_xm12_w}
+  XM13: {l: x_dut_xm13_l, m: x_dut_xm13_m, w: x_dut_xm13_w}
+  XM14: {l: x_dut_xm14_l, m: x_dut_xm14_m, w: x_dut_xm14_w}
+  XM15: {l: x_dut_xm15_l, m: x_dut_xm15_m, w: x_dut_xm15_w}
+  XM16: {l: x_dut_xm16_l, m: x_dut_xm16_m, w: x_dut_xm16_w}
+  XM2: {l: x_dut_xm2_l, m: x_dut_xm2_m, w: x_dut_xm2_w}
+  XM3: {l: x_dut_xm3_l, m: x_dut_xm3_m, w: x_dut_xm3_w}
+  XM4: {l: x_dut_xm4_l, m: x_dut_xm4_m, w: x_dut_xm4_w}
+  XM5: {l: x_dut_xm5_l, m: x_dut_xm5_m, w: x_dut_xm5_w}
+  XM6: {l: x_dut_xm6_l, m: x_dut_xm6_m, w: x_dut_xm6_w}
+  XM7: {l: x_dut_xm7_l, m: x_dut_xm7_m, w: x_dut_xm7_w}
+  XM8: {l: x_dut_xm8_l, m: x_dut_xm8_m, w: x_dut_xm8_w}
+  XM9: {l: x_dut_xm9_l, m: x_dut_xm9_m, w: x_dut_xm9_w}
+groups:
+- name: mirror_xm15_l
+  kind: mirror_length
+  members: [XM15, XM13, XM14]
+  tie: [l]
+  description: CMFB bias diode XM15 mirrors onto the output sinks XM13/XM14 — same L for mirror accuracy
+    (structural detection).
+- name: pair_xm2_xm3
+  kind: matched_pair
+  members: [XM2, XM3]
+  tie: [w, l, m]
+  description: PMOS input differential pair (structural detection).
+- name: pair_xm9_xm10
+  kind: shared_geometry
+  members: [XM9, XM10]
+  tie: [w, l, m]
+  description: PMOS telescopic cascode pair over the two output branches.
+- name: pair_xm11_xm12
+  kind: shared_geometry
+  members: [XM11, XM12]
+  tie: [w, l, m]
+  description: NMOS telescopic cascode pair over the two output branches.
+- name: pair_xm13_xm14
+  kind: matched_pair
+  members: [XM13, XM14]
+  tie: [w, m]
+  description: Output current sinks (gates on the shared CMFB bias node); W/m matched, L already tied
+    through mirror_xm15_l.
+- name: pair_xm5_xm7
+  kind: matched_pair
+  members: [XM5, XM7]
+  tie: [w, l, m]
+  description: DDA-CMFB sense pair (gates on voutn/voutp).
+- name: pair_xm6_xm8
+  kind: matched_pair
+  members: [XM6, XM8]
+  tie: [w, l, m]
+  description: DDA-CMFB reference half — drawn as two parallel unit devices (both gates on vb4), matching
+    the sense pair's combined strength.
+- name: pair_xm15_xm16
+  kind: shared_geometry
+  members: [XM15, XM16]
+  tie: [w, l, m]
+  description: The two DDA diode loads (cm_bias / cm_sense) — symmetric halves of the differential-difference
+    comparison; W/m matched, XM15's L is the mirror_xm15_l representative.
+- name: tails_xm1_xm4_l
+  kind: shared_geometry
+  members: [XM1, XM4]
+  tie: [l]
+  description: Main tail (XM1) and CMFB tail (XM4) share the gate bias vb3 — same L so their current densities
+    track; W stays free to scale the CMFB branch current independently.

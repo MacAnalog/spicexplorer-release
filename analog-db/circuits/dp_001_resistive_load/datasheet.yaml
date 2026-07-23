@@ -1,0 +1,31 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# Differential-pair metric sheet: tail current (power), output common-mode, differential DC gain.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.5}
+  vcm:    {unit: V, typical: 0.75}
+  ibias:  {unit: uA, typical: 20}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  i_supply:
+    display: "Tail / supply current"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {min: 1.0e-6, max: 2.0e-4, unit: A}
+  v_ocm:
+    display: "Output common-mode"
+    description: "(voutp+voutn)/2 at the nominal bias."
+    unit: V
+    analysis: dc_op
+    extract: {meas: v_ocm}
+    spec: {min: 0.4, max: 1.2, unit: V}
+  gain_dc:
+    display: "Differential DC gain"
+    description: "d(voutp-voutn)/d(vid) at vid=0 (V/V). Set by gm·R_load of the pair."
+    unit: "V/V"
+    analysis: gain_dc
+    extract: {meas: gain_dc}
+    spec: {min: 1.0, unit: "V/V"}

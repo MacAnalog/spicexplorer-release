@@ -1,0 +1,35 @@
+[project]
+name = "spicexplorer"
+version = "0.1.0"
+description = "SpiceXplorer circuit optimizer — the first platform tool (keeps the historical `spicexplorer` import name)."
+requires-python = ">=3.10"
+dependencies = [
+    "spicexplorer-core",
+    "dacite>=1.9",
+    "nevergrad>=1.0",
+    "numpy>=2.2",
+    "pandas>=2.2.3",
+    "plotly>=6.9.0",
+    "psf_utils>=1.8",
+    "PyYAML>=6.0.1",
+    "tqdm>=4.69.0",
+]
+
+[project.optional-dependencies]
+ax = ["ax-platform>=1.2.4; python_version >= '3.11'"]
+# Bode / AC transfer-function fitting + the (dormant) RL optimizers. torch is a heavy
+# wheel, so it is OPT-IN: the common single-objective / constraint optimizers and the
+# entire scoring path are pure numpy and import without it. `control`/`sympy` back the
+# symbolic transfer-function helpers. Install with: pip install 'spicexplorer[torch]'.
+torch = [
+    "torch>=2.6",
+    "control>=0.10",
+    "sympy>=1.13.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spicexplorer"]

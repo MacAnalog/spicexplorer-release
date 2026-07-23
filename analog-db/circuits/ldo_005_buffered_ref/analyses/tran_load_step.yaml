@@ -1,0 +1,19 @@
+# Transient load step (1 -> 10 mA); undershoot + recovery time.
+schema: spicexplorer/analysis@1
+id: tran_load_step
+template: tran_load_step
+description: "Fast 1 -> 10 mA load step into Cout; peak undershoot + settling time."
+params:
+  VDD: 3.3
+  COUT: 1u
+  ILOAD_LO: 1m
+  ILOAD_HI: 10m
+  TSTART: 5u
+  TEDGE: 10n
+  TPULSE: 20u
+  TPER: 40u
+  TSTEP: 50n
+  TSTOP: 30u
+  VTOL: 1m
+flags: []
+produces: [v_undershoot, t_transient]

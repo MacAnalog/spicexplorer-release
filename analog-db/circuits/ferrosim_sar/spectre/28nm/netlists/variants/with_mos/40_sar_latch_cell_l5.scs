@@ -1,0 +1,114 @@
+// Library name: SAR_11B_ZZS
+// Cell name: L5_LATCH_CELL
+// View name: schematic
+// Inherited view list: spectre cmos_sch cmos.sch schematic veriloga ahdl
+// pspice dspf
+subckt L5_LATCH_CELL DCMPN DCMPP DN DNB DP DPB ENB_NEXT ENB_PRE RSTN_GLB \
+        VALID VDD VSS
+    M14 (DN DNB VSS VSS) nch_ulvt_mac l=30n w=200n multi=1 nf=1 sd=100n \
+        ad=1.5e-14 as=1.5e-14 pd=550.0n ps=550.0n nrd=2.828877 \
+        nrs=2.828877 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M9 (DNB EN DCMPN VSS) nch_ulvt_mac l=30n w=390.0n multi=1 nf=1 sd=100n \
+        ad=2.925e-14 as=2.925e-14 pd=930.0n ps=930.0n nrd=0.892496 \
+        nrs=0.892496 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M6 (DPB EN DCMPP VSS) nch_ulvt_mac l=30n w=390.0n multi=1 nf=1 sd=100n \
+        ad=2.925e-14 as=2.925e-14 pd=930.0n ps=930.0n nrd=0.892496 \
+        nrs=0.892496 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M8 (DPB DNB net1 VSS) nch_ulvt_mac l=30n w=270.0n multi=1 nf=1 sd=100n \
+        ad=2.025e-14 as=2.025e-14 pd=690.0n ps=690.0n nrd=1.366791 \
+        nrs=1.366791 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M7 (DNB DPB net1 VSS) nch_ulvt_mac l=30n w=270.0n multi=1 nf=1 sd=100n \
+        ad=2.025e-14 as=2.025e-14 pd=690.0n ps=690.0n nrd=1.366791 \
+        nrs=1.366791 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M1 (net14 RSTN VSS VSS) nch_ulvt_mac l=30n w=270.0n multi=1 nf=1 \
+        sd=100n ad=2.025e-14 as=2.025e-14 pd=690.0n ps=690.0n nrd=1.366791 \
+        nrs=1.366791 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M12 (DP DPB VSS VSS) nch_ulvt_mac l=30n w=200n multi=1 nf=1 sd=100n \
+        ad=1.5e-14 as=1.5e-14 pd=550.0n ps=550.0n nrd=2.828877 \
+        nrs=2.828877 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M0 (net1 RDY net14 VSS) nch_ulvt_mac l=30n w=270.0n multi=1 nf=1 \
+        sd=100n ad=2.025e-14 as=2.025e-14 pd=690.0n ps=690.0n nrd=1.366791 \
+        nrs=1.366791 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M3 (DNB RSTN VDD VDD) pch_ulvt_mac l=30n w=200n multi=1 nf=1 sd=100n \
+        ad=1.5e-14 as=1.5e-14 pd=550.0n ps=550.0n nrd=1.688887 \
+        nrs=1.688887 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M10 (DPB RSTN VDD VDD) pch_ulvt_mac l=30n w=200n multi=1 nf=1 sd=100n \
+        ad=1.5e-14 as=1.5e-14 pd=550.0n ps=550.0n nrd=1.688887 \
+        nrs=1.688887 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M5 (DPB DNB VDD VDD) pch_ulvt_mac l=30n w=200n multi=1 nf=1 sd=100n \
+        ad=1.5e-14 as=1.5e-14 pd=550.0n ps=550.0n nrd=1.688887 \
+        nrs=1.688887 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M2 (DNB DPB VDD VDD) pch_ulvt_mac l=30n w=200n multi=1 nf=1 sd=100n \
+        ad=1.5e-14 as=1.5e-14 pd=550.0n ps=550.0n nrd=1.688887 \
+        nrs=1.688887 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M13 (DN DNB VDD VDD) pch_ulvt_mac l=30n w=260.0n multi=1 nf=1 sd=100n \
+        ad=1.95e-14 as=1.95e-14 pd=670.0n ps=670.0n nrd=0.789742 \
+        nrs=0.789742 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M11 (DP DPB VDD VDD) pch_ulvt_mac l=30n w=260.0n multi=1 nf=1 sd=100n \
+        ad=1.95e-14 as=1.95e-14 pd=670.0n ps=670.0n nrd=0.789742 \
+        nrs=0.789742 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    C0 (DPB VSS) capacitor c=1f
+    C10 (DNB VSS) capacitor c=1f
+    I4 (DNB DPB RDY VDD VSS) ND2D0BWP12T30P140LVT
+    I26 (RSTN_GLB RDY ENB_NEXT VDD VSS) ND2D0BWP12T30P140LVT
+    I15 (RDY VALID ENB_PRE EN VDD VSS) NR3D0BWP12T30P140LVT
+    I25 (ENB_PRE RSTN VDD VSS) INVD0BWP12T30P140LVT
+ends L5_LATCH_CELL
+// End of subcircuit definition.
+

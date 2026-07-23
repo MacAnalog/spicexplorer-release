@@ -1,0 +1,65 @@
+** AUTHORED TEMPLATE — amplifier/dc_cm_bias_sweep (committed from the amp_029 review
+** finding: "no stable interior DC point" deserved a reproducible gate, not scratchpad
+** prose). Characterizes the OUTPUT-COMMON-MODE sensitivity of an FD amplifier to one
+** internal bias knob: the knob (name bound as CMKNOB, e.g. the stage-1 load-gate bias)
+** is stepped across 5 points VB1..VB5 via alterparam+reset; at each point the op's
+** output CM vocm_i = (voutp+voutn)/2 is recorded. cm_interior_pts counts how many of
+** the 5 land inside VCM +/- VBAND:
+**   5..1  = the knob has a usable interior window (its width ~ the passing points'
+**           span — pick VB points around the expected balance);
+**   0     = the output rails at every sampled bias: no interior operating point at
+**           this sizing (e.g. a no-CMFB topology's cascaded gds knife edges).
+** Matched DC inputs at VCM; self-biased diff port order:
+**   .subckt <id> vinp vinn voutp voutn vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM VBAND CMKNOB VB1 VB2 VB3 VB4 VB5
+**                    PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vcm  vcm 0 dc {VCM}
+Vinp vinp vcm dc 0
+Vinn vinn vcm dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  * each op opens a NEW plot: print every vocm_i immediately (the measure parser reads
+  * these lines), and the final count reaches back via plot-qualified names (opN.vocm_N).
+  alterparam ${CMKNOB}=${VB1}
+  reset
+  op
+  let vocm_1 = (v(voutp)+v(voutn))/2
+  print vocm_1
+  alterparam ${CMKNOB}=${VB2}
+  reset
+  op
+  let vocm_2 = (v(voutp)+v(voutn))/2
+  print vocm_2
+  alterparam ${CMKNOB}=${VB3}
+  reset
+  op
+  let vocm_3 = (v(voutp)+v(voutn))/2
+  print vocm_3
+  alterparam ${CMKNOB}=${VB4}
+  reset
+  op
+  let vocm_4 = (v(voutp)+v(voutn))/2
+  print vocm_4
+  alterparam ${CMKNOB}=${VB5}
+  reset
+  op
+  let vocm_5 = (v(voutp)+v(voutn))/2
+  print vocm_5
+  let lo = ${VCM} - ${VBAND}
+  let hi = ${VCM} + ${VBAND}
+  let cm_interior_pts = ((op1.vocm_1 gt lo) & (op1.vocm_1 lt hi)) + ((op2.vocm_2 gt lo) & (op2.vocm_2 lt hi)) + ((op3.vocm_3 gt lo) & (op3.vocm_3 lt hi)) + ((op4.vocm_4 gt lo) & (op4.vocm_4 lt hi)) + ((vocm_5 gt lo) & (vocm_5 lt hi))
+  print cm_interior_pts
+  write
+  quit
+.endc
+.end

@@ -1,0 +1,12 @@
+# amp_028_ideal_fully_diff — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit amp_028_ideal_fully_diff --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  CIN: {Value: cin_val}
+  COUT: {Value: cout_val}
+  GM: {Value: gm_val}
+  RIN: {Value: rin_val}
+  ROUT: {Value: rout_val}

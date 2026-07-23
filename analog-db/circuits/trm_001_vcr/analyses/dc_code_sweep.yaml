@@ -1,0 +1,12 @@
+# Analysis binding (plan D-4): trim dc_code_sweep — static transfer + linearity.
+schema: spicexplorer/analysis@1
+id: dc_code_sweep
+template: dc_code_sweep
+description: "Trim code (Vcode) sweep; full_range, lsb_step, inl_lsb, monotonic."
+params:
+  VDD: 1.2
+  CODE_LO: 0
+  CODE_HI: 1.2
+  CODE_STEP: 0.05
+flags: []
+produces: [full_range, lsb_step, inl_lsb, monotonic]

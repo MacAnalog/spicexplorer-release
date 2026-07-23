@@ -1,0 +1,212 @@
+# ia_004 (Fan CCIA + ripple-reduction loop) — gain / power / active-area trade-off on IHP.
+#
+# FIRST optimizer config for a COMPOSED entry (ia_002 core + sup_003 RRL). Written
+# 2026-07-20, immediately after the DRAWING_REVIEW S7 sense-ground fix promoted ia_004 to
+# `validated`. Drives the committed raw decks (`ws_root: ..` = the analog-db root).
+#
+# ── READ THIS BEFORE TRUSTING THE RESULT ────────────────────────────────────────────────
+#
+# 1. THIS IS NOT A PARETO FRONT. The platform has no multi-objective backend — the only Ax
+#    classes are Ax_Spice_Constraint_Satisfaction and Ax_Spice_Single_Objective (Pareto
+#    appears only as unimplemented comments in the dormant RL backend). Every spec below is
+#    range-normalized and aggregated into ONE scalar, exactly as nevergrad does. To trace an
+#    approximate front, re-run with different `weight:` on power/active_area and collect the
+#    winners — a weighted-sum sweep, not a true front.
+#
+# 2. `active_area` COUNTS TRANSISTORS ONLY, and for THIS circuit that is the minority of the
+#    area. The derived recipe is sum(W·L·m) over device rows; it has no capacitor term.
+#    ia_004's scoreboard: active_gate_area_um2 191.24 across 75 MOS, but c_total_f 47.7 pF
+#    across 14 caps — at MIM densities that is O(10^4) um^2, i.e. ~100x the transistor area.
+#    So `active_area` here means "active DEVICE area of the searched core" and nothing more.
+#    The caps are FROZEN (not searched) precisely so the number stays self-consistent.
+#
+# 3. hpf_hz AND bw_cl_hz ARE GUARDS, NOT OBJECTIVES. This is the lesson of the 2026-07-20
+#    sizing revert: block-local optima for the RRL (min-W switches, Cs=4p) each moved
+#    ia_004's hpf_hz from 32.5 Hz to 776 kHz / 395 kHz, breaking the <=1000 Hz spec. Any
+#    search that ignores the frequency response WILL rediscover that regression. Both bands
+#    are carried here so the optimizer is penalized for it.
+#
+# ── SCOPE OF THE SEARCH ─────────────────────────────────────────────────────────────────
+# 18 dims: the MAIN (ia_002 core) device W/L + its four gate biases. Deliberately excluded:
+#   • all caps (Cin/Cfb set gain_cl by ratio — a design choice, not a power trade; and see 2)
+#   • all chopper/SC transmission gates (the hpf_hz landmine — freeze first, search later)
+#   • the whole `rrl` instance (its opamp + switches) — contributes a FIXED power/area offset
+#     in every eval here. A second round can open it once this one is understood.
+# Ax degrades past ~20-30 dims, so widening the search is a deliberate follow-up, not a free
+# upgrade.
+#
+# Baseline — MEASURED at the committed defaults 2026-07-20 (tt, ngspice-45), NOT read from the
+# scoreboard, because THE SCOREBOARD IS STALE. `scoreboard/ihp-sg13g2/ee77a983e2.json` was
+# written 2026-07-17, BEFORE the S7 sense-ground fix, and was never regenerated:
+#
+#            deck at defaults      scoreboard ee77a983e2      verdict
+#   gain_cl_db    25.713                 25.719              agrees
+#   hpf_hz        32.442                 32.482              agrees
+#   bw_cl_hz    1.802e6                385609.8              4.68x APART
+#   i_supply     219.50 uA              218.95 uA            agrees
+#
+# A/B against `git show HEAD:` of this same deck reproduces 385609.8 EXACTLY, so the S7 fix is
+# the cause: it WIDENED the closed-loop band 385.6 kHz -> 1.80 MHz. Gain-vs-frequency shows the
+# 100 Hz - 10 kHz passband is untouched (25.276/25.661/25.700/25.713 dB before vs
+# 25.281/25.669/25.709/25.713 after); the two curves only diverge above 100 kHz, where the
+# pre-fix version rolled off early (25.43 dB @100k, 18.70 @1M) and the fixed one stays flat
+# (25.70 @100k, 24.65 @1M). So the old roll-off was an ARTIFACT of the broken RRL loading the
+# signal path, not intentional band-limiting — and ia_004 has no intentional band-limiting at
+# all. Nothing flagged the 4.68x move because `bw_cl_hz`'s datasheet spec is one-sided
+# (min: 500), which both values satisfy. Regenerate the scoreboard before trusting it.
+#
+#   gain_cl_db 25.713 | hpf_hz 32.442 | bw_cl_hz 1.802e6 | i_supply 219.50 uA (263.4 uW)
+#   searched-subset device area at defaults: 96.8 um^2
+project:
+  name: ia_004 CCIA+RRL — gain / power / area
+  description: Fan chopper CCIA with ripple-reduction loop — closed-loop gain vs supply power vs active device area, with the hpf/bw spec bands carried as guards
+  simulator: ngspice
+  save_sim: false
+  parallel_sim: true
+  ws_root: ..
+  netlist: raw/ia_004_fan_chopper_rrl/ihp-sg13g2/ac_closed_loop.spice
+  outdir: raw_optimize/_runs/ia_004_fan_chopper_rrl
+  tech_spec:
+    name: ihp-sg13g2
+    constraints: {}
+  dut_params:
+  # ── main instance: ia_002 core. Bounds are ~0.3x..3x around the committed defaults,
+  #    clipped to the sizing.yaml min/max — not the full legal range, to keep Ax tractable.
+  - {name: x_dut_xm1_main_w,  min_val: 5.0e-06, max_val: 6.0e-05}   # tail PMOS (vb4)   def 20u
+  - {name: x_dut_xm1_main_l,  min_val: 3.0e-07, max_val: 3.0e-06}   # ALSO sets XM6-XM9 L
+  - {name: x_dut_xm2_main_w,  min_val: 5.0e-06, max_val: 6.0e-05}   # input pair        def 20u
+  - {name: x_dut_xm2_main_l,  min_val: 1.5e-07, max_val: 2.0e-06}
+  - {name: x_dut_xm4_main_w,  min_val: 1.0e-06, max_val: 1.5e-05}   # fold sink (vb1)   def 4.7u
+  - {name: x_dut_xm4_main_l,  min_val: 3.0e-07, max_val: 3.0e-06}
+  - {name: x_dut_xm6_main_w,  min_val: 2.0e-06, max_val: 3.0e-05}   # fold source (vb4) def 10u
+  - {name: x_dut_xm8_main_w,  min_val: 1.5e-06, max_val: 2.0e-05}   # output PMOS (vb4) def 6.2u
+  - {name: x_dut_xm10_main_w, min_val: 2.0e-06, max_val: 3.0e-05}   # PMOS cascode      def 10u
+  - {name: x_dut_xm10_main_l, min_val: 1.3e-07, max_val: 1.0e-06}
+  - {name: x_dut_xm12_main_w, min_val: 1.0e-06, max_val: 1.5e-05}   # NMOS cascode      def 5u
+  - {name: x_dut_xm12_main_l, min_val: 1.3e-07, max_val: 1.0e-06}
+  - {name: x_dut_xm14_main_w, min_val: 1.5e-06, max_val: 2.0e-05}   # output NMOS       def 6u
+  - {name: x_dut_xm14_main_l, min_val: 1.5e-07, max_val: 2.0e-06}
+  # gate biases (V) — the real power lever on this topology
+  - {name: vb1_main, min_val: 0.30, max_val: 0.80}   # NMOS fold-sink gate   def 0.50
+  - {name: vb2_main, min_val: 0.50, max_val: 1.00}   # NMOS cascode gate     def 0.75
+  - {name: vb3_main, min_val: 0.25, max_val: 0.70}   # PMOS load-cascode     def 0.45
+  - {name: vb4_main, min_val: 0.35, max_val: 0.85}   # PMOS current-source   def 0.55
+  # frozen m-counts — declared so the active_area recipe can resolve them on every eval path
+  - {name: x_dut_xm1_main_m,  freeze: true, val: 1.0}
+  - {name: x_dut_xm2_main_m,  freeze: true, val: 1.0}
+  - {name: x_dut_xm4_main_m,  freeze: true, val: 1.0}
+  - {name: x_dut_xm6_main_m,  freeze: true, val: 1.0}
+  - {name: x_dut_xm8_main_m,  freeze: true, val: 1.0}
+  - {name: x_dut_xm10_main_m, freeze: true, val: 1.0}
+  - {name: x_dut_xm12_main_m, freeze: true, val: 1.0}
+  - {name: x_dut_xm14_main_m, freeze: true, val: 1.0}
+  testbenches:
+  - name: ac_closed_loop
+    params: []
+    netlist: raw/ia_004_fan_chopper_rrl/ihp-sg13g2/ac_closed_loop.spice
+    enable: true
+    description: 'raw deck: ac_closed_loop (gain_cl_db, hpf_hz, bw_cl_hz)'
+  - name: dc_op
+    params: []
+    netlist: raw/ia_004_fan_chopper_rrl/ihp-sg13g2/dc_op.spice
+    enable: true
+    description: 'raw deck: dc_op (i_supply, vos)'
+  optimizer_config:
+    type: bayesian_ax
+    random_seed: 48
+    budget: 60
+    # `name` is the BACKEND-SPECIFIC algorithm knob and is INERT under Ax (it selects the
+    # Nevergrad algorithm). The dataclass requires it regardless, so it is kept at the shipped
+    # value — flipping `type:` back to `nevergrad` then runs the identical search under NGOpt.
+    name: NGOpt
+    lin_variable_bounds: {min: 0, max: 100}
+    log_variable_bounds: {min: 1, max: 100}
+    target_specs:
+    # ── OBJECTIVE 1: closed-loop gain. Datasheet spec min 20 / typ 26 dB; the cap ratio
+    #    Cin/Cfb = 20 sets it, and the caps are frozen, so this mostly guards against a
+    #    sizing that stops the core from realizing the ratio.
+    - name: gain_cl_db
+      testbench: ac_closed_loop
+      sim_type: ac
+      goal: exceed
+      target: 26.0
+      range: 20.0
+      tolerance: 0.5
+      weight: 1.0
+      reward_type: log
+      enable: true
+    # ── GUARD: high-pass corner must stay under the 1000 Hz spec. Baseline 32.5 Hz sits far
+    #    inside, so this contributes flat reward until a candidate breaks it — which is the
+    #    entire point (see header note 3).
+    - name: hpf_hz
+      testbench: ac_closed_loop
+      sim_type: ac
+      goal: minimize
+      target: 1000.0
+      range: 1000.0
+      tolerance: 50.0
+      weight: 2.0
+      reward_type: none
+      enable: true
+    # ── GUARD: closed-loop bandwidth floor. Datasheet spec min 500 Hz, just above the
+    #    100-320 Hz biomedical passband. One-sided by design: excess bandwidth is not
+    #    rewarded, and it costs power, so the power objective supplies the downward pressure.
+    - name: bw_cl_hz
+      testbench: ac_closed_loop
+      sim_type: ac
+      goal: exceed
+      target: 500.0
+      range: 5000.0
+      tolerance: 100.0
+      weight: 2.0
+      reward_type: log
+      enable: true
+    # ── OBJECTIVE 2: supply power. Tier-1 |I_supply|·VDD at the 1.2 V IHP rail. Baseline
+    #    262.7 uW; target set well below it to keep real downward pressure. NOTE this is the
+    #    WHOLE composite including the frozen RRL, so part of it is not reachable by this
+    #    search. Fan's 1.8 uW headline is a 65 nm number and is NOT the target here.
+    - name: power
+      testbench: dc_op
+      sim_type: op
+      goal: minimize
+      target: 120.0
+      range: 300.0
+      tolerance: 5.0
+      weight: 1.0
+      reward_type: none
+      enable: true
+      measurement: {meas: power_uw, probe: i(i_supply), vdd: 1.2}
+    # ── OBJECTIVE 3: active DEVICE area of the searched core (um^2). Param-derived
+    #    sum(W·L·m), no simulation. Tied twins are listed TWICE because each shares its
+    #    partner's w/l params (XM3=XM2, XM5=XM4, XM7=XM6, XM9=XM8, XM11=XM10, XM13=XM12,
+    #    XM15=XM14) and m stays 1. XM6-XM9 take their LENGTH from x_dut_xm1_main_l — see the
+    #    deck's derived .param block. Defaults sum to 96.8 um^2.
+    - name: active_area
+      testbench: dc_op          # ignored for a derived spec; must name a valid tb
+      sim_type: op              # ignored for a derived spec
+      goal: minimize
+      target: 50.0
+      range: 100.0
+      tolerance: 2.0
+      weight: 1.0
+      reward_type: none
+      enable: true
+      measurement:
+        derived: active_area
+        scale: 1.0e12           # m^2 -> um^2
+        devices:
+        - {w: x_dut_xm1_main_w,  l: x_dut_xm1_main_l,  m: x_dut_xm1_main_m}   # XM1  tail
+        - {w: x_dut_xm2_main_w,  l: x_dut_xm2_main_l,  m: x_dut_xm2_main_m}   # XM2  in pair
+        - {w: x_dut_xm2_main_w,  l: x_dut_xm2_main_l,  m: x_dut_xm2_main_m}   # XM3  = XM2
+        - {w: x_dut_xm4_main_w,  l: x_dut_xm4_main_l,  m: x_dut_xm4_main_m}   # XM4  fold sink
+        - {w: x_dut_xm4_main_w,  l: x_dut_xm4_main_l,  m: x_dut_xm4_main_m}   # XM5  = XM4
+        - {w: x_dut_xm6_main_w,  l: x_dut_xm1_main_l,  m: x_dut_xm6_main_m}   # XM6  fold src
+        - {w: x_dut_xm6_main_w,  l: x_dut_xm1_main_l,  m: x_dut_xm6_main_m}   # XM7  = XM6
+        - {w: x_dut_xm8_main_w,  l: x_dut_xm1_main_l,  m: x_dut_xm8_main_m}   # XM8  out PMOS
+        - {w: x_dut_xm8_main_w,  l: x_dut_xm1_main_l,  m: x_dut_xm8_main_m}   # XM9  = XM8
+        - {w: x_dut_xm10_main_w, l: x_dut_xm10_main_l, m: x_dut_xm10_main_m}  # XM10 P cascode
+        - {w: x_dut_xm10_main_w, l: x_dut_xm10_main_l, m: x_dut_xm10_main_m}  # XM11 = XM10
+        - {w: x_dut_xm12_main_w, l: x_dut_xm12_main_l, m: x_dut_xm12_main_m}  # XM12 N cascode
+        - {w: x_dut_xm12_main_w, l: x_dut_xm12_main_l, m: x_dut_xm12_main_m}  # XM13 = XM12
+        - {w: x_dut_xm14_main_w, l: x_dut_xm14_main_l, m: x_dut_xm14_main_m}  # XM14 out NMOS
+        - {w: x_dut_xm14_main_w, l: x_dut_xm14_main_l, m: x_dut_xm14_main_m}  # XM15 = XM14

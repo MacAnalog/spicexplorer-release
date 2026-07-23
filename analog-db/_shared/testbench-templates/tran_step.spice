@@ -1,0 +1,36 @@
+** AUTHORED TEMPLATE — universal/tran_step (plan D-4): unity-gain step → slew + settling.
+** Bindings: DUT PORT_LINE VDD VCM IBIAS CL
+**   VSTEP TSTEP TSTOP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+CLoad vout 0 {CL}
+
+* unity-gain follower: vinn shorted to vout (0 V source = ideal feedback wire)
+.param VSTEP=${VSTEP}
+Vinp vinp 0 dc {VCM} pulse({VCM} {VCM+VSTEP} ${TSTART} 1n 1n 1 1)
+Vfb  vinn vout dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP}
+  * settle to the FINAL value, not the input — a follower's systematic offset would
+  * otherwise keep |vout - vinp| outside a tight tolerance band forever.
+  meas tran vfinal FIND v(vout) AT=${TSTOP}
+  let verr = abs(v(vout) - vfinal)
+  meas tran tcross WHEN verr=${VTOL} FALL=LAST
+  let t_settle = tcross - ${TSTART}
+  print t_settle
+  write
+  quit
+.endc
+.end

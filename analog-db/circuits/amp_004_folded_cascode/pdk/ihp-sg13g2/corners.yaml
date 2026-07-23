@@ -1,0 +1,7 @@
+# The CORA benches hardcode mos_tt only (no RES devices in the core).
+pdk: ihp-sg13g2
+corners:
+  tt: [{lib_file: cornerMOSlv.lib, section: mos_tt}]
+  ss: [{lib_file: cornerMOSlv.lib, section: mos_ss}]
+  ff: [{lib_file: cornerMOSlv.lib, section: mos_ff}]
+default_corner: tt

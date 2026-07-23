@@ -1,0 +1,41 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# SUPERSET of cace_format 5.2. See _shared/CACE_FORMAT.md for the field-overlap mapping (O-1).
+# Spec bands are sanity targets for the default element values (gm*rout = 60 dB, single
+# dominant output pole) — the macromodel is ideal, so vos/i_supply bands guard the harness.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  cload:  {unit: fF, typical: 50}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+  vcm:    {unit: V, typical: 0.6}
+metrics:
+  dc_gain_db:
+    display: "DC open-loop differential gain"
+    description: "Differential DC gain vdb(voutp,voutn) = gm*rout (60 dB at defaults)"
+    unit: dB
+    analysis: ac_open_loop
+    extract: {meas: dcgain}
+    spec: {min: 40, unit: dB}
+  ugf_hz:
+    display: "Unity-gain frequency"
+    description: "Single dominant pole at the output: ~gm/(2*pi*(cout + CL_diff))"
+    unit: Hz
+    analysis: ac_open_loop
+    extract: {meas: ugf}
+    spec: {min: 1.0e6, unit: Hz}
+  vos:
+    display: "Output offset"
+    description: "voutp - voutn at matched DC inputs; identically 0 for the ideal VCCS"
+    unit: V
+    analysis: dc_op
+    extract: {meas: vos}
+    spec: {min: -1e-3, typ: 0, max: 1e-3, unit: V}
+  i_supply:
+    display: "Supply current"
+    description: "abs(i(Vdd)); the macromodel draws no supply current — ideally 0"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 1e-6, unit: A}

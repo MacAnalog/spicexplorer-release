@@ -1,0 +1,27 @@
+# SUPER-DSL manifest — the minimal closed-loop LDO, imported from
+# external/conceptual_LDO_design/ltspice/LDO_basic.asc (a textbook ideal-op-amp + PMOS pass +
+# resistor divider design). circuitgraph's device factory doesn't type VCVS/E-source primitives
+# (M/R/C/L/V/I/X only — see device_factory.py), so the source's behavioral op-amp is realized
+# here as the minimal REAL 4-transistor equivalent instead: NMOS input pair + PMOS mirror load,
+# ideal tail sink, NO bias-mirror transistor, NO compensation network. Deliberately the simplest
+# amp in the DB — a "basic/conceptual" complement to the Miller-compensated ldo_007_pmos and the
+# richer 2-stage ldo_005_buffered_ref.
+schema: spicexplorer/circuit@1
+id: ldo_004_basic_pmos
+class: ldo
+display_name: "Basic PMOS LDO (minimal 4T error amp, uncompensated)"
+compensation: none (dominant pole set by the pass-gate parasitic C)
+stages: 1                       # single-stage error amp driving the pass device directly
+ports: [vdd, vout, vss]         # reference generated INTERNALLY (ideal, sim reference)
+provenance:
+  aliases: [basic_pmos_ldo]
+  source: external/conceptual_LDO_design/ltspice/LDO_basic.asc    # vendored verbatim at reference/ltspice/
+  designer: "Danial Noori Zadeh"
+  license: MIT
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, sky130, gf180mcu]
+analyses: [dc_op, load_regulation, line_regulation, psrr, dropout, tran_load_step, loop_stability, noise, tran_line_step]
+status: draft

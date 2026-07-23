@@ -1,0 +1,46 @@
+simulator lang=spectre
+
+subckt ref_buffer_push_pull SETN_GATE SETP_GATE VREFM VREFN VREFOUT
+    Mp_vrefn_drive (VREFN SETP_GATE VREFOUT VREFOUT) pch_ulvt_mac l=90n w=20.5u multi=16 nf=41
+    Mn_vrefm_drive (VREFM SETN_GATE VREFOUT VREFOUT) nch_ulvt_mac l=90n w=20.5u multi=16 nf=41
+ends ref_buffer_push_pull
+
+subckt ref_buffer_stage2 SETN SETP VREFM VREFN VREFOUT
+    Xpush_pull_core (setn_gate setp_gate VREFM VREFN VREFOUT) ref_buffer_push_pull
+
+    // The layout decap array was collapsed into ideal capacitors at the
+    // local DC operating point of each gate node.
+    Cdecap_setn_gate (setn_gate VREFN) capacitor c=14.39745p
+    Cdecap_setp_gate (setp_gate VREFN) capacitor c=16.27952p
+
+    Rsetn_gate (SETN setn_gate) rupolym l=1.715u w=100n m=1 multi=(1)
+    Rsetp_gate (SETP setp_gate) rupolym l=1.715u w=100n m=1 multi=(1)
+ends ref_buffer_stage2
+
+subckt ref_buffer_bias IBIAS SETN SETP VREFDES VREFH VREFM VREFN
+    Mn_setp_bias_follower (SETP n_bias_gate VREFN VREFN) nch_mac l=300n w=8u multi=1 nf=8
+    Mn_bias_diode (n_bias_gate n_bias_gate VREFN VREFN) nch_mac l=300n w=8u multi=1 nf=8
+
+    Mp_ibias_diode (IBIAS IBIAS VREFH VREFH) pch_18_mac l=150n w=4u multi=1 nf=4
+    Mp_setn_bias_source (SETN IBIAS VREFH VREFH) pch_18_mac l=150n w=4u multi=1 nf=4
+    Mp_error_pair_source (p_error_source IBIAS VREFH VREFH) pch_18_mac l=150n w=2u multi=1 nf=2
+    Mp_vrefdes_branch (n_bias_gate VREFDES p_error_source VREFH) pch_18_mac l=300n w=16u multi=1 nf=8
+    Mp_feedback_branch (SETP vrefreg p_error_source VREFH) pch_18_mac l=300n w=16u multi=1 nf=8
+    Mp_ibias_gate_decap (VREFH IBIAS VREFH VREFH) pch_18_mac l=150n w=1u multi=6 nf=1
+
+    Mp_vrefreg_setp_drive (VREFN SETP vrefreg vrefreg) pch_ulvt_mac l=90n w=20u multi=1 nf=40
+    Mp_setp_gate_decap (VREFN SETP VREFN vrefreg) pch_ulvt_mac l=90n w=22u multi=1 nf=44
+    Mp_setp_trim_source (VREFN SETP trim_mid vrefreg) pch_ulvt_mac l=90n w=2u multi=1 nf=4
+
+    Mn_vrefreg_setn_drive (VREFM SETN vrefreg vrefreg) nch_ulvt_mac l=90n w=20u multi=1 nf=40
+    Mn_setn_gate_decap (VREFM SETN VREFM vrefreg) nch_ulvt_mac l=90n w=20u multi=1 nf=40
+    Mn_setn_trim_top_a (VREFM SETN setn_trim_mid_a vrefreg) nch_ulvt_mac l=90n w=500n multi=1 nf=1
+    Mn_setn_trim_top_b (VREFM SETN setn_trim_mid_b vrefreg) nch_ulvt_mac l=90n w=500n multi=1 nf=1
+    Mn_setn_trim_bottom_a (setn_trim_mid_a SETN trim_mid vrefreg) nch_ulvt_mac l=90n w=500n multi=1 nf=1
+    Mn_setn_trim_bottom_b (setn_trim_mid_b SETN trim_mid vrefreg) nch_ulvt_mac l=90n w=500n multi=1 nf=1
+    Mn_setn_trim_diode (SETN SETN trim_mid vrefreg) nch_ulvt_mac l=90n w=2u multi=1 nf=4
+
+    Csetp_bias_filter (SETP VREFN) cfmom_2t nr=288 lr=40u w=50n s=50n stm=1 spm=7 multi=1
+    Csetn_bias_filter (SETN VREFN) cfmom_2t nr=288 lr=40u w=50n s=50n stm=1 spm=7 multi=1
+    Cibias_filter (VREFH IBIAS) cfmom_2t nr=150 lr=18u w=50n s=50n stm=1 spm=7 multi=1
+ends ref_buffer_bias

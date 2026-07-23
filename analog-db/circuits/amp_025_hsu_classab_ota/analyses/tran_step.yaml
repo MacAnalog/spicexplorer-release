@@ -1,0 +1,17 @@
+# Analysis binding (plan D-4): tran_step_diff template — small-step settling in the
+# unity-follower configuration (one path closed through voutp).
+schema: spicexplorer/analysis@1
+id: tran_step
+template: tran_step_diff
+description: "Step settling (t_settle) in the diff unity-follower configuration."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 50f
+  VSTEP: 50m
+  TSTART: 1u
+  TSTEP: 1n
+  TSTOP: 20u
+  VTOL: 5m
+flags: []
+produces: [t_settle]

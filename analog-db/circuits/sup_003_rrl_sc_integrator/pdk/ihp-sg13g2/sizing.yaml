@@ -1,0 +1,91 @@
+# Design variables for the ihp-sg13g2 binding (explicit eng tokens; sg13 lv-MOS geometry
+# rules). The drawn corpus used identical minimum-size placeholder devices and 1p caps;
+# opamp defaults are hand-seeded like amp_027_fan_rrl_ota (same core), switches get a
+# generic 2u/0.13u unit TG, and the cap ratio Cs/Cint = 1p/4p sets the integrator's
+# per-cycle charge-transfer scale (ripple-sense bench tran_rrl_sense: theoretical
+# (Cs/Cint)*FCHOP V/s per V of ripple at the int nodes — see datasheet.yaml for the
+# measured reality/caveats). Group representatives only (see abstract/params.yaml
+# ties): opamp mirrors amp_027's structure with _opamp-suffixed names; all six TGs
+# share one unit switch geometry (tg_nmos/tg_pmos reps XM1_S1/XM2_S1); the four
+# chopper legs likewise (XM*_CHRRL_1 reps, straight+cross tied);
+# cap pairs tie to the p-side value.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  # --- opamp core (telescopic + DDA-CMFB; amp_027-style defaults) ---
+  - {name: x_dut_xm1_opamp_w,  description: "Main tail current source width (PMOS, gate vb3)", default: 20u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm1_opamp_l,  description: "Tail current-source length (shared with CMFB tail XM4)", default: 1u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm2_opamp_w,  description: "PMOS input pair width", default: 20u, min: 0.15u, max: 200u, unit: m}
+  - {name: x_dut_xm2_opamp_l,  description: "PMOS input pair length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm4_opamp_w,  description: "CMFB tail width (sets CMFB branch current vs XM1)", default: 10u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm5_opamp_w,  description: "DDA-CMFB sense pair width", default: 4u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xm5_opamp_l,  description: "DDA-CMFB sense pair length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm6_opamp_w,  description: "DDA-CMFB reference-half unit width (x2 parallel as drawn)", default: 4u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xm6_opamp_l,  description: "DDA-CMFB reference-half length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm9_opamp_w,  description: "PMOS telescopic cascode width", default: 10u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm9_opamp_l,  description: "PMOS telescopic cascode length", default: 0.3u, min: 0.13u, max: 5u, unit: m}
+  - {name: x_dut_xm11_opamp_w, description: "NMOS telescopic cascode width", default: 5u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm11_opamp_l, description: "NMOS telescopic cascode length", default: 0.3u, min: 0.13u, max: 5u, unit: m}
+  - {name: x_dut_xm13_opamp_w, description: "Output current-sink width (gate on CMFB bias)", default: 6u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm15_opamp_w, description: "DDA diode-load width (cm_bias/cm_sense diodes)", default: 2u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xm15_opamp_l, description: "DDA diode-load length (mirror L, also sets sink L)", default: 1u, min: 0.13u, max: 10u, unit: m}
+  # --- switches: unit TG geometry (all six SC switches tied; chopper legs separate) ---
+  # WIDTHS LEFT AT the drawn 2u — a move to minimum W (0.15u) was tried and REVERTED
+  # 2026-07-20. Characterization (sweep, live ihp tt), all vs the 2*Cs/Cint law:
+  # BLOCK-LOCALLY min-W is strictly better, because efficiency is set by a sense-node
+  # parasitic charge divider Cs/(Cs+Cpar) with Cpar dominated by switch DIFFUSION area —
+  # widening HURTS (at Cs=1p: 18.8% @1u, 17.5% @2u, 4.8% @5u, 1.4% @20u; at Cs=4p,
+  # 0.15u reaches 61.7%). Ron is NOT the limiter at FCHOP=5k (min-W Ron ~30k x 1p = 30 ns
+  # vs a 100 us half-period), so "widen for lower Ron" is wrong block-locally.
+  # BUT min-W is a SYSTEM regression: in the composed ia_004 it moved hpf_hz
+  # 32.5 Hz -> 776 kHz, breaking that entry's <=1000 Hz spec (higher switch Ron reshapes
+  # the composite's feedback path). Cs=4p regressed it too (-> 395 kHz), independently.
+  # CONCLUSION: this block cannot be sized in isolation — both block-local optima break
+  # the composite. Size it composite-aware (and multi-objective: ripple_gain vs power vs
+  # area), and only after the P4-4b CMFB closure makes the composite exercisable at all.
+  - {name: x_dut_xm1_s1_w, description: "SC-switch TG NMOS width (unit switch, all six tied)", default: 2u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm1_s1_l, description: "SC-switch TG NMOS length", default: 0.13u, min: 0.13u, max: 1u, unit: m}
+  - {name: x_dut_xm2_s1_w, description: "SC-switch TG PMOS width (unit switch, all six tied)", default: 2u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm2_s1_l, description: "SC-switch TG PMOS length", default: 0.13u, min: 0.13u, max: 1u, unit: m}
+  - {name: x_dut_xm1_chrrl_1_w, description: "Chopper TG NMOS width (all four 4-gate-modulator legs tied)", default: 2u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm1_chrrl_1_l, description: "Chopper TG NMOS length", default: 0.13u, min: 0.13u, max: 1u, unit: m}
+  - {name: x_dut_xm2_chrrl_1_w, description: "Chopper TG PMOS width (all four 4-gate-modulator legs tied)", default: 2u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm2_chrrl_1_l, description: "Chopper TG PMOS length", default: 0.13u, min: 0.13u, max: 1u, unit: m}
+  # --- SC caps: Cs LEFT AT the drawn 1p — a raise to 4p was tried and REVERTED 2026-07-20.
+  # Cs is the numerator of the Cs/(Cs+Cpar) divider, so BLOCK-LOCALLY it is the efficiency
+  # lever (vs the 2*Cs/Cint law, at min-W switches: 11.7% @0.5p -> 24.2% @1p -> 28.1% @2p
+  # -> 61.7% @4p). BUT Cs=4p is a SYSTEM regression: in the composed ia_004 it moved
+  # hpf_hz 32.5 Hz -> 395 kHz (4 decades), breaking that entry's <=1000 Hz spec — the RRL
+  # sense caps load the CCIA node the composite ties them to. Block-local optimum is NOT
+  # the system optimum here, so Cs stays drawn until a composite-aware, multi-objective
+  # pass (incl. AREA — 2x Cs + 2x Cint + 2x Caz dominate this block's area) sets it.
+  # Caz is not a lever (1.0-1.2x over a 16x sweep).
+  - {name: x_dut_cs1_value,   description: "Ripple sense cap Cs (p/n tied) — drawn 1p; see the Cs=4p system-regression note above", default: 1p, min: 100f, max: 10p, unit: F}
+  - {name: x_dut_caz1_value,  description: "Auto-zero coupling cap Caz (p/n tied)", default: 1p, min: 100f, max: 10p, unit: F}
+  - {name: x_dut_cint1_value, description: "Integration cap Cint (p/n tied)", default: 4p, min: 500f, max: 40p, unit: F}
+  # --- behavioral compensation-Gm output stage (ideal-amp-fully-diff leaf) ---
+  - {name: gm_val, description: "Output-stage transconductance (behavioral VCCS)", default: 100u, min: 1u, max: 10m, unit: S}
+  - {name: rout_val, description: "Output-stage output resistance (voltage gain = gm_val*rout_val)", default: 10Meg, min: 100k, max: 1G, unit: Ohm}
+  - {name: cout_val, description: "Output-stage output capacitance", default: 100f, min: 1f, max: 10p, unit: F}
+  - {name: rin_val, description: "Output-stage differential input resistance (near-ideal int-node load)", default: 1T, min: 1Meg, max: 100T, unit: Ohm}
+  - {name: cin_val, description: "Output-stage differential input capacitance", default: 10f, min: 1f, max: 1p, unit: F}
+  # --- bias levels (the drawing's Vb1..Vb4 0.5 V ports; amp_027 defaults) ---
+  - {name: vb1, description: "PMOS cascode gate bias (drawn as an external 0.5 V port)", default: 0.45, min: 0.0, max: 1.2, unit: V}
+  - {name: vb2, description: "NMOS cascode gate bias (drawn as an external 0.5 V port)", default: 0.75, min: 0.0, max: 1.2, unit: V}
+  - {name: vb3, description: "PMOS tail gate bias (sets branch currents; drawn 0.5 V)", default: 0.55, min: 0.0, max: 1.2, unit: V}
+  - {name: vb4, description: "Output common-mode reference into the DDA-CMFB (drawn 0.5 V)", default: 0.6, min: 0.0, max: 1.2, unit: V}
+  # Frozen per-device literals: defaults reproduce the drawn m=1 exactly; freeze keeps
+  # them out of the search space.
+  - {name: x_dut_xm1_opamp_m,  description: "XM1_OPAMP m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm2_opamp_m,  description: "XM2_OPAMP m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm4_opamp_m,  description: "XM4_OPAMP m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm5_opamp_m,  description: "XM5_OPAMP m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm6_opamp_m,  description: "XM6_OPAMP m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm9_opamp_m,  description: "XM9_OPAMP m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm11_opamp_m, description: "XM11_OPAMP m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm13_opamp_m, description: "XM13_OPAMP m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm15_opamp_m, description: "XM15_OPAMP m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm1_s1_m,     description: "SC-switch TG NMOS m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm2_s1_m,     description: "SC-switch TG PMOS m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm1_chrrl_1_m, description: "Chopper TG NMOS m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm2_chrrl_1_m, description: "Chopper TG PMOS m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

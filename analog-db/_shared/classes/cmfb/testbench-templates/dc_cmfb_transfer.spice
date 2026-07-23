@@ -1,0 +1,64 @@
+** AUTHORED TEMPLATE — cmfb/dc_cmfb_transfer (block-level polarity + transfer + ranges).
+** THE polarity bench: both sense inputs tied to one swept source Vs (a pure sensed-CM
+** drive), vref held at VCM; the vcmfb(vs) curve gives
+**   cmfb_slope     SIGNED two-point slope at VCM +/- VDELTA (V/V): canonical
+**                  vcmfb = A*(sensed - vref) -> positive; inverted -> negative.
+**                  Cross-check the plant side with amplifier/dc_cmfb_plant_sign.
+**   gain_servo_db  20*log10(|cmfb_slope|)
+**   vcmfb_nat      output at Vs = VCM (zero CM error) — the actuator-matching level:
+**                  closed-loop static CM error ~ (needed gate - vcmfb_nat)/|slope|
+**   vcmfb_min/max  control-output range over the VSLO..VSHI sweep (rail-clamp span)
+**   sense_lo/hi    active sensed-CM range: |d vcmfb/d vs| >= 10% of its sweep peak.
+**                  NOTE: a LINEAR behavioral servo never crosses the threshold — these
+**                  two meas fail harmlessly there; list them in `produces:` only for
+**                  members with a real (compressive) input stage.
+**   r_sense_in     DC resistance looking into the tied sense pins (plant loading),
+**                  from the drive-source current at VCM +/- VDELTA
+**   i_supply       op supply current (behavioral members with no-connect vdd: ~0)
+** Assumes the CMFB port order (bind a reduced/reordered PORT_LINE otherwise):
+**   .subckt <id> vinp vinn vcmfb vref vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM VDELTA VSLO VSHI VSSTEP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vref vref 0 dc {VCM}
+* tied sensed-CM drive (both sense pins follow vs exactly)
+Vs   vs 0 dc {VCM}
+Vinp vinp vs dc 0
+Vinn vinn vs dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = -i(vdd)
+  print i_supply
+  dc Vs ${VSLO} ${VSHI} ${VSSTEP}
+  meas dc vcmfb_nat FIND v(vcmfb) AT=${VCM}
+  meas dc g_lo FIND v(vcmfb) AT={${VCM}-${VDELTA}}
+  meas dc g_hi FIND v(vcmfb) AT={${VCM}+${VDELTA}}
+  let cmfb_slope = (g_hi - g_lo)/(2*${VDELTA})
+  let gain_servo_db = db(abs(cmfb_slope))
+  print cmfb_slope gain_servo_db
+  meas dc vcmfb_min MIN v(vcmfb)
+  meas dc vcmfb_max MAX v(vcmfb)
+  * active sensed-CM range: |local slope| crosses 10% of its peak (real input stages)
+  let dm = abs(deriv(v(vcmfb)))
+  meas dc dpk MAX dm
+  let thr = 0.1*dpk
+  meas dc sense_lo WHEN dm=$&thr RISE=1
+  meas dc sense_hi WHEN dm=$&thr FALL=LAST
+  * sense-port loading from the drive-source current
+  meas dc is_lo FIND i(Vs) AT={${VCM}-${VDELTA}}
+  meas dc is_hi FIND i(Vs) AT={${VCM}+${VDELTA}}
+  let r_sense_in = abs((2*${VDELTA})/(is_hi - is_lo))
+  print r_sense_in
+  write
+  quit
+.endc
+.end

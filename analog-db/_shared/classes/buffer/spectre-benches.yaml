@@ -1,0 +1,31 @@
+# Per-TESTBENCH Spectre engine config for the BUFFER class — which analysis templates
+# each bench composes on the closed (Spectre) lane, and which SKILL calculator
+# expressions read its results (the OCEAN Tier-2 route). Same wiring convention as the
+# amplifier/ia/ldo maps: templates live in `_shared/engines/spectre/analyses.yaml`,
+# expressions in `calculator.yaml`; `$NAME` in args pulls from the render context (the
+# bench's `analyses/<tb>.yaml` params UPPERCASE + platform extras like RAIL); unmapped
+# template placeholders resolve from the context by their own name.
+#
+# The buffer vocabulary is the small follower trio: op anchor, full-range input DC
+# transfer (sweeps the Vin source; gain_dc/v_offset ride the sweep), and the AC
+# response at the VCM bias (deck stimulus carries the ac marker on Vin).
+schema: spicexplorer/spectre-benches@1
+class: buffer
+benches:
+  dc_op:
+    analyses:
+      - {template: dc_op}
+    calculator: []
+  dc_transfer:
+    # sweep-only (the ldo/amplifier convention: a dc_op sibling would leave a second
+    # `.dc` PSF beside the sweep's `dc.dc`)
+    analyses:
+      - {template: dc_sweep, args: {DEV: VIN, START: $VSTART, STOP: $VSTOP, STEP: $VSTEP}}
+    calculator: []
+  ac_gain:
+    analyses:
+      - {template: dc_op}
+      - {template: ac}
+    calculator:
+      - {name: gain_ac_db, expr: gain_db_at, args: {OUT: vout, FREQ: $FSTART}}
+      - {name: f3db_hz, expr: bw_3db, args: {OUT: vout}}

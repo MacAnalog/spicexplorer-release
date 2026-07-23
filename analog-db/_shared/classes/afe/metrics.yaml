@@ -1,0 +1,37 @@
+# AFE (analog front-end) class — canonical metric vocabulary (plan P4-5 activation).
+# Validated against _shared/schema/class.schema.json by the verify harness (Tier 0).
+# NEW class added 2026-07-19 (bio-afe landing pass) as FORWARD SCAFFOLDING: the first
+# intended member is the bio-afe-01 `afe-ideal` chain (ccia -> PGA -> SRMC filter),
+# which cannot land until the P4 `composition.yaml` composer exists (it is a COMPOSITE
+# of already-staged blocks; drawings/TODO_bio_afe_port.md landing steps). No member and
+# no templates yet — benches for the clocked chain (gain-per-code, BW-per-duty, chain
+# THD vs the paper's -68 dB headline, clocked noise) are tracked in
+# _shared/classes/TODO_new_class_testbenches.md and the bio-afe TODO's bench-gaps list.
+#
+# Port convention (illustrative, from the bio-afe chain): vinp vinn voutp voutn VDD VSS
+# VCM + gain-code pins (V_D0..2 / _NOT) + phase clocks (V_PHI, V_PHI_NOT). Each member
+# binds its own.
+schema: spicexplorer/class@1
+class: afe
+id_code: afe            # accession-id prefix -> afe_001_<slug> (plan_scoreboard D-1)
+description: >-
+  Multi-block analog front-end chains (biosignal acquisition: IA -> PGA -> filter).
+  End-to-end midband gain per gain code, chain bandwidth (incl. duty-controlled filter
+  corners), high-pass corner, output common mode, chain THD/dynamic range, supply
+  current; clocked benches inherit the chopper/duty-cycle conventions of the member
+  blocks.
+ppa:                      # scoreboard PPA rollup declaration (plan_scoreboard D-7)
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: gain_cl_db, better: max}
+    - {metric: thd_pct, better: min}
+canonical_metrics:
+  - gain_cl_db        # end-to-end midband closed-loop gain at a stated code (dB)
+  - hpf_hz            # chain high-pass corner (Hz)
+  - bw_cl_hz          # chain -3 dB bandwidth / filter corner at a stated duty (Hz)
+  - vocm_v            # output common mode (V)
+  - thd_pct           # chain large-signal THD (%)
+  - dynamic_range_db  # chain DR/SFDR (dB)
+  - i_supply          # total supply current (A)
+templates:
+  - ac_chain_static   # e2e chain AC, phases/codes pinned static (pattern validated on the drawing; re-validate on first member)

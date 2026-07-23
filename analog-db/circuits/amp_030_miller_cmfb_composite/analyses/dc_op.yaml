@@ -1,0 +1,11 @@
+# Analysis binding (plan D-4): dc_op_diff template — operating point + supply current +
+# output offset/common-mode (the (absent) CM control — no CMFB drawn's residual).
+schema: spicexplorer/analysis@1
+id: dc_op
+template: dc_op_diff
+description: "DC operating point; i_supply + vos (output offset)."
+params:
+  VDD: 1.2
+  VCM: 0.6
+flags: []
+produces: [i_supply, vos]

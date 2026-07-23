@@ -1,0 +1,80 @@
+{
+  "area": {
+    "active_gate_area_um2": 21.6,
+    "c_count": 0,
+    "c_total_f": 0.0,
+    "mos_count": 4,
+    "r_count": 2,
+    "r_total_ohm": 44000.0
+  },
+  "circuit": "dp_001_resistive_load",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 3.459865e-05,
+            "v_ocm": 1.339415
+          },
+          "status": "ok"
+        },
+        "gain_dc": {
+          "measures": {
+            "gain_dc": 3.379674,
+            "vd_hi": -0.03379674,
+            "vd_lo": 0.03379674
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:24:56+00:00"
+      }
+    }
+  },
+  "design_id": "208e41fdf3",
+  "metrics": {
+    "tt": {
+      "gain_dc": {
+        "spec": "pass",
+        "value": 3.379674
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 3.459865e-05
+      },
+      "v_ocm": {
+        "spec": "fail",
+        "value": 1.339415
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_rp_value": 22000,
+      "x_dut_xmn_m": 1,
+      "x_dut_xmp_l": 0.3,
+      "x_dut_xmp_m": 1,
+      "x_dut_xmp_w": 12,
+      "x_dut_xmr_l": 0.3,
+      "x_dut_xmr_m": 1,
+      "x_dut_xmr_w": 24,
+      "x_dut_xmt_m": 1,
+      "x_dut_xmt_w": 24
+    }
+  },
+  "pdk": "sky130",
+  "ppa": {
+    "active_gate_area_um2": 21.6,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "gain_dc": 3.379674
+    },
+    "power_w": 5.1897975e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

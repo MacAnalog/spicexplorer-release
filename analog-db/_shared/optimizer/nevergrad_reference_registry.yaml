@@ -1,0 +1,189 @@
+# ==============================================================================
+# NEVERGRAD OPTIMIZER REGISTRY REFERENCE
+# ==============================================================================
+# This file categorizes the available registry keys for the 'name' field.
+# Use these strings directly in: optimizer_config.name
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. DIFFERENTIAL EVOLUTION (DE) FAMILY
+# Best for: Robust global search, mixed integer/continuous, non-smooth landscapes.
+# ------------------------------------------------------------------------------
+Differential_Evolution:
+  Standard:
+    - DE                  # Standard implementation
+    - TwoPointsDE         # (Recommended) Excellent default, uses 2-point crossover
+    - OnePointDE          # Classic genetic crossover
+    - LhsDE               # DE initialized with Latin Hypercube Sampling
+  
+  Specialized:
+    - NoisyDE             # Optimized for noisy fitness functions
+    - DiscreteDE          # Specialized for integer/discrete parameters
+    - GeneticDE           # More "genetic algorithm" style mutation
+    - MiniDE              # Low budget variant
+    - TinyDE              # Very low budget variant
+  
+  Rotation_Invariant:     # Good if parameters are highly correlated
+    - RotatedTwoPointsDE
+    - RotationInvariantDE
+    - AlmostRotationInvariantDE
+
+# ------------------------------------------------------------------------------
+# 2. CMA-ES FAMILY (Covariance Matrix Adaptation)
+# Best for: Continuous problems, high precision, local convergence, "difficult" functions.
+# ------------------------------------------------------------------------------
+CMA_ES:
+  Standard:
+    - CMA                 # The gold standard for continuous optimization
+    - DiagonalCMA         # (Recommended for High Dim) Ignores correlations, faster (O(N) vs O(N^2))
+    - ParametrizedCMA     # The generic family wrapper
+  
+  Variants:
+    - MetaCMA             # Adapts CMA settings dynamically
+    - DoubleFastGADiscreteOnePlusOne # (Often beats CMA on discrete problems)
+    - FCMA                # Fast CMA
+  
+  Estimation_of_Distribution: # Algorithms based on probabilistic modeling
+    - EDA                 # Estimation of Distribution Algorithm
+    - MEDA                # Mixed EDA
+    - PCEDA               # PC-based EDA
+    - MPCEDA              # Multi-PC EDA
+    - EMNA                # Estimation of Multivariate Normal Algorithm (Isotropic/Separable)
+  
+  Population_Sizes:
+    - LargeCMA            # Large population (more global)
+    - TinyCMA             # Small population (faster convergence)
+    - MicroCMA            # Very small population
+
+# ------------------------------------------------------------------------------
+# 3. AUTO-ML & META-OPTIMIZERS
+# Best for: "Set and forget". These automatically switch strategies based on budget/dimension.
+# ------------------------------------------------------------------------------
+AutoML:
+  NGOpt_Series:           # (Highly Recommended) Nevergrad's flagship meta-optimizers
+    - NGOpt               # The main entry point (adapts to everything)
+    - NGO                 # Base NGO implementation
+    - NGOptRW             # Real-world optimized
+    - NGOpt4, NGOpt8, NGOpt10, NGOpt38, NGOpt39 # Iteration specific variants
+    - NgDS, NgDS11, NgDS2 # Competence map approaches
+    - NgIoh, NgIoh10, NgIoh21 # IO-Hprofiler tuned variants
+  
+  Portfolios:             # Runs multiple algorithms in parallel/sequence
+    - Portfolio
+    - ConfPortfolio       # Configurable Portfolio
+    - ParaPortfolio       # Parallel portfolio
+    - Shiwa               # "She wa" - Adapts to noise and conditioning
+    - CM                  # Competence Map (Simplest)
+    - CMandAS2, CMandAS3  # Competence Map with Algorithm Selection
+    - Wiz
+  
+  Hybrid_Portfolios:      # Passive portfolios combining distinct strategies
+    - BFGSCMA             # MetaCMA + BFGS
+    - BFGSCMAPlus         # CMA + BFGS (Logarithmic budget)
+    - LogBFGSCMA          # Logarithmic budget variants
+    - LogBFGSCMAPlus      # Passive portfolio of CMA and several BFGS (at least log budget)
+    - SqrtBFGSCMA         # Square-root budget variants
+    - SqrtBFGSCMAPlus     # Passive portfolio of CMA and several BFGS (at least sqrt budget)
+    
+    - SQPCMA              # MetaCMA + SQP
+    - SQPCMAPlus          # CMA + SQP
+    - SqrtSQPCMAPlus      # Passive portfolio of CMA and several SQP (at least sqrt budget)
+    
+    - MultiBFGS           # Portfolio of many BFGS
+    - MultiBFGSPlus       # Portfolio of several BFGS
+    - LogMultiBFGSPlus    # Portfolio of several BFGS (at least log budget)
+    - SqrtMultiBFGSPlus   # Portfolio of several BFGS (at least sqrt budget)
+    
+    - MultiCobyla         # Portfolio of many Cobyla
+    - MultiCobylaPlus     # Passive portfolio of several Cobyla
+    
+    - MultiSQP            # Portfolio of many SQP
+    - MultiSQPPlus        # Passive portfolio of several SQP
+  
+  Meta_Wrappers:          # Optimizers that modify the flow of others
+    - Chaining            # Runs Alg A, then Alg B, feeding history
+    - Rescaled            # Rescales the domain (e.g., focus on center)
+    - SplitOptimizer      # Splits variables among optimizers (Monovariate/Multivariate)
+    - NoisySplit          # Non-progressive noisy split
+    - MultipleSingleRuns  # For multi-objective, runs single-obj multiple times
+
+# ------------------------------------------------------------------------------
+# 4. ONE PLUS ONE (1+1) FAMILY
+# Best for: Simple hill climbing, low budgets, discrete parameters, debug.
+# ------------------------------------------------------------------------------
+One_Plus_One:
+  Standard:
+    - OnePlusOne          # Simple mutation-only hill climber
+    - ParametrizedOnePlusOne # Highly configurable 1+1
+  
+  Discrete_Integer:       # Excellent for purely discrete search spaces
+    - DiscreteOnePlusOne
+    - OptimisticDiscreteOnePlusOne
+    - DoubleFastGADiscreteOnePlusOne # Current SOTA for many discrete tasks
+    - MultiDiscrete       # Combines 3 Discrete(1+1) optimizers
+  
+  Noisy:
+    - NoisyOnePlusOne
+    - OptimisticNoisyOnePlusOne
+
+# ------------------------------------------------------------------------------
+# 5. SAMPLING & QUASI-RANDOM
+# Best for: Initial exploration, finding valid starting points, sweeping.
+# ------------------------------------------------------------------------------
+Sampling:
+  Random:
+    - RandomSearch
+    - RandomSearchPlusMiddlePoint # Checks the center (0,0) first
+  
+  Low_Discrepancy:        # (Recommended over Random)
+    - HaltonSearch
+    - ScrHaltonSearch     # Scrambled Halton (Better for high dimensions)
+    - HammersleySearch
+    - ScrHammersleySearch # Scrambled Hammersley (Best for fixed budget)
+    - LHSSearch           # Latin Hypercube Sampling
+
+# ------------------------------------------------------------------------------
+# 6. PARTICLE SWARM OPTIMIZATION (PSO)
+# Best for: Specific engineering problems, "flocking" behavior.
+# ------------------------------------------------------------------------------
+PSO:
+  - PSO                   # Standard Particle Swarm
+  - ConfPSO               # Configurable PSO (various topologies)
+  - RealSpacePSO          # PSO adapted for real-space (R^n)
+  - SQOPSO                # Scrambled Quasi-Oppositional PSO
+
+# ------------------------------------------------------------------------------
+# 7. GRADIENT-BASED & SCIPY WRAPPERS
+# Best for: Smooth, differentiable functions where you want to fine-tune a result.
+# ------------------------------------------------------------------------------
+Gradient_Based:
+  Scipy:
+    - NelderMead          # Gradient-free simplex method
+    - BFGS                # Quasi-Newton method
+    - LBFGSB              # Limited-memory BFGS with Bounds
+    - Cobyla              # Constrained optimization
+    - SQP                 # Sequential Quadratic Programming
+    - Powell              # Powell's conjugate direction method
+    - ForceMultiCobyla    # Forced portfolio of Cobyla
+
+# ------------------------------------------------------------------------------
+# 8. BAYESIAN OPTIMIZATION
+# Best for: Very expensive functions (minutes/hours per run), low dimension (< 20).
+# ------------------------------------------------------------------------------
+Bayesian:
+  - BO                    # Standard Bayesian Optimization
+  - BayesOptim            # Wraps bayes-optim package
+  - ParametrizedBO        # Wraps bayes_opt package with tuning
+  - PCABO                 # BO with PCA (good for higher dimensions)
+  - NoisyBandit           # Upper Confidence Bound (UCB) approach
+
+# ------------------------------------------------------------------------------
+# 9. OTHER FAMILIES
+# ------------------------------------------------------------------------------
+Others:
+  - SPSA                  # Simultaneous Perturbation Stochastic Approximation (Gradient approx)
+  - TBPSA                 # Test-Based Population Size Adaptation
+  - ParametrizedTBPSA     # Tuned TBPSA
+  - cGA                   # Compact Genetic Algorithm (Discrete baseline)
+  - VoronoiDE             # Voronoi-based DE
+  - AX, AXP               # Wrappers for Ax platform (Facebook)

@@ -1,0 +1,20 @@
+simulator lang=spectre
+
+subckt cmp_strongarm CLK DCMPN DCMPP LM LP VDD VINN VINP VSS
+mn_tail_clk (tail_src CLK VSS VSS) nch_ulvt_mac l=30n w=2u multi=1 nf=4
+mn_input_vinn_main (sense_p VINN tail_src VSS) nch_ulvt_mac l=30n w=16.0u multi=1 nf=32
+mn_input_vinp_main (sense_n VINP tail_src VSS) nch_ulvt_mac l=30n w=16.0u multi=1 nf=32
+mn_latch_lm_eval (LM LP sense_n VSS) nch_ulvt_mac l=30n w=4u multi=1 nf=8
+mn_latch_lp_eval (LP LM sense_p VSS) nch_ulvt_mac l=30n w=4u multi=1 nf=8
+mn_out_buff_dcmpn (DCMPN LM VSS VSS) nch_ulvt_mac l=30n w=1.5u multi=1 nf=3
+mn_out_buff_dcmpp (DCMPP LP VSS VSS) nch_ulvt_mac l=30n w=1.5u multi=1 nf=3
+mp_out_buff_dcmpn (DCMPN LM VDD VDD) pch_ulvt_mac l=30n w=1.5u multi=1 nf=3
+mp_out_buff_dcmpp (DCMPP LP VDD VDD) pch_ulvt_mac l=30n w=1.5u multi=1 nf=3
+mp_precharge_sense_p (sense_p CLK VDD VDD) pch_ulvt_mac l=30n w=2u multi=1 nf=4
+mp_precharge_sense_n (sense_n CLK VDD VDD) pch_ulvt_mac l=30n w=2u multi=1 nf=4
+mp_precharge_lp (LP CLK VDD VDD) pch_ulvt_mac l=30n w=2u multi=1 nf=4
+mp_precharge_lm (LM CLK VDD VDD) pch_ulvt_mac l=30n w=2u multi=1 nf=4
+mp_latch_lm_pullup (LM LP VDD VDD) pch_ulvt_mac l=30n w=4u multi=1 nf=8
+mp_latch_lp_pullup (LP LM VDD VDD) pch_ulvt_mac l=30n w=4u multi=1 nf=8
+ends cmp_strongarm
+// End of subcircuit definition.

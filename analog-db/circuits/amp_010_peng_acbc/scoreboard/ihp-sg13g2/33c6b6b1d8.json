@@ -1,0 +1,152 @@
+{
+  "area": {
+    "active_gate_area_um2": 1694.807,
+    "c_count": 2,
+    "c_total_f": 2.298034724811285e-11,
+    "mos_count": 27,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "amp_010_peng_acbc",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 89.39148,
+            "pm": 67.12996,
+            "ugf": 1990057.0
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 70.42852
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0005222081,
+            "vos": 0.002815435
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.002397218,
+            "onoise_total": 0.02611666
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 58.46412
+          },
+          "status": "ok"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 1.736694e-06,
+            "tcross": 2.736694e-06,
+            "vfinal": 0.5028833
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T15:24:58+00:00"
+      }
+    }
+  },
+  "design_id": "33c6b6b1d8",
+  "metrics": {
+    "tt": {
+      "cmrr_db": {
+        "spec": "pass",
+        "value": 70.42852
+      },
+      "dc_gain_db": {
+        "spec": "fail",
+        "value": 89.39148
+      },
+      "i_supply": {
+        "spec": "none",
+        "value": 0.0005222081
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 67.12996
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 58.46412
+      },
+      "t_settle": {
+        "spec": "fail",
+        "value": 1.736694e-06
+      },
+      "ugf_hz": {
+        "spec": "fail",
+        "value": 1990057.0
+      },
+      "vn_in": {
+        "spec": "none",
+        "value": 0.002397218
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "CAPACITOR_0": 2.0430087284603034e-11,
+      "CAPACITOR_1": 2.550259963509819e-12,
+      "CURRENT_0_BIAS": 3.996786010323819e-05,
+      "x_dut_xm10_l": 2.2244583870195597e-06,
+      "x_dut_xm10_m": "4",
+      "x_dut_xm10_w": 3.377303596550355e-06,
+      "x_dut_xm11_l": 7.856601519191357e-07,
+      "x_dut_xm11_m": "4",
+      "x_dut_xm11_w": 7.4280734342571135e-06,
+      "x_dut_xm12_l": 2.3749431503428344e-06,
+      "x_dut_xm12_m": "4",
+      "x_dut_xm12_w": 9.492831802088759e-06,
+      "x_dut_xm15_m": "4",
+      "x_dut_xm16_l": 1.1668313969196092e-06,
+      "x_dut_xm16_m": 16,
+      "x_dut_xm16_w": 5.771658199079574e-06,
+      "x_dut_xm20_l": 8.837690762232146e-07,
+      "x_dut_xm20_w": 3.8245197469405045e-06,
+      "x_dut_xm23_l": 7.37144845573635e-06,
+      "x_dut_xm23_m": "4",
+      "x_dut_xm23_w": 3.602791539515317e-06,
+      "x_dut_xm24_l": 8.614603864658314e-06,
+      "x_dut_xm24_m": "4",
+      "x_dut_xm24_w": 5.679981678222847e-06,
+      "x_dut_xm25_l": 2.151924751998938e-06,
+      "x_dut_xm25_m": "4",
+      "x_dut_xm25_w": 3.27895798458223e-06,
+      "x_dut_xm59_l": 4.828638185058813e-06,
+      "x_dut_xm59_m": "4",
+      "x_dut_xm59_w": 7.792799010278286e-06,
+      "x_dut_xm7_l": 1.045554200539786e-06,
+      "x_dut_xm7_m": "4",
+      "x_dut_xm7_w": 6.517906882951287e-06
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 1694.807,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 89.39148,
+      "pm_deg": 67.12996,
+      "ugf_hz": 1990057.0
+    },
+    "power_w": 0.00093997458
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

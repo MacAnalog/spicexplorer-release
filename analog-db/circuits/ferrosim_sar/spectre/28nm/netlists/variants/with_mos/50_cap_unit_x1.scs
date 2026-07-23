@@ -1,0 +1,10 @@
+// Library name: SAR_11B_ZZS
+// Cell name: LB_CUNIT_X1
+// View name: schematic
+// Inherited view list: spectre cmos_sch cmos.sch schematic veriloga ahdl
+// pspice dspf
+subckt LB_CUNIT_X1 BOT TOP
+    C0 (TOP BOT) capacitor c=200.0a
+ends LB_CUNIT_X1
+// End of subcircuit definition.
+

@@ -1,0 +1,11 @@
+// sfe_ptat_classic — DUT (Spectre rendering of the upstream HSPICE .SUBCKT)
+// Source: AnalogGym "Sensing Front End" / ptat_classic (PTAT_CLASSIC). Verbatim original: ptat_classic.orig.sp
+// kind: reference — provenance/eval only, NOT lowered or simulated by analog-db.
+// Classic PTAT reference: NMOS pair (M0/M1) biased by a PMOS current mirror (M3/M4), degeneration R0.
+subckt ptat_classic VDDA vsense GNDA
+    M0 (vsense net1 net12 net12) nch_mac l=350n w=2u m=1 nf=1
+    M1 (net1 net1 GNDA GNDA) nch_mac l=350n w=2u m=1 nf=1
+    M3 (vsense vsense VDDA VDDA) pch_mac l=300n w=2u m=1 nf=1
+    M4 (net1 vsense VDDA VDDA) pch_mac l=300n w=2u m=1 nf=1
+    R0 (net12 GNDA) resistor r=1000
+ends ptat_classic

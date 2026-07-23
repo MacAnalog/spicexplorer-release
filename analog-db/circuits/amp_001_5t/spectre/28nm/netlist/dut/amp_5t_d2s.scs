@@ -1,0 +1,10 @@
+simulator lang=spectre
+
+subckt AMP_5T_D2S I_DOWN VDD VIN VIP VOUT VSS
+M3 (VOUT net1 VDD VDD) pch_ulvt_mac l=100n w=4u multi=1 nf=2
+M4 (net1 net1 VDD VDD) pch_ulvt_mac l=100n w=4u multi=1 nf=2
+M5 (I_DOWN I_DOWN VSS VSS) nch_ulvt_mac l=100n w=2u multi=1 nf=1
+M0 (net1 VIP net2 VSS) nch_ulvt_mac l=100n w=10u multi=1 nf=4
+M2 (net2 I_DOWN VSS VSS) nch_ulvt_mac l=100n w=16u multi=1 nf=8
+M1 (VOUT VIN net2 VSS) nch_ulvt_mac l=100n w=10u multi=1 nf=4
+ends AMP_5T_D2S

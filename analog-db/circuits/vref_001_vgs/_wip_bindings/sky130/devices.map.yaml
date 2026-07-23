@@ -1,0 +1,7 @@
+# Generic device kind -> sky130 device name. TWO NMOS flavors for the ΔVth reference: the 1.8V core
+# NMOS is the Vgs=0 source (token `nmos`); the 5V IO NMOS (higher Vt) is the diode (token `nmos_hv`).
+# Both are covered by the generated slim corner lib's default families (1.8V core + 5V IO).
+pdk: sky130
+devices:
+  nmos:    {model: sky130_fd_pr__nfet_01v8}
+  nmos_hv: {model: sky130_fd_pr__nfet_g5v0d10v5}

@@ -1,0 +1,49 @@
+schema: spicexplorer/circuit@1
+id: ia_005_hsu_pga_ideal
+class: ia
+tier: ia
+subfamily: pga
+realization: mixed
+display_name: Hsu 3-bit binary cap-feedback PGA (ideal-amp core)
+ports:
+- vinp
+- vinn
+- voutp
+- voutn
+- VDD
+- VSS
+- VCM
+- V_D0
+- V_D0_NOT
+- V_D1
+- V_D1_NOT
+- V_D2
+- V_D2_NOT
+provenance:
+  source: drawings/bio-afe-01-YuPinHsu-reconfigable-SRMC (hand-drawn xschem, PGA-ideal.sch)
+  paper: "Y.-P. Hsu, Z. Liu, M. M. Hella, \"A -68 dB THD, 0.6 mm2 Active Area Biosignal Acquisition System With a 40-320 Hz Duty-Cycle Controlled Filter\", IEEE TCAS-I 67(1):233-245, Jan. 2020"
+  aliases: [PGA-ideal]
+  designer: "Noorizadeh (schematic capture, after Hsu et al.)"
+  notes: >-
+    The programmable-gain stage of the Hsu bio-AFE chain (chain position:
+    ccia -> PGA -> SRMC; family landing manifest
+    drawings/bio-afe-01-YuPinHsu-reconfigable-SRMC/landing.yaml). Cap-feedback
+    PGA: two 3-bit binary capbank instances (= sw_003_binary_capbank, flattened
+    here) set Cin per side against Cf = 1p feedback caps around a behavioral
+    ideal-amp-fully-diff leaf (= amp_028's macromodel, flattened here;
+    realization: mixed); anti-series diode-connected PMOS pseudo-resistor
+    stacks across each Cf give the summing nodes their DC servo path. Gain =
+    -(1+code)*Cu/Cf — INVERTING, the family's cap-feedback convention — with
+    HP corner pseudo-R/Cf (code-independent) and LP at beta*GBW. Full 8-code
+    validation 2026-07-19 (DRAWING_REVIEW.md §8 finding 1; machine copy
+    drawings/sizing-and-specs.yaml bio_afe_ideal_chain.PGA_ideal): gains
+    -0.08..17.98 dB vs ideal (1+code), HP 2.17 Hz all codes, LP 1.08-3.4 MHz,
+    vocm 0.6000 every code, 1% step settling 0.52 us, THD 0.0018% at code 111.
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/PGA-ideal.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks:
+- ihp-sg13g2
+status: draft

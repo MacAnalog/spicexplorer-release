@@ -1,0 +1,8 @@
+// sfe_ptat_sensor_2t — DUT (Spectre rendering of the upstream HSPICE .SUBCKT)
+// Source: AnalogGym "Sensing Front End" / PTAT_SENSOR. Verbatim original: ptat_sensor_2t.orig.sp
+// kind: reference — provenance/eval only, NOT lowered or simulated by analog-db.
+// 2-transistor stacked-NMOS PTAT sensor core; vsense is the temperature-proportional output.
+subckt ptat_sensor_2t VDDA vsense GNDA
+    M0 (VDDA vsense vsense GNDA) nch_mac l=200e-9 w=8e-6 multi=8 nf=8
+    M1 (vsense vsense GNDA GNDA) nch_mac l=1e-6 w=4e-6 multi=8 nf=4
+ends ptat_sensor_2t

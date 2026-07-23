@@ -1,0 +1,60 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# SUPERSET of cace_format 5.2. See _shared/CACE_FORMAT.md for the field-overlap mapping (O-1).
+# Numbers are the 2026-07-19 full 8-code native-ihp validation at the committed sizing
+# defaults (Cu = Cf = 1p, drawn min-size TGs/pseudo-Rs, ideal-amp defaults) —
+# drawings/sizing-and-specs.yaml bio_afe_ideal_chain.PGA_ideal + DRAWING_REVIEW.md §8
+# finding 1. Metrics are DOCUMENTED-ONLY (no analysis binding): every ia-class
+# differential bench drives only vinp/vinn/voutp/voutn/vdd/vss (+ chopper clock nets),
+# so the six static code pins V_D0..V_D2_NOT would be left floating (TG gates with no
+# DC path — the assembled deck cannot run); a code-pin-aware PGA bench template is the
+# open follow-up.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  vcm:    {unit: V, typical: 0.6}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  gain_cl_db:
+    display: "Closed-loop mid-band gain (per code)"
+    description: "Gain magnitude vs code 000..111, measured [-0.08, 5.94, 9.46, 11.96, 13.90, 15.48,
+      16.82, 17.98] dB vs the ideal (1+code) law [0.00, 6.02, 9.54, 12.04, 13.98, 15.56, 16.90,
+      18.06] dB — monotonic, no degenerate codes, all within 0.08 dB of ideal. The gain is INVERTING
+      (-(1+code)*Cu/Cf, family cap-feedback convention). Documented-only: see the header note"
+    unit: dB
+    spec: {typ: 17.98, unit: dB}
+  hpf_hz:
+    display: "High-pass corner"
+    description: "Low-side corner set by the pseudo-resistors x Cf — measured 2.17 Hz at EVERY code
+      (code-independent: the bank sits outside the pseudo-R/Cf pole). Documented-only"
+    unit: Hz
+    spec: {max: 10, unit: Hz}
+  bw_cl_hz:
+    display: "Closed-loop bandwidth (per code)"
+    description: "High-side -3 dB corner = beta*GBW of the ideal-amp core — measured 3.4 MHz at
+      code 000 falling to 1.08 MHz at code 111 (bandwidth trades with gain). Documented-only"
+    unit: Hz
+    spec: {min: 1e6, unit: Hz}
+  t_settle:
+    display: "Step settling time (1%)"
+    description: "10 mV input step settles to 1% in 0.52 us (measured at gain -3.96 V/V — the
+      inverting sign is the family convention, not an error). Documented-only"
+    unit: s
+    spec: {max: 5e-6, unit: s}
+  thd_pct:
+    display: "Total harmonic distortion"
+    description: "0.0018% (-94.9 dB) at code 111, 476 mVpp differential output, 1 kHz — the TG
+      path adds nothing in-band at the drawn min-size switches. Documented-only"
+    unit: "%"
+    spec: {max: 0.01, unit: "%"}
+notes: >-
+  Gains are INVERTING (family cap-feedback convention: vout = -(1+code)*Cu/Cf * vin);
+  the measured dB table is magnitude. Code pins V_D0..V_D2_NOT are driven STATICALLY
+  (complementary rails per bit, not clocks); deselected bank bottom plates park at VCM.
+  Output CM: vocm = 0.6000 at every code (pseudo-R servo to the ideal-amp CM; VCM pin
+  0.6). No cload condition — the stage drives its successor through cap feedback in the
+  chain (ccia -> PGA -> SRMC). The capbank constituent is landed separately as
+  sw_003_binary_capbank (same binary decision, DRAWING_REVIEW §8 finding 1); the
+  behavioral core is amp_028_ideal_fully_diff's macromodel flattened in
+  (realization: mixed).

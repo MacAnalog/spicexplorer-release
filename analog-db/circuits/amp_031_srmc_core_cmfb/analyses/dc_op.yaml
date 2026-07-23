@@ -1,0 +1,12 @@
+# Analysis binding (plan D-4): dc_op_diff template — operating point + supply current +
+# output offset (the dual behavioral CMFB servos' residual). VCM=0.5: the SRMC filter's
+# system CM (== the committed 0.5 V refs) — NOT the 0.6 class convention.
+schema: spicexplorer/analysis@1
+id: dc_op
+template: dc_op_diff
+description: "DC operating point; i_supply + vos (output offset). Input CM 0.5 V."
+params:
+  VDD: 1.2
+  VCM: 0.5
+flags: []
+produces: [i_supply, vos]

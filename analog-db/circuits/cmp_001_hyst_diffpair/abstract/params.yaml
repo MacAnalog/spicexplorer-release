@@ -1,0 +1,64 @@
+# cmp_001_hyst_diffpair — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit cmp_001_hyst_diffpair --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  RHN: {Value: x_dut_rhn_value}
+  RHP: {Value: x_dut_rhp_value}
+  RT: {Value: x_rtail}
+  XMB1N: {l: x_dut_xmb1n_l, m: x_dut_xmb1n_m, w: x_dut_xmb1n_w}
+  XMB1P: {l: x_dut_xmb1p_l, m: x_dut_xmb1p_m, w: x_dut_xmb1p_w}
+  XMB2N: {l: x_dut_xmb2n_l, m: x_dut_xmb2n_m, w: x_dut_xmb2n_w}
+  XMB2P: {l: x_dut_xmb2p_l, m: x_dut_xmb2p_m, w: x_dut_xmb2p_w}
+  XMB3N: {l: x_dut_xmb3n_l, m: x_dut_xmb3n_m, w: x_dut_xmb3n_w}
+  XMB3P: {l: x_dut_xmb3p_l, m: x_dut_xmb3p_m, w: x_dut_xmb3p_w}
+  XMHN: {l: x_dut_xmhn_l, m: x_dut_xmhn_m, w: x_dut_xmhn_w}
+  XMHP: {l: x_dut_xmhp_l, m: x_dut_xmhp_m, w: x_dut_xmhp_w}
+  XMIN: {l: x_dut_xmin_l, m: x_dut_xmin_m, w: x_dut_xmin_w}
+  XMIP: {l: x_dut_xmip_l, m: x_dut_xmip_m, w: x_dut_xmip_w}
+  XMPLD: {l: x_dut_xmpld_l, m: x_dut_xmpld_m, w: x_dut_xmpld_w}
+  XMPLM: {l: x_dut_xmplm_l, m: x_dut_xmplm_m, w: x_dut_xmplm_w}
+groups:
+- name: shared_xmip_l
+  kind: shared_geometry
+  members: [XMIP, XMIN, XMHN, XMHP]
+  tie: [l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_pair_l (l).'
+- name: pair_xmip_xmin
+  kind: matched_pair
+  members: [XMIP, XMIN]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_pair_w (w).'
+- name: mirror_xmpld_w_l
+  kind: mirror_length
+  members: [XMPLD, XMPLM]
+  tie: [w, l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_pload_w (w),
+    x_pload_l (l).'
+- name: shared_xmhn_w
+  kind: shared_geometry
+  members: [XMHN, XMHP]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_hyst_w (w).'
+- name: shared_xmb1p_l
+  kind: shared_geometry
+  members: [XMB1P, XMB1N, XMB2P, XMB2N, XMB3P, XMB3N]
+  tie: [l]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_inv_l (l).'
+- name: shared_xmb1p_w
+  kind: shared_geometry
+  members: [XMB1P, XMB2P, XMB3P]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_invp_w (w).'
+- name: shared_xmb1n_w
+  kind: shared_geometry
+  members: [XMB1N, XMB2N, XMB3N]
+  tie: [w]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_invn_w (w).'
+- name: shared_rhn_value
+  kind: shared_geometry
+  members: [RHN, RHP]
+  tie: [Value]
+  description: 'Mechanically derived from today''s sharing (P4 sweep) - legacy symbol(s): x_rhyst (Value).'

@@ -1,0 +1,14 @@
+# Analysis binding (plan D-4): switch-class dc_ron_diff template — swept on-resistance of
+# the differential pass pair (P leg swept and measured; N leg biased at VMID and loaded
+# identically so both halves conduct).
+schema: spicexplorer/analysis@1
+id: dc_ron
+template: dc_ron_diff
+description: "Swept on-resistance of the P leg; r_on at VMID + r_on_max over 0..VDD."
+params:
+  VDD: 1.2
+  VMID: 0.6
+  ITEST: 10u
+  VSWEEP_STEP: 0.01
+flags: []
+produces: [r_on, r_on_max]

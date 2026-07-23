@@ -1,0 +1,25 @@
+# Per-TESTBENCH Spectre engine config for the COMPARATOR class — same wiring
+# convention as the amplifier/ia/ldo maps (see any of those headers for the schema).
+#
+# dc_hysteresis composes TWO sweeps of the same input source — the forward `dc_sweep`
+# (→ `dc.dc`) and the reverse `dc_sweep_down` (→ `dcdown.dc`, same args, negated
+# step) — so vth_rise reads off the up leg and vth_fall off the down leg without the
+# two directions colliding on one PSF. tran_decision is a plain clocked transient:
+# the StrongARM clock/overdrive stimulus rides in from the translated deck.
+schema: spicexplorer/spectre-benches@1
+class: comparator
+benches:
+  dc_op:
+    analyses:
+      - {template: dc_op}
+    calculator: []
+  dc_hysteresis:
+    analyses:
+      - {template: dc_sweep, args: {DEV: VINP, START: $VSTART, STOP: $VSTOP, STEP: $VSTEP}}
+      - {template: dc_sweep_down, args: {DEV: VINP, START: $VSTART, STOP: $VSTOP, STEP: $VSTEP}}
+    calculator: []
+  tran_decision:
+    analyses:
+      - {template: dc_op}
+      - {template: tran}
+    calculator: []

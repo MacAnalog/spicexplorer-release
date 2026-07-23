@@ -1,0 +1,14 @@
+** Abstract 2-transistor subthreshold PTAT temperature-sensor core.
+** AUTHORED source of truth (plan D-2). PDK-neutral model tokens (nmos); per-PDK device names +
+** geometry come from circuitgraph lowering + pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vdd vout vss
+**
+** Topology (AnalogGym "Sensing Front End" / PTAT_SENSOR): two stacked NMOS. XM0 sits between the
+** supply and the sense node with gate tied to its own source (Vgs=0 → sub-threshold conduction);
+** XM1 is diode-connected from the sense node to ground. The sense node vout settles at a
+** temperature-proportional (PTAT) voltage set by the two sub-threshold currents.
+** Devices are XM* (subckt-instance cards): open-PDK MOS devices (IHP PSP/OSDI, sky130 BSIM) are
+** .subckt wrappers, so the lowered netlist instantiates them with X cards.
+XM0 vdd  vout vout vss nmos w=x_dut_xm0_w l=x_dut_xm0_l m=x_dut_xm0_m
+XM1 vout vout vss  vss nmos w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+.end

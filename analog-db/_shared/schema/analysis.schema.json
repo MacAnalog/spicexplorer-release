@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spicexplorer/analysis@1",
+  "title": "SpiceXplorer analysis binding",
+  "description": "Binds a class/shared testbench template to per-circuit parameters (plan D-4). The resolver (Phase 2) renders template + datasheet conditions into a runnable netlist.",
+  "type": "object",
+  "required": ["schema", "id", "template"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "spicexplorer/analysis@1"},
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(_[a-z0-9]+)*$",
+      "description": "Analysis id (e.g. ac_open_loop, dc_op, noise, tran_step, linearity)."
+    },
+    "template": {
+      "type": "string",
+      "description": "Template id resolved against _shared/classes/<class>/testbench-templates/ then _shared/testbench-templates/."
+    },
+    "description": {"type": "string"},
+    "enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "false = scaffolded but unselected: Tier 2 still assembles it (cheap), but the runner and the sim tiers (T3/T4) skip it."
+    },
+    "params": {
+      "type": "object",
+      "description": "Template parameter overrides for this circuit (e.g. CL, VCM, sweep ranges).",
+      "additionalProperties": true
+    },
+    "flags": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Template feature flags (e.g. bias_wrap for the AnalogGym open-loop-in-closed-loop-bias trick)."
+    },
+    "produces": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Metric ids this analysis is expected to produce (must exist in datasheet.metrics)."
+    }
+  }
+}

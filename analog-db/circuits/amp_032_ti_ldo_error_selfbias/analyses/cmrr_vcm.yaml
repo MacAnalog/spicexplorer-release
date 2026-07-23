@@ -1,0 +1,9 @@
+# Analysis binding for the SELF-BIASED error amp (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+schema: spicexplorer/analysis@1
+id: cmrr_vcm
+template: cmrr_vcm_selfbias
+description: "CMRR - 1 V AC common-mode on both inputs of the unity buffer, DC-band floor."
+params: {VDD: 3.3, VCM: 1.2, CL: 10p, FSTART: 1k, FSTOP: 1G, PPD: 101}
+flags: []
+produces: [cmrr_db]

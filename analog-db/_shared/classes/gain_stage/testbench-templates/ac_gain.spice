@@ -1,0 +1,33 @@
+** AUTHORED TEMPLATE — gain_stage/ac_gain: bias-wrapped small-signal AC response.
+** The 1 TH inductor DC-shorts vout back to vin — self-biasing the inverting stage at its trip
+** point (= the high-gain region, wherever the PDK/corner puts it) — while the 1 TF cap AC-opens
+** that loop and injects the stimulus. CL loads the output. Reports the low-frequency gain (dB)
+** and the -3 dB bandwidth.
+** Class port convention: vdd vout vin ibias vss (ibias sink-referenced, see metrics.yaml).
+** Bindings: DUT PORT_LINE VDD IBIAS CL FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param IBIAS=${IBIAS}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias ibias vss dc {IBIAS}
+Vac  sigin 0 dc 0 ac 1        ; AC stimulus
+Lfb  vout vin 1T              ; 1 TH: DC short (bias), AC open
+Cin  vin sigin 1T             ; 1 TF: DC open, AC inject into the input node
+CLoad vout 0 {CL}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  meas ac gain_ac_db FIND vdb(vout) AT=${FSTART}
+  let gtarget = gain_ac_db - 3
+  meas ac f3db_hz WHEN vdb(vout)=gtarget FALL=1
+  write
+  quit
+.endc
+.end

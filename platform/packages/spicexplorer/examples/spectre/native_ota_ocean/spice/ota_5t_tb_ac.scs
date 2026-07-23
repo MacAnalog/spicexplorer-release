@@ -1,0 +1,30 @@
+// 5T-OTA AC testbench — native Spectre (TEMPLATE).
+//
+// A normal hand-written Spectre deck: stimulus + DUT + analyses + saves, plus a
+// `parameters` line whose names match the project's dut_params (LOWERCASE — the injected
+// namespace). The optimizer rewrites those values per candidate; the PVT corner replaces
+// the `include "…" section=…` line below. Analyses are named per the PSF/OCEAN contract
+// (`dcOp dc` → result `dc`/`dcOpInfo`; `ac ac …` → result `ac`).
+simulator lang=spectre
+global 0
+
+// default model include — replaced by the PVT corner's include at render time
+include "models.scs" section=tt_lvt
+
+// design variables (injected per candidate) + fixed bias
+parameters w_in=1u l_in=0.2u w_tail=2u vdd=1.2 vcm=0.6
+
+include "../dut/ota_5t.scs"
+
+// stimulus: 1 V AC on the input, common-mode bias, supply, load
+vdd  (vdd 0)    vsource dc=vdd
+vcm  (cm  0)    vsource dc=vcm
+vin  (inp cm)   vsource dc=0 mag=1
+xota (v_out inp cm vdd 0) ota_5t w_in=w_in l_in=l_in w_tail=w_tail
+cl   (v_out 0)  capacitor c=1p
+
+simulatorOptions options gmin=1e-13 reltol=1e-4 vabstol=1e-6 iabstol=1e-12
+dcOp dc
+ac ac start=1 stop=1e8 dec=101
+finalTimeOP info what=oppoint where=rawfile
+saveOptions options save=allpub

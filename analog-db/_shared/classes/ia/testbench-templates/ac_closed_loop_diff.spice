@@ -1,0 +1,58 @@
+** AUTHORED TEMPLATE — ia/ac_closed_loop_diff (plan_hierarchical_composition P3).
+** Fully-differential IA closed-loop AC response. The DUT closes its own loop (cap-ratio
+** feedback + pseudo-resistor/servo bias are INSIDE the DUT), so the bench just drives a
+** differential AC stimulus about the input common mode and reads the differential output:
+** mid-band closed-loop gain (= the Cin/Cfb ratio in a CCIA), the LOW-side high-pass
+** corner hpf_hz (pseudo-resistor x input caps -> bandpass), and the HIGH-side -3 dB
+** bw_cl_hz.
+**
+** Assumes a self-biased, differential-in/differential-out DUT port order:
+**   .subckt <id> vinp vinn voutp voutn vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CL FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+Vcm  vcm 0 dc {VCM}
+* balanced differential drive: +/- half about the common mode (1 V diff total)
+Vinp vinp vcm dc 0 ac 0.5
+Vinn vinn vcm dc 0 ac -0.5
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  let gdb = db(v(voutp) - v(voutn))
+  * PASSBAND gain is read AT FMID, not taken as MAX. On a peaked response (an
+  * under-damped loop, a positive-feedback path) the resonant peak would otherwise
+  * become "the gain", and the (gain-3dB) corners below would then straddle the peak
+  * instead of the band - reporting an HPF corner up near the peak. On a flat
+  * band-pass FIND-at-FMID and MAX agree, so this does not move existing figures.
+  meas ac gain_cl_db FIND gdb AT=${FMID}
+  * MAX meas lines carry an `at=` suffix the result parser skips - re-print clean
+  print gain_cl_db
+  * SHAPE GUARD: how far the worst-case peak sits above the passband. ~0 dB on a flat
+  * band-pass; a large value means gain_cl_db / hpf_hz / bw_cl_hz below describe a
+  * PEAKED response and must not be read as flat-band figures.
+  meas ac gain_peak_db MAX gdb
+  print gain_peak_db
+  let peaking_db = gain_peak_db - gain_cl_db
+  print peaking_db
+  * linear closed-loop gain (V/V) from the passband dB figure
+  let gain_cl = 10^(gain_cl_db/20)
+  print gain_cl
+  let g3 = gain_cl_db - 3
+  * bandpass corners: gain rises through (passband-3dB) at the HPF corner, falls at the top
+  meas ac hpf_hz WHEN gdb=g3 RISE=1
+  meas ac bw_cl_hz WHEN gdb=g3 FALL=LAST
+  write
+  quit
+.endc
+.end

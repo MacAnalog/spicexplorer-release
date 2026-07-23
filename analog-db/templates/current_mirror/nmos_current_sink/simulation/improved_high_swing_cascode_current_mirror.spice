@@ -1,0 +1,13 @@
+** sch_path: /Users/danialnoorizadeh/Code/spicexplorer-workspace/spicexplorer-platform/examples/analog-db/templates/current_mirror/nmos_current_sink/improved_high_swing_cascode_current_mirror.sch
+**.subckt improved_high_swing_cascode_current_mirror VSS iin iout iin2
+*.iopin VSS
+*.iopin iin
+*.iopin iout
+*.iopin iin2
+XM1 net2 iin VSS VSS sg13_lv_nmos w=0.15u l=0.13u ng=1
+XM2 net1 iin VSS VSS sg13_lv_nmos w=0.15u l=0.13u ng=1
+XM3 iout iin2 net1 VSS sg13_lv_nmos w=0.15u l=0.13u ng=1
+XM4 iin2 iin2 VSS VSS sg13_lv_nmos w=0.15u l=0.13u ng=1
+XM5 iin iin2 net2 VSS sg13_lv_nmos w=0.15u l=0.13u ng=1
+**.ends
+.end

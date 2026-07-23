@@ -1,0 +1,33 @@
+schema: spicexplorer/circuit@1
+id: amp_031_srmc_core_cmfb
+class: amplifier
+tier: ota
+subfamily: ota
+realization: mixed
+display_name: Hsu SRMC filter core amp with dual-loop CMFB (sized)
+stages: 2
+compensation: miller-rz
+ports: [vinp, vinn, voutp, voutn, vdd, vss]
+provenance:
+  source: drawings/bio-afe-01-YuPinHsu-reconfigable-SRMC (hand-drawn xschem, SRMC-core-amp-w-cmfb.sch)
+  paper: "Y.-P. Hsu, Z. Liu, M. M. Hella, \"A -68 dB THD, 0.6 mm2 Active Area Biosignal Acquisition System With a 40-320 Hz Duty-Cycle Controlled Filter\", IEEE TCAS-I 67(1):233-245, Jan. 2020"
+  aliases: [SRMC-core-amp-w-cmfb, SRMC-core-amp]
+  designer: "Noorizadeh (schematic capture, after Hsu et al.); sizing: SpiceXplorer optimizer campaign 2026-07-18/19"
+  notes: >-
+    The transistor OTA core of the Hsu SRMC duty-cycled filter, with its two per-stage
+    CMFB loops closed by the drawn shared/ideal canonical servo blocks (flattened here
+    as behavioral macromodels, like amp_025). First entry landed with an
+    OPTIMIZER-SIZED binding as the authoring default (full-precision; the drawn seed
+    is unstable). B5 polarity closure + dual-engine campaign:
+    drawings/SIZING_VALIDATION_REPORT.md; machine specs drawings/sizing-and-specs.yaml
+    (bio_afe_SRMC_core_amp). The bare SRMC-core-amp block (no CMFB) is deliberately
+    NOT its own entry — it is this entry minus the servos; the wrapper is the
+    verifiable unit.
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/SRMC-core-amp-w-cmfb.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, FOUNDRY-n65]
+analyses: [ac_open_loop, dc_op, tran_cm_kick]
+status: draft

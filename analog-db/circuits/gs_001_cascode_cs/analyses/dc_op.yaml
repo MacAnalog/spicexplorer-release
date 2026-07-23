@@ -1,0 +1,10 @@
+# Analysis binding (plan D-4): gain_stage dc_op — self-biased operating point + supply current.
+schema: spicexplorer/analysis@1
+id: dc_op
+template: dc_op
+description: "Bias-wrapped DC op point: trip voltage (v_trip) + i_supply (power)."
+params:
+  VDD: 1.5
+  IBIAS: 20u
+flags: [bias_wrap]
+produces: [v_trip, i_supply]

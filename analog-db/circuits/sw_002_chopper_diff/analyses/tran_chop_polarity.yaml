@@ -1,0 +1,19 @@
+# Analysis binding: the modulator's polarity-reversal gate (adversarial-review follow-up
+# — the 4-gate redraw's defining function, previously proven only in commit prose).
+schema: spicexplorer/analysis@1
+id: tran_chop_polarity
+template: tran_chop_polarity
+description: "Clocked polarity reversal: v_fwd (straight phase) vs v_rev (cross phase); chop_inversion ~ -1."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  VD: 0.2
+  RLOAD: 100k
+  FCHOP: 5k
+  TEDGE: 200n
+  TM1: 850u
+  TM2: 950u
+  TSTEP: 200n
+  TSTOP: 1m
+flags: []
+produces: [v_fwd, v_rev, chop_inversion]

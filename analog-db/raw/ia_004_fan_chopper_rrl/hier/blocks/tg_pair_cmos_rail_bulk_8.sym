@@ -1,0 +1,31 @@
+v {xschem version=3.4.6 file_version=1.2}
+G {type=subcircuit
+format="@name @pinlist @symname"
+template="name=x1"}
+V {}
+S {}
+E {}
+L 4 -120 -60 120 -60 {}
+L 4 120 -60 120 60 {}
+L 4 120 60 -120 60 {}
+L 4 -120 60 -120 -60 {}
+B 5 -142.5 -22.5 -137.5 -17.5 {name=clk_phi_1 dir=in}
+L 4 -120 -20 -140 -20 {}
+T {ctl_p} -108 -20 0 0 0.16 0.16 {layer=4}
+B 5 -142.5 17.5 -137.5 22.5 {name=clk_phi_2 dir=in}
+L 4 -120 20 -140 20 {}
+T {ctl_n} -108 20 0 0 0.16 0.16 {layer=4}
+B 5 137.5 -22.5 142.5 -17.5 {name=rrl__oa_inn dir=out}
+L 4 120 -20 140 -20 {}
+T {a} 108 -20 0 0 0.16 0.16 {layer=4}
+B 5 137.5 17.5 142.5 22.5 {name=rrl__oa_outp dir=out}
+L 4 120 20 140 20 {}
+T {b} 108 20 0 0 0.16 0.16 {layer=4}
+B 5 -2.5 -82.5 2.5 -77.5 {name=vdd dir=inout}
+L 4 0 -60 0 -80 {}
+T {vdd} 0 -60 0 0 0.16 0.16 {layer=4}
+B 5 -2.5 77.5 2.5 82.5 {name=vss dir=inout}
+L 4 0 60 0 80 {}
+T {vss} 0 60 0 0 0.16 0.16 {layer=4}
+T {tg_pair_cmos_rail_bulk_8} -112 -52 0 0 0.3 0.3 {layer=4}
+T {@name} -112 36 0 0 0.2 0.2 {layer=4}

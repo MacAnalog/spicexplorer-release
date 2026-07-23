@@ -1,0 +1,30 @@
+** AUTHORED TEMPLATE — oscillator/tran_oscillation: steady-state oscillation transient.
+** [SKELETON - NOT VALIDATED, 2026-07-15]: well-formed but not yet exercised against a real DUT;
+** forward scaffolding for a future open-PDK promotion of this class. Develop + validate the meas
+** blocks and add the class metric reader then. See _shared/classes/TODO_new_class_testbenches.md
+** Runs long enough to reach steady state, then reports the free-running frequency from two
+** successive rising mid-supply crossings; period and duty are post-processed from the .raw.
+** A UIC start lets the ring build up from its unstable DC point. Port convention: vdd vout vss.
+** Bindings: DUT PORT_LINE VDD TSTEP TSTOP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VMID={VDD/2}
+
+Vdd vdd 0 dc {VDD}
+Vss vss 0 dc 0
+
+${PORT_LINE} ${DUT}
+
+.ic v(vout)=0
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP} uic
+  meas tran period TRIG v(vout) VAL=VMID RISE=3 TARG v(vout) VAL=VMID RISE=4
+  let f_osc_hz = 1/period
+  print f_osc_hz
+  write
+  quit
+.endc
+.end

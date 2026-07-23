@@ -1,0 +1,131 @@
+schema: spicexplorer/datasheet@1
+cace_format: '5.2'
+default_conditions:
+  supply:
+    unit: V
+    typical: 1.5
+  cload:
+    unit: fF
+    typical: 50
+  corner:
+    typical: tt
+  temp:
+    unit: degC
+    typical: 27
+  vcm:
+    unit: V
+    typical: 0.8
+metrics:
+  dc_gain_db:
+    display: DC open-loop differential gain
+    description: Differential large-signal DC gain, vdb(voutp,voutn)
+    unit: dB
+    analysis: ac_open_loop
+    extract:
+      meas: dcgain
+    spec:
+      min: 60
+      unit: dB
+  ugf_hz:
+    display: Unity-gain frequency
+    unit: Hz
+    analysis: ac_open_loop
+    extract:
+      meas: ugf
+    spec:
+      unit: Hz
+      min: 5000000.0
+  pm_deg:
+    display: Phase margin
+    unit: deg
+    analysis: ac_open_loop
+    extract:
+      meas: pm
+    spec:
+      typ: 60
+      unit: deg
+      min: 60.0
+      max: 90
+  vos:
+    display: Output offset
+    description: voutp - voutn at matched DC inputs; the residual of the CMFB servo
+    unit: V
+    analysis: dc_op
+    extract:
+      meas: vos
+    spec:
+      typ: 0
+      max: 20e-3
+      unit: V
+  i_supply:
+    display: Supply current
+    unit: A
+    analysis: dc_op
+    extract:
+      meas: i_supply
+    spec:
+      max: 0.001
+      unit: A
+  vn_in:
+    display: Input-referred noise
+    unit: V/sqrt(Hz)
+    analysis: noise
+    extract:
+      meas: inoise_total
+    spec:
+      max: 0.0012
+      unit: V/sqrt(Hz)
+  t_settle:
+    display: Settling time
+    description: Unity-gain differential-follower settling (see tran_step_diff.spice)
+    unit: s
+    analysis: tran_step
+    extract:
+      meas: t_settle
+    spec:
+      max: 5.0e-07
+      unit: s
+  zcm_lf_ohm:
+    display: CM output impedance (low frequency)
+    description: "Closed-loop common-mode output impedance at FSTART \u2014 the CM\
+      \ servo's stiffness (characterization bound, loose sanity band)"
+    unit: ohm
+    analysis: ac_cm_reg
+    extract:
+      meas: zcm_lf_ohm
+    spec:
+      max: 100e3
+      unit: ohm
+  cm_peaking_db:
+    display: CM impedance peaking
+    description: "20log10(Zcm_peak/Zcm_lf) \u2014 >6 dB flags an underdamped CM loop\
+      \ (the external signature of poor CM phase margin; internal T_cm needs a composed\
+      \ loop probe)"
+    unit: dB
+    analysis: ac_cm_reg
+    extract:
+      meas: cm_peaking_db
+    spec:
+      max: 6
+      unit: dB
+  cm_resid_v:
+    display: CM kick residual
+    description: "vocm displacement remaining after the CM current kick releases \u2014\
+      \ nonzero flags CM latch-up (a second operating point)"
+    unit: V
+    analysis: tran_cm_kick
+    extract:
+      meas: cm_resid_v
+    spec:
+      min: -5e-3
+      max: 5e-3
+      unit: V
+  t_cm_settle:
+    display: CM kick recovery time
+    unit: s
+    analysis: tran_cm_kick
+    extract:
+      meas: t_cm_settle
+    spec:
+      max: 5e-6
+      unit: s

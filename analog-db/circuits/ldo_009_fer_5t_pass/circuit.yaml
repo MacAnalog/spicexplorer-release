@@ -1,0 +1,32 @@
+# ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
+# PROMOTED from the ferrosim_ldo_sample reference entry: authored a device-generic abstract
+# netlist + open-PDK bindings so the 5T-OTA + PMOS-pass LDO is lowerable, assembled and
+# simulated. The original FOUNDRY 28nm deck (with its Verilog-A behavioral bandgap, va_vref) is
+# retained under `references`. The va_vref reference is REPLACED by an ideal internal source
+# with the same 10 kohm output resistance (x_vref_val + x_rref), and the external bias is
+# internalized — the entry follows the ldo class's self-contained 3-port convention.
+schema: spicexplorer/circuit@1
+id: ldo_009_fer_5t_pass
+class: ldo
+display_name: "LDO: 5T OTA error amp + PMOS pass, unity feedback, Miller-compensated"
+compensation: miller (c_mil pass-gate to vout)
+stages: 1
+ports: [vdd, vout, vss]
+provenance:
+  source: Arcadia-1/ferrosim (imported via netlist-crawler)
+  aliases: [ldo_sample, ferrosim_ldo_sample]
+  designer: Token Zhang
+  license: MIT
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, sky130, gf180mcu]
+analyses: [dc_op, load_regulation, line_regulation, psrr, dropout, tran_load_step, loop_stability, noise, tran_line_step]
+references:
+  - {tool: spectre, dir: spectre/28nm, node: 28nm}
+optimize:
+  budget: 2000
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

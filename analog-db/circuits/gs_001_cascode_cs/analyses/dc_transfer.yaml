@@ -1,0 +1,13 @@
+# Analysis binding (plan D-4): gain_stage dc_transfer — full-range sweep, peak gain magnitude.
+schema: spicexplorer/analysis@1
+id: dc_transfer
+template: dc_transfer
+description: "DC transfer sweep 0..VDD; peak |dVout/dVin| (gain_dc) + its location (vin_pk)."
+params:
+  VDD: 1.5
+  IBIAS: 20u
+  VSTART: 0
+  VSTOP: 1.5
+  VSTEP: 0.005
+flags: []
+produces: [gain_dc, vin_pk]

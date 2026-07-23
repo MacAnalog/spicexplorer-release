@@ -1,0 +1,13 @@
+# TRUE regulation-loop gain / phase margin / gain margin by Middlebrook voltage injection at the
+# DUT's 0 V `Vlp` loop-break marker (see the class template header for the method and its
+# validation). This is the analysis the class's `loop_stability` bench could only proxy: measured
+# 2026-07-20, the PREVIOUS revision of this circuit showed zout_peak_db = 0.0 — which reads as a
+# beautifully damped loop but actually meant there was no loop gain at all (0.97 dB at DC). A
+# peaking metric cannot tell those two apart; this one can.
+schema: spicexplorer/analysis@1
+id: ac_loopgain
+template: ac_loopgain
+description: "Loop gain, UGF, phase margin and gain margin of the regulation loop (voltage injection at Vlp)."
+params: {VDD: 3.3, ILOAD: 1m, COUT: 1u, FSTART: 1, FSTOP: 1G, PPD: 51}
+flags: []
+produces: [loopgain_db, ugf_loop, pm_loop, gm_loop_db]

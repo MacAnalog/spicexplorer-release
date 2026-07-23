@@ -1,0 +1,28 @@
+# Design variables for the ihp-sg13g2 binding. Validated against sizing.schema.json.
+# 28nm geometry re-noted to 130nm lv devices: L stretched (0.3u NMOS / 0.5u PMOS) for output
+# resistance, W scaled to keep moderate current density at IBIAS = 20uA (load leg ~12uA via the
+# x_dut_xmpld_w/x_dut_xmpb1_w mirror ratio, as in the upstream 20u/32u split).
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xmpb1_w, description: "PMOS bias-ladder diode width",       default: 16u,  min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xmpb1_l, description: "PMOS bias/load length",              default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xmpnr_w, description: "PMOS nbias-branch source width",     default: 0.5u,   min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xmnb2_w, description: "NMOS bias-stack diode width",        default: 6u,   min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xmnb2_l, description: "NMOS bias-stack length",             default: 0.3u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xmpld_w, description: "PMOS load + cascode width",          default: 10u,  min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xmpld_l, description: "PMOS load + cascode length",         default: 0.5u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xmnca_w,  description: "NMOS cascode width",                 default: 4u,   min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xmnin_w,   description: "NMOS input device width",            default: 4u,   min: 0.18u, max: 50u, unit: m}
+  - {name: x_dut_xmnca_l,   description: "NMOS input + cascode length",        default: 0.3u, min: 0.13u, max: 10u, unit: m}
+  # Frozen per-device literals (P4 atomic sweep): defaults reproduce the authored
+  # netlist literals exactly; freeze keeps them out of the search space.
+  - {name: x_dut_xmpb1_m, description: "XMPB1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmpb2_m, description: "XMPB2 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmpnr_m, description: "XMPNR m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmnb2_m, description: "XMNB2 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmnb1_m, description: "XMNB1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmpld_m, description: "XMPLD m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmpca_m, description: "XMPCA m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmnca_m, description: "XMNCA m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xmnin_m, description: "XMNIN m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

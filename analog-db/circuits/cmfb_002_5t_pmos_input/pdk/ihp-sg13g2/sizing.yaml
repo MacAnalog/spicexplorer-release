@@ -1,0 +1,29 @@
+# Design variables for the ihp-sg13g2 binding — the 2026-07-20 real-5T-CMFB campaign
+# winner (drawings/SIZING_VALIDATION_REPORT.md §8; machine copy
+# drawings/sizing-and-specs.yaml shared.real_5t_cmfb.pmos_input_winner). Per-flavor
+# Nevergrad (TwoPointsDE ~400 evals) INSIDE the sized SRMC core (amp_031): CM errors
+# 3.6/2.1 mV, diff PM 58.9 deg preserved, kick residual 0.000 both loops. Defaults are
+# the ROUNDED 3-sigfig values — they reproduce the full-precision winner EXACTLY (the
+# point is not bistable) and match the committed drawing (drawings/shared/
+# amp-single-ended-5t-pmos-input.sch). Group representatives only (see
+# abstract/params.yaml ties): XM5<-XM4 (pair), XM6<-XM2 (mirror), RMN<-RMP.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xm4_w, description: "PMOS input pair width (XM4/XM5)", default: 1.42u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm4_l, description: "PMOS input pair length", default: 0.27u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_xm2_w, description: "NMOS mirror width (XM6 diode / XM2 output)", default: 2.32u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm2_l, description: "NMOS mirror length (long: sets output ro and the servo pole)", default: 1.31u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_xm1_w, description: "PMOS tail width (gate on the bias string)", default: 0.329u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm1_l, description: "PMOS tail length", default: 0.267u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_xm7_w, description: "Bias-string NMOS diode width", default: 0.293u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm7_l, description: "Bias-string NMOS diode length", default: 0.22u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_xm3_w, description: "Bias-string PMOS diode width (with XM7 sets the string current; XM1 mirrors)", default: 0.881u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm3_l, description: "Bias-string PMOS diode length", default: 0.259u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_rmp_value, description: "CM-detector averaging resistor (RMN tied; high-R to avoid loading the sensed outputs)", default: 1Meg, min: 10k, max: 100Meg, unit: Ohm}
+  # Frozen per-device literals: defaults reproduce the drawn m=1 exactly.
+  - {name: x_dut_xm1_m, description: "XM1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm2_m, description: "XM2 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm3_m, description: "XM3 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm4_m, description: "XM4 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm7_m, description: "XM7 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

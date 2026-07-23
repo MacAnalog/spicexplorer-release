@@ -1,0 +1,7 @@
+# Generic device kind -> sky130 device name (plan §3 tree; Phase 1 multi-PDK proof).
+# Per-topology override of circuitgraph's built-in SKYWATER_SKY130 table. For the 5T core
+# the 1.8 V core devices are the right default per polarity.
+pdk: sky130
+devices:
+  nmos: {model: sky130_fd_pr__nfet_01v8}
+  pmos: {model: sky130_fd_pr__pfet_01v8}

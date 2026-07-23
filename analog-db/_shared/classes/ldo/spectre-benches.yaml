@@ -1,0 +1,62 @@
+# Per-TESTBENCH Spectre engine config for the LDO class — which analysis templates each
+# bench composes on the closed (Spectre) lane, and which SKILL calculator expressions
+# read its results (the OCEAN Tier-2 route). Same wiring convention as the amplifier/ia
+# maps: templates live in `_shared/engines/spectre/analyses.yaml`, expressions in
+# `calculator.yaml`; `$NAME` in args pulls from the render context (the bench's
+# `analyses/<tb>.yaml` params UPPERCASE + platform extras like RAIL); unmapped template
+# placeholders resolve from the context by their own name.
+#
+# The LDO family is the largest non-amplifier class (first non-amp vocabulary, closing
+# the todo_virtuoso_bridge follow-on): its benches are DC sweeps of a SOURCE (dropout /
+# line reg sweep Vdd, load reg sweeps Iload), supply-referred AC (psrr rides the ac
+# marker on Vdd), supply-referred noise (iprobe=VDD), and load/line transient steps.
+# loop_stability is an AC output-impedance shape read (no VIPRB loop probe in the
+# class template), so it composes a plain ac.
+schema: spicexplorer/spectre-benches@1
+class: ldo
+benches:
+  dc_op:
+    analyses:
+      - {template: dc_op}
+    calculator: []
+  dropout:
+    # sweep-only (cf. the amplifier linearity note: a dc_op sibling would leave a
+    # second `.dc` PSF beside the sweep's `dc.dc`)
+    analyses:
+      - {template: dc_sweep, args: {DEV: VDD, START: $VDD_START, STOP: $VDD_STOP, STEP: $VDD_STEP}}
+    calculator: []
+  line_regulation:
+    analyses:
+      - {template: dc_sweep, args: {DEV: VDD, START: $VDD_START, STOP: $VDD_STOP, STEP: $VDD_STEP}}
+    calculator: []
+  load_regulation:
+    analyses:
+      - {template: dc_sweep, args: {DEV: ILOAD, START: $ILOAD_START, STOP: $ILOAD_STOP, STEP: $ILOAD_STEP}}
+    calculator: []
+  loop_stability:
+    analyses:
+      - {template: dc_op}
+      - {template: ac}
+    calculator: []
+  noise:
+    analyses:
+      - {template: dc_op}
+      - {template: noise, args: {OUT: vout, IPROBE: VDD}}
+    calculator: []
+  psrr:
+    analyses:
+      - {template: dc_op}
+      - {template: ac}
+    calculator:
+      # the residual supply→output transfer at FMEAS; PSRR = its negation in dB
+      - {name: psrr_db, expr: neg_gain_db_at, args: {OUT: vout, FREQ: $FMEAS}}
+  tran_line_step:
+    analyses:
+      - {template: dc_op}
+      - {template: tran}
+    calculator: []
+  tran_load_step:
+    analyses:
+      - {template: dc_op}
+      - {template: tran}
+    calculator: []

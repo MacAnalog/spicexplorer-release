@@ -1,0 +1,52 @@
+v {xschem version=3.4.5 file_version=1.2
+*
+* This file is part of XSCHEM,
+* a schematic capture and Spice/Vhdl/Verilog netlisting tool for circuit
+* simulation.
+* Copyright (C) 1998-2023 Stefan Frederik Schippers
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+}
+G {}
+K {type=polarized_capacitor
+format="@name @pinlist @value m=@m"
+tedax_format="footprint @name @footprint 
+value @name @value
+device @name @device
+@comptag"
+verilog_ignore=true
+template="name=C1
+m=1
+value=1p
+footprint=1206
+device=polarized_capacitor"
+}
+V {}
+S {}
+E {}
+L 4 0 5 0 30 {}
+L 4 0 -30 0 -5 {}
+L 4 -10 -5 10 -5 {}
+L 4 2.5 -22.5 7.5 -22.5 {}
+L 4 5 -25 5 -20 {}
+B 5 -2.5 -32.5 2.5 -27.5 {name=p dir=inout propag=1 pinnumber=1}
+B 5 -2.5 27.5 2.5 32.5 {name=m dir=inout propag=0 pinnumber=2}
+A 4 0 26.25 21.25 61.92751306414704 56.14497387170592 {}
+T {@value} 15 0 0 0 0.25 0.2 {}
+T {@name} 15 -13.75 0 0 0.2 0.2 {}
+T {@#0:pinnumber} -5 -26.25 0 1 0.2 0.2 {layer=13}
+T {@#1:pinnumber} -5 16.25 0 1 0.2 0.2 {layer=13}
+T {@#0:net_name} 5 -42.5 0 0 0.15 0.15 {layer=15}
+T {@#1:net_name} 5 32.5 0 0 0.15 0.15 {layer=15}

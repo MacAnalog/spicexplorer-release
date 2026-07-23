@@ -1,0 +1,13 @@
+# Design variables for the ihp-sg13g2 binding (plan §3 tree). Validated against sizing.schema.json.
+# Geometry adapted from the AnalogGym 180nm PTAT core (M0 200n/8u ×8, M1 1u/4u ×8) to the IHP
+# lv-NMOS envelope. The XM0/XM1 device-strength ratio sets the sub-Vt PTAT operating point, so the
+# W·m/L ratios are preserved; absolute L kept ≥ a few×Lmin to keep the two branch currents small.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xm0_w, description: "Top (Vgs=0) device width",        default: 8.0u, min: 0.18u, max: 10u, unit: m}
+  - {name: x_dut_xm0_l, description: "Top (Vgs=0) device length",       default: 0.2u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm0_m, description: "Top device multiplier",           default: 8, is_integer: true}
+  - {name: x_dut_xm1_w, description: "Bottom diode-connected width",     default: 4.0u, min: 0.18u, max: 10u, unit: m}
+  - {name: x_dut_xm1_l, description: "Bottom diode-connected length",    default: 1.0u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm1_m, description: "Bottom device multiplier",         default: 8, is_integer: true}

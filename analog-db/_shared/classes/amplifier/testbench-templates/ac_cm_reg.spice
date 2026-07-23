@@ -1,0 +1,49 @@
+** AUTHORED TEMPLATE — amplifier/ac_cm_reg (CM-loop health, frequency domain).
+** Closed-loop COMMON-MODE output impedance: a unit AC common-mode current (0.5 A per
+** side) is injected into both outputs; vocm/(1 A) = |Zcm(f)|. The CM feedback loop
+** suppresses Zcm in-band, so:
+**   zcm_lf_ohm     low-frequency Zcm — the CM stiffness the servo achieves
+**   zcm_peak_ohm   the sweep maximum
+**   cm_peaking_db  20*log10(peak/lf) — impedance peaking; a large value flags an
+**                  underdamped CM loop (the external signature of poor CM phase margin)
+** HONESTY NOTE: the internal CM loop gain/phase (T_cm, PM_cm) cannot be probed from a
+** bench without breaking the loop inside the DUT — that is a composition-time
+** measurement (insert a VIPRB/stb probe in the CMFB path of a composed variant). This
+** bench measures the closed-loop observables that T_cm determines.
+**
+** Assumes a self-biased, differential-output DUT with a CM control loop:
+**   .subckt <id> vinp vinn voutp voutn vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CL FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+Vcm  vcm 0 dc {VCM}
+Vinp vinp vcm dc 0
+Vinn vinn vcm dc 0
+* unit common-mode current injection (0.5 A AC per side -> 1 A total CM)
+Icmp 0 voutp dc 0 ac 0.5
+Icmn 0 voutn dc 0 ac 0.5
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  let zcm = mag((v(voutp)+v(voutn))/2)
+  meas ac zcm_lf_ohm FIND zcm AT=${FSTART}
+  meas ac zcm_pk MAX zcm
+  * MAX meas lines carry an `at=` suffix the result parser skips - re-print clean
+  let zcm_peak_ohm = zcm_pk
+  let cm_peaking_db = 20*log10(zcm_pk/zcm_lf_ohm)
+  print zcm_peak_ohm cm_peaking_db
+  write
+  quit
+.endc
+.end

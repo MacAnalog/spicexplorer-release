@@ -1,0 +1,61 @@
+# Functional-subcircuit template library — CMOS transmission gate.
+#
+# A complementary pass gate: an NMOS ∥ PMOS that passes a rail-to-rail signal when their
+# complementary clocks are asserted. The matcher keys on the parallel n/p pair sharing both signal
+# terminals with anti-phase gate control. See rules/transmission_gate.md.
+#
+# STATUS: both drawn variants registered — the canonical bulk-blind pair + the rail-bulk variant
+# (per-template `match_bulk: true`).
+#
+# Bulk-blind aliasing, now RESOLVED via per-template bulk matching: the two drawn variants —
+# `transmission_gate_pair.sch` (bulks tied to the VSS/VDD rails) and
+# `transmission_gate_pair_body_tied.sch` (bulks tied back to the channel ports) — differ ONLY in
+# their bulk ties, so under the detector's bulk-blind default they are topologically IDENTICAL
+# (the rail variant's VSS/VDD, being bulk-only nets, vanish from the signature). The canonical
+# `tg.pair.cmos` stays bulk-blind and recognises BOTH bulk styles (recall); the rail variant
+# carries `match_bulk: true`, so it is matched with its bulk edges kept and only fires on a host
+# whose bulks genuinely sit on the rails (precision).
+#
+# Ambiguity semantics (see circuitgraph `match.group_matches`): on a rail-bulk host BOTH templates
+# fire on the same device pair; the bulk-strict match is the more specific claim, so
+# `tg.pair.cmos_rail_bulk` wins the primary label and `tg.pair.cmos` is reported as its alternate
+# (kept for transparency, never silently dropped). On a body-tied host only `tg.pair.cmos` fires.
+schema: spicexplorer/subcircuit-template-library@1
+family: transmission_gate
+display_name: "Transmission-gate functional sub-circuits"
+provenance:
+  note: "General CMOS switch design rules of thumb (no single source paper)"
+  pdk: ihp-sg13g2   # netlisted with sg13_lv_* devices; matching ignores the model
+
+# Design rules — registered for tracking; consumed by humans + LLM agents (see templates/README.md).
+rules:
+  - path: rules/transmission_gate.md
+    title: "CMOS transmission-gate sizing (Wp/Wn ratio, Ron/charge-injection trade-offs) & recognition"
+    sources: ["CMOS switch design rules of thumb"]
+
+# Ports: a / b are the two (interchangeable) signal terminals; ctl_n drives the NMOS gate, ctl_p the
+# complementary PMOS gate. `image:` is a headless xschem render (PNG) of each `.sch`.
+templates:
+  - id: tg.pair.cmos
+    display_name: "CMOS transmission gate (NMOS ∥ PMOS pass pair, 2T)"
+    class: pass_gate
+    polarity: complementary
+    role: analog_switch
+    netlist: simulation/transmission_gate_pair_body_tied.spice
+    image: transmission_gate_pair_body_tied.png
+    # Canonical bulk-blind netlist (see the aliasing note above); also matches the rail-bulk style
+    # (where it then rides as the rail variant's alternate).
+    ports: {a: port_A, b: port_B, ctl_n: vctl, ctl_p: vctl_not}
+
+  - id: tg.pair.cmos_rail_bulk
+    display_name: "CMOS transmission gate, rail-tied bulks (NMOS ∥ PMOS pass pair, 2T)"
+    class: pass_gate
+    polarity: complementary
+    role: analog_switch
+    netlist: simulation/transmission_gate_pair.spice
+    image: transmission_gate_pair.png
+    # Bulk-strict variant: matched with MOS bulk edges kept (NMOS bulk → VSS-class rail, PMOS bulk →
+    # VDD-class rail), so it only fires on a host drawn in the rail-bulk style — and wins the
+    # primary label there over the bulk-blind canonical pair (see the ambiguity note above).
+    match_bulk: true
+    ports: {a: port_A, b: port_B, ctl_n: vctl, ctl_p: vctl_not}

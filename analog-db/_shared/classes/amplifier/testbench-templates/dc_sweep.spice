@@ -1,0 +1,30 @@
+** AUTHORED TEMPLATE — amplifier/dc_sweep (plan D-4).
+** Buffer-connected input common-mode sweep: output tracking range.
+** Bindings: DUT PORT_LINE VDD VCM IBIAS CL VSWEEP_START VSWEEP_STOP VSWEEP_STEP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param IBIAS=${IBIAS}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+CLoad vout 0 {CL}
+
+Vinp vinp 0 dc {VCM}
+Vfb  vinn vout dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  dc Vinp ${VSWEEP_START} ${VSWEEP_STOP} ${VSWEEP_STEP}
+  let verr = abs(v(vout) - v(vinp))
+  meas dc vout_min MIN v(vout)
+  meas dc vout_max MAX v(vout)
+  write
+  quit
+.endc
+.end

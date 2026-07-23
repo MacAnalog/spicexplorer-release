@@ -1,0 +1,47 @@
+** AUTHORED TEMPLATE - ia/dc_op_chopper_rrl .
+** dc_op_chopper_diff PLUS the two SC-phase sources. Split out rather than added to the base so the
+** non-RRL chopper IAs (ia_002 / ia_003), whose port list has no clk_phi_1/clk_phi_2,
+** keep rendering unchanged; an RRL composite selects this via `template:` in its
+** analyses/<id>.yaml. Everything else - stimulus, clock freeze, measures - is identical
+** to dc_op_chopper_diff, which stays the reference.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Vref vref 0 dc {VCM}
+Vcm  vcm 0 dc {VCM}
+Vinp vinp vcm dc 0
+Vinn vinn vcm dc 0
+
+* clocks held transparent
+Vck_in_a  clk_chin      0 dc {VDD}
+Vck_in_b  clk_chin_not  0 dc 0
+Vck_fb_a  clk_chfb      0 dc {VDD}
+Vck_fb_b  clk_chfb_not  0 dc 0
+Vck_out_a clk_chout     0 dc {VDD}
+Vck_out_b clk_chout_not 0 dc 0
+Vck_pf_a  clk_chpf      0 dc {VDD}
+Vck_pf_b  clk_chpf_not  0 dc 0
+
+* SC phase pins DRIVEN (phi_1 high = integrate-connected). Without these the RRL's
+* SC switch gates float and the ripple-reduction loop is INERT - the frozen figures
+* then describe the CCIA with the RRL disconnected, not the RRL-connected loop.
+Vphi1s clk_phi_1 0 dc {VDD}
+Vphi2s clk_phi_2 0 dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  let vos = v(voutp) - v(voutn)
+  let vocm = (v(voutp) + v(voutn))/2
+  print i_supply vos vocm
+  write
+  quit
+.endc
+.end

@@ -1,0 +1,11 @@
+schema: spicexplorer/analysis@1
+id: line_regulation
+template: line_regulation
+description: "DC Vin sweep 1.7 -> 2.0 at nominal load; delta-Vout."
+params:
+  ILOAD: 5m
+  VDD_START: 1.7
+  VDD_STOP: 2.0
+  VDD_STEP: 0.02
+flags: []
+produces: [line_reg]

@@ -1,0 +1,37 @@
+v {xschem version=3.4.4 file_version=1.2
+*
+* This file is part of XSCHEM,
+* a schematic capture and Spice/Vhdl/Verilog netlisting tool for circuit
+* simulation.
+* Copyright (C) 1998-2023 Stefan Frederik Schippers
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+}
+G {}
+K {type=bus_tap
+template="name=l1 lab=[0]"
+net_name=true
+format="* tap: @#1:net_name --> @#0:net_name"
+verilog_format="// tap: @#1:net_name --> @#0:net_name"
+vhdl_format="-- tap: @#1:net_name --> @#0:net_name"
+tedax_format="# tap: @#1:net_name --> @#0:net_name"}
+V {}
+S {}
+E {}
+L 1 0 0 10 -10 {}
+B 5 9.375 -10.625 10.625 -9.375 {name=tap dir=inout}
+B 5 -0.625 -0.625 0.625 0.625 {name=bus dir=inout}
+T {@lab} 12.5 -12.5 3 0 0.27 0.27 {}
+T {@#0:net_name} 31.25 -12.5 3 0 0.15 0.15 {layer=15}

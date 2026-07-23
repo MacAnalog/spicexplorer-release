@@ -1,0 +1,32 @@
+# Python
+*/__pycache__/*
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# coverage artifacts
+.coverage
+.coverage.*
+htmlcov/
+
+.cadence/perf/*
+.claude/worktrees/*
+.cadence/*
+
+# Runtime / outputs (mirrors the monolith's ignores)
+work/
+logs/
+auto_save/
+*.raw
+*.pkl
+
+# Editor / OS
+.DS_Store
+
+# Env / secrets (LLM API keys live in the environment, never committed)
+.env
+.env.*

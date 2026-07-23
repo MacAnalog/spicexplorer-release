@@ -1,0 +1,35 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# SUPERSET of cace_format 5.2. See _shared/CACE_FORMAT.md for the field-overlap mapping (O-1).
+# Spec bands are sanity targets for the signal-switch defaults in pdk/*/sizing.yaml (w=2u
+# pass devices at VDD=1.2 V), not paper numbers — Fan et al. characterize the full CCIA
+# system, not this chopper-modulator block (true 4-gate modulator; see
+# provenance.notes in circuit.yaml). The dc_ron_diff bench holds vctl HIGH =
+# straight path on / cross path off, so r_on characterizes the straight legs.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  r_on:
+    display: "On-resistance at mid signal range"
+    description: "Composite NMOS||PMOS pass resistance of the swept P leg at v(va_p)=VDD/2, both legs ON and identically loaded"
+    unit: ohm
+    analysis: dc_ron
+    extract: {meas: r_on}
+    spec: {max: 20e3, unit: ohm}
+  r_on_max:
+    display: "Worst-case on-resistance over the signal sweep"
+    description: "Maximum of r_on(v) over the 0..VDD sweep of the P leg (the mid-range hump where neither device is strongly on)"
+    unit: ohm
+    analysis: dc_ron
+    extract: {meas: r_on_max}
+    spec: {max: 100e3, unit: ohm}
+  chop_inversion:
+    display: "Chopper polarity inversion ratio"
+    description: "v_rev/v_fwd from the clocked polarity bench — a true 4-gate modulator gives ~ -1 (the 2-gate placeholder gave ~0); sign + straight/cross symmetry in one number"
+    unit: ""
+    analysis: tran_chop_polarity
+    extract: {meas: chop_inversion}
+    spec: {min: -1.2, max: -0.8}

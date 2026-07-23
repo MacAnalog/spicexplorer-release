@@ -1,0 +1,28 @@
+schema: spicexplorer/circuit@1
+id: amp_027_fan_rrl_ota
+class: amplifier
+tier: ota
+subfamily: ota
+realization: transistor
+display_name: "Fan ripple-reduction-loop SC-integrator opamp core (telescopic + DDA-CMFB)"
+stages: 1
+ports: [vinp, vinn, voutp, voutn, vdd, vss]
+provenance:
+  source: drawings/ccia-02-QinwenFan-chopper-ripple-reduction (hand-drawn xschem, integrator-switchcap-opamp.sch)
+  paper: "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011"
+  aliases: [integrator-switchcap-opamp]
+  designer: "Noorizadeh (schematic capture, after Fan et al.)"
+  notes: >-
+    The opamp inside the ripple-reduction loop's switched-capacitor integrator
+    (sup_/ia_ entries compose it). Drawn unsized (all devices at placeholder
+    minimum size) with Vb1..Vb4 as external bias ports; this entry pulls the
+    four bias levels inside as knob-driven dc sources, per the
+    instantiator-owns-bias convention (plan_hierarchical_composition D3/D4).
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/integrator-switchcap-opamp.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, FOUNDRY-n65]
+analyses: [ac_open_loop, dc_op, noise, tran_step, ac_cm_reg, tran_cm_kick]
+status: draft

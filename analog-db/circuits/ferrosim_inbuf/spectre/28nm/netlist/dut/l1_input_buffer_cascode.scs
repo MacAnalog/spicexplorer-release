@@ -1,0 +1,254 @@
+subckt L1_INPUT_BUFFER_CASCODE IB SUB VCM VDD VINN VINP VOUTN VOUTP VSS
+    C14 (VGP1N VGP2N) cfmom_2t nr=800 lr=5u w=50n s=50n stm=2 spm=7 \
+        multi=1
+    C15 (VGN1N VINN) cfmom_2t nr=800 lr=5u w=50n s=50n stm=2 spm=7 multi=1
+    C11 (VINN VGP1N) cfmom_2t nr=800 lr=5u w=50n s=50n stm=2 spm=7 multi=1
+    C16 (VGN2N VGN1N) cfmom_2t nr=800 lr=5u w=50n s=50n stm=2 spm=7 \
+        multi=1
+    C17 (VGP1P VGP2P) cfmom_2t nr=800 lr=5u w=50n s=50n stm=2 spm=7 \
+        multi=1
+    C20 (VGN2P VGN1P) cfmom_2t nr=800 lr=5u w=50n s=50n stm=2 spm=7 \
+        multi=1
+    C19 (VGN1P VINP) cfmom_2t nr=800 lr=5u w=50n s=50n stm=2 spm=7 multi=1
+    C18 (VINP VGP1P) cfmom_2t nr=800 lr=5u w=50n s=50n stm=2 spm=7 multi=1
+    M79 (VBP2 VBP2 net3 VCM) pch_ulvt_mac l=30n w=500n multi=8 nf=1 \
+        sd=100n ad=3.75e-14 as=3.75e-14 pd=1.15u ps=1.15u nrd=0.383209 \
+        nrs=0.383209 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M82 (VBP1 VBP1 VCM VCM) pch_ulvt_mac l=30n w=500n multi=4 nf=1 sd=100n \
+        ad=3.75e-14 as=3.75e-14 pd=1.15u ps=1.15u nrd=0.383209 \
+        nrs=0.383209 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M83 (net3 VBP2 VCM VCM) pch_ulvt_mac l=30n w=400n multi=1 nf=1 sd=100n \
+        ad=3e-14 as=3e-14 pd=950.0n ps=950.0n nrd=0.522453 nrs=0.522453 \
+        sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n sa4=75.0n \
+        sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n spa2=100n \
+        spa3=100n sap=91.9776n sapb=114.444n spba=115.715n spba1=117.043n \
+        dfm_flag=0 spmt=1.11111e+15 spomt=0 spomt1=1.11111e+60 \
+        spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M60 (net5 VGP1P VOUTP VOUTP) pch_ulvt_mac l=30n w=500n multi=160 nf=1 \
+        sd=100n ad=3.75e-14 as=3.75e-14 pd=1.15u ps=1.15u nrd=0.383209 \
+        nrs=0.383209 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M51 (VSS VGP2P net5 net5) pch_ulvt_mac l=30n w=500n multi=320 nf=1 \
+        sd=100n ad=3.75e-14 as=3.75e-14 pd=1.15u ps=1.15u nrd=0.383209 \
+        nrs=0.383209 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M61 (net1 VGP1N VOUTN VOUTN) pch_ulvt_mac l=30n w=500n multi=160 nf=1 \
+        sd=100n ad=3.75e-14 as=3.75e-14 pd=1.15u ps=1.15u nrd=0.383209 \
+        nrs=0.383209 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M52 (VSS VGP2N net1 net1) pch_ulvt_mac l=30n w=500n multi=320 nf=1 \
+        sd=100n ad=3.75e-14 as=3.75e-14 pd=1.15u ps=1.15u nrd=0.383209 \
+        nrs=0.383209 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M80 (net3 VBP2 net3 VCM) pch_ulvt_mac l=30n w=1u multi=1 nf=2 sd=100n \
+        ad=5e-14 as=7.5e-14 pd=1.2u ps=2.3u nrd=0.212518 nrs=0.212518 \
+        sa=112.742n sb=112.742n sa1=93.6047n sa2=112.078n sa3=163.715n \
+        sa4=110.059n sb1=93.6047n sb2=112.078n sb3=163.715n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=104.359n sapb=125.813n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M81 (net3 VCM VCM VCM) pch_ulvt_mac l=30n w=500n multi=1 nf=1 sd=100n \
+        ad=3.75e-14 as=3.75e-14 pd=1.15u ps=1.15u nrd=0.383209 \
+        nrs=0.383209 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+//Series configuration of R27
+R27  (VGN2N R27_1__dmy0 ) rupolym l=24.05u w=200n m=1 multi=(1)
+R27_2__dmy0  (R27_1__dmy0 VBN2 ) rupolym l=24.05u w=200n m=1 multi=(1)
+//End of R27
+
+//Series configuration of R20
+R20  (VBP2 R20_1__dmy0 ) rupolym l=24.05u w=200n m=1 multi=(1)
+R20_2__dmy0  (R20_1__dmy0 VGP2P ) rupolym l=24.05u w=200n m=1 multi=(1)
+//End of R20
+
+R30 (VBP0 net7 ) rupolym l=3u w=600n m=1 multi=(1)
+
+//Series configuration of R23
+R23  (VGP1N R23_1__dmy0 ) rupolym l=24.05u w=200n m=1 multi=(1)
+R23_2__dmy0  (R23_1__dmy0 VBP1 ) rupolym l=24.05u w=200n m=1 multi=(1)
+//End of R23
+
+//Series configuration of R25
+R25  (VGN1N R25_1__dmy0 ) rupolym l=24.05u w=200n m=1 multi=(1)
+R25_2__dmy0  (R25_1__dmy0 VBN1 ) rupolym l=24.05u w=200n m=1 multi=(1)
+//End of R25
+
+//Series configuration of R14
+R14  (VBN2 R14_1__dmy0 ) rupolym l=24.05u w=200n m=1 multi=(1)
+R14_2__dmy0  (R14_1__dmy0 VGN2P ) rupolym l=24.05u w=200n m=1 multi=(1)
+//End of R14
+
+//Series configuration of R21
+R21  (VGP2N R21_1__dmy0 ) rupolym l=24.05u w=200n m=1 multi=(1)
+R21_2__dmy0  (R21_1__dmy0 VBP2 ) rupolym l=24.05u w=200n m=1 multi=(1)
+//End of R21
+
+//Series configuration of R16
+R16  (VBN1 R16_1__dmy0 ) rupolym l=24.05u w=200n m=1 multi=(1)
+R16_2__dmy0  (R16_1__dmy0 VGN1P ) rupolym l=24.05u w=200n m=1 multi=(1)
+//End of R16
+
+//Series configuration of R18
+R18  (VBP1 R18_1__dmy0 ) rupolym l=24.05u w=200n m=1 multi=(1)
+R18_2__dmy0  (R18_1__dmy0 VGP1P ) rupolym l=24.05u w=200n m=1 multi=(1)
+//End of R18
+
+    M40 (VBP2 IB VSS VSS) nch_mac l=350.0n w=2u multi=4 nf=1 sd=120.0n \
+        ad=1.9e-13 as=1.9e-13 pd=4.19u ps=4.19u nrd=0.141446 nrs=0.141446 \
+        sa=95.0n sb=95.0n sa1=95.0n sa2=95.0n sa3=95.0n sa4=95.0n \
+        sb1=95.0n sb2=95.0n sb3=95.0n spa=120.0n spa1=120.0n spa2=120.0n \
+        spa3=120.0n sap=112.128n sapb=128.193n spba=147.309n \
+        spba1=164.697n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M39 (VSS IB VSS VSS) nch_mac l=350.0n w=2u multi=2 nf=1 sd=120.0n \
+        ad=1.9e-13 as=1.9e-13 pd=4.19u ps=4.19u nrd=0.141446 nrs=0.141446 \
+        sa=95.0n sb=95.0n sa1=95.0n sa2=95.0n sa3=95.0n sa4=95.0n \
+        sb1=95.0n sb2=95.0n sb3=95.0n spa=120.0n spa1=120.0n spa2=120.0n \
+        spa3=120.0n sap=112.128n sapb=128.193n spba=147.309n \
+        spba1=164.697n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M41 (VBP1 IB VSS VSS) nch_mac l=350.0n w=2u multi=4 nf=1 sd=120.0n \
+        ad=1.9e-13 as=1.9e-13 pd=4.19u ps=4.19u nrd=0.141446 nrs=0.141446 \
+        sa=95.0n sb=95.0n sa1=95.0n sa2=95.0n sa3=95.0n sa4=95.0n \
+        sb1=95.0n sb2=95.0n sb3=95.0n spa=120.0n spa1=120.0n spa2=120.0n \
+        spa3=120.0n sap=112.128n sapb=128.193n spba=147.309n \
+        spba1=164.697n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M42 (IB IB VSS VSS) nch_mac l=350.0n w=2u multi=4 nf=1 sd=120.0n \
+        ad=1.9e-13 as=1.9e-13 pd=4.19u ps=4.19u nrd=0.141446 nrs=0.141446 \
+        sa=95.0n sb=95.0n sa1=95.0n sa2=95.0n sa3=95.0n sa4=95.0n \
+        sb1=95.0n sb2=95.0n sb3=95.0n spa=120.0n spa1=120.0n spa2=120.0n \
+        spa3=120.0n sap=112.128n sapb=128.193n spba=147.309n \
+        spba1=164.697n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M43 (net7 IB VSS VSS) nch_mac l=350.0n w=2u multi=4 nf=1 sd=120.0n \
+        ad=1.9e-13 as=1.9e-13 pd=4.19u ps=4.19u nrd=0.141446 nrs=0.141446 \
+        sa=95.0n sb=95.0n sa1=95.0n sa2=95.0n sa3=95.0n sa4=95.0n \
+        sb1=95.0n sb2=95.0n sb3=95.0n spa=120.0n spa1=120.0n spa2=120.0n \
+        spa3=120.0n sap=112.128n sapb=128.193n spba=147.309n \
+        spba1=164.697n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M62 (VDD VBP0 VDD VDD) pch_mac l=350.0n w=3u multi=6 nf=1 sd=120.0n \
+        ad=2.85e-13 as=2.85e-13 pd=6.19u ps=6.19u nrd=0.037034 \
+        nrs=0.037034 sa=95.0n sb=95.0n sa1=95.0n sa2=95.0n sa3=95.0n \
+        sa4=95.0n sb1=95.0n sb2=95.0n sb3=95.0n spa=120.0n spa1=120.0n \
+        spa2=120.0n spa3=120.0n sap=112.128n sapb=128.193n spba=147.309n \
+        spba1=164.697n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M57 (VBN1 VBP0 VDD VDD) pch_mac l=350.0n w=3u multi=4 nf=1 sd=120.0n \
+        ad=2.85e-13 as=2.85e-13 pd=6.19u ps=6.19u nrd=0.037034 \
+        nrs=0.037034 sa=95.0n sb=95.0n sa1=95.0n sa2=95.0n sa3=95.0n \
+        sa4=95.0n sb1=95.0n sb2=95.0n sb3=95.0n spa=120.0n spa1=120.0n \
+        spa2=120.0n spa3=120.0n sap=112.128n sapb=128.193n spba=147.309n \
+        spba1=164.697n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M55 (VBN2 VBP0 VDD VDD) pch_mac l=350.0n w=3u multi=4 nf=1 sd=120.0n \
+        ad=2.85e-13 as=2.85e-13 pd=6.19u ps=6.19u nrd=0.037034 \
+        nrs=0.037034 sa=95.0n sb=95.0n sa1=95.0n sa2=95.0n sa3=95.0n \
+        sa4=95.0n sb1=95.0n sb2=95.0n sb3=95.0n spa=120.0n spa1=120.0n \
+        spa2=120.0n spa3=120.0n sap=112.128n sapb=128.193n spba=147.309n \
+        spba1=164.697n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M56 (VBP0 VBP0 VDD VDD) pch_mac l=350.0n w=3u multi=4 nf=1 sd=120.0n \
+        ad=2.85e-13 as=2.85e-13 pd=6.19u ps=6.19u nrd=0.037034 \
+        nrs=0.037034 sa=95.0n sb=95.0n sa1=95.0n sa2=95.0n sa3=95.0n \
+        sa4=95.0n sb1=95.0n sb2=95.0n sb3=95.0n spa=120.0n spa1=120.0n \
+        spa2=120.0n spa3=120.0n sap=112.128n sapb=128.193n spba=147.309n \
+        spba1=164.697n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M87 (VBN2 VBN2 net6 VCM) nch_ulvt_mac l=30n w=500n multi=8 nf=1 \
+        sd=100n ad=3.75e-14 as=3.75e-14 pd=1.15u ps=1.15u nrd=0.662935 \
+        nrs=0.662935 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M88 (net6 VBN2 net6 VCM) nch_ulvt_mac l=30n w=1u multi=1 nf=2 sd=100n \
+        ad=5e-14 as=7.5e-14 pd=1.2u ps=2.3u nrd=0.425847 nrs=0.425847 \
+        sa=112.742n sb=112.742n sa1=93.6047n sa2=112.078n sa3=163.715n \
+        sa4=110.059n sb1=93.6047n sb2=112.078n sb3=163.715n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=104.359n sapb=125.813n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M86 (net6 VCM VCM VCM) nch_ulvt_mac l=30n w=500n multi=1 nf=1 sd=100n \
+        ad=3.75e-14 as=3.75e-14 pd=1.15u ps=1.15u nrd=0.662935 \
+        nrs=0.662935 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M84 (net6 VBN2 VCM VCM) nch_ulvt_mac l=30n w=300n multi=1 nf=1 sd=100n \
+        ad=2.25e-14 as=2.25e-14 pd=750.0n ps=750.0n nrd=1.414438 \
+        nrs=1.414438 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M59 (net4 VGN1N VOUTN VOUTN) nch_ulvt_mac l=30n w=500n multi=160 nf=1 \
+        sd=100n ad=3.75e-14 as=3.75e-14 pd=1.15u ps=1.15u nrd=0.662935 \
+        nrs=0.662935 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M85 (VBN1 VBN1 VCM VCM) nch_ulvt_mac l=30n w=500n multi=4 nf=1 sd=100n \
+        ad=3.75e-14 as=3.75e-14 pd=1.15u ps=1.15u nrd=0.662935 \
+        nrs=0.662935 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M49 (VDD VGN2P net2 net2) nch_ulvt_mac l=30n w=500n multi=320 nf=1 \
+        sd=100n ad=3.75e-14 as=3.75e-14 pd=1.15u ps=1.15u nrd=0.662935 \
+        nrs=0.662935 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M50 (VDD VGN2N net4 net4) nch_ulvt_mac l=30n w=500n multi=320 nf=1 \
+        sd=100n ad=3.75e-14 as=3.75e-14 pd=1.15u ps=1.15u nrd=0.662935 \
+        nrs=0.662935 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M58 (net2 VGN1P VOUTP VOUTP) nch_ulvt_mac l=30n w=500n multi=160 nf=1 \
+        sd=100n ad=3.75e-14 as=3.75e-14 pd=1.15u ps=1.15u nrd=0.662935 \
+        nrs=0.662935 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    D0 (SUB VDD) dnwpsub area=4.41936e-11 pj=3.024e-05 m=(1)
+    D2 (SUB VDD) dnwpsub area=1.27693e-10 pj=4.608e-05 m=(2)
+    D1 (SUB VDD) dnwpsub area=1.398e-11 pj=1.532e-05 m=(1)
+    D33 (VSS VDD) pwdnw area=3.27376e-11 pj=2.704e-05 m=(1)
+    D29 (net4 VDD) pwdnw area=5.71536e-11 pj=3.474e-05 m=(1)
+    D32 (VCM VDD) pwdnw area=8.106e-12 pj=1.192e-05 m=(1)
+    D28 (net2 VDD) pwdnw area=5.71536e-11 pj=3.474e-05 m=(1)
+    D31 (VOUTN VDD) pwdnw area=3.71952e-11 pj=3.166e-05 m=(1)
+    D30 (VOUTP VDD) pwdnw area=3.71952e-11 pj=3.166e-05 m=(1)
+ends L1_INPUT_BUFFER_CASCODE

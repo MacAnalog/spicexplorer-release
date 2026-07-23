@@ -1,0 +1,36 @@
+** AUTHORED TEMPLATE — amplifier/ac_open_loop_biaswrap_ibias: the bias-wrap open-loop bench for
+** DUTs on the class ibias-port convention (ports vdd vout vinp vinn ibias vss). Same trick as
+** ac_open_loop_biaswrap (which hardcodes the 5-port AnalogGym order): a 1 TH inductor DC-shorts
+** vout back to the INVERTING input to set the high-gain operating point (mandatory for amps with
+** a large systematic offset), while a 1 TF cap AC-opens that loop and injects the stimulus.
+** Bindings: DUT PORT_LINE VDD VCM CL IBIAS FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+.param IBIAS=${IBIAS}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+Ibias vdd ibias dc {IBIAS}
+Vcm  vinp 0 dc {VCM}          ; common-mode bias on the non-inverting input
+Vac  sigin 0 dc 0 ac 1        ; AC stimulus
+Lfb  vout vinn 1T             ; 1 TH: DC short (bias), AC open
+Cin  vinn sigin 1T            ; 1 TF: DC open, AC inject into the inverting node
+CLoad vout 0 {CL}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  meas ac dcgain FIND vdb(vout) AT=${FSTART}
+  meas ac ugf    WHEN vdb(vout)=0 FALL=1
+  let phc = cph(vout)*180/3.14159265
+  let ph  = 180 + phc - phc[0]
+  meas ac pm     FIND ph WHEN vdb(vout)=0 FALL=1
+  write
+  quit
+.endc
+.end

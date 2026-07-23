@@ -1,0 +1,12 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "cmfb_001_ideal_rsense_servo",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 7,
+    "blocks_detected": 0,
+    "by_family": {},
+    "structural_roles": {}
+  },
+  "groups": []
+}

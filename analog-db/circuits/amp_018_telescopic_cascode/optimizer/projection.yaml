@@ -1,0 +1,79 @@
+# THIN optimizer projection (plan D-3). Only the optimizer-specific wiring lives here;
+# dut_params come from pdk/ihp-sg13g2/sizing.yaml and target_specs from datasheet.yaml.
+# `analog-db generate` merges them into ../project_setup.yaml (GENERATED, drift-guarded).
+# Mirrors the committed NEWCAS baseline (legacy examples/OTA/cascode project_setup) — the
+# P3 regression gate asserts the generated config is equivalent to it.
+extends: ../circuit.yaml
+pdk: ihp-sg13g2
+project:
+  name: CASCODE-OTA · analog-db amp_018
+  description: DB projection of amp_018_telescopic_cascode — telescopic-cascode OTA sizing in ihp-sg13g2 (mirrors the classic example)
+  simulator: ngspice
+  save_sim: false
+  parallel_sim: true
+  # paths are relative to ws_root, which resolves against the GENERATED project_setup.yaml's dir
+  ws_root: pdk/ihp-sg13g2
+  netlist: testbenches.legacy/ota-improved_tb-loopgain.spice
+  schematic: schematic/ota-improved.sch
+  outdir: testbenches.legacy/temp_spice_out
+  tech_spec:
+    name: ihp-sg13g2
+    constraints:
+      max_nfet_w: 200u
+      min_nfet_w: 0.18u
+      max_nfet_l: 10u
+      min_nfet_l: 0.18u
+      max_pfet_w: 200u
+      min_pfet_w: 0.18u
+      max_pfet_l: 10u
+      min_pfet_l: 0.18u
+  pvt:
+    active_corner: tt_27C_1V5
+    process_bundles:
+      tt:
+        - {lib_file: cornerMOSlv.lib, section: mos_tt}
+        - {lib_file: cornerRES.lib, section: res_typ}
+      ss:
+        - {lib_file: cornerMOSlv.lib, section: mos_ss}
+        - {lib_file: cornerRES.lib, section: res_wcs}
+      ff:
+        - {lib_file: cornerMOSlv.lib, section: mos_ff}
+        - {lib_file: cornerRES.lib, section: res_bcs}
+    corners:
+      - {name: tt_27C_1V5, process: tt, temp: 27, supply: {node: VDD, value: 1.5}, enabled: true}
+      - {name: ss_125C_1V35, process: ss, temp: 125, supply: {node: VDD, value: 1.35}, enabled: true}
+      - {name: ff_m40C_1V65, process: ff, temp: -40, supply: {node: VDD, value: 1.65}, enabled: false}
+    model_lib_root: null
+  testbenches:
+    - name: tb_ac
+      params:
+        - {name: CL, description: load capacitance, val: 50f}
+        - {name: V_CM, description: input common mode voltage, val: 0.8}
+        - {name: F_AC_START, description: start frequency for AC analysis, val: 1}
+        - {name: F_AC_STOP, description: stop frequency for AC analysis, val: 100e9}
+      netlist: testbenches.legacy/ota-improved_tb-loopgain.spice
+      enable: true
+      description: AC analysis for UGF, Gain, PM
+    - name: tb_noise
+      params:
+        - {name: CL, description: load capacitance, val: 50f}
+        - {name: V_CM, description: input common mode voltage, val: 0.8}
+        - {name: F_NOISE_START, description: start frequency for noise analysis, val: 1e6}
+        - {name: F_NOISE_STOP, description: stop frequency for noise analysis, val: 1e9}
+      netlist: testbenches.legacy/ota-improved_tb-noise.spice
+      enable: true
+      description: Noise analysis for input referred noise
+    - name: tb_tran
+      params:
+        - {name: CL, description: load capacitance, val: 50f}
+        - {name: V_REF, description: reference voltage used for step input, val: 0.8}
+      netlist: testbenches.legacy/ota-improved_tb-tran.spice
+      enable: true
+      description: Transient analysis for slew rate and settling time
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48
+    budget: 2000
+    name: LogBFGSCMAPlus
+    lin_variable_bounds: {min: 0, max: 100}
+    log_variable_bounds: {min: 1, max: 100}

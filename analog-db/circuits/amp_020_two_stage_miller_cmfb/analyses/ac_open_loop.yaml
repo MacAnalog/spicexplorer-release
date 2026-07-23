@@ -1,0 +1,17 @@
+# Analysis binding (plan D-4). Validated against _shared/schema/analysis.schema.json.
+# Binds the amplifier-class ac_open_loop_diff template (differential output, self-biased —
+# no ibias port) to this circuit's conditions.
+schema: spicexplorer/analysis@1
+id: ac_open_loop
+template: ac_open_loop_diff
+description: "Open-loop differential AC gain/phase for dc_gain_db, ugf_hz, pm_deg."
+params:
+  FSTART: 1k
+  FSTOP: 100MEG
+  PPD: 101
+  CL: 50f
+  VCM: 0.8
+  VDD: 1.5
+flags: []                # no bias_wrap needed: symmetric topology + matched inputs (see
+                          # ac_open_loop_diff.spice header) keeps the output offset defined
+produces: [dc_gain_db, ugf_hz, pm_deg]

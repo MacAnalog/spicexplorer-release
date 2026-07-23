@@ -1,0 +1,66 @@
+** AUTHORED TEMPLATE — ia/tran_chopper_ripple (plan_hierarchical_composition P3; the
+** CLOCKED bench family for the chopper subfamily — plan S4.6 "ia - chopper": a static
+** .ac/.noise on the frozen network is the wrong analysis for these figures).
+** One combined clocked transient: all chopper clock pairs run at FCHOP; the differential
+** input is 0 until T1 (window A -> chopped output offset + ripple), then steps to VIN_DC
+** (window B -> chopped closed-loop gain). Measures, all in-deck:
+**   v_ripple_pp   peak-to-peak differential output ripple in the settled window B
+**   gain_cl       (avgB - avgA)/VIN_DC — the chopped closed-loop gain
+**   vos_residual  window-A output average, input-referred through gain_cl
+** Windows WA0..WA1 (before T1) and WB0..WB1 (before TSTOP) MUST each span an integer
+** number of chop periods, settled after the respective input change.
+**
+** Assumes the chopper-IA port convention (extra clock pairs are driven even if a given
+** DUT omits some — extra driven nets are harmless):
+**   .subckt <id> vinp vinn voutp voutn vref clk_chin clk_chin_not clk_chfb clk_chfb_not
+**                clk_chout clk_chout_not [clk_chpf clk_chpf_not] vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CL FCHOP TEDGE VIN_DC T1 WA0 WA1 WB0 WB1
+**                    TSTEP TSTOP PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+.param FCHOP=${FCHOP}
+.param TCHOP={1/FCHOP}
+.param TEDGE=${TEDGE}
+.param VIN_DC=${VIN_DC}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+Vref vref 0 dc {VCM}
+Vcm  vcm 0 dc {VCM}
+* differential input: 0 in window A, VIN_DC from T1 (window B)
+Vinp vinp vcm pulse(0 {VIN_DC} ${T1} 1n 1n 1 2)
+Vinn vinn vcm dc 0
+
+* chopper clocks: complementary pairs, all phases aligned at FCHOP
+Vck_in_a  clk_chin      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_in_b  clk_chin_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_fb_a  clk_chfb      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_fb_b  clk_chfb_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_out_a clk_chout     0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_out_b clk_chout_not 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_pf_a  clk_chpf      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_pf_b  clk_chpf_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP}
+  let vd = v(voutp) - v(voutn)
+  meas tran vavga AVG vd from=${WA0} to=${WA1}
+  meas tran vavgb AVG vd from=${WB0} to=${WB1}
+  meas tran vdmax MAX vd from=${WB0} to=${WB1}
+  meas tran vdmin MIN vd from=${WB0} to=${WB1}
+  let v_ripple_pp = vdmax - vdmin
+  let gain_cl = (vavgb - vavga)/${VIN_DC}
+  let vos_residual = vavga/gain_cl
+  print v_ripple_pp gain_cl vos_residual
+  write
+  quit
+.endc
+.end

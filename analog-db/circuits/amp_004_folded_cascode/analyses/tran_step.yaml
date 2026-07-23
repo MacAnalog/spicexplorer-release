@@ -1,0 +1,7 @@
+schema: spicexplorer/analysis@1
+id: tran_step
+template: tran_step
+description: "Unity-gain step settling."
+params: {VDD: 1.8, VCM: 0.9, IBIAS: -34u, CL: 5p, VSTEP: 0.2, VTOL: 2m, TSTART: 2u, TSTEP: 2n, TSTOP: 10u}
+flags: []
+produces: [t_settle]

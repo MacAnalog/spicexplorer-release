@@ -1,0 +1,34 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# Clocked comparator sheet: decision delay, decided output levels, period-average power.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.5}
+  vcm:    {unit: V, typical: 0.75}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  t_prop:
+    display: "clk -> voutp decision delay (VOD = 50 mV)"
+    unit: s
+    analysis: tran_decision
+    extract: {meas: t_prop}
+    spec: {max: 5.0e-9, unit: s}
+  v_out_high:
+    display: "Decided high level (voutp, mid-evaluation)"
+    unit: V
+    analysis: tran_decision
+    extract: {meas: v_out_high}
+    spec: {min: 1.4, unit: V}
+  v_out_low:
+    display: "Decided low level (voutn, mid-evaluation)"
+    unit: V
+    analysis: tran_decision
+    extract: {meas: v_out_low}
+    spec: {max: 0.1, unit: V}
+  i_supply:
+    display: "Clock-period average supply current (10 MHz)"
+    unit: A
+    analysis: tran_decision
+    extract: {meas: i_supply}
+    spec: {max: 1.0e-4, unit: A}

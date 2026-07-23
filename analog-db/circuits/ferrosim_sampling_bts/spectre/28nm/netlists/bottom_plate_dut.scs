@@ -1,0 +1,49 @@
+// Bottom-plate differential sampler from
+// PLAYGROUND_LLM/TB_SAMPLING_BTS_BOT_DIFF Interactive.7.RO.
+//
+// Evaluated output:
+//   Vsampled = (VTOPN - VSN) - (VTOPP - VSP)
+
+subckt BOTTOM_PLATE_SAMPLER VSP VSN VTOPP VTOPN VGP VGN VG VCM VINP VINN VSS
+
+    C_N (VSN VTOPN) capacitor c=CL
+    C_P (VSP VTOPP) capacitor c=CL
+
+    M_N (VSN VGN VINN VSS) nch_ulvt_mac l=30n w=40u multi=M_IN nf=80 sd=100n \
+        ad=2e-12 as=2.025e-12 pd=48.0u ps=49.1u nrd=0.014738 nrs=0.014738 \
+        sa=1.83341u sb=1.83341u sa1=324.988n sa2=1.04703u sa3=1.36117u \
+        sa4=1.73871u sb1=324.988n sb2=1.04703u sb3=1.36117u spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=261.036n sapb=250.239n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M_P (VSP VGP VINP VSS) nch_ulvt_mac l=30n w=40u multi=M_IN nf=80 sd=100n \
+        ad=2e-12 as=2.025e-12 pd=48.0u ps=49.1u nrd=0.014738 nrs=0.014738 \
+        sa=1.83341u sb=1.83341u sa1=324.988n sa2=1.04703u sa3=1.36117u \
+        sa4=1.73871u sb1=324.988n sb2=1.04703u sb3=1.36117u spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=261.036n sapb=250.239n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+
+    M_CM_N (VTOPN VG VCM VSS) nch_mac l=30n w=2.5u multi=M_VCM nf=5 sd=100n \
+        ad=1.375e-13 as=1.375e-13 pd=3.55u ps=3.55u nrd=0.205435 \
+        nrs=0.205435 sa=209.857n sb=209.857n sa1=127.328n sa2=202.276n \
+        sa3=370.542n sa4=200.595n sb1=127.328n sb2=202.276n sb3=370.542n \
+        spa=100n spa1=100n spa2=100n spa3=100n sap=127.283n sapb=146.019n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M_CM_P (VTOPP VG VCM VSS) nch_mac l=30n w=2.5u multi=M_VCM nf=5 sd=100n \
+        ad=1.375e-13 as=1.375e-13 pd=3.55u ps=3.55u nrd=0.205435 \
+        nrs=0.205435 sa=209.857n sb=209.857n sa1=127.328n sa2=202.276n \
+        sa3=370.542n sa4=200.595n sb1=127.328n sb2=202.276n sb3=370.542n \
+        spa=100n spa1=100n spa2=100n spa3=100n sap=127.283n sapb=146.019n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M_TOP_SHORT (VTOPN VG VTOPP VSS) nch_mac l=30n w=20u multi=M_VCM nf=40 sd=100n \
+        ad=1e-12 as=1.025e-12 pd=24.0u ps=25.1u nrd=0.029187 nrs=0.029187 \
+        sa=1.03854u sb=1.03854u sa1=257.328n sa2=718.772n sa3=1.05625u \
+        sa4=982.7n sb1=257.328n sb2=718.772n sb3=1.05625u spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=215.859n sapb=216.999n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+
+ends BOTTOM_PLATE_SAMPLER

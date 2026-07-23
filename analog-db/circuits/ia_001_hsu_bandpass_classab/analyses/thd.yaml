@@ -1,0 +1,24 @@
+# Analysis binding (plan D-4): thd_diff template — large-signal distortion of the closed-loop
+# IA (the paper's headline figure: -65 dB THD with the class-AB output). Single differential
+# tone at F0, in-deck coherent single-bin DFT over harmonics 2..5. ASIG = 2 mV is a
+# realistic biosignal input level (the linear range tops out ~5 mV / ~0.1 V diff out;
+# 20 mV drove the class-AB downswing into clipping -> 27% THD, live 2026-07-17). COHERENT window: TSTOP =
+# 8 ms = exactly 8 periods of F0 = 1 kHz; TSTEP = 1 us <= 1/(200*F0).
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_diff
+description: "Closed-loop THD at 1 kHz, 2 mV differential input (~40 mV diff out, gain ~20) — the paper's small-signal biosignal regime."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 50f
+  ASIG: 2m
+  F0: 1k
+  TSTEP: 1u
+  TSTART: 8m
+  TSTOP: 16m
+  # closed-lane native PSS harmonic budget (the ia map's thd bench: pss @F0 + the
+  # thd_pct calculator row) — the open ngspice lane ignores it
+  HARMS: 7
+flags: []
+produces: [thd_pct]

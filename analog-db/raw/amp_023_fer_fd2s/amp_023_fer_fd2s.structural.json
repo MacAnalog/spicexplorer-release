@@ -1,0 +1,182 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "amp_023_fer_fd2s",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 38,
+    "blocks_detected": 6,
+    "by_family": {
+      "current_mirror": 4,
+      "differential_pair": 2
+    },
+    "structural_roles": {
+      "XMB1": "current_mirror",
+      "XMB2": "current_mirror",
+      "XMBD": "current_mirror_reference",
+      "XMEA1": "differential_pair",
+      "XMEA2": "differential_pair",
+      "XMEAT": "tail_current_source",
+      "XMEPD": "current_mirror_reference",
+      "XMEPM": "current_mirror",
+      "XMI1": "differential_pair",
+      "XMI2": "differential_pair",
+      "XMKA": "current_mirror",
+      "XMKB": "current_mirror",
+      "XMLA": "current_mirror",
+      "XMLB": "current_mirror",
+      "XMNA": "cascode_device",
+      "XMNB": "cascode_device",
+      "XMNCD": "current_mirror_reference",
+      "XMND1": "current_mirror",
+      "XMPD1": "current_mirror_reference",
+      "XMPM1": "current_mirror",
+      "XMSA": "current_mirror",
+      "XMSB": "current_mirror",
+      "XMT": "tail_current_source"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.nmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XMBD",
+      "output_devices": [
+        "XMB1",
+        "XMB2",
+        "XMEAT",
+        "XMT"
+      ],
+      "devices": [
+        "XMB1",
+        "XMB2",
+        "XMBD",
+        "XMEAT",
+        "XMT"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "ibias",
+        "out": "vbp"
+      }
+    },
+    {
+      "group_id": "cm.pmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XMEPD",
+      "output_devices": [
+        "XMEPM"
+      ],
+      "devices": [
+        "XMEPD",
+        "XMEPM"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "ead",
+        "out": "vcmfb"
+      }
+    },
+    {
+      "group_id": "cm.nmos.high_swing_cascode#1",
+      "family": "current_mirror",
+      "mirror_class": "high_swing_cascode",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.high_swing_cascode",
+      "reference_device": "XMNCD",
+      "output_devices": [
+        "XMNA",
+        "XMNB"
+      ],
+      "devices": [
+        "XMKA",
+        "XMKB",
+        "XMNA",
+        "XMNB",
+        "XMNCD",
+        "XMND1"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "vcn",
+        "out": "o1a",
+        "ref_in2": "vcmfb"
+      }
+    },
+    {
+      "group_id": "cm.pmos.simple#2",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XMPD1",
+      "output_devices": [
+        "XMLA",
+        "XMLB",
+        "XMPM1",
+        "XMSA",
+        "XMSB"
+      ],
+      "devices": [
+        "XMLA",
+        "XMLB",
+        "XMPD1",
+        "XMPM1",
+        "XMSA",
+        "XMSB"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "vbp",
+        "out": "voutp"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#1",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XMEA1",
+        "XMEA2"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "vsen",
+        "in_n": "vcmr",
+        "CM_tail": "eatail",
+        "out_n": "ead",
+        "out_p": "vcmfb"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#2",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XMI1",
+        "XMI2"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "vinp",
+        "in_n": "vinn",
+        "CM_tail": "tail",
+        "out_n": "fn",
+        "out_p": "fp"
+      }
+    }
+  ]
+}

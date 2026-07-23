@@ -1,0 +1,9 @@
+# LDO dc operating point — quiescent current + regulated output (class-scoped dc_op superset).
+schema: spicexplorer/analysis@1
+id: dc_op
+template: dc_op
+description: "DC operating point; quiescent current and regulated output voltage."
+params:
+  VDD: 1.8
+flags: []
+produces: [i_q, v_out]

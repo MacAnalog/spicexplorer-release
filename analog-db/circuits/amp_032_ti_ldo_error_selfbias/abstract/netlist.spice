@@ -1,0 +1,57 @@
+** Abstract TI-LDO error amplifier, BALANCED variant — amp_032_ti_ldo_error_selfbias with its
+** stacked stage-2 diode removed, which eliminates that topology's structural input offset.
+**
+** WHY (measured on gf180mcu tt, 2026-07-20, amp_032 at its landed sizing):
+**   amp_032's stage 2 stacked a diode M7 whose SOURCE sits on the first-stage output node nb, with
+**   XMBE sinking its current I_e. Two consequences, both structural:
+**     1. KCL at the two mirror-load branches differs by I_e: na carries I(M1)+I(M4)=tail/2 (M4 is a
+**        ~zero-current level shifter), while nb carries I(M2)+I_e. But M3/M5 are a MATCHED pair on a
+**        shared gate nd, so they want equal currents. The circuit reconciles this by skewing the
+**        input pair — measured 46.17 uA vs 17.19 uA, a 2.7:1 split — and that skew IS the offset.
+**     2. Worse, nb = vdd - Vsg(M6) + Vsg(M7). With comparable Vsg's, nb is PINNED near the rail
+**        (measured 3.091 V on a 3.3 V supply), leaving M5 only 0.21 V of Vsd — deep triode, so it
+**        cannot act as a current source at all. Widening M7 barely helps: 12.88u -> 100u moved nb
+**        only 3.121 -> 3.013 V and vos only 58.5 -> 49.8 mV.
+**   Adding a replica sink on the na branch (matched to XMBE) treats symptom 1 only: vos 87.1 ->
+**   54.9 mV, still far off. The stack itself is the problem.
+**
+** THE FIX: delete M7 and XMBE, and drive M6's gate straight from nb. KCL at nb is then simply
+** I(M5) = I(M2), the matched mirror forces I(M1) = I(M2), and the systematic offset vanishes.
+** nb settles at 2.032 V (M5 Vsd 1.27 V, comfortably saturated) and the input pair splits
+** 32.16/30.40 uA. Measured at amp_032's landed sizing, this ALSO improves gain, rejection, noise
+** and power — it is not a trade:
+**   vos 87.1 -> 9.74 mV · dcgain 54.32 -> 72.32 dB · psrr 31.6 -> 38.7 dB · vn_in 227 -> 178 uV
+**   i_supply 213 -> 195 uA (XMBE's ~17 uA is gone) · 13 devices -> 11
+** The one regression is phase margin (65.8 -> 10.7 deg), which is EXPECTED and not structural:
+** Rz/Cc were tuned against the old stage 2. Re-compensation is a sizing problem, and Rz/Cc are
+** free knobs (unfreezing exactly those took amp_033 from 21 to 73.9 deg).
+**
+** Retains amp_032's Vth-LEVEL-SHIFTED PMOS mirror load (M3/M4 compound diode, M4 at ~zero current)
+** and its on-chip diode-PMOS self-bias, so it is still recognisably the TI application-note amp.
+** Subckt port order (= circuit.yaml ports): vdd vout vinp vinn vss
+** vinp = VFB (non-inverting), vinn = VREF (inverting).
+**.subckt amp_032_ti_ldo_error_selfbias vdd vout vinp vinn vss
+** on-chip reference: diode-connected PMOS from vdd into the mirror rail (replaces the ibias port)
+XMBP ibias ibias vdd vdd pmos w=x_dut_xmbp_w l=x_dut_xmbp_l
+** bias mirror rail. The _e/_f sinks are ratioed smaller than the tail: M5 must supply BOTH M2's
+** tail-half AND mirror_e's sink (KCL at nb: i1 = i2 + I_e needs I_e < tail/2).
+XMB0 ibias ibias vss vss nmos w=x_dut_xmb0_w l=x_dut_xmb0_l
+XMBC tail  ibias vss vss nmos w=x_dut_xmbc_w l=x_dut_xmbc_l m=x_dut_xmbc_m
+XMBF nlev  ibias vss vss nmos w=x_dut_xmbf_w l=x_dut_xmbf_l
+XMBO vout  ibias vss vss nmos w=x_dut_xmbo_w l=x_dut_xmbo_l m=x_dut_xmbo_m
+** input pair (M1 g=VREF, M2 g=VFB; common source = tail)
+XM1 na vinn tail vss nmos w=x_dut_xm1_w l=x_dut_xm1_l
+XM2 nb vinp tail vss nmos w=x_dut_xm2_w l=x_dut_xm2_l
+** level-shifted PMOS mirror load: M3m/M5 gates on nd; M4 = compound-diode level shifter
+XM3 na nd vdd vdd pmos w=x_dut_xm3_w l=x_dut_xm3_l
+XM4 nlev na nd vdd pmos w=x_dut_xm4_w l=x_dut_xm4_l
+XM5 nb nd vdd vdd pmos w=x_dut_xm5_w l=x_dut_xm5_l
+** second stage: M6 is a plain common-source driver taken DIRECTLY off the first-stage output nb.
+** amp_032 instead stacked a diode M7 (source on nb, gate/drain ne) here and mirrored ne->M6, with
+** XMBE sinking M7's current. Removing that stack is the whole point of this accession — see header.
+XM6 vout nb vdd vdd pmos w=x_dut_xm6_w l=x_dut_xm6_l
+** compensation (Rz + Cc from the first-stage node to the output)
+Rz nb ncz 'r_z'
+Cc ncz vout 'c_comp'
+**.ends
+.end

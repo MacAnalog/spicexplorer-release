@@ -1,0 +1,27 @@
+# Analysis binding (plan D-4). Binds the support-class tran_rrl_sense template
+# (ripple-sensing demodulating SC-integrator bench, DRAWING_REVIEW S4 option A): a
+# differential SQUARE ripple of +/-VR/2 per side at FCHOP on vinp/vinn, CLK_CH_RRL
+# clocked synchronously at FCHOP and PHI_1/PHI_2 as exact complements (the drawn TGs
+# use the opposite phase as each complement — see the template header). A DC input is
+# correctly rejected by the AC-coupled front end. T1/T2 sit inside the linear ramp,
+# an integer number of chop periods (6) apart, EARLY —
+# the unclamped behavioral integrator winds up to nonphysical hundreds of volts if the
+# window extends further (VR is scaled down for the same reason; ripple_gain is
+# VR-normalized so the metric is unchanged).
+schema: spicexplorer/analysis@1
+id: tran_rrl_sense
+template: tran_rrl_sense
+description: "RRL ripple-sense bench: demodulated integrator ramp per volt of ripple (ripple_gain, V/s/V; its SIGN is the composed RRL loop polarity)."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  VR: 2m
+  FCHOP: 5k
+  TEDGE: 100n
+  T1: 0.6m
+  T2: 1.8m
+  TSTEP: 500n
+  TSTOP: 2m
+  TMAX: 200n
+flags: []
+produces: [ramp_rate, ripple_gain]

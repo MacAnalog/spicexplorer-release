@@ -1,0 +1,168 @@
+// Library name: SAR_11B_ZZS
+// Cell name: L5_DAC_SWI
+// View name: schematic
+// Inherited view list: spectre cmos_sch cmos.sch schematic veriloga ahdl
+// pspice dspf
+subckt L5_DAC_SWI DCTRL\<11\> DCTRL\<10\> DCTRL\<9\> DCTRL\<8\> DCTRL\<7\> \
+        DCTRL\<6\> DCTRL\<5\> DCTRL\<4\> DCTRL\<3\> DCTRL\<2\> DCTRL\<1\> \
+        VBOT\<11\> VBOT\<10\> VBOT\<9\> VBOT\<8\> VBOT\<7\> VBOT\<6\> \
+        VBOT\<5\> VBOT\<4\> VBOT\<3\> VBOT\<2\> VBOT\<1\> VDD VREFN VREFP \
+        VSS
+    M10\<5\> (VBOT\<6\> DCTRL\<6\> VREFN VSS) nch_mac l=30n w=200n multi=1 \
+        nf=1 sd=100n ad=1.5e-14 as=1.5e-14 pd=550.0n ps=550.0n \
+        nrd=2.828877 nrs=2.828877 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n \
+        sa3=75.0n sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=91.9776n sapb=114.444n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M10\<4\> (VBOT\<5\> DCTRL\<5\> VREFN VSS) nch_mac l=30n w=200n multi=1 \
+        nf=1 sd=100n ad=1.5e-14 as=1.5e-14 pd=550.0n ps=550.0n \
+        nrd=2.828877 nrs=2.828877 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n \
+        sa3=75.0n sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=91.9776n sapb=114.444n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M10\<3\> (VBOT\<4\> DCTRL\<4\> VREFN VSS) nch_mac l=30n w=200n multi=1 \
+        nf=1 sd=100n ad=1.5e-14 as=1.5e-14 pd=550.0n ps=550.0n \
+        nrd=2.828877 nrs=2.828877 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n \
+        sa3=75.0n sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=91.9776n sapb=114.444n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M10\<2\> (VBOT\<3\> DCTRL\<3\> VREFN VSS) nch_mac l=30n w=200n multi=1 \
+        nf=1 sd=100n ad=1.5e-14 as=1.5e-14 pd=550.0n ps=550.0n \
+        nrd=2.828877 nrs=2.828877 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n \
+        sa3=75.0n sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=91.9776n sapb=114.444n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M10\<1\> (VBOT\<2\> DCTRL\<2\> VREFN VSS) nch_mac l=30n w=200n multi=1 \
+        nf=1 sd=100n ad=1.5e-14 as=1.5e-14 pd=550.0n ps=550.0n \
+        nrd=2.828877 nrs=2.828877 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n \
+        sa3=75.0n sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=91.9776n sapb=114.444n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M10\<0\> (VBOT\<1\> DCTRL\<1\> VREFN VSS) nch_mac l=30n w=200n multi=1 \
+        nf=1 sd=100n ad=1.5e-14 as=1.5e-14 pd=550.0n ps=550.0n \
+        nrd=2.828877 nrs=2.828877 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n \
+        sa3=75.0n sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=91.9776n sapb=114.444n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M8 (VBOT\<7\> DCTRL\<7\> VREFN VSS) nch_mac l=30n w=400n multi=1 nf=1 \
+        sd=100n ad=3e-14 as=3e-14 pd=950.0n ps=950.0n nrd=0.896976 \
+        nrs=0.896976 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M6 (VBOT\<8\> DCTRL\<8\> VREFN VSS) nch_mac l=30n w=800n multi=1 nf=2 \
+        sd=100n ad=4e-14 as=6e-14 pd=1u ps=1.9u nrd=0.576527 nrs=0.576527 \
+        sa=112.742n sb=112.742n sa1=93.6047n sa2=112.078n sa3=163.715n \
+        sa4=110.059n sb1=93.6047n sb2=112.078n sb3=163.715n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=104.359n sapb=125.813n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M5 (VBOT\<9\> DCTRL\<9\> VREFN VSS) nch_mac l=30n w=1.6u multi=1 nf=4 \
+        sd=100n ad=8e-14 as=1e-13 pd=2u ps=2.9u nrd=0.336264 nrs=0.336264 \
+        sa=179.203n sb=179.203n sa1=118.069n sa2=174.76n sa3=310.76n \
+        sa4=171.966n sb1=118.069n sb2=174.76n sb3=310.76n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=120.952n sapb=140.537n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M2 (VBOT\<10\> DCTRL\<10\> VREFN VSS) nch_mac l=30n w=3.2u multi=1 \
+        nf=8 sd=100n ad=1.6e-13 as=1.8e-13 pd=4u ps=4.9u nrd=0.183401 \
+        nrs=0.183401 sa=295.835n sb=295.835n sa1=149.315n sa2=274.565n \
+        sa3=507.343n sa4=281.096n sb1=149.315n sb2=274.565n sb3=507.343n \
+        spa=100n spa1=100n spa2=100n spa3=100n sap=142.36n sapb=158.808n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M0 (VBOT\<11\> DCTRL\<11\> VREFN VSS) nch_mac l=30n w=6.4u multi=1 \
+        nf=16 sd=100n ad=3.2e-13 as=3.4e-13 pd=8u ps=8.9u nrd=0.096063 \
+        nrs=0.096063 sa=501.551n sb=501.551n sa1=188.832n sa2=423.139n \
+        sa3=725.324n sa4=474.578n sb1=188.832n sb2=423.139n sb3=725.324n \
+        spa=100n spa1=100n spa2=100n spa3=100n sap=169.423n sapb=180.951n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M11\<5\> (VBOT\<6\> DCTRL\<6\> VREFP VDD) pch_mac l=30n w=260.0n \
+        multi=1 nf=1 sd=100n ad=1.95e-14 as=1.95e-14 pd=670.0n ps=670.0n \
+        nrd=0.789742 nrs=0.789742 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n \
+        sa3=75.0n sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=91.9776n sapb=114.444n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M11\<4\> (VBOT\<5\> DCTRL\<5\> VREFP VDD) pch_mac l=30n w=260.0n \
+        multi=1 nf=1 sd=100n ad=1.95e-14 as=1.95e-14 pd=670.0n ps=670.0n \
+        nrd=0.789742 nrs=0.789742 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n \
+        sa3=75.0n sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=91.9776n sapb=114.444n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M11\<3\> (VBOT\<4\> DCTRL\<4\> VREFP VDD) pch_mac l=30n w=260.0n \
+        multi=1 nf=1 sd=100n ad=1.95e-14 as=1.95e-14 pd=670.0n ps=670.0n \
+        nrd=0.789742 nrs=0.789742 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n \
+        sa3=75.0n sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=91.9776n sapb=114.444n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M11\<2\> (VBOT\<3\> DCTRL\<3\> VREFP VDD) pch_mac l=30n w=260.0n \
+        multi=1 nf=1 sd=100n ad=1.95e-14 as=1.95e-14 pd=670.0n ps=670.0n \
+        nrd=0.789742 nrs=0.789742 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n \
+        sa3=75.0n sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=91.9776n sapb=114.444n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M11\<1\> (VBOT\<2\> DCTRL\<2\> VREFP VDD) pch_mac l=30n w=260.0n \
+        multi=1 nf=1 sd=100n ad=1.95e-14 as=1.95e-14 pd=670.0n ps=670.0n \
+        nrd=0.789742 nrs=0.789742 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n \
+        sa3=75.0n sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=91.9776n sapb=114.444n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M11\<0\> (VBOT\<1\> DCTRL\<1\> VREFP VDD) pch_mac l=30n w=260.0n \
+        multi=1 nf=1 sd=100n ad=1.95e-14 as=1.95e-14 pd=670.0n ps=670.0n \
+        nrd=0.789742 nrs=0.789742 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n \
+        sa3=75.0n sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=91.9776n sapb=114.444n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M9 (VBOT\<7\> DCTRL\<7\> VREFP VDD) pch_mac l=30n w=520.0n multi=1 \
+        nf=1 sd=100n ad=3.9e-14 as=3.9e-14 pd=1.19u ps=1.19u nrd=0.386982 \
+        nrs=0.386982 sa=75.0n sb=75.0n sa1=75.0n sa2=75.0n sa3=75.0n \
+        sa4=75.0n sb1=75.0n sb2=75.0n sb3=75.0n spa=100n spa1=100n \
+        spa2=100n spa3=100n sap=91.9776n sapb=114.444n spba=115.715n \
+        spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M7 (VBOT\<8\> DCTRL\<8\> VREFP VDD) pch_mac l=30n w=1.04u multi=1 nf=2 \
+        sd=100n ad=5.2e-14 as=7.8e-14 pd=1.24u ps=2.38u nrd=0.214709 \
+        nrs=0.214709 sa=112.742n sb=112.742n sa1=93.6047n sa2=112.078n \
+        sa3=163.715n sa4=110.059n sb1=93.6047n sb2=112.078n sb3=163.715n \
+        spa=100n spa1=100n spa2=100n spa3=100n sap=104.359n sapb=125.813n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M4 (VBOT\<9\> DCTRL\<9\> VREFP VDD) pch_mac l=30n w=2.08u multi=1 nf=4 \
+        sd=100n ad=1.04e-13 as=1.3e-13 pd=2.48u ps=3.62u nrd=0.113583 \
+        nrs=0.113583 sa=179.203n sb=179.203n sa1=118.069n sa2=174.76n \
+        sa3=310.76n sa4=171.966n sb1=118.069n sb2=174.76n sb3=310.76n \
+        spa=100n spa1=100n spa2=100n spa3=100n sap=120.952n sapb=140.537n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M3 (VBOT\<10\> DCTRL\<10\> VREFP VDD) pch_mac l=30n w=4.16u multi=1 \
+        nf=8 sd=100n ad=2.08e-13 as=2.34e-13 pd=4.96u ps=6.1u nrd=0.058488 \
+        nrs=0.058488 sa=295.835n sb=295.835n sa1=149.315n sa2=274.565n \
+        sa3=507.343n sa4=281.096n sb1=149.315n sb2=274.565n sb3=507.343n \
+        spa=100n spa1=100n spa2=100n spa3=100n sap=142.36n sapb=158.808n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+    M1 (VBOT\<11\> DCTRL\<11\> VREFP VDD) pch_mac l=30n w=8.32u multi=1 \
+        nf=16 sd=100n ad=4.16e-13 as=4.42e-13 pd=9.92u ps=11.06u \
+        nrd=0.029687 nrs=0.029687 sa=501.551n sb=501.551n sa1=188.832n \
+        sa2=423.139n sa3=725.324n sa4=474.578n sb1=188.832n sb2=423.139n \
+        sb3=725.324n spa=100n spa1=100n spa2=100n spa3=100n sap=169.423n \
+        sapb=180.951n spba=115.715n spba1=117.043n dfm_flag=0 \
+        spmt=1.11111e+15 spomt=0 spomt1=1.11111e+60 spmb=1.11111e+15 \
+        spomb=0 spomb1=1.11111e+60
+ends L5_DAC_SWI
+// End of subcircuit definition.
+

@@ -1,0 +1,6 @@
+pdk: sky130
+corners:
+  tt: [{lib_file: sky130.lib.spice, section: tt}]
+  ss: [{lib_file: sky130.lib.spice, section: ss}]
+  ff: [{lib_file: sky130.lib.spice, section: ff}]
+default_corner: tt

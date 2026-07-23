@@ -1,0 +1,16 @@
+** Abstract resistorless 4T PTAT cell (cross-coupled NMOS/PMOS pairs).
+** AUTHORED source of truth (plan D-2). PDK-neutral model tokens (nmos/pmos); per-PDK device
+** names + geometry come from circuitgraph lowering + pdk/<pdk>/ bindings.
+** Subckt port order (= circuit.yaml ports): vdd vout vss
+**
+** Topology (AnalogGym "Sensing Front End" / PTAT_65_classic1): XM1 = NMOS diode (na),
+** XM0 = NMOS with gate at na and drain at vout; XM3 = PMOS diode at vout, XM4 = PMOS with
+** gate at vout and drain at na. The cross-coupled loop self-biases in sub-threshold and vout
+** (one |Vsg_p| below vdd... referenced through the NMOS side) rides PTAT. A deliberate W
+** skew between the NMOS legs (x_ndio_w vs x_nout_w, upstream 1:1 at 65nm) sets a
+** non-degenerate sub-threshold operating point on the open PDKs.
+XM1 na   na   vss vss nmos w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+XM0 vout na   vss vss nmos w=x_dut_xm0_w l=x_dut_xm0_l m=x_dut_xm0_m
+XM3 vout vout vdd vdd pmos w=x_dut_xm3_w    l=x_dut_xm3_l m=x_dut_xm3_m
+XM4 na   vout vdd vdd pmos w=x_dut_xm4_w    l=x_dut_xm4_l m=x_dut_xm4_m
+.end

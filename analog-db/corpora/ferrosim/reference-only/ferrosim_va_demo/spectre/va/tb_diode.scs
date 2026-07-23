@@ -1,0 +1,15 @@
+// VA diode: DC sweep + AC + noise through the ferrosim VA path
+simulator lang=spectre
+global 0
+parameters vd=0.6
+ahdl_include "my_diode.va"
+v_in (IN 0) vsource dc=vd mag=1 type=dc
+r_s (IN A) resistor r=1k
+x_d (A 0) my_diode is_sat=1e-15 nf=1.0 cj=20f
+simulatorOptions options temp=27 tnom=27
+dcOp dc annotate=status
+swp dc param=vd start=0.3 stop=0.8 step=5m
+ac ac start=1k stop=10G dec=10
+noise (A 0) noise start=1k stop=1G dec=10 iprobe=v_in
+save A IN v_in:p
+saveOptions options save=selected

@@ -1,0 +1,15 @@
+** sch_path: diff_pair_improved_pmos.sch
+**.subckt diff_pair_improved_pmos vinp vinn CM_tail drain_n drain_p VDD VBIAS
+*.ipin vinp
+*.ipin vinn
+*.ipin CM_tail
+*.ipin drain_n
+*.ipin drain_p
+*.ipin VDD
+*.ipin VBIAS
+XM1 net1 vinn CM_tail VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM2 net2 vinp CM_tail VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM3 drain_n VBIAS net1 VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+XM4 drain_p VBIAS net2 VDD sg13_lv_pmos w=0.15u l=0.13u ng=1 m=1
+**.ends
+.end

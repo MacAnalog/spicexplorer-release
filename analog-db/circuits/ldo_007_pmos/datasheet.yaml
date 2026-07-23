@@ -1,0 +1,101 @@
+# Datasheet for the PMOS-pass LDO. Validated against _shared/schema/datasheet.schema.json.
+# UNITS NOTE (corrected vs the original plan): load_reg / line_reg are a plain delta-Vout in
+# VOLTS (= what the `.meas`/`let` in the class templates actually compute), NOT mV/mA or mV/V
+# slopes. The harness has no slope-normalisation step, so the unit must match the extracted value.
+#
+# SPECS CHARACTERIZED ON sky130 (the validated reference PDK) by real ngspice runs — see
+# results/sky130__tt.json. sky130 is stable + low-dropout + regulating; ihp-sg13g2 and gf180mcu
+# LOWER + ASSEMBLE + run but the sky130-tuned sizing is not yet retuned for them (IHP: low loop
+# gain / poor load-reg; gf180: transient unstable) — per-PDK tuning is follow-up work.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.8}      # input rail (Vin) -> binds ${VDD}
+  vout:   {unit: V, typical: 1.2}      # regulated output target (= vref*(r_top+r_bot)/r_bot)
+  vref:   {unit: V, typical: 0.6}      # internal reference (sizing var vref_val)
+  cout:   {unit: uF, typical: 1.0}     # external output cap assumed by PSRR/transient/stability
+  iload:  {unit: mA, typical: 1.0}     # nominal load current
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  v_out:
+    display: "Regulated output voltage"
+    description: "DC output at nominal load; should settle to vref*(r_top+r_bot)/r_bot ~ 1.2 V."
+    unit: V
+    analysis: dc_op
+    extract: {meas: vout_dc}
+    spec: {min: 1.16, typ: 1.2, max: 1.24, unit: V}
+  i_q:
+    display: "Quiescent current"
+    description: "Total supply current at no load (error-amp tail + divider + bias)."
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 2.5e-4, unit: A}        # sky130 measured 209 uA (error-amp tail dominates)
+  load_reg:
+    display: "Load regulation"
+    description: "delta-Vout across the 0 -> ILOAD_STOP DC load sweep (volts, not a slope)."
+    unit: V
+    analysis: load_regulation
+    extract: {meas: load_reg}
+    spec: {max: 0.02, unit: V}
+  line_reg:
+    display: "Line regulation"
+    description: "delta-Vout across the Vin sweep at fixed load (volts, not a slope)."
+    unit: V
+    analysis: line_regulation
+    extract: {meas: line_reg}
+    spec: {max: 0.02, unit: V}
+  v_dropout:
+    display: "Dropout voltage"
+    description: "Vin - Vout at which Vout has fallen to VOUT_THRESH under heavy load."
+    unit: V
+    analysis: dropout
+    extract: {meas: v_dropout}
+    spec: {max: 0.3, unit: V}
+  psrr_vdd_db:
+    display: "PSRR (Vdd -> Vout)"
+    description: "Supply rejection at FMEAS (1 kHz) at nominal load + Cout."
+    unit: dB
+    analysis: psrr
+    extract: {meas: psrr_vdd_db}
+    spec: {min: 30, unit: dB}
+  zout_peak_db:
+    display: "Closed-loop Zout peaking"
+    description: >-
+      Peaking of the closed-loop output impedance above its DC value (dB). A stability PROXY
+      measurable from the [vdd,vout,vss] ports: a large peak => low phase margin / ringing. True
+      loop-gain phase-margin needs internal-node access (a future ac_loopgain probe), since this
+      LDO's feedback loop is entirely internal to the subckt.
+    unit: dB
+    analysis: loop_stability
+    extract: {meas: zout_peak_db}
+    spec: {max: 8, unit: dB}            # sky130 measured 7.0 dB (PM ~42 deg); <6 dB would need a gate buffer
+  v_undershoot:
+    display: "Load-step undershoot"
+    description: "Peak Vout droop on a fast lo->hi load step (volts)."
+    unit: V
+    analysis: tran_load_step
+    extract: {meas: v_undershoot}
+    spec: {max: 0.1, unit: V}
+  t_transient:
+    display: "Load-step recovery time"
+    description: "Time for Vout to settle back within VTOL after the load step."
+    unit: s
+    analysis: tran_load_step
+    extract: {meas: t_transient}
+    spec: {max: 3.0e-5, unit: s}        # sky130 measured 22 us (set by the 1 uF output cap)
+  vn_out_rms:
+    display: "Integrated output noise"
+    description: "Closed-loop output noise integrated 10 Hz - 10 MHz at nominal load + Cout (V rms)."
+    unit: V
+    analysis: noise
+    extract: {meas: vn_out_rms}
+    spec: {max: 0.02, unit: V}          # sky130 measured 13.4 mVrms (error-amp input pair dominates)
+  v_line_pp:
+    display: "Line-transient deviation"
+    description: "Peak-to-peak Vout deviation over a fast 1.6 -> 2.0 V supply step at nominal load."
+    unit: V
+    analysis: tran_line_step
+    extract: {meas: v_line_pp}
+    spec: {max: 0.005, unit: V}         # sky130 measured 1.27 mV p2p

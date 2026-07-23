@@ -1,0 +1,18 @@
+# Analysis binding (plan D-4). cmfb-class dc_cmfb_transfer on the real NMOS-input
+# member: full-VDD sensed-CM sweep at the SRMC system CM (vref 0.5). VDELTA is 10 mV
+# (not 20): the sized error amp's active window is ~[0.468, 0.561] and +/-20 mV would
+# straddle the compression floor. Real member -> the range/loading measures ARE
+# produced (vcmfb_min/max, sense_lo/hi, r_sense_in), unlike the behavioral cmfb_001.
+schema: spicexplorer/analysis@1
+id: dc_cmfb_transfer
+template: dc_cmfb_transfer
+description: "Sensed-CM DC transfer: signed slope (canonical, ~+10), natural output (~0.251), rails span, active sense range, sense loading, supply current."
+params:
+  VDD: 1.2
+  VCM: 0.5
+  VDELTA: 10m
+  VSLO: 0
+  VSHI: 1.2
+  VSSTEP: 2m
+flags: []
+produces: [cmfb_slope, gain_servo_db, vcmfb_nat, vcmfb_min, vcmfb_max, sense_lo, sense_hi, r_sense_in, i_supply]

@@ -1,0 +1,25 @@
+# Differential-pair class — canonical metric vocabulary + owned testbench templates (plan D-10).
+# NEW class added by the promote-reference-circuits work for the ferrosim resistively-loaded
+# differential pair (promoted with a current-mirror tail so the structure is mirror-anchored and
+# both the pair and its mirror are detectable). Validated against class.schema.json (T0).
+#
+# A bare diff pair's figures of merit are its differential DC gain, its output common-mode level
+# and its tail/supply current — a smaller vocabulary than a full OTA (no closed-loop / PM / slew).
+schema: spicexplorer/class@1
+class: diff_pair
+id_code: dp             # accession-id prefix for verifiable circuits (plan_scoreboard D-1)
+description: >-
+  Resistively- or actively-loaded differential pairs with a current-mirror tail. DC operating
+  point (tail current + output common-mode) and a differential DC sweep (small-signal gain).
+ppa:                      # scoreboard PPA rollup declaration (plan_scoreboard D-7)
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: gain_dc, better: max}
+canonical_metrics:
+  - gain_dc          # differential DC gain d(voutp-voutn)/d(vid) at vid=0 (V/V)
+  - v_ocm            # output common-mode level (V)
+  - i_supply         # tail/supply current (A)
+  - v_out            # generic single-ended DC output (V)
+templates:
+  - dc_op
+  - gain_dc

@@ -1,0 +1,149 @@
+{
+  "area": {
+    "active_gate_area_um2": 204.0,
+    "c_count": 3,
+    "c_total_f": 1.5240000000000002e-12,
+    "mos_count": 25,
+    "r_count": 4,
+    "r_total_ohm": 460000.0
+  },
+  "circuit": "amp_013_qu2017_azc",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 80.06226,
+            "pm": 81.96733,
+            "ugf": 1883741.0
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 90.20458
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 4.855819e-05,
+            "vos": -0.000716171
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.0119624,
+            "onoise_total": 0.1036785
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 76.80025
+          },
+          "status": "ok"
+        },
+        "tran_step": {
+          "error": "amp_013_qu2017_azc/tran_step@ihp-sg13g2/tt: no measures parsed:\nlue :  1.70994e-05\n Reference value :  1.71383e-05\n Reference value :  1.71794e-05\n Reference value :  1.72391e-05\n Reference value :  1.73127e-05\n Reference value :  1.73815e-05\n Reference value :  1.74556e-05\n Reference value :  1.75313e-05\n Reference value :  1.75837e-05\n Reference value :  1.76369e-05\n Reference value :  1.76907e-05\n Reference value :  1.77399e-05\n Reference value :  1.77828e-05\n Reference value :  1.78545e-05\n ",
+          "status": "sim_error"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-21T02:17:30+00:00"
+      }
+    }
+  },
+  "design_id": "5a739f2d63",
+  "metrics": {
+    "tt": {
+      "cmrr_db": {
+        "spec": "pass",
+        "value": 90.20458
+      },
+      "dc_gain_db": {
+        "spec": "fail",
+        "value": 80.06226
+      },
+      "i_supply": {
+        "spec": "none",
+        "value": 4.855819e-05
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 81.96733
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 76.80025
+      },
+      "ugf_hz": {
+        "spec": "fail",
+        "value": 1883741.0
+      },
+      "vn_in": {
+        "spec": "none",
+        "value": 0.0119624
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "CAPACITOR_0": "810f",
+      "CAPACITOR_1": "404f",
+      "CAPACITOR_2": "310f",
+      "CURRENT_0_BIAS": "1u",
+      "RESISTOR_0": "35K",
+      "RESISTOR_1": "35k",
+      "RESISTOR_2": "350k",
+      "RESISTOR_3": "40k",
+      "x_dut_xm10_l": "1u",
+      "x_dut_xm10_m": "4",
+      "x_dut_xm10_w": "1u",
+      "x_dut_xm11_l": "1u",
+      "x_dut_xm11_m": "4",
+      "x_dut_xm11_w": "1u",
+      "x_dut_xm12_l": "1u",
+      "x_dut_xm12_m": "4",
+      "x_dut_xm12_w": "1u",
+      "x_dut_xm13_l": "1u",
+      "x_dut_xm13_m": "4",
+      "x_dut_xm13_w": "1u",
+      "x_dut_xm16_l": "1u",
+      "x_dut_xm16_m": "4",
+      "x_dut_xm16_w": "1u",
+      "x_dut_xm18_l": "1u",
+      "x_dut_xm18_m": "4",
+      "x_dut_xm18_w": "1u",
+      "x_dut_xm19_l": "1u",
+      "x_dut_xm19_m": "4",
+      "x_dut_xm20_w": "7u",
+      "x_dut_xm24_l": "1u",
+      "x_dut_xm24_m": "4",
+      "x_dut_xm24_w": "1u",
+      "x_dut_xm3_l": "1u",
+      "x_dut_xm3_w": "1u",
+      "x_dut_xm5_m": "4",
+      "x_dut_xm6_l": "1u",
+      "x_dut_xm6_m": "4",
+      "x_dut_xm6_w": "1u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 204.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 80.06226,
+      "pm_deg": 81.96733,
+      "ugf_hz": 1883741.0
+    },
+    "power_w": 8.7404742e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

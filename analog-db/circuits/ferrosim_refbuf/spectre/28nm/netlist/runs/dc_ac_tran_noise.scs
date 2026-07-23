@@ -1,0 +1,45 @@
+// Reference-buffer characterization copied from Maestro Interactive.1.RO.
+// Original STB was omitted from this runnable entry because Maestro generated
+// `stb stb ...` without a probe and Spectre reported SPECTRE-16408.
+simulator lang=spectre
+global 0
+parameters IBREF=40u
+
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=pre_simu
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=noise_worst
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=ttmacro_mos_moscap
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=tt_res_bip_dio_disres
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=tt_mom
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=tt_ind_jvar
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=tt_r_metal
+
+include "dut/ref_buffer_blocks.scs"
+include "tb/tb_ref_buffer_characterization.scs"
+
+simulatorOptions options psfversion="1.4.0" reltol=1e-4 vabstol=1e-6 \
+    iabstol=1e-12 temp=27 tnom=27 scalem=1.0 scale=1.0 gmin=1e-12 rforce=1 \
+    maxnotes=5 maxwarns=5 digits=5 cols=80 pivrel=1e-3 \
+    sensfile="../psf/sens.output" checklimitdest=psf
+
+tran tran stop=2n errpreset=conservative step=1p maxstep=1p \
+    write="spectre.ic" writefinal="spectre.fc" savetime=[600] \
+    savefile="spectre.tran.save" annotate=status flushtime=30 maxiters=5
+finalTimeOP info what=oppoint where=rawfile
+
+ac ac start=1k stop=200G log=500 annotate=status
+
+dcOp dc write="spectre.dc" maxiters=150 maxsteps=10000 annotate=status
+dcOpInfo info what=oppoint where=rawfile
+
+noise (VREFP VREFN\<1\>) noise start=1k stop=10G annotate=status
+
+modelParameter info what=models where=rawfile
+element info what=inst where=rawfile
+outputParameter info what=output where=rawfile
+designParamVals info what=parameters where=rawfile
+primitives info what=primitives where=rawfile
+subckts info what=subckts where=rawfile
+
+save VREFP VREFN\<1\> Vbias_vrefm:p Vstage_vrefm:p \
+    Vstage_vrefn:p Vbias_vrefn:p SETN SETP
+saveOptions options save=selected

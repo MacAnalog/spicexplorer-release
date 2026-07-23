@@ -1,0 +1,15 @@
+# Analysis binding (plan D-4): buffer ac_gain — AC gain + bandwidth into CL at the VCM bias.
+schema: spicexplorer/analysis@1
+id: ac_gain
+template: ac_gain
+description: "AC response at the VCM bias point into CL; gain_ac_db (~0 dB) + f3db_hz."
+params:
+  VDD: 1.5
+  VCM: 0.9
+  IBIAS: 10u
+  CL: 500f
+  FSTART: 100
+  FSTOP: 10G
+  PPD: 20
+flags: []
+produces: [gain_ac_db, f3db_hz]

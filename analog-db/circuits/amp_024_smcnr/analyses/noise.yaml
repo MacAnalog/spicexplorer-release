@@ -1,0 +1,8 @@
+# Analysis binding (plan D-4): universal noise — input-referred noise, unity-gain connected.
+schema: spicexplorer/analysis@1
+id: noise
+template: noise
+description: "Input-referred noise over the sensing band; vn_in."
+params: {VDD: 1.5, VCM: 0.5, CL: 10p, FSTART: 1, FSTOP: 1MEG, PPD: 50}
+flags: []
+produces: [vn_in]

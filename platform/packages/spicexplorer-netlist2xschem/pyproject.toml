@@ -1,0 +1,38 @@
+[project]
+name = "spicexplorer-netlist2xschem"
+version = "0.0.0"
+description = "SpiceXplorer netlist→xschem tool — turn a SPICE netlist into an xschem schematic (.sch): map devices to PDK/generic symbols, place them on a grid, wire pins by net-name label, and (optionally) render to PNG/SVG via headless xschem."
+requires-python = ">=3.10"
+dependencies = [
+    "spicexplorer-core",   # NetlistView (the read-only netlist seam); never a peer tool
+    "pydantic>=2",         # typed I/O contract (contract.py) — feeds OpenAPI/TS codegen + MCP schemas
+]
+
+[project.optional-dependencies]
+# PNG export: xschem renders the .sch to SVG headlessly (cairo); cairosvg rasterizes SVG→PNG without
+# needing an X server (xschem's native --png requires one). SVG export and .sch generation work
+# without this extra; render() degrades to SVG when cairosvg is absent.
+render = ["cairosvg>=2.7"]
+# xvport end-to-end checks (`--netcheck`): the ported-cellview ⇄ source graph-equivalence oracle
+# compares the two netlists with spicexplorer-circuitgraph. An OWNER-APPROVED exception to the
+# "peer leaf tools never import each other" rule — lazy + optional (endcheck.py only); the port
+# pipeline itself never needs it, and the checks SKIP honestly when the extra is absent.
+e2e = ["spicexplorer-circuitgraph"]
+
+# NOTE: a leaf tool — depends on spicexplorer-core only (+ pydantic from PyPI). It MUST NOT import a
+# peer tool (the optimizer `spicexplorer`, `spicexplorer_circuitgraph`, `spicexplorer_netlist2tf`,
+# `spicexplorer_gmid`) nor the data repo `spicexplorer_analog_db`. The netlist→schematic transform is
+# pure Python; only `render.py` shells out to xschem, and it degrades gracefully when xschem is absent.
+# The ONE sanctioned exception is the lazy [e2e] extra above (xvport's netcheck oracle).
+# (Its workspace source is declared once at the workspace root, like every member's.)
+
+[project.scripts]
+netlist2xschem = "spicexplorer_netlist2xschem.cli:main"
+xvport = "spicexplorer_netlist2xschem.virtuoso_export.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spicexplorer_netlist2xschem"]

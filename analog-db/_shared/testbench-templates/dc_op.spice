@@ -1,0 +1,23 @@
+** AUTHORED TEMPLATE — universal/dc_op (plan D-4): DC operating point + supply current.
+** Truly class-agnostic: supplies only. Classes whose op point needs more wiring (an
+** amplifier's ibias + input common mode) own a class-scoped dc_op that shadows this one
+** (class templates resolve first, D-4/D-10).
+** Bindings: DUT PORT_LINE VDD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+
+Vdd  vdd 0 dc {VDD}
+Vss  vss 0 dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  print i_supply
+  write
+  quit
+.endc
+.end

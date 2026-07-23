@@ -1,0 +1,19 @@
+// Common-mode gain run: AC excitation on the input common-mode source.
+// CMRR = Adm (from ol_main) / |Acm| with Acm = vout_cm / vin_cm.
+simulator lang=spectre
+global 0
+parameters VSUP=0.9 VCM=0.45 IB=20u CL=1p acdm=0 accm=1 acvdd=0 vid=0
+
+include "${PDK_ROOT}/models/spectre/toplevel.scs" section=TOP_TT
+include "ota_fd2s.scs"
+include "tb_openloop.scs"
+
+simulatorOptions options psfversion="1.4.0" temp=27 tnom=27 scalem=1.0 \
+    scale=1.0 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 digits=5 cols=80 \
+    pivrel=1e-3 checklimitdest=psf
+
+dcOp dc maxiters=150 maxsteps=10000 annotate=status
+ac ac start=1 stop=10G dec=20 annotate=status
+
+save OUTP OUTN INP INN
+saveOptions options save=selected

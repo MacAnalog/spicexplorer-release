@@ -1,0 +1,36 @@
+# Datasheet (plan D-3/D-5/D-12). Metric sheet for the NMOS track-and-hold. Specs are loose open-PDK
+# envelopes (goal: converged, valid metrics + validated class benches on ihp-sg13g2).
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  v_out:
+    display: "Tracked output"
+    description: "Sampled-node voltage in track mode (clk high) — follows Vin (VCM)."
+    unit: V
+    analysis: dc_op
+    extract: {meas: v_out}
+    spec: {min: 0.3, max: 0.9, unit: V}
+  i_supply:
+    display: "Supply current"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {max: 1.0e-3, unit: A}
+  pedestal_v:
+    display: "Sampling pedestal"
+    description: "Charge-injection step on vout at the track->hold clock edge (typically negative)."
+    unit: V
+    analysis: tran_sample
+    extract: {meas: pedestal_v}
+    spec: {min: any}
+  droop_v_per_s:
+    display: "Hold droop rate"
+    description: "vout drift rate during hold (switch off-leakage / hold-cap)."
+    unit: "V/s"
+    analysis: tran_sample
+    extract: {meas: droop_v_per_s}
+    spec: {min: any}

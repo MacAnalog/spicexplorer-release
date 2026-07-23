@@ -1,0 +1,13 @@
+schema: spicexplorer/analysis@1
+id: noise
+template: noise
+description: "Integrated closed-loop output noise, 10 Hz - 10 MHz, at nominal load."
+params:
+  VDD: 2.0
+  ILOAD: 10m
+  COUT: 50p
+  FSTART: 10
+  FSTOP: 10meg
+  PPD: 10
+flags: []
+produces: [vn_out_rms]

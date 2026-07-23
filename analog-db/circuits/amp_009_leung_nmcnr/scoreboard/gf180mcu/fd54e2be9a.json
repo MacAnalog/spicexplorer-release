@@ -1,0 +1,95 @@
+{
+  "area": {
+    "active_gate_area_um2": 272.0,
+    "c_count": 2,
+    "c_total_f": 8e-12,
+    "mos_count": 24,
+    "r_count": 1,
+    "r_total_ohm": 10000.0
+  },
+  "circuit": "amp_009_leung_nmcnr",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 114.9883,
+            "pm": 71.29894,
+            "ugf": 894835.0
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "status": "disabled"
+        },
+        "noise": {
+          "status": "disabled"
+        },
+        "tran_step": {
+          "status": "disabled"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-06-11T15:12:33+00:00"
+      }
+    }
+  },
+  "design_id": "fd54e2be9a",
+  "metrics": {
+    "tt": {
+      "dc_gain_db": {
+        "spec": "pass",
+        "value": 114.9883
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 71.29894
+      },
+      "ugf_hz": {
+        "spec": "none",
+        "value": 894835.0
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "CAPACITOR_0": "5p",
+      "CAPACITOR_1": "3p",
+      "CURRENT_0_BIAS": "3u",
+      "x_dut_xm11_l": "1u",
+      "x_dut_xm7_m": "4",
+      "x_dut_xm11_w": "1u",
+      "x_dut_xm10_l": "1u",
+      "x_dut_xm10_m": "4",
+      "x_dut_xm10_w": "1u",
+      "x_dut_xm19_l": "1u",
+      "x_dut_xm14_m": "4",
+      "x_dut_xm19_w": "1u",
+      "x_dut_xm21_l": "1u",
+      "x_dut_xm21_m": "4",
+      "x_dut_xm21_w": "1u",
+      "x_dut_xm23_l": "1u",
+      "x_dut_xm23_m": "4",
+      "x_dut_xm23_w": "1u",
+      "x_dut_xm9_l": "1u",
+      "x_dut_xm9_m": "4",
+      "x_dut_xm9_w": "1u",
+      "RESISTOR_0": "10k"
+    }
+  },
+  "pdk": "gf180mcu",
+  "ppa": {
+    "active_gate_area_um2": 272.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 114.9883,
+      "pm_deg": 71.29894,
+      "ugf_hz": 894835.0
+    }
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

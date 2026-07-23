@@ -1,0 +1,25 @@
+// Runnable NMOS ULVT switch-Ron sweep. Vd is held 10 mV above source.
+
+simulator lang=spectre
+global 0
+
+parameters Vbias=0 Vg=0.9 Vds_meas=0.01
+
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=pre_simu
+include "${PDK_ROOT}/models/spectre/crn28ull_model.scs" section=ttmacro_mos_moscap
+
+V_g (G 0) vsource dc=Vg type=dc
+V_s (S 0) vsource dc=Vbias type=dc
+V_d (D S) vsource dc=Vds_meas type=dc
+M_DUT (D G S 0) nch_ulvt_mac l=30n w=1u multi=1 nf=10
+
+simulatorOptions options psfversion="1.4.0" reltol=1e-4 vabstol=1e-6 \
+    iabstol=1e-12 temp=27 tnom=27 scalem=1.0 scale=1.0 \
+    gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 digits=5 cols=80 \
+    pivrel=1e-3 sensfile="../psf/sens.output" checklimitdest=psf
+
+dc dc param=Vbias start=0 stop=0.4 step=0.01 annotate=status
+element info what=inst where=rawfile
+
+save M_DUT:gds M_DUT:id
+saveOptions options save=selected

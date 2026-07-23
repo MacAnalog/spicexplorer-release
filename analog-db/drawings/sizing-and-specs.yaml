@@ -1,0 +1,258 @@
+# drawings/ — consolidated sizing + measured specs (2026-07-18/19 dual-engine campaign)
+# [REFERENCE] Machine-readable companion to SIZING_VALIDATION_REPORT.md (prose/method)
+# and DRAWING_REVIEW.md §8 (per-block sweep verdicts). Conventions:
+#   - engines: ngspice = native ihp-sg13g2 tt 27C; spectre = FOUNDRY-n65 tt via the
+#     operator's NDA-neutral wrapper (no kit data in this file).
+#   - widths are xschem TOTAL widths (ng=1 everywhere, so per-finger == total).
+#   - full_precision values are AUTHORITATIVE where given (amp_025's DC solution is
+#     bistable — rounded knobs land in the wound-servo basin; keep all digits).
+#   - behavioral macromodel params are testbench-supplied globals, not geometry.
+schema: spicexplorer/drawings-sizing-specs@1
+campaign: 2026-07-18/19
+
+shared:
+  transmission_gate_pair:
+    sizing: {drawn: "w=0.15u l=0.13u (all four devices, min-size)"}
+    specs:
+      ngspice: {ron_at_vcm0p6: 26.6k, ron_min: 3.40k, ron_max: 31.2k,
+                off_leak_1v: 272f_A, off_r_equiv: ">3.7T"}
+      spectre: {port: "verify+netcheck+simcheck OK (smoke block)"}
+  chopper_diff:
+    specs:
+      ngspice: {phase_A_diff_out: +97.44m, phase_B_diff_out: -97.44m,
+                input: "±50 mV diff", cm_preserved: 0.5998}
+  capbank:
+    parameterization: "BINARY (owner decision 2026-07-19): all caps value=Cu (TB must
+      .param Cu; default bench value 1p); weighting structural via m — C1 fixed m=1,
+      C2(D0) m=1, C3(D1) m=2, C4(D2) m=4 → C_eff=(1+code)*Cu"
+    specs:
+      ngspice: {ceff_code0_to_7: "1p..8p exact steps @ Cu=1p, all 8 distinct/monotonic"}
+      spectre: "STALE cellview (pre-binary). Re-port needs an m-aware capa map rule
+        (xvport maps only value→c; m=2/4 would silently drop)"
+  ideal_macromodels:
+    params_default: {gm_val: 100u, rout_val: 10Meg, rin_val: 1T, cout_val: 100f,
+                     cin_val: 10f, Rm: 1Meg}
+    notes:
+      - "ideal-amp-fully-diff: A=gm*rout=60 dB, pole 159 kHz @ defaults (measured exact)"
+      - "vcm-detector: Rout=Rm/2=500k — load with >>Meg or sensed CM divides away"
+      - "cmfb-output-ideal-amp = A*(sensed-vref) (slope +1000); -inv = A*(vref-sensed)
+         (slope -1000) — pick by plant parity (dc_cmfb_plant_sign template)"
+      - "servo compensation per consumer: SRMC loops cout_val=100f OK;
+         ccia-01 core REQUIRES cout_val=100p (100f under-damped, kick escapes)"
+      - "UNCLAMPED servo caveat: winds 10s-100s V out of rail on wrong polarity /
+         dead actuator; rail-clamped variant is an open follow-up"
+      - "gm_val=100u cannot drive the SRMC 1k R-network — stiff-gm (100m) variant or
+         duty-scaled R_eff for design-intent filter numbers"
+  real_5t_cmfb:    # 2026-07-20: REAL transistor-level CMFB (replaces ideal servos)
+    accessions: "LANDED same day into the NEW `cmfb` class (owner decision: CMFB out
+      of the generic support toolbox): cmfb_002_5t_pmos_input + cmfb_003_5t_nmos_input
+      (this section's winners = their sizing.yaml defaults); the ideal servo re-classed
+      sup_002 -> cmfb_001_ideal_rsense_servo; class suite = dc_cmfb_transfer /
+      ac_servo / tran_cmfb_step (signed-polarity-first metrics)"
+    blocks: "amp-single-ended-5t-{nmos,pmos}-input (5T OTA + on-cell 2-diode bias
+      string, no external bias pin) wrapped by cmfb-output-amp-5t-{nmos,pmos}-input
+      (+ -inv swapped-input variants for non-inverting plants); pin footprint ==
+      the ideal pair, so consumer swap is a pure symbol-path change"
+    polarity_check: "standalone dc sweep, vref=0.5: canonical slopes +14.0 (nmos) /
+      +9.4 (pmos) at drawn min sizes; -inv mirrors -14.4 / -9.5"
+    sizing:        # per-flavor Nevergrad (TwoPointsDE ~400 evals) INSIDE the sized
+                   # SRMC core (amp_031 winner); objective: CM error + PM/gain/UGF
+                   # + kick stability + supply current. ROUNDED 3-sigfig values
+                   # reproduce winner metrics EXACTLY (not bistable) and are
+                   # committed in the .sch files == authoritative.
+      pmos_input_winner:   # CHOSEN for the SRMC consumer (score 3.40 vs 9.24)
+        rounded:  {M4_M5_in_pair: {w: 1.42u, l: 0.27u}, M6_M2_mirror: {w: 2.32u, l: 1.31u},
+                   M1_tail: {w: 0.329u, l: 0.267u}, M7_bias_n: {w: 0.293u, l: 0.22u},
+                   M3_bias_p: {w: 0.881u, l: 0.259u}}
+        full_precision: {w_in: 1.419591579583896e-06, l_in: 2.702704038778698e-07,
+                         w_ld: 2.31687239723547e-06, l_ld: 1.3149955825715198e-06,
+                         w_tl: 3.2905455692948113e-07, l_tl: 2.6723717947101066e-07,
+                         w_bn: 2.9338747721699096e-07, l_bn: 2.197389297254071e-07,
+                         w_bp: 8.810417092668546e-07, l_bp: 2.588371059138098e-07}
+      nmos_input_winner:   # validated secondary (score 9.24)
+        rounded:  {M1_M2_in_pair: {w: 0.349u, l: 0.834u}, M3_M4_mirror: {w: 0.218u, l: 1.19u},
+                   M8_tail: {w: 18u, l: 0.484u}, M5_bias_n: {w: 1.57u, l: 0.276u},
+                   M6_bias_p: {w: 0.178u, l: 1.07u}}
+        full_precision: {w_in: 3.4903239196781644e-07, l_in: 8.341771390511717e-07,
+                         w_ld: 2.1823337088892705e-07, l_ld: 1.1859387512834458e-06,
+                         w_tl: 1.796259990247479e-05, l_tl: 4.843900559777285e-07,
+                         w_bn: 1.5731041622020363e-06, l_bn: 2.7551084347372647e-07,
+                         w_bp: 1.7819354009811655e-07, l_bp: 1.0741148873300073e-06}
+    specs:   # in-loop, sized SRMC core, both loops real, VDD 1.2, refs 0.5, 200us windows
+      ngspice_pmos_sized: {cm_err: "3.6/2.1 mV (loop1/loop2)", servos: "0.215/0.318 in-rail",
+                           dcgain_db: 54.72, ugf: 76.9Meg, pm_deg: 58.9, i_supply: 116.4u,
+                           kick_resid: "0.000/0.000 mV BOTH loops"}
+      ngspice_nmos_sized: {cm_err: "3.8/4.8 mV", dcgain_db: 54.72, ugf: 76.9Meg,
+                           pm_deg: 58.9, i_supply: 112.9u, kick_resid: "0.000/0.000 mV"}
+      drawn_min_baseline: {cm_err: "~35 mV", pm_deg: "43-47", note: "loops stable even
+        at min size; low servo gain (9-14) costs static CM error, which starves the
+        output stage and eats PM"}
+    notes:
+      - "RAIL-CLAMPED BY CONSTRUCTION: both CM kicks recover with zero residual —
+         closes the ideal-servo loop-1 basin-escape finding AND the 'rail-clamped
+         variant' open item for this consumer (ideal blocks keep the caveat)"
+      - "real-amp static CM error = (needed actuator gate - amp natural output)/A_servo;
+         the pmos flavor's natural output 0.502 sits closest to the needed 0.215/0.318"
+
+bio_afe_SRMC_core_amp:
+  cmfb: {loop1: canonical, loop2: canonical, plant_parity: "both INVERTING
+    (ihp AND FOUNDRY-n65 confirmed)"}
+  refs: {V_REF_CMFB1: 0.5, V_REF_CMFB2: 0.5, input_cm: 0.5}
+  vb2_per_pdk: {ihp_seed_fix: 0.7, ihp_sized: 0.7, FOUNDRY_n65_drawn: 0.5, FOUNDRY_n65_sized: 0.35}
+  sizing:
+    drawn_seed: "all 0.15u/0.13u except XM8 0.5u/0.13u (B5 actuator fix, committed in .sch)"
+    ihp_winner:       # optimizer (scripted Nevergrad 400 + 100-loop banded refine)
+      rounded:
+        XM3_XM4_nmos_in:  {w: 1.93u, l: 0.717u}
+        XM6_XM7_pmos_in:  {w: 4.33u, l: 0.554u}
+        XM5_nmos_tail:    {w: 2.65u, l: 0.486u}
+        XM8_pmos_tail:    {w: 2.86u, l: 0.444u}
+        XM1_XM9_out_nmos: {w: 2.02u, l: 0.428u}
+        XM2_XM10_out_pmos: {w: 1.59u, l: 0.576u}
+        Cc: 0.583p
+        Rz: 2.10k
+        VB2: 0.700
+      full_precision:
+        wn_in: 1.929899553930193e-06
+        ln_in: 7.17160573582043e-07
+        wp_in: 4.333517676791642e-06
+        lp_in: 5.543754544025163e-07
+        wn_tail: 2.65342774731541e-06
+        ln_tail: 4.862864381993593e-07
+        wp_tail: 2.8635900612133323e-06
+        lp_tail: 4.4416626216939937e-07
+        wn_out: 2.0223959132588594e-06
+        ln_out: 4.2775106088068857e-07
+        wp_out: 1.5914426355899998e-06
+        lp_out: 5.757246674262767e-07
+        cc_val: 5.825188706426775e-13
+        rz_val: 2102.5223381221017
+        vb2_val: 0.7002027602191484
+  specs:   # closed-loop w-cmfb wrapper, VDD 1.2, CL 50f/side
+    ngspice_seed:   {dcgain_db: 39.9, ugf: 34.7Meg, pm_deg: -17.8, note: UNSTABLE,
+                     i_supply: 4.05u}
+    ngspice_sized:  {dcgain_db: 54.67, ugf: 76.2Meg, pm_deg: 60.2, i_supply: 96.9u,
+                     cm_err: "0.21/0.31 mV", servos: "0.214/0.309 in-rail",
+                     kick_loop2: PASS, kick_loop1: "FAIL — escapes unclamped-servo
+                     basin (locally stable only; open follow-up)"}
+    spectre_drawn:  {dcgain_db: 38.1, ugf: 25.9Meg, pm_deg: 37.1, i_supply: 56.7u, vb2: 0.5}
+    spectre_sized:  {dcgain_db: 37.8, ugf: 100.6Meg, pm_deg: 102.1, i_supply: 319.3u,
+                     vb2: 0.35, gain_note: "pinned at FOUNDRY65 LVT gm/gds ceiling (~38 dB);
+                     >=55 dB at 65nm needs cascoding",
+                     loop2_marginal: "servo equilibrium -0.024 V below rail; rail-limited
+                     achievable CM tops at 0.474 (26 mV short of ref) — stronger out-PMOS
+                     or ref 0.47"}
+    unity_gain_stability: "NOT unity-gain stable as compensated (Miller feedthrough
+      shelf); fine inside the SRMC loop's beta — reuse flag"
+  consumer_variants:
+    SRMC_core_amp_w_cmfb: "ideal servos (cmfb-output-ideal-amp x2) — the amp_031 binding"
+    SRMC_core_amp_w_cmfb_5t: "REAL 5T CMFB (cmfb-output-amp-5t-pmos-input x2, sized —
+      see shared.real_5t_cmfb); e2e from the committed export: CM err 2.1 mV,
+      54.72 dB / 76.9 MHz / PM 58.9 / 116.4 uA, kick resid 0.000"
+
+bio_afe_SRMC_filter:
+  bench_rules: {input_cm: 0.5, note: "0.6 rails the servos through the DC-coupled R path"}
+  specs:
+    ngspice: {static_corner: "TG-Ron dominated (~28k vs drawn 1k)",
+              duty_scaled_Reff_1Meg_corner: 150.2kHz,
+              matches_ideal_within: "0.1%",
+              clocked_5kHz: "CM healthy both duties (vocm 0.5007); corner-vs-duty
+              UNOBSERVABLE at drawn Rf=1k/Cf=1p (corner 4 decades above FS/2) —
+              Rf*Cf ~1e4x scale-up is an open owner decision"}
+
+bio_afe_ideal_chain:
+  ccia_ideal: {gain_midband: "x0.998 (Cin/Cf=1)", hp_corner: 2.18Hz,
+               pseudo_r: "~73 G", lp_corner: 56.1Meg, choppers: "none in this export"}
+  PGA_ideal:   # full validation 2026-07-19, post-binary capbank, Cu=1p, Cf=1p
+    gain_law: "(1+code), inverting (family cap-feedback convention)"
+    gain_db_codes_0_to_7: [-0.08, 5.94, 9.46, 11.96, 13.90, 15.48, 16.82, 17.98]
+    ideal_db_codes_0_to_7: [0.00, 6.02, 9.54, 12.04, 13.98, 15.56, 16.90, 18.06]
+    hp_corner: "2.17 Hz ALL codes (pseudo-R/Cf, code-independent)"
+    lp_corner_range: "1.08–3.4 MHz (beta*GBW, falls with gain)"
+    vocm_all_codes: 0.6000
+    step_settle_1pct: 0.52us
+    thd_code7_476mVpp_1kHz: "0.0018 % (-94.9 dB)"
+  afe_ideal: {chain_gain_stiff_amps: "+11.74 dB @ old thermometer code 111 (now
+    +18 dB-class with binary bank — chain re-run pending)", hp: 3.37Hz, lp: 2.41Meg}
+
+ccia_01_two_stage_ota_core:
+  cmfb: {block: cmfb-output-ideal-amp-inv, plant_parity: "NON-inverting (ihp AND
+    FOUNDRY-n65 confirmed)", servo_cout_val: 100p}
+  biases:
+    ihp_amp025_flavor: {vb1: 0.55, vb2: 0.45, vb3: 0.75, vcmfb_ref: 0.6}
+    FOUNDRY_n65: {vcmfb_ref: 0.8, note: "65nm achievable-CM window [0.61, 1.04] —
+      0.5/0.6 unreachable (class-AB follower level-shift floor)"}
+  amp025_finetune_winner:   # NOT recommended for adoption: bistable DC knife-edge;
+                            # gain is a topology limit (plateau ~38-39 dB, needs cascoding)
+    metrics: {dcgain_db: 38.83, ugf: 10.46Meg, pm_deg: 84.1, i_supply: 105.5u,
+              vocm: 0.5994, vcmfb: 0.648, kick: PASS,
+              baseline: "landed defaults: 35.80 dB / 22.4Meg / 73.9 deg / 173.6u"}
+    full_precision:   # verifies ONLY at these exact values (bistable basin)
+      x_dut_xm1_w: 3.255134556162643e-05
+      x_dut_xm1_l: 1.5135089332979994e-06
+      x_dut_xm2_w: 3.0260934409784362e-05
+      x_dut_xm2_l: 5.536959407100543e-07
+      x_dut_xm4_w: 5.027396165371476e-06
+      x_dut_xm4_l: 7.736400343293231e-07
+      x_dut_xm6_w: 9.995472180541491e-06
+      x_dut_xm7_w: 6.178384957154317e-06
+      x_dut_xm7_l: 4.5367860257388995e-07
+      x_dut_xm10_w: 1.2406714463364421e-05
+      x_dut_xm10_l: 4.515644106589847e-07
+      x_dut_xm12_w: 1.243134925091261e-05
+      x_dut_xm12_l: 7.681039016129695e-07
+      x_dut_xm14_w: 3.844796586052789e-06
+      x_dut_xm14_l: 8.072234854954705e-07
+      x_dut_xm15_w: 2.397604508781322e-05
+      x_dut_xm15_l: 7.87177418740626e-07
+      x_dut_xm16_w: 5.888232589958273e-06
+      x_dut_xm16_l: 4.0568320462521815e-07
+      x_dut_xm17_w: 1.9820137663159365e-05
+      x_dut_xm17_l: 6.064366989117288e-07
+      x_dut_xm18_w: 2.449486947255661e-05
+      x_dut_xm18_l: 4.425032159878025e-07
+      x_dut_xm19_w: 2.986579926824681e-06
+      x_dut_xm19_l: 6.135490457136755e-07
+      x_dut_c1_value: 1.2651382465923711e-12
+      x_dut_r1_value: 14886.50604083197
+      vb1: 0.5573034760318202
+      vb2: 0.4982341444568812
+      vb3: 0.722822178012469
+  specs_65nm_drawn: {dcgain_db: 28.9, ugf: 2.2Meg, pm_deg: 96.5, i_supply: 26.1u,
+                     vocm: 0.799}
+
+ccia_01_ccia_dut:
+  passives: {Cin: 16p, Cf: 0.8p, ideal_gain: "26.0 dB"}
+  specs:
+    ngspice_amp025_sized: {gain_db: 24.5, vocm: 0.599, servo: in-rail}
+    spectre_drawn: {gain_db_midband: 22.9, vocm: 0.799, i_supply: 16.0u,
+                    gap_cause: "core loop gain 28.9 dB at 65nm"}
+  landed_delta: "ia_001's landed biases (vb3 0.40) belong to its rest-at-vref detuned
+    servo (ROSRV); the drawing's ideal servo rests at VSS → use amp_025-flavor biases"
+
+ccia_02_and_OTA:   # landed sizings live in circuits/<id>/pdk/ihp-sg13g2/sizing.yaml —
+                   # not duplicated here; campaign-measured specs only
+  two_stage_opamp_core_amp026:
+    ngspice_sized: {dcgain_db: 61.7, ugf: 20.8Meg, pm_deg: 64.3}
+    spectre_drawn: {dcgain_db: 29.1, ugf: 1.33Meg, pm_deg: 83.8, i_supply: 67.5u,
+                    vb1_retune: "0.5→0.6"}
+  integrator_switchcap_opamp_amp027:
+    ngspice_sized: {dcgain_db: 46.6, pm_deg: 47.6}
+    spectre_sized: {dcgain_db: 25.2, ugf: 58.4Meg, pm_deg: 92.9, i_supply: 22.9u}
+    cmfb_note: "sense diode XM16 dangling but loop functional single-sided;
+      cost -126 mV CM error + 17 dB peaking; one-net merge = improvement not blocker"
+  rrl_sc_integrator_sup003:
+    held_phase_transfer: "matches 2*Cs/Cint law (1.90/0.48 vs 2.0/0.5)"
+  ia_002_ia_003_duts:
+    ngspice_sized: {gain_db: 25.72, ideal: 26.02}
+    spectre_sized_benchcaps: {gain_db: 21.2, vocm: 0.610, vb1_retune: "0.5→0.6"}
+    pf_path: "benign static; closed-loop LP 1.24→2.10 MHz"
+  two_stage_miller_cmc_amp020:
+    ngspice_sized: {dcgain_db: 24.8, ugf: 22Meg, pm_deg: 90.2}
+    spectre: "NOT functional at 65nm drawn geometry (self-CM equilibrium vs output
+      stage); needs own re-size or stays ihp-only. I0 drawn 1m un-runnable at 65nm
+      min geometry (mirror VGS > VDD) — retuned 20u"
+  two_stage_miller_amp029:
+    status: "no interior DC point (cm_interior_pts=0) — matches prior review; 65nm
+      with X pinned 0.70: 28.3 dB / 13.1Meg / 38.3 deg / 78.2u"
+  two_stage_skeleton: {status: "unbiasable by design — N/A"}

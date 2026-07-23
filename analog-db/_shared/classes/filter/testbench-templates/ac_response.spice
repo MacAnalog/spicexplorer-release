@@ -1,0 +1,29 @@
+** AUTHORED TEMPLATE — filter/ac_response: small-signal magnitude/phase response of a filter.
+** [SKELETON - NOT VALIDATED, 2026-07-15]: well-formed but not yet exercised against a real DUT;
+** forward scaffolding for a future open-PDK promotion of this class. Develop + validate the meas
+** blocks and add the class metric reader then. See _shared/classes/TODO_new_class_testbenches.md
+** Injects a 1 V AC at the input and reports the passband gain (at FSTART) and the -3 dB corner
+** (FALL edge); Q, stopband rejection and group delay are post-processed from the swept .raw.
+** Port convention: vdd vin vout vss. Bindings: DUT PORT_LINE VDD VCM FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+
+Vdd vdd 0 dc {VDD}
+Vss vss 0 dc 0
+Vin vin 0 dc {VCM} ac 1
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  meas ac passband_gain_db FIND vdb(vout) AT=${FSTART}
+  let gtarget = passband_gain_db - 3
+  meas ac fc_hz WHEN vdb(vout)=gtarget FALL=1
+  print passband_gain_db fc_hz
+  write
+  quit
+.endc
+.end

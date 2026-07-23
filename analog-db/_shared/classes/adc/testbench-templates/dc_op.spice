@@ -1,0 +1,25 @@
+** AUTHORED TEMPLATE — adc/dc_op: DC operating point + supply current of a converter's analog core.
+** [VALIDATED 2026-07-16 on ihp-sg13g2 against adc_001_inv1b — live ngspice].
+** Holds the analog input at mid-scale and reports the static supply draw (power) and output level.
+** Port convention: vdd vin vout vss. Bindings: DUT PORT_LINE VDD VCM PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+
+Vdd vdd 0 dc {VDD}
+Vss vss 0 dc 0
+Vin vin 0 dc {VCM}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  op
+  let i_supply = abs(i(Vdd))
+  let v_out = v(vout)
+  print i_supply v_out
+  write
+  quit
+.endc
+.end

@@ -1,0 +1,44 @@
+
+// Library name: SAR_11B_ZZS
+// Cell name: _TB_SAR
+// View name: schematic
+// Inherited view list: spectre cmos_sch cmos.sch schematic veriloga ahdl
+// pspice dspf
+I233 (VREFN VREFP) _TU_REF_GEN
+V21 (VIN 0) vsource dc=500.0m mag=-1 type=sine sinedc=VDD/2 ampl=-AIN1/2 \
+        freq=cycle/N*Fs
+V20 (VIP 0) vsource dc=500.0m mag=1 type=sine sinedc=VDD/2 ampl=AIN1/2 \
+        freq=cycle/N*Fs
+V22 (CLKS 0) vsource type=pulse val0=0 val1=VDD period=1/Fs delay=0 \
+        rise=10p fall=10p width=1/Fs/4-50p
+V31 (VDD 0) vsource dc=VDD type=dc
+V30 (VSS 0) vsource dc=0 type=dc
+I110 (TRIM_OS\<3\> TRIM_OS\<2\> TRIM_OS\<1\> TRIM_OS\<0\>) \
+        _VA_D2B_ENCODER_4B trim_code=TRIM_OS vdd=VDD
+I_DAC (DOUT\<11\> DOUT\<10\> DOUT\<9\> DOUT\<8\> DOUT\<7\> DOUT\<6\> \
+        DOUT\<5\> DOUT\<4\> DOUT\<3\> DOUT\<2\> DOUT\<1\> DOUT\<0\> CLKS \
+        AOUT) _VA_DAC_11B vdd=0.9 vth=0.45
+I_SAR (CLKS DOUT\<11\> DOUT\<10\> DOUT\<9\> DOUT\<8\> DOUT\<7\> DOUT\<6\> \
+        DOUT\<5\> DOUT\<4\> DOUT\<3\> DOUT\<2\> DOUT\<1\> DOUT\<0\> RSTP \
+        TRIM_OS\<3\> TRIM_OS\<2\> TRIM_OS\<1\> TRIM_OS\<0\> VDD VIN VIP \
+        VREFN VREFP VSS) L3_SAR_11B_schematic
+simulatorOptions options psfversion="1.4.0" temp=27 tnom=27 scalem=1.0 \
+    scale=1.0 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 digits=5 cols=80 \
+    pivrel=1e-3 sensfile="../psf/sens.output" checklimitdest=psf 
+tran tran stop=t_end maxstep=5p write="spectre.ic" writefinal="spectre.fc" \
+    savetime=[600] savefile="spectre.tran.save" annotate=status \
+    save=selected flushtime=30 skipstart=_EXPR_14 strobeperiod=_EXPR_15 \
+    strobeoutput=all 
+finalTimeOP info what=oppoint where=rawfile
+modelParameter info what=models where=rawfile
+element info what=inst where=rawfile
+outputParameter info what=output where=rawfile
+designParamVals info what=parameters where=rawfile
+primitives info what=primitives where=rawfile
+subckts info what=subckts where=rawfile
+save AOUT I_SAR.VTOPP I_SAR.VTOPN I_SAR:19 I_SAR.CMPCK DOUT\<11\> \
+    DOUT\<10\> DOUT\<9\> DOUT\<8\> DOUT\<7\> DOUT\<6\> DOUT\<5\> DOUT\<4\> \
+    DOUT\<3\> DOUT\<2\> DOUT\<1\> DOUT\<0\> CLKS RSTP 
+saveOptions options save=allpub
+ahdl_include "${PROJECT_VA_ROOT}/_VA_D2B_ENCODER_4B/veriloga/veriloga.va"
+ahdl_include "${PROJECT_VA_ROOT}/_VA_DAC_11B/veriloga/veriloga.va"

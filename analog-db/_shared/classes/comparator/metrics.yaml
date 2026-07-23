@@ -1,0 +1,33 @@
+# Comparator class — canonical metric vocabulary + owned testbench templates (plan D-10).
+# Validated against _shared/schema/class.schema.json by the verify harness (Tier 0).
+# Covers BOTH continuous-time comparators (single-ended `vout`, optionally with built-in
+# hysteresis) and clocked/latched comparators (differential `voutp`/`voutn` + `clk`); each
+# circuit binds only the templates that match its port set.
+#
+# Port conventions by template:
+#   dc_op / dc_hysteresis (continuous-time): vdd vout vinp vinn vss  (self-contained DUT)
+#   tran_decision (clocked):                 vdd voutp voutn vinp vinn clk vss
+schema: spicexplorer/class@1
+class: comparator
+id_code: cmp            # accession-id prefix for verifiable circuits (plan_scoreboard D-1)
+description: >-
+  Voltage comparators: continuous-time (threshold + hysteresis via up/down DC sweeps) and
+  clocked latched (StrongARM-style decision delay, output levels, average supply current).
+ppa:
+  power: {metric: i_supply, times_vdd: true}
+  performance:
+    - {metric: v_hyst, better: max}
+    - {metric: t_prop, better: min}
+canonical_metrics:
+  - vth_rise         # input threshold crossing on the ascending sweep (vout rising), V
+  - vth_fall         # input threshold crossing on the descending sweep (vout falling), V
+  - v_hyst           # vth_rise - vth_fall (0 for a hysteresis-free comparator), V
+  - t_prop           # clk-edge -> decided-output propagation delay (clocked), s
+  - v_out_high       # decided/settled output high level
+  - v_out_low        # decided/settled output low level
+  - i_supply         # static (CT) or clock-period average (clocked) supply current
+  - v_out
+templates:
+  - dc_op
+  - dc_hysteresis
+  - tran_decision

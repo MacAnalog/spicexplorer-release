@@ -1,0 +1,33 @@
+# SWITCH class — analog switches: transmission gates, differential pass gates, chopper
+# modulator networks (plan_hierarchical_composition S4.3 "ADC-constituent support blocks",
+# created on demand for the first drawn members: the CCIA transmission_gate_pair and
+# chopper-diff blocks). Support-tier: off the linear-gain spine; its analysis vocabulary
+# is on-resistance, charge injection, and leakage (plan S4.6 "switch / bootstrap"), not
+# gain/bandwidth.
+schema: spicexplorer/class@1
+class: switch
+id_code: sw             # accession-id prefix -> sw_001_<slug>
+description: >-
+  Analog switches and switch networks: on-resistance over the signal range, charge
+  injection onto a hold capacitor, off-state leakage. Members are support-tier
+  constituents of S/H stages, choppers, and SC networks.
+ppa:
+  power: {metric: i_leak, times_vdd: true}
+  performance:
+    - {metric: r_on, better: min}
+    - {metric: q_inj_v, better: min}
+canonical_metrics:
+  - r_on            # on-resistance at mid signal range
+  - r_on_max        # worst-case on-resistance over the swept signal range
+  - q_inj_v         # charge-injection pedestal on the hold cap (V)
+  - i_leak          # off-state leakage current
+  - i_supply
+  - v_fwd            # chopper: mid-phase-1 differential pass value
+  - v_rev            # chopper: mid-phase-2 (cross path) value
+  - chop_inversion   # v_rev/v_fwd — a true modulator gives ~ -1
+  - area_um2
+templates:
+  - dc_ron          # swept on-resistance (single pass gate: port_a -> port_b)
+  - dc_ron_diff     # swept on-resistance, differential pass pair (va_p/n -> vb_p/n)
+  - tran_chargeinj  # charge-injection pedestal at switch-off onto a hold cap
+  - tran_chop_polarity  # chopper modulators: clocked polarity-reversal proof (chop_inversion ~ -1)

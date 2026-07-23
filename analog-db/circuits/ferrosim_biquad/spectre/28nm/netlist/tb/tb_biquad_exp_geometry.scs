@@ -1,0 +1,42 @@
+R10 (OINN vcm) resistor r=2*R1*(1+2*R2/R1)*beta
+R8 (vcm OINP) resistor r=2*R1*(1+2*R2/R1)*beta
+R46 (BINN vop) resistor r=R1
+R45 (vin BINN) resistor r=R1
+R50 (vop vcm) resistor r=R1
+R49 (BINN OINP) resistor r=R2
+R48 (BINP OINN) resistor r=R2
+R51 (vcm von) resistor r=R1
+R63 (BINP vip) resistor r=R1
+R47 (BINP von) resistor r=R1
+C59 (von OINN) capacitor c=663f
+C58 (vop OINP) capacitor c=663f
+C57 (0 BINP) capacitor c=5.31p
+C56 (0 BINN) capacitor c=5.31p
+C24 (vop vcm) capacitor c=CL
+C23 (vcm von) capacitor c=CL
+I16 (0 IBOTA) isource dc=IB1 type=dc
+I17 (0 IBOTA2) isource dc=IB2 type=dc
+I9 (VBIASP hvdd) isource dc=200u type=dc
+I34 (net16 net9 vop von) diffstbprobe
+M72 (VBIASP vcm net5 hvdd) pch_ulvt_mac l=30n w=2.4u multi=1 nf=2 sd=100n \
+        ad=1.2e-13 as=1.8e-13 pd=2.6u ps=5.1u nrd=0.074877 nrs=0.074877 \
+        sa=112.742n sb=112.742n sa1=93.6047n sa2=112.078n sa3=163.715n \
+        sa4=110.059n sb1=93.6047n sb2=112.078n sb3=163.715n spa=100n \
+        spa1=100n spa2=100n spa3=100n sap=104.359n sapb=125.813n \
+        spba=115.715n spba1=117.043n dfm_flag=0 spmt=1.11111e+15 spomt=0 \
+        spomt1=1.11111e+60 spmb=1.11111e+15 spomb=0 spomb1=1.11111e+60
+IPRB0 (net10 net16) iprobe
+M78 (net5 VBIASP hvdd hvdd) pch_mac l=100n w=12.0u multi=1 nf=4 sd=120.0n \
+        ad=7.2e-13 as=9.3e-13 pd=12.48u ps=18.62u nrd=0.010201 \
+        nrs=0.010201 sa=267.765n sb=267.765n sa1=154.33n sa2=252.011n \
+        sa3=439.026n sa4=237.611n sb1=154.33n sb2=252.011n sb3=439.026n \
+        spa=120.0n spa1=120.0n spa2=120.0n spa3=120.0n sap=151.852n \
+        sapb=174.739n spba=154.498n spba1=159.05n dfm_flag=0 \
+        spmt=1.11111e+15 spomt=0 spomt1=1.11111e+60 spmb=1.11111e+15 \
+        spomb=0 spomb1=1.11111e+60
+V5 (net15 0) vsource dc=VICM type=dc
+V9 (vcm 0) vsource dc=VCM type=dc
+V4 (hvdd 0) vsource dc=VDD type=dc
+I32 (hvdd 0 IBOTA IBOTA2 0 vcm OINN OINP net10 net9) HS_BIQUAD_OTA
+V12 (net15 vin) vsource mag=500m type=sine sinedc=vdc ampl=amp freq=f
+V13 (vip net15) vsource mag=500m type=sine sinedc=vdc ampl=amp freq=f

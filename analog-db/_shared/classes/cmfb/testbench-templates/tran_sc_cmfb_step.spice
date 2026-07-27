@@ -1,0 +1,87 @@
+** AUTHORED TEMPLATE — cmfb/tran_sc_cmfb_step (clocked switched-capacitor CMFB suite).
+** The continuous-time class benches (dc_cmfb_transfer / ac_servo) are meaningless for
+** an SC-CMFB — every sense path is capacitive, so the DC transfer is zero and the
+** static AC transfer is just a cap divider. The WHOLE suite therefore runs in one
+** clocked transient: two-phase EXACT-COMPLEMENT clocks (support-class rule — a
+** non-overlap gap would half-turn-on the PMOS halves), a sensed-CM one-shot step,
+** and AVG measurement windows spanning INTEGER clock periods (FIND-at-instant
+** aliases the clock ripple).
+**   vcmfb_nat     settled control output at zero CM error (pre-step AVG window
+**                 WP0..WP1). For the classic SC-CMFB this is ~VBIAS by
+**                 construction: steady state enforces vcmfb = cm(vin) - VCM +
+**                 VBIAS — the actuator level is PROGRAMMED, not sized.
+**   step_delta_v  settled plateau AVG (WA0..WA1) minus vcmfb_nat — SIGNED; the
+**                 charge-redistribution transfer is ~ +VSTEP (slope ~ +1).
+**   cmfb_slope    step_delta_v / VSTEP — the discrete-time transfer slope
+**                 (time-domain stand-in for the dc_cmfb_transfer slope; canonical
+**                 polarity = positive).
+**   ring_v        (max-min)/2 of vcmfb over the settled plateau window: clock
+**                 ripple + charge-injection/feedthrough residue — the SC-CMFB's
+**                 native figure of demerit.
+**   t_cm_settle   release-edge recovery: last |vcmfb - vend| = VTOL crossing minus
+**                 TSTEP2 (vend = settled end AVG window WE0..WE1). VTOL must sit
+**                 ABOVE the steady clock ripple or the crossing never lands.
+**   i_supply      AVG vdd draw over the settled pre-step window (switching charge
+**                 pulses + junction leakage — there is no static path).
+** Settling physics: each sense phase shares the switched caps (2*C_sw) with the
+** bound CL, closing ~2*C_sw/(2*C_sw+CL) of the remaining error per clock — place
+** WP0/WA0/WE0 several clock periods after the preceding edge. TMAX must bound the
+** internal step (TSTEP is only the print interval): at slow clocks the solver
+** otherwise steps over the TG conduction intervals (TMAX ~ 200n proven).
+** Assumes the SC-CMFB port order (this member's PORT_LINE):
+**   .subckt <id> vinp vinn vcmfb vcm vbias clk_phi clk_phi_not vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM VBIAS CL FCLK TEDGE VSTEP TSTEP1 TSTEP2
+**                    WP0 WP1 WA0 WA1 WE0 WE1 VTOL TSTEP TSTOP TMAX PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param VBIAS=${VBIAS}
+.param CL=${CL}
+.param FCLK=${FCLK}
+.param TCLK={1/FCLK}
+.param TEDGE=${TEDGE}
+
+Vdd   vdd 0 dc {VDD}
+Vss   vss 0 dc 0
+Vcm   vcm 0 dc {VCM}
+Vbias vbias 0 dc {VBIAS}
+* two-phase clocks: EXACT complements, phi high first (refresh phase at t=0+)
+Vphi  clk_phi     0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCLK/2-TEDGE} {TCLK})
+Vphin clk_phi_not 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCLK/2-TEDGE} {TCLK})
+* sensed-CM one-shot square step: VCM -> VCM+VSTEP during TSTEP1..TSTEP2
+Vs   vs 0 dc {VCM} pulse({VCM} {${VCM}+${VSTEP}} ${TSTEP1} 10n 10n {${TSTEP2}-${TSTEP1}} 1)
+Vinp vinp vs dc 0
+Vinn vinn vs dc 0
+* actuator gate proxy — also the SC network's hold capacitance during refresh
+CLoad vcmfb 0 {CL}
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  tran ${TSTEP} ${TSTOP} 0 ${TMAX}
+  meas tran vnat_raw AVG v(vcmfb) FROM=${WP0} TO=${WP1}
+  let vcmfb_nat = vnat_raw
+  print vcmfb_nat
+  meas tran von AVG v(vcmfb) FROM=${WA0} TO=${WA1}
+  let step_delta_v = von - vnat_raw
+  print step_delta_v
+  let cmfb_slope = step_delta_v/${VSTEP}
+  print cmfb_slope
+  meas tran von_max MAX v(vcmfb) FROM=${WA0} TO=${WA1}
+  meas tran von_min MIN v(vcmfb) FROM=${WA0} TO=${WA1}
+  let ring_v = (von_max - von_min)/2
+  print ring_v
+  meas tran vend_raw AVG v(vcmfb) FROM=${WE0} TO=${WE1}
+  let verr = abs(v(vcmfb) - vend_raw)
+  meas tran tcross WHEN verr=${VTOL} FALL=LAST
+  let t_cm_settle = tcross - ${TSTEP2}
+  print t_cm_settle
+  meas tran isup_raw AVG i(Vdd) FROM=${WP0} TO=${WP1}
+  let i_supply = -isup_raw
+  print i_supply
+  write
+  quit
+.endc
+.end

@@ -155,6 +155,23 @@
     },
     {
       "connections": {
+        "N": "vref_cm",
+        "P": "cmfb__cm_sense"
+      },
+      "device_type": "CAP",
+      "id": "CIN_SERVO_CMFB",
+      "params": {
+        "Value": "'cin_val_cmfb'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
         "N": "voutp",
         "P": "main__g2_p"
       },
@@ -196,6 +213,23 @@
       "id": "COUT_1_RRL",
       "params": {
         "Value": "'cout_val_rrl'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vcmfb_raw",
+        "P": "vss"
+      },
+      "device_type": "CAP",
+      "id": "COUT_SERVO_CMFB",
+      "params": {
+        "Value": "'cout_val_cmfb'"
       },
       "polarity": null,
       "ports": null,
@@ -259,6 +293,25 @@
     },
     {
       "connections": {
+        "CN": "cmfb__cm_sense",
+        "CP": "vref_cm",
+        "N": "vcmfb_raw",
+        "P": "vss"
+      },
+      "device_type": "VCCS",
+      "id": "GM_SERVO_CMFB",
+      "params": {
+        "Value": "{gm_val_cmfb}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
         "N": "vref",
         "P": "main__vsum_n"
       },
@@ -310,6 +363,57 @@
     },
     {
       "connections": {
+        "N": "vref_cm",
+        "P": "cmfb__cm_sense"
+      },
+      "device_type": "RES",
+      "id": "RIN_SERVO_CMFB",
+      "params": {
+        "Value": "'rin_val_cmfb'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "cmfb__cm_sense",
+        "P": "voutn"
+      },
+      "device_type": "RES",
+      "id": "RMN_CMFB",
+      "params": {
+        "Value": "'x_dut_rmn_cmfb_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "voutp",
+        "P": "cmfb__cm_sense"
+      },
+      "device_type": "RES",
+      "id": "RMP_CMFB",
+      "params": {
+        "Value": "'x_dut_rmp_cmfb_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
         "N": "out1_n",
         "P": "out1_p"
       },
@@ -317,6 +421,23 @@
       "id": "ROUT_1_RRL",
       "params": {
         "Value": "'rout_val_rrl'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vcmfb_raw",
+        "P": "vss"
+      },
+      "device_type": "RES",
+      "id": "ROUT_SERVO_CMFB",
+      "params": {
+        "Value": "'rout_val_cmfb'"
       },
       "polarity": null,
       "ports": null,
@@ -429,13 +550,13 @@
     },
     {
       "connections": {
-        "N": "vss",
-        "P": "main__vb4"
+        "N": "vcmfb_raw",
+        "P": "vb4_ctl"
       },
       "device_type": "VSOURCE",
-      "id": "VB4_MAIN",
+      "id": "VB40",
       "params": {
-        "Value": "dc {vb4_main}"
+        "Value": "dc {vb40}"
       },
       "polarity": null,
       "ports": null,
@@ -453,6 +574,23 @@
       "id": "VB4_RRL",
       "params": {
         "Value": "dc {vb4_rrl}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vss",
+        "P": "vref_cm"
+      },
+      "device_type": "VSOURCE",
+      "id": "VREFCM",
+      "params": {
+        "Value": "dc {vcm_ref}"
       },
       "polarity": null,
       "ports": null,
@@ -906,7 +1044,7 @@
       "connections": {
         "BULK": "vdd",
         "DRAIN": "main__tail",
-        "GATE": "main__vb4",
+        "GATE": "vb4_ctl",
         "SOURCE": "vdd"
       },
       "device_type": "MOS",
@@ -1872,7 +2010,7 @@
       "connections": {
         "BULK": "vdd",
         "DRAIN": "main__casc_src_n",
-        "GATE": "main__vb4",
+        "GATE": "vb4_ctl",
         "SOURCE": "vdd"
       },
       "device_type": "MOS",
@@ -1914,7 +2052,7 @@
       "connections": {
         "BULK": "vdd",
         "DRAIN": "main__casc_src_p",
-        "GATE": "main__vb4",
+        "GATE": "vb4_ctl",
         "SOURCE": "vdd"
       },
       "device_type": "MOS",
@@ -1956,7 +2094,7 @@
       "connections": {
         "BULK": "vdd",
         "DRAIN": "voutp",
-        "GATE": "main__vb4",
+        "GATE": "vb4_ctl",
         "SOURCE": "vdd"
       },
       "device_type": "MOS",
@@ -1998,7 +2136,7 @@
       "connections": {
         "BULK": "vdd",
         "DRAIN": "voutn",
-        "GATE": "main__vb4",
+        "GATE": "vb4_ctl",
         "SOURCE": "vdd"
       },
       "device_type": "MOS",
@@ -2039,8 +2177,8 @@
   ],
   "meta": {
     "circuit_name": "ia_004_fan_chopper_rrl",
-    "component_count": 102,
-    "net_count": 56
+    "component_count": 110,
+    "net_count": 59
   },
   "nets": [
     {
@@ -2081,6 +2219,11 @@
     {
       "is_supply": false,
       "name": "clk_phi_2",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "cmfb__cm_sense",
       "supply_type": ""
     },
     {
@@ -2151,11 +2294,6 @@
     {
       "is_supply": false,
       "name": "main__vb3",
-      "supply_type": ""
-    },
-    {
-      "is_supply": false,
-      "name": "main__vb4",
       "supply_type": ""
     },
     {
@@ -2289,6 +2427,16 @@
       "supply_type": ""
     },
     {
+      "is_supply": false,
+      "name": "vb4_ctl",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vcmfb_raw",
+      "supply_type": ""
+    },
+    {
       "is_supply": true,
       "name": "vdd",
       "supply_type": "VDD"
@@ -2316,6 +2464,11 @@
     {
       "is_supply": false,
       "name": "vref",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vref_cm",
       "supply_type": ""
     },
     {

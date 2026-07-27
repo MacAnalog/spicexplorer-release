@@ -1,0 +1,157 @@
+{
+  "area": {
+    "active_gate_area_um2": 385.145,
+    "c_count": 3,
+    "c_total_f": 2.302787989525255e-12,
+    "mos_count": 25,
+    "r_count": 4,
+    "r_total_ohm": 1281772.63838979
+  },
+  "circuit": "amp_013_qu2017_azc",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 125.4748,
+            "pm": 69.38691,
+            "ugf": 2763886.0
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 71.21559
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 4.292331e-05,
+            "vos": 0.0007146123
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.02197207,
+            "onoise_total": 0.0310848
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 68.95603
+          },
+          "status": "ok"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 8.884487e-06,
+            "tcross": 9.884487e-06,
+            "vfinal": 0.500674
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-24T23:14:38+00:00"
+      }
+    }
+  },
+  "design_id": "b77c4a3e59",
+  "metrics": {
+    "tt": {
+      "cmrr_db": {
+        "spec": "pass",
+        "value": 71.21559
+      },
+      "dc_gain_db": {
+        "spec": "pass",
+        "value": 125.4748
+      },
+      "i_supply": {
+        "spec": "none",
+        "value": 4.292331e-05
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 69.38691
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 68.95603
+      },
+      "t_settle": {
+        "spec": "fail",
+        "value": 8.884487e-06
+      },
+      "ugf_hz": {
+        "spec": "pass",
+        "value": 2763886.0
+      },
+      "vn_in": {
+        "spec": "none",
+        "value": 0.02197207
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "CAPACITOR_0": 9.89825533013604e-13,
+      "CAPACITOR_1": 9.699486474277936e-13,
+      "CAPACITOR_2": 3.4301380908385716e-13,
+      "CURRENT_0_BIAS": 1.1407160477046306e-06,
+      "RESISTOR_0": 92438.64289092096,
+      "RESISTOR_1": 76335.16886584445,
+      "RESISTOR_2": 1034441.999157821,
+      "RESISTOR_3": 78556.82747520377,
+      "x_dut_xm10_l": 5.285041676119048e-07,
+      "x_dut_xm10_m": "4",
+      "x_dut_xm10_w": 1.1228490677621372e-06,
+      "x_dut_xm11_l": 1.9336964656148824e-06,
+      "x_dut_xm11_m": "4",
+      "x_dut_xm11_w": 1.888255317373759e-06,
+      "x_dut_xm12_l": 2.66307335147796e-06,
+      "x_dut_xm12_m": "4",
+      "x_dut_xm12_w": 4.6071488558508376e-07,
+      "x_dut_xm13_l": 2.6551593738610703e-06,
+      "x_dut_xm13_m": "4",
+      "x_dut_xm13_w": 2.973856479546674e-06,
+      "x_dut_xm16_l": 2.8345445398725867e-06,
+      "x_dut_xm16_m": "4",
+      "x_dut_xm16_w": 1.42164317225128e-06,
+      "x_dut_xm18_l": 6.877294178273821e-07,
+      "x_dut_xm18_m": "4",
+      "x_dut_xm18_w": 2.588437638222415e-06,
+      "x_dut_xm19_l": 2.610327701333222e-06,
+      "x_dut_xm19_m": "4",
+      "x_dut_xm20_w": 2.5993169079035972e-06,
+      "x_dut_xm24_l": 2.3573338427611332e-06,
+      "x_dut_xm24_m": "4",
+      "x_dut_xm24_w": 6.255420156088461e-07,
+      "x_dut_xm3_l": 2.935577622893652e-06,
+      "x_dut_xm3_w": 7.211308519223292e-07,
+      "x_dut_xm5_m": "4",
+      "x_dut_xm6_l": 1.5337011063452708e-06,
+      "x_dut_xm6_m": "4",
+      "x_dut_xm6_w": 1.6264538203401115e-06
+    }
+  },
+  "pdk": "gf180mcu",
+  "ppa": {
+    "active_gate_area_um2": 385.145,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 125.4748,
+      "pm_deg": 69.38691,
+      "ugf_hz": 2763886.0
+    },
+    "power_w": 7.7261958e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

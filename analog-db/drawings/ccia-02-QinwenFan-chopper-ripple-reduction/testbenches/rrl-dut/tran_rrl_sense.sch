@@ -80,10 +80,10 @@ C {devices/gnd.sym} 95 -160 0 0 {name=g22 lab=0}
 C {devices/vsource.sym} 95 -310 0 0 {name=Vckrn value="pulse(\{VDD\} 0 0 \{TEDGE\} \{TEDGE\} \{TCHOP/2-TEDGE\} \{TCHOP\})" savecurrent=true}
 C {devices/lab_wire.sym} 95 -340 0 0 {name=l23 sig_type=std_logic lab=clk_ch_rrl_not}
 C {devices/gnd.sym} 95 -280 0 0 {name=g24 lab=0}
-C {devices/vsource.sym} 475 -205 0 0 {name=Vphi1 value="pulse(0 \{VDD\} 0 \{TEDGE\} \{TEDGE\} \{TCHOP/2-TEDGE\} \{TCHOP\})" savecurrent=true}
+C {devices/vsource.sym} 475 -205 0 0 {name=Vphi1 value="pulse(0 \{VDD\} 0 \{TEDGE\} \{TEDGE\} \{TCHOP/4-TEDGE\} \{TCHOP/2\})" savecurrent=true}
 C {devices/lab_wire.sym} 475 -235 0 0 {name=l25 sig_type=std_logic lab=clk_phi_1}
 C {devices/gnd.sym} 475 -175 0 0 {name=g26 lab=0}
-C {devices/vsource.sym} 475 -310 0 0 {name=Vphi2 value="pulse(\{VDD\} 0 0 \{TEDGE\} \{TEDGE\} \{TCHOP/2-TEDGE\} \{TCHOP\})" savecurrent=true}
+C {devices/vsource.sym} 475 -310 0 0 {name=Vphi2 value="pulse(\{VDD\} 0 0 \{TEDGE\} \{TEDGE\} \{TCHOP/4-TEDGE\} \{TCHOP/2\})" savecurrent=true}
 C {devices/lab_wire.sym} 475 -340 0 0 {name=l27 sig_type=std_logic lab=clk_phi_2}
 C {devices/gnd.sym} 475 -280 0 0 {name=g28 lab=0}
 C {devices/code.sym} 50 -1315 0 0 {name=PARAMS_BENCH

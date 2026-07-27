@@ -6,7 +6,7 @@
 **   docker run --rm -i spicexplorer-spice-base:local \
 **     bash -lc 'd=$(mktemp -d) && cat > $d/c.spice && cd $d && ngspice -b c.spice' < raw/amp_019_ti_ldo_error/gf180mcu/cmrr_vcm.spice
 *----------------------------------------------------------*
-** params: 18 free + 0 frozen knobs (sizing.yaml) · 10 tied · 0 ratio-derived (abstract/params.yaml) · 4 testbench params
+** params: 19 free + 0 frozen knobs (sizing.yaml) · 10 tied · 0 ratio-derived (abstract/params.yaml) · 4 testbench params
 ** AUTHORED TEMPLATE — amplifier/cmrr_vcm (plan D-4/D-5): common-mode rejection.
 ** The DUT is closed in a unity-gain buffer and the SAME 1 V AC rides on both inputs:
 ** Vinp carries ac 1, and the vinn–vout short (Vfb) also carries ac 1, so vinn = vout + vac.
@@ -41,24 +41,25 @@ XDUT vdd vout vinp vinn ibias vss amp_019_ti_ldo_error
   write
   quit
 .endc
-.param x_dut_xmb0_w=20u
+.param x_dut_xmb0_w=10u
 .param x_dut_xmb0_l=2u
 .param x_dut_xmbc_m=1
 .param x_dut_xmbo_m=1
 .param x_dut_xm1_w=40u
 .param x_dut_xm1_l=0.7u
-.param x_dut_xm3_w=40u
+.param x_dut_xm3_w=100u
 .param x_dut_xm3_l=0.5u
 .param x_dut_xm4_w=10u
 .param x_dut_xm4_l=0.5u
-.param x_dut_xm7_w=20u
+.param x_dut_xm7_w=40u
 .param x_dut_xm7_l=0.5u
-.param x_dut_xm6_w=80u
-.param x_dut_xm6_l=2u
-.param r_z=1k
-.param c_comp=2p
-.param x_dut_xmbe_w=5u
+.param x_dut_xm6_w=100u
+.param x_dut_xm6_l=0.5u
+.param r_z=470
+.param c_comp=25p
+.param x_dut_xmbe_w=0.4u
 .param x_dut_xmbf_w=5u
+.param r_nd=500k
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).
@@ -74,6 +75,7 @@ XDUT vdd vout vinp vinn ibias vss amp_019_ti_ldo_error
 .param x_dut_xm5_l = {x_dut_xm3_l}
 .subckt amp_019_ti_ldo_error vdd vout vinp vinn ibias vss
 CC ncz vout 'c_comp'
+RND na nd 'r_nd'
 RZ nb ncz 'r_z'
 XM1 na vinn tail vss nfet_06v0 l=x_dut_xm1_l w=x_dut_xm1_w
 XM2 nb vinp tail vss nfet_06v0 l=x_dut_xm2_l w=x_dut_xm2_w

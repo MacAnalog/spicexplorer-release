@@ -1,59 +1,62 @@
 # AnalogGym design variables (role-encoded). W/L in um, M integer; the netlist scales
-# them (e.g. m='4*<M>'). Defaults are the committed AnalogGym values.
+# them (e.g. m='4*<M>'). Defaults re-sized 2026-07-25 (pdk_rescue follow-up): the AnalogGym
+# template values were dead on sky130 (dcgain -13.9 dB) and the RAFFC inner loop
+# (C0->XM16->net050->XM10->net013->mirror->VOUT) limit-cycled; this point is large-signal
+# stable at tt/ss/ff (zero-step + 0.2 V step both settle).
 schema: spicexplorer/sizing@1
 pdk: sky130
 variables:
 - name: CAPACITOR_0
-  default: 11p
+  default: '13p'
 - name: CAPACITOR_1
-  default: 0.35p
+  default: '0.375p'
 - name: CURRENT_0_BIAS
-  default: 20u
+  default: '28u'
 - name: x_dut_xm6_l
-  default: '1'
+  default: '6.0745'
 - name: x_dut_xm3_m
-  default: '1'
-- name: x_dut_xm6_w
-  default: '1'
-- name: x_dut_xm10_l
-  default: '1'
-- name: x_dut_xm10_m
-  default: '1'
-- name: x_dut_xm10_w
-  default: '1'
-- name: x_dut_xm11_l
-  default: '1'
-- name: x_dut_xm11_m
-  default: '1'
-- name: x_dut_xm11_w
-  default: '1'
-- name: x_dut_xm15_l
-  default: '1'
-- name: x_dut_xm15_m
   default: '2'
+- name: x_dut_xm6_w
+  default: '83.9081'
+- name: x_dut_xm10_l
+  default: '1.0'
+- name: x_dut_xm10_m
+  default: '2'
+- name: x_dut_xm10_w
+  default: '20.7315'
+- name: x_dut_xm11_l
+  default: '2.6754'
+- name: x_dut_xm11_m
+  default: '2'
+- name: x_dut_xm11_w
+  default: '40.0'
+- name: x_dut_xm15_l
+  default: '6.3215'
+- name: x_dut_xm15_m
+  default: '4'
 - name: x_dut_xm15_w
-  default: '1'
+  default: '56.9217'
 - name: x_dut_xm59_l
-  default: '1'
+  default: '2.0'
 - name: x_dut_xm14_m
-  default: '1'
+  default: '2'
 - name: x_dut_xm59_w
-  default: '1'
+  default: '14.5237'
 - name: x_dut_xm21_l
-  default: '1'
+  default: '1.0'
 - name: x_dut_xm21_m
-  default: '3'
+  default: '6'
 - name: x_dut_xm21_w
-  default: '1'
+  default: '12.0'
 - name: x_dut_xm7_l
-  default: '1'
+  default: '0.6033'
 - name: x_dut_xm7_m
-  default: '1'
+  default: '2'
 - name: x_dut_xm7_w
-  default: '1'
+  default: '8.0'
 - name: x_dut_xm9_l
-  default: '1'
+  default: '0.797'
 - name: x_dut_xm9_m
-  default: '1'
+  default: '2'
 - name: x_dut_xm9_w
-  default: '1'
+  default: '8.0125'

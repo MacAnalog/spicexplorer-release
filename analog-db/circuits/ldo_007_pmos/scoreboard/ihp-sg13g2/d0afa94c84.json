@@ -1,0 +1,177 @@
+{
+  "area": {
+    "active_gate_area_um2": 608.0,
+    "c_count": 2,
+    "c_total_f": 2.00005e-09,
+    "mos_count": 7,
+    "r_count": 3,
+    "r_total_ohm": 40001.0
+  },
+  "circuit": "ldo_007_pmos",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0002323818,
+            "vout_dc": 1.220334
+          },
+          "status": "ok"
+        },
+        "dropout": {
+          "measures": {
+            "v_dropout": 0.09891209,
+            "vin_at": 1.3,
+            "vout_at": 1.201088
+          },
+          "status": "ok"
+        },
+        "line_regulation": {
+          "measures": {
+            "line_reg": 0.004686,
+            "vout_max": 1.216532,
+            "vout_min": 1.211846
+          },
+          "status": "ok"
+        },
+        "load_regulation": {
+          "measures": {
+            "load_reg": 0.015716,
+            "vout_max": 1.220334,
+            "vout_min": 1.204618
+          },
+          "status": "ok"
+        },
+        "loop_stability": {
+          "measures": {
+            "zout_dc": 7.704768,
+            "zout_max": 7.704768,
+            "zout_peak_db": 0.0
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "onoise_total": 2.189928e-05,
+            "vn_out_rms": 0.004679666
+          },
+          "status": "ok"
+        },
+        "psrr": {
+          "measures": {
+            "psrr_vdd_db": 43.86137,
+            "vout_db": -43.86137
+          },
+          "status": "ok"
+        },
+        "tran_line_step": {
+          "measures": {
+            "v_line_pp": 0.002062,
+            "vout_max": 1.214698,
+            "vout_min": 1.212636
+          },
+          "status": "ok"
+        },
+        "tran_load_step": {
+          "measures": {
+            "t_transient": 2.073784e-05,
+            "tcross": 2.573784e-05,
+            "v_undershoot": 0.004263,
+            "vout_min": 1.207205,
+            "vout_post": 1.211468
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-25T01:01:23+00:00"
+      }
+    }
+  },
+  "design_id": "d0afa94c84",
+  "metrics": {
+    "tt": {
+      "i_q": {
+        "spec": "pass",
+        "value": 0.0002323818
+      },
+      "line_reg": {
+        "spec": "pass",
+        "value": 0.004686
+      },
+      "load_reg": {
+        "spec": "pass",
+        "value": 0.015716
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 43.86137
+      },
+      "t_transient": {
+        "spec": "pass",
+        "value": 2.073784e-05
+      },
+      "v_dropout": {
+        "spec": "pass",
+        "value": 0.09891209
+      },
+      "v_line_pp": {
+        "spec": "pass",
+        "value": 0.002062
+      },
+      "v_out": {
+        "spec": "pass",
+        "value": 1.220334
+      },
+      "v_undershoot": {
+        "spec": "pass",
+        "value": 0.004263
+      },
+      "vn_out_rms": {
+        "spec": "pass",
+        "value": 0.004679666
+      },
+      "zout_peak_db": {
+        "spec": "pass",
+        "value": 0.0
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "c_comp": "0.05p",
+      "c_ff": "2n",
+      "i_tail": "100u",
+      "r_bot": "20k",
+      "r_top": "20k",
+      "r_z": 1,
+      "vref_val": 0.6,
+      "x_dut_xm1_l": "2.0u",
+      "x_dut_xm1_w": "50u",
+      "x_dut_xm3_l": "1.0u",
+      "x_dut_xm3_w": "44u",
+      "x_dut_xm6_l": "1.0u",
+      "x_dut_xm6_w": "40u",
+      "x_dut_xmp_l": "0.2u",
+      "x_dut_xmp_m": 120,
+      "x_dut_xmp_w": "10u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 608.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "load_reg": 0.015716,
+      "psrr_vdd_db": 43.86137,
+      "v_dropout": 0.09891209,
+      "v_undershoot": 0.004263
+    },
+    "power_w": 0.00041828724
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

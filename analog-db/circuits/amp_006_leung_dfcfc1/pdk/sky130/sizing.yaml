@@ -4,62 +4,62 @@ schema: spicexplorer/sizing@1
 pdk: sky130
 variables:
 - name: CAPACITOR_0
-  default: 18p
+  default: 1.5966452016016108e-11
 - name: CAPACITOR_1
-  default: 3p
+  default: 1.0473880477821312e-12
 - name: CURRENT_0_BIAS
-  default: 20u
+  default: 1.539084770371749e-05
 - name: x_dut_xm7_l
-  default: '1'
+  default: 0.774295061543087
 - name: x_dut_xm7_m
   default: '4'
 - name: x_dut_xm7_w
-  default: '1'
+  default: 2.844920763110503
 - name: x_dut_xm11_l
-  default: '1'
+  default: 2.475876282154329
 - name: x_dut_xm11_m
   default: '200'
 - name: x_dut_xm11_w
-  default: '1'
+  default: 1.5060241332703186
 - name: x_dut_xm12_l
-  default: '1'
+  default: 1.0019872646382586
 - name: x_dut_xm12_m
   default: '400'
 - name: x_dut_xm12_w
-  default: '1'
+  default: 1.0082544722242455
 - name: x_dut_xm16_l
-  default: '1'
+  default: 1.17832241645752
 - name: x_dut_xm16_m
   default: 16
 - name: x_dut_xm16_w
-  default: '1'
+  default: 2.4677480940508967
 - name: x_dut_xm20_l
-  default: '1'
+  default: 1.561178916804453
 - name: x_dut_xm15_m
   default: '4'
 - name: x_dut_xm20_w
-  default: '1'
+  default: 0.9544162425810105
 - name: x_dut_xm22_l
-  default: '1'
+  default: 0.4261554310997154
 - name: x_dut_xm22_m
   default: '4'
 - name: x_dut_xm22_w
-  default: '1'
+  default: 0.8619138288230459
 - name: x_dut_xm24_l
-  default: '1'
+  default: 0.6172379793530587
 - name: x_dut_xm24_m
   default: '1'
 - name: x_dut_xm24_w
-  default: '2'
+  default: 2.9797148967364664
 - name: x_dut_xm25_l
-  default: '1'
+  default: 0.5132567188055531
 - name: x_dut_xm25_m
   default: '400'
 - name: x_dut_xm25_w
-  default: '1'
+  default: 2.4967854344668825
 - name: x_dut_xm10_l
-  default: '1'
+  default: 0.7986335659661512
 - name: x_dut_xm10_m
   default: '100'
 - name: x_dut_xm10_w
-  default: '1'
+  default: 0.5868843429622508

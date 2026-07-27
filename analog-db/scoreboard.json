@@ -79,10 +79,32 @@
           ]
         },
         "amp_002_alfio_raffc": {
-          "baseline": "a03d96bc6f",
+          "baseline": "78fe665860",
           "entries": [
             {
               "baseline": true,
+              "design_id": "78fe665860",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 17496.381,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 136.4228,
+                  "pm_deg": 67.23877,
+                  "ugf_hz": 2532733.0
+                },
+                "power_w": 0.00062421966
+              },
+              "spec": {
+                "fail": 0,
+                "none": 2,
+                "pass": 6
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "a03d96bc6f",
               "pareto": false,
               "ppa": {
@@ -98,6 +120,28 @@
                 "fail": 1,
                 "none": 0,
                 "pass": 0
+              }
+            },
+            {
+              "baseline": false,
+              "design_id": "d81be29114",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 19044.644,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 125.0666,
+                  "pm_deg": 75.2783,
+                  "ugf_hz": 1232768.0
+                },
+                "power_w": 0.00030423924
+              },
+              "spec": {
+                "fail": 2,
+                "none": 2,
+                "pass": 4
               }
             },
             {
@@ -123,10 +167,10 @@
           ]
         },
         "amp_003_fan_smc": {
-          "baseline": "08b523095d",
+          "baseline": "3c0cf8e717",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "08b523095d",
               "pareto": false,
               "ppa": {
@@ -142,6 +186,28 @@
                 "fail": 1,
                 "none": 0,
                 "pass": 0
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "3c0cf8e717",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 25623.33,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 121.9332,
+                  "pm_deg": 82.61602,
+                  "ugf_hz": 2054359.0
+                },
+                "power_w": 0.00165109266
+              },
+              "spec": {
+                "fail": 1,
+                "none": 2,
+                "pass": 5
               }
             },
             {
@@ -167,10 +233,32 @@
           ]
         },
         "amp_004_folded_cascode": {
-          "baseline": "a0a1f08a0c",
+          "baseline": "82bc686bb3",
           "entries": [
             {
               "baseline": true,
+              "design_id": "82bc686bb3",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 918.0,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 77.63494,
+                  "pm_deg": 82.7503,
+                  "ugf_hz": 21276900.0
+                },
+                "power_w": 0.00099839289
+              },
+              "spec": {
+                "fail": 0,
+                "none": 2,
+                "pass": 6
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "a0a1f08a0c",
               "pareto": true,
               "ppa": {
@@ -209,7 +297,7 @@
           ]
         },
         "amp_005_hoilee_affc": {
-          "baseline": "ae677b438c",
+          "baseline": "b8dfbe1250",
           "entries": [
             {
               "baseline": false,
@@ -234,7 +322,7 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "ae677b438c",
               "pareto": false,
               "ppa": {
@@ -253,12 +341,56 @@
                 "none": 1,
                 "pass": 0
               }
+            },
+            {
+              "baseline": true,
+              "design_id": "b8dfbe1250",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 526.146,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 101.8132,
+                  "pm_deg": 63.47046,
+                  "ugf_hz": 1134380.0
+                },
+                "power_w": 0.00034146108
+              },
+              "spec": {
+                "fail": 2,
+                "none": 2,
+                "pass": 4
+              }
             }
           ]
         },
         "amp_006_leung_dfcfc1": {
-          "baseline": "af7ea74ab8",
+          "baseline": "09fbeaf1c4",
           "entries": [
+            {
+              "baseline": true,
+              "design_id": "09fbeaf1c4",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 187415.404,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 154.8494,
+                  "pm_deg": 71.7108,
+                  "ugf_hz": 2165778.0
+                },
+                "power_w": 0.0018533934000000002
+              },
+              "spec": {
+                "fail": 1,
+                "none": 2,
+                "pass": 5
+              }
+            },
             {
               "baseline": false,
               "design_id": "8b9c79db2f",
@@ -282,7 +414,7 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "af7ea74ab8",
               "pareto": true,
               "ppa": {
@@ -353,10 +485,10 @@
           ]
         },
         "amp_008_leung_nmcf": {
-          "baseline": "05ac54f8b4",
+          "baseline": "fec2ec7ac3",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "05ac54f8b4",
               "pareto": false,
               "ppa": {
@@ -396,6 +528,28 @@
                 "fail": 3,
                 "none": 3,
                 "pass": 2
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "fec2ec7ac3",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 653.993,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 105.7364,
+                  "pm_deg": 68.66322,
+                  "ugf_hz": 1804270.0
+                },
+                "power_w": 0.0004127742
+              },
+              "spec": {
+                "fail": 1,
+                "none": 2,
+                "pass": 5
               }
             }
           ]
@@ -497,8 +651,30 @@
           ]
         },
         "amp_011_peng_iac": {
-          "baseline": "fa2efab5d0",
+          "baseline": "5210244a38",
           "entries": [
+            {
+              "baseline": true,
+              "design_id": "5210244a38",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 476.883,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 142.2761,
+                  "pm_deg": 70.06267,
+                  "ugf_hz": 2206568.0
+                },
+                "power_w": 3.4086456e-05
+              },
+              "spec": {
+                "fail": 1,
+                "none": 2,
+                "pass": 5
+              }
+            },
             {
               "baseline": false,
               "design_id": "91bfccfeaa",
@@ -522,7 +698,7 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "fa2efab5d0",
               "pareto": false,
               "ppa": {
@@ -545,10 +721,10 @@
           ]
         },
         "amp_012_peng_tcfc": {
-          "baseline": "19a720dcfe",
+          "baseline": "7b304b100c",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "19a720dcfe",
               "pareto": false,
               "ppa": {
@@ -566,6 +742,28 @@
                 "fail": 1,
                 "none": 1,
                 "pass": 1
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "7b304b100c",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 1526.814,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 129.7664,
+                  "pm_deg": 80.83717,
+                  "ugf_hz": 1367652.0
+                },
+                "power_w": 0.00011851855200000001
+              },
+              "spec": {
+                "fail": 2,
+                "none": 2,
+                "pass": 4
               }
             },
             {
@@ -593,10 +791,10 @@
           ]
         },
         "amp_013_qu2017_azc": {
-          "baseline": "33b8ead7d5",
+          "baseline": "b77c4a3e59",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "33b8ead7d5",
               "pareto": false,
               "ppa": {
@@ -614,6 +812,28 @@
                 "fail": 1,
                 "none": 1,
                 "pass": 1
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "b77c4a3e59",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 385.145,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 125.4748,
+                  "pm_deg": 69.38691,
+                  "ugf_hz": 2763886.0
+                },
+                "power_w": 7.7261958e-05
+              },
+              "spec": {
+                "fail": 1,
+                "none": 2,
+                "pass": 5
               }
             },
             {
@@ -689,10 +909,10 @@
           ]
         },
         "amp_015_sau_cfcc": {
-          "baseline": "3e7bec24eb",
+          "baseline": "efe309966c",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "3e7bec24eb",
               "pareto": false,
               "ppa": {
@@ -732,6 +952,28 @@
                 "fail": 3,
                 "none": 3,
                 "pass": 2
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "efe309966c",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 293.314,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 126.394,
+                  "pm_deg": 72.09671,
+                  "ugf_hz": 4524257.0
+                },
+                "power_w": 0.00023958108
+              },
+              "spec": {
+                "fail": 1,
+                "none": 2,
+                "pass": 5
               }
             }
           ]
@@ -833,12 +1075,34 @@
           ]
         },
         "amp_018_telescopic_cascode": {
-          "baseline": "cede47dce7",
+          "baseline": "a8738e3d83",
           "entries": [
+            {
+              "baseline": true,
+              "design_id": "a8738e3d83",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 70.825,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 82.69146,
+                  "pm_deg": 45.43973,
+                  "ugf_hz": 76686910.0
+                },
+                "power_w": 1.1494371e-05
+              },
+              "spec": {
+                "fail": 3,
+                "none": 0,
+                "pass": 5
+              }
+            },
             {
               "baseline": false,
               "design_id": "ae1efb45e1",
-              "pareto": true,
+              "pareto": false,
               "ppa": {
                 "active_gate_area_um2": 2746.826,
                 "corners_run": [
@@ -853,9 +1117,9 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "cede47dce7",
-              "pareto": true,
+              "pareto": false,
               "ppa": {
                 "active_gate_area_um2": 2746.826,
                 "corners_run": [
@@ -872,10 +1136,32 @@
           ]
         },
         "amp_019_ti_ldo_error": {
-          "baseline": "e337f68e9f",
+          "baseline": "2d37fe9fbe",
           "entries": [
             {
               "baseline": true,
+              "design_id": "2d37fe9fbe",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 301.8,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 42.95845,
+                  "pm_deg": 91.44801,
+                  "ugf_hz": 6323880.0
+                },
+                "power_w": 0.007497095099999999
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 10
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "e337f68e9f",
               "pareto": true,
               "ppa": {
@@ -970,10 +1256,10 @@
           ]
         },
         "amp_021_yan_az": {
-          "baseline": "26320ac25f",
+          "baseline": "66d63b7053",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "26320ac25f",
               "pareto": false,
               "ppa": {
@@ -991,6 +1277,28 @@
                 "fail": 1,
                 "none": 1,
                 "pass": 1
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "66d63b7053",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 157.497,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 150.2067,
+                  "pm_deg": 70.45108,
+                  "ugf_hz": 169346.0
+                },
+                "power_w": 5.8974750000000007e-05
+              },
+              "spec": {
+                "fail": 2,
+                "none": 2,
+                "pass": 4
               }
             },
             {
@@ -1099,10 +1407,10 @@
           ]
         },
         "amp_032_ti_ldo_error_selfbias": {
-          "baseline": "0d97ec7f42",
+          "baseline": "ee780244df",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "0d97ec7f42",
               "pareto": true,
               "ppa": {
@@ -1126,7 +1434,7 @@
             {
               "baseline": false,
               "design_id": "2e92f7dbcb",
-              "pareto": true,
+              "pareto": false,
               "ppa": {
                 "active_gate_area_um2": 477.968,
                 "corners_run": [
@@ -1165,6 +1473,28 @@
                 "fail": 1,
                 "none": 0,
                 "pass": 11
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "ee780244df",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 460.324,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 72.73077,
+                  "pm_deg": 82.318,
+                  "ugf_hz": 18649180.0
+                },
+                "power_w": 0.00058998126
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 12
               }
             }
           ]
@@ -1248,7 +1578,7 @@
           ]
         },
         "amp_002_alfio_raffc": {
-          "baseline": "fc7e53c7d6",
+          "baseline": "d7d1bc6b54",
           "entries": [
             {
               "baseline": false,
@@ -1317,6 +1647,28 @@
             },
             {
               "baseline": true,
+              "design_id": "d7d1bc6b54",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 1891.867,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 103.8838,
+                  "pm_deg": 73.38164,
+                  "ugf_hz": 2532597.0
+                },
+                "power_w": 0.00060520158
+              },
+              "spec": {
+                "fail": 0,
+                "none": 2,
+                "pass": 6
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "fc7e53c7d6",
               "pareto": true,
               "ppa": {
@@ -1547,8 +1899,30 @@
           ]
         },
         "amp_005_hoilee_affc": {
-          "baseline": "7874a2872a",
+          "baseline": "04760b7b7a",
           "entries": [
+            {
+              "baseline": true,
+              "design_id": "04760b7b7a",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 2199.737,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 97.48253,
+                  "pm_deg": 72.04218,
+                  "ugf_hz": 4688503.0
+                },
+                "power_w": 0.00034198308000000003
+              },
+              "spec": {
+                "fail": 1,
+                "none": 2,
+                "pass": 5
+              }
+            },
             {
               "baseline": false,
               "design_id": "06b46a383c",
@@ -1574,7 +1948,7 @@
             {
               "baseline": false,
               "design_id": "0b04b2c251",
-              "pareto": true,
+              "pareto": false,
               "ppa": {
                 "active_gate_area_um2": 2734.895,
                 "corners_run": [
@@ -1637,9 +2011,9 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "7874a2872a",
-              "pareto": true,
+              "pareto": false,
               "ppa": {
                 "active_gate_area_um2": 4073.394,
                 "corners_run": [
@@ -1661,7 +2035,7 @@
           ]
         },
         "amp_006_leung_dfcfc1": {
-          "baseline": "62bbd14a7b",
+          "baseline": "71b76db8d6",
           "entries": [
             {
               "baseline": false,
@@ -1730,7 +2104,7 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "62bbd14a7b",
               "pareto": false,
               "ppa": {
@@ -1748,6 +2122,28 @@
                 "fail": 2,
                 "none": 0,
                 "pass": 1
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "71b76db8d6",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 12803.049,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 93.81099,
+                  "pm_deg": 61.46602,
+                  "ugf_hz": 2240923.0
+                },
+                "power_w": 0.0006923113200000001
+              },
+              "spec": {
+                "fail": 1,
+                "none": 2,
+                "pass": 5
               }
             },
             {
@@ -1889,12 +2285,12 @@
           ]
         },
         "amp_008_leung_nmcf": {
-          "baseline": "535a011272",
+          "baseline": "c58a4c634a",
           "entries": [
             {
               "baseline": false,
               "design_id": "4154674215",
-              "pareto": true,
+              "pareto": false,
               "ppa": {
                 "active_gate_area_um2": 1937.728,
                 "corners_run": [
@@ -1914,7 +2310,7 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "535a011272",
               "pareto": false,
               "ppa": {
@@ -1993,6 +2389,28 @@
                   "ugf_hz": 2230819.0
                 },
                 "power_w": 0.0012087918000000001
+              },
+              "spec": {
+                "fail": 1,
+                "none": 2,
+                "pass": 5
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "c58a4c634a",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 646.069,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 89.35506,
+                  "pm_deg": 62.80692,
+                  "ugf_hz": 3164019.0
+                },
+                "power_w": 0.00031515714000000003
               },
               "spec": {
                 "fail": 1,
@@ -2139,7 +2557,7 @@
           ]
         },
         "amp_010_peng_acbc": {
-          "baseline": "33c6b6b1d8",
+          "baseline": "83ad2f7d48",
           "entries": [
             {
               "baseline": false,
@@ -2186,7 +2604,7 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "33c6b6b1d8",
               "pareto": true,
               "ppa": {
@@ -2229,6 +2647,28 @@
               }
             },
             {
+              "baseline": true,
+              "design_id": "83ad2f7d48",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 1573.291,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 92.31567,
+                  "pm_deg": 60.28729,
+                  "ugf_hz": 1822813.0
+                },
+                "power_w": 0.0005080554
+              },
+              "spec": {
+                "fail": 3,
+                "none": 2,
+                "pass": 3
+              }
+            },
+            {
               "baseline": false,
               "design_id": "e32d36fe51",
               "pareto": true,
@@ -2253,7 +2693,7 @@
           ]
         },
         "amp_011_peng_iac": {
-          "baseline": "1182f679d0",
+          "baseline": "ee1bf58d6e",
           "entries": [
             {
               "baseline": false,
@@ -2277,7 +2717,7 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "1182f679d0",
               "pareto": true,
               "ppa": {
@@ -2363,12 +2803,56 @@
                 "none": 2,
                 "pass": 5
               }
+            },
+            {
+              "baseline": true,
+              "design_id": "ee1bf58d6e",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 1272.799,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 109.589,
+                  "pm_deg": 86.54685,
+                  "ugf_hz": 2752258.0
+                },
+                "power_w": 3.7097855999999996e-05
+              },
+              "spec": {
+                "fail": 1,
+                "none": 2,
+                "pass": 5
+              }
             }
           ]
         },
         "amp_012_peng_tcfc": {
-          "baseline": "c0d46cbffa",
+          "baseline": "0c745293e7",
           "entries": [
+            {
+              "baseline": true,
+              "design_id": "0c745293e7",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 1690.696,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 102.3455,
+                  "pm_deg": 66.37213,
+                  "ugf_hz": 2126388.0
+                },
+                "power_w": 0.000122420592
+              },
+              "spec": {
+                "fail": 1,
+                "none": 2,
+                "pass": 5
+              }
+            },
             {
               "baseline": false,
               "design_id": "1a0294cb92",
@@ -2413,7 +2897,7 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "c0d46cbffa",
               "pareto": true,
               "ppa": {
@@ -2757,10 +3241,10 @@
           ]
         },
         "amp_016_song_dacfc": {
-          "baseline": "224fcec456",
+          "baseline": "3bd6208a5d",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "224fcec456",
               "pareto": false,
               "ppa": {
@@ -2781,7 +3265,7 @@
               }
             },
             {
-              "baseline": false,
+              "baseline": true,
               "design_id": "3bd6208a5d",
               "pareto": true,
               "ppa": {
@@ -2805,7 +3289,7 @@
           ]
         },
         "amp_018_telescopic_cascode": {
-          "baseline": "a7a6458c3a",
+          "baseline": "a4f0ac8fca",
           "entries": [
             {
               "baseline": false,
@@ -2853,6 +3337,28 @@
             },
             {
               "baseline": true,
+              "design_id": "a4f0ac8fca",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 97.248,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 52.18989,
+                  "pm_deg": 62.46857,
+                  "ugf_hz": 23228320.0
+                },
+                "power_w": 1.1401036500000001e-05
+              },
+              "spec": {
+                "fail": 2,
+                "none": 0,
+                "pass": 6
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "a7a6458c3a",
               "pareto": true,
               "ppa": {
@@ -2942,7 +3448,7 @@
           ]
         },
         "amp_019_ti_ldo_error": {
-          "baseline": "c6f1e9806c",
+          "baseline": "a8de457c35",
           "entries": [
             {
               "baseline": false,
@@ -2968,6 +3474,28 @@
             },
             {
               "baseline": true,
+              "design_id": "a8de457c35",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 437.2,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 50.02848,
+                  "pm_deg": 74.49291,
+                  "ugf_hz": 11632340.0
+                },
+                "power_w": 0.010505282699999998
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 10
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "c6f1e9806c",
               "pareto": true,
               "ppa": {
@@ -3040,7 +3568,7 @@
           ]
         },
         "amp_021_yan_az": {
-          "baseline": "c506814bc3",
+          "baseline": "a4fc72389c",
           "entries": [
             {
               "baseline": false,
@@ -3066,6 +3594,28 @@
             },
             {
               "baseline": true,
+              "design_id": "a4fc72389c",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 242.875,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 121.232,
+                  "pm_deg": 67.57772,
+                  "ugf_hz": 119388.8
+                },
+                "power_w": 8.675973000000001e-05
+              },
+              "spec": {
+                "fail": 2,
+                "none": 2,
+                "pass": 4
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "c506814bc3",
               "pareto": false,
               "ppa": {
@@ -3318,10 +3868,10 @@
           ]
         },
         "amp_024_smcnr": {
-          "baseline": "cf958de246",
+          "baseline": "57f7e284e2",
           "entries": [
             {
-              "baseline": false,
+              "baseline": true,
               "design_id": "57f7e284e2",
               "pareto": true,
               "ppa": {
@@ -3339,11 +3889,11 @@
               "spec": {
                 "fail": 2,
                 "none": 0,
-                "pass": 4
+                "pass": 6
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "cf958de246",
               "pareto": true,
               "ppa": {
@@ -3540,10 +4090,32 @@
           ]
         },
         "amp_029_two_stage_miller_comp": {
-          "baseline": "8b0bf2f382",
+          "baseline": "2e55cced7c",
           "entries": [
             {
               "baseline": true,
+              "design_id": "2e55cced7c",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 58.0,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 50.46528,
+                  "pm_deg": 77.37936,
+                  "ugf_hz": 97279430.0
+                },
+                "power_w": 0.00021543852
+              },
+              "spec": {
+                "fail": 1,
+                "none": 0,
+                "pass": 7
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "8b0bf2f382",
               "pareto": true,
               "ppa": {
@@ -3716,10 +4288,32 @@
           ]
         },
         "amp_002_alfio_raffc": {
-          "baseline": "aab6f15cda",
+          "baseline": "8ab56ff570",
           "entries": [
             {
               "baseline": true,
+              "design_id": "8ab56ff570",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 28122.012,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 109.6462,
+                  "pm_deg": 61.36211,
+                  "ugf_hz": 2164492.0
+                },
+                "power_w": 0.00067738914
+              },
+              "spec": {
+                "fail": 1,
+                "none": 2,
+                "pass": 5
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "aab6f15cda",
               "pareto": true,
               "ppa": {
@@ -3853,10 +4447,32 @@
           ]
         },
         "amp_005_hoilee_affc": {
-          "baseline": "ced18a79df",
+          "baseline": "7ab30a5b23",
           "entries": [
             {
               "baseline": true,
+              "design_id": "7ab30a5b23",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 314.757,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 91.87013,
+                  "pm_deg": 85.04665,
+                  "ugf_hz": 2022997.0
+                },
+                "power_w": 0.00020922138000000002
+              },
+              "spec": {
+                "fail": 2,
+                "none": 2,
+                "pass": 4
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "ced18a79df",
               "pareto": false,
               "ppa": {
@@ -3901,10 +4517,10 @@
           ]
         },
         "amp_006_leung_dfcfc1": {
-          "baseline": "2c07de9882",
+          "baseline": "eaa4aac933",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "2c07de9882",
               "pareto": false,
               "ppa": {
@@ -3944,6 +4560,28 @@
                 "fail": 2,
                 "none": 3,
                 "pass": 3
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "eaa4aac933",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 2138.809,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 122.9008,
+                  "pm_deg": 86.23429,
+                  "ugf_hz": 2918638.0
+                },
+                "power_w": 0.00048848472
+              },
+              "spec": {
+                "fail": 1,
+                "none": 2,
+                "pass": 5
               }
             }
           ]
@@ -3997,10 +4635,32 @@
           ]
         },
         "amp_008_leung_nmcf": {
-          "baseline": "701d113494",
+          "baseline": "2b7c766ebe",
           "entries": [
             {
               "baseline": true,
+              "design_id": "2b7c766ebe",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 893.937,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 118.245,
+                  "pm_deg": 74.46832,
+                  "ugf_hz": 2005053.0
+                },
+                "power_w": 0.00022222818
+              },
+              "spec": {
+                "fail": 1,
+                "none": 2,
+                "pass": 5
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "701d113494",
               "pareto": false,
               "ppa": {
@@ -4141,7 +4801,7 @@
           ]
         },
         "amp_011_peng_iac": {
-          "baseline": "7a56bf6ad7",
+          "baseline": "b05a1961d6",
           "entries": [
             {
               "baseline": false,
@@ -4166,7 +4826,7 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "7a56bf6ad7",
               "pareto": false,
               "ppa": {
@@ -4185,14 +4845,36 @@
                 "none": 1,
                 "pass": 1
               }
+            },
+            {
+              "baseline": true,
+              "design_id": "b05a1961d6",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 834.503,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 129.4501,
+                  "pm_deg": 69.4265,
+                  "ugf_hz": 4316318.0
+                },
+                "power_w": 9.1816524e-05
+              },
+              "spec": {
+                "fail": 0,
+                "none": 2,
+                "pass": 6
+              }
             }
           ]
         },
         "amp_012_peng_tcfc": {
-          "baseline": "4e4f4cd087",
+          "baseline": "698b82885f",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "4e4f4cd087",
               "pareto": false,
               "ppa": {
@@ -4210,6 +4892,28 @@
                 "fail": 1,
                 "none": 1,
                 "pass": 1
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "698b82885f",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 1209.778,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 106.8282,
+                  "pm_deg": 75.08087,
+                  "ugf_hz": 2325825.0
+                },
+                "power_w": 0.00021297438
+              },
+              "spec": {
+                "fail": 0,
+                "none": 2,
+                "pass": 6
               }
             },
             {
@@ -4333,10 +5037,10 @@
           ]
         },
         "amp_015_sau_cfcc": {
-          "baseline": "5b9f33a62b",
+          "baseline": "df1abd890a",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "5b9f33a62b",
               "pareto": false,
               "ppa": {
@@ -4376,6 +5080,28 @@
                 "fail": 3,
                 "none": 3,
                 "pass": 2
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "df1abd890a",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 254.217,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 111.9773,
+                  "pm_deg": 89.47318,
+                  "ugf_hz": 5049555.0
+                },
+                "power_w": 0.00025542468
+              },
+              "spec": {
+                "fail": 0,
+                "none": 2,
+                "pass": 6
               }
             }
           ]
@@ -4473,8 +5199,30 @@
           ]
         },
         "amp_019_ti_ldo_error": {
-          "baseline": "be8a158bd9",
+          "baseline": "47808570bc",
           "entries": [
+            {
+              "baseline": true,
+              "design_id": "47808570bc",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 523.5,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 41.13797,
+                  "pm_deg": 54.66081,
+                  "ugf_hz": 68104990.0
+                },
+                "power_w": 0.0102675507
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 10
+              }
+            },
             {
               "baseline": false,
               "design_id": "58c60b1688",
@@ -4498,7 +5246,7 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "be8a158bd9",
               "pareto": true,
               "ppa": {
@@ -4571,10 +5319,10 @@
           ]
         },
         "amp_021_yan_az": {
-          "baseline": "488b34369f",
+          "baseline": "741587eacd",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "488b34369f",
               "pareto": false,
               "ppa": {
@@ -4592,6 +5340,28 @@
                 "fail": 1,
                 "none": 1,
                 "pass": 1
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "741587eacd",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 143.984,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 147.9541,
+                  "pm_deg": 68.59086,
+                  "ugf_hz": 485409.8
+                },
+                "power_w": 0.000126080478
+              },
+              "spec": {
+                "fail": 2,
+                "none": 2,
+                "pass": 4
               }
             },
             {
@@ -4761,6 +5531,62 @@
                 "fail": 0,
                 "none": 0,
                 "pass": 6
+              }
+            }
+          ]
+        }
+      },
+      "FOUNDRY-n65": {
+        "amp_026_fan_chopper_ota": {
+          "baseline": "d47c7c3ce7",
+          "entries": [
+            {
+              "baseline": true,
+              "design_id": "d47c7c3ce7",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 48.239,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 57.447562155,
+                  "pm_deg": 73.277574984,
+                  "ugf_hz": 9106893.0645
+                },
+                "power_w": 0.00015036739746160905
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 7
+              }
+            }
+          ]
+        },
+        "amp_027_fan_rrl_ota": {
+          "baseline": "f7f86a8d53",
+          "entries": [
+            {
+              "baseline": true,
+              "design_id": "f7f86a8d53",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 41.313,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "dc_gain_db": 42.683875784,
+                  "pm_deg": 67.127453922,
+                  "ugf_hz": 736768343.31
+                },
+                "power_w": 7.574726871041665e-05
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
               }
             }
           ]
@@ -4974,6 +5800,31 @@
                 "fail": 0,
                 "none": 0,
                 "pass": 14
+              }
+            }
+          ]
+        },
+        "cmfb_004_output_switched_cap": {
+          "baseline": "93e2f9fb5b",
+          "entries": [
+            {
+              "baseline": true,
+              "design_id": "93e2f9fb5b",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 0.312,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "t_cm_settle": 0.00050005
+                },
+                "power_w": 3.1931172e-14
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 6
               }
             }
           ]
@@ -5517,7 +6368,7 @@
               "spec": {
                 "fail": 1,
                 "none": 0,
-                "pass": 9
+                "pass": 5
               }
             }
           ]
@@ -5542,16 +6393,36 @@
               "spec": {
                 "fail": 1,
                 "none": 0,
-                "pass": 9
+                "pass": 5
               }
             }
           ]
         },
         "ia_004_fan_chopper_rrl": {
-          "baseline": "ee77a983e2",
+          "baseline": "03a2fe3857",
           "entries": [
             {
               "baseline": true,
+              "design_id": "03a2fe3857",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 191.24,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "gain_cl": 19.11536
+                },
+                "power_w": 0.0002179602
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 5
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "ee77a983e2",
               "pareto": true,
               "ppa": {
@@ -5560,12 +6431,37 @@
                   "tt"
                 ],
                 "performance": {},
-                "power_w": 0.00026339412
+                "power_w": 0.00021790908
               },
               "spec": {
                 "fail": 0,
                 "none": 0,
-                "pass": 6
+                "pass": 2
+              }
+            }
+          ]
+        }
+      },
+      "FOUNDRY-n65": {
+        "ia_002_fan_chopper_simple": {
+          "baseline": "55b5148c68",
+          "entries": [
+            {
+              "baseline": true,
+              "design_id": "55b5148c68",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 52.4,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {},
+                "power_w": 0.00014940326190744817
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 2
               }
             }
           ]
@@ -5575,8 +6471,54 @@
     "ldo": {
       "gf180mcu": {
         "ldo_001_analoggym_basic": {
-          "baseline": "db67eb725f",
+          "baseline": "a94c72c092",
           "entries": [
+            {
+              "baseline": false,
+              "design_id": "7ace1be7b1",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 3867.24,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.027738,
+                  "psrr_vdd_db": 45.05221,
+                  "v_dropout": 0.06143541,
+                  "v_undershoot": 1.165099
+                },
+                "power_w": 0.00015144595200000002
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "a94c72c092",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 6662.76,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.015784,
+                  "psrr_vdd_db": 46.60617,
+                  "v_dropout": 0.05062656,
+                  "v_undershoot": 0.237493
+                },
+                "power_w": 0.000151478406
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
+            },
             {
               "baseline": false,
               "design_id": "d58d9fbe62",
@@ -5601,7 +6543,7 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "db67eb725f",
               "pareto": true,
               "ppa": {
@@ -5626,7 +6568,7 @@
           ]
         },
         "ldo_002_analoggym_folded_cascode": {
-          "baseline": "ca63b1a2f7",
+          "baseline": "a9bdd1b3f5",
           "entries": [
             {
               "baseline": false,
@@ -5653,6 +6595,29 @@
             },
             {
               "baseline": true,
+              "design_id": "a9bdd1b3f5",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 1460.0,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.004829,
+                  "psrr_vdd_db": 47.91053,
+                  "v_dropout": 0.1014815,
+                  "v_undershoot": 0.724472
+                },
+                "power_w": 0.0007708056
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "ca63b1a2f7",
               "pareto": true,
               "ppa": {
@@ -5677,10 +6642,10 @@
           ]
         },
         "ldo_003_analoggym_simple": {
-          "baseline": "217b9f4fe3",
+          "baseline": "3bd9dd4a52",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "217b9f4fe3",
               "pareto": true,
               "ppa": {
@@ -5703,7 +6668,7 @@
               }
             },
             {
-              "baseline": false,
+              "baseline": true,
               "design_id": "3bd9dd4a52",
               "pareto": false,
               "ppa": {
@@ -5728,10 +6693,33 @@
           ]
         },
         "ldo_004_basic_pmos": {
-          "baseline": "c9e20c693a",
+          "baseline": "2dfaef80fa",
           "entries": [
             {
               "baseline": true,
+              "design_id": "2dfaef80fa",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 396.0,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.011866,
+                  "psrr_vdd_db": 71.66065,
+                  "v_dropout": 0.04813479,
+                  "v_undershoot": 0.006165
+                },
+                "power_w": 0.00037178136
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "c9e20c693a",
               "pareto": true,
               "ppa": {
@@ -5778,10 +6766,10 @@
           ]
         },
         "ldo_005_buffered_ref": {
-          "baseline": "172a8c6e82",
+          "baseline": "5a17b89d28",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "172a8c6e82",
               "pareto": true,
               "ppa": {
@@ -5796,6 +6784,52 @@
                   "v_undershoot": 0.004233
                 },
                 "power_w": 0.00155463693
+              },
+              "spec": {
+                "fail": 1,
+                "none": 0,
+                "pass": 13
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "5a17b89d28",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 899.689,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.006042,
+                  "psrr_vdd_db": 35.55717,
+                  "v_dropout": 0.3403637,
+                  "v_undershoot": 0.005159
+                },
+                "power_w": 0.0015590619
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 14
+              }
+            },
+            {
+              "baseline": false,
+              "design_id": "6466a7bdbc",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 1048.019,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.003728,
+                  "psrr_vdd_db": 30.56594,
+                  "v_dropout": 0.5194918,
+                  "v_undershoot": 0.004292
+                },
+                "power_w": 0.00155534808
               },
               "spec": {
                 "fail": 1,
@@ -5874,10 +6908,10 @@
           ]
         },
         "ldo_007_pmos": {
-          "baseline": "c4901c4c6a",
+          "baseline": "ef7cfaa5d4",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "c4901c4c6a",
               "pareto": true,
               "ppa": {
@@ -5919,6 +6953,29 @@
                 "none": 0,
                 "pass": 8
               }
+            },
+            {
+              "baseline": true,
+              "design_id": "ef7cfaa5d4",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 1489.0,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.005387,
+                  "psrr_vdd_db": 69.13171,
+                  "v_dropout": 0.2656085,
+                  "v_undershoot": 0.006972
+                },
+                "power_w": 0.00026214876
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
             }
           ]
         },
@@ -5951,10 +7008,33 @@
           ]
         },
         "ldo_009_fer_5t_pass": {
-          "baseline": "bc43722a01",
+          "baseline": "02ad4e1023",
           "entries": [
             {
               "baseline": true,
+              "design_id": "02ad4e1023",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 263.36,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.0242768,
+                  "psrr_vdd_db": 61.99213,
+                  "v_dropout": 0.1787708,
+                  "v_undershoot": 0.0125397
+                },
+                "power_w": 0.00011681265600000001
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "bc43722a01",
               "pareto": true,
               "ppa": {
@@ -5981,10 +7061,10 @@
       },
       "ihp-sg13g2": {
         "ldo_001_analoggym_basic": {
-          "baseline": "278000076e",
+          "baseline": "5db094b1ff",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "278000076e",
               "pareto": true,
               "ppa": {
@@ -6004,6 +7084,52 @@
                 "fail": 1,
                 "none": 0,
                 "pass": 10
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "5db094b1ff",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 4836.9,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.026343,
+                  "psrr_vdd_db": 36.95043,
+                  "v_dropout": 0.04781053,
+                  "v_undershoot": 0.161263
+                },
+                "power_w": 0.000160395804
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
+            },
+            {
+              "baseline": false,
+              "design_id": "a09f6c4299",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 4804.9,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.026976,
+                  "psrr_vdd_db": 35.6067,
+                  "v_dropout": 0.05055851,
+                  "v_undershoot": 0.137407
+                },
+                "power_w": 0.000160317954
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
               }
             },
             {
@@ -6032,10 +7158,10 @@
           ]
         },
         "ldo_002_analoggym_folded_cascode": {
-          "baseline": "2d6e93d568",
+          "baseline": "7ee55a90f2",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "2d6e93d568",
               "pareto": true,
               "ppa": {
@@ -6050,6 +7176,52 @@
                   "v_undershoot": 0.816556
                 },
                 "power_w": 0.001247734
+              },
+              "spec": {
+                "fail": 2,
+                "none": 0,
+                "pass": 9
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "7ee55a90f2",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 2181.0,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.011607,
+                  "psrr_vdd_db": 48.38148,
+                  "v_dropout": 0.05205117,
+                  "v_undershoot": 0.632214
+                },
+                "power_w": 0.0008162614
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
+            },
+            {
+              "baseline": false,
+              "design_id": "9e6c87b3e1",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 2167.5,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.013817,
+                  "psrr_vdd_db": 42.06573,
+                  "v_dropout": 0.07110255,
+                  "v_undershoot": 0.322392
+                },
+                "power_w": 0.0014810568
               },
               "spec": {
                 "fail": 2,
@@ -6083,7 +7255,7 @@
           ]
         },
         "ldo_003_analoggym_simple": {
-          "baseline": "7292081906",
+          "baseline": "5c1584803c",
           "entries": [
             {
               "baseline": false,
@@ -6110,6 +7282,29 @@
             },
             {
               "baseline": true,
+              "design_id": "5c1584803c",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 1758.0,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.012466,
+                  "psrr_vdd_db": 35.21503,
+                  "v_dropout": 0.1475883,
+                  "v_undershoot": 0.301412
+                },
+                "power_w": 0.000572136
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "7292081906",
               "pareto": true,
               "ppa": {
@@ -6130,14 +7325,60 @@
                 "none": 0,
                 "pass": 9
               }
+            },
+            {
+              "baseline": false,
+              "design_id": "f4683aee94",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 3162.0,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.009743,
+                  "psrr_vdd_db": 48.18531,
+                  "v_dropout": 0.08365306,
+                  "v_undershoot": 0.286888
+                },
+                "power_w": 0.000572286
+              },
+              "spec": {
+                "fail": 1,
+                "none": 0,
+                "pass": 10
+              }
             }
           ]
         },
         "ldo_004_basic_pmos": {
-          "baseline": "bd5f7dc4f9",
+          "baseline": "41f06a069e",
           "entries": [
             {
               "baseline": true,
+              "design_id": "41f06a069e",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 790.0,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.025094,
+                  "psrr_vdd_db": 37.38389,
+                  "v_dropout": 0.04119105,
+                  "v_undershoot": 0.008997
+                },
+                "power_w": 0.00037176624
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "bd5f7dc4f9",
               "pareto": true,
               "ppa": {
@@ -6183,6 +7424,56 @@
             }
           ]
         },
+        "ldo_005_buffered_ref": {
+          "baseline": "67ea759104",
+          "entries": [
+            {
+              "baseline": true,
+              "design_id": "67ea759104",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 778.821,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.001274,
+                  "psrr_vdd_db": 44.52535,
+                  "v_dropout": 0.169675,
+                  "v_undershoot": 0.001957
+                },
+                "power_w": 0.00250369383
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 14
+              }
+            },
+            {
+              "baseline": false,
+              "design_id": "b77bb89a30",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 853.821,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 1.658611,
+                  "psrr_vdd_db": 25.49338,
+                  "v_undershoot": 0.03995
+                },
+                "power_w": 0.00147521121
+              },
+              "spec": {
+                "fail": 5,
+                "none": 0,
+                "pass": 8
+              }
+            }
+          ]
+        },
         "ldo_006_stub": {
           "baseline": "0fc1460a11",
           "entries": [
@@ -6209,10 +7500,10 @@
           ]
         },
         "ldo_007_pmos": {
-          "baseline": "1fe01a8445",
+          "baseline": "d0afa94c84",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "1fe01a8445",
               "pareto": false,
               "ppa": {
@@ -6255,14 +7546,60 @@
                 "none": 0,
                 "pass": 7
               }
+            },
+            {
+              "baseline": false,
+              "design_id": "a1b7852bd0",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 518.0,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.024586,
+                  "psrr_vdd_db": 48.08948,
+                  "v_dropout": 0.1003136,
+                  "v_undershoot": 0.005086
+                },
+                "power_w": 0.00044248679999999997
+              },
+              "spec": {
+                "fail": 1,
+                "none": 0,
+                "pass": 10
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "d0afa94c84",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 608.0,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.015716,
+                  "psrr_vdd_db": 43.86137,
+                  "v_dropout": 0.09891209,
+                  "v_undershoot": 0.004263
+                },
+                "power_w": 0.00041828724
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
             }
           ]
         },
         "ldo_008_fer_mirror_ota": {
-          "baseline": "0d828d6770",
+          "baseline": "a76556e907",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "0d828d6770",
               "pareto": true,
               "ppa": {
@@ -6285,7 +7622,7 @@
               }
             },
             {
-              "baseline": false,
+              "baseline": true,
               "design_id": "a76556e907",
               "pareto": false,
               "ppa": {
@@ -6310,8 +7647,31 @@
           ]
         },
         "ldo_009_fer_5t_pass": {
-          "baseline": "696bb45b65",
+          "baseline": "02767721cd",
           "entries": [
+            {
+              "baseline": true,
+              "design_id": "02767721cd",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 52.8,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.0355528,
+                  "psrr_vdd_db": 60.85411,
+                  "v_dropout": 0.1894805,
+                  "v_undershoot": 0.0188408
+                },
+                "power_w": 0.00013303053
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
+            },
             {
               "baseline": false,
               "design_id": "3758d0b88e",
@@ -6336,7 +7696,7 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "696bb45b65",
               "pareto": true,
               "ppa": {
@@ -6382,7 +7742,7 @@
                 "power_w": 3.422898e-05
               },
               "spec": {
-                "fail": 0,
+                "fail": 1,
                 "none": 0,
                 "pass": 10
               }
@@ -6515,10 +7875,10 @@
           ]
         },
         "ldo_004_basic_pmos": {
-          "baseline": "708f4ef328",
+          "baseline": "d1144b6b15",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "708f4ef328",
               "pareto": true,
               "ppa": {
@@ -6538,6 +7898,29 @@
                 "fail": 3,
                 "none": 0,
                 "pass": 8
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "d1144b6b15",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 549.0,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.012801,
+                  "psrr_vdd_db": 64.24408,
+                  "v_dropout": 0.05814472,
+                  "v_undershoot": 0.006091
+                },
+                "power_w": 0.0003716883
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
               }
             },
             {
@@ -6610,7 +7993,7 @@
           ]
         },
         "ldo_007_pmos": {
-          "baseline": "461f32dc10",
+          "baseline": "2cd142806a",
           "entries": [
             {
               "baseline": false,
@@ -6637,6 +8020,29 @@
             },
             {
               "baseline": true,
+              "design_id": "2cd142806a",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 1260.0,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.010701,
+                  "psrr_vdd_db": 70.11699,
+                  "v_dropout": 0.2382648,
+                  "v_undershoot": 0.00881
+                },
+                "power_w": 0.000155379924
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
+            },
+            {
+              "baseline": false,
               "design_id": "461f32dc10",
               "pareto": true,
               "ppa": {
@@ -6661,8 +8067,31 @@
           ]
         },
         "ldo_008_fer_mirror_ota": {
-          "baseline": "c7d6becc36",
+          "baseline": "85f073a70e",
           "entries": [
+            {
+              "baseline": true,
+              "design_id": "85f073a70e",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 162.4,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.01738,
+                  "psrr_vdd_db": 37.06447,
+                  "v_dropout": 0.06318425,
+                  "v_undershoot": 0.058523
+                },
+                "power_w": 0.00018244242
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
+            },
             {
               "baseline": false,
               "design_id": "88b872fc86",
@@ -6687,7 +8116,7 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "c7d6becc36",
               "pareto": true,
               "ppa": {
@@ -6712,7 +8141,7 @@
           ]
         },
         "ldo_009_fer_5t_pass": {
-          "baseline": "97a93775ce",
+          "baseline": "9892b69076",
           "entries": [
             {
               "baseline": false,
@@ -6738,7 +8167,7 @@
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "97a93775ce",
               "pareto": true,
               "ppa": {
@@ -6753,6 +8182,29 @@
                   "v_undershoot": 0.0196689
                 },
                 "power_w": 0.000116094654
+              },
+              "spec": {
+                "fail": 0,
+                "none": 0,
+                "pass": 11
+              }
+            },
+            {
+              "baseline": true,
+              "design_id": "9892b69076",
+              "pareto": true,
+              "ppa": {
+                "active_gate_area_um2": 116.8,
+                "corners_run": [
+                  "tt"
+                ],
+                "performance": {
+                  "load_reg": 0.0260819,
+                  "psrr_vdd_db": 63.35126,
+                  "v_dropout": 0.355485,
+                  "v_undershoot": 0.0118352
+                },
+                "power_w": 0.00011608322399999999
               },
               "spec": {
                 "fail": 0,
@@ -6828,7 +8280,7 @@
                   "tt"
                 ],
                 "performance": {
-                  "ripple_gain": -437664.0
+                  "ripple_gain": -1658910.0
                 }
               },
               "spec": {

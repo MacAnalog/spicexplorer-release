@@ -5,23 +5,23 @@ schema: spicexplorer/sizing@1
 pdk: ihp-sg13g2
 variables:
 - name: x_dut_xm1_w
-  default: 20u
+  default: 60u
 - name: x_dut_xm1_l
-  default: 1u
+  default: 0.5u
 - name: x_dut_xm3_w
-  default: 30u
+  default: 60u
 - name: x_dut_xm3_l
   default: 0.5u
 - name: x_dut_xm5_w
-  default: 10u
+  default: 30u
 - name: x_dut_xm5_l
   default: 0.5u
 - name: x_dut_xm7_w
-  default: 20u
+  default: 13u
 - name: x_dut_xm7_l
-  default: 2u
+  default: 1u
 - name: x_dut_xm9_w
-  default: 30u
+  default: 10u
 - name: x_dut_xm9_l
   default: 0.5u
 - name: x_dut_xmp_w
@@ -29,11 +29,11 @@ variables:
 - name: x_dut_xmp_l
   default: 0.5u
 - name: x_dut_xmp_m
-  default: '250'
+  default: '400'
 - name: r_z
-  default: 3k
+  default: 1.5k
 - name: c_comp
-  default: 2p
+  default: 5p
   description: Upstream XCfb mim, M_Cfb=10 units of ~200 fF
 - name: vref_val
   default: 1.8
@@ -44,5 +44,5 @@ variables:
   default: '0.025'
   description: Upstream TB Vb2 (PMOS cascode gate rail, near-ground for deep cascode)
 - name: r_bleed
-  default: 100k
+  default: 40k
   description: Minimum-load bleed (import adaptation; upstream TBs never run true no-load)

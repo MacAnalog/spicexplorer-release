@@ -1,0 +1,37 @@
+# Analysis binding: the SC-CMFB's whole clocked suite in one transient (class
+# template tran_sc_cmfb_step, new 2026-07-27 — the CT dc/ac benches are meaningless
+# through capacitive sense paths). FCLK 1 kHz = the bio-AFE system rate (Hsu
+# TCAS-I 67(1) 2020, FS = 1k; DRAWING_REVIEW §6 triage). Windows are INTEGER clock
+# periods: pre-step [6m,9m], plateau [15m,19m], end [27m,29m]; step +50 mV during
+# [10m,20m] (SC transfer is linear — no compression window to dodge, and 50 mV
+# keeps the slope read well above the clock ripple). Settling is ~2*C_sw/(2*C_sw+CL)
+# ~ 98% per clock at the 1p/50f defaults, so every window sits >= 5 periods after
+# its edge. VTOL 5m must stay above the steady ripple (measured ~sub-mV). TMAX 200n
+# bounds the internal step so the solver cannot walk over TG conduction (the proven
+# slow-clock footgun).
+schema: spicexplorer/analysis@1
+id: tran_sc_cmfb_step
+template: tran_sc_cmfb_step
+description: "Clocked SC-CMFB suite: vcmfb_nat (~vbias), cmfb_slope (~+1), step_delta_v, clock-ripple ring_v, t_cm_settle, i_supply into 50 fF."
+params:
+  VDD: 1.2
+  VCM: 0.5
+  VBIAS: 0.3
+  CL: 50f
+  FCLK: 1k
+  TEDGE: 50n
+  VSTEP: 50m
+  TSTEP1: 10m
+  TSTEP2: 20m
+  WP0: 6m
+  WP1: 9m
+  WA0: 15m
+  WA1: 19m
+  WE0: 27m
+  WE1: 29m
+  VTOL: 5m
+  TSTEP: 5u
+  TSTOP: 30m
+  TMAX: 200n
+flags: []
+produces: [vcmfb_nat, step_delta_v, cmfb_slope, ring_v, t_cm_settle, i_supply]

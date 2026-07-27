@@ -46,6 +46,14 @@ XM2 nb vinp tail vss nmos w=x_dut_xm2_w l=x_dut_xm2_l
 XM3 na nd vdd vdd pmos w=x_dut_xm3_w l=x_dut_xm3_l
 XM4 nlev na nd vdd pmos w=x_dut_xm4_w l=x_dut_xm4_l
 XM5 nb nd vdd vdd pmos w=x_dut_xm5_w l=x_dut_xm5_l
+** DC definition of the level-shifted mirror's gate rail (FIX 2026-07-25, same as
+** ldo_005/the drawings): nd otherwise floats — only M3/M5 gates (no DC) and M4's
+** source (whose channel current has no other supply) touch it, so it is pinned by
+** model leakage on BSIM4 and SINGULAR on leakage-free PSP (stable wrong equilibrium,
+** vout = VDD — proven on ldo_005@ihp). ~0 DC current through the tie: at DC nd = na
+** (standard diode-connected mirror) while M4 keeps the transient level shift.
+** Do NOT replace with a vdd pull-up (kills low-vin operation).
+RND na nd 'r_nd'
 ** second stage: M6 is a plain common-source driver taken DIRECTLY off the first-stage output nb.
 ** amp_032 instead stacked a diode M7 (source on nb, gate/drain ne) here and mirrored ne->M6, with
 ** XMBE sinking M7's current. Removing that stack is the whole point of this accession — see header.

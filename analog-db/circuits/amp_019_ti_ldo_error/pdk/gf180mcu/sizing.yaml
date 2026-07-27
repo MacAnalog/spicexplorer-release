@@ -5,7 +5,7 @@ schema: spicexplorer/sizing@1
 pdk: gf180mcu
 variables:
 - name: x_dut_xmb0_w
-  default: 20u
+  default: 10u
   description: "Bias-mirror NMOS unit (1 mA/branch at ~0.3 V vdsat)"
 - name: x_dut_xmb0_l
   default: 2u
@@ -19,7 +19,7 @@ variables:
 - name: x_dut_xm1_l
   default: 0.7u
 - name: x_dut_xm3_w
-  default: 40u
+  default: 100u
   description: "Level-shifted PMOS mirror (M3m/M5)"
 - name: x_dut_xm3_l
   default: 0.5u
@@ -29,24 +29,30 @@ variables:
 - name: x_dut_xm4_l
   default: 0.5u
 - name: x_dut_xm7_w
-  default: 20u
+  default: 40u
   description: "M7 second-stage diode (stacked on the first-stage output node)"
 - name: x_dut_xm7_l
   default: 0.5u
 - name: x_dut_xm6_w
-  default: 80u
+  default: 100u
   description: "M6 output PMOS"
 - name: x_dut_xm6_l
-  default: 2u
+  default: 0.5u
 - name: r_z
-  default: 1k
+  default: 470
   description: "Upstream RZ ppolyf_u_3k placeholder geometry -> coarse 1k"
 - name: c_comp
-  default: 2p
+  default: 25p
   description: "Upstream param block says 100p, instance says 1p; coarse 2p"
 - name: x_dut_xmbe_w
-  default: 5u
+  default: 0.4u
   description: "M_mirror_e sink — MUST be < tail/2 for a valid first-stage op point (see netlist note)"
 - name: x_dut_xmbf_w
   default: 5u
   description: "M_mirror_f sink (level-shifter anchor; carries ~0 by design)"
+- name: r_nd
+  default: 500k
+  min: 10k
+  max: 10MEG
+  unit: ohm
+  description: "Level-shifted-mirror gate-rail tie na->nd (DC-defines nd; ~0 current — fix 2026-07-25, see abstract netlist)"

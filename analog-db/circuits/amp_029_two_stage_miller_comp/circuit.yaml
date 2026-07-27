@@ -20,13 +20,20 @@ provenance:
     the drawing: the first-stage load-gate net X is FLOATING as drawn — landed
     as the internal knob source {vbl}; the 1 mA bias literal became the
     {i_bias} knob (re-seeded to 20 uA). CHARACTERIZATION FINDING (committed as the
-    dc_cm_bias_sweep analysis; tt): with no CM control at either stage the DC operating point has NO
-    stable interior solution — stage 1 flips between rails within a ~20 mV vbl
-    window (0.70-0.72) and the output rails on BOTH sides (two cascaded
-    gds-level knife edges). The T4 gain skip is a property of the topology,
-    not the sizing; amp_020 (same drawing family) adds the resistive CM servo
-    that makes this amplifier usable. Kept as the pedagogical/topological
-    sibling and a future CMFB-composition target.
+    dc_cm_bias_sweep analysis; tt; refined by the 2026-07 sizing study): with no
+    CM control at either stage, an interior DC point EXISTS but only inside a
+    knife-edge vbl window obeying width x CM-gain ~ 0.5 V — 0.2 mV wide at the
+    50 dB baseline sizing (0.7086-0.7088), 3.5 mV at a 37 dB min-L sizing, and
+    wide (>0.5 V) only in a degenerate ~3.5 mA regime 7x over the i_supply spec
+    (two cascaded gds-level knife edges; up/down fine sweeps agree — sensitivity,
+    not hysteresis). The committed vbl default is tt-centered to 4 decimals, so
+    dc_gain/pm/ugf/t_settle measure honestly at tt (design 2e55cced7c: 50.5 dB /
+    77.4 deg / 97 MHz / 3.1 us, all pass); cm_interior_pts stays 0 by design —
+    no gain-spec-compatible sizing widens the window to the bench's 20-30 mV
+    sample spacing, i.e. the robustness fail is the topology, not the sizing.
+    amp_020 (same drawing family) adds the resistive CM servo that makes this
+    amplifier usable. Kept as the pedagogical/topological sibling and a future
+    CMFB-composition target (amp_030 composes the fix).
 artifacts:
   schematic: pdk/ihp-sg13g2/schematic/two-stage-miller-comp.sch
   abstract_netlist: abstract/netlist.spice

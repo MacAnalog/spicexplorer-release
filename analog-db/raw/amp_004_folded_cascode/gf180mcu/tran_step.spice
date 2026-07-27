@@ -17,9 +17,9 @@
 .lib sm141064.ngspice fets_mm
 .temp 27
 
-.param VDD=1.8
-.param VCM=0.9
-.param IBIAS=-34u
+.param VDD=3.3
+.param VCM=1.65
+.param IBIAS=-100u
 .param CL=5p
 
 Vdd  vdd 0 dc {VDD}
@@ -47,42 +47,42 @@ XDUT vinn vinp vout vdd ibias vss amp_004_folded_cascode
   write
   quit
 .endc
-.param x_dut_xm1_w=72u
-.param x_dut_xm1_l=2u
-.param x_dut_xm13_w=106.5u
-.param x_dut_xm13_l=2u
-.param x_dut_xm6_w=44u
-.param x_dut_xm6_l=2.5u
-.param x_dut_xm7_w=78u
-.param x_dut_xm7_l=2u
-.param x_dut_xm9_w=183u
-.param x_dut_xm9_l=4.5u
-.param x_dut_xm11_w=50u
-.param x_dut_xm11_l=3u
-.param x_dut_xm12_w=50u
-.param x_dut_xm12_l=3u
-.param x_dut_vb1=1.225
-.param x_dut_vb2=1.275
-.param x_dut_xm1_ng=8
-.param x_dut_xm13_ng=11
-.param x_dut_xm6_ng=5
-.param x_dut_xm7_ng=8
-.param x_dut_xm9_ng=19
-.param x_dut_xm11_ng=5
-.param x_dut_xm12_ng=5
+.param x_dut_xm1_w=96u
+.param x_dut_xm1_l=0.5u
+.param x_dut_xm13_w=60u
+.param x_dut_xm13_l=1u
+.param x_dut_xm6_w=30u
+.param x_dut_xm6_l=0.5u
+.param x_dut_xm7_w=88u
+.param x_dut_xm7_l=0.5u
+.param x_dut_xm9_w=82u
+.param x_dut_xm9_l=1u
+.param x_dut_xm11_w=60u
+.param x_dut_xm11_l=1u
+.param x_dut_xm12_w=60u
+.param x_dut_xm12_l=1u
+.param x_dut_vb1=1.2
+.param x_dut_vb2=1.95
+.param x_dut_xm1_ng=12
+.param x_dut_xm13_ng=12
+.param x_dut_xm6_ng=6
+.param x_dut_xm7_ng=11
+.param x_dut_xm9_ng=16
+.param x_dut_xm11_ng=12
+.param x_dut_xm12_ng=12
 .param x_dut_xm4_m=1
 .param x_dut_xm1_m=1
 .param x_dut_xm2_m=1
 .param x_dut_xm3_m=1
-.param x_dut_xm11_m=1
-.param x_dut_xm0_m=1
+.param x_dut_xm11_m=2
+.param x_dut_xm0_m=2
 .param x_dut_xm6_m=1
 .param x_dut_xm5_m=1
 .param x_dut_xm7_m=1
 .param x_dut_xm8_m=1
 .param x_dut_xm9_m=1
 .param x_dut_xm10_m=1
-.param x_dut_xm12_m=1
+.param x_dut_xm12_m=2
 .param x_dut_xm13_m=1
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that

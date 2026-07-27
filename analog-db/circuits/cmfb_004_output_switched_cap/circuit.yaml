@@ -1,0 +1,48 @@
+schema: spicexplorer/circuit@1
+id: cmfb_004_output_switched_cap
+class: cmfb
+tier: support
+realization: transistor
+display_name: Switched-capacitor CMFB (two-phase charge-redistribution CM detector, canonical)
+stages: 1
+ports:
+- vinp
+- vinn
+- vcmfb
+- vcm
+- vbias
+- clk_phi
+- clk_phi_not
+- vdd
+- vss
+provenance:
+  source: drawings/shared (hand-drawn xschem, cmfb-output-switched-cap.sch, owner-sketched 2026-07-27)
+  paper: "Y.-P. Hsu, S.-L. Liu, M. M. Hella (SRMC bio-AFE, TCAS-I 67(1) 2020) — the paper's actual output-CM circuit, setting the core amplifier's vo1+/- and vo2+/- common modes"
+  aliases: [cmfb-output-switched-cap]
+  designer: "Noorizadeh (schematic, 2026-07-27)"
+  notes: >-
+    The class's first SWITCHED-CAPACITOR member — no error amplifier at all: per
+    side, a switched cap alternates between the (vcm, vbias) reference pair on
+    clk_phi and the (vin, vcmfb) sensed/control pair on clk_phi_not, so charge
+    redistribution enforces vcmfb = cm(vinp,vinn) - vcm + vbias in steady state.
+    Discrete-time transfer slope is +1 by construction (CANONICAL polarity, for
+    inverting plants — B5 rule) and the zero-error actuator level equals vbias:
+    PROGRAMMED, not sized (contrast cmfb_002/003, whose vcmfb_nat placement is the
+    sizing problem). This is the Hsu paper's CMFB for the SRMC core amp — the
+    committed amp_031 consumer instead carries the real 5T CMFB (cmfb_002 flavor);
+    swapping it for this network is the composition follow-up (needs the two-phase
+    clock pair plumbed). vcmfb is Hi-Z during the refresh phase — the consumer's
+    actuator gate is the hold capacitance, so the block only regulates into a
+    capacitive load. Clocked-only characterization: the CT class benches
+    (dc_cmfb_transfer/ac_servo) see purely capacitive paths and are meaningless
+    here — the whole suite is the tran_sc_cmfb_step template (class metrics.yaml,
+    2026-07-27).
+artifacts:
+  schematic: pdk/ihp-sg13g2/schematic/cmfb-output-switched-cap.sch
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+analyses: [tran_sc_cmfb_step]
+pdks:
+- ihp-sg13g2
+status: draft

@@ -41,19 +41,19 @@ XDUT vdd vout vinp vinn ibias vss amp_018_telescopic_cascode
   write
   quit
 .endc
-.param x_dut_xm1_w=27.241u
-.param x_dut_xm1_l=0.246u
-.param x_dut_xm1c_w=48.148u
-.param x_dut_xm1c_l=5.274u
-.param x_dut_xm3_w=99.145u
-.param x_dut_xm3_l=1.391u
-.param x_dut_xm3c_w=78.432u
-.param x_dut_xm3c_l=4.589u
-.param x_dut_xm5_w=170.082u
-.param x_dut_xm5_l=0.505u
+.param x_dut_xm1_w=6.116280667583133e-07
+.param x_dut_xm1_l=7.791216446889749e-07
+.param x_dut_xm1c_w=6.96391065616068e-06
+.param x_dut_xm1c_l=9.920210290687422e-07
+.param x_dut_xm3_w=1.7141886411301278e-06
+.param x_dut_xm3_l=5.45823761118433e-06
+.param x_dut_xm3c_w=8.795623406543892e-06
+.param x_dut_xm3c_l=3.883557926921232e-07
+.param x_dut_xm5_w=4.7008952481424335e-06
+.param x_dut_xm5_l=3.7679599937261675e-06
 .param x_dut_xm5_ng=2
-.param x_dut_xm6_w=118.161u
-.param x_dut_xm6_l=9.666u
+.param x_dut_xm6_w=8.145207701283387e-06
+.param x_dut_xm6_l=4.815201971218506e-06
 .param x_dut_v_bias_1=0.509
 .param x_dut_v_bias_2=1.032
 .param x_dut_xm1_m=1

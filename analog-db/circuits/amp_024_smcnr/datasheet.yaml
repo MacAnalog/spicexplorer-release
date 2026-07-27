@@ -47,6 +47,26 @@ metrics:
       unit: deg
       min: 60.0
       max: 90
+  cmrr_db:
+    display: Common-mode rejection
+    description: CMRR in the unity-buffer config, DC-band floor (gap fill 2026-07-24).
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_db
+    spec:
+      min: 40
+      unit: dB
+  psrr_vdd_db:
+    display: Positive-supply rejection
+    description: PSRR+ in the unity-buffer config, DC-band floor (gap fill 2026-07-24).
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_vdd_db
+    spec:
+      min: 40.0
+      unit: dB
   i_supply:
     display: Supply current
     unit: A

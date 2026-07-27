@@ -77,7 +77,10 @@ XDUT vdd vout vss ldo_007_pmos
   * NaN rather than a fabricated number when the sweep never reaches regulation — an honest
   * "this circuit does not regulate anywhere in the swept range".
   if found < 0.5
-    let v_dropout = 0/0
+    * 0*log(0) — NOT 0/0: ngspice-45 hard-errors on 0/0 ("argument out of range for
+    * divide"), so the vector never exists and the runner reports sim_error instead of
+    * the intended honest NaN (found live on ldo_004's committed sizing, 2026-07-24).
+    let v_dropout = 0*log(0)
   else
     let v_dropout = vin_at - vout_at
   end
@@ -86,21 +89,21 @@ XDUT vdd vout vss ldo_007_pmos
   quit
 .endc
 .param x_dut_xmp_w=20u
-.param x_dut_xmp_m=20
+.param x_dut_xmp_m=140
 .param x_dut_xmp_l=0.5u
-.param x_dut_xm1_w=4u
+.param x_dut_xm1_w=16u
 .param x_dut_xm1_l=0.5u
-.param x_dut_xm3_w=4u
+.param x_dut_xm3_w=25u
 .param x_dut_xm3_l=0.5u
-.param x_dut_xm6_w=4u
-.param x_dut_xm6_l=1.0u
-.param r_top=100k
-.param r_bot=100k
+.param x_dut_xm6_w=48u
+.param x_dut_xm6_l=0.5u
+.param r_top=5k
+.param r_bot=35k
 .param c_ff=60p
 .param c_comp=0.05p
 .param r_z=1
-.param vref_val=0.6
-.param i_tail=200u
+.param vref_val=1.05
+.param i_tail=60u
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

@@ -1,0 +1,78 @@
+{
+  "schema": "spicexplorer/gmid-lut@1",
+  "pdk": "ihp-sg13g2",
+  "device": "sg13_hv_nmos",
+  "model_family": "psp",
+  "polarity": "n",
+  "corner": "tt",
+  "model": {
+    "corner_lines": [
+      ".lib cornerMOShv.lib mos_tt"
+    ],
+    "variant_override": {
+      "lib_file": "cornerMOShv.lib"
+    },
+    "info": "IHP sg13g2, 1.5 V lv, PSP/OSDI"
+  },
+  "conditions": {
+    "temp_k": 300.0,
+    "width_um": 5.0,
+    "nfing": 1
+  },
+  "dimensions": {
+    "L_um": {
+      "n": 7,
+      "min": 0.45,
+      "max": 3.0,
+      "values": [
+        0.45,
+        0.6,
+        0.8,
+        1.0,
+        1.5,
+        2.0,
+        3.0
+      ]
+    },
+    "VGS_V": {
+      "n": 51,
+      "min": 0.0,
+      "max": 2.5,
+      "step": 0.05
+    },
+    "VDS_V": {
+      "n": 11,
+      "min": 0.0,
+      "max": 2.5,
+      "step": 0.25
+    },
+    "VSB_V": {
+      "n": 2,
+      "min": 0.0,
+      "max": 0.6,
+      "step": 0.6,
+      "stored": "magnitude"
+    }
+  },
+  "params": [
+    "ID",
+    "VT",
+    "GM",
+    "GMB",
+    "GDS",
+    "CGG",
+    "CGB",
+    "CGD",
+    "CGS",
+    "CDD",
+    "CSS",
+    "STH",
+    "SFL"
+  ],
+  "lut_file": "sg13_hv_nmos__tt.pkl",
+  "provenance": {
+    "tool": "analog-db gmid-extract",
+    "ngspice": "45",
+    "extracted_at": "2026-07-25T00:54:33+00:00"
+  }
+}

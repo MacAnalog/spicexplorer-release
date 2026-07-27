@@ -13,10 +13,10 @@
       "analyses": {
         "tran_rrl_sense": {
           "measures": {
-            "ramp_rate": -875.328,
-            "ripple_gain": -437664.0,
-            "v1": -0.4582189,
-            "v2": -1.508613
+            "ramp_rate": -3317.83,
+            "ripple_gain": -1658910.0,
+            "v1": -2.802028,
+            "v2": -6.783419
           },
           "status": "ok"
         }
@@ -24,7 +24,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-21T02:29:02+00:00"
+        "run_at": "2026-07-27T11:52:37+00:00"
       }
     }
   },
@@ -33,7 +33,7 @@
     "tt": {
       "ripple_gain": {
         "spec": "none",
-        "value": -437664.0
+        "value": -1658910.0
       }
     }
   },
@@ -97,7 +97,7 @@
       "tt"
     ],
     "performance": {
-      "ripple_gain": -437664.0
+      "ripple_gain": -1658910.0
     }
   },
   "schema": "spicexplorer/scoreboard-entry@1"

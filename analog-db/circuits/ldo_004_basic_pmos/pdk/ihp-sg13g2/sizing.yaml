@@ -4,13 +4,13 @@ schema: spicexplorer/sizing@1
 pdk: ihp-sg13g2
 variables:
   - {name: x_dut_xmp_w,   description: "Pass PMOS per-device width (<=bin max)", default: 10u, min: 1u,   max: 100u, unit: m}
-  - {name: x_dut_xmp_m,   description: "Pass PMOS parallel multiplier (total W = x_dut_xmp_w*x_dut_xmp_m)", default: 20, min: 1, max: 200, unit: count, is_integer: true}
-  - {name: x_dut_xmp_l,   description: "Pass PMOS length",           default: 0.5u, min: 0.13u, max: 2u,    unit: m}
+  - {name: x_dut_xmp_m,   description: "Pass PMOS parallel multiplier (total W = x_dut_xmp_w*x_dut_xmp_m)", default: 200, min: 1, max: 200, unit: count, is_integer: true}
+  - {name: x_dut_xmp_l,   description: "Pass PMOS length",           default: 0.3u, min: 0.13u, max: 2u,    unit: m}
   - {name: r_top,    description: "Divider top",                default: 100k, min: 1k,    max: 10Meg, unit: ohm}
   - {name: r_bot,    description: "Divider bottom",              default: 100k, min: 1k,    max: 10Meg, unit: ohm}
-  - {name: vref_val, description: "Internal reference voltage",  default: 0.6,  min: 0.3,   max: 1.2,   unit: V}
+  - {name: vref_val, description: "Internal reference voltage",  default: 0.635, min: 0.3,  max: 1.2,   unit: V}
   - {name: i_tail,   description: "Error-amp tail bias current", default: 200u, min: 1u,    max: 500u,  unit: A}
-  - {name: x_dut_xm1_w,     description: "Error-amp input pair width",  default: 4u,   min: 0.18u, max: 50u,   unit: m}
-  - {name: x_dut_xm1_l,     description: "Error-amp input pair length", default: 0.5u, min: 0.13u, max: 10u,   unit: m}
-  - {name: x_dut_xm3_w,   description: "Error-amp PMOS load width",   default: 4u,   min: 0.18u, max: 50u,   unit: m}
-  - {name: x_dut_xm3_l,   description: "Error-amp PMOS load length",  default: 0.5u, min: 0.13u, max: 10u,   unit: m}
+  - {name: x_dut_xm1_w,     description: "Error-amp input pair width",  default: 50u,  min: 0.18u, max: 50u,   unit: m}
+  - {name: x_dut_xm1_l,     description: "Error-amp input pair length", default: 1u,   min: 0.13u, max: 10u,   unit: m}
+  - {name: x_dut_xm3_w,   description: "Error-amp PMOS load width",   default: 45u,  min: 0.18u, max: 50u,   unit: m}
+  - {name: x_dut_xm3_l,   description: "Error-amp PMOS load length",  default: 1u,   min: 0.13u, max: 10u,   unit: m}

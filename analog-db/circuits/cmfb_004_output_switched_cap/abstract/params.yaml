@@ -1,0 +1,56 @@
+# cmfb_004_output_switched_cap — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit cmfb_004_output_switched_cap --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  C1: {Value: x_dut_c1_value}
+  C2: {Value: x_dut_c2_value}
+  C3: {Value: x_dut_c3_value}
+  C4: {Value: x_dut_c4_value}
+  XM1: {l: x_dut_xm1_l, m: x_dut_xm1_m, w: x_dut_xm1_w}
+  XM10: {l: x_dut_xm10_l, m: x_dut_xm10_m, w: x_dut_xm10_w}
+  XM11: {l: x_dut_xm11_l, m: x_dut_xm11_m, w: x_dut_xm11_w}
+  XM12: {l: x_dut_xm12_l, m: x_dut_xm12_m, w: x_dut_xm12_w}
+  XM13: {l: x_dut_xm13_l, m: x_dut_xm13_m, w: x_dut_xm13_w}
+  XM14: {l: x_dut_xm14_l, m: x_dut_xm14_m, w: x_dut_xm14_w}
+  XM15: {l: x_dut_xm15_l, m: x_dut_xm15_m, w: x_dut_xm15_w}
+  XM16: {l: x_dut_xm16_l, m: x_dut_xm16_m, w: x_dut_xm16_w}
+  XM2: {l: x_dut_xm2_l, m: x_dut_xm2_m, w: x_dut_xm2_w}
+  XM3: {l: x_dut_xm3_l, m: x_dut_xm3_m, w: x_dut_xm3_w}
+  XM4: {l: x_dut_xm4_l, m: x_dut_xm4_m, w: x_dut_xm4_w}
+  XM5: {l: x_dut_xm5_l, m: x_dut_xm5_m, w: x_dut_xm5_w}
+  XM6: {l: x_dut_xm6_l, m: x_dut_xm6_m, w: x_dut_xm6_w}
+  XM7: {l: x_dut_xm7_l, m: x_dut_xm7_m, w: x_dut_xm7_w}
+  XM8: {l: x_dut_xm8_l, m: x_dut_xm8_m, w: x_dut_xm8_w}
+  XM9: {l: x_dut_xm9_l, m: x_dut_xm9_m, w: x_dut_xm9_w}
+# AUTHORED ties (2026-07-27 registration review): the drawing carries GLOBAL geometry
+# params — tg_n_w/tg_n_l for every TG NMOS, tg_p_w/tg_p_l for every TG PMOS,
+# cmfb_cm1/cmfb_cm2 for the switched/reservoir cap pairs — so the ties below ARE the
+# drawn intent, not a recommendation. shared_geometry (not matched_pair): the eight
+# gates share no source net; what matters is equal Ron/charge-injection per phase and
+# p/n-side symmetry (mismatch leaks differential signal into vcmfb).
+groups:
+- name: tg_nmos_all
+  kind: shared_geometry
+  members: [XM1, XM3, XM5, XM7, XM9, XM11, XM13, XM15]
+  tie: [w, l, m]
+  description: All eight transmission-gate NMOS halves (drawn global tg_n_w/tg_n_l);
+    p/n-side symmetry keeps charge injection common-mode.
+- name: tg_pmos_all
+  kind: shared_geometry
+  members: [XM2, XM4, XM6, XM8, XM10, XM12, XM14, XM16]
+  tie: [w, l, m]
+  description: All eight transmission-gate PMOS halves (drawn global tg_p_w/tg_p_l).
+- name: cap_switched
+  kind: shared_geometry
+  members: [C2, C4]
+  tie: [Value]
+  description: Per-side switched caps (drawn cmfb_cm1) — equal values so both sides
+    transfer equal charge and vcmfb reads the true CM.
+- name: cap_reservoir
+  kind: shared_geometry
+  members: [C1, C3]
+  tie: [Value]
+  description: Per-side reservoir caps across (vbias, vcm) (drawn cmfb_cm2).

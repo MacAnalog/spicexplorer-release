@@ -38,8 +38,8 @@ lab=vctl_not}
 N 410 -620 590 -620 {
 lab=vctl_not}
 C {devices/title.sym} 210 -70 0 0 {name=l1 author="Copyright 2026 MacAnalog Research Group"}
-C {ipin.sym} 380 -400 0 0 {name=p1 lab=port_A}
-C {ipin.sym} 740 -400 0 1 {name=p2 lab=port_B}
+C {iopin.sym} 380 -400 0 0 {name=p1 lab=port_A}
+C {iopin.sym} 740 -400 0 1 {name=p2 lab=port_B}
 C {ipin.sym} 520 -180 2 1 {name=p6 lab=vctl}
 C {ipin.sym} 590 -340 3 1 {name=p3 lab=VSS}
 C {sg13g2_pr/sg13_lv_nmos.sym} 590 -260 3 0 {name=M1

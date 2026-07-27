@@ -19,6 +19,23 @@
     },
     {
       "connections": {
+        "N": "nd",
+        "P": "na"
+      },
+      "device_type": "RES",
+      "id": "RND",
+      "params": {
+        "Value": "'r_nd'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
         "N": "ncz",
         "P": "nb"
       },
@@ -259,7 +276,7 @@
   ],
   "meta": {
     "circuit_name": "amp_032_ti_ldo_error_selfbias",
-    "component_count": 13,
+    "component_count": 14,
     "net_count": 12
   },
   "nets": [

@@ -30,6 +30,11 @@ instances:
     ports: {vinp: vinp, vinn: vinn, voutp: voutp, voutn: voutn, vdd: vdd, vss: vss}
     taps: {vbl: vbl_ctl}
     omit: [Vbl]
+    # The composite owns its compensation (plan D3): the block's 0.3p default is
+    # tuned for amp_029's OPEN-CM settle spec; with the CMFB servo closed, 1p is
+    # the qualified point (0.3p re-recorded live at +15 dB cm_peaking and a 97 MHz
+    # ugf the tran benches under-resolve).
+    override: {x_dut_c1_value: 1p}
   - name: servo
     block: cmfb_001_ideal_rsense_servo
     pin: 9c8861186398

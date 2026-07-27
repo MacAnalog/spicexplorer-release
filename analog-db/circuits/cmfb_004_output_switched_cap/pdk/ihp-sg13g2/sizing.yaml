@@ -1,0 +1,23 @@
+# Design variables for the ihp-sg13g2 binding. The drawing carries symbolic globals
+# (tg_n_w/tg_n_l/tg_p_w/tg_p_l for ALL eight transmission gates, cmfb_cm1/cmfb_cm2
+# for the switched/reservoir cap pairs) — mapped here onto group representatives
+# (see abstract/params.yaml ties: all TG NMOS <- XM1, all TG PMOS <- XM2,
+# reservoir C3 <- C1, switched C4 <- C2). TG defaults are MINIMUM geometry
+# (w=0.15u l=0.13u — the drawn literals), chosen by live sweep 2026-07-27: at
+# FCLK 1 kHz the switch RC is trivial (Ron*C << TCLK/2) and charge injection is
+# the ONLY thing TG width buys you — w 2u -> 0.5u -> 0.15u moved ring_v
+# 9.6m -> 2.6m -> 0.94 mV and vcmfb_nat offset 3.0m -> ~0.5 mV. Caps default to
+# the sketch's original 1p; the cap-to-consumer-gate ratio sets per-clock error
+# closure (2*C_sw/(2*C_sw+CL) ~ 98% at 1p/50f — settles in one sense phase).
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  - {name: x_dut_xm1_w, description: "TG NMOS width (all eight gates tied)", default: 0.15u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xm1_l, description: "TG NMOS length", default: 0.13u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_xm2_w, description: "TG PMOS width (all eight gates tied)", default: 0.15u, min: 0.15u, max: 50u, unit: m}
+  - {name: x_dut_xm2_l, description: "TG PMOS length", default: 0.13u, min: 0.13u, max: 2u, unit: m}
+  - {name: x_dut_c1_value, description: "Reservoir cap across (vbias, vcm), per side (drawn cmfb_cm2; C3 tied)", default: 1p, min: 50f, max: 10p, unit: F}
+  - {name: x_dut_c2_value, description: "Switched cap across (ctl, sense), per side (drawn cmfb_cm1; C4 tied) — with the consumer's gate CL sets per-clock error closure", default: 1p, min: 50f, max: 10p, unit: F}
+  # Frozen per-device literals: defaults reproduce the drawn m=1 exactly.
+  - {name: x_dut_xm1_m, description: "TG NMOS m (frozen literal, tied)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm2_m, description: "TG PMOS m (frozen literal, tied)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

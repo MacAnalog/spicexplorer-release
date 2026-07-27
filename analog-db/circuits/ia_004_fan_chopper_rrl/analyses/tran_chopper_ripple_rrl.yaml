@@ -1,0 +1,30 @@
+# Analysis binding (P4-4b): the RRL composite's clocked ripple bench — RE-BOUND
+# 2026-07-27, the first time it can produce numbers: the composed core now carries the
+# cmfb_001 ideal CM servo on Vb4 (see composition.yaml), so the output CM no longer
+# rails under the running clocks and the transient completes. All chopper clock pairs
+# at FCHOP; clk_phi_1/2 at 2x FCHOP (the CCIA SC architecture rate: two charge
+# transfers per chop period, phi_1 rising with the chop edge). Window A (0 input,
+# 3m..4m) gives the ZERO-INPUT residual ripple WITH the RRL active (v_ripple0_pp — the
+# ripple-nulling figure); window B (VIN_DC input, 7m..8m) the chopped gain + ripple.
+# Both windows sit after the RRL's ~5 ms settling (rrl gm_val 10u — composition note).
+schema: spicexplorer/analysis@1
+id: tran_chopper_ripple_rrl
+template: tran_chopper_ripple_rrl
+description: "Clocked transient at FCHOP with the RRL + CM servo active; v_ripple_pp + v_ripple0_pp + gain_cl + vos_residual."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 50f
+  FCHOP: 5k
+  TEDGE: 50n
+  VIN_DC: 10m
+  T1: 4m
+  WA0: 3m
+  WA1: 4m
+  WB0: 7m
+  WB1: 8m
+  TSTEP: 1u
+  TSTOP: 8m
+  TMAX: 200n
+flags: []
+produces: [v_ripple_pp, v_ripple0_pp, gain_cl, vos_residual]

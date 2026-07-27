@@ -31,21 +31,21 @@ XDUT vdd vout vss ldo_007_pmos
   quit
 .endc
 .param x_dut_xmp_w=10u
-.param x_dut_xmp_m=20
-.param x_dut_xmp_l=0.5u
-.param x_dut_xm1_w=4u
-.param x_dut_xm1_l=0.5u
-.param x_dut_xm3_w=4u
-.param x_dut_xm3_l=0.5u
-.param x_dut_xm6_w=4u
+.param x_dut_xmp_m=120
+.param x_dut_xmp_l=0.2u
+.param x_dut_xm1_w=50u
+.param x_dut_xm1_l=2.0u
+.param x_dut_xm3_w=44u
+.param x_dut_xm3_l=1.0u
+.param x_dut_xm6_w=40u
 .param x_dut_xm6_l=1.0u
-.param r_top=100k
-.param r_bot=100k
-.param c_ff=60p
+.param r_top=20k
+.param r_bot=20k
+.param c_ff=2n
 .param c_comp=0.05p
 .param r_z=1
 .param vref_val=0.6
-.param i_tail=200u
+.param i_tail=100u
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

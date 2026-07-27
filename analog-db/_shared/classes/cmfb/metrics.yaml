@@ -56,3 +56,4 @@ templates:
   - dc_cmfb_transfer  # sensed-CM sweep: polarity slope, gain, natural output, ranges, sense loading, i_supply
   - ac_servo          # CM AC drive -> vcmfb transfer: gain_servo_db, bw_servo_hz, ugf_servo_hz (moved from support 2026-07-20, + UGF)
   - tran_cmfb_step    # sensed-CM step: signed step_delta_v, ring_v, t_cm_settle
+  - tran_sc_cmfb_step # clocked SC-CMFB one-bench suite (2026-07-27): two-phase clocks + CM step; AVG-window vcmfb_nat/cmfb_slope/step_delta_v + clock-ripple ring_v + t_cm_settle + i_supply (the CT dc/ac templates are meaningless through capacitive sense paths)

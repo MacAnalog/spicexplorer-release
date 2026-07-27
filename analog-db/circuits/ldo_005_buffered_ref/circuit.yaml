@@ -29,6 +29,6 @@ artifacts:
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
   reference_schematic: reference/ti-ldo/pictures/TI_LDO_system_architecture.png
-pdks: [gf180mcu]
+pdks: [gf180mcu, ihp-sg13g2]
 analyses: [dc_op, load_regulation, line_regulation, psrr, dropout, tran_load_step, loop_stability, ac_loopgain, noise, tran_line_step]
 status: draft

@@ -52,3 +52,24 @@ metrics:
     description: "Voltage-driven |Zin| at FSIG with clocks frozen — the cap-coupled 1/(pi*f*Cin) figure; the in-operation number is zin_chop_ohm"
     unit: Ohm
     spec: {min: 50e6, unit: Ohm}
+  gain_cl:
+    display: "Chopped closed-loop gain (clocked, RRL + CM servo active)"
+    description: "Windowed-average differential gain under the running clocks (tran_chopper_ripple_rrl window B); the cap-ratio design value is Cin/Cfb = 20 V/V"
+    unit: V/V
+    analysis: tran_chopper_ripple_rrl
+    extract: {meas: gain_cl}
+    spec: {min: 15, typ: 20, unit: V/V}
+  v_ripple0_pp:
+    display: "Zero-input output ripple, RRL active"
+    description: "Window-A (zero differential input) peak-to-peak output ripple with the ripple-reduction loop and CM servo running — THE ripple-nulling figure (the RRL-less ia_002 sits at ~0.4 Vpp)"
+    unit: V
+    analysis: tran_chopper_ripple_rrl
+    extract: {meas: v_ripple0_pp}
+    spec: {max: 10e-3, unit: V}
+  zin_chop_ohm:
+    display: "Chopped differential input impedance"
+    description: "Average input current under the running clocks (tran_zin_chopped); the static zin_ohm spec row above is the paper target the frozen-AC bench used to mis-measure"
+    unit: Ohm
+    analysis: tran_zin_chopped
+    extract: {meas: zin_chop_ohm}
+    spec: {min: 1e6, unit: Ohm}

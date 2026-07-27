@@ -1,0 +1,10 @@
+# Analysis binding (psrr_vdd) — positive-supply rejection (gap fill 2026-07-24: the only
+# single-ended amplifier that shipped without the rejection pair; unity-buffer config,
+# same DC operating point the biaswrap AC bench proves: VDD 1.5, VCM 0.5).
+schema: spicexplorer/analysis@1
+id: psrr_vdd
+template: psrr_vdd_selfbias
+description: "PSRR+ — 1 V supply ripple into the unity buffer, DC-band floor."
+params: {VDD: 1.5, VCM: 0.5, CL: 10p, FSTART: 1k, FSTOP: 1G, PPD: 101}
+flags: []
+produces: [psrr_vdd_db]

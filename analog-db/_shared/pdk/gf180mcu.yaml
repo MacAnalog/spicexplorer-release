@@ -68,8 +68,12 @@ gmid:
   variants:                               # corner override per device variant (matched on device name)
     - match: "06v0"                       # the 6V IO device: model cards reference skew params
       corners:                            #   (nfet_06v0_tox …) only the master `typical` corner defines
+        includes: [design.ngspice]        #   defines par_vth/var_k/... the 6V subckt formals need (fix 2026-07-25)
         per_corner: {tt: [typical, nfet_06v0_t, pfet_06v0_t]}  #   (typical-only in this open subset).
         # KNOWN LIMITATION: this vendored gf180 ngspice subset does NOT characterize cleanly — the 6V
         # `_dss` mismatch wrapper (agauss/var_vth) + a `$`-comment in `typical` abort the bare sweep.
-        # The section plumbing is correct (resolves the model); a fuller gf180 model vendoring unblocks
-        # it. Use the 3.3 V core devices for gm/ID sizing. See _shared/GMID.md.
+        # 2026-07-25 re-probe: adding `includes: [design.ngspice]` (which the working circuit decks
+        # carry) is necessary but NOT sufficient — var_vth/var_k stay undefined even with the *_t
+        # sections dropped (typical-only). The working circuit decks differ in some further way; next
+        # lead = binary-diff a passing raw 6V deck against the characterization deck. Until then use
+        # the 3.3 V core devices for gm/ID sizing (directional anchors). See _shared/GMID.md.

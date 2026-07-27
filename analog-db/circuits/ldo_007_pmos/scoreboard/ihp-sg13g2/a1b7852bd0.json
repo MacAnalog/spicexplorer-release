@@ -1,0 +1,177 @@
+{
+  "area": {
+    "active_gate_area_um2": 518.0,
+    "c_count": 2,
+    "c_total_f": 2.00005e-09,
+    "mos_count": 7,
+    "r_count": 3,
+    "r_total_ohm": 200001.0
+  },
+  "circuit": "ldo_007_pmos",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.000245826,
+            "vout_dc": 1.228833
+          },
+          "status": "ok"
+        },
+        "dropout": {
+          "measures": {
+            "v_dropout": 0.1003136,
+            "vin_at": 1.3,
+            "vout_at": 1.199686
+          },
+          "status": "ok"
+        },
+        "line_regulation": {
+          "measures": {
+            "line_reg": 0.003823,
+            "vout_max": 1.217439,
+            "vout_min": 1.213616
+          },
+          "status": "ok"
+        },
+        "load_regulation": {
+          "measures": {
+            "load_reg": 0.024586,
+            "vout_max": 1.228833,
+            "vout_min": 1.204247
+          },
+          "status": "ok"
+        },
+        "loop_stability": {
+          "measures": {
+            "zout_dc": 9.882516,
+            "zout_max": 9.882516,
+            "zout_peak_db": 0.0
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "onoise_total": 3.459589e-05,
+            "vn_out_rms": 0.005881827
+          },
+          "status": "ok"
+        },
+        "psrr": {
+          "measures": {
+            "psrr_vdd_db": 48.08948,
+            "vout_db": -48.08948
+          },
+          "status": "ok"
+        },
+        "tran_line_step": {
+          "measures": {
+            "v_line_pp": 0.001428,
+            "vout_max": 1.215966,
+            "vout_min": 1.214538
+          },
+          "status": "ok"
+        },
+        "tran_load_step": {
+          "measures": {
+            "t_transient": 2.116574e-05,
+            "tcross": 2.616574e-05,
+            "v_undershoot": 0.005086,
+            "vout_min": 1.20893,
+            "vout_post": 1.214016
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-25T00:11:13+00:00"
+      }
+    }
+  },
+  "design_id": "a1b7852bd0",
+  "metrics": {
+    "tt": {
+      "i_q": {
+        "spec": "pass",
+        "value": 0.000245826
+      },
+      "line_reg": {
+        "spec": "pass",
+        "value": 0.003823
+      },
+      "load_reg": {
+        "spec": "fail",
+        "value": 0.024586
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 48.08948
+      },
+      "t_transient": {
+        "spec": "pass",
+        "value": 2.116574e-05
+      },
+      "v_dropout": {
+        "spec": "pass",
+        "value": 0.1003136
+      },
+      "v_line_pp": {
+        "spec": "pass",
+        "value": 0.001428
+      },
+      "v_out": {
+        "spec": "pass",
+        "value": 1.228833
+      },
+      "v_undershoot": {
+        "spec": "pass",
+        "value": 0.005086
+      },
+      "vn_out_rms": {
+        "spec": "pass",
+        "value": 0.005881827
+      },
+      "zout_peak_db": {
+        "spec": "pass",
+        "value": 0.0
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "c_comp": "0.05p",
+      "c_ff": "2n",
+      "i_tail": "120u",
+      "r_bot": "100k",
+      "r_top": "100k",
+      "r_z": 1,
+      "vref_val": 0.6,
+      "x_dut_xm1_l": "2.0u",
+      "x_dut_xm1_w": "40u",
+      "x_dut_xm3_l": "0.5u",
+      "x_dut_xm3_w": "38u",
+      "x_dut_xm6_l": "1.0u",
+      "x_dut_xm6_w": "40u",
+      "x_dut_xmp_l": "0.2u",
+      "x_dut_xmp_m": 120,
+      "x_dut_xmp_w": "10u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 518.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "load_reg": 0.024586,
+      "psrr_vdd_db": 48.08948,
+      "v_dropout": 0.1003136,
+      "v_undershoot": 0.005086
+    },
+    "power_w": 0.00044248679999999997
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

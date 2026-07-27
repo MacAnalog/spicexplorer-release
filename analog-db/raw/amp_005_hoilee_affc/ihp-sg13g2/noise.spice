@@ -48,39 +48,39 @@ XDUT vss vdd vinn vinp vout amp_005_hoilee_affc
   write
   quit
 .endc
-.param CAPACITOR_0=18p
-.param CAPACITOR_1=3p
-.param CURRENT_0_BIAS=20u
-.param x_dut_xm7_l=1u
+.param CAPACITOR_0=1.2027996372488677e-11
+.param CAPACITOR_1=1.1234225390570069e-11
+.param CURRENT_0_BIAS=1.0516627406451695e-05
+.param x_dut_xm7_l=6.8591719501937685e-06
 .param x_dut_xm7_m=4
-.param x_dut_xm7_w=1u
-.param x_dut_xm11_l=1u
+.param x_dut_xm7_w=2.1688317329503267e-06
+.param x_dut_xm11_l=1.3719002576008967e-06
 .param x_dut_xm11_m=4
-.param x_dut_xm11_w=1u
-.param x_dut_xm12_l=1u
+.param x_dut_xm11_w=2.787979957461642e-06
+.param x_dut_xm12_l=5.988349136760322e-07
 .param x_dut_xm12_m=4
-.param x_dut_xm12_w=1u
-.param x_dut_xm16_l=1u
+.param x_dut_xm12_w=8.693919829128843e-06
+.param x_dut_xm16_l=8.243898016316384e-06
 .param x_dut_xm16_m=16
-.param x_dut_xm16_w=1u
-.param x_dut_xm64_l=1u
+.param x_dut_xm16_w=2.897929542688612e-06
+.param x_dut_xm64_l=3.1517618454065407e-06
 .param x_dut_xm15_m=4
-.param x_dut_xm64_w=1u
-.param x_dut_xm22_l=1u
+.param x_dut_xm64_w=2.094992853501535e-07
+.param x_dut_xm22_l=9.330295256693488e-06
 .param x_dut_xm22_m=4
-.param x_dut_xm22_w=1u
-.param x_dut_xm25_l=1u
+.param x_dut_xm22_w=6.336364993731919e-06
+.param x_dut_xm25_l=3.9810122573135085e-06
 .param x_dut_xm25_m=4
-.param x_dut_xm25_w=1u
-.param x_dut_xm59_l=1u
+.param x_dut_xm25_w=2.7116514340377637e-06
+.param x_dut_xm59_l=4.373747329573235e-06
 .param x_dut_xm59_m=4
-.param x_dut_xm59_w=1u
-.param x_dut_xm63_l=1u
+.param x_dut_xm59_w=4.575782045310205e-06
+.param x_dut_xm63_l=7.675120142737927e-07
 .param x_dut_xm63_m=4
-.param x_dut_xm63_w=1u
-.param x_dut_xm10_l=1u
+.param x_dut_xm63_w=2.921605049426876e-06
+.param x_dut_xm10_l=7.729179746551887e-07
 .param x_dut_xm10_m=4
-.param x_dut_xm10_w=1u
+.param x_dut_xm10_w=9.8813954120161e-06
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

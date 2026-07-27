@@ -5,24 +5,24 @@ schema: spicexplorer/sizing@1
 pdk: sky130
 variables:
 - name: x_dut_xmb0_w
-  default: 20
+  default: 100
   description: Bias-mirror NMOS unit (1 mA/branch at ~0.3 V vdsat)
 - name: x_dut_xmb0_l
-  default: 2
+  default: 0.5
 - name: x_dut_xmbc_m
   default: '1'
 - name: x_dut_xmbo_m
   default: '1'
 - name: x_dut_xm1_w
-  default: 40
+  default: 100
   description: Input pair
 - name: x_dut_xm1_l
-  default: 0.7
+  default: 0.5
 - name: x_dut_xm3_w
   default: 40
   description: Level-shifted PMOS mirror (M3m/M5)
 - name: x_dut_xm3_l
-  default: 0.5
+  default: 1
 - name: x_dut_xm4_w
   default: 10
   description: M4 compound-diode level shifter (~zero DC current)
@@ -39,15 +39,21 @@ variables:
 - name: x_dut_xm6_l
   default: 2
 - name: r_z
-  default: 1k
+  default: 3k
   description: Upstream RZ ppolyf_u_3k placeholder geometry -> coarse 1k
 - name: c_comp
-  default: 2p
+  default: 6p
   description: Upstream param block says 100p, instance says 1p; coarse 2p
 - name: x_dut_xmbe_w
-  default: 5
+  default: 12
   description: "M_mirror_e sink \u2014 MUST be < tail/2 for a valid first-stage op point (see netlist\
     \ note)"
 - name: x_dut_xmbf_w
-  default: 5
+  default: 25
   description: M_mirror_f sink (level-shifter anchor; carries ~0 by design)
+- name: r_nd
+  default: 500k
+  min: 10k
+  max: 10MEG
+  unit: ohm
+  description: "Level-shifted-mirror gate-rail tie na->nd (DC-defines nd; ~0 current — fix 2026-07-25, see abstract netlist)"

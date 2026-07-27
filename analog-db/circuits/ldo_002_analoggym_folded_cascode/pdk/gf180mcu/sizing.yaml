@@ -5,9 +5,9 @@ schema: spicexplorer/sizing@1
 pdk: gf180mcu
 variables:
 - name: x_dut_xm1_w
-  default: 20u
+  default: 60u
 - name: x_dut_xm1_l
-  default: 1u
+  default: 0.6u
 - name: x_dut_xm3_w
   default: 30u
 - name: x_dut_xm3_l

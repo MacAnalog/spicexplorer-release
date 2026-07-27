@@ -19,6 +19,12 @@
           },
           "status": "ok"
         },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 96.43619
+          },
+          "status": "ok"
+        },
         "dc_op": {
           "measures": {
             "i_supply": 1.302889e-06
@@ -29,6 +35,12 @@
           "measures": {
             "inoise_total": 0.0002805704,
             "onoise_total": 0.03038629
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 105.4818
           },
           "status": "ok"
         },
@@ -44,13 +56,17 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-21T02:21:57+00:00"
+        "run_at": "2026-07-24T22:23:09+00:00"
       }
     }
   },
   "design_id": "57f7e284e2",
   "metrics": {
     "tt": {
+      "cmrr_db": {
+        "spec": "pass",
+        "value": 96.43619
+      },
       "dc_gain_db": {
         "spec": "pass",
         "value": 69.3674
@@ -62,6 +78,10 @@
       "pm_deg": {
         "spec": "fail",
         "value": 58.08825
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 105.4818
       },
       "t_settle": {
         "spec": "pass",

@@ -117,14 +117,16 @@ def test_net_extraction_matches_electrical_ground_truth(fixture, expected, ports
 
 
 def test_extraction_prefers_human_label_over_xschem_auto_name():
-    # chopper-diff has one net carrying both the auto '#net2' and the human 'Vctl_not';
-    # xschem's netlister publishes the human name, so the extractor must too (subckt
-    # port naming drifts one hierarchy level up otherwise).
+    # chopper-diff has one net whose wires still carry the CACHED auto-label '#net2'
+    # while a human 'Vctl_not' label component names it. Cached wire ``lab=`` attrs are
+    # not electrical labels (xschem regenerates them and ignores stale ones): they must
+    # neither name the net nor reach the multiple-labels warning path — a stale cached
+    # name once by-name-MERGED two distinct nets (the vo1p/VDD port regression).
     sch, symlib = _load("chopper-diff.sch")
     nx = extract_nets(sch, symlib)
     assert "Vctl_not" in nx.nets
     assert "#net2" not in nx.nets
-    assert any("multiple labels" in w for w in nx.warnings)
+    assert not any("multiple labels" in w for w in nx.warnings)
 
 
 def test_extraction_rot_flip_devices_have_wire_following_stubs():

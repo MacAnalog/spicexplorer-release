@@ -5,19 +5,19 @@
 schema: spicexplorer/sizing@1
 pdk: ihp-sg13g2
 variables:
-  - {name: x_dut_xm1_w,    description: "Input pair W",         default: 27.241u,  min: 0.18u, max: 200u, unit: m}
-  - {name: x_dut_xm1_l,    description: "Input pair L",         default: 0.246u,   min: 0.18u, max: 10u,  unit: m}
-  - {name: x_dut_xm1c_w,  description: "NMOS cascode W",       default: 48.148u,  min: 0.18u, max: 200u, unit: m}
-  - {name: x_dut_xm1c_l,  description: "NMOS cascode L",       default: 5.274u,   min: 0.18u, max: 10u,  unit: m}
-  - {name: x_dut_xm3_w,    description: "PMOS load W",          default: 99.145u,  min: 0.18u, max: 200u, unit: m}
-  - {name: x_dut_xm3_l,    description: "PMOS load L",          default: 1.391u,   min: 0.18u, max: 10u,  unit: m}
-  - {name: x_dut_xm3c_w,  description: "PMOS cascode W",       default: 78.432u,  min: 0.18u, max: 200u, unit: m}
-  - {name: x_dut_xm3c_l,  description: "PMOS cascode L",       default: 4.589u,   min: 0.18u, max: 10u,  unit: m}
-  - {name: x_dut_xm5_w,      description: "Tail W",               default: 170.082u, min: 0.18u, max: 200u, unit: m}
-  - {name: x_dut_xm5_l,      description: "Tail L",               default: 0.505u,   min: 0.18u, max: 10u,  unit: m}
+  - {name: x_dut_xm1_w,    description: "Input pair W",         default: 6.116280667583133e-07,  min: 0.18u, max: 200u, unit: m}
+  - {name: x_dut_xm1_l,    description: "Input pair L",         default: 7.791216446889749e-07,   min: 0.18u, max: 10u,  unit: m}
+  - {name: x_dut_xm1c_w,  description: "NMOS cascode W",       default: 6.96391065616068e-06,  min: 0.18u, max: 200u, unit: m}
+  - {name: x_dut_xm1c_l,  description: "NMOS cascode L",       default: 9.920210290687422e-07,   min: 0.18u, max: 10u,  unit: m}
+  - {name: x_dut_xm3_w,    description: "PMOS load W",          default: 1.7141886411301278e-06,  min: 0.18u, max: 200u, unit: m}
+  - {name: x_dut_xm3_l,    description: "PMOS load L",          default: 5.45823761118433e-06,   min: 0.18u, max: 10u,  unit: m}
+  - {name: x_dut_xm3c_w,  description: "PMOS cascode W",       default: 8.795623406543892e-06,  min: 0.18u, max: 200u, unit: m}
+  - {name: x_dut_xm3c_l,  description: "PMOS cascode L",       default: 3.883557926921232e-07,   min: 0.18u, max: 10u,  unit: m}
+  - {name: x_dut_xm5_w,      description: "Tail W",               default: 4.7008952481424335e-06, min: 0.18u, max: 200u, unit: m}
+  - {name: x_dut_xm5_l,      description: "Tail L",               default: 3.7679599937261675e-06,   min: 0.18u, max: 10u,  unit: m}
   - {name: x_dut_xm5_ng,     description: "Tail fingers",         default: 2,        min: 1,     max: 5, is_integer: true}
-  - {name: x_dut_xm6_w,      description: "Mirror ref W",         default: 118.161u, min: 0.18u, max: 200u, unit: m}
-  - {name: x_dut_xm6_l,      description: "Mirror ref L",         default: 9.666u,   min: 0.18u, max: 10u,  unit: m}
+  - {name: x_dut_xm6_w,      description: "Mirror ref W",         default: 8.145207701283387e-06, min: 0.18u, max: 200u, unit: m}
+  - {name: x_dut_xm6_l,      description: "Mirror ref L",         default: 4.815201971218506e-06,   min: 0.18u, max: 10u,  unit: m}
   - {name: x_dut_v_bias_1,  description: "NMOS cascode bias",    default: 0.509,    min: 0,     max: 1.2,  unit: V}
   - {name: x_dut_v_bias_2,  description: "PMOS cascode bias",    default: 1.032,    min: 0,     max: 1.2,  unit: V}
   # Frozen per-device literals (P4 atomic sweep): defaults reproduce the authored

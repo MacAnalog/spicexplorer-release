@@ -68,8 +68,9 @@ def test_configdriven_amp022_tsmc65_ac(tmp_path: Path) -> None:
     assert set(evals) == {"dc_gain_db", "ugf_hz", "pm_deg"}, evals
     for name, m in evals.items():
         assert m.satisfied, f"{name}={m.value} fails datasheet spec [{m.spec_min}, {m.spec_max}]"
-    # and reproduces the bespoke-test AC numbers (47.4 dB / 18 MHz / 61°) within a tolerance band
-    assert 40.0 < evals["dc_gain_db"].value < 55.0, evals
+    # band around the committed gm/ID re-sizing (the binding carries the current
+    # re-sized operating point, ~55 dB / 11 MHz / 78°)
+    assert 45.0 < evals["dc_gain_db"].value < 62.0, evals
     assert 5.0e6 < evals["ugf_hz"].value < 40.0e6, evals
     # pm band top 80→90 (2026-07-17 `m=` fix: the multi-finger devices now really run
     # their designed multiplicity — more gm, ~81° PM; every datasheet spec still passes)
@@ -84,7 +85,7 @@ def test_configdriven_amp022_tsmc65_ac(tmp_path: Path) -> None:
     ("tb", "metric", "lo", "hi"),
     [
         ("cmrr_vcm", "cmrr_db", 40.0, 90.0),        # live 2026-07-09: 58.4 dB
-        ("psrr_vdd", "psrr_vdd_db", 60.0, 130.0),   # live 2026-07-09: 96.6 dB
+        ("psrr_vdd", "psrr_vdd_db", 50.0, 130.0),   # live 2026-07-22 (gmid_v7 sizing): 57.0 dB
         ("linearity", "icmr_range", 0.7, 1.2),      # live 2026-07-09: 1.07 V of the 1.2 V rail
     ],
 )
@@ -165,7 +166,7 @@ def test_configdriven_amp022_tsmc65_stb_and_calculator_route(tmp_path: Path) -> 
     lg = measure(run.result, {"meas": "loopgain_db", "out": "loopGain"}, default_analysis="stb")
     # bands widened with the 2026-07-17 `m=` fix (designed multiplicity → more gm:
     # pm ~82°, gain margin ~22 dB observed live)
-    assert 45.0 < pm < 90.0 and 3.0 < gm < 30.0 and 40.0 < lg < 55.0, (pm, gm, lg)
+    assert 45.0 < pm < 90.0 and 3.0 < gm < 30.0 and 45.0 < lg < 62.0, (pm, gm, lg)
 
     # calculator route: the template DB's SKILL set on the same raw dir (native margins)
     ms = bench_ocean_measurements(_CIRCUIT, "stb", pdk=_PDK)
@@ -175,7 +176,10 @@ def test_configdriven_amp022_tsmc65_stb_and_calculator_route(tmp_path: Path) -> 
             vals = sess.measure(run.result.raw_dir, ms, label="stb_calc")
     except OceanMetricsError as exc:
         pytest.skip(f"no OCEAN session here: {exc}")
-    assert abs(vals["pm_loop"] - pm) < 2.0, (vals, pm)
+    # 2026-07-22 (gmid_v7 re-sizing): the two routes interpolate the crossover on
+    # different frequency grids; at the new op point they differ by ~2.9 deg (76.1 vs
+    # 79.0). Keep the parity gate tight enough to catch sign/convention breakage.
+    assert abs(vals["pm_loop"] - pm) < 4.0, (vals, pm)
     assert abs(vals["gm_loop_db"] - gm) < 0.5, (vals, gm)
     assert abs(vals["loopgain_db"] - lg) < 0.1, (vals, lg)
 

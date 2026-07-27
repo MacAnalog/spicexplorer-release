@@ -2,3 +2,4 @@
 # Maintained via `analog-db scoreboard set-baseline` (or auto-named on first record).
 baselines:
   ihp-sg13g2: 730698f250
+  tsmc-n65: d47c7c3ce7

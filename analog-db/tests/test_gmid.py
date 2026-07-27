@@ -74,9 +74,14 @@ def test_variant_swaps_corner_lib_ihp_hv():
 def test_variant_swaps_sections_gf180_io():
     """A gf180 6V IO device pulls the `typical` + 06v0 model sections (not the 3.3 V default)."""
     io = gmid.GmidConfig.from_registry("gf180mcu", device="nfet_06v0")
-    assert io.corner_override == {"per_corner": {"tt": ["typical", "nfet_06v0_t", "pfet_06v0_t"]}}
+    assert io.corner_override == {
+        "includes": ["design.ngspice"],
+        "per_corner": {"tt": ["typical", "nfet_06v0_t", "pfet_06v0_t"]},
+    }
     deck, _ = gmid.build_deck(io, pdks.load_registry("gf180mcu"))
     assert ".lib sm141064.ngspice nfet_06v0_t" in deck and "nfet_03v3_t" not in deck
+    # the statistical/mismatch params the 6V subckt formals reference (2026-07-25)
+    assert ".include design.ngspice" in deck
 
 
 def test_variant_corner_not_available_is_clear_error():

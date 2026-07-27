@@ -388,63 +388,68 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "a03d96bc6f",
+          "design_id": "78fe665860",
           "ppa": {
-            "active_gate_area_um2": 78.0,
+            "active_gate_area_um2": 17496.381,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": -19.83207
-            }
+              "dc_gain_db": 136.4228,
+              "pm_deg": 67.23877,
+              "ugf_hz": 2532733.0
+            },
+            "power_w": 0.00062421966
           },
           "spec": {
-            "fail": 1,
-            "none": 0,
-            "pass": 0
+            "fail": 0,
+            "none": 2,
+            "pass": 6
           }
         },
         "ihp-sg13g2": {
-          "design_id": "fc7e53c7d6",
+          "design_id": "d7d1bc6b54",
           "ppa": {
-            "active_gate_area_um2": 1612.727,
+            "active_gate_area_um2": 1891.867,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 74.41905,
-              "pm_deg": 63.89268,
-              "ugf_hz": 2446759.0
+              "dc_gain_db": 103.8838,
+              "pm_deg": 73.38164,
+              "ugf_hz": 2532597.0
             },
-            "power_w": 0.00076627548
+            "power_w": 0.00060520158
           },
           "spec": {
-            "fail": 2,
+            "fail": 0,
             "none": 2,
-            "pass": 4
+            "pass": 6
           }
         },
         "sky130": {
-          "design_id": "aab6f15cda",
+          "design_id": "8ab56ff570",
           "ppa": {
-            "active_gate_area_um2": 78.0,
+            "active_gate_area_um2": 28122.012,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": -13.92692
+              "dc_gain_db": 109.6462,
+              "pm_deg": 61.36211,
+              "ugf_hz": 2164492.0
             },
-            "power_w": 0.00031793652000000004
+            "power_w": 0.00067738914
           },
           "spec": {
-            "fail": 4,
+            "fail": 1,
             "none": 2,
-            "pass": 0
+            "pass": 5
           }
         }
       },
       "stages": 3,
-      "status": "incomplete"
+      "status": "draft"
     },
     {
       "analyses": [
@@ -554,20 +559,23 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "08b523095d",
+          "design_id": "3c0cf8e717",
           "ppa": {
-            "active_gate_area_um2": 412.0,
+            "active_gate_area_um2": 25623.33,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": -1.809502
-            }
+              "dc_gain_db": 121.9332,
+              "pm_deg": 82.61602,
+              "ugf_hz": 2054359.0
+            },
+            "power_w": 0.00165109266
           },
           "spec": {
             "fail": 1,
-            "none": 0,
-            "pass": 0
+            "none": 2,
+            "pass": 5
           }
         },
         "ihp-sg13g2": {
@@ -726,21 +734,23 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "a0a1f08a0c",
+          "design_id": "82bc686bb3",
           "ppa": {
-            "active_gate_area_um2": 3556.0,
+            "active_gate_area_um2": 918.0,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": -30.81176
+              "dc_gain_db": 77.63494,
+              "pm_deg": 82.7503,
+              "ugf_hz": 21276900.0
             },
-            "power_w": 6.416955e-05
+            "power_w": 0.00099839289
           },
           "spec": {
-            "fail": 1,
-            "none": 1,
-            "pass": 1
+            "fail": 0,
+            "none": 2,
+            "pass": 6
           }
         },
         "ihp-sg13g2": {
@@ -898,37 +908,38 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "ae677b438c",
+          "design_id": "b8dfbe1250",
           "ppa": {
-            "active_gate_area_um2": 276.0,
+            "active_gate_area_um2": 526.146,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 84.74553,
-              "pm_deg": 14.89639,
-              "ugf_hz": 1339634.0
-            }
+              "dc_gain_db": 101.8132,
+              "pm_deg": 63.47046,
+              "ugf_hz": 1134380.0
+            },
+            "power_w": 0.00034146108
           },
           "spec": {
             "fail": 2,
-            "none": 1,
-            "pass": 0
+            "none": 2,
+            "pass": 4
           }
         },
         "ihp-sg13g2": {
-          "design_id": "7874a2872a",
+          "design_id": "04760b7b7a",
           "ppa": {
-            "active_gate_area_um2": 4073.394,
+            "active_gate_area_um2": 2199.737,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 79.99763,
-              "pm_deg": 63.71968,
-              "ugf_hz": 2299016.0
+              "dc_gain_db": 97.48253,
+              "pm_deg": 72.04218,
+              "ugf_hz": 4688503.0
             },
-            "power_w": 0.00038156382
+            "power_w": 0.00034198308000000003
           },
           "spec": {
             "fail": 1,
@@ -937,22 +948,23 @@
           }
         },
         "sky130": {
-          "design_id": "ced18a79df",
+          "design_id": "7ab30a5b23",
           "ppa": {
-            "active_gate_area_um2": 276.0,
+            "active_gate_area_um2": 314.757,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 86.05459,
-              "pm_deg": 10.55733,
-              "ugf_hz": 2074809.0
-            }
+              "dc_gain_db": 91.87013,
+              "pm_deg": 85.04665,
+              "ugf_hz": 2022997.0
+            },
+            "power_w": 0.00020922138000000002
           },
           "spec": {
             "fail": 2,
-            "none": 1,
-            "pass": 0
+            "none": 2,
+            "pass": 4
           }
         }
       },
@@ -1068,60 +1080,63 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "af7ea74ab8",
+          "design_id": "09fbeaf1c4",
           "ppa": {
-            "active_gate_area_um2": 1414.0,
+            "active_gate_area_um2": 187415.404,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 136.4349,
-              "pm_deg": 103.9913,
-              "ugf_hz": 2118584.0
-            }
+              "dc_gain_db": 154.8494,
+              "pm_deg": 71.7108,
+              "ugf_hz": 2165778.0
+            },
+            "power_w": 0.0018533934000000002
           },
           "spec": {
             "fail": 1,
-            "none": 1,
-            "pass": 1
+            "none": 2,
+            "pass": 5
           }
         },
         "ihp-sg13g2": {
-          "design_id": "62bbd14a7b",
+          "design_id": "71b76db8d6",
           "ppa": {
-            "active_gate_area_um2": 1414.0,
+            "active_gate_area_um2": 12803.049,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 91.70523,
-              "pm_deg": 40.96688,
-              "ugf_hz": 4818770.0
-            }
-          },
-          "spec": {
-            "fail": 2,
-            "none": 0,
-            "pass": 1
-          }
-        },
-        "sky130": {
-          "design_id": "2c07de9882",
-          "ppa": {
-            "active_gate_area_um2": 1414.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 121.8025,
-              "pm_deg": 32.93583,
-              "ugf_hz": 3703652.0
-            }
+              "dc_gain_db": 93.81099,
+              "pm_deg": 61.46602,
+              "ugf_hz": 2240923.0
+            },
+            "power_w": 0.0006923113200000001
           },
           "spec": {
             "fail": 1,
-            "none": 1,
-            "pass": 1
+            "none": 2,
+            "pass": 5
+          }
+        },
+        "sky130": {
+          "design_id": "eaa4aac933",
+          "ppa": {
+            "active_gate_area_um2": 2138.809,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 122.9008,
+              "pm_deg": 86.23429,
+              "ugf_hz": 2918638.0
+            },
+            "power_w": 0.00048848472
+          },
+          "spec": {
+            "fail": 1,
+            "none": 2,
+            "pass": 5
           }
         }
       },
@@ -1405,60 +1420,63 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "05ac54f8b4",
+          "design_id": "fec2ec7ac3",
           "ppa": {
-            "active_gate_area_um2": 236.0,
+            "active_gate_area_um2": 653.993,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 92.78391,
-              "pm_deg": 9.183788,
-              "ugf_hz": 2341623.0
-            }
+              "dc_gain_db": 105.7364,
+              "pm_deg": 68.66322,
+              "ugf_hz": 1804270.0
+            },
+            "power_w": 0.0004127742
           },
           "spec": {
-            "fail": 2,
-            "none": 1,
-            "pass": 0
+            "fail": 1,
+            "none": 2,
+            "pass": 5
           }
         },
         "ihp-sg13g2": {
-          "design_id": "535a011272",
+          "design_id": "c58a4c634a",
           "ppa": {
-            "active_gate_area_um2": 236.0,
+            "active_gate_area_um2": 646.069,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 92.6587,
-              "pm_deg": -33.32779,
-              "ugf_hz": 5671184.0
-            }
+              "dc_gain_db": 89.35506,
+              "pm_deg": 62.80692,
+              "ugf_hz": 3164019.0
+            },
+            "power_w": 0.00031515714000000003
           },
           "spec": {
-            "fail": 2,
-            "none": 0,
-            "pass": 1
+            "fail": 1,
+            "none": 2,
+            "pass": 5
           }
         },
         "sky130": {
-          "design_id": "701d113494",
+          "design_id": "2b7c766ebe",
           "ppa": {
-            "active_gate_area_um2": 236.0,
+            "active_gate_area_um2": 893.937,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 95.12883,
-              "pm_deg": -11.22923,
-              "ugf_hz": 4070035.0
-            }
+              "dc_gain_db": 118.245,
+              "pm_deg": 74.46832,
+              "ugf_hz": 2005053.0
+            },
+            "power_w": 0.00022222818
           },
           "spec": {
-            "fail": 2,
-            "none": 1,
-            "pass": 0
+            "fail": 1,
+            "none": 2,
+            "pass": 5
           }
         }
       },
@@ -1765,18 +1783,18 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "33c6b6b1d8",
+          "design_id": "83ad2f7d48",
           "ppa": {
-            "active_gate_area_um2": 1694.807,
+            "active_gate_area_um2": 1573.291,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 89.39148,
-              "pm_deg": 67.12996,
-              "ugf_hz": 1990057.0
+              "dc_gain_db": 92.31567,
+              "pm_deg": 60.28729,
+              "ugf_hz": 1822813.0
             },
-            "power_w": 0.00093997458
+            "power_w": 0.0005080554
           },
           "spec": {
             "fail": 3,
@@ -1915,37 +1933,38 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "fa2efab5d0",
+          "design_id": "5210244a38",
           "ppa": {
-            "active_gate_area_um2": 356.15,
+            "active_gate_area_um2": 476.883,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 109.0238,
-              "pm_deg": 10.48878,
-              "ugf_hz": 2129097.0
-            }
+              "dc_gain_db": 142.2761,
+              "pm_deg": 70.06267,
+              "ugf_hz": 2206568.0
+            },
+            "power_w": 3.4086456e-05
           },
           "spec": {
             "fail": 1,
-            "none": 1,
-            "pass": 1
+            "none": 2,
+            "pass": 5
           }
         },
         "ihp-sg13g2": {
-          "design_id": "1182f679d0",
+          "design_id": "ee1bf58d6e",
           "ppa": {
-            "active_gate_area_um2": 3571.972,
+            "active_gate_area_um2": 1272.799,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 114.2748,
-              "pm_deg": 65.23009,
-              "ugf_hz": 3005890.0
+              "dc_gain_db": 109.589,
+              "pm_deg": 86.54685,
+              "ugf_hz": 2752258.0
             },
-            "power_w": 6.442016399999999e-05
+            "power_w": 3.7097855999999996e-05
           },
           "spec": {
             "fail": 1,
@@ -1954,22 +1973,23 @@
           }
         },
         "sky130": {
-          "design_id": "7a56bf6ad7",
+          "design_id": "b05a1961d6",
           "ppa": {
-            "active_gate_area_um2": 356.15,
+            "active_gate_area_um2": 834.503,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 112.3681,
-              "pm_deg": 9.622547,
-              "ugf_hz": 1966989.0
-            }
+              "dc_gain_db": 129.4501,
+              "pm_deg": 69.4265,
+              "ugf_hz": 4316318.0
+            },
+            "power_w": 9.1816524e-05
           },
           "spec": {
-            "fail": 1,
-            "none": 1,
-            "pass": 1
+            "fail": 0,
+            "none": 2,
+            "pass": 6
           }
         }
       },
@@ -2084,37 +2104,38 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "19a720dcfe",
+          "design_id": "7b304b100c",
           "ppa": {
-            "active_gate_area_um2": 836.0,
+            "active_gate_area_um2": 1526.814,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 109.8322,
-              "pm_deg": -75.57556,
-              "ugf_hz": 2408935.0
-            }
+              "dc_gain_db": 129.7664,
+              "pm_deg": 80.83717,
+              "ugf_hz": 1367652.0
+            },
+            "power_w": 0.00011851855200000001
           },
           "spec": {
-            "fail": 1,
-            "none": 1,
-            "pass": 1
+            "fail": 2,
+            "none": 2,
+            "pass": 4
           }
         },
         "ihp-sg13g2": {
-          "design_id": "c0d46cbffa",
+          "design_id": "0c745293e7",
           "ppa": {
-            "active_gate_area_um2": 1372.822,
+            "active_gate_area_um2": 1690.696,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 95.48032,
-              "pm_deg": 71.16532,
-              "ugf_hz": 2081312.0
+              "dc_gain_db": 102.3455,
+              "pm_deg": 66.37213,
+              "ugf_hz": 2126388.0
             },
-            "power_w": 0.00028485918000000003
+            "power_w": 0.000122420592
           },
           "spec": {
             "fail": 1,
@@ -2123,22 +2144,23 @@
           }
         },
         "sky130": {
-          "design_id": "4e4f4cd087",
+          "design_id": "698b82885f",
           "ppa": {
-            "active_gate_area_um2": 836.0,
+            "active_gate_area_um2": 1209.778,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 107.2241,
-              "pm_deg": 16.50527,
-              "ugf_hz": 3398010.0
-            }
+              "dc_gain_db": 106.8282,
+              "pm_deg": 75.08087,
+              "ugf_hz": 2325825.0
+            },
+            "power_w": 0.00021297438
           },
           "spec": {
-            "fail": 1,
-            "none": 1,
-            "pass": 1
+            "fail": 0,
+            "none": 2,
+            "pass": 6
           }
         }
       },
@@ -2255,22 +2277,23 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "33b8ead7d5",
+          "design_id": "b77c4a3e59",
           "ppa": {
-            "active_gate_area_um2": 204.0,
+            "active_gate_area_um2": 385.145,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 105.3036,
-              "pm_deg": 33.63685,
-              "ugf_hz": 1115502.0
-            }
+              "dc_gain_db": 125.4748,
+              "pm_deg": 69.38691,
+              "ugf_hz": 2763886.0
+            },
+            "power_w": 7.7261958e-05
           },
           "spec": {
             "fail": 1,
-            "none": 1,
-            "pass": 1
+            "none": 2,
+            "pass": 5
           }
         },
         "ihp-sg13g2": {
@@ -2597,22 +2620,23 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "3e7bec24eb",
+          "design_id": "efe309966c",
           "ppa": {
-            "active_gate_area_um2": 376.0,
+            "active_gate_area_um2": 293.314,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 110.5772,
-              "pm_deg": 11.13804,
-              "ugf_hz": 5065538.0
-            }
+              "dc_gain_db": 126.394,
+              "pm_deg": 72.09671,
+              "ugf_hz": 4524257.0
+            },
+            "power_w": 0.00023958108
           },
           "spec": {
             "fail": 1,
-            "none": 1,
-            "pass": 1
+            "none": 2,
+            "pass": 5
           }
         },
         "ihp-sg13g2": {
@@ -2636,22 +2660,23 @@
           }
         },
         "sky130": {
-          "design_id": "5b9f33a62b",
+          "design_id": "df1abd890a",
           "ppa": {
-            "active_gate_area_um2": 376.0,
+            "active_gate_area_um2": 254.217,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 100.0792,
-              "pm_deg": -2.37375,
-              "ugf_hz": 6411088.0
-            }
+              "dc_gain_db": 111.9773,
+              "pm_deg": 89.47318,
+              "ugf_hz": 5049555.0
+            },
+            "power_w": 0.00025542468
           },
           "spec": {
-            "fail": 1,
-            "none": 1,
-            "pass": 1
+            "fail": 0,
+            "none": 2,
+            "pass": 6
           }
         }
       },
@@ -2661,8 +2686,11 @@
     {
       "analyses": [
         "ac_open_loop",
+        "cmrr_vcm",
         "dc_op",
         "noise",
+        "psrr_vdd",
+        "tran_step",
         "tran_step",
         "psrr_vdd",
         "cmrr_vcm"
@@ -2787,7 +2815,7 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "224fcec456",
+          "design_id": "3bd6208a5d",
           "ppa": {
             "active_gate_area_um2": 472.0,
             "corners_run": [
@@ -2797,12 +2825,13 @@
               "dc_gain_db": 72.12176,
               "pm_deg": 66.68143,
               "ugf_hz": 1408014.0
-            }
+            },
+            "power_w": 0.00025262928
           },
           "spec": {
-            "fail": 2,
-            "none": 0,
-            "pass": 1
+            "fail": 4,
+            "none": 2,
+            "pass": 2
           }
         },
         "sky130": {
@@ -3059,38 +3088,43 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "cede47dce7",
+          "design_id": "a8738e3d83",
           "ppa": {
-            "active_gate_area_um2": 2746.826,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {}
-          },
-          "spec": {
-            "fail": 0,
-            "none": 0,
-            "pass": 0
-          }
-        },
-        "ihp-sg13g2": {
-          "design_id": "a7a6458c3a",
-          "ppa": {
-            "active_gate_area_um2": 2744.974,
+            "active_gate_area_um2": 70.825,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 52.81459,
-              "pm_deg": -396.7135,
-              "ugf_hz": 55890210.0
+              "dc_gain_db": 82.69146,
+              "pm_deg": 45.43973,
+              "ugf_hz": 76686910.0
             },
-            "power_w": 3.095802e-05
+            "power_w": 1.1494371e-05
           },
           "spec": {
             "fail": 3,
             "none": 0,
-            "pass": 3
+            "pass": 5
+          }
+        },
+        "ihp-sg13g2": {
+          "design_id": "a4f0ac8fca",
+          "ppa": {
+            "active_gate_area_um2": 97.248,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 52.18989,
+              "pm_deg": 62.46857,
+              "ugf_hz": 23228320.0
+            },
+            "power_w": 1.1401036500000001e-05
+          },
+          "spec": {
+            "fail": 2,
+            "none": 0,
+            "pass": 6
           }
         },
         "sky130": {
@@ -3128,7 +3162,7 @@
       "id": "amp_019_ti_ldo_error",
       "kind": "verifiable",
       "params": {
-        "devices": 14,
+        "devices": 15,
         "groups": {
           "mirror_xmb0_l": "mirror_length",
           "pair_xm1_xm2": "matched_pair",
@@ -3138,19 +3172,19 @@
         "ratios": 0,
         "symbols": {
           "gf180mcu": {
-            "free": 18,
+            "free": 19,
             "frozen": 0,
             "ratio": 0,
             "tied": 10
           },
           "ihp-sg13g2": {
-            "free": 18,
+            "free": 19,
             "frozen": 0,
             "ratio": 0,
             "tied": 10
           },
           "sky130": {
-            "free": 18,
+            "free": 19,
             "frozen": 0,
             "ratio": 0,
             "tied": 10
@@ -3207,63 +3241,63 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "e337f68e9f",
+          "design_id": "2d37fe9fbe",
           "ppa": {
-            "active_gate_area_um2": 411.0,
+            "active_gate_area_um2": 301.8,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 40.29435,
-              "pm_deg": 49.03196,
-              "ugf_hz": 23506000.0
+              "dc_gain_db": 42.95845,
+              "pm_deg": 91.44801,
+              "ugf_hz": 6323880.0
             },
-            "power_w": 0.0076578216
+            "power_w": 0.007497095099999999
           },
           "spec": {
             "fail": 0,
             "none": 0,
-            "pass": 8
+            "pass": 10
           }
         },
         "ihp-sg13g2": {
-          "design_id": "c6f1e9806c",
+          "design_id": "a8de457c35",
           "ppa": {
-            "active_gate_area_um2": 411.0,
+            "active_gate_area_um2": 437.2,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 53.77038,
-              "pm_deg": 25.02772,
-              "ugf_hz": 42443660.0
+              "dc_gain_db": 50.02848,
+              "pm_deg": 74.49291,
+              "ugf_hz": 11632340.0
             },
-            "power_w": 0.0081223659
+            "power_w": 0.010505282699999998
           },
           "spec": {
-            "fail": 1,
+            "fail": 0,
             "none": 0,
-            "pass": 7
+            "pass": 10
           }
         },
         "sky130": {
-          "design_id": "be8a158bd9",
+          "design_id": "47808570bc",
           "ppa": {
-            "active_gate_area_um2": 411.0,
+            "active_gate_area_um2": 523.5,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 45.1186,
-              "pm_deg": 50.44174,
-              "ugf_hz": 28416180.0
+              "dc_gain_db": 41.13797,
+              "pm_deg": 54.66081,
+              "ugf_hz": 68104990.0
             },
-            "power_w": 0.0075344841
+            "power_w": 0.0102675507
           },
           "spec": {
-            "fail": 1,
+            "fail": 0,
             "none": 0,
-            "pass": 7
+            "pass": 10
           }
         }
       },
@@ -3559,60 +3593,63 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "26320ac25f",
+          "design_id": "66d63b7053",
           "ppa": {
-            "active_gate_area_um2": 100.0,
+            "active_gate_area_um2": 157.497,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 150.6321,
-              "pm_deg": 26.60767,
-              "ugf_hz": 327506.2
-            }
-          },
-          "spec": {
-            "fail": 1,
-            "none": 1,
-            "pass": 1
-          }
-        },
-        "ihp-sg13g2": {
-          "design_id": "c506814bc3",
-          "ppa": {
-            "active_gate_area_um2": 100.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 121.9021,
-              "pm_deg": 8.75582,
-              "ugf_hz": 394140.6
-            }
+              "dc_gain_db": 150.2067,
+              "pm_deg": 70.45108,
+              "ugf_hz": 169346.0
+            },
+            "power_w": 5.8974750000000007e-05
           },
           "spec": {
             "fail": 2,
-            "none": 0,
-            "pass": 1
+            "none": 2,
+            "pass": 4
           }
         },
-        "sky130": {
-          "design_id": "488b34369f",
+        "ihp-sg13g2": {
+          "design_id": "a4fc72389c",
           "ppa": {
-            "active_gate_area_um2": 100.0,
+            "active_gate_area_um2": 242.875,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 150.4548,
-              "pm_deg": -9.138734,
-              "ugf_hz": 423564.3
-            }
+              "dc_gain_db": 121.232,
+              "pm_deg": 67.57772,
+              "ugf_hz": 119388.8
+            },
+            "power_w": 8.675973000000001e-05
           },
           "spec": {
-            "fail": 1,
-            "none": 1,
-            "pass": 1
+            "fail": 2,
+            "none": 2,
+            "pass": 4
+          }
+        },
+        "sky130": {
+          "design_id": "741587eacd",
+          "ppa": {
+            "active_gate_area_um2": 143.984,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 147.9541,
+              "pm_deg": 68.59086,
+              "ugf_hz": 485409.8
+            },
+            "power_w": 0.000126080478
+          },
+          "spec": {
+            "fail": 2,
+            "none": 2,
+            "pass": 4
           }
         }
       },
@@ -4027,6 +4064,8 @@
     {
       "analyses": [
         "ac_open_loop",
+        "cmrr_vcm",
+        "psrr_vdd",
         "dc_op",
         "noise",
         "tran_step"
@@ -4095,29 +4134,37 @@
         "gf180mcu": {
           "_dut": "raw/amp_024_smcnr/gf180mcu/_dut.spice",
           "ac_open_loop": "raw/amp_024_smcnr/gf180mcu/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_024_smcnr/gf180mcu/cmrr_vcm.spice",
           "dc_op": "raw/amp_024_smcnr/gf180mcu/dc_op.spice",
           "noise": "raw/amp_024_smcnr/gf180mcu/noise.spice",
+          "psrr_vdd": "raw/amp_024_smcnr/gf180mcu/psrr_vdd.spice",
           "tran_step": "raw/amp_024_smcnr/gf180mcu/tran_step.spice"
         },
         "ihp-sg13g2": {
           "_dut": "raw/amp_024_smcnr/ihp-sg13g2/_dut.spice",
           "ac_open_loop": "raw/amp_024_smcnr/ihp-sg13g2/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_024_smcnr/ihp-sg13g2/cmrr_vcm.spice",
           "dc_op": "raw/amp_024_smcnr/ihp-sg13g2/dc_op.spice",
           "noise": "raw/amp_024_smcnr/ihp-sg13g2/noise.spice",
+          "psrr_vdd": "raw/amp_024_smcnr/ihp-sg13g2/psrr_vdd.spice",
           "tran_step": "raw/amp_024_smcnr/ihp-sg13g2/tran_step.spice"
         },
         "sky130": {
           "_dut": "raw/amp_024_smcnr/sky130/_dut.spice",
           "ac_open_loop": "raw/amp_024_smcnr/sky130/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_024_smcnr/sky130/cmrr_vcm.spice",
           "dc_op": "raw/amp_024_smcnr/sky130/dc_op.spice",
           "noise": "raw/amp_024_smcnr/sky130/noise.spice",
+          "psrr_vdd": "raw/amp_024_smcnr/sky130/psrr_vdd.spice",
           "tran_step": "raw/amp_024_smcnr/sky130/tran_step.spice"
         },
         "tsmc-n65": {
           "_dut": "raw/amp_024_smcnr/tsmc-n65/_dut.spice",
           "ac_open_loop": "raw/amp_024_smcnr/tsmc-n65/ac_open_loop.spice",
+          "cmrr_vcm": "raw/amp_024_smcnr/tsmc-n65/cmrr_vcm.spice",
           "dc_op": "raw/amp_024_smcnr/tsmc-n65/dc_op.spice",
           "noise": "raw/amp_024_smcnr/tsmc-n65/noise.spice",
+          "psrr_vdd": "raw/amp_024_smcnr/tsmc-n65/psrr_vdd.spice",
           "tran_step": "raw/amp_024_smcnr/tsmc-n65/tran_step.spice"
         }
       },
@@ -4153,7 +4200,7 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "cf958de246",
+          "design_id": "57f7e284e2",
           "ppa": {
             "active_gate_area_um2": 332.5,
             "corners_run": [
@@ -4169,7 +4216,7 @@
           "spec": {
             "fail": 2,
             "none": 0,
-            "pass": 4
+            "pass": 6
           }
         },
         "sky130": {
@@ -4403,6 +4450,26 @@
             "none": 0,
             "pass": 7
           }
+        },
+        "tsmc-n65": {
+          "design_id": "d47c7c3ce7",
+          "ppa": {
+            "active_gate_area_um2": 48.239,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 57.447562155,
+              "pm_deg": 73.277574984,
+              "ugf_hz": 9106893.0645
+            },
+            "power_w": 0.00015036739746160905
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 7
+          }
         }
       },
       "stages": 2,
@@ -4506,6 +4573,26 @@
             "fail": 2,
             "none": 0,
             "pass": 9
+          }
+        },
+        "tsmc-n65": {
+          "design_id": "f7f86a8d53",
+          "ppa": {
+            "active_gate_area_um2": 41.313,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "dc_gain_db": 42.683875784,
+              "pm_deg": 67.127453922,
+              "ugf_hz": 736768343.31
+            },
+            "power_w": 7.574726871041665e-05
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 11
           }
         }
       },
@@ -4629,7 +4716,7 @@
           "two-stage-miller-comp"
         ],
         "designer": "Stefan Schippers (xschem examples); landed by Noorizadeh",
-        "notes": "The plain-Miller sibling of amp_020 (which adds the resistive common-mode servo this drawing omits \u2014 'no CM control' is the topology's defining difference, not a defect). Common-source second stage = high output impedance = an OTA (subfamily: ota, drawings/README.md). Deviations from the drawing: the first-stage load-gate net X is FLOATING as drawn \u2014 landed as the internal knob source {vbl}; the 1 mA bias literal became the {i_bias} knob (re-seeded to 20 uA). CHARACTERIZATION FINDING (committed as the dc_cm_bias_sweep analysis; tt): with no CM control at either stage the DC operating point has NO stable interior solution \u2014 stage 1 flips between rails within a ~20 mV vbl window (0.70-0.72) and the output rails on BOTH sides (two cascaded gds-level knife edges). The T4 gain skip is a property of the topology, not the sizing; amp_020 (same drawing family) adds the resistive CM servo that makes this amplifier usable. Kept as the pedagogical/topological sibling and a future CMFB-composition target.",
+        "notes": "The plain-Miller sibling of amp_020 (which adds the resistive common-mode servo this drawing omits \u2014 'no CM control' is the topology's defining difference, not a defect). Common-source second stage = high output impedance = an OTA (subfamily: ota, drawings/README.md). Deviations from the drawing: the first-stage load-gate net X is FLOATING as drawn \u2014 landed as the internal knob source {vbl}; the 1 mA bias literal became the {i_bias} knob (re-seeded to 20 uA). CHARACTERIZATION FINDING (committed as the dc_cm_bias_sweep analysis; tt; refined by the 2026-07 sizing study): with no CM control at either stage, an interior DC point EXISTS but only inside a knife-edge vbl window obeying width x CM-gain ~ 0.5 V \u2014 0.2 mV wide at the 50 dB baseline sizing (0.7086-0.7088), 3.5 mV at a 37 dB min-L sizing, and wide (>0.5 V) only in a degenerate ~3.5 mA regime 7x over the i_supply spec (two cascaded gds-level knife edges; up/down fine sweeps agree \u2014 sensitivity, not hysteresis). The committed vbl default is tt-centered to 4 decimals, so dc_gain/pm/ugf/t_settle measure honestly at tt (design 2e55cced7c: 50.5 dB / 77.4 deg / 97 MHz / 3.1 us, all pass); cm_interior_pts stays 0 by design \u2014 no gain-spec-compatible sizing widens the window to the bench's 20-30 mV sample spacing, i.e. the robustness fail is the topology, not the sizing. amp_020 (same drawing family) adds the resistive CM servo that makes this amplifier usable. Kept as the pedagogical/topological sibling and a future CMFB-composition target (amp_030 composes the fix).",
         "source": "drawings/OTA-Two-Stage (hand-drawn xschem, two-stage-miller-comp.sch)"
       },
       "raw": {
@@ -4655,23 +4742,23 @@
       },
       "scoreboard": {
         "ihp-sg13g2": {
-          "design_id": "8b0bf2f382",
+          "design_id": "2e55cced7c",
           "ppa": {
             "active_gate_area_um2": 58.0,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 8.331272,
-              "pm_deg": 105.0847,
-              "ugf_hz": 5698261.0
+              "dc_gain_db": 50.46528,
+              "pm_deg": 77.37936,
+              "ugf_hz": 97279430.0
             },
-            "power_w": 0.00023414796
+            "power_w": 0.00021543852
           },
           "spec": {
-            "fail": 3,
+            "fail": 1,
             "none": 0,
-            "pass": 5
+            "pass": 7
           }
         }
       },
@@ -4888,7 +4975,7 @@
       "id": "amp_032_ti_ldo_error_selfbias",
       "kind": "verifiable",
       "params": {
-        "devices": 13,
+        "devices": 14,
         "groups": {
           "mirror_xmb0_l": "mirror_length",
           "pair_xm1_xm2": "matched_pair",
@@ -4898,7 +4985,7 @@
         "ratios": 0,
         "symbols": {
           "gf180mcu": {
-            "free": 17,
+            "free": 18,
             "frozen": 0,
             "ratio": 0,
             "tied": 9
@@ -4937,18 +5024,18 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "0d97ec7f42",
+          "design_id": "ee780244df",
           "ppa": {
-            "active_gate_area_um2": 477.022,
+            "active_gate_area_um2": 460.324,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "dc_gain_db": 61.77028,
-              "pm_deg": 82.69175,
-              "ugf_hz": 7074893.0
+              "dc_gain_db": 72.73077,
+              "pm_deg": 82.318,
+              "ugf_hz": 18649180.0
             },
-            "power_w": 0.0005895185999999999
+            "power_w": 0.00058998126
           },
           "spec": {
             "fail": 0,
@@ -5444,6 +5531,77 @@
             "fail": 0,
             "none": 0,
             "pass": 14
+          }
+        }
+      },
+      "stages": 1,
+      "status": "draft"
+    },
+    {
+      "analyses": [
+        "tran_sc_cmfb_step"
+      ],
+      "class": "cmfb",
+      "compensation": null,
+      "display_name": "Switched-capacitor CMFB (two-phase charge-redistribution CM detector, canonical)",
+      "id": "cmfb_004_output_switched_cap",
+      "kind": "verifiable",
+      "params": {
+        "devices": 20,
+        "groups": {
+          "cap_reservoir": "shared_geometry",
+          "cap_switched": "shared_geometry",
+          "tg_nmos_all": "shared_geometry",
+          "tg_pmos_all": "shared_geometry"
+        },
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 6,
+            "frozen": 2,
+            "ratio": 0,
+            "tied": 44
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "aliases": [
+          "cmfb-output-switched-cap"
+        ],
+        "designer": "Noorizadeh (schematic, 2026-07-27)",
+        "notes": "The class's first SWITCHED-CAPACITOR member \u2014 no error amplifier at all: per side, a switched cap alternates between the (vcm, vbias) reference pair on clk_phi and the (vin, vcmfb) sensed/control pair on clk_phi_not, so charge redistribution enforces vcmfb = cm(vinp,vinn) - vcm + vbias in steady state. Discrete-time transfer slope is +1 by construction (CANONICAL polarity, for inverting plants \u2014 B5 rule) and the zero-error actuator level equals vbias: PROGRAMMED, not sized (contrast cmfb_002/003, whose vcmfb_nat placement is the sizing problem). This is the Hsu paper's CMFB for the SRMC core amp \u2014 the committed amp_031 consumer instead carries the real 5T CMFB (cmfb_002 flavor); swapping it for this network is the composition follow-up (needs the two-phase clock pair plumbed). vcmfb is Hi-Z during the refresh phase \u2014 the consumer's actuator gate is the hold capacitance, so the block only regulates into a capacitive load. Clocked-only characterization: the CT class benches (dc_cmfb_transfer/ac_servo) see purely capacitive paths and are meaningless here \u2014 the whole suite is the tran_sc_cmfb_step template (class metrics.yaml, 2026-07-27).",
+        "paper": "Y.-P. Hsu, S.-L. Liu, M. M. Hella (SRMC bio-AFE, TCAS-I 67(1) 2020) \u2014 the paper's actual output-CM circuit, setting the core amplifier's vo1+/- and vo2+/- common modes",
+        "source": "drawings/shared (hand-drawn xschem, cmfb-output-switched-cap.sch, owner-sketched 2026-07-27)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/cmfb_004_output_switched_cap/ihp-sg13g2/_dut.spice",
+          "tran_sc_cmfb_step": "raw/cmfb_004_output_switched_cap/ihp-sg13g2/tran_sc_cmfb_step.spice"
+        }
+      },
+      "schematic": {
+        "abstract": "circuits/cmfb_004_output_switched_cap/pdk/ihp-sg13g2/schematic/cmfb-output-switched-cap.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "93e2f9fb5b",
+          "ppa": {
+            "active_gate_area_um2": 0.312,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "t_cm_settle": 0.00050005
+            },
+            "power_w": 3.1931172e-14
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 6
           }
         }
       },
@@ -6677,7 +6835,23 @@
           "spec": {
             "fail": 1,
             "none": 0,
-            "pass": 9
+            "pass": 5
+          }
+        },
+        "tsmc-n65": {
+          "design_id": "55b5148c68",
+          "ppa": {
+            "active_gate_area_um2": 52.4,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {},
+            "power_w": 0.00014940326190744817
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 2
           }
         }
       },
@@ -6767,7 +6941,7 @@
           "spec": {
             "fail": 1,
             "none": 0,
-            "pass": 9
+            "pass": 5
           }
         }
       },
@@ -6776,7 +6950,9 @@
     },
     {
       "analyses": [
-        "dc_op"
+        "dc_op",
+        "tran_chopper_ripple_rrl",
+        "tran_zin_chopped"
       ],
       "class": "ia",
       "compensation": null,
@@ -6784,7 +6960,7 @@
       "id": "ia_004_fan_chopper_rrl",
       "kind": "verifiable",
       "params": {
-        "devices": 102,
+        "devices": 110,
         "groups": {
           "chfb_tg_nmos_main": "shared_geometry",
           "chfb_tg_pmos_main": "shared_geometry",
@@ -6802,6 +6978,7 @@
           "pair_cm_main": "shared_geometry",
           "pair_cs_rrl": "shared_geometry",
           "pair_rb_main": "shared_geometry",
+          "pair_rmp_rmn_cmfb": "shared_geometry",
           "pair_xm10_xm11_main": "shared_geometry",
           "pair_xm11_xm12_rrl": "shared_geometry",
           "pair_xm12_xm13_main": "shared_geometry",
@@ -6824,10 +7001,10 @@
         "ratios": 0,
         "symbols": {
           "ihp-sg13g2": {
-            "free": 70,
+            "free": 77,
             "frozen": 27,
             "ratio": 0,
-            "tied": 155
+            "tied": 156
           }
         }
       },
@@ -6843,24 +7020,28 @@
       "raw": {
         "ihp-sg13g2": {
           "_dut": "raw/ia_004_fan_chopper_rrl/ihp-sg13g2/_dut.spice",
-          "dc_op": "raw/ia_004_fan_chopper_rrl/ihp-sg13g2/dc_op.spice"
+          "dc_op": "raw/ia_004_fan_chopper_rrl/ihp-sg13g2/dc_op.spice",
+          "tran_chopper_ripple_rrl": "raw/ia_004_fan_chopper_rrl/ihp-sg13g2/tran_chopper_ripple_rrl.spice",
+          "tran_zin_chopped": "raw/ia_004_fan_chopper_rrl/ihp-sg13g2/tran_zin_chopped.spice"
         }
       },
       "scoreboard": {
         "ihp-sg13g2": {
-          "design_id": "ee77a983e2",
+          "design_id": "03a2fe3857",
           "ppa": {
             "active_gate_area_um2": 191.24,
             "corners_run": [
               "tt"
             ],
-            "performance": {},
-            "power_w": 0.00026339412
+            "performance": {
+              "gain_cl": 19.11536
+            },
+            "power_w": 0.0002179602
           },
           "spec": {
             "fail": 0,
             "none": 0,
-            "pass": 6
+            "pass": 5
           }
         }
       },
@@ -7021,45 +7202,45 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "db67eb725f",
+          "design_id": "a94c72c092",
           "ppa": {
-            "active_gate_area_um2": 5548.56,
+            "active_gate_area_um2": 6662.76,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.28684,
-              "psrr_vdd_db": 53.53653,
-              "v_dropout": 0.071956,
-              "v_undershoot": 1.008237
+              "load_reg": 0.015784,
+              "psrr_vdd_db": 46.60617,
+              "v_dropout": 0.05062656,
+              "v_undershoot": 0.237493
             },
-            "power_w": 3.433257e-05
+            "power_w": 0.000151478406
           },
           "spec": {
-            "fail": 2,
+            "fail": 0,
             "none": 0,
-            "pass": 9
+            "pass": 11
           }
         },
         "ihp-sg13g2": {
-          "design_id": "278000076e",
+          "design_id": "5db094b1ff",
           "ppa": {
-            "active_gate_area_um2": 4462.8,
+            "active_gate_area_um2": 4836.9,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.020254,
-              "psrr_vdd_db": 39.56932,
-              "v_dropout": 0.005801,
-              "v_undershoot": 0.345326
+              "load_reg": 0.026343,
+              "psrr_vdd_db": 36.95043,
+              "v_dropout": 0.04781053,
+              "v_undershoot": 0.161263
             },
-            "power_w": 3.6470052000000004e-05
+            "power_w": 0.000160395804
           },
           "spec": {
-            "fail": 1,
+            "fail": 0,
             "none": 0,
-            "pass": 10
+            "pass": 11
           }
         },
         "sky130": {
@@ -7191,45 +7372,45 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "ca63b1a2f7",
+          "design_id": "a9bdd1b3f5",
           "ppa": {
-            "active_gate_area_um2": 1428.0,
+            "active_gate_area_um2": 1460.0,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.005654,
-              "psrr_vdd_db": 44.61621,
-              "v_dropout": 0.081244,
-              "v_undershoot": 0.741033
+              "load_reg": 0.004829,
+              "psrr_vdd_db": 47.91053,
+              "v_dropout": 0.1014815,
+              "v_undershoot": 0.724472
             },
-            "power_w": 0.0007305348
+            "power_w": 0.0007708056
           },
           "spec": {
-            "fail": 1,
+            "fail": 0,
             "none": 0,
-            "pass": 10
+            "pass": 11
           }
         },
         "ihp-sg13g2": {
-          "design_id": "2d6e93d568",
+          "design_id": "7ee55a90f2",
           "ppa": {
-            "active_gate_area_um2": 1425.0,
+            "active_gate_area_um2": 2181.0,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.031623,
-              "psrr_vdd_db": 46.14197,
-              "v_dropout": 0.045291,
-              "v_undershoot": 0.816556
+              "load_reg": 0.011607,
+              "psrr_vdd_db": 48.38148,
+              "v_dropout": 0.05205117,
+              "v_undershoot": 0.632214
             },
-            "power_w": 0.001247734
+            "power_w": 0.0008162614
           },
           "spec": {
-            "fail": 2,
+            "fail": 0,
             "none": 0,
-            "pass": 9
+            "pass": 11
           }
         },
         "sky130": {
@@ -7360,7 +7541,7 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "217b9f4fe3",
+          "design_id": "3bd9dd4a52",
           "ppa": {
             "active_gate_area_um2": 3748.0,
             "corners_run": [
@@ -7369,7 +7550,7 @@
             "performance": {
               "load_reg": 0.05906,
               "psrr_vdd_db": 29.22701,
-              "v_dropout": 0.103073,
+              "v_dropout": 0.1694435,
               "v_undershoot": 0.9942183
             },
             "power_w": 0.0002283116
@@ -7381,24 +7562,24 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "7292081906",
+          "design_id": "5c1584803c",
           "ppa": {
-            "active_gate_area_um2": 3738.0,
+            "active_gate_area_um2": 1758.0,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.019855,
-              "psrr_vdd_db": 39.34645,
-              "v_dropout": 0.039285,
-              "v_undershoot": 1.436365
+              "load_reg": 0.012466,
+              "psrr_vdd_db": 35.21503,
+              "v_dropout": 0.1475883,
+              "v_undershoot": 0.301412
             },
-            "power_w": 0.0003325938
+            "power_w": 0.000572136
           },
           "spec": {
-            "fail": 2,
+            "fail": 0,
             "none": 0,
-            "pass": 9
+            "pass": 11
           }
         },
         "sky130": {
@@ -7527,40 +7708,40 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "c9e20c693a",
+          "design_id": "2dfaef80fa",
           "ppa": {
-            "active_gate_area_um2": 108.0,
+            "active_gate_area_um2": 396.0,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.5082074,
-              "psrr_vdd_db": 22.73032,
-              "v_dropout": 0.08601,
-              "v_undershoot": 0.025748
+              "load_reg": 0.011866,
+              "psrr_vdd_db": 71.66065,
+              "v_dropout": 0.04813479,
+              "v_undershoot": 0.006165
             },
-            "power_w": 0.00037138194000000004
+            "power_w": 0.00037178136
           },
           "spec": {
-            "fail": 3,
+            "fail": 0,
             "none": 0,
-            "pass": 8
+            "pass": 11
           }
         },
         "ihp-sg13g2": {
-          "design_id": "bd5f7dc4f9",
+          "design_id": "41f06a069e",
           "ppa": {
-            "active_gate_area_um2": 108.0,
+            "active_gate_area_um2": 790.0,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.134495,
-              "psrr_vdd_db": 38.37417,
-              "v_dropout": 0.055004,
-              "v_undershoot": 0.028192
+              "load_reg": 0.025094,
+              "psrr_vdd_db": 37.38389,
+              "v_dropout": 0.04119105,
+              "v_undershoot": 0.008997
             },
-            "power_w": 0.00037176444
+            "power_w": 0.00037176624
           },
           "spec": {
             "fail": 0,
@@ -7569,24 +7750,24 @@
           }
         },
         "sky130": {
-          "design_id": "708f4ef328",
+          "design_id": "d1144b6b15",
           "ppa": {
-            "active_gate_area_um2": 108.0,
+            "active_gate_area_um2": 549.0,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.137609,
-              "psrr_vdd_db": 30.23527,
-              "v_dropout": 0.065423,
-              "v_undershoot": 0.032684
+              "load_reg": 0.012801,
+              "psrr_vdd_db": 64.24408,
+              "v_dropout": 0.05814472,
+              "v_undershoot": 0.006091
             },
-            "power_w": 0.00037115838
+            "power_w": 0.0003716883
           },
           "spec": {
-            "fail": 3,
+            "fail": 0,
             "none": 0,
-            "pass": 8
+            "pass": 11
           }
         }
       },
@@ -7612,7 +7793,7 @@
       "id": "ldo_005_buffered_ref",
       "kind": "verifiable",
       "params": {
-        "devices": 33,
+        "devices": 34,
         "groups": {
           "mirror_xmea_b0_l": "mirror_length",
           "mirror_xmra_3_w_l": "mirror_length",
@@ -7625,7 +7806,13 @@
         "ratios": 0,
         "symbols": {
           "gf180mcu": {
-            "free": 39,
+            "free": 40,
+            "frozen": 0,
+            "ratio": 0,
+            "tied": 15
+          },
+          "ihp-sg13g2": {
+            "free": 40,
             "frozen": 0,
             "ratio": 0,
             "tied": 15
@@ -7637,7 +7824,8 @@
         ]
       },
       "pdks": [
-        "gf180mcu"
+        "gf180mcu",
+        "ihp-sg13g2"
       ],
       "provenance": {
         "aliases": [
@@ -7661,6 +7849,19 @@
           "psrr": "raw/ldo_005_buffered_ref/gf180mcu/psrr.spice",
           "tran_line_step": "raw/ldo_005_buffered_ref/gf180mcu/tran_line_step.spice",
           "tran_load_step": "raw/ldo_005_buffered_ref/gf180mcu/tran_load_step.spice"
+        },
+        "ihp-sg13g2": {
+          "_dut": "raw/ldo_005_buffered_ref/ihp-sg13g2/_dut.spice",
+          "ac_loopgain": "raw/ldo_005_buffered_ref/ihp-sg13g2/ac_loopgain.spice",
+          "dc_op": "raw/ldo_005_buffered_ref/ihp-sg13g2/dc_op.spice",
+          "dropout": "raw/ldo_005_buffered_ref/ihp-sg13g2/dropout.spice",
+          "line_regulation": "raw/ldo_005_buffered_ref/ihp-sg13g2/line_regulation.spice",
+          "load_regulation": "raw/ldo_005_buffered_ref/ihp-sg13g2/load_regulation.spice",
+          "loop_stability": "raw/ldo_005_buffered_ref/ihp-sg13g2/loop_stability.spice",
+          "noise": "raw/ldo_005_buffered_ref/ihp-sg13g2/noise.spice",
+          "psrr": "raw/ldo_005_buffered_ref/ihp-sg13g2/psrr.spice",
+          "tran_line_step": "raw/ldo_005_buffered_ref/ihp-sg13g2/tran_line_step.spice",
+          "tran_load_step": "raw/ldo_005_buffered_ref/ihp-sg13g2/tran_load_step.spice"
         }
       },
       "schematic": {
@@ -7668,24 +7869,45 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "172a8c6e82",
+          "design_id": "5a17b89d28",
           "ppa": {
-            "active_gate_area_um2": 1017.564,
+            "active_gate_area_um2": 899.689,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.003621,
-              "psrr_vdd_db": 31.94445,
-              "v_dropout": 0.5499162,
-              "v_undershoot": 0.004233
+              "load_reg": 0.006042,
+              "psrr_vdd_db": 35.55717,
+              "v_dropout": 0.3403637,
+              "v_undershoot": 0.005159
             },
-            "power_w": 0.00155463693
+            "power_w": 0.0015590619
           },
           "spec": {
-            "fail": 1,
+            "fail": 0,
             "none": 0,
-            "pass": 13
+            "pass": 14
+          }
+        },
+        "ihp-sg13g2": {
+          "design_id": "67ea759104",
+          "ppa": {
+            "active_gate_area_um2": 778.821,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "load_reg": 0.001274,
+              "psrr_vdd_db": 44.52535,
+              "v_dropout": 0.169675,
+              "v_undershoot": 0.001957
+            },
+            "power_w": 0.00250369383
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 14
           }
         }
       },
@@ -7917,59 +8139,61 @@
       },
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "c4901c4c6a",
+          "design_id": "ef7cfaa5d4",
           "ppa": {
-            "active_gate_area_um2": 216.0,
+            "active_gate_area_um2": 1489.0,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.028549,
-              "psrr_vdd_db": 104.3774,
-              "v_undershoot": 0.0
+              "load_reg": 0.005387,
+              "psrr_vdd_db": 69.13171,
+              "v_dropout": 0.2656085,
+              "v_undershoot": 0.006972
             },
-            "power_w": 0.00037186146
+            "power_w": 0.00026214876
           },
           "spec": {
-            "fail": 2,
+            "fail": 0,
             "none": 0,
-            "pass": 8
+            "pass": 11
           }
         },
         "ihp-sg13g2": {
-          "design_id": "1fe01a8445",
+          "design_id": "d0afa94c84",
           "ppa": {
-            "active_gate_area_um2": 116.0,
+            "active_gate_area_um2": 608.0,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.091878,
-              "psrr_vdd_db": 51.46625,
-              "v_undershoot": 0.021629
+              "load_reg": 0.015716,
+              "psrr_vdd_db": 43.86137,
+              "v_dropout": 0.09891209,
+              "v_undershoot": 0.004263
             },
-            "power_w": 0.00055456506
+            "power_w": 0.00041828724
           },
           "spec": {
-            "fail": 3,
+            "fail": 0,
             "none": 0,
-            "pass": 7
+            "pass": 11
           }
         },
         "sky130": {
-          "design_id": "461f32dc10",
+          "design_id": "2cd142806a",
           "ppa": {
-            "active_gate_area_um2": 516.0,
+            "active_gate_area_um2": 1260.0,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.015569,
-              "psrr_vdd_db": 59.16634,
-              "v_dropout": 0.284106,
-              "v_undershoot": 0.028949
+              "load_reg": 0.010701,
+              "psrr_vdd_db": 70.11699,
+              "v_dropout": 0.2382648,
+              "v_undershoot": 0.00881
             },
-            "power_w": 0.00037577808
+            "power_w": 0.000155379924
           },
           "spec": {
             "fail": 0,
@@ -8125,7 +8349,7 @@
           }
         },
         "ihp-sg13g2": {
-          "design_id": "0d828d6770",
+          "design_id": "a76556e907",
           "ppa": {
             "active_gate_area_um2": 162.4,
             "corners_run": [
@@ -8134,7 +8358,7 @@
             "performance": {
               "load_reg": 0.027977,
               "psrr_vdd_db": 49.54039,
-              "v_dropout": 0.011678,
+              "v_dropout": 0.07564856,
               "v_undershoot": 0.040847
             },
             "power_w": 0.00029517516
@@ -8146,7 +8370,7 @@
           }
         },
         "sky130": {
-          "design_id": "c7d6becc36",
+          "design_id": "85f073a70e",
           "ppa": {
             "active_gate_area_um2": 162.4,
             "corners_run": [
@@ -8154,16 +8378,16 @@
             ],
             "performance": {
               "load_reg": 0.01738,
-              "psrr_vdd_db": 37.08755,
-              "v_dropout": 0.032625,
-              "v_undershoot": 0.088287
+              "psrr_vdd_db": 37.06447,
+              "v_dropout": 0.06318425,
+              "v_undershoot": 0.058523
             },
             "power_w": 0.00018244242
           },
           "spec": {
-            "fail": 1,
+            "fail": 0,
             "none": 0,
-            "pass": 10
+            "pass": 11
           }
         }
       },
@@ -8283,61 +8507,61 @@
       ],
       "scoreboard": {
         "gf180mcu": {
-          "design_id": "bc43722a01",
+          "design_id": "02ad4e1023",
           "ppa": {
-            "active_gate_area_um2": 61.76,
+            "active_gate_area_um2": 263.36,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.4037317,
-              "psrr_vdd_db": 62.57693,
-              "v_dropout": 0.4645783,
-              "v_undershoot": 0.0293354
+              "load_reg": 0.0242768,
+              "psrr_vdd_db": 61.99213,
+              "v_dropout": 0.1787708,
+              "v_undershoot": 0.0125397
             },
-            "power_w": 0.00011685420000000002
+            "power_w": 0.00011681265600000001
           },
           "spec": {
-            "fail": 1,
+            "fail": 0,
             "none": 0,
-            "pass": 10
+            "pass": 11
           }
         },
         "ihp-sg13g2": {
-          "design_id": "696bb45b65",
+          "design_id": "02767721cd",
           "ppa": {
-            "active_gate_area_um2": 46.4,
+            "active_gate_area_um2": 52.8,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.038944,
-              "psrr_vdd_db": -17.0628,
-              "v_dropout": 0.1504052,
-              "v_undershoot": 0.0206201
+              "load_reg": 0.0355528,
+              "psrr_vdd_db": 60.85411,
+              "v_dropout": 0.1894805,
+              "v_undershoot": 0.0188408
             },
-            "power_w": 0.000131464044
+            "power_w": 0.00013303053
           },
           "spec": {
-            "fail": 2,
+            "fail": 0,
             "none": 0,
-            "pass": 9
+            "pass": 11
           }
         },
         "sky130": {
-          "design_id": "97a93775ce",
+          "design_id": "9892b69076",
           "ppa": {
-            "active_gate_area_um2": 46.4,
+            "active_gate_area_um2": 116.8,
             "corners_run": [
               "tt"
             ],
             "performance": {
-              "load_reg": 0.037189,
-              "psrr_vdd_db": 60.43764,
-              "v_dropout": 0.286199,
-              "v_undershoot": 0.0196689
+              "load_reg": 0.0260819,
+              "psrr_vdd_db": 63.35126,
+              "v_dropout": 0.355485,
+              "v_undershoot": 0.0118352
             },
-            "power_w": 0.000116094654
+            "power_w": 0.00011608322399999999
           },
           "spec": {
             "fail": 0,
@@ -8583,7 +8807,7 @@
               "tt"
             ],
             "performance": {
-              "ripple_gain": -437664.0
+              "ripple_gain": -1658910.0
             }
           },
           "spec": {
@@ -9443,7 +9667,8 @@
     "cmfb": [
       "cmfb_001_ideal_rsense_servo",
       "cmfb_002_5t_pmos_input",
-      "cmfb_003_5t_nmos_input"
+      "cmfb_003_5t_nmos_input",
+      "cmfb_004_output_switched_cap"
     ],
     "comparator": [
       "cmp_001_hyst_diffpair",

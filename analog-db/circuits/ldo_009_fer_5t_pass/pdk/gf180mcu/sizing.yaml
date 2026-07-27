@@ -30,7 +30,7 @@ variables:
   unit: m
 - name: x_dut_xmld_w
   description: PMOS mirror load width
-  default: 4u
+  default: 32u
   min: 0.22u
   max: 50u
   unit: m
@@ -42,7 +42,7 @@ variables:
   unit: m
 - name: x_dut_xmp_w
   description: PMOS pass width (per finger, m=20)
-  default: 8u
+  default: 40u
   min: 0.22u
   max: 50u
   unit: m

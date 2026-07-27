@@ -652,6 +652,8 @@ class CircuitRun:
                 evals[m.name] = MetricEval(m.name, value, m.satisfied(value), m.spec_min, m.spec_max)
                 continue
             recipe = {**m.recipe, "out": self._out(str(m.recipe.get("out", "vout")))}
+            if "ref" in recipe:  # differential tran read (out - ref), e.g. voutp/voutn
+                recipe["ref"] = self._out(str(recipe["ref"]))
             if "vin" in recipe:  # the DC-sweep (ICMR) recipes read the swept input net too
                 recipe["vin"] = self._out(str(recipe["vin"]))
             if self.engine == _SPECTRE and self.testbench in ("thd", "iip3"):

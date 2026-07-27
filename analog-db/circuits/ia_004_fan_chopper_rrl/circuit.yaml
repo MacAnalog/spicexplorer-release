@@ -35,5 +35,5 @@ artifacts:
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
 pdks: [ihp-sg13g2]
-analyses: [dc_op]
+analyses: [dc_op, tran_chopper_ripple_rrl, tran_zin_chopped]
 status: draft

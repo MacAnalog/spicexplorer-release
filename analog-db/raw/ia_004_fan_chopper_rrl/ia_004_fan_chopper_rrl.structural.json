@@ -3,7 +3,7 @@
   "circuit": "ia_004_fan_chopper_rrl",
   "source_netlist": "abstract/netlist.spice",
   "summary": {
-    "device_count": 102,
+    "device_count": 110,
     "blocks_detected": 31,
     "by_family": {
       "current_mirror": 1,

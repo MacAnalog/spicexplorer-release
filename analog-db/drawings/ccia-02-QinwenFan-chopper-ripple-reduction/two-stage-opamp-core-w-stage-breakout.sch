@@ -203,7 +203,7 @@ N 2280 -720 2350 -720 {
 lab=voutn}
 N 2350 -765 2350 -720 {
 lab=voutn}
-N 2350 -765 2581.25 -765 {
+N 2350 -765 2580 -765 {
 lab=voutn}
 N 1960 -530 2580 -530 {
 lab=voutp}
@@ -213,17 +213,17 @@ N 1500 -670 1500 -660 {
 lab=VDD}
 N 1805 -660 1805 -655 {
 lab=#net7}
-N 1660 -520 1660 -422.5 {
+N 1660 -520 1660 -420 {
 lab=vctl}
-N 1645 -421.25 1660 -422.5 {
+N 1645 -420 1660 -420 {
 lab=vctl}
 N 1650 -380 1700 -380 {
 lab=vctl_not}
 N 1700 -520 1700 -380 {
 lab=vctl_not}
-N 1738.75 -741.25 1740 -720 {
+N 1740 -740 1740 -720 {
 lab=VDD}
-N 1760 -720 1761.25 -741.25 {
+N 1760 -720 1760 -740 {
 lab=VSS}
 N 2350 -870 2350 -765 {
 lab=voutn}
@@ -389,16 +389,16 @@ m=1
 value=x_dut_cm1_main_value
 footprint=1206
 device="ceramic capacitor"}
-C {lab_pin.sym} 1738.75 -741.25 0 0 {name=p24 sig_type=std_logic lab=VDD}
-C {lab_pin.sym} 1761.25 -741.25 0 1 {name=p25 sig_type=std_logic lab=VSS}
+C {lab_pin.sym} 1740 -740 0 0 {name=p24 sig_type=std_logic lab=VDD}
+C {lab_pin.sym} 1760 -740 0 1 {name=p25 sig_type=std_logic lab=VSS}
 C {capa.sym} 2250 -720 3 0 {name=Cm_2
 m=1
 value=x_dut_cm1_main_value
 footprint=1206
 device="ceramic capacitor"}
-C {opin.sym} 2581.25 -765 0 0 {name=p26 lab=voutn}
+C {opin.sym} 2580 -765 0 0 {name=p26 lab=voutn}
 C {opin.sym} 2578.75 -530 0 0 {name=p27 lab=voutp}
 C {ipin.sym} 1650 -380 0 0 {name=p28 lab=vctl_not}
-C {ipin.sym} 1645 -421.25 0 0 {name=p29 lab=vctl}
+C {ipin.sym} 1645 -420 0 0 {name=p29 lab=vctl}
 C {iopin.sym} 1480 -800 0 1 {name=p30 lab=vo1p}
 C {iopin.sym} 1480 -460 0 1 {name=p31 lab=vo1n}

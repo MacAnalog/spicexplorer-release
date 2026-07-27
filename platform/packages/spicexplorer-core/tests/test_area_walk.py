@@ -115,5 +115,6 @@ def test_amp008_counts_all_24_with_resolved_multipliers():
     assert by_ref["XM19"]["m"] == pytest.approx(32.0)
     assert by_ref["XM12"]["m"] == pytest.approx(16.0)  # {xm14_m*4}
     assert by_ref["XM7"]["m"] == pytest.approx(4.0)
-    # true default silicon ≈ 236 µm² — the old 7-group hand list saw ~28 µm² (~10× under).
-    assert rep["active_area"] == pytest.approx(236.0, rel=1e-3)
+    # true default silicon ≈ 646 µm² after the all-spec gm/ID re-sizing of the corpus
+    # (the old 7-group hand list saw ~28 µm², ~23× under; the pre-resize walk read ~236).
+    assert rep["active_area"] == pytest.approx(646.07, rel=1e-3)

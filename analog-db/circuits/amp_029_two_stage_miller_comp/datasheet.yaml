@@ -18,9 +18,11 @@ default_conditions:
 metrics:
   dc_gain_db:
     display: DC open-loop differential gain
-    description: "Differential large-signal DC gain. STRUCTURAL SKIP: with no CM control\
-      \ the topology has no stable interior operating point (see circuit.yaml notes)\
-      \ \u2014 this spec is unreachable at ANY sizing; amp_020 is the servo'd variant"
+    description: "Differential large-signal DC gain. Measured at a TT-CENTERED knife-edge\
+      \ bias: an interior operating point exists only inside a ~0.2 mV vbl window (vbl\
+      \ default is centered to 4 decimals), so the value is honest at tt but NOT robust\
+      \ \u2014 the fragility is the structural cm_interior_pts finding (see circuit.yaml\
+      \ notes); amp_020 is the servo'd variant"
     unit: dB
     analysis: ac_open_loop
     extract:
@@ -95,11 +97,14 @@ metrics:
   cm_interior_pts:
     display: Interior operating points across the vbl sweep
     description: "STRUCTURAL: of 5 vbl samples bracketing the stage-1 flip window,\
-      \ how many give vocm inside VCM+/-0.25 V. Measured 0 \u2014 the no-CM-control\
-      \ topology has no interior DC point at any sampled bias (see circuit.yaml notes);\
-      \ a composed CMFB is the fix \u2014 LANDED as amp_030_miller_cmfb_composite\
-      \ (this core + cmfb_001_ideal_rsense_servo via the P4 composer), which measures\
-      \ 5/5 on the same sweep"
+      \ how many give vocm inside VCM+/-0.25 V. Measured 0 \u2014 the interior window\
+      \ obeys width x CM-gain ~ 0.5 V (2026-07 sizing study: 0.2 mV at the 50 dB\
+      \ sizing, 3.5 mV at a 37 dB min-L sizing, wide only in a 3.5 mA degenerate\
+      \ regime 7x over the i_supply spec), so no gain-spec-compatible sizing can\
+      \ put a sample inside it \u2014 this fail is the topology, not the sizing\
+      \ (see circuit.yaml notes); a composed CMFB is the fix \u2014 LANDED as\
+      \ amp_030_miller_cmfb_composite (this core + cmfb_001_ideal_rsense_servo via\
+      \ the P4 composer), which measures 5/5 on the same sweep"
     unit: ''
     analysis: dc_cm_bias_sweep
     extract:

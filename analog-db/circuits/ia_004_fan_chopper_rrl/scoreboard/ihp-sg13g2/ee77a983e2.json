@@ -11,26 +11,11 @@
   "corners": {
     "tt": {
       "analyses": {
-        "ac_closed_loop": {
-          "measures": {
-            "bw_cl_hz": 1802165.0,
-            "gain_cl": 19.30461,
-            "gain_cl_db": 25.71322,
-            "hpf_hz": 32.44218
-          },
-          "status": "ok"
-        },
-        "ac_zin_diff": {
-          "measures": {
-            "zin_ohm": 204362500.0
-          },
-          "status": "ok"
-        },
         "dc_op": {
           "measures": {
-            "i_supply": 0.0002194951,
-            "vocm": 0.6096373,
-            "vos": 7.720941e-06
+            "i_supply": 0.0001815909,
+            "vocm": 0.6096376,
+            "vos": 0.006913107
           },
           "status": "ok"
         }
@@ -38,36 +23,20 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-21T02:26:28+00:00"
+        "run_at": "2026-07-27T04:44:16+00:00"
       }
     }
   },
   "design_id": "ee77a983e2",
   "metrics": {
     "tt": {
-      "bw_cl_hz": {
-        "spec": "pass",
-        "value": 1802165.0
-      },
-      "gain_cl_db": {
-        "spec": "pass",
-        "value": 25.71322
-      },
-      "hpf_hz": {
-        "spec": "pass",
-        "value": 32.44218
-      },
       "i_supply": {
         "spec": "pass",
-        "value": 0.0002194951
+        "value": 0.0001815909
       },
       "vos": {
         "spec": "pass",
-        "value": 7.720941e-06
-      },
-      "zin_ohm": {
-        "spec": "pass",
-        "value": 204362500.0
+        "value": 0.006913107
       }
     }
   },
@@ -179,7 +148,7 @@
       "tt"
     ],
     "performance": {},
-    "power_w": 0.00026339412
+    "power_w": 0.00021790908
   },
   "schema": "spicexplorer/scoreboard-entry@1"
 }

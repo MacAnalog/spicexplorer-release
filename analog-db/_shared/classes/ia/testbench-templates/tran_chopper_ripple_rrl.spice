@@ -1,6 +1,6 @@
 ** AUTHORED TEMPLATE — ia/tran_chopper_ripple_rrl (plan_hierarchical_composition P4; the
 ** tran_chopper_ripple bench for a CCIA WITH a composed ripple-reduction loop: adds the
-** two-phase SC clock pair clk_phi_1/clk_phi_2 (exact complements at FCHOP, in phase
+** two-phase SC clock pair clk_phi_1/clk_phi_2 (exact complements at 2*FCHOP, phi_1 in phase
 ** with the chop clocks — the tran_rrl_sense convention; the RRL demod clock is wired
 ** to clk_chout INSIDE the composite). Same three measures, so v_ripple_pp is directly
 ** comparable RRL-on vs the RRL-less sibling (ia_002/ia_003), PLUS the RRL's own
@@ -59,8 +59,8 @@ Vck_pf_a  clk_chpf      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP
 Vck_pf_b  clk_chpf_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
 * two-phase SC clock for the composed RRL integrator (exact complements, in phase) —
 * without these the RRL's SC switch gates float and the ripple-reduction loop is INERT
-Vphi1 clk_phi_1 0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
-Vphi2 clk_phi_2 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vphi1 clk_phi_1 0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/4-TEDGE} {TCHOP/2})
+Vphi2 clk_phi_2 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/4-TEDGE} {TCHOP/2})
 
 ${PORT_LINE} ${DUT}
 

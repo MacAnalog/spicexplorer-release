@@ -214,9 +214,16 @@ def extract_nets(sch: Schematic, symlib: SymLibrary | None = None) -> NetExtract
             pin_points.append((comp.name, p.name, float(ax), float(ay), (comp.x, comp.y)))
             uf.add(_key(ax, ay))
 
+    # A wire's own ``lab=`` attribute is NOT an electrical label — xschem caches it from
+    # the previous netlist run and re-derives connectivity from label components only, so
+    # a stale value must never name (or by-name MERGE) a net. Live failure this guarded
+    # against: a drawing whose vo1p web still carried ``lab=VDD`` from an earlier editing
+    # state ported with vo1p merged into VDD (netcheck 21 vs 20 nets). Keep the cached
+    # labels only as a cosmetic naming HINT for otherwise-anonymous groups (below).
+    wire_hints: list[tuple[str, float, float]] = []
     for w in sch.wires:
         if w.lab:
-            label_points.append((w.lab, w.x1, w.y1))
+            wire_hints.append((w.lab, w.x1, w.y1))
 
     # T-junctions & pins-on-wires: union every known node with any segment it lies on.
     nodes = [(k, k[0] / 2.0, k[1] / 2.0) for k in uf.keys()]
@@ -242,6 +249,19 @@ def extract_nets(sch: Schematic, symlib: SymLibrary | None = None) -> NetExtract
     merged: dict[tuple[int, int], set[str]] = {}
     for root, names in names_by_root.items():
         merged.setdefault(uf.find(root), set()).update(names)
+
+    # Cosmetic pass: let a cached wire label name an otherwise-anonymous group, but only
+    # if the name is not already claimed by a real label anywhere (a duplicate name would
+    # make Virtuoso's by-name connectivity re-introduce the stale-label merge), and never
+    # an xschem auto-name ('#netN' — the netlister renumbers those freely).
+    claimed = {n for names in merged.values() for n in names}
+    for lab, x, y in wire_hints:
+        if lab.startswith("#") or lab in claimed:
+            continue
+        root = uf.find(_key(x, y))
+        if not merged.get(root):
+            merged.setdefault(root, set()).add(lab)
+            claimed.add(lab)
 
     def net_name(root: tuple[int, int]) -> str:
         names = sorted(merged.get(root, ()))

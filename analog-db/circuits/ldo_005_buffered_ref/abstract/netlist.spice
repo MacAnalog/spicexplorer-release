@@ -91,6 +91,21 @@ XMEA_2  ea_nb    lp_brk    ea_tail vss nmos w=x_dut_xmea_2_w l=x_dut_xmea_2_l
 XMEA_3  ea_na    ea_nd    vdd     vdd pmos w=x_dut_xmea_3_w  l=x_dut_xmea_3_l
 XMEA_4  ea_nlev  ea_na    ea_nd   vdd pmos w=x_dut_xmea_4_w  l=x_dut_xmea_4_l
 XMEA_5  ea_nb    ea_nd    vdd     vdd pmos w=x_dut_xmea_5_w  l=x_dut_xmea_5_l
+** DC definition of the level-shifted mirror's gate rail (FIX 2026-07-25). ea_nd is
+** otherwise fed only by leakage: it connects to XMEA_3/5 gates (no DC) and XMEA_4's
+** source, whose channel current has no other supply — on BSIM4 (gf180mcu) the
+** XMEA_4 source/n-well junction + gate leakage silently pin it, on leakage-free PSP
+** (ihp-sg13g2) the node is singular and the DC sweeps latch to a stable wrong
+** equilibrium (vout = VDD). The fix is a resistor TIE from the mirror drain (ea_na)
+** to the gate rail: at DC (XMEA_4/XMBF carry ~0 by design) no current flows in it,
+** so ea_nd = ea_na and XMEA_3/5 degenerate to a standard diode-connected mirror —
+** defined at every vin, every model family — while XMEA_4 still provides the
+** transient level-shift/feedforward path the TI structure intends. (A vdd->nd
+** pull-up bleeder was tried first and rejected: it parks the mirror gates at vdd
+** at low vin, killing stage-1 exactly where the dropout sweep needs it.) The SAME
+** structure (and fix) applies to the TI drawings this LDO inlines: amp_032/033's
+** XM3/XM4/XM5 'nd' rail — add r_nd from na to nd there too.
+REAnd ea_na   ea_nd    'r_ea_nd'
 XMEA_6  ea_out   ea_nb    vdd     vdd pmos w=x_dut_xmea_6_w  l=x_dut_xmea_6_l
 REAz  ea_nb    ea_ncz   'r_ea_z'
 CEAc  ea_ncz   ea_out   'c_ea_comp'

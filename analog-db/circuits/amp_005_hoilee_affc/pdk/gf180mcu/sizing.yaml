@@ -5,68 +5,68 @@ schema: spicexplorer/sizing@1
 pdk: gf180mcu
 variables:
 - name: CAPACITOR_0
-  default: 18p
+  default: 3.748186470147291e-11
 - name: CAPACITOR_1
-  default: 3p
+  default: 8.55148088496208e-12
 - name: CURRENT_0_BIAS
-  default: 20u
+  default: 1.3646745172682422e-05
 - name: x_dut_xm7_l
-  default: 1u
+  default: 9.201474380170063e-07
 - name: x_dut_xm7_m
   default: '4'
 - name: x_dut_xm7_w
-  default: 1u
+  default: 1.3018908971048287e-06
 - name: x_dut_xm11_l
-  default: 1u
+  default: 2.232466680529081e-06
 - name: x_dut_xm11_m
   default: '4'
 - name: x_dut_xm11_w
-  default: 1u
+  default: 1.8905910908401381e-06
 - name: x_dut_xm12_l
-  default: 1u
+  default: 9.627881710104118e-07
 - name: x_dut_xm12_m
   default: '4'
 - name: x_dut_xm12_w
-  default: 1u
+  default: 1.2190440968776572e-06
 - name: x_dut_xm16_l
-  default: 1u
+  default: 1.4568744468553686e-06
 - name: x_dut_xm16_m
   default: 16
 - name: x_dut_xm16_w
-  default: 1u
+  default: 2.5128844005711266e-06
 - name: x_dut_xm64_l
-  default: 1u
+  default: 1.1391448769997566e-06
 - name: x_dut_xm15_m
   default: '4'
 - name: x_dut_xm64_w
-  default: 1u
+  default: 1.3175537812931393e-06
 - name: x_dut_xm22_l
-  default: 1u
+  default: 1.082170775498444e-06
 - name: x_dut_xm22_m
   default: '4'
 - name: x_dut_xm22_w
-  default: 1u
+  default: 2.0650025826402277e-06
 - name: x_dut_xm25_l
-  default: 1u
+  default: 2.2545813644496383e-06
 - name: x_dut_xm25_m
   default: '4'
 - name: x_dut_xm25_w
-  default: 1u
+  default: 2.0837965297745365e-06
 - name: x_dut_xm59_l
-  default: 1u
+  default: 1.7756884773069662e-06
 - name: x_dut_xm59_m
   default: '4'
 - name: x_dut_xm59_w
-  default: 1u
+  default: 2.294094475468767e-06
 - name: x_dut_xm63_l
-  default: 1u
+  default: 4.02696091187469e-07
 - name: x_dut_xm63_m
   default: '4'
 - name: x_dut_xm63_w
-  default: 1u
+  default: 2.6760656648896125e-06
 - name: x_dut_xm10_l
-  default: 1u
+  default: 1.1028115725638225e-06
 - name: x_dut_xm10_m
   default: '4'
 - name: x_dut_xm10_w
-  default: 1u
+  default: 2.297209217432828e-06

@@ -5,50 +5,50 @@ schema: spicexplorer/sizing@1
 pdk: gf180mcu
 variables:
 - name: CAPACITOR_0
-  default: 1.1p
+  default: 2.841565345453662e-12
 - name: CAPACITOR_1
-  default: 1p
+  default: 2.9093401455369416e-12
 - name: CURRENT_0_BIAS
-  default: 1.25u
+  default: 1.612562415336745e-06
 - name: x_dut_xm66_l
-  default: 1u
+  default: 2.4620247531528172e-06
 - name: x_dut_xm65_m
   default: '4'
 - name: x_dut_xm66_w
-  default: 1u
+  default: 7.053368746832123e-07
 - name: x_dut_xm10_l
-  default: 1u
+  default: 9.525191145714718e-07
 - name: x_dut_xm10_m
   default: '4'
 - name: x_dut_xm10_w
-  default: 1u
+  default: 2.0829727261628363e-06
 - name: x_dut_xm11_l
-  default: 1u
+  default: 6.599550573369295e-07
 - name: x_dut_xm11_m
   default: '4'
 - name: x_dut_xm11_w
-  default: 1u
+  default: 7.838463098404965e-07
 - name: x_dut_xm19_l
-  default: 1u
+  default: 7.964513524019758e-07
 - name: x_dut_xm14_m
   default: '4'
 - name: x_dut_xm19_w
-  default: 1u
+  default: 2.6366568577235976e-06
 - name: x_dut_xm23_l
-  default: 1u
+  default: 5.899641940650178e-07
 - name: x_dut_xm23_m
   default: '4'
 - name: x_dut_xm23_w
-  default: 1u
+  default: 2.589112390177542e-06
 - name: x_dut_xm70_l
-  default: 1u
+  default: 9.317920271084534e-07
 - name: x_dut_xm70_m
   default: '4'
 - name: x_dut_xm70_w
-  default: 1u
+  default: 3.3406564359366024e-07
 - name: x_dut_xm9_l
-  default: 1u
+  default: 9.334118722664796e-07
 - name: x_dut_xm9_m
   default: '4'
 - name: x_dut_xm9_w
-  default: 1u
+  default: 2.9745712367704808e-06

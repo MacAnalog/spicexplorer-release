@@ -3,7 +3,7 @@
   "circuit": "amp_019_ti_ldo_error",
   "source_netlist": "abstract/netlist.spice",
   "summary": {
-    "device_count": 14,
+    "device_count": 15,
     "blocks_detected": 2,
     "by_family": {
       "current_mirror": 1,

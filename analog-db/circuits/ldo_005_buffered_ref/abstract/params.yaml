@@ -12,6 +12,7 @@ devices:
   R1: {Value: r_ref_top}
   R2: {Value: r_ref_bot}
   R3: {Value: r_bleed}
+  REAND: {Value: r_ea_nd}
   REAZ: {Value: r_ea_z}
   RRAZ: {Value: r_ra_z}
   R_LPF: {Value: r_lpf}

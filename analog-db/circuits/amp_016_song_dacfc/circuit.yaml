@@ -30,8 +30,11 @@ pdks:
 - tsmc-n65
 analyses:
 - ac_open_loop
+- cmrr_vcm
 - dc_op
 - noise
+- psrr_vdd
+- tran_step
 - tran_step
 - psrr_vdd
 - cmrr_vcm

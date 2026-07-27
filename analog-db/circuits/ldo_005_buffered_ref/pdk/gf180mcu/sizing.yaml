@@ -67,13 +67,14 @@ variables:
   - {name: x_dut_xmea_bf_w, description: "Error-amp mirror_f sink (level-shifter anchor, ~0 current by design)", default: 5u, min: 1u, max: 40u, unit: m}
   - {name: x_dut_xmea_1_w,  description: "Error-amp input pair width (XEA1/XEA2 matched)", default: 68.542u, min: 4u, max: 100u, unit: m}
   - {name: x_dut_xmea_1_l,  description: "Error-amp input pair length", default: 0.7u, min: 0.28u, max: 10u, unit: m}
-  - {name: x_dut_xmea_3_w,  description: "Error-amp level-shifted PMOS mirror (XEA3/XEA5 matched)", default: 69.545u, min: 4u, max: 100u, unit: m}
+  - {name: x_dut_xmea_3_w,  description: "Error-amp level-shifted PMOS mirror (XEA3/XEA5 matched)", default: 100u, min: 4u, max: 100u, unit: m}
   - {name: x_dut_xmea_3_l,  description: "Error-amp PMOS mirror length", default: 0.5u, min: 0.28u, max: 10u, unit: m}
   - {name: x_dut_xmea_4_w,  description: "Error-amp M4 compound-diode level shifter (~zero DC current)", default: 10u, min: 2u, max: 100u, unit: m}
   - {name: x_dut_xmea_4_l,  description: "Error-amp M4 length", default: 0.5u, min: 0.28u, max: 10u, unit: m}
-  - {name: x_dut_xmea_6_w,  description: "Error-amp output PMOS (drives the pass gate)", default: 12u, min: 8u, max: 100u, unit: m}
+  - {name: x_dut_xmea_6_w,  description: "Error-amp output PMOS (drives the pass gate)", default: 14u, min: 8u, max: 100u, unit: m}
   - {name: x_dut_xmea_6_l,  description: "Error-amp output PMOS length", default: 3.8349u, min: 0.28u, max: 10u, unit: m}
   - {name: r_ea_z,      description: "Error-amp Miller nulling resistor - expect re-tuning against the pass gate", default: 28.429k, min: 100, max: 100k, unit: ohm}
+  - {name: r_ea_nd,    description: "EA gate-rail tie na->nd (DC-defines ea_nd; ~0 current by design — fix 2026-07-25, see abstract netlist)", default: 50k, min: 10k, max: 10MEG, unit: ohm}
   - {name: c_ea_comp,   description: "Error-amp Miller capacitor - expect re-tuning against the pass gate", default: 0.2p, min: 0.2p, max: 50p, unit: F}
 # --- System level: reference, divider, RC filter, pass device, output network ---
   - {name: vref_val,    description: "Internal reference voltage (ideal source; a real bandgap is vref_001_vgs)", default: 0.8, min: 0.3, max: 1.5, unit: V}
@@ -82,7 +83,7 @@ variables:
   - {name: r_lpf,       description: "Reference low-pass filter resistor", default: 10k, min: 1k, max: 1Meg, unit: ohm}
   - {name: c_lpf,       description: "Reference low-pass filter cap (10k/10p => ~1.6 MHz corner)", default: 10p, min: 0.1p, max: 10n, unit: F}
   - {name: x_dut_xmp_w, description: "Pass PMOS per-device width (<= the gf180 100u bin max)", default: 20u, min: 1u, max: 100u, unit: m}
-  - {name: x_dut_xmp_m, description: "Pass PMOS parallel multiplier (total W = w*m)", default: 20, min: 1, max: 200, unit: count, is_integer: true}
+  - {name: x_dut_xmp_m, description: "Pass PMOS parallel multiplier (total W = w*m)", default: 7, min: 1, max: 200, unit: count, is_integer: true}
   - {name: x_dut_xmp_l, description: "Pass PMOS length (short = low dropout, but more gate cap to drive)", default: 0.6u, min: 0.28u, max: 2u, unit: m}
   - {name: r_bleed,     description: "Output bleeder / minimum-load path (the drawing's R3)", default: 10k, min: 1k, max: 1Meg, unit: ohm}
   - {name: c_out_int,   description: "On-die output capacitor (the drawing's C1); benches add their own external COUT", default: 10p, min: 0.1p, max: 1n, unit: F}

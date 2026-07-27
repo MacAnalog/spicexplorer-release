@@ -42,7 +42,7 @@ XDUT vdd vout vss ldo_008_fer_mirror_ota
 .param x_dut_xmld_l=0.5
 .param x_dut_xmp_w=8
 .param x_dut_xmp_l=0.2
-.param x_rcomp=2000
+.param x_rcomp=40000
 .param x_ccomp=160e-12
 .param x_dut_rt_value=9000
 .param x_vref_val=0.6

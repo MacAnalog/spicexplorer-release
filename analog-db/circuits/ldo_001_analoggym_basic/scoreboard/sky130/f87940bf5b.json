@@ -19,8 +19,11 @@
           "status": "ok"
         },
         "dropout": {
-          "error": "ldo_001_analoggym_basic/dropout@sky130/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 ldo_001_analoggym_basic \u00d7 dropout \u00d7 sky130 \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n Reference value :  1.00000e+00\nNo. of Data Rows : 81\nASCII raw file \"rawspice.raw\"\nngspice-45 done\nError: argument out of range for divide\n  in term: 0/0\n\nError: Can't evaluate \"0/0\"\nWarning from checkvalid: vec",
-          "status": "sim_error"
+          "measures": {
+            "vin_at": 0.0,
+            "vout_at": 0.0
+          },
+          "status": "ok"
         },
         "line_regulation": {
           "measures": {
@@ -82,7 +85,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-21T04:43:55+00:00"
+        "run_at": "2026-07-25T14:53:28+00:00"
       }
     }
   },
@@ -108,6 +111,10 @@
       "t_transient": {
         "spec": "pass",
         "value": 2.459831e-05
+      },
+      "v_dropout": {
+        "spec": "fail",
+        "value": null
       },
       "v_line_pp": {
         "spec": "pass",

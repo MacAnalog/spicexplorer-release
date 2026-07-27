@@ -295,6 +295,9 @@ def measure(
     if kind == "tran":
         t = _real_wave(result, str(recipe.get("time", "time")), analysis)
         v = _real_wave(result, str(recipe["out"]), analysis)
+        if recipe.get("ref") is not None:
+            # differential read: v = out - ref (fully-diff benches, e.g. voutp/voutn)
+            v = v - _real_wave(result, str(recipe["ref"]), analysis)
         if meas in ("iip3", "iip3_dbv", "im3_dbc"):
             a = _wf.iip3_from_two_tone(
                 t,

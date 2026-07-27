@@ -69,7 +69,7 @@
           "required": ["value", "spec"],
           "additionalProperties": false,
           "properties": {
-            "value": {"type": "number"},
+            "value": {"type": ["number", "null"]},
             "spec": {"enum": ["pass", "fail", "none"]}
           }
         }
@@ -83,7 +83,7 @@
       "properties": {
         "power_w": {"type": ["number", "null"]},
         "active_gate_area_um2": {"type": ["number", "null"]},
-        "performance": {"type": "object", "additionalProperties": {"type": "number"}},
+        "performance": {"type": "object", "additionalProperties": {"type": ["number", "null"]}},
         "corners_run": {"type": "array", "items": {"type": "string"}}
       }
     }

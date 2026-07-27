@@ -12,7 +12,7 @@ pdk: tsmc-n65
 variables:
 - name: x_dut_xm1_w
   description: Main tail current source width (PMOS, gate vb4)
-  default: 20u
+  default: 5.629u
   min: 0.15u
   max: 100u
   unit: m
@@ -24,7 +24,7 @@ variables:
   unit: m
 - name: x_dut_xm2_w
   description: PMOS input pair width
-  default: 20u
+  default: 4.933u
   min: 0.15u
   max: 200u
   unit: m
@@ -36,7 +36,7 @@ variables:
   unit: m
 - name: x_dut_xm4_w
   description: First-stage NMOS fold sink width (gate vb1; carries pair half + fold branch)
-  default: 6u
+  default: 2.51u
   min: 0.15u
   max: 100u
   unit: m
@@ -48,19 +48,19 @@ variables:
   unit: m
 - name: x_dut_xm6_w
   description: PMOS fold current-source width (gate vb4)
-  default: 10u
+  default: 2.814u
   min: 0.15u
   max: 100u
   unit: m
 - name: x_dut_xm8_w
   description: Class-A output PMOS current-source width (gate vb4)
-  default: 12u
+  default: 11.257u
   min: 0.15u
   max: 100u
   unit: m
 - name: x_dut_xm10_w
   description: PMOS first-stage-load cascode width (gate vb3)
-  default: 10u
+  default: 2.398u
   min: 0.15u
   max: 100u
   unit: m
@@ -72,7 +72,7 @@ variables:
   unit: m
 - name: x_dut_xm12_w
   description: Folded NMOS cascode width (gate vb2)
-  default: 5u
+  default: 0.792u
   min: 0.15u
   max: 100u
   unit: m
@@ -84,13 +84,13 @@ variables:
   unit: m
 - name: x_dut_xm14_w
   description: Class-A output NMOS common-source width (gate on g2_p/g2_n)
-  default: 6u
+  default: 1.043u
   min: 0.15u
   max: 200u
   unit: m
 - name: x_dut_xm14_l
   description: Class-A output NMOS common-source length
-  default: 0.5u
+  default: 0.25u
   min: 0.13u
   max: 10u
   unit: m
@@ -180,7 +180,7 @@ variables:
   unit: F
 - name: x_dut_cm1_value
   description: Per-side Miller compensation cap (drawn Cm_1=1p xschem default; Cm_2 was symbolic)
-  default: 1p
+  default: 2p
   min: 0.1p
   max: 10p
   unit: F
@@ -193,25 +193,25 @@ variables:
   unit: ohm
 - name: vb1
   description: First-stage NMOS fold-sink gate bias (XM4/XM5; drawn 0.5 V)
-  default: 0.5
+  default: 0.324117
   min: 0.0
   max: 1.2
   unit: V
 - name: vb2
   description: Folded NMOS cascode gate bias (XM12/XM13; drawn 0.5 V)
-  default: 0.75
+  default: 0.472198
   min: 0.0
   max: 1.2
   unit: V
 - name: vb3
   description: PMOS load-cascode gate bias (XM10/XM11; drawn 0.5 V)
-  default: 0.45
+  default: 0.438401
   min: 0.0
   max: 1.2
   unit: V
 - name: vb4
   description: PMOS current-source gate bias (XM1/XM6/XM7/XM8/XM9; drawn 0.5 V)
-  default: 0.55
+  default: 0.785955
   min: 0.0
   max: 1.2
   unit: V

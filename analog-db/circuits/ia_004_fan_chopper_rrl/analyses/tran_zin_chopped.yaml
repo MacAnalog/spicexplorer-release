@@ -1,0 +1,22 @@
+# Analysis binding (P4-4b): chopped input impedance under the running clocks —
+# RE-BOUND 2026-07-27 with the core-CM closure (cmfb_001 servo on Vb4, see
+# composition.yaml); previously the transient aborted at ~2.7 us on the railing CM.
+# clk_phi_1/2 at 2x FCHOP (the CCIA SC architecture rate).
+schema: spicexplorer/analysis@1
+id: tran_zin_chopped
+template: tran_zin_chopped
+description: "Average differential input current under the running clocks -> zin_chop_ohm."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 50f
+  FCHOP: 5k
+  TEDGE: 50n
+  VZ: 10m
+  W0: 0.4m
+  W1: 1m
+  TSTEP: 1u
+  TSTOP: 1m
+  TMAX: 200n
+flags: []
+produces: [zin_chop_ohm]

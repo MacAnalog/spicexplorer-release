@@ -54,7 +54,8 @@ def test_load_sizing_matches_committed_defaults():
     # Pins the binding reader against the committed sizing.yaml (post the 2026-07-13
     # parameterization knob rename: atomic per-instance x_dut_* symbols, incl. the
     # frozen finger counts). The live tests now DERIVE their sizing from this same
-    # loader — hand-transcribed dicts drift.
+    # loader — hand-transcribed dicts drift. The binding carries the current
+    # gm/ID re-sizing.
     assert load_sizing(_CIRCUIT, _PDK) == {
         "x_dut_xmbd_w": "4u", "x_dut_xm7_w": "4u", "x_dut_xm0_w": "10u",
         "x_dut_xm3_w": "1u",

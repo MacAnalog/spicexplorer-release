@@ -6,36 +6,36 @@
 ** Source: pdk/gf180mcu/netlist.spice (run `analog-db generate` to refresh).
 *----------------------------------------------------------*
 ** params: 30 free + 0 frozen knobs (sizing.yaml) · 36 tied · 15 ratio-derived (abstract/params.yaml)
-.param CAPACITOR_0=18p
-.param CAPACITOR_1=3p
-.param CURRENT_0_BIAS=20u
-.param x_dut_xm7_l=1u
+.param CAPACITOR_0=8.32747441016969e-12
+.param CAPACITOR_1=1.20146469416183e-11
+.param CURRENT_0_BIAS=4.6213339585591946e-05
+.param x_dut_xm7_l=7.186159622988795e-06
 .param x_dut_xm7_m=4
-.param x_dut_xm7_w=1u
-.param x_dut_xm11_l=1u
+.param x_dut_xm7_w=1.5855511865886235e-05
+.param x_dut_xm11_l=5.507168854886564e-06
 .param x_dut_xm11_m=200
-.param x_dut_xm11_w=1u
-.param x_dut_xm12_l=1u
+.param x_dut_xm11_w=1.4847549345775367e-05
+.param x_dut_xm12_l=1.9542556365557642e-06
 .param x_dut_xm12_m=400
-.param x_dut_xm12_w=1u
-.param x_dut_xm16_l=1u
+.param x_dut_xm12_w=3.137207881824609e-05
+.param x_dut_xm16_l=2.577246051483524e-06
 .param x_dut_xm16_m=16
-.param x_dut_xm16_w=1u
-.param x_dut_xm20_l=1u
+.param x_dut_xm16_w=9.278528805101642e-05
+.param x_dut_xm20_l=1.9069326343924546e-06
 .param x_dut_xm15_m=4
-.param x_dut_xm20_w=1u
-.param x_dut_xm22_l=1u
+.param x_dut_xm20_w=8.061626891022945e-06
+.param x_dut_xm22_l=3.848301595762323e-06
 .param x_dut_xm22_m=4
-.param x_dut_xm22_w=1u
-.param x_dut_xm24_l=1u
+.param x_dut_xm22_w=1.8681992685912943e-06
+.param x_dut_xm24_l=8.88913234337658e-06
 .param x_dut_xm24_m=1
-.param x_dut_xm24_w=2u
-.param x_dut_xm25_l=1u
+.param x_dut_xm24_w=6.31984442861354e-05
+.param x_dut_xm25_l=6.488851778022391e-06
 .param x_dut_xm25_m=400
-.param x_dut_xm25_w=1u
-.param x_dut_xm10_l=1u
+.param x_dut_xm25_w=5.042427868099229e-05
+.param x_dut_xm10_l=2.4753747959407387e-06
 .param x_dut_xm10_m=100
-.param x_dut_xm10_w=1u
+.param x_dut_xm10_w=1.6191578078237667e-06
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

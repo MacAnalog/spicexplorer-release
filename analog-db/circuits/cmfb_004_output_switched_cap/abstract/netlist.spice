@@ -1,0 +1,51 @@
+** Abstract switched-capacitor CMFB network (the bio-AFE paper's ACTUAL output-CM
+** circuit): two-phase charge-redistribution CM detector with NO error amplifier —
+** per side, a switched cap alternates between the reference pair (vcm, vbias) on
+** clk_phi and the sensed/control pair (vin+-, vcmfb) on clk_phi_not, so steady
+** state enforces vcmfb = cm(vinp,vinn) - vcm + vbias: the discrete-time transfer
+** slope is +1 (CANONICAL polarity) and the zero-error actuator level is PROGRAMMED
+** by vbias rather than sized. Reservoir caps hold the (vcm - vbias) reference
+** difference. AUTHORED source of truth (plan D-2). PDK-neutral model tokens
+** (nmos/pmos); per-PDK device names + geometry come from circuitgraph lowering +
+** pdk/<pdk>/{devices.map,sizing}.yaml.
+** Subckt port order (= circuit.yaml ports): vinp vinn vcmfb vcm vbias clk_phi clk_phi_not vdd vss
+**
+** Topology (from drawings/shared/cmfb-output-switched-cap.sch, flattened by hand
+** after xschem netlisting; each drawn transmission_gate_pair x1..x8 expands to an
+** NMOS+PMOS pair, numbered XM(2k-1)/XM(2k) in drawing order):
+**   x1 XM1/XM2   vcm     <-> sense_p  conducts on clk_phi      (refresh)
+**   x2 XM3/XM4   vbias   <-> ctl_p    conducts on clk_phi      (refresh)
+**   x3 XM5/XM6   sense_p <-> vinp     conducts on clk_phi_not  (sense)
+**   x4 XM7/XM8   ctl_p   <-> vcmfb    conducts on clk_phi_not  (sense)
+**   x5..x8 = the vinn-side mirror (sense_n / ctl_n).
+**   C2/C4 = the switched caps (drawn param cmfb_cm1) across (ctl, sense);
+**   C1/C3 = reservoir caps (drawn param cmfb_cm2) across (vbias, vcm).
+**   Rails vdd/vss appear ONLY as TG bulks (body bias); there is NO static supply
+**   path — i_supply is switching charge + junction leakage.
+**   During clk_phi (refresh) vcmfb is Hi-Z: the consumer's actuator gate (bench
+**   CL) is the hold capacitance — the drawing carries no dedicated hold cap.
+**   drawing conformance: none deviated — connectivity matches the 2026-07-27
+**   sketch exactly (ERC undriven-vcmfb fix was symbol pin DIRECTION only).
+**.subckt cmfb_004_output_switched_cap vinp vinn vcmfb vcm vbias clk_phi clk_phi_not vdd vss
+XM1 vcm clk_phi sense_p vss nmos w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m
+XM2 sense_p clk_phi_not vcm vdd pmos w=x_dut_xm2_w l=x_dut_xm2_l m=x_dut_xm2_m
+XM3 vbias clk_phi ctl_p vss nmos w=x_dut_xm3_w l=x_dut_xm3_l m=x_dut_xm3_m
+XM4 ctl_p clk_phi_not vbias vdd pmos w=x_dut_xm4_w l=x_dut_xm4_l m=x_dut_xm4_m
+XM5 sense_p clk_phi_not vinp vss nmos w=x_dut_xm5_w l=x_dut_xm5_l m=x_dut_xm5_m
+XM6 vinp clk_phi sense_p vdd pmos w=x_dut_xm6_w l=x_dut_xm6_l m=x_dut_xm6_m
+XM7 ctl_p clk_phi_not vcmfb vss nmos w=x_dut_xm7_w l=x_dut_xm7_l m=x_dut_xm7_m
+XM8 vcmfb clk_phi ctl_p vdd pmos w=x_dut_xm8_w l=x_dut_xm8_l m=x_dut_xm8_m
+XM9 vcm clk_phi sense_n vss nmos w=x_dut_xm9_w l=x_dut_xm9_l m=x_dut_xm9_m
+XM10 sense_n clk_phi_not vcm vdd pmos w=x_dut_xm10_w l=x_dut_xm10_l m=x_dut_xm10_m
+XM11 vbias clk_phi ctl_n vss nmos w=x_dut_xm11_w l=x_dut_xm11_l m=x_dut_xm11_m
+XM12 ctl_n clk_phi_not vbias vdd pmos w=x_dut_xm12_w l=x_dut_xm12_l m=x_dut_xm12_m
+XM13 sense_n clk_phi_not vinn vss nmos w=x_dut_xm13_w l=x_dut_xm13_l m=x_dut_xm13_m
+XM14 vinn clk_phi sense_n vdd pmos w=x_dut_xm14_w l=x_dut_xm14_l m=x_dut_xm14_m
+XM15 ctl_n clk_phi_not vcmfb vss nmos w=x_dut_xm15_w l=x_dut_xm15_l m=x_dut_xm15_m
+XM16 vcmfb clk_phi ctl_n vdd pmos w=x_dut_xm16_w l=x_dut_xm16_l m=x_dut_xm16_m
+C1 vbias vcm 'x_dut_c1_value'
+C2 ctl_p sense_p 'x_dut_c2_value'
+C3 vbias vcm 'x_dut_c3_value'
+C4 ctl_n sense_n 'x_dut_c4_value'
+**.ends
+.end

@@ -6,7 +6,7 @@ pdk: tsmc-n65
 variables:
 - name: x_dut_xm1_w
   description: Main tail current source width (PMOS, gate vb3)
-  default: 20u
+  default: 13.551u
   min: 0.15u
   max: 100u
   unit: m
@@ -18,7 +18,7 @@ variables:
   unit: m
 - name: x_dut_xm2_w
   description: PMOS input pair width
-  default: 20u
+  default: 13.8u
   min: 0.15u
   max: 200u
   unit: m
@@ -30,13 +30,13 @@ variables:
   unit: m
 - name: x_dut_xm4_w
   description: CMFB tail width (sets CMFB branch current vs XM1)
-  default: 10u
+  default: 6.775u
   min: 0.15u
   max: 100u
   unit: m
 - name: x_dut_xm5_w
   description: DDA-CMFB sense pair width
-  default: 4u
+  default: 1.578u
   min: 0.15u
   max: 50u
   unit: m
@@ -48,7 +48,7 @@ variables:
   unit: m
 - name: x_dut_xm6_w
   description: DDA-CMFB reference-half unit width (x2 parallel as drawn)
-  default: 4u
+  default: 1.578u
   min: 0.15u
   max: 50u
   unit: m
@@ -60,7 +60,7 @@ variables:
   unit: m
 - name: x_dut_xm9_w
   description: PMOS telescopic cascode width
-  default: 10u
+  default: 4.031u
   min: 0.15u
   max: 100u
   unit: m
@@ -72,7 +72,7 @@ variables:
   unit: m
 - name: x_dut_xm11_w
   description: NMOS telescopic cascode width
-  default: 5u
+  default: 1.022u
   min: 0.15u
   max: 100u
   unit: m
@@ -84,43 +84,43 @@ variables:
   unit: m
 - name: x_dut_xm13_w
   description: Output current-sink width (gate on CMFB bias)
-  default: 6u
+  default: 0.666u
   min: 0.15u
   max: 100u
   unit: m
 - name: x_dut_xm15_w
   description: DDA diode-load width (cm_bias/cm_sense diodes)
-  default: 2u
+  default: 0.333u
   min: 0.15u
   max: 50u
   unit: m
 - name: x_dut_xm15_l
   description: DDA diode-load length (mirror L, also sets sink L)
-  default: 1u
+  default: 0.5u
   min: 0.13u
   max: 10u
   unit: m
 - name: vb1
   description: PMOS cascode gate bias (drawn as an external 0.5 V port)
-  default: 0.45
+  default: 0.292504
   min: 0.0
   max: 1.2
   unit: V
 - name: vb2
   description: NMOS cascode gate bias (drawn as an external 0.5 V port)
-  default: 0.75
+  default: 0.612061
   min: 0.0
   max: 1.2
   unit: V
 - name: vb3
   description: PMOS tail gate bias (sets branch currents; drawn 0.5 V)
-  default: 0.55
+  default: 0.796166
   min: 0.0
   max: 1.2
   unit: V
 - name: vb4
   description: Output common-mode reference into the DDA-CMFB (drawn 0.5 V)
-  default: 0.6
+  default: 0.5
   min: 0.0
   max: 1.2
   unit: V

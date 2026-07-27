@@ -77,20 +77,20 @@ XDUT vinp vinn voutp voutn vref clk_chin clk_chin_not clk_chfb clk_chfb_not clk_
   write
   quit
 .endc
-.param x_dut_xm1_w=20u
+.param x_dut_xm1_w=5.629u
 .param x_dut_xm1_l=1u
-.param x_dut_xm2_w=20u
+.param x_dut_xm2_w=4.933u
 .param x_dut_xm2_l=0.5u
-.param x_dut_xm4_w=6u
+.param x_dut_xm4_w=2.51u
 .param x_dut_xm4_l=1u
-.param x_dut_xm6_w=10u
-.param x_dut_xm8_w=12u
-.param x_dut_xm10_w=10u
+.param x_dut_xm6_w=2.814u
+.param x_dut_xm8_w=11.257u
+.param x_dut_xm10_w=2.398u
 .param x_dut_xm10_l=0.3u
-.param x_dut_xm12_w=5u
+.param x_dut_xm12_w=0.792u
 .param x_dut_xm12_l=0.3u
-.param x_dut_xm14_w=6u
-.param x_dut_xm14_l=0.5u
+.param x_dut_xm14_w=1.043u
+.param x_dut_xm14_l=0.25u
 .param x_dut_xm16_w=2u
 .param x_dut_xm16_l=0.13u
 .param x_dut_xm17_w=2u
@@ -105,12 +105,12 @@ XDUT vinp vinn voutp voutn vref clk_chin clk_chin_not clk_chfb clk_chfb_not clk_
 .param x_dut_xm25_l=0.13u
 .param x_dut_cin1_value=16p
 .param x_dut_cfb1_value=0.8p
-.param x_dut_cm1_value=1p
+.param x_dut_cm1_value=2p
 .param x_dut_rb1_value=10Meg
-.param vb1=0.5
-.param vb2=0.75
-.param vb3=0.45
-.param vb4=0.55
+.param vb1=0.324117
+.param vb2=0.472198
+.param vb3=0.438401
+.param vb4=0.785955
 .param x_dut_xm1_m=1
 .param x_dut_xm2_m=1
 .param x_dut_xm4_m=1

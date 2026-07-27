@@ -73,7 +73,10 @@ XDUT vdd vout vss ldo_008_fer_mirror_ota
   * NaN rather than a fabricated number when the sweep never reaches regulation — an honest
   * "this circuit does not regulate anywhere in the swept range".
   if found < 0.5
-    let v_dropout = 0/0
+    * 0*log(0) — NOT 0/0: ngspice-45 hard-errors on 0/0 ("argument out of range for
+    * divide"), so the vector never exists and the runner reports sim_error instead of
+    * the intended honest NaN (found live on ldo_004's committed sizing, 2026-07-24).
+    let v_dropout = 0*log(0)
   else
     let v_dropout = vin_at - vout_at
   end
@@ -89,7 +92,7 @@ XDUT vdd vout vss ldo_008_fer_mirror_ota
 .param x_dut_xmld_l=0.5
 .param x_dut_xmp_w=8
 .param x_dut_xmp_l=0.2
-.param x_rcomp=2000
+.param x_rcomp=40000
 .param x_ccomp=160e-12
 .param x_dut_rt_value=9000
 .param x_vref_val=0.6

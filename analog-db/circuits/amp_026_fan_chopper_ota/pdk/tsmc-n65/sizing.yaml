@@ -6,7 +6,7 @@ pdk: tsmc-n65
 variables:
 - name: x_dut_xm1_w
   description: PMOS tail current-source width (gate vb4)
-  default: 20u
+  default: 5.629u
   min: 0.15u
   max: 100u
   unit: m
@@ -18,7 +18,7 @@ variables:
   unit: m
 - name: x_dut_xm2_w
   description: PMOS input pair width
-  default: 20u
+  default: 4.933u
   min: 0.15u
   max: 200u
   unit: m
@@ -30,7 +30,7 @@ variables:
   unit: m
 - name: x_dut_xm4_w
   description: First-stage NMOS fold-sink width (gate vb1)
-  default: 10u
+  default: 2.51u
   min: 0.15u
   max: 100u
   unit: m
@@ -42,19 +42,19 @@ variables:
   unit: m
 - name: x_dut_xm6_w
   description: PMOS fold current-source width (gate vb4)
-  default: 10u
+  default: 2.814u
   min: 0.15u
   max: 100u
   unit: m
 - name: x_dut_xm8_w
   description: Class-A output PMOS current-source width (gate vb4)
-  default: 10u
+  default: 11.257u
   min: 0.15u
   max: 100u
   unit: m
 - name: x_dut_xm10_w
   description: PMOS cascode width (gate vb3)
-  default: 10u
+  default: 2.398u
   min: 0.15u
   max: 100u
   unit: m
@@ -66,7 +66,7 @@ variables:
   unit: m
 - name: x_dut_xm12_w
   description: Folded NMOS cascode width (gate vb2)
-  default: 5u
+  default: 0.792u
   min: 0.15u
   max: 100u
   unit: m
@@ -78,7 +78,7 @@ variables:
   unit: m
 - name: x_dut_xm14_w
   description: 'Class-A output NMOS common-source width (big W/L: gm2 must clear the Miller RHP zero)'
-  default: 10u
+  default: 1.043u
   min: 0.15u
   max: 100u
   unit: m
@@ -121,26 +121,26 @@ variables:
 - name: vb1
   description: "First-stage NMOS fold-sink gate bias (drawn as an external 0.5 V port; retuned \u2014\
     \ 0.5 collapses the knife-edge stage-1 output node, no CMFB)"
-  default: 0.398118
+  default: 0.324117
   min: 0.0
   max: 1.2
   unit: V
 - name: vb2
   description: Folded NMOS cascode gate bias (drawn as an external 0.5 V port; lowered for out1 headroom
     at the gm2-boosted stage-2 gate level)
-  default: 0.65
+  default: 0.472198
   min: 0.0
   max: 1.2
   unit: V
 - name: vb3
   description: PMOS cascode gate bias (drawn as an external 0.5 V port)
-  default: 0.45
+  default: 0.438401
   min: 0.0
   max: 1.2
   unit: V
 - name: vb4
   description: "PMOS current-source gate bias \u2014 tail + fold + output sources (drawn 0.5 V)"
-  default: 0.55
+  default: 0.785955
   min: 0.0
   max: 1.2
   unit: V

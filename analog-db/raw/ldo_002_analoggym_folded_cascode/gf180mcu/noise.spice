@@ -35,8 +35,8 @@ XDUT vdd vout vss ldo_002_analoggym_folded_cascode
   write
   quit
 .endc
-.param x_dut_xm1_w=20u
-.param x_dut_xm1_l=1u
+.param x_dut_xm1_w=60u
+.param x_dut_xm1_l=0.6u
 .param x_dut_xm3_w=30u
 .param x_dut_xm3_l=0.5u
 .param x_dut_xm5_w=10u

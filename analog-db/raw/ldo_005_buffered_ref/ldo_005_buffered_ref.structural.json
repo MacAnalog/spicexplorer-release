@@ -1,0 +1,138 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "ldo_005_buffered_ref",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 34,
+    "blocks_detected": 5,
+    "by_family": {
+      "current_mirror": 3,
+      "differential_pair": 2
+    },
+    "structural_roles": {
+      "XMEA_1": "differential_pair",
+      "XMEA_2": "differential_pair",
+      "XMEA_B0": "current_mirror_reference",
+      "XMEA_BC": "tail_current_source",
+      "XMEA_BF": "current_mirror",
+      "XMEA_BO": "current_mirror",
+      "XMRA_1": "differential_pair",
+      "XMRA_2": "differential_pair",
+      "XMRA_3": "current_mirror_reference",
+      "XMRA_4": "current_mirror",
+      "XMRA_B0": "current_mirror_reference",
+      "XMRA_BC": "tail_current_source",
+      "XMRA_BO": "current_mirror"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.nmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XMEA_B0",
+      "output_devices": [
+        "XMEA_BC",
+        "XMEA_BF",
+        "XMEA_BO"
+      ],
+      "devices": [
+        "XMEA_B0",
+        "XMEA_BC",
+        "XMEA_BF",
+        "XMEA_BO"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "ea_ibias",
+        "out": "ea_tail"
+      }
+    },
+    {
+      "group_id": "cm.pmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XMRA_3",
+      "output_devices": [
+        "XMRA_4"
+      ],
+      "devices": [
+        "XMRA_3",
+        "XMRA_4"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "ra_na",
+        "out": "ra_nb"
+      }
+    },
+    {
+      "group_id": "cm.nmos.simple#2",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XMRA_B0",
+      "output_devices": [
+        "XMRA_BC",
+        "XMRA_BO"
+      ],
+      "devices": [
+        "XMRA_B0",
+        "XMRA_BC",
+        "XMRA_BO"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "ra_ibias",
+        "out": "ra_tail"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#1",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XMEA_1",
+        "XMEA_2"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "v_lpf_out",
+        "in_n": "lp_brk",
+        "CM_tail": "ea_tail",
+        "out_n": "ea_nb",
+        "out_p": "ea_na"
+      }
+    },
+    {
+      "group_id": "dp.nmos.simple#2",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "nmos",
+      "template_id": "dp.nmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XMRA_1",
+        "XMRA_2"
+      ],
+      "ports": {
+        "supply": "vss",
+        "in_p": "vref",
+        "in_n": "v_ref_fb",
+        "CM_tail": "ra_tail",
+        "out_n": "ra_na",
+        "out_p": "ra_nb"
+      }
+    }
+  ]
+}

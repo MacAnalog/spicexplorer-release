@@ -14,24 +14,32 @@ devices:
   CINT1_RRL: {Value: x_dut_cint1_rrl_value}
   CINT2_RRL: {Value: x_dut_cint2_rrl_value}
   CIN_1_RRL: {Value: cin_val_rrl}
+  CIN_SERVO_CMFB: {Value: cin_val_cmfb}
   CM1_MAIN: {Value: x_dut_cm1_main_value}
   CM2_MAIN: {Value: x_dut_cm2_main_value}
   COUT_1_RRL: {Value: cout_val_rrl}
+  COUT_SERVO_CMFB: {Value: cout_val_cmfb}
   CS1_RRL: {Value: x_dut_cs1_rrl_value}
   CS2_RRL: {Value: x_dut_cs2_rrl_value}
   GM_1_RRL: {Value: gm_val_rrl}
+  GM_SERVO_CMFB: {Value: gm_val_cmfb}
   RB1_MAIN: {Value: x_dut_rb1_main_value}
   RB2_MAIN: {Value: x_dut_rb2_main_value}
   RIN_1_RRL: {Value: rin_val_rrl}
+  RIN_SERVO_CMFB: {Value: rin_val_cmfb}
+  RMN_CMFB: {Value: x_dut_rmn_cmfb_value}
+  RMP_CMFB: {Value: x_dut_rmp_cmfb_value}
   ROUT_1_RRL: {Value: rout_val_rrl}
+  ROUT_SERVO_CMFB: {Value: rout_val_cmfb}
   VB1_MAIN: {Value: vb1_main}
   VB1_RRL: {Value: vb1_rrl}
   VB2_MAIN: {Value: vb2_main}
   VB2_RRL: {Value: vb2_rrl}
   VB3_MAIN: {Value: vb3_main}
   VB3_RRL: {Value: vb3_rrl}
-  VB4_MAIN: {Value: vb4_main}
+  VB40: {Value: vb40}
   VB4_RRL: {Value: vb4_rrl}
+  VREFCM: {Value: vcm_ref}
   XM10_MAIN: {l: x_dut_xm10_main_l, m: x_dut_xm10_main_m, w: x_dut_xm10_main_w}
   XM10_OPAMP_RRL: {l: x_dut_xm10_opamp_rrl_l, m: x_dut_xm10_opamp_rrl_m, w: x_dut_xm10_opamp_rrl_w}
   XM11_MAIN: {l: x_dut_xm11_main_l, m: x_dut_xm11_main_m, w: x_dut_xm11_main_w}
@@ -322,3 +330,9 @@ groups:
   description: PMOS legs of the four chopper TGs — straight (_1/_2) and cross (_3/_4) legs of the 4-gate
     modulator, all the same drawn unit TG cell, kept as its own functional block (ported from sup_003_rrl_sc_integrator
     through the composer rename).
+- name: pair_rmp_rmn_cmfb
+  kind: shared_geometry
+  members: [RMP_CMFB, RMN_CMFB]
+  tie: [Value]
+  description: CM-detector averaging resistors — equal values so cm_sense sits at the true
+    output midpoint (== cmfb_001_ideal_rsense_servo's pair_rmp_rmn).

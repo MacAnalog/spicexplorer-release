@@ -1,0 +1,62 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# SUPERSET of cace_format 5.2. See _shared/CACE_FORMAT.md for the field-overlap mapping.
+# The SC-CMFB's contract is structural, not sized: steady state enforces
+# vcmfb = cm(vin) - vcm + vbias, so slope ~ +1 (canonical POSITIVE — the sign IS the
+# polarity spec), vcmfb_nat ~ vbias (0.3 V bound here — the bench's programmed
+# actuator level), and the interesting MEASURED figures are the clock ripple /
+# charge-injection residue (ring_v), the multi-cycle settle, and the switching-only
+# supply draw. Bands set from the 2026-07-27 live ihp tt characterization at the
+# committed defaults (VDD 1.2, VCM 0.5, VBIAS 0.3, FCLK 1k, CL 50f, min-geometry
+# TGs 0.15u/0.13u, caps 1p/1p): vcmfb_nat 0.2994, slope +0.999, ring_v 0.94 mV,
+# t_cm_settle 0.50 ms, i_supply 27 fA.
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.2}
+  cload:  {unit: fF, typical: 50}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+  vcm:    {unit: V, typical: 0.5}
+metrics:
+  vcmfb_nat:
+    display: "Zero-error natural output"
+    description: "Settled vcmfb at sensed CM == vcm — PROGRAMMED to vbias (0.3 V) by charge redistribution, not sized (contrast cmfb_002's placement-by-sizing)"
+    unit: V
+    analysis: tran_sc_cmfb_step
+    extract: {meas: vcmfb_nat}
+    spec: {min: 0.29, max: 0.31, unit: V}
+  cmfb_slope:
+    display: "Signed discrete-time transfer slope"
+    description: "step_delta_v/VSTEP — POSITIVE (canonical polarity for inverting plants); ~ +1 by construction for the SC charge-redistribution transfer"
+    unit: V/V
+    analysis: tran_sc_cmfb_step
+    extract: {meas: cmfb_slope}
+    spec: {min: 0.9, unit: V/V}
+  step_delta_v:
+    display: "Step response settled shift"
+    description: "Settled plateau AVG minus pre-step AVG for a +50 mV sensed-CM step — POSITIVE, ~ +50 mV (time-domain polarity cross-check)"
+    unit: V
+    analysis: tran_sc_cmfb_step
+    extract: {meas: step_delta_v}
+    spec: {min: 0.045, unit: V}
+  ring_v:
+    display: "Plateau ripple half-amplitude"
+    description: "(max-min)/2 of vcmfb over the settled plateau window: clock ripple + charge-injection/feedthrough residue — the SC-CMFB's native figure of demerit"
+    unit: V
+    analysis: tran_sc_cmfb_step
+    extract: {meas: ring_v}
+    spec: {max: 0.005, unit: V}
+  t_cm_settle:
+    display: "Step release settle time"
+    description: "Release-edge recovery to |vcmfb - final| < 5 mV — multi-cycle by construction (~98% of the error closes per clock at 1p/50f)"
+    unit: s
+    analysis: tran_sc_cmfb_step
+    extract: {meas: t_cm_settle}
+    spec: {max: 2.0e-3, unit: s}
+  i_supply:
+    display: "Supply current (switching average)"
+    description: "AVG vdd draw over a settled window — switching charge pulses + junction leakage only; there is NO static supply path"
+    unit: A
+    analysis: tran_sc_cmfb_step
+    extract: {meas: i_supply}
+    spec: {max: 1.0e-9, unit: A}

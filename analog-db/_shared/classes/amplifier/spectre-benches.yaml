@@ -56,6 +56,23 @@ benches:
     analyses:
       - {template: dc_op}
     calculator: []
+  ac_cm_reg:
+    analyses:
+      - {template: dc_op}
+      - {template: ac}
+    calculator:
+      # CM benches assume the self-biased differential-output port contract
+      # (voutp/voutn), like the ngspice templates they mirror.
+      - {name: zcm_lf_ohm, expr: cm_z_lf, args: {OUTP: voutp, OUTN: voutn, FREQ: $FSTART}}
+      - {name: cm_peaking_db, expr: cm_z_peaking_db, args: {OUTP: voutp, OUTN: voutn, FREQ: $FSTART}}
+  tran_cm_kick:
+    analyses:
+      - {template: dc_op}
+      - {template: tran}
+    calculator:
+      - {name: cm_kick_v, expr: cm_kick_v, args: {OUTP: voutp, OUTN: voutn}}
+      - {name: cm_resid_v, expr: cm_resid_v, args: {OUTP: voutp, OUTN: voutn}}
+      - {name: t_cm_settle, expr: cm_t_settle, args: {OUTP: voutp, OUTN: voutn}}
   noise:
     analyses:
       - {template: dc_op}

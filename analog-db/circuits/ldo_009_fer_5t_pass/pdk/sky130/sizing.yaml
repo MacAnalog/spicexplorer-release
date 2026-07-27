@@ -8,9 +8,9 @@ variables:
   - {name: x_dut_xmnb_l,   description: "NMOS bias length",                     default: 0.4, min: 0.15, max: 20, unit: m}
   - {name: x_dut_xmip_w,   description: "5T pair width (per finger, m=2)",      default: 8,   min: 0.42, max: 100, unit: m}
   - {name: x_dut_xmip_l,   description: "5T pair length",                       default: 0.2, min: 0.15, max: 20, unit: m}
-  - {name: x_dut_xmld_w,   description: "PMOS mirror load width",               default: 4,   min: 0.42, max: 100, unit: m}
+  - {name: x_dut_xmld_w,   description: "PMOS mirror load width",               default: 32,  min: 0.42, max: 100, unit: m}
   - {name: x_dut_xmld_l,   description: "PMOS mirror load length",              default: 0.4, min: 0.15, max: 20, unit: m}
-  - {name: x_dut_xmp_w, description: "PMOS pass width (per finger, m=20)",   default: 8,   min: 0.42, max: 100, unit: m}
+  - {name: x_dut_xmp_w, description: "PMOS pass width (per finger, m=20)",   default: 20,  min: 0.42, max: 100, unit: m}
   - {name: x_dut_xmp_l, description: "PMOS pass length",                     default: 0.2, min: 0.15, max: 20, unit: m}
   - {name: x_cmil,   description: "Miller cap vout -> pass gate (F)",     default: 2e-12, min: 1e-13, max: 2e-11, unit: F}
   - {name: x_cout,   description: "On-board output decap (F)",            default: 50e-12, min: 1e-12, max: 5e-10, unit: F}

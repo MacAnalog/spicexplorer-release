@@ -88,6 +88,8 @@ metrics:
     analysis: tran_step
     extract:
       meas: t_settle
+      out: voutp   # fully-diff: registry reads out - ref (closed lane has no in-deck meas)
+      ref: voutn
     spec:
       max: 1.0e-05
       unit: s

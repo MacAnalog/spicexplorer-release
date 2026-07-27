@@ -74,7 +74,10 @@ XDUT vdd vout vss ldo_002_analoggym_folded_cascode
   * NaN rather than a fabricated number when the sweep never reaches regulation — an honest
   * "this circuit does not regulate anywhere in the swept range".
   if found < 0.5
-    let v_dropout = 0/0
+    * 0*log(0) — NOT 0/0: ngspice-45 hard-errors on 0/0 ("argument out of range for
+    * divide"), so the vector never exists and the runner reports sim_error instead of
+    * the intended honest NaN (found live on ldo_004's committed sizing, 2026-07-24).
+    let v_dropout = 0*log(0)
   else
     let v_dropout = vin_at - vout_at
   end
@@ -82,25 +85,25 @@ XDUT vdd vout vss ldo_002_analoggym_folded_cascode
   write
   quit
 .endc
-.param x_dut_xm1_w=20u
-.param x_dut_xm1_l=1u
-.param x_dut_xm3_w=30u
+.param x_dut_xm1_w=60u
+.param x_dut_xm1_l=0.5u
+.param x_dut_xm3_w=60u
 .param x_dut_xm3_l=0.5u
-.param x_dut_xm5_w=10u
+.param x_dut_xm5_w=30u
 .param x_dut_xm5_l=0.5u
-.param x_dut_xm7_w=20u
-.param x_dut_xm7_l=2u
-.param x_dut_xm9_w=30u
+.param x_dut_xm7_w=13u
+.param x_dut_xm7_l=1u
+.param x_dut_xm9_w=10u
 .param x_dut_xm9_l=0.5u
 .param x_dut_xmp_w=10u
 .param x_dut_xmp_l=0.5u
-.param x_dut_xmp_m=250
-.param r_z=3k
-.param c_comp=2p
+.param x_dut_xmp_m=400
+.param r_z=1.5k
+.param c_comp=5p
 .param vref_val=1.8
 .param vb1_val=1.0
 .param vb2_val=0.025
-.param r_bleed=100k
+.param r_bleed=40k
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

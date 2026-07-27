@@ -34,4 +34,4 @@ analyses:
 - tran_step
 - psrr_vdd
 - cmrr_vcm
-status: incomplete # Have to turn off because gain in skywater is negative... with the template dimensions
+status: draft # sky130 re-sized 2026-07-25 (was dead at the template dimensions); all PDK baselines alive

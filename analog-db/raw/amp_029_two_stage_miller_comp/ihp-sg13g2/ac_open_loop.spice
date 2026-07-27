@@ -71,9 +71,9 @@ Vinn vinn vcm dc 0 ac -0.5
 .param x_dut_xm7_w=6u
 .param x_dut_xm8_w=2u
 .param x_dut_r1_value=2k
-.param x_dut_c1_value=1p
+.param x_dut_c1_value=0.3p
 .param i_bias=20u
-.param vbl=0.71
+.param vbl=0.7087
 .param x_dut_xm1_m=1
 .param x_dut_xm3_m=1
 .param x_dut_xm5_m=1

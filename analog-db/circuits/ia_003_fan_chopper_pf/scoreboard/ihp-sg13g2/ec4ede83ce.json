@@ -11,21 +11,6 @@
   "corners": {
     "tt": {
       "analyses": {
-        "ac_closed_loop": {
-          "measures": {
-            "bw_cl_hz": 2100179.0,
-            "gain_cl": 19.31346,
-            "gain_cl_db": 25.7172,
-            "hpf_hz": 31.85298
-          },
-          "status": "ok"
-        },
-        "ac_zin_diff": {
-          "measures": {
-            "zin_ohm": 612208900.0
-          },
-          "status": "ok"
-        },
         "dc_op": {
           "measures": {
             "i_supply": 0.0001463952,
@@ -48,9 +33,9 @@
         },
         "tran_zin_chopped": {
           "measures": {
-            "iavgn": 2.860368e-11,
-            "iavgp": -8.139656e-10,
-            "zin_chop_ohm": 23736920.0
+            "iavgn": 2.787576e-11,
+            "iavgp": -8.139391e-10,
+            "zin_chop_ohm": 23758190.0
           },
           "status": "ok"
         }
@@ -58,28 +43,16 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-21T02:26:23+00:00"
+        "run_at": "2026-07-27T11:53:45+00:00"
       }
     }
   },
   "design_id": "ec4ede83ce",
   "metrics": {
     "tt": {
-      "bw_cl_hz": {
-        "spec": "pass",
-        "value": 2100179.0
-      },
       "gain_cl": {
         "spec": "pass",
         "value": 6.946581
-      },
-      "gain_cl_db": {
-        "spec": "pass",
-        "value": 25.7172
-      },
-      "hpf_hz": {
-        "spec": "pass",
-        "value": 31.85298
       },
       "i_supply": {
         "spec": "pass",
@@ -99,11 +72,7 @@
       },
       "zin_chop_ohm": {
         "spec": "pass",
-        "value": 23736920.0
-      },
-      "zin_ohm": {
-        "spec": "pass",
-        "value": 612208900.0
+        "value": 23758190.0
       }
     }
   },

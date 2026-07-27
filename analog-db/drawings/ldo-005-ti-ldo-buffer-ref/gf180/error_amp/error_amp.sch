@@ -299,3 +299,16 @@ spiceprefix=X
 C {devices/lab_pin.sym} 150 -510 0 0 {name=p31 sig_type=std_logic lab=vdd}
 N 1110 -810 1190 -810 {lab=net_b}
 C {devices/lab_pin.sym} 1110 -810 2 0 {name=p_m6gate sig_type=std_logic lab=net_b}
+C {devices/res.sym} 340 -760 0 0 {name=REAnd
+value=500k
+footprint=1206
+device=resistor
+m=1}
+C {devices/lab_pin.sym} 340 -790 1 0 {name=p91 sig_type=std_logic lab=net_d}
+C {devices/lab_pin.sym} 340 -730 3 0 {name=p92 sig_type=std_logic lab=net_a}
+T {REAnd (fix 2026-07-25): DC-defines the M3m/M5 gate rail net_d by tying it to the
+mirror drain net_a. ~0 DC current (M4 / mirror_f are ~zero-current by design), so at
+DC the mirror is diode-connected while M4 keeps the transient level shift. Without it
+net_d floats on model leakage: leakage-free models (e.g. IHP PSP) latch the amplifier
+(vout = VDD, every DC sweep railed). Do NOT replace with a vdd pull-up (kills dropout).
+See analog-db reviews/ldo-gmid-sizing-report.md, "The ea_nd netlist fix".} 40 -1040 0 0 0.2 0.2 {}

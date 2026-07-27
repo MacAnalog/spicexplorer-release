@@ -44,9 +44,9 @@ XDUT vdd vout vss ldo_009_fer_5t_pass
 .param x_dut_xmnb_l=0.4u
 .param x_dut_xmip_w=8u
 .param x_dut_xmip_l=0.28u
-.param x_dut_xmld_w=4u
+.param x_dut_xmld_w=32u
 .param x_dut_xmld_l=0.4u
-.param x_dut_xmp_w=8u
+.param x_dut_xmp_w=40u
 .param x_dut_xmp_l=0.28u
 .param x_cmil=2e-12
 .param x_cout=50e-12

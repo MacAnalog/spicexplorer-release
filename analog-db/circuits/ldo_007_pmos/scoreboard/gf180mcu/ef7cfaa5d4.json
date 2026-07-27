@@ -1,0 +1,177 @@
+{
+  "area": {
+    "active_gate_area_um2": 1489.0,
+    "c_count": 2,
+    "c_total_f": 6.005e-11,
+    "mos_count": 7,
+    "r_count": 3,
+    "r_total_ohm": 40001.0
+  },
+  "circuit": "ldo_007_pmos",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0001456382,
+            "vout_dc": 1.203382
+          },
+          "status": "ok"
+        },
+        "dropout": {
+          "measures": {
+            "v_dropout": 0.2656085,
+            "vin_at": 1.46,
+            "vout_at": 1.194391
+          },
+          "status": "ok"
+        },
+        "line_regulation": {
+          "measures": {
+            "line_reg": 0.000647,
+            "vout_max": 1.201692,
+            "vout_min": 1.201045
+          },
+          "status": "ok"
+        },
+        "load_regulation": {
+          "measures": {
+            "load_reg": 0.005387,
+            "vout_max": 1.203382,
+            "vout_min": 1.197995
+          },
+          "status": "ok"
+        },
+        "loop_stability": {
+          "measures": {
+            "zout_dc": -1.746275,
+            "zout_max": 3.817387,
+            "zout_peak_db": 5.563662
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "onoise_total": 3.749883e-05,
+            "vn_out_rms": 0.006123629
+          },
+          "status": "ok"
+        },
+        "psrr": {
+          "measures": {
+            "psrr_vdd_db": 69.13171,
+            "vout_db": -69.13171
+          },
+          "status": "ok"
+        },
+        "tran_line_step": {
+          "measures": {
+            "v_line_pp": 0.000769,
+            "vout_max": 1.201549,
+            "vout_min": 1.20078
+          },
+          "status": "ok"
+        },
+        "tran_load_step": {
+          "measures": {
+            "t_transient": 2.368626e-05,
+            "tcross": 2.868626e-05,
+            "v_undershoot": 0.006972,
+            "vout_min": 1.19403,
+            "vout_post": 1.201002
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-25T04:36:46+00:00"
+      }
+    }
+  },
+  "design_id": "ef7cfaa5d4",
+  "metrics": {
+    "tt": {
+      "i_q": {
+        "spec": "pass",
+        "value": 0.0001456382
+      },
+      "line_reg": {
+        "spec": "pass",
+        "value": 0.000647
+      },
+      "load_reg": {
+        "spec": "pass",
+        "value": 0.005387
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 69.13171
+      },
+      "t_transient": {
+        "spec": "pass",
+        "value": 2.368626e-05
+      },
+      "v_dropout": {
+        "spec": "pass",
+        "value": 0.2656085
+      },
+      "v_line_pp": {
+        "spec": "pass",
+        "value": 0.000769
+      },
+      "v_out": {
+        "spec": "pass",
+        "value": 1.203382
+      },
+      "v_undershoot": {
+        "spec": "pass",
+        "value": 0.006972
+      },
+      "vn_out_rms": {
+        "spec": "pass",
+        "value": 0.006123629
+      },
+      "zout_peak_db": {
+        "spec": "pass",
+        "value": 5.563662
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "c_comp": "0.05p",
+      "c_ff": "60p",
+      "i_tail": "60u",
+      "r_bot": "35k",
+      "r_top": "5k",
+      "r_z": 1,
+      "vref_val": 1.05,
+      "x_dut_xm1_l": "0.5u",
+      "x_dut_xm1_w": "16u",
+      "x_dut_xm3_l": "0.5u",
+      "x_dut_xm3_w": "25u",
+      "x_dut_xm6_l": "0.5u",
+      "x_dut_xm6_w": "48u",
+      "x_dut_xmp_l": "0.5u",
+      "x_dut_xmp_m": 140,
+      "x_dut_xmp_w": "20u"
+    }
+  },
+  "pdk": "gf180mcu",
+  "ppa": {
+    "active_gate_area_um2": 1489.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "load_reg": 0.005387,
+      "psrr_vdd_db": 69.13171,
+      "v_dropout": 0.2656085,
+      "v_undershoot": 0.006972
+    },
+    "power_w": 0.00026214876
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

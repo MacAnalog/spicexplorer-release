@@ -12,14 +12,14 @@ variables:
   unit: m
 - name: x_dut_xmp_m
   description: Pass PMOS parallel multiplier (total W = x_dut_xmp_w*x_dut_xmp_m)
-  default: 20
+  default: 100
   min: 1
   max: 200
   unit: count
   is_integer: true
 - name: x_dut_xmp_l
   description: Pass PMOS length
-  default: 0.5
+  default: 0.42
   min: 0.42
   max: 2
   unit: m
@@ -37,7 +37,7 @@ variables:
   unit: ohm
 - name: vref_val
   description: Internal reference voltage
-  default: 0.6
+  default: 0.645
   min: 0.3
   max: 1.2
   unit: V
@@ -49,19 +49,19 @@ variables:
   unit: A
 - name: x_dut_xm1_w
   description: Error-amp input pair width
-  default: 4
+  default: 42
   min: 0.42
   max: 50
   unit: m
 - name: x_dut_xm1_l
   description: Error-amp input pair length
-  default: 0.5
+  default: 1
   min: 0.42
   max: 10
   unit: m
 - name: x_dut_xm3_w
   description: Error-amp PMOS load width
-  default: 4
+  default: 45
   min: 0.42
   max: 50
   unit: m

@@ -6,139 +6,139 @@ pdk: gf180mcu
 variables:
 - name: x_dut_xm1_w
   description: Input pair W (PMOS)
-  default: 72u
+  default: 96u
   min: 1u
-  max: 200u
+  max: 100u
   unit: m
 - name: x_dut_xm1_l
   description: Input pair L
-  default: 2u
+  default: 0.5u
   min: 0.5u
   max: 5u
   unit: m
 - name: x_dut_xm13_w
   description: NMOS mirror W
-  default: 106.5u
+  default: 60u
   min: 1u
-  max: 200u
+  max: 100u
   unit: m
 - name: x_dut_xm13_l
   description: NMOS mirror L
-  default: 2u
+  default: 1u
   min: 0.5u
   max: 5u
   unit: m
 - name: x_dut_xm6_w
   description: NMOS cascode W
-  default: 44u
+  default: 30u
   min: 1u
-  max: 200u
+  max: 100u
   unit: m
 - name: x_dut_xm6_l
   description: NMOS cascode L
-  default: 2.5u
+  default: 0.5u
   min: 0.5u
   max: 5u
   unit: m
 - name: x_dut_xm7_w
   description: PMOS cascode W
-  default: 78u
+  default: 88u
   min: 1u
-  max: 200u
+  max: 100u
   unit: m
 - name: x_dut_xm7_l
   description: PMOS cascode L
-  default: 2u
+  default: 0.5u
   min: 0.5u
   max: 5u
   unit: m
 - name: x_dut_xm9_w
   description: PMOS mirror W
-  default: 183u
+  default: 82u
   min: 1u
-  max: 200u
+  max: 100u
   unit: m
 - name: x_dut_xm9_l
   description: PMOS mirror L
-  default: 4.5u
+  default: 1u
   min: 0.5u
   max: 5u
   unit: m
 - name: x_dut_xm11_w
   description: Tail/bias W
-  default: 50u
+  default: 60u
   min: 1u
-  max: 200u
+  max: 100u
   unit: m
 - name: x_dut_xm11_l
   description: Tail/bias L
-  default: 3u
+  default: 1u
   min: 0.5u
   max: 5u
   unit: m
 - name: x_dut_xm12_w
   description: NMOS-bias feed W
-  default: 50u
+  default: 60u
   min: 1u
-  max: 200u
+  max: 100u
   unit: m
 - name: x_dut_xm12_l
   description: NMOS-bias feed L
-  default: 3u
+  default: 1u
   min: 0.5u
   max: 5u
   unit: m
 - name: x_dut_vb1
   description: NMOS cascode bias
-  default: 1.225
+  default: 1.2
   min: 0.1
-  max: 1.8
+  max: 3.3
   unit: V
 - name: x_dut_vb2
   description: PMOS cascode bias
-  default: 1.275
+  default: 1.95
   min: 0.1
-  max: 1.8
+  max: 3.3
   unit: V
 - name: x_dut_xm1_ng
   description: Input pair fingers
-  default: 8
+  default: 12
   min: 1
   max: 32
   freeze: true
 - name: x_dut_xm13_ng
   description: NMOS mirror fingers
-  default: 11
+  default: 12
   min: 1
   max: 32
   freeze: true
 - name: x_dut_xm6_ng
   description: NMOS cascode fingers
-  default: 5
+  default: 6
   min: 1
   max: 32
   freeze: true
 - name: x_dut_xm7_ng
   description: PMOS cascode fingers
-  default: 8
+  default: 11
   min: 1
   max: 32
   freeze: true
 - name: x_dut_xm9_ng
   description: PMOS mirror fingers
-  default: 19
+  default: 16
   min: 1
   max: 32
   freeze: true
 - name: x_dut_xm11_ng
   description: Tail/bias fingers
-  default: 5
+  default: 12
   min: 1
   max: 32
   freeze: true
 - name: x_dut_xm12_ng
   description: NMOS-bias feed fingers
-  default: 5
+  default: 12
   min: 1
   max: 32
   freeze: true
@@ -148,13 +148,21 @@ variables:
 - {name: x_dut_xm1_m, description: "XM1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
 - {name: x_dut_xm2_m, description: "XM2 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
 - {name: x_dut_xm3_m, description: "XM3 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
-- {name: x_dut_xm11_m, description: "XM11 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
-- {name: x_dut_xm0_m, description: "XM0 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+- {name: x_dut_xm11_m, description: "XM11 m (frozen literal)", default: 2, min: 1, max: 16, freeze: true, is_integer: true}
+- {name: x_dut_xm0_m, description: "XM0 m (frozen literal)", default: 2, min: 1, max: 16, freeze: true, is_integer: true}
 - {name: x_dut_xm6_m, description: "XM6 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
 - {name: x_dut_xm5_m, description: "XM5 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
 - {name: x_dut_xm7_m, description: "XM7 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
 - {name: x_dut_xm8_m, description: "XM8 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
 - {name: x_dut_xm9_m, description: "XM9 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
 - {name: x_dut_xm10_m, description: "XM10 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
-- {name: x_dut_xm12_m, description: "XM12 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+- {name: x_dut_xm12_m, description: "XM12 m (frozen literal)", default: 2, min: 1, max: 16, freeze: true, is_integer: true}
 - {name: x_dut_xm13_m, description: "XM13 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+# Per-PDK bench overrides (assemble.py precedence: datasheet < analyses < analysis_params).
+# gf180mcu binds the 3.3 V core family (nfet/pfet_03v3): the cross-PDK 1.8 V/34 uA bench
+# conditions leave the stack cut off (the committed -30.8 dB baseline). Re-biased for the
+# 3.3 V rail; IBIAS -100u sets tail=100u, 50 uA/side (gm/ID~14 pair -> ugf >= 20 MHz at CL=5p).
+analysis_params:
+  VDD: 3.3
+  VCM: 1.65
+  IBIAS: -100u

@@ -6,6 +6,7 @@
 schema: spicexplorer/params@1
 devices:
   CC: {Value: c_comp}
+  RND: {Value: r_nd}
   RZ: {Value: r_z}
   XM1: {l: x_dut_xm1_l, w: x_dut_xm1_w}
   XM2: {l: x_dut_xm2_l, w: x_dut_xm2_w}
@@ -23,20 +24,20 @@ groups:
   kind: mirror_length
   members: [XMB0, XMBC, XMBF, XMBO]
   tie: [l]
-  description: 'All five mirror-rail sinks share one channel length (mirror matching).'
+  description: All five mirror-rail sinks share one channel length (mirror matching).
 - name: shared_xmb0_w
   kind: shared_geometry
   members: [XMB0, XMBC, XMBO]
   tie: [w]
-  description: 'Bias diode + tail + output sink share the mirror unit width; XMBF keeps its own width (it only
-    anchors the M4 level shifter and carries ~0 current).'
+  description: Bias diode + tail + output sink share the mirror unit width; XMBF keeps its own width (it
+    only anchors the M4 level shifter and carries ~0 current).
 - name: pair_xm1_xm2
   kind: matched_pair
   members: [XM1, XM2]
   tie: [w, l]
-  description: 'Input differential pair - must match or the amp has a systematic offset.'
+  description: Input differential pair - must match or the amp has a systematic offset.
 - name: shared_xm3_w_l
   kind: shared_geometry
   members: [XM3, XM5]
   tie: [w, l]
-  description: 'Level-shifted PMOS mirror load pair - must match for a balanced first stage.'
+  description: Level-shifted PMOS mirror load pair - must match for a balanced first stage.

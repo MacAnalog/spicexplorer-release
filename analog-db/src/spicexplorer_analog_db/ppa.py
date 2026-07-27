@@ -26,6 +26,7 @@ from typing import Any
 
 from .bindings import _SCALE_UM_PDKS
 from .model import Circuit, load_class
+from .raw_project import _eng
 
 _ENG = {
     "t": 1e12, "g": 1e9, "meg": 1e6, "k": 1e3, "m": 1e-3, "u": 1e-6,
@@ -260,8 +261,12 @@ def _spec_verdict(value: float, spec: dict[str, Any] | None) -> str:
 def metric_values(circuit: Circuit, analyses_block: dict[str, Any]) -> dict[str, Any]:
     """One corner's recorded ``analyses`` block → ``{canonical metric: {value, spec}}``.
 
-    Metrics whose analysis didn't run clean (or whose measure is missing) are omitted —
-    the rollup marks them absent rather than guessing."""
+    Metrics whose analysis didn't run at all are omitted — the rollup marks them
+    absent rather than guessing. A metric whose analysis ran CLEAN but whose measure
+    is missing or NaN is a spec FAILURE (value ``None``): the bench's honest-NaN
+    paths (e.g. dropout's "never regulates in the swept range") and ngspice
+    ``failed`` measures land here, and a silently-missing key used to be misread as
+    a pass downstream (found on ldo_005@ihp, 2026-07-25)."""
     out: dict[str, Any] = {}
     for name, mspec in circuit.datasheet().get("metrics", {}).items():
         aid = mspec.get("analysis")
@@ -273,6 +278,8 @@ def metric_values(circuit: Circuit, analyses_block: dict[str, Any]) -> dict[str,
             continue
         value = (ablock.get("measures") or {}).get(meas)
         if value is None or value != value:  # missing or NaN
+            if mspec.get("spec"):
+                out[name] = {"value": None, "spec": "fail"}
             continue
         out[name] = {"value": value, "spec": _spec_verdict(float(value), mspec.get("spec"))}
     return out
@@ -284,9 +291,18 @@ def class_ppa(class_id: str) -> dict[str, Any]:
 
 
 def ppa_rollup(
-    circuit: Circuit, corners_metrics: dict[str, dict[str, Any]], area: dict[str, Any]
+    circuit: Circuit,
+    corners_metrics: dict[str, dict[str, Any]],
+    area: dict[str, Any],
+    analysis_params: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """The PPA vector over the recorded corners (worst case, direction-aware)."""
+    """The PPA vector over the recorded corners (worst case, direction-aware).
+
+    ``analysis_params`` is the binding's per-PDK testbench-condition override block
+    (``sizing.yaml analysis_params``); a ``VDD`` there is the rail the entry was
+    actually simulated at and takes precedence over the datasheet typical for
+    ``times_vdd`` power.
+    """
     decl = class_ppa(circuit.klass)
     out: dict[str, Any] = {
         "active_gate_area_um2": area.get("active_gate_area_um2"),
@@ -296,7 +312,7 @@ def ppa_rollup(
     pvals = [
         m[power.get("metric", "")]["value"]
         for m in corners_metrics.values()
-        if power.get("metric") in m
+        if power.get("metric") in m and m[power.get("metric", "")]["value"] is not None
     ]
     if pvals:
         worst = max(pvals)  # power: higher is worse
@@ -307,13 +323,21 @@ def ppa_rollup(
                 .get("supply", {})
                 .get("typical")
             )
+            for k, v in (analysis_params or {}).items():
+                if str(k).upper() == "VDD":
+                    try:
+                        vdd = _eng(v)
+                    except (TypeError, ValueError):
+                        pass
             out["power_w"] = worst * float(vdd) if vdd is not None else None
         else:
             out["power_w"] = worst
     performance: dict[str, float] = {}
     for perf in decl.get("performance") or []:
         vals = [
-            m[perf["metric"]]["value"] for m in corners_metrics.values() if perf["metric"] in m
+            m[perf["metric"]]["value"]
+            for m in corners_metrics.values()
+            if perf["metric"] in m and m[perf["metric"]]["value"] is not None
         ]
         if vals:
             performance[perf["metric"]] = min(vals) if perf.get("better") == "max" else max(vals)

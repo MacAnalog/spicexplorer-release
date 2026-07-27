@@ -5,7 +5,13 @@
 **   XDUT vinp vinn voutp voutn vref clk_chin clk_chin_not clk_chfb clk_chfb_not clk_chout clk_chout_not clk_phi_1 clk_phi_2 vdd vss ia_004_fan_chopper_rrl
 ** Source: pdk/ihp-sg13g2/netlist.spice (run `analog-db generate` to refresh).
 *----------------------------------------------------------*
-** params: 70 free + 27 frozen knobs (sizing.yaml) · 155 tied · 0 ratio-derived (abstract/params.yaml)
+** params: 77 free + 27 frozen knobs (sizing.yaml) · 156 tied · 0 ratio-derived (abstract/params.yaml)
+.param gm_val_cmfb=100u
+.param rout_val_cmfb=1k
+.param cout_val_cmfb=100f
+.param rin_val_cmfb=1e12
+.param cin_val_cmfb=10f
+.param x_dut_rmp_cmfb_value=1Meg
 .param x_dut_xm1_main_w=20u
 .param x_dut_xm1_main_l=1u
 .param x_dut_xm2_main_w=20u
@@ -39,7 +45,6 @@
 .param vb1_main=0.5
 .param vb2_main=0.75
 .param vb3_main=0.45
-.param vb4_main=0.55
 .param x_dut_xm1_main_m=1
 .param x_dut_xm2_main_m=1
 .param x_dut_xm4_main_m=1
@@ -103,6 +108,8 @@
 .param x_dut_xm2_s1_rrl_m=1
 .param x_dut_xm1_chrrl_1_rrl_m=1
 .param x_dut_xm2_chrrl_1_rrl_m=1
+.param vcm_ref=0.6
+.param vb40=0.55
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).
@@ -261,6 +268,7 @@
 .param x_dut_xm2_chrrl_2_rrl_m = {x_dut_xm2_chrrl_1_rrl_m}
 .param x_dut_xm2_chrrl_3_rrl_m = {x_dut_xm2_chrrl_1_rrl_m}
 .param x_dut_xm2_chrrl_4_rrl_m = {x_dut_xm2_chrrl_1_rrl_m}
+.param x_dut_rmn_cmfb_value = {x_dut_rmp_cmfb_value}
 .subckt ia_004_fan_chopper_rrl vinp vinn voutp voutn vref clk_chin clk_chin_not clk_chfb clk_chfb_not clk_chout clk_chout_not clk_phi_1 clk_phi_2 vdd vss
 CAZ1_RRL rrl__sum_p rrl__oa_inp 'x_dut_caz1_rrl_value'
 CAZ2_RRL rrl__sum_n rrl__oa_inn 'x_dut_caz2_rrl_value'
@@ -271,24 +279,32 @@ CIN2_MAIN main__vsum_p main__inch_p 'x_dut_cin2_main_value'
 CINT1_RRL rrl__sum_p rrl__int_p 'x_dut_cint1_rrl_value'
 CINT2_RRL rrl__sum_n rrl__int_n 'x_dut_cint2_rrl_value'
 CIN_1_RRL rrl__int_p rrl__int_n 'cin_val_rrl'
+CIN_SERVO_CMFB cmfb__cm_sense vref_cm 'cin_val_cmfb'
 CM1_MAIN main__g2_p voutp 'x_dut_cm1_main_value'
 CM2_MAIN main__g2_n voutn 'x_dut_cm2_main_value'
 COUT_1_RRL out1_p out1_n 'cout_val_rrl'
+COUT_SERVO_CMFB vss vcmfb_raw 'cout_val_cmfb'
 CS1_RRL voutp rrl__sc_p 'x_dut_cs1_rrl_value'
 CS2_RRL voutn rrl__sc_n 'x_dut_cs2_rrl_value'
 GM_1_RRL out1_p out1_n rrl__int_p rrl__int_n {gm_val_rrl}
+GM_SERVO_CMFB vss vcmfb_raw vref_cm cmfb__cm_sense {gm_val_cmfb}
 RB1_MAIN main__vsum_n vref 'x_dut_rb1_main_value'
 RB2_MAIN main__vsum_p vref 'x_dut_rb2_main_value'
 RIN_1_RRL rrl__int_p rrl__int_n 'rin_val_rrl'
+RIN_SERVO_CMFB cmfb__cm_sense vref_cm 'rin_val_cmfb'
+RMN_CMFB voutn cmfb__cm_sense 'x_dut_rmn_cmfb_value'
+RMP_CMFB cmfb__cm_sense voutp 'x_dut_rmp_cmfb_value'
 ROUT_1_RRL out1_p out1_n 'rout_val_rrl'
+ROUT_SERVO_CMFB vss vcmfb_raw 'rout_val_cmfb'
 VB1_MAIN main__vb1 vss dc {vb1_main}
 VB1_RRL rrl__vb1 vss dc {vb1_rrl}
 VB2_MAIN main__vb2 vss dc {vb2_main}
 VB2_RRL rrl__vb2 vss dc {vb2_rrl}
 VB3_MAIN main__vb3 vss dc {vb3_main}
 VB3_RRL rrl__vb3 vss dc {vb3_rrl}
-VB4_MAIN main__vb4 vss dc {vb4_main}
+VB40 vb4_ctl vcmfb_raw dc {vb40}
 VB4_RRL rrl__vb4 vss dc {vb4_rrl}
+VREFCM vref_cm vss dc {vcm_ref}
 XM10_MAIN out1_n main__vb3 main__casc_src_n vdd sg13_lv_pmos l=x_dut_xm10_main_l m=x_dut_xm10_main_m w=x_dut_xm10_main_w
 XM10_OPAMP_RRL rrl__oa_outp rrl__vb1 rrl__oa_d1p vdd sg13_lv_pmos l=x_dut_xm10_opamp_rrl_l m=x_dut_xm10_opamp_rrl_m w=x_dut_xm10_opamp_rrl_w
 XM11_MAIN out1_p main__vb3 main__casc_src_p vdd sg13_lv_pmos l=x_dut_xm11_main_l m=x_dut_xm11_main_m w=x_dut_xm11_main_w
@@ -310,7 +326,7 @@ XM1_CHRRL_1_RRL rrl__sum_p clk_chout rrl__sc_p vss sg13_lv_nmos l=x_dut_xm1_chrr
 XM1_CHRRL_2_RRL rrl__sum_n clk_chout rrl__sc_n vss sg13_lv_nmos l=x_dut_xm1_chrrl_2_rrl_l m=x_dut_xm1_chrrl_2_rrl_m w=x_dut_xm1_chrrl_2_rrl_w
 XM1_CHRRL_3_RRL rrl__sum_p clk_chout_not rrl__sc_n vss sg13_lv_nmos l=x_dut_xm1_chrrl_3_rrl_l m=x_dut_xm1_chrrl_3_rrl_m w=x_dut_xm1_chrrl_3_rrl_w
 XM1_CHRRL_4_RRL rrl__sum_n clk_chout_not rrl__sc_p vss sg13_lv_nmos l=x_dut_xm1_chrrl_4_rrl_l m=x_dut_xm1_chrrl_4_rrl_m w=x_dut_xm1_chrrl_4_rrl_w
-XM1_MAIN main__tail main__vb4 vdd vdd sg13_lv_pmos l=x_dut_xm1_main_l m=x_dut_xm1_main_m w=x_dut_xm1_main_w
+XM1_MAIN main__tail vb4_ctl vdd vdd sg13_lv_pmos l=x_dut_xm1_main_l m=x_dut_xm1_main_m w=x_dut_xm1_main_w
 XM1_OPAMP_RRL rrl__oa_tail rrl__vb3 vdd vdd sg13_lv_pmos l=x_dut_xm1_opamp_rrl_l m=x_dut_xm1_opamp_rrl_m w=x_dut_xm1_opamp_rrl_w
 XM1_S1_RRL rrl__sc_n clk_phi_2 vss vss sg13_lv_nmos l=x_dut_xm1_s1_rrl_l m=x_dut_xm1_s1_rrl_m w=x_dut_xm1_s1_rrl_w
 XM1_S2_RRL rrl__sc_p clk_phi_2 vss vss sg13_lv_nmos l=x_dut_xm1_s2_rrl_l m=x_dut_xm1_s2_rrl_m w=x_dut_xm1_s2_rrl_w
@@ -356,12 +372,12 @@ XM4_MAIN main__fold_p main__vb1 vss vss sg13_lv_nmos l=x_dut_xm4_main_l m=x_dut_
 XM4_OPAMP_RRL rrl__oa_cm_tail rrl__vb3 vdd vdd sg13_lv_pmos l=x_dut_xm4_opamp_rrl_l m=x_dut_xm4_opamp_rrl_m w=x_dut_xm4_opamp_rrl_w
 XM5_MAIN main__fold_n main__vb1 vss vss sg13_lv_nmos l=x_dut_xm5_main_l m=x_dut_xm5_main_m w=x_dut_xm5_main_w
 XM5_OPAMP_RRL rrl__oa_cm_sense rrl__oa_outn rrl__oa_cm_tail vdd sg13_lv_pmos l=x_dut_xm5_opamp_rrl_l m=x_dut_xm5_opamp_rrl_m w=x_dut_xm5_opamp_rrl_w
-XM6_MAIN main__casc_src_n main__vb4 vdd vdd sg13_lv_pmos l=x_dut_xm6_main_l m=x_dut_xm6_main_m w=x_dut_xm6_main_w
+XM6_MAIN main__casc_src_n vb4_ctl vdd vdd sg13_lv_pmos l=x_dut_xm6_main_l m=x_dut_xm6_main_m w=x_dut_xm6_main_w
 XM6_OPAMP_RRL rrl__oa_cm_bias rrl__vb4 rrl__oa_cm_tail vdd sg13_lv_pmos l=x_dut_xm6_opamp_rrl_l m=x_dut_xm6_opamp_rrl_m w=x_dut_xm6_opamp_rrl_w
-XM7_MAIN main__casc_src_p main__vb4 vdd vdd sg13_lv_pmos l=x_dut_xm7_main_l m=x_dut_xm7_main_m w=x_dut_xm7_main_w
+XM7_MAIN main__casc_src_p vb4_ctl vdd vdd sg13_lv_pmos l=x_dut_xm7_main_l m=x_dut_xm7_main_m w=x_dut_xm7_main_w
 XM7_OPAMP_RRL rrl__oa_cm_sense rrl__oa_outp rrl__oa_cm_tail vdd sg13_lv_pmos l=x_dut_xm7_opamp_rrl_l m=x_dut_xm7_opamp_rrl_m w=x_dut_xm7_opamp_rrl_w
-XM8_MAIN voutp main__vb4 vdd vdd sg13_lv_pmos l=x_dut_xm8_main_l m=x_dut_xm8_main_m w=x_dut_xm8_main_w
+XM8_MAIN voutp vb4_ctl vdd vdd sg13_lv_pmos l=x_dut_xm8_main_l m=x_dut_xm8_main_m w=x_dut_xm8_main_w
 XM8_OPAMP_RRL rrl__oa_cm_bias rrl__vb4 rrl__oa_cm_tail vdd sg13_lv_pmos l=x_dut_xm8_opamp_rrl_l m=x_dut_xm8_opamp_rrl_m w=x_dut_xm8_opamp_rrl_w
-XM9_MAIN voutn main__vb4 vdd vdd sg13_lv_pmos l=x_dut_xm9_main_l m=x_dut_xm9_main_m w=x_dut_xm9_main_w
+XM9_MAIN voutn vb4_ctl vdd vdd sg13_lv_pmos l=x_dut_xm9_main_l m=x_dut_xm9_main_m w=x_dut_xm9_main_w
 XM9_OPAMP_RRL rrl__oa_outn rrl__vb1 rrl__oa_d1n vdd sg13_lv_pmos l=x_dut_xm9_opamp_rrl_l m=x_dut_xm9_opamp_rrl_m w=x_dut_xm9_opamp_rrl_w
 .ends

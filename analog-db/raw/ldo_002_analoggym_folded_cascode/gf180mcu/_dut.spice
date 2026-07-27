@@ -6,8 +6,8 @@
 ** Source: pdk/gf180mcu/netlist.spice (run `analog-db generate` to refresh).
 *----------------------------------------------------------*
 ** params: 19 free + 0 frozen knobs (sizing.yaml) · 8 tied · 0 ratio-derived (abstract/params.yaml)
-.param x_dut_xm1_w=20u
-.param x_dut_xm1_l=1u
+.param x_dut_xm1_w=60u
+.param x_dut_xm1_l=0.6u
 .param x_dut_xm3_w=30u
 .param x_dut_xm3_l=0.5u
 .param x_dut_xm5_w=10u

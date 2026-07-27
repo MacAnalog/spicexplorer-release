@@ -1,0 +1,180 @@
+{
+  "area": {
+    "active_gate_area_um2": 2181.0,
+    "c_count": 1,
+    "c_total_f": 5e-12,
+    "mos_count": 10,
+    "r_count": 2,
+    "r_total_ohm": 41500.0
+  },
+  "circuit": "ldo_002_analoggym_folded_cascode",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0004081307,
+            "vout_dc": 1.811749
+          },
+          "status": "ok"
+        },
+        "dropout": {
+          "measures": {
+            "v_dropout": 0.05205117,
+            "vin_at": 1.85,
+            "vout_at": 1.797949
+          },
+          "status": "ok"
+        },
+        "line_regulation": {
+          "measures": {
+            "line_reg": 0.000836,
+            "vout_max": 1.80075,
+            "vout_min": 1.799914
+          },
+          "status": "ok"
+        },
+        "load_regulation": {
+          "measures": {
+            "load_reg": 0.011607,
+            "vout_max": 1.811749,
+            "vout_min": 1.800142
+          },
+          "status": "ok"
+        },
+        "loop_stability": {
+          "measures": {
+            "zout_dc": -12.13959,
+            "zout_max": 20.32772,
+            "zout_peak_db": 32.46731
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "onoise_total": 3.734078e-05,
+            "vn_out_rms": 0.00611071
+          },
+          "status": "ok"
+        },
+        "psrr": {
+          "measures": {
+            "psrr_vdd_db": 48.38148,
+            "vout_db": -48.38148
+          },
+          "status": "ok"
+        },
+        "tran_line_step": {
+          "measures": {
+            "v_line_pp": 0.036453,
+            "vout_max": 1.817627,
+            "vout_min": 1.781174
+          },
+          "status": "ok"
+        },
+        "tran_load_step": {
+          "measures": {
+            "t_transient": 2.054097e-05,
+            "tcross": 2.554097e-05,
+            "v_undershoot": 0.632214,
+            "vout_min": 1.179185,
+            "vout_post": 1.811399
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-07-25T01:01:13+00:00"
+      }
+    }
+  },
+  "design_id": "7ee55a90f2",
+  "metrics": {
+    "tt": {
+      "i_q": {
+        "spec": "pass",
+        "value": 0.0004081307
+      },
+      "line_reg": {
+        "spec": "pass",
+        "value": 0.000836
+      },
+      "load_reg": {
+        "spec": "pass",
+        "value": 0.011607
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 48.38148
+      },
+      "t_transient": {
+        "spec": "pass",
+        "value": 2.054097e-05
+      },
+      "v_dropout": {
+        "spec": "pass",
+        "value": 0.05205117
+      },
+      "v_line_pp": {
+        "spec": "pass",
+        "value": 0.036453
+      },
+      "v_out": {
+        "spec": "pass",
+        "value": 1.811749
+      },
+      "v_undershoot": {
+        "spec": "pass",
+        "value": 0.632214
+      },
+      "vn_out_rms": {
+        "spec": "pass",
+        "value": 0.00611071
+      },
+      "zout_peak_db": {
+        "spec": "pass",
+        "value": 32.46731
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "c_comp": "5p",
+      "r_bleed": "40k",
+      "r_z": "1.5k",
+      "vb1_val": "1.0",
+      "vb2_val": "0.025",
+      "vref_val": 1.8,
+      "x_dut_xm1_l": "0.5u",
+      "x_dut_xm1_w": "60u",
+      "x_dut_xm3_l": "0.5u",
+      "x_dut_xm3_w": "60u",
+      "x_dut_xm5_l": "0.5u",
+      "x_dut_xm5_w": "30u",
+      "x_dut_xm7_l": "1u",
+      "x_dut_xm7_w": "13u",
+      "x_dut_xm9_l": "0.5u",
+      "x_dut_xm9_w": "10u",
+      "x_dut_xmp_l": "0.5u",
+      "x_dut_xmp_m": "400",
+      "x_dut_xmp_w": "10u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 2181.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "load_reg": 0.011607,
+      "psrr_vdd_db": 48.38148,
+      "v_dropout": 0.05205117,
+      "v_undershoot": 0.632214
+    },
+    "power_w": 0.0008162614
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

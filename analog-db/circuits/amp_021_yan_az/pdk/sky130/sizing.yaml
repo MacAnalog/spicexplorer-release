@@ -4,74 +4,74 @@ schema: spicexplorer/sizing@1
 pdk: sky130
 variables:
 - name: CAPACITOR_0
-  default: 1.4p
+  default: 3.458877584486538e-12
 - name: CAPACITOR_1
-  default: 1.3p
+  default: 3.0507658439580926e-12
 - name: CURRENT_1_BIAS
-  default: 5u
+  default: 1.3433787567603088e-05
 - name: x_dut_xm67_l
-  default: '1'
+  default: 1.280483608542843
 - name: x_dut_xm67_m
   default: '4'
 - name: x_dut_xm67_w
-  default: '1'
+  default: 0.812584856306191
 - name: x_dut_xm11_l
-  default: '1'
+  default: 0.41991635246489656
 - name: x_dut_xm11_m
   default: '4'
 - name: x_dut_xm11_w
-  default: '1'
+  default: 1.303441089469606
 - name: x_dut_xm13_l
-  default: '1'
+  default: 2.719269089317299
 - name: x_dut_xm13_m
   default: '4'
 - name: x_dut_xm13_w
-  default: '1'
+  default: 1.8433608471255465
 - name: x_dut_xm14_l
-  default: '1'
+  default: 1.9007336631384961
 - name: x_dut_xm14_m
   default: '4'
 - name: x_dut_xm14_w
-  default: '1'
+  default: 2.7209581091133175
 - name: x_dut_xm16_l
-  default: '1'
+  default: 0.38932112227696614
 - name: x_dut_xm16_m
   default: '4'
 - name: x_dut_xm16_w
-  default: '1'
+  default: 2.253034247752003
 - name: x_dut_xm18_l
-  default: '1'
+  default: 1.6662631310875642
 - name: x_dut_xm18_m
   default: '4'
 - name: x_dut_xm18_w
-  default: '1'
+  default: 1.04924880144302
 - name: x_dut_xm19_l
-  default: '1'
+  default: 0.8280466670814688
 - name: x_dut_xm19_m
   default: '4'
 - name: x_dut_xm19_w
-  default: '1'
+  default: 0.746561623054721
 - name: x_dut_xm22_l
-  default: '1'
+  default: 0.7782864823091848
 - name: x_dut_xm22_m
   default: '4'
 - name: x_dut_xm22_w
-  default: '1'
+  default: 2.374100801686893
 - name: x_dut_xm23_l
-  default: '1'
+  default: 0.4760704258362352
 - name: x_dut_xm23_m
   default: '4'
 - name: x_dut_xm23_w
-  default: '1'
+  default: 1.2073216696924558
 - name: x_dut_xm10_l
-  default: '1'
+  default: 0.5246246830395339
 - name: x_dut_xm10_m
   default: '4'
 - name: x_dut_xm10_w
-  default: '1'
+  default: 0.8264772026846
 - name: RESISTOR_0
-  default: 240k
+  default: 269734.82360887644
 - name: RESISTOR_1
-  default: 85.7k
+  default: 31632.802717808896
 - name: RESISTOR_2
-  default: 85.7K
+  default: 223442.2185020715

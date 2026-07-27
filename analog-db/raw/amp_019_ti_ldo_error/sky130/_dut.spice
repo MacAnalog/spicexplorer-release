@@ -5,25 +5,26 @@
 **   XDUT vdd vout vinp vinn ibias vss amp_019_ti_ldo_error
 ** Source: pdk/sky130/netlist.spice (run `analog-db generate` to refresh).
 *----------------------------------------------------------*
-** params: 18 free + 0 frozen knobs (sizing.yaml) · 10 tied · 0 ratio-derived (abstract/params.yaml)
-.param x_dut_xmb0_w=20
-.param x_dut_xmb0_l=2
+** params: 19 free + 0 frozen knobs (sizing.yaml) · 10 tied · 0 ratio-derived (abstract/params.yaml)
+.param x_dut_xmb0_w=100
+.param x_dut_xmb0_l=0.5
 .param x_dut_xmbc_m=1
 .param x_dut_xmbo_m=1
-.param x_dut_xm1_w=40
-.param x_dut_xm1_l=0.7
+.param x_dut_xm1_w=100
+.param x_dut_xm1_l=0.5
 .param x_dut_xm3_w=40
-.param x_dut_xm3_l=0.5
+.param x_dut_xm3_l=1
 .param x_dut_xm4_w=10
 .param x_dut_xm4_l=0.5
 .param x_dut_xm7_w=20
 .param x_dut_xm7_l=0.5
 .param x_dut_xm6_w=80
 .param x_dut_xm6_l=2
-.param r_z=1k
-.param c_comp=2p
-.param x_dut_xmbe_w=5
-.param x_dut_xmbf_w=5
+.param r_z=3k
+.param c_comp=6p
+.param x_dut_xmbe_w=12
+.param x_dut_xmbf_w=25
+.param r_nd=500k
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).
@@ -39,6 +40,7 @@
 .param x_dut_xm5_l = {x_dut_xm3_l}
 .subckt amp_019_ti_ldo_error vdd vout vinp vinn ibias vss
 CC ncz vout 'c_comp'
+RND na nd 'r_nd'
 RZ nb ncz 'r_z'
 XM1 na vinn tail vss sky130_fd_pr__nfet_g5v0d10v5 l=x_dut_xm1_l w=x_dut_xm1_w
 XM2 nb vinp tail vss sky130_fd_pr__nfet_g5v0d10v5 l=x_dut_xm2_l w=x_dut_xm2_w

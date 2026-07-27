@@ -12,19 +12,28 @@
 ** amplifier's output RIPPLE (an AC square wave at f_chop), synchronously demodulate it
 ** (the internal chopper, CLK_CH_RRL at f_chop), and integrate the demodulated product.
 ** So the stimulus is a differential SQUARE ripple of amplitude +/-VR/2 per side at
-** FCHOP, with CLK_CH_RRL clocked in phase and PHI_1/PHI_2 as exact complements at the
-** same rate. A DC input is (correctly) rejected by the AC-coupled front end — the old
+** FCHOP, with CLK_CH_RRL clocked in phase at FCHOP and PHI_1/PHI_2 as exact
+** complements at TWICE the chop rate (2*FCHOP, phi_1 rising with the chop edge) —
+** the CCIA architecture's SC-integrator clocking (two charge transfers per chop
+** period; matches the hand-tuned drawings/ccia-dut decks). A DC input is (correctly) rejected by the AC-coupled front end — the old
 ** tran_sc_integrate DC-ramp expectation does not apply to this topology.
-** Measures: ramp_rate between T1 and T2 (inside the linear ramp, integer periods
-** apart) and ripple_gain = ramp_rate/VR (V/s per V of ripple) — the RRL sensing gain.
+** Measures: ramp_rate between two ONE-CHOP-PERIOD AVG windows W1/W2 centered inside
+** the linear ramp (window centers an integer number of periods apart) and
+** ripple_gain = ramp_rate/VR (V/s per V of ripple) — the RRL sensing gain.
+** Period-averaged windows (not FIND point samples) so the integrator output's
+** residual f_chop ripple integrates to ~zero per window and cannot alias into the
+** slope (adversarial-review nit closed).
 ** The SIGN of ripple_gain records the demodulation polarity of the drawn clock hookup
 ** (S4.2): it is the sign of the composed RRL loop.
 **
 ** Assumes the RRL-integrator port order:
 **   .subckt <id> vinp vinn voutp voutn clk_ch_rrl clk_ch_rrl_not clk_phi_1 clk_phi_2
 **                vdd vss
-** Required bindings: DUT PORT_LINE VDD VCM VR FCHOP TEDGE T1 T2 TSTEP TSTOP TMAX
-**                    PDK_INCLUDE.  TMAX = max internal step (TSTEP is only the print
+** Required bindings: DUT PORT_LINE VDD VCM VR FCHOP TEDGE W1A W1B W2A W2B TSTEP TSTOP
+**                    TMAX PDK_INCLUDE.  Each window MUST span exactly one chop period
+**                    (W1B-W1A = W2B-W2A = 1/FCHOP); the slope denominator is the
+**                    window-center distance.
+**                    TMAX = max internal step (TSTEP is only the print
 **                    interval; the SC network needs ~200n or the solver steps over TG
 **                    conduction and dies).
 .lib cornerMOSlv.lib mos_tt
@@ -47,8 +56,8 @@ Vinn vinn vcm pulse({VR/2} {-VR/2} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
 * synchronous demodulation clock + two-phase SC clock (exact complements)
 Vckr  clk_ch_rrl     0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
 Vckrn clk_ch_rrl_not 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
-Vphi1 clk_phi_1 0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
-Vphi2 clk_phi_2 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vphi1 clk_phi_1 0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/4-TEDGE} {TCHOP/2})
+Vphi2 clk_phi_2 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/4-TEDGE} {TCHOP/2})
 
 XDUT vinp vinn voutp voutn clk_ch_rrl clk_ch_rrl_not clk_phi_1 clk_phi_2 vdd vss sup_003_rrl_sc_integrator
 
@@ -56,9 +65,9 @@ XDUT vinp vinn voutp voutn clk_ch_rrl clk_ch_rrl_not clk_phi_1 clk_phi_2 vdd vss
   set filetype=ascii
   tran 500n 2m 0 200n
   let vd = v(voutp) - v(voutn)
-  meas tran v1 FIND vd AT=0.6m
-  meas tran v2 FIND vd AT=1.8m
-  let ramp_rate = (v2 - v1)/(1.8m - 0.6m)
+  meas tran v1 AVG vd from=0.5m to=0.7m
+  meas tran v2 AVG vd from=1.7m to=1.9m
+  let ramp_rate = (v2 - v1)/((1.7m+1.9m)/2 - (0.5m+0.7m)/2)
   let ripple_gain = ramp_rate/(2m)
   print ramp_rate ripple_gain
   write

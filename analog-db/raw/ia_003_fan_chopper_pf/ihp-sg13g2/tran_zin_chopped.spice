@@ -55,8 +55,8 @@ Vck_out_b clk_chout_not 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP
 Vck_pf_a  clk_chpf      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
 Vck_pf_b  clk_chpf_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
 * two-phase SC clock (exact complements, in phase)
-Vphi1 clk_phi_1 0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
-Vphi2 clk_phi_2 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vphi1 clk_phi_1 0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/4-TEDGE} {TCHOP/2})
+Vphi2 clk_phi_2 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/4-TEDGE} {TCHOP/2})
 
 XDUT vinp vinn voutp voutn vref clk_chin clk_chin_not clk_chfb clk_chfb_not clk_chout clk_chout_not clk_chpf clk_chpf_not vdd vss ia_003_fan_chopper_pf
 

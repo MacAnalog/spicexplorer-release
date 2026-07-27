@@ -5,68 +5,68 @@ schema: spicexplorer/sizing@1
 pdk: ihp-sg13g2
 variables:
 - name: CAPACITOR_0
-  default: 10p
+  default: 1.5243644096080043e-11
 - name: CAPACITOR_1
-  default: 3p
+  default: 4.402507573573152e-12
 - name: CURRENT_0_BIAS
-  default: 20u
+  default: 1.8082465686777552e-05
 - name: x_dut_xm7_l
-  default: 1u
+  default: 1.2902341267533141e-06
 - name: x_dut_xm7_m
   default: '4'
 - name: x_dut_xm7_w
-  default: 1u
+  default: 2.685518732454959e-06
 - name: x_dut_xm11_l
-  default: 1u
+  default: 1.2439816799710138e-06
 - name: x_dut_xm11_m
   default: '4'
 - name: x_dut_xm11_w
-  default: 1u
+  default: 6.396890309541469e-06
 - name: x_dut_xm12_l
-  default: 1u
+  default: 1.1884331794890765e-06
 - name: x_dut_xm12_m
   default: '4'
 - name: x_dut_xm12_w
-  default: 1u
+  default: 9.159932268263267e-06
 - name: x_dut_xm16_l
-  default: 1u
+  default: 5.010724100654932e-07
 - name: x_dut_xm16_m
   default: 16
 - name: x_dut_xm16_w
-  default: 1u
+  default: 3.545279834051504e-06
 - name: x_dut_xm20_l
-  default: 1u
+  default: 6.168391068710868e-07
 - name: x_dut_xm15_m
   default: '4'
 - name: x_dut_xm20_w
-  default: 1u
+  default: 5.5317188114095435e-06
 - name: x_dut_xm23_l
-  default: 1u
+  default: 9.697679952071656e-06
 - name: x_dut_xm23_m
   default: '4'
 - name: x_dut_xm23_w
-  default: 1u
+  default: 4.023436033059282e-06
 - name: x_dut_xm24_l
-  default: 1u
+  default: 8.02381522824797e-06
 - name: x_dut_xm24_m
   default: '4'
 - name: x_dut_xm24_w
-  default: 1u
+  default: 9.967535668168825e-06
 - name: x_dut_xm25_l
-  default: 1u
+  default: 1.907748102920573e-06
 - name: x_dut_xm25_m
   default: '4'
 - name: x_dut_xm25_w
-  default: 1u
+  default: 3.5220907102407082e-06
 - name: x_dut_xm59_l
-  default: 1u
+  default: 7.878249404965684e-06
 - name: x_dut_xm59_m
   default: '4'
 - name: x_dut_xm59_w
-  default: 1u
+  default: 4.977746327534988e-06
 - name: x_dut_xm10_l
-  default: 1u
+  default: 1.0666738016981741e-06
 - name: x_dut_xm10_m
   default: '4'
 - name: x_dut_xm10_w
-  default: 1u
+  default: 4.250341621136358e-06

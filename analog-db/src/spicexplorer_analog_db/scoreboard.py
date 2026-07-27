@@ -147,7 +147,9 @@ def record(
     entry["metrics"] = {
         c: ppa.metric_values(circuit, block["analyses"]) for c, block in entry["corners"].items()
     }
-    entry["ppa"] = ppa.ppa_rollup(circuit, entry["metrics"], entry["area"])
+    entry["ppa"] = ppa.ppa_rollup(
+        circuit, entry["metrics"], entry["area"], entry["parameters"].get("analysis_params")
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(entry, indent=2, sort_keys=True) + "\n")
 

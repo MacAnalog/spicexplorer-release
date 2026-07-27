@@ -89,24 +89,24 @@ variables:
   max: 10u
   unit: m
 - name: x_dut_xm6_w
-  default: 20u
+  default: 60u
   min: 8u
   max: 100u
   unit: m
   description: M6 output PMOS
 - name: x_dut_xm6_l
-  default: 3.8349u
+  default: 1u
   min: 0.28u
   max: 10u
   unit: m
 - name: r_z
-  default: 28.429k
+  default: 10k
   min: 100
   max: 50k
   unit: ohm
   description: Nulling resistor (Miller compensation)
 - name: c_comp
-  default: 6.7168p
+  default: 15p
   min: 0.2p
   max: 20p
   unit: F
@@ -117,3 +117,9 @@ variables:
   max: 40u
   unit: m
   description: M_mirror_f sink (level-shifter anchor; carries ~0 by design)
+- name: r_nd
+  default: 500k
+  min: 10k
+  max: 10MEG
+  unit: ohm
+  description: "Level-shifted-mirror gate-rail tie na->nd (DC-defines nd; ~0 current — fix 2026-07-25, see abstract netlist)"

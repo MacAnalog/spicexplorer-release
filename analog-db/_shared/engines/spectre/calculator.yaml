@@ -71,6 +71,38 @@ expressions:
       mean-square density; integ over the band then sqrt is the RMS. Cross-checks the
       Tier-1 registry `inoise_total`/`onoise_total`, and is the calculator route the
       Spectre lane uses instead of the Tier-1 PSF read (which mis-looks-up `vout`).
+  # -- CM-loop health (fully-differential DUTs; the ac_cm_reg / tran_cm_kick benches) --
+  cm_z_lf:
+    result: ac
+    expr: 'value(mag((v("{OUTP}") + v("{OUTN}"))/2) {FREQ})'
+    notes: >-
+      Low-frequency closed-loop CM output impedance: the ac_cm_reg deck injects a unit
+      AC common-mode current (0.5 A per side), so vocm(f) IS |Zcm(f)| in ohms.
+  cm_z_peaking_db:
+    result: ac
+    expr: 'dB20(ymax(mag((v("{OUTP}") + v("{OUTN}"))/2)) / value(mag((v("{OUTP}") + v("{OUTN}"))/2) {FREQ}))'
+    notes: >-
+      Zcm impedance peaking 20*log10(peak/lf) — the external signature of an
+      underdamped CM loop (mirrors the ngspice template's cm_peaking_db).
+  cm_kick_v:
+    result: tran
+    expr: '(value((v("{OUTP}") + v("{OUTN}"))/2 {TMID}) - value((v("{OUTP}") + v("{OUTN}"))/2 ({TKICK}/2.0)))'
+    notes: >-
+      tran_cm_kick — settled vocm displacement while the CM current kick is applied
+      (vocm(TMID) - vocm(TKICK/2), the pre-kick sample instant the ngspice deck uses).
+  cm_resid_v:
+    result: tran
+    expr: '(value((v("{OUTP}") + v("{OUTN}"))/2 {TEND}) - value((v("{OUTP}") + v("{OUTN}"))/2 ({TKICK}/2.0)))'
+    notes: >-
+      tran_cm_kick — vocm residual after the kick releases (~0 for a healthy loop;
+      nonzero flags CM bistability/latch-up).
+  cm_t_settle:
+    result: tran
+    expr: '(cross(abs((v("{OUTP}") + v("{OUTN}"))/2 - value((v("{OUTP}") + v("{OUTN}"))/2 {TEND})) {VTOL} -1 "falling") - {TREL})'
+    notes: >-
+      tran_cm_kick — recovery time from the release edge until |vocm - vocm(TEND)|
+      stays below VTOL; cross(... -1 "falling") = the LAST falling crossing (the OCEAN
+      analogue of the ngspice meas FALL=LAST). Live-validated against the waveform.
   # -- operating point ---------------------------------------------------------
   node_v:
     result: dc

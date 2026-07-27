@@ -3,8 +3,11 @@
 # differential SQUARE ripple of +/-VR/2 per side at FCHOP on vinp/vinn, CLK_CH_RRL
 # clocked synchronously at FCHOP and PHI_1/PHI_2 as exact complements (the drawn TGs
 # use the opposite phase as each complement — see the template header). A DC input is
-# correctly rejected by the AC-coupled front end. T1/T2 sit inside the linear ramp,
-# an integer number of chop periods (6) apart, EARLY —
+# correctly rejected by the AC-coupled front end. W1/W2 are one-chop-period AVG
+# windows (residual f_chop ripple integrates to ~zero per window, so it cannot alias
+# into the slope — the FIND-at-instant nit from the adversarial review). Window
+# centers 0.6m/1.8m sit inside the linear ramp, an integer number of chop periods
+# (6) apart, EARLY —
 # the unclamped behavioral integrator winds up to nonphysical hundreds of volts if the
 # window extends further (VR is scaled down for the same reason; ripple_gain is
 # VR-normalized so the metric is unchanged).
@@ -18,8 +21,10 @@ params:
   VR: 2m
   FCHOP: 5k
   TEDGE: 100n
-  T1: 0.6m
-  T2: 1.8m
+  W1A: 0.5m
+  W1B: 0.7m
+  W2A: 1.7m
+  W2B: 1.9m
   TSTEP: 500n
   TSTOP: 2m
   TMAX: 200n

@@ -142,6 +142,14 @@ devices:
     symref: devices/vccs.sym
     terms: {p: PLUS, m: MINUS, cp: "NC+", cm: "NC-"}
     params: {value: ggain}
+  # (live-probed 2026-07-27: analogLib vcvs terminals are the same PLUS/MINUS/NC+/NC-;
+  # the voltage-gain CDF parameter is egain)
+  - match: "*/vcvs.sym"
+    lib: analogLib
+    cell: vcvs
+    symref: devices/vcvs.sym
+    terms: {p: PLUS, m: MINUS, cp: "NC+", cm: "NC-"}
+    params: {value: egain}
 
 # Reverse-direction NDA denylist: masters in these libs map back by table only —
 # never dump their symbol geometry out of Cadence.

@@ -6,7 +6,7 @@
 **   docker run --rm -i spicexplorer-spice-base:local \
 **     bash -lc 'd=$(mktemp -d) && cat > $d/c.spice && cd $d && ngspice -b c.spice' < raw/amp_032_ti_ldo_error_selfbias/gf180mcu/tran_step.spice
 *----------------------------------------------------------*
-** params: 17 free + 0 frozen knobs (sizing.yaml) · 9 tied · 0 ratio-derived (abstract/params.yaml) · 4 testbench params
+** params: 18 free + 0 frozen knobs (sizing.yaml) · 9 tied · 0 ratio-derived (abstract/params.yaml) · 4 testbench params
 ** AUTHORED TEMPLATE — amplifier/tran_step_biaswrap: unity-gain step settling for DUTs on the
 ** AnalogGym self-bias convention (ports vss vdd vinn vinp vout; NO ibias port). Single-ended
 ** companion of tran_step_diff (M4 follow-up). Unlike the AC/noise bias-wraps — which AC-open the
@@ -66,11 +66,12 @@ XDUT vdd vout vinp vinn vss amp_032_ti_ldo_error_selfbias
 .param x_dut_xm3_l=0.5u
 .param x_dut_xm4_w=10u
 .param x_dut_xm4_l=0.5u
-.param x_dut_xm6_w=20u
-.param x_dut_xm6_l=3.8349u
-.param r_z=28.429k
-.param c_comp=6.7168p
+.param x_dut_xm6_w=60u
+.param x_dut_xm6_l=1u
+.param r_z=10k
+.param c_comp=15p
 .param x_dut_xmbf_w=5u
+.param r_nd=500k
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).
@@ -85,6 +86,7 @@ XDUT vdd vout vinp vinn vss amp_032_ti_ldo_error_selfbias
 .param x_dut_xm5_l = {x_dut_xm3_l}
 .subckt amp_032_ti_ldo_error_selfbias vdd vout vinp vinn vss
 CC ncz vout 'c_comp'
+RND na nd 'r_nd'
 RZ nb ncz 'r_z'
 XM1 na vinn tail vss nfet_06v0 l=x_dut_xm1_l w=x_dut_xm1_w
 XM2 nb vinp tail vss nfet_06v0 l=x_dut_xm2_l w=x_dut_xm2_w

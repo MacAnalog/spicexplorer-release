@@ -6,7 +6,7 @@
 **   docker run --rm -i spicexplorer-spice-base:local \
 **     bash -lc 'd=$(mktemp -d) && cat > $d/c.spice && cd $d && ngspice -b c.spice' < raw/ldo_005_buffered_ref/gf180mcu/tran_line_step.spice
 *----------------------------------------------------------*
-** params: 39 free + 0 frozen knobs (sizing.yaml) · 15 tied · 0 ratio-derived (abstract/params.yaml) · 0 testbench params
+** params: 40 free + 0 frozen knobs (sizing.yaml) · 15 tied · 0 ratio-derived (abstract/params.yaml) · 0 testbench params
 ** AUTHORED TEMPLATE — ldo/tran_line_step: fast lo->hi->lo supply step at fixed load;
 ** peak-to-peak output deviation. The time-domain complement of line_regulation's DC sweep,
 ** following the vendored "Line Transient" benches (circuits/ldo_004_basic_pmos/reference/ltspice/
@@ -57,13 +57,14 @@ XDUT vdd vout vss ldo_005_buffered_ref
 .param x_dut_xmea_bf_w=5u
 .param x_dut_xmea_1_w=68.542u
 .param x_dut_xmea_1_l=0.7u
-.param x_dut_xmea_3_w=69.545u
+.param x_dut_xmea_3_w=100u
 .param x_dut_xmea_3_l=0.5u
 .param x_dut_xmea_4_w=10u
 .param x_dut_xmea_4_l=0.5u
-.param x_dut_xmea_6_w=12u
+.param x_dut_xmea_6_w=14u
 .param x_dut_xmea_6_l=3.8349u
 .param r_ea_z=28.429k
+.param r_ea_nd=50k
 .param c_ea_comp=0.2p
 .param vref_val=0.8
 .param r_ref_top=100k
@@ -71,7 +72,7 @@ XDUT vdd vout vss ldo_005_buffered_ref
 .param r_lpf=10k
 .param c_lpf=10p
 .param x_dut_xmp_w=20u
-.param x_dut_xmp_m=20
+.param x_dut_xmp_m=7
 .param x_dut_xmp_l=0.6u
 .param r_bleed=10k
 .param c_out_int=10p
@@ -101,6 +102,7 @@ C_LPF v_lpf_out vss 'c_lpf'
 R1 v_ref_out v_ref_fb 'r_ref_top'
 R2 v_ref_fb vss 'r_ref_bot'
 R3 vout vss 'r_bleed'
+REAND ea_na ea_nd 'r_ea_nd'
 REAZ ea_nb ea_ncz 'r_ea_z'
 RRAZ ra_nb ra_ncz 'r_ra_z'
 R_LPF v_ref_out v_lpf_out 'r_lpf'

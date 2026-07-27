@@ -5,74 +5,74 @@ schema: spicexplorer/sizing@1
 pdk: ihp-sg13g2
 variables:
 - name: CAPACITOR_0
-  default: 1.4p
+  default: 2.0732096210406212e-12
 - name: CAPACITOR_1
-  default: 1.3p
+  default: 1.3209260533707503e-12
 - name: CURRENT_1_BIAS
-  default: 5u
+  default: 6.60354669496728e-06
 - name: x_dut_xm67_l
-  default: 1u
+  default: 1.782211188591483e-06
 - name: x_dut_xm67_m
   default: '4'
 - name: x_dut_xm67_w
-  default: 1u
+  default: 1.8748136691009925e-06
 - name: x_dut_xm11_l
-  default: 1u
+  default: 6.352699277470426e-07
 - name: x_dut_xm11_m
   default: '4'
 - name: x_dut_xm11_w
-  default: 1u
+  default: 2.4431391818709206e-06
 - name: x_dut_xm13_l
-  default: 1u
+  default: 2.373449886230304e-06
 - name: x_dut_xm13_m
   default: '4'
 - name: x_dut_xm13_w
-  default: 1u
+  default: 6.058668206892358e-07
 - name: x_dut_xm14_l
-  default: 1u
+  default: 2.227107248789151e-06
 - name: x_dut_xm14_m
   default: '4'
 - name: x_dut_xm14_w
-  default: 1u
+  default: 1.7315123012919251e-06
 - name: x_dut_xm16_l
-  default: 1u
+  default: 4.915622161314355e-07
 - name: x_dut_xm16_m
   default: '4'
 - name: x_dut_xm16_w
-  default: 1u
+  default: 8.526355584579695e-07
 - name: x_dut_xm18_l
-  default: 1u
+  default: 2.370275853048583e-06
 - name: x_dut_xm18_m
   default: '4'
 - name: x_dut_xm18_w
-  default: 1u
+  default: 8.647557110850986e-07
 - name: x_dut_xm19_l
-  default: 1u
+  default: 5.731417654504935e-07
 - name: x_dut_xm19_m
   default: '4'
 - name: x_dut_xm19_w
-  default: 1u
+  default: 1.7632804821669286e-06
 - name: x_dut_xm22_l
-  default: 1u
+  default: 2.443659701562954e-06
 - name: x_dut_xm22_m
   default: '4'
 - name: x_dut_xm22_w
-  default: 1u
+  default: 7.471045622570156e-07
 - name: x_dut_xm23_l
-  default: 1u
+  default: 1.1682967080953975e-06
 - name: x_dut_xm23_m
   default: '4'
 - name: x_dut_xm23_w
-  default: 1u
+  default: 1.991412011402502e-06
 - name: x_dut_xm10_l
-  default: 1u
+  default: 7.673015504227583e-07
 - name: x_dut_xm10_m
   default: '4'
 - name: x_dut_xm10_w
-  default: 1u
+  default: 2.078470894994438e-06
 - name: RESISTOR_0
-  default: 240k
+  default: 598629.277243448
 - name: RESISTOR_1
-  default: 85.7k
+  default: 205758.4303181738
 - name: RESISTOR_2
-  default: 85.7K
+  default: 77105.04822510517

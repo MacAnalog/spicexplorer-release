@@ -7,31 +7,31 @@ variables:
 - name: x_dut_xm0_w
   default: 5u
 - name: x_dut_xm0_l
-  default: 1u
+  default: 2u
 - name: x_dut_xm0_m
   default: '3'
 - name: x_dut_xm8_w
-  default: 5.5u
+  default: 5u
 - name: x_dut_xm8_l
-  default: 4u
+  default: 1u
 - name: x_dut_xm8_m
-  default: '8'
+  default: '6'
 - name: x_dut_xm10_w
   default: 8u
 - name: x_dut_xm10_l
-  default: 1u
+  default: 0.5u
 - name: x_dut_xm10_m
-  default: '7'
+  default: '12'
 - name: x_dut_xm11_w
   default: 9u
 - name: x_dut_xm11_l
   default: 0.15u
 - name: x_dut_xm11_m
-  default: '928'
+  default: '464'
 - name: x_dut_xm14_w
   default: 1.5u
 - name: x_dut_xm14_l
-  default: 4u
+  default: 1.5u
 - name: x_dut_xm14_m
   default: '10'
 - name: x_dut_xm22_w
@@ -39,18 +39,18 @@ variables:
 - name: x_dut_xm22_l
   default: 2u
 - name: x_dut_xm22_m
-  default: '8'
+  default: '120'
 - name: r_top
   default: 300k
   description: "Upstream r1 (fixed 300e3) \u2014 sets vout = vref*(r_top+r_bot)/r_bot = 4*vref"
 - name: r_bot
   default: 100k
 - name: c_comp
-  default: 6.8p
+  default: 8.2p
   description: Upstream mim XC0, M_C0=34 units of ~200 fF (10x10 um mim)
 - name: vref_val
   default: 0.4
   description: Upstream TB Vref = 0.4 V -> vout target 1.6 V at the 1.8 V rail
 - name: i_bias
-  default: 1.5u
+  default: 8u
   description: Upstream current_0_bias

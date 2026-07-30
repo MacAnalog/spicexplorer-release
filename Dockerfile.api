@@ -1,0 +1,40 @@
+# syntax=docker/dockerfile:1.7
+# =============================================================================
+# SpiceXplorer API — lightweight FastAPI image (no ngspice / no PDK).
+#
+# Serves the REST + SSE API over the optimizer/tools. Without ngspice + a PDK
+# the app runs in replay/degraded mode (GET /api/env reports pdk_ok:false and
+# live_runs_enabled:false) — the UI, score shaping, compare/explore on cached
+# checkpoints, and the reference library all work; live simulation does not.
+# For live SPICE, run the platform natively against a local ngspice + open PDK.
+#
+# Build context = repo root (needs platform/ + analog-db/).
+#   docker compose build api      # or via `make up`
+# =============================================================================
+FROM python:3.11-slim
+
+# uv for fast, lockless workspace resolution (CPU torch pinned in the platform
+# pyproject's [tool.uv.index], so no CUDA wheels are pulled on linux).
+COPY --from=ghcr.io/astral-sh/uv:0.10 /uv /uvx /bin/
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+
+WORKDIR /app
+# The analog-db corpus backs the /api/library routes; the platform is the uv
+# workspace (the 6 released packages).
+COPY analog-db/ ./analog-db/
+COPY platform/  ./platform/
+
+WORKDIR /app/platform
+# Resolve + install the workspace (api + its closure) into platform/.venv, then
+# borrow the analog-db corpus editable (no deps — it is not a workspace member).
+RUN uv sync \
+    && uv pip install --no-deps -e ../analog-db
+
+ENV SPICEXPLORER_ANALOG_DB=/app/analog-db \
+    LOG_LEVEL=INFO
+EXPOSE 8000
+
+# project_root() anchors on /app/platform/.spicexplorer-root; app_config.json is
+# read from there. Run from the platform root so both resolve.
+CMD ["uv", "run", "uvicorn", "spicexplorer_api.main:app", "--host", "0.0.0.0", "--port", "8000"]

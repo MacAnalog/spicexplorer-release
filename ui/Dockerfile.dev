@@ -1,0 +1,50 @@
+# syntax=docker/dockerfile:1.7
+# =============================================================================
+# SpiceXplorer frontend — Next.js 15 (development).
+#
+# Single-stage dev build optimized for fast rebuilds and hot reload.
+# - Full node_modules (prod + dev deps) for linting / type-checking
+# - npm ci --prefer-offline against a cached ~/.npm for stable installs
+# - Source code bind-mounted at runtime for HMR (see compose.dev.yaml); the
+#   .dockerignore still excludes .next/ and node_modules/
+# - Polling watchers (set below) so HMR works on macOS/Docker Desktop
+#
+# Build context = ui/.   Built (with the source mounts) via:
+#   docker compose -f compose.yaml -f compose.dev.yaml up --build   # service: ui
+# =============================================================================
+ARG NODE_TAG=22-alpine
+
+FROM node:${NODE_TAG}
+WORKDIR /app
+ENV NODE_ENV=development \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=4000 \
+    HOSTNAME=0.0.0.0 \
+    # macOS/Docker Desktop loses inotify events across the bind mount; force the
+    # Next.js/webpack watchers to poll so hot-reload (HMR) actually fires.
+    WATCHPACK_POLLING=true \
+    CHOKIDAR_USEPOLLING=true
+
+# Install curl for healthcheck and build deps
+RUN apk add --no-cache curl python3 make g++
+
+# Copy lockfile first for layer caching — npm install only re-runs on lock changes
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline
+
+# Copy config files (tailwind, next.config, tsconfig)
+COPY next.config.mjs tailwind.config.ts postcss.config.mjs tsconfig.json ./
+
+# Copy public and src (will be overridden by bind mounts in compose)
+COPY public ./public
+COPY src ./src
+
+EXPOSE 4000
+
+# Health check for container orchestration
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -f http://localhost:4000 || exit 1
+
+# Dev server with fast refresh
+CMD ["npm", "run", "dev"]

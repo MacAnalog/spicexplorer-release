@@ -28,16 +28,18 @@ geometry: {min_l: 0.15u, min_w: 0.42u, max_l: 20u, max_w: 30u}
 gmid:
   family: bsim4
   device: sky130_fd_pr__nfet_01v8        # default device (the 1.8V core nmos); --device for others
-  corners: [tt, ss, ff]                  # `--corner all` extracts each into its own __<corner>.pkl
+  corners: [tt, ss, ff, sf, fs]          # `--corner all` extracts each into its own __<corner>.pkl
   probe: "m.xm1.m{device}"
   width_um: 5                            # single characterization width (µm); the LUT is per-unit-W
   nfing: 1
+  finger_widths: [0.5, 1, 5]             # characterised finger widths (µm); 5 = nominal (untagged), 0.5/1 = narrow companions
   temp_k: 300
-  sweep:
-    vgs: [0, 0.05, 1.8]                  # (start, step, stop) V
-    vds: [0, 0.2, 1.8]   # coarse VDS (the gm/ID method needs few VDS); --vds for finer
-    vsb: [0, -0.4, -0.4]                # 2 body-bias points (0, 0.4 V); --vsb for more
-    length_um: [0.15, 0.18, 0.2, 0.3, 0.5, 1, 2, 4]
+  out_root: ~/.spicexplorer/gmid         # out-of-repo store (LUTs regenerate via scripts/regen_gmid_luts.py; not committed)
+  sweep:                                 # max-fidelity 25 mV grid (VDS 200mV cost up to 40% av0 err at low VDS)
+    vgs: [0, 0.025, 1.8]                 # (start, step, stop) V
+    vds: [0, 0.025, 1.8]                 # fine VDS resolves the saturation knee (gds/av0/ro)
+    vsb: [0, -0.09, -0.9]                # 11 body-bias points 0..VDD/2 (was 2 pts, off-grid above 0.4 V)
+    length_um: [0.15, 0.18, 0.22, 0.28, 0.35, 0.5, 0.7, 1.0, 1.5, 2.0, 3.0, 4.0]  # dense near Lmin
   info: "SkyWater sky130, 1.8 V core, BSIM4"
   simulator:                              # optional ngspice runtime knobs (CLI --runner/--workers override)
     runner: auto                          # auto = host ngspice+$PDK_ROOT when available, else docker

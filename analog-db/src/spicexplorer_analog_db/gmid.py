@@ -346,13 +346,109 @@ def parse_lut(text: str, cfg: GmidConfig) -> dict[str, Any]:
     return lut
 
 
-def lut_path_for(pdk: str, device: str, corner: str = "tt") -> Path:
-    """The committed-LUT path for a (pdk, device, corner) — no GmidConfig needed."""
-    return paths.shared_root() / "gmid" / pdk / f"{device}__{corner}.pkl"
+# ── store resolution (out-of-repo canonical + legacy in-repo fallback) ────────────────────────
+# The gm/ID LUTs are no longer committed (they regenerate from the registries via the regen
+# script — see scripts/regen_gmid_luts.py). The canonical store is `gmid.out_root` (default
+# `~/.spicexplorer/gmid`), the SAME out-of-repo layout the Spectre lane already writes FOUNDRY-n65
+# into, so open + licensed PDKs share one store. Readers still fall back to the legacy committed
+# `_shared/gmid/<pdk>/` location so an older checkout keeps working.
+
+_DEFAULT_OUT_ROOT = "~/.spicexplorer/gmid"
+_NOMINAL_TEMP_C = 27.0  # 27 °C tables carry NO temp suffix (back-compat); others get `__<T>C`
+_NOMINAL_WF_UM = 5.0    # 5 µm finger carries NO wf suffix (the default LUT); others get `__wf<W>u`
+
+
+def store_root(pdk: str) -> Path:
+    """The canonical (writable) LUT store dir for ``pdk`` — ``gmid.out_root``/``<pdk>``.
+
+    Registry-driven (``_shared/pdk/<pdk>.yaml`` → ``gmid.out_root``); defaults to
+    ``~/.spicexplorer/gmid`` when the block or key is absent, so every PDK resolves the same
+    out-of-repo store regardless of whether its registry spells it out.
+    """
+    try:
+        g = pdks.load_registry(pdk).get("gmid", {}) or {}
+    except Exception:
+        g = {}
+    root = Path(str(g.get("out_root", _DEFAULT_OUT_ROOT))).expanduser()
+    return root / pdk
+
+
+def _search_dirs(pdk: str) -> list[Path]:
+    """Read locations for a PDK's LUTs, canonical (out-of-repo) first, legacy (in-repo) last."""
+    dirs = [store_root(pdk), paths.shared_root() / "gmid" / pdk]
+    seen: list[Path] = []
+    for d in dirs:
+        if d not in seen:
+            seen.append(d)
+    return seen
+
+
+def _temp_suffix(temp_c: float | None) -> str:
+    """``__<T>C`` for a non-nominal temperature; empty at 27 °C (keeps the historic filename)."""
+    if temp_c is None or abs(float(temp_c) - _NOMINAL_TEMP_C) < 0.5:
+        return ""
+    return f"__{int(round(float(temp_c)))}C"
+
+
+def _wf_suffix(wf_um: float | None) -> str:
+    """``__wf<W>u`` for a non-nominal finger width; empty at 5 µm (the default single-W LUT).
+
+    ``.`` is not filename-safe here (it would confuse the extension split) so it is written ``p``:
+    0.5 µm → ``__wf0p5u``, 1 µm → ``__wf1u``.
+    """
+    if wf_um is None or abs(float(wf_um) - _NOMINAL_WF_UM) < 1e-9:
+        return ""
+    return "__wf" + f"{float(wf_um):g}".replace(".", "p") + "u"
+
+
+def lut_filename(
+    device: str, corner: str = "tt", temp_c: float | None = None,
+    wf_um: float | None = None, *, ext: str = "pkl",
+) -> str:
+    """``<device>__<corner>[__<T>C][__wf<W>u].<ext>`` — optional segments appear only off-nominal."""
+    return f"{device}__{corner}{_temp_suffix(temp_c)}{_wf_suffix(wf_um)}.{ext}"
+
+
+def parse_stem(stem: str) -> tuple[str, str, float, float]:
+    """Inverse of :func:`lut_filename`: a stem → ``(device, corner, temp_c, wf_um)``.
+
+    Strips the optional trailing finger-width (``__wf<W>u``) then temperature (``__<n>C``) tokens
+    (defaults 5 µm / 27 °C when absent), then splits ``<device>__<corner>`` on the LAST ``__``
+    (device names may themselves contain ``__``, e.g. ``sky130_fd_pr__nfet_01v8``).
+    """
+    wf_um = _NOMINAL_WF_UM
+    m = re.search(r"__wf([0-9p]+)u$", stem)
+    if m:
+        wf_um = float(m.group(1).replace("p", "."))
+        stem = stem[: m.start()]
+    temp_c = _NOMINAL_TEMP_C
+    m = re.search(r"__(-?\d+)C$", stem)
+    if m:
+        temp_c = float(m.group(1))
+        stem = stem[: m.start()]
+    device, _, corner = stem.rpartition("__")
+    return device, corner, temp_c, wf_um
+
+
+def lut_path_for(pdk: str, device: str, corner: str = "tt", temp_c: float | None = None,
+                 wf_um: float | None = None) -> Path:
+    """The **canonical write** path for a (pdk, device, corner[, temp, finger-W]) — in the store."""
+    return store_root(pdk) / lut_filename(device, corner, temp_c, wf_um)
+
+
+def find_lut_path(pdk: str, device: str, corner: str = "tt", temp_c: float | None = None,
+                  wf_um: float | None = None) -> Path:
+    """The first EXISTING LUT across the search dirs; the canonical path (for a clear error) if none."""
+    name = lut_filename(device, corner, temp_c, wf_um)
+    for d in _search_dirs(pdk):
+        p = d / name
+        if p.is_file():
+            return p
+    return store_root(pdk) / name
 
 
 def lut_path(cfg: GmidConfig) -> Path:
-    return lut_path_for(cfg.pdk, cfg.device, cfg.corner)
+    return lut_path_for(cfg.pdk, cfg.device, cfg.corner, cfg.temp_k - 273.15, cfg.width_um)
 
 
 def write_lut(cfg: GmidConfig, lut: dict[str, Any]) -> Path:
@@ -431,8 +527,21 @@ def build_manifest(
     }
 
 
-def manifest_path_for(pdk: str, device: str, corner: str = "tt") -> Path:
-    return paths.shared_root() / "gmid" / pdk / f"{device}__{corner}.manifest.json"
+def manifest_path_for(pdk: str, device: str, corner: str = "tt", temp_c: float | None = None,
+                      wf_um: float | None = None) -> Path:
+    """Canonical **write** path for a manifest sidecar (out-of-repo store)."""
+    return store_root(pdk) / lut_filename(device, corner, temp_c, wf_um, ext="manifest.json")
+
+
+def find_manifest_path(pdk: str, device: str, corner: str = "tt", temp_c: float | None = None,
+                       wf_um: float | None = None) -> Path:
+    """First EXISTING manifest across the search dirs; the canonical path (clear error) if none."""
+    name = lut_filename(device, corner, temp_c, wf_um, ext="manifest.json")
+    for d in _search_dirs(pdk):
+        p = d / name
+        if p.is_file():
+            return p
+    return store_root(pdk) / name
 
 
 def write_manifest(
@@ -443,7 +552,7 @@ def write_manifest(
     ngspice: str | None = None,
     extracted_at: str | None = None,
 ) -> Path:
-    out = manifest_path_for(cfg.pdk, cfg.device, cfg.corner)
+    out = manifest_path_for(cfg.pdk, cfg.device, cfg.corner, cfg.temp_k - 273.15, cfg.width_um)
     out.parent.mkdir(parents=True, exist_ok=True)
     man = build_manifest(cfg, lut, registry, ngspice=ngspice, extracted_at=extracted_at)
     out.write_text(json.dumps(man, indent=2) + "\n")
@@ -460,10 +569,10 @@ def manifest(pdk: str, device: str | None = None, corner: str = "tt") -> dict[st
         device = pdks.load_registry(pdk).get("gmid", {}).get("device")
         if device is None:
             raise ValueError(f"{pdk}: no `gmid.device` default in the registry — pass device=")
-    p = manifest_path_for(pdk, device, corner)
+    p = find_manifest_path(pdk, device, corner)
     if not p.is_file():
         raise FileNotFoundError(
-            f"no manifest '{p.name}' under _shared/gmid/{pdk}/ — regenerate it with "
+            f"no manifest '{p.name}' under {store_root(pdk)}/ — regenerate it with "
             f"`analog-db gmid-extract --pdk {pdk} --device {device}"
             + (f" --corner {corner}" if corner != "tt" else "") + "`"
         )
@@ -475,26 +584,42 @@ def list_luts(pdk: str | None = None) -> list[dict[str, Any]]:
 
     The DB user's entry point: enumerate what's available, then `manifest()`/`lut()` for the detail.
     """
-    root = paths.shared_root() / "gmid"
-    if not root.is_dir():
-        return []
-    pdk_dirs = [root / pdk] if pdk else sorted(d for d in root.iterdir() if d.is_dir())
+    # Enumerate over the canonical out-of-repo store AND the legacy in-repo location, for every
+    # registered PDK (plus any stray PDK dirs found in either root). Canonical wins on dedup.
+    legacy = paths.shared_root() / "gmid"
+    if pdk is not None:
+        pdk_names = [pdk]
+    else:
+        names: set[str] = set(pdks.registry_ids())
+        for r in {store_root(p) for p in pdks.registry_ids()} | {legacy}:
+            base = r.parent if r.name in pdks.registry_ids() else r
+            if base.is_dir():
+                names.update(d.name for d in base.iterdir() if d.is_dir())
+        pdk_names = sorted(names)
     rows: list[dict[str, Any]] = []
-    for d in pdk_dirs:
-        if not d.is_dir():
-            continue
-        for pkl in sorted(d.glob("*.pkl")):
-            device, _, corner = pkl.stem.rpartition("__")
-            man = d / f"{pkl.stem}.manifest.json"
-            rows.append(
-                {
-                    "pdk": d.name,
-                    "device": device,
-                    "corner": corner,
-                    "lut_file": str(pkl.relative_to(root)),
-                    "manifest": str(man.relative_to(root)) if man.is_file() else None,
-                }
-            )
+    for name in pdk_names:
+        seen: set[tuple[str, str, float, float]] = set()
+        for d in _search_dirs(name):
+            if not d.is_dir():
+                continue
+            for pkl in sorted(d.glob("*.pkl")):
+                device, corner, temp_c, wf_um = parse_stem(pkl.stem)
+                key = (device, corner, temp_c, wf_um)
+                if key in seen:
+                    continue  # canonical dir already provided this (device, corner, temp, finger-W)
+                seen.add(key)
+                man = d / f"{pkl.stem}.manifest.json"
+                rows.append(
+                    {
+                        "pdk": name,
+                        "device": device,
+                        "corner": corner,
+                        "temp_c": temp_c,
+                        "wf_um": wf_um,
+                        "lut_file": str(pkl),
+                        "manifest": str(man) if man.is_file() else None,
+                    }
+                )
     return rows
 
 
@@ -643,7 +768,26 @@ def load_lut(path: Path | str):
             return pickle.load(fh)
 
 
-def lut(pdk: str, device: str | None = None, corner: str = "tt"):
+def available_finger_widths(pdk: str, device: str, corner: str = "tt",
+                            temp_c: float | None = None) -> list[float]:
+    """Sorted finger widths [µm] a (pdk, device, corner[, temp]) is characterized at, across the store.
+
+    The finger-width companion LUTs (``__wf<W>u`` tagged; 5 µm untagged) are what the interpolating
+    reader ``spicexplorer_gmid.FingerWidthSet`` consumes. Empty list if the device isn't present.
+    """
+    want = (device, corner, temp_c if temp_c is not None else _NOMINAL_TEMP_C)
+    wfs: set[float] = set()
+    for d in _search_dirs(pdk):
+        if not d.is_dir():
+            continue
+        for pkl in d.glob("*.pkl"):
+            dev, cnr, t, wf = parse_stem(pkl.stem)
+            if (dev, cnr, t) == want:
+                wfs.add(wf)
+    return sorted(wfs)
+
+
+def lut(pdk: str, device: str | None = None, corner: str = "tt", *, wf_um: float | None = None):
     """One-step load of a committed gm/ID LUT — the common case (no GmidConfig / path surgery).
 
     ``device`` defaults to the PDK registry's ``gmid.device`` (the core device). Returns a
@@ -652,17 +796,57 @@ def lut(pdk: str, device: str | None = None, corner: str = "tt"):
     not every (pdk × device × corner) is (only the cores are committed; others are one extract away).
     """
     if device is None:
-        device = pdks.load_registry(pdk).get("gmid", {}).get("device")
+        reg = pdks.load_registry(pdk)
+        # Prefer the explicit gmid.device default; else fall back to the nmos core flavour so the
+        # Spectre-lane PDKs (which carry devices.nmos.* instead of gmid.device) also resolve.
+        device = reg.get("gmid", {}).get("device")
+        if device is None:
+            nmos = (reg.get("devices", {}).get("nmos") or {})
+            device = nmos.get("core") or nmos.get("lvt") or nmos.get("lv") or nmos.get("svt")
         if device is None:
             raise ValueError(f"{pdk}: no `gmid.device` default in the registry — pass device=")
-    path = lut_path_for(pdk, device, corner)
+    path = find_lut_path(pdk, device, corner, wf_um=wf_um)
     if not path.is_file():
-        have = sorted(p.name for p in path.parent.glob("*.pkl")) if path.parent.is_dir() else []
-        cmd = f"analog-db gmid-extract --pdk {pdk} --device {device}"
+        searched = _search_dirs(pdk)
+        have = sorted(
+            {q.name for d in searched if d.is_dir() for q in d.glob("*.pkl")}
+        )
+        spectre = (pdks.load_registry(pdk).get("gmid", {}) or {}).get("engine") == "spectre"
+        base = "gmid-extract-spectre" if spectre else "gmid-extract"
+        cmd = f"analog-db {base} --pdk {pdk}" + (f" --device {device}" if not spectre else "")
         if corner != "tt":
             cmd += f" --corner {corner}"
         raise FileNotFoundError(
-            f"no committed LUT '{path.name}' under _shared/gmid/{pdk}/ "
-            f"(committed there: {', '.join(have) or 'none'}). Extract it:\n    {cmd}"
+            f"no LUT '{path.name}' for {pdk} (searched: {', '.join(str(d) for d in searched)}; "
+            f"present there: {', '.join(have) or 'none'}). Regenerate:\n    {cmd}"
         )
     return load_lut(path)
+
+
+def finger_width_set(pdk: str, device: str | None = None, corner: str = "tt",
+                     temp_c: float | None = None):
+    """A ``spicexplorer_gmid.FingerWidthSet`` over every characterised finger width of a device.
+
+    Discovers the finger-width companion LUTs in the store (``__wf<W>u`` tagged + the untagged 5 µm
+    nominal) and loads them into the interpolating reader, so a caller can look up an operating point
+    at an arbitrary finger width. Raises ``FileNotFoundError`` (with the regen command) if none are
+    present. ``device`` defaults like :func:`lut`.
+    """
+    from spicexplorer_gmid import FingerWidthSet
+
+    if device is None:
+        reg = pdks.load_registry(pdk)
+        device = reg.get("gmid", {}).get("device")
+        if device is None:
+            nmos = reg.get("devices", {}).get("nmos") or {}
+            device = nmos.get("core") or nmos.get("lvt") or nmos.get("lv") or nmos.get("svt")
+        if device is None:
+            raise ValueError(f"{pdk}: no default device — pass device=")
+    wfs = available_finger_widths(pdk, device, corner, temp_c)
+    if not wfs:
+        raise FileNotFoundError(
+            f"no LUTs for {pdk}/{device}@{corner} in {store_root(pdk)} — regenerate with "
+            f"`python tools/regen_gmid_luts.py --pdk {pdk}`"
+        )
+    paths = {wf: find_lut_path(pdk, device, corner, temp_c, wf) for wf in wfs}
+    return FingerWidthSet.load(paths)

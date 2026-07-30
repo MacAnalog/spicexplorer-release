@@ -25,6 +25,7 @@ jobs:
           - spicexplorer
           - spicexplorer-waveview
           - spicexplorer-api
+          - spicexplorer-gmid
     steps:
       - uses: actions/checkout@v5
       - name: platform unit ported yet?

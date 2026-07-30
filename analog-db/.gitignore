@@ -15,3 +15,20 @@ sandbox/*
 # BARE NAME (resolved on the ngspice sourcepath). `.include` does NOT search that path, so driving
 # them through the optimizer natively needs copies with absolute paths — machine-specific, never committed.
 raw_optimize/_abs/
+
+# gm/ID LUTs are regenerable artifacts, not source. The canonical store is OUT-OF-REPO
+# (~/.spicexplorer/gmid/<pdk>/, the gmid.out_root); rebuild with tools/regen_gmid_luts.py.
+# See _shared/GMID.md. (Small offline test fixtures live in packages/spicexplorer-gmid/tests/.)
+_shared/gmid/**/*.pkl
+_shared/gmid/**/*.manifest.json
+# ...but KEEP a small coarse-grid fixture set (open PDKs only, ~0.3-0.6 MB each) tracked, so the
+# reader tests (gmid.lut / list_luts / manifest) have real data in a fresh checkout / CI. These are
+# the low-resolution tables; the full max-fidelity store stays out-of-repo.
+!_shared/gmid/sky130/sky130_fd_pr__nfet_01v8__tt.pkl
+!_shared/gmid/sky130/sky130_fd_pr__nfet_01v8__tt.manifest.json
+!_shared/gmid/sky130/sky130_fd_pr__pfet_01v8__tt.pkl
+!_shared/gmid/sky130/sky130_fd_pr__pfet_01v8__tt.manifest.json
+!_shared/gmid/ihp-sg13g2/sg13_lv_nmos__tt.pkl
+!_shared/gmid/ihp-sg13g2/sg13_lv_nmos__tt.manifest.json
+!_shared/gmid/ihp-sg13g2/sg13_lv_pmos__tt.pkl
+!_shared/gmid/ihp-sg13g2/sg13_lv_pmos__tt.manifest.json

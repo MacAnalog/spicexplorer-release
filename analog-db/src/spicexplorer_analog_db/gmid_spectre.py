@@ -64,7 +64,7 @@ from typing import Any, Callable
 import numpy as np
 
 from . import pdks
-from .gmid import _axis_spec, _grid
+from .gmid import _axis_spec, _grid, lut_filename
 
 # ── pygmid reduction convention (pygmid.sweep.config coefficient matrices) ──────────────────
 # stored LUT param ← signed sum of Spectre op-point params; `odd` entries flip sign for the
@@ -101,6 +101,7 @@ class SpectreGmidConfig:
     nmos: str
     pmos: str
     lib_file: str                              # neutral operator wrapper (corners.lib_file)
+    flavor: str = "core"                       # Vt flavour key into devices.{nmos,pmos} (lvt/svt/hvt)
     corner: str = "tt"
     width_um: float = 5.0
     nfing: int = 1
@@ -115,8 +116,15 @@ class SpectreGmidConfig:
     timeout_s: int = 1200                      # gmid.simulator.timeout_s — per-job wall clock
 
     @classmethod
-    def from_registry(cls, pdk: str, corner: str = "tt", **overrides: Any) -> SpectreGmidConfig:
-        """Build a config from the PDK registry's ``gmid`` block (+ optional overrides)."""
+    def from_registry(cls, pdk: str, corner: str = "tt", flavor: str | None = None,
+                      **overrides: Any) -> SpectreGmidConfig:
+        """Build a config from the PDK registry's ``gmid`` block (+ optional overrides).
+
+        ``flavor`` selects the Vt class: it keys into ``devices.{nmos,pmos}`` (e.g. ``lvt``→
+        ``DEVICE``, ``svt``→``nch``, ``hvt``→``DEVICE``). Defaults to the registry's
+        ``gmid.flavor`` (else the first of ``gmid.flavors``, else ``core``) so a plain
+        ``--pdk FOUNDRY-n65`` keeps its historic LVT behaviour.
+        """
         reg = pdks.load_registry(pdk)
         g = reg.get("gmid")
         if not g:
@@ -127,13 +135,22 @@ class SpectreGmidConfig:
             )
         if corner not in reg["corners"]["sections"]:
             raise ValueError(f"corner {corner!r} not in registry sections {reg['corners']['sections']}")
+        flavors = [str(x) for x in g.get("flavors", [])]
+        flavor = flavor or g.get("flavor") or (flavors[0] if flavors else "core")
+        nmos_map, pmos_map = reg["devices"]["nmos"], reg["devices"]["pmos"]
+        if flavor not in nmos_map or flavor not in pmos_map:
+            raise ValueError(
+                f"{pdk}: flavour {flavor!r} not in devices.nmos {sorted(nmos_map)} / "
+                f"devices.pmos {sorted(pmos_map)}"
+            )
         sw = g.get("sweep", {})
         sim = g.get("simulator", {}) or {}
         cfg = cls(
             pdk=pdk,
-            nmos=str(reg["devices"]["nmos"]["core"]),
-            pmos=str(reg["devices"]["pmos"]["core"]),
+            nmos=str(nmos_map[flavor]),
+            pmos=str(pmos_map[flavor]),
             lib_file=str(reg["corners"]["lib_file"]),
+            flavor=flavor,
             corner=corner,
             width_um=float(g.get("width_um", 5.0)),
             nfing=int(g.get("nfing", 1)),
@@ -155,6 +172,11 @@ class SpectreGmidConfig:
     @property
     def registered_corners(self) -> list[str]:
         return [str(c) for c in pdks.load_registry(self.pdk).get("gmid", {}).get("corners", ["tt"])]
+
+    @property
+    def registered_flavors(self) -> list[str]:
+        fl = [str(f) for f in pdks.load_registry(self.pdk).get("gmid", {}).get("flavors", [])]
+        return fl or [self.flavor]
 
 
 def axes(cfg: SpectreGmidConfig) -> dict[str, np.ndarray]:
@@ -341,7 +363,9 @@ def device_for(cfg: SpectreGmidConfig, pol: str) -> str:
 
 
 def lut_path(cfg: SpectreGmidConfig, pol: str) -> Path:
-    return cfg.out_root / cfg.pdk / f"{device_for(cfg, pol)}__{cfg.corner}.pkl"
+    return cfg.out_root / cfg.pdk / lut_filename(
+        device_for(cfg, pol), cfg.corner, cfg.temp_k - 273.15, cfg.width_um
+    )
 
 
 def write_lut(cfg: SpectreGmidConfig, lut: dict[str, Any], pol: str) -> Path:
@@ -362,6 +386,7 @@ def build_manifest(cfg: SpectreGmidConfig, lut: dict[str, Any], pol: str,
         "device": device_for(cfg, pol),
         "model_family": "bsim4",
         "polarity": pol,
+        "flavor": cfg.flavor,
         "corner": cfg.corner,
         "model": {
             # the EXACT include line, kit-neutral: wrapper filename + generic section only
@@ -389,7 +414,10 @@ def build_manifest(cfg: SpectreGmidConfig, lut: dict[str, Any], pol: str,
 
 def write_manifest(cfg: SpectreGmidConfig, lut: dict[str, Any], pol: str,
                    *, extracted_at: str | None = None) -> Path:
-    out = lut_path(cfg, pol).with_name(f"{device_for(cfg, pol)}__{cfg.corner}.manifest.json")
+    out = lut_path(cfg, pol).with_name(
+        lut_filename(device_for(cfg, pol), cfg.corner, cfg.temp_k - 273.15, cfg.width_um,
+                     ext="manifest.json")
+    )
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(build_manifest(cfg, lut, pol, extracted_at=extracted_at),
                               indent=2) + "\n")

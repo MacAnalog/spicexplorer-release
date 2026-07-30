@@ -13,6 +13,7 @@ spicexplorer-circuitgraph = { workspace = true }
 spicexplorer-netlist2xschem = { workspace = true }
 spicexplorer-waveview = { workspace = true }
 spicexplorer-api = { workspace = true }
+spicexplorer-gmid = { workspace = true }
 # CPU-only torch on Linux (no CUDA) — the api pulls spicexplorer[torch] for the
 # Bode / AC transfer-function optimizer; the CPU wheel keeps `uv sync` and the
 # Docker image lean. macOS/Windows use the normal PyPI wheels.
@@ -43,6 +44,7 @@ testpaths = [
     "packages/spicexplorer-netlist2xschem/tests",
     "packages/spicexplorer-waveview/tests",
     "packages/spicexplorer-api/tests",
+    "packages/spicexplorer-gmid/tests",
 ]
 markers = [
     "slow: marks tests that run a real SPICE simulation (deselect with -m 'not slow')",

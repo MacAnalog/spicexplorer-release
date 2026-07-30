@@ -2,7 +2,13 @@
   ".github/workflows/analog-db.yml",
   ".github/workflows/lint.yml",
   ".github/workflows/platform.yml",
+  ".github/workflows/ui.yml",
   ".gitignore",
+  "Dockerfile.api",
+  "Makefile",
   "README.md",
+  "compose.yaml",
+  "docs/docker.md",
+  "docs/getting-started.md",
   "platform/pyproject.toml"
 ]

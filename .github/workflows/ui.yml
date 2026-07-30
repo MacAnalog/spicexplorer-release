@@ -1,0 +1,50 @@
+# Managed by the private release infra (scripts/release/repo/) — edit there,
+# not here; the next port overwrites this file.
+#
+# Per-unit CI for the ui (Next.js "Studio") front-end. Self-skips until the ui
+# unit actually ports (no ui/ tree in the monorepo yet).
+name: ui
+
+on:
+  push:
+    branches: [main]
+    paths: ["ui/**", ".github/workflows/ui.yml"]
+  pull_request:
+    paths: ["ui/**", ".github/workflows/ui.yml"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: ui unit ported yet?
+        id: ported
+        run: |
+          if [ -d "ui" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::ui/ not in the monorepo yet — this job activates once the ui unit ports."
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.ported.outputs.ok == 'true'
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - name: install (from lockfile)
+        if: steps.ported.outputs.ok == 'true'
+        working-directory: ui
+        run: npm ci
+      - name: typecheck
+        if: steps.ported.outputs.ok == 'true'
+        working-directory: ui
+        run: npm run typecheck
+      - name: unit tests (vitest)
+        if: steps.ported.outputs.ok == 'true'
+        working-directory: ui
+        run: npm run test
+      - name: production build
+        if: steps.ported.outputs.ok == 'true'
+        working-directory: ui
+        run: npm run build

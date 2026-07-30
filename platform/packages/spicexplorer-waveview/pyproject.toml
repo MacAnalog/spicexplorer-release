@@ -1,0 +1,27 @@
+[project]
+name = "spicexplorer-waveview"
+version = "0.0.0"
+description = "SpiceXplorer universal simulation-result viewer backend — path-based loaders for ngspice .raw files and Spectre PSF raw dirs into one engine-neutral WaveDataset, a SimResult adapter so every Tier-1 registry measurement runs on loaded data, simulator-log parsing, waveform downsampling, and interactive Plotly figure builders."
+requires-python = ">=3.10"
+dependencies = [
+    "spicexplorer-core",   # SimResult protocol + Tier-1 measurement registry; never a peer tool
+    "spicelib>=1.5,<1.6",  # ngspice .raw reader (RawRead) — same pin as core
+    "psf-utils>=1.9",      # Spectre psfascii swept-PSF reader — same lib the Spectre backend uses
+    "numpy>=2.2",
+    "plotly>=6.9.0",         # interactive notebook figures (matches the UI's plotly.js)
+    "matplotlib>=3.8",       # static PNG export (snapshot.py — OO/Agg only, no pyplot)
+    "pydantic>=2",         # typed I/O contract — feeds the API's OpenAPI/TS codegen
+]
+
+# NOTE: a leaf tool — depends on spicexplorer-core only (+ spicelib/psf-utils/numpy/plotly/
+# pydantic from PyPI). It MUST NOT import a peer tool (the optimizer `spicexplorer`,
+# `spicexplorer_gmid`, …) nor the analog-db data repo. The Spectre PSF-dir reading here is a
+# deliberate sibling of `spicexplorer.backends.spectre.read_swept_psf` (peers can't import
+# each other); parity between the two is pinned by tests, not imports.
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spicexplorer_waveview"]

@@ -1,0 +1,28 @@
+{
+  "$comment": "Central UI content/constants — copy, branding, featured ids, image knobs. Components import { UI } from '@/config'. Edit HERE to change user-facing text without touching component code. Data (catalog, runs, measurements) always comes from the backend — this file is presentation content only.",
+  "brand": {
+    "name": "SpiceXplorer",
+    "product": "Studio",
+    "version": "0.4.2"
+  },
+  "library": {
+    "home": {
+      "title": "Reference Library",
+      "taglineAfterCount": "circuits (amplifiers + LDOs) lowered to 3 open PDKs, each with class-scoped analyses, a machine-readable datasheet, and recorded SPICE runs. Pick one to open its datasheet, then size, score and optimize.",
+      "featuredHeading": "Reference case study",
+      "featuredCircuit": "amp_018_telescopic_cascode",
+      "gridCap": 12,
+      "recentlyRun": ["amp_018_telescopic_cascode", "amp_001_5t", "amp_004_folded_cascode"]
+    }
+  },
+  "analyze": {
+    "emptyState": {
+      "title": "No dataset open",
+      "hint": "ngspice .raw · Spectre PSF · keep_raw runs",
+      "action": "⤒ Open / Import"
+    },
+    "tree": {
+      "emptyHint": "No datasets open. Open an ngspice .raw or a Spectre PSF dir, or pick a keep_raw run."
+    }
+  }
+}

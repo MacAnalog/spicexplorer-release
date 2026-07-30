@@ -1,0 +1,25 @@
+[project]
+name = "spicexplorer-api"
+version = "0.1.0"
+description = "SpiceXplorer FastAPI adapter — REST + SSE over the optimizer/tools (a thin adapter; no business logic)."
+requires-python = ">=3.10"
+dependencies = [
+    # `[torch]` keeps the deployed app's Bode (`nevergrad_bode`) optimizer working.
+    # Drop the extra (-> bare "spicexplorer") to make the api/Docker torch-free — safe
+    # only if no project uses the Bode/transfer-function optimizer. The common
+    # single-objective/constraint optimizers + scoring are numpy and need no torch.
+    "spicexplorer[torch]",  # the optimizer tool (orchestrator, viz, DSL)
+    "spicexplorer-core",   # kernel: spice_engine, eng, env, pvt, paths
+    "spicexplorer-netlist2xschem",  # netlist -> xschem .sch (+ optional render) leaf tool
+    "spicexplorer-waveview",  # universal result viewer (dataset loaders + measurements) leaf tool
+    "fastapi>=0.139.2",
+    "uvicorn[standard]>=0.51.0",
+    "python-multipart>=0.0.12",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spicexplorer_api"]

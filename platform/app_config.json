@@ -1,0 +1,10 @@
+{
+  "default_yaml": "examples/OTA/cascode/ihp-sg13g2/sizing/project_setup.yaml",
+  "preset_checkpoints": {
+    "lhsde_sigmoid": "examples/OTA/cascode/NEWCAS_SUBMISSION_APPENDIX/CASCODE-OTA_LhsDE_2026-02-07_10-54-54_sigmoid-loss.csv",
+    "lhssearch_sigmoid": "examples/OTA/cascode/NEWCAS_SUBMISSION_APPENDIX/CASCODE-OTA_LHSSearch_2026-02-07_10-53-21_blind-search_sigmoid-loss.csv",
+    "lhsde_relabs": "examples/OTA/cascode/NEWCAS_SUBMISSION_APPENDIX/CASCODE-OTA_LhsDE_2026-02-07_14-53-23_relAbs-loss.csv",
+    "logbfgscmaplus_relabs": "examples/OTA/cascode/NEWCAS_SUBMISSION_APPENDIX/CASCODE-OTA_LogBFGSCMAPlus_2026-02-08_00-01-55_BFGS_relativeAbs-loss.csv"
+  },
+  "schematic_svg": "examples/OTA/cascode/ihp-sg13g2/xschem/ota-improved.svg"
+}

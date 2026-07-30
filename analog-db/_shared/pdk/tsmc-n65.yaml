@@ -14,9 +14,9 @@
 pdk: tsmc-n65
 sim_engine: spectre                      # native lane: licensed Spectre via virtuoso-bridge (no ngspice; see NDA note above)
 supply: {default: 1.2, unit: V}          # nominal 1.2 V core rail (CRN65 core devices)
-devices:
-  nmos: {core: nch_lvt}                   # low-Vt core flavour (pairs with the tt_lvt corner models)
-  pmos: {core: pch_lvt}
+devices:                                  # public CRN65 nomenclature (identifiers only, no kit bytes)
+  nmos: {core: nch_lvt, lvt: nch_lvt, svt: nch, hvt: nch_hvt}   # core alias = lvt (back-compat)
+  pmos: {core: pch_lvt, lvt: pch_lvt, svt: pch, hvt: pch_hvt}
 corners:
   lib_file: tsmc_n65_models.scs           # neutral operator-supplied wrapper (see NDA note above)
   sections: [tt, ss, ff, sf, fs]
@@ -29,9 +29,11 @@ geometry: {min_l: 0.06u, min_w: 0.12u, max_l: 10u, max_w: 100u}
 gmid:
   family: bsim4
   engine: spectre
-  corners: [tt]                           # `--corner all` extracts each registered corner
+  corners: [tt, ss, ff, sf, fs]           # `--corner all` extracts each registered corner
+  flavors: [lvt, svt, hvt]                # `--flavor all` sweeps each Vt class (devices.{nmos,pmos}[flavor])
   width_um: 5                             # characterization finger width; apply sizings with
   nfing: 1                                #   ~2-10 µm fingers + m (narrow fingers deviate)
+  finger_widths: [0.5, 1, 5]              # characterised finger widths (µm); 5 = nominal (untagged), 0.5/1 = narrow companions
   temp_k: 300.15                          # 27 °C
   sweep:                                  # 25 mV bias grids: validated ≤0.3 % gm/ID interp error
     vgs: [0, 0.025, 1.5]                  #   (start, step, stop) V

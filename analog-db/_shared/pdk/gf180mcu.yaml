@@ -50,16 +50,18 @@ geometry: {min_l: 0.28u, min_w: 0.22u, max_l: 10u, max_w: 100u}
 gmid:
   family: bsim4
   device: nfet_03v3                      # default device (the 3.3V core nmos); --device pfet_03v3 etc.
-  corners: [tt, ss, ff]                  # `--corner all` extracts each into its own __<corner>.pkl
+  corners: [tt, ss, ff, sf, fs]          # `--corner all` extracts each into its own __<corner>.pkl
   probe: "m.xm1.m0"
   width_um: 5                            # single characterization width (µm); the LUT is per-unit-W
   nfing: 1
+  finger_widths: [0.5, 1, 5]             # characterised finger widths (µm); 5 = nominal (untagged), 0.5/1 = narrow companions
   temp_k: 300
-  sweep:
-    vgs: [0, 0.05, 3.3]                  # (start, step, stop) V — 3.3V rail
-    vds: [0, 0.2, 3.3]   # coarse VDS (the gm/ID method needs few VDS); --vds for finer
-    vsb: [0, -0.4, -0.4]                # 2 body-bias points (0, 0.4 V); --vsb for more
-    length_um: [0.28, 0.3, 0.5, 1, 2, 4]
+  out_root: ~/.spicexplorer/gmid         # out-of-repo store (LUTs regenerate via scripts/regen_gmid_luts.py; not committed)
+  sweep:                                 # max-fidelity 25 mV grid — 3.3 V rail
+    vgs: [0, 0.025, 3.3]                 # (start, step, stop) V — 3.3V rail
+    vds: [0, 0.025, 3.3]                 # fine VDS resolves the saturation knee (gds/av0/ro)
+    vsb: [0, -0.165, -1.65]             # 11 body-bias points 0..VDD/2 (was 2 pts, off-grid above 0.4 V)
+    length_um: [0.28, 0.3, 0.35, 0.45, 0.6, 0.8, 1.0, 1.5, 2.0, 3.0, 4.0]  # dense near Lmin
   info: "GlobalFoundries gf180mcu, 3.3 V, BSIM4"
   simulator:                              # optional ngspice runtime knobs (CLI --runner/--workers override)
     runner: auto                          # auto = host ngspice+$PDK_ROOT when available, else docker

@@ -457,31 +457,42 @@ def _cmd_gmid_extract_spectre(args: argparse.Namespace) -> int:
         print(f"  --corner all → registered corners for {args.pdk}: {', '.join(corners)}")
     else:
         corners = [c.strip() for c in args.corner.split(",") if c.strip()]
+    if args.flavor == "all":
+        flavors: list[str | None] = list(base.registered_flavors)
+        print(f"  --flavor all → registered flavours for {args.pdk}: {', '.join(base.registered_flavors)}")
+    elif args.flavor:
+        flavors = [f.strip() for f in args.flavor.split(",") if f.strip()]
+    else:
+        flavors = [None]  # registry default flavour
 
     stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     failures: list[str] = []
-    for corner in corners:
-        try:
-            cfg = gmid_spectre.SpectreGmidConfig.from_registry(args.pdk, corner=corner, **overrides)
-            if args.smoke:
-                cfg.length_um = cfg.length_um[:2]
-                cfg.vsb = (cfg.vsb[0], cfg.vsb[1], cfg.vsb[0])  # single VSB point
-            if args.dry_run:
-                ax = gmid_spectre.axes(cfg)
-                print(gmid_spectre.build_deck(cfg, float(ax["L"][0]), float(ax["VSB"][0])))
-                continue
-            luts = gmid_spectre.extract(
-                cfg, scratch=Path(args.scratch) if args.scratch else None
-            )
-            for pol, lut in luts.items():
-                path = gmid_spectre.write_lut(cfg, lut, pol)
-                man = gmid_spectre.write_manifest(cfg, lut, pol, extracted_at=stamp)
-                print(f"  wrote {path}  (VGS×VDS×VSB={lut['GM'].shape[1]}×"
-                      f"{lut['GM'].shape[2]}×{lut['GM'].shape[3]}, {lut['GM'].shape[0]} L)")
-                print(f"  wrote {man}")
-        except (ValueError, KeyError, RuntimeError) as exc:
-            print(f"analog-db: {corner}: {exc}", file=sys.stderr)
-            failures.append(corner)
+    for flavor in flavors:
+        for corner in corners:
+            tag = f"{flavor or 'default'}/{corner}"
+            try:
+                cfg = gmid_spectre.SpectreGmidConfig.from_registry(
+                    args.pdk, corner=corner, flavor=flavor, **overrides
+                )
+                if args.smoke:
+                    cfg.length_um = cfg.length_um[:2]
+                    cfg.vsb = (cfg.vsb[0], cfg.vsb[1], cfg.vsb[0])  # single VSB point
+                if args.dry_run:
+                    ax = gmid_spectre.axes(cfg)
+                    print(gmid_spectre.build_deck(cfg, float(ax["L"][0]), float(ax["VSB"][0])))
+                    continue
+                luts = gmid_spectre.extract(
+                    cfg, scratch=Path(args.scratch) if args.scratch else None
+                )
+                for pol, lut in luts.items():
+                    path = gmid_spectre.write_lut(cfg, lut, pol)
+                    man = gmid_spectre.write_manifest(cfg, lut, pol, extracted_at=stamp)
+                    print(f"  wrote {path}  (VGS×VDS×VSB={lut['GM'].shape[1]}×"
+                          f"{lut['GM'].shape[2]}×{lut['GM'].shape[3]}, {lut['GM'].shape[0]} L)")
+                    print(f"  wrote {man}")
+            except (ValueError, KeyError, RuntimeError) as exc:
+                print(f"analog-db: {tag}: {exc}", file=sys.stderr)
+                failures.append(tag)
     return 1 if failures else 0
 
 
@@ -707,6 +718,11 @@ def main(argv: list[str] | None = None) -> int:
         "--corner",
         default="tt",
         help="corner(s): one (tt), a comma list, or 'all' = the registry gmid.corners set",
+    )
+    gs.add_argument(
+        "--flavor",
+        help="Vt flavour(s): one (lvt), a comma list (lvt,svt,hvt), or 'all' = the registry "
+        "gmid.flavors set; each keys into devices.{nmos,pmos} (default: registry gmid.flavor)",
     )
     gs.add_argument("--vgs", help="VGS sweep 'start,step,stop' (V; default: registry)")
     gs.add_argument("--vds", help="VDS sweep 'start,step,stop' (V; default: registry)")

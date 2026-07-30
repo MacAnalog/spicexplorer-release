@@ -51,7 +51,9 @@ jobs:
                       -e platform/packages/spicexplorer-netlist2xschem \
                       -e platform/packages/spicexplorer-waveview \
                       -e platform/packages/spicexplorer
-          pip install -e "platform/packages/${{ matrix.package }}" pytest pyyaml
+          # httpx: FastAPI TestClient's HTTP backend — the api route tests import
+          # starlette.testclient at collection, which hard-errors without it.
+          pip install -e "platform/packages/${{ matrix.package }}" pytest pyyaml httpx
       - name: wire the analog-db corpus (templates + examples)
         if: steps.ported.outputs.ok == 'true'
         # circuitgraph's template library and some example YAMLs resolve the

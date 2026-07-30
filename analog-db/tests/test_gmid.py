@@ -212,14 +212,17 @@ def test_registry_corners_defaults_and_reads():
 
 
 def test_lut_convenience_loads_and_errors_clearly():
-    # the common case: one call, registry-default device, the tt LUT (out-of-repo store or the
-    # legacy in-repo fallback — the reader searches both)
-    nch = gmid.lut("sky130")
-    assert nch["INFO"]  # a Lookup (or dict) with the header populated
-    # an absent LUT: a clear error naming where it searched + the regen command. Use a device that
-    # never exists so this is robust to which corners the local store happens to hold.
+    # error leg (store-independent): a device that never exists → a clear error naming where it
+    # searched + the regen command.
     with pytest.raises(FileNotFoundError, match="gmid-extract --pdk sky130"):
         gmid.lut("sky130", "sky130_fd_pr__nonexistent_device")
+    # load leg: LUTs are out-of-repo / regenerable — a fresh checkout (CI) has no store until
+    # tools/regen_gmid_luts.py runs, so only assert the load when the store is populated.
+    try:
+        nch = gmid.lut("sky130")
+    except FileNotFoundError:
+        pytest.skip("gm/ID store not populated (regenerate with tools/regen_gmid_luts.py)")
+    assert nch["INFO"]  # a Lookup (or dict) with the header populated
 
 
 # ── LUT manifest (the registry record beside each .pkl) ──────────────────────────────────────────
@@ -242,15 +245,20 @@ def test_build_manifest_captures_dimensions_corner_and_model():
 
 
 def test_manifest_reader_and_list_luts():
+    # error leg (store-independent): an absent device → clear regen error
+    with pytest.raises(FileNotFoundError, match="gmid-extract"):
+        gmid.manifest("sky130", "sky130_fd_pr__nonexistent_device")  # absent → clear regen error
+    # store-dependent legs: LUTs are out-of-repo / regenerable — a fresh checkout (CI) has none
+    # until tools/regen_gmid_luts.py runs, so skip these when the store isn't populated.
     rows = gmid.list_luts("sky130")
+    if not rows:
+        pytest.skip("gm/ID store not populated (regenerate with tools/regen_gmid_luts.py)")
     assert {r["device"] for r in rows} >= {"sky130_fd_pr__nfet_01v8", "sky130_fd_pr__pfet_01v8"}
-    assert all(r["manifest"] for r in rows)                 # every committed LUT has its manifest
+    assert all(r["manifest"] for r in rows)                 # every present LUT has its manifest
     m = gmid.manifest("sky130", "sky130_fd_pr__pfet_01v8")  # matches the pfet LUT grid (any store)
     # L count is grid-dependent (>=8; the densified registry grid is 12) — assert a floor, not a
     # brittle exact count, so grid refinements don't break the reader test.
     assert m["pdk"] == "sky130" and m["dimensions"]["L_um"]["n"] >= 8 and m["lut_file"].endswith(".pkl")
-    with pytest.raises(FileNotFoundError, match="gmid-extract"):
-        gmid.manifest("sky130", "sky130_fd_pr__nonexistent_device")  # absent → clear regen error
 
 
 # ── simulator block + per-L parallel extraction (the native/docker-less lane) ────────────────────

@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+build/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Misc
+.DS_Store
+*.log
+
+# Env / secrets — Next.js local env files. A *tracked* .env.local holding only
+# NEXT_PUBLIC_* is browser-exposed config, not a secret; real server-side keys
+# must go in an ignored .env*.local (these patterns keep them out of git).
+.env*.local
+
+# design-sync (claude.ai/design) — staged converter scripts, build output, and
+# machine state. The durable inputs under .design-sync/ (config.json, entry.ts,
+# tw-input.css, previews/, NOTES.md, conventions.md, overrides/) ARE committed.
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+.design-sync/styles.compiled.css
+.design-sync/_probe.mjs

@@ -1,0 +1,93 @@
+@import 'tailwindcss';
+
+/*
+  Theme (colors/fonts/shadows) stays in tailwind.config.ts via @config rather than an
+  inlined @theme block: that config imports ACCENT from src/config/colors.ts, which
+  CLAUDE.md designates as the ONE definition of the accent hexes (also consumed by
+  lib/library/data.ts and lib/waveview/config.ts). Inlining literals here would fork it.
+*/
+@config '../../tailwind.config.ts';
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: #fafafa;
+  color: #0a0a0a;
+  font-feature-settings: "calt" 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* In @layer base ON PURPOSE: unlayered rules beat @layer utilities, so an
+   unlayered `font: inherit` silently cancelled any text-size utility placed
+   directly on a button/input/select (the demo rows in the ⌘P overlay rendered
+   16px despite their text-[13px]). Base-layer resets lose to utilities. */
+@layer base {
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
+
+/* Pulsing dot used for live status indicators */
+@keyframes obs-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.4);
+  }
+}
+
+.obs-pulse {
+  animation: obs-pulse 1.4s ease-in-out infinite;
+}
+
+/* YAML pane (dark) — used by Monaco overlay & static preview */
+.yaml-pane {
+  background: #1c1c1f;
+  color: #d4d4d8;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.demo-scrollbar {
+  scrollbar-color: #9ca3af transparent;
+  scrollbar-width: thin;
+}

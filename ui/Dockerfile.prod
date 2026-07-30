@@ -1,0 +1,79 @@
+# syntax=docker/dockerfile:1.7
+# =============================================================================
+# SpiceXplorer frontend — Next.js 15 (production-optimized).
+#
+# Three-stage build:
+#   1. deps — install ALL node_modules from the lock file (layer cache). Must
+#      include devDeps: `next build` needs typescript/tailwind/postcss/@types,
+#      which live in devDependencies. The runner does NOT carry node_modules
+#      (standalone output bundles its own), so devDeps never reach the final image.
+#   2. builder — compile Next.js standalone output (no dev tools in runner)
+#   3. runner — minimal image with only server.js + static assets + prod deps
+#
+# Build context = ui/
+# Runs as non-root user for security. Image ~150MB.
+#
+# Build:   docker build -f spicexplorer-ui/Dockerfile.prod -t spicexplorer-ui:prod .
+# Run:     docker run -p 4000:4000 spicexplorer-ui:prod
+# =============================================================================
+ARG NODE_TAG=22-alpine
+
+# ---- Stage 1: deps — install ALL deps (devDeps required by `next build`) ----
+FROM node:${NODE_TAG} AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline
+
+# ---- Stage 2: builder — compile Next.js with full toolchain ----
+FROM node:${NODE_TAG} AS builder
+WORKDIR /app
+# Baked into the build: next.config.mjs rewrites /api/* → ${BACKEND_URL} are
+# resolved at `next build` time. Default matches the compose service name `api`.
+ARG BACKEND_URL=http://api:8000
+ENV BACKEND_URL=${BACKEND_URL} \
+    NEXT_TELEMETRY_DISABLED=1 \
+    NODE_ENV=production
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy entire source (build config files + source)
+COPY . .
+
+# Build Next.js standalone output with cache optimization
+RUN --mount=type=cache,target=/app/.next/cache \
+    npm run build
+
+# ---- Stage 3: runner — minimal production image ----
+FROM node:${NODE_TAG} AS runner
+WORKDIR /app
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=4000 \
+    HOSTNAME=0.0.0.0
+
+# Metadata for scanning and provenance
+LABEL org.opencontainers.image.title="SpiceXplorer UI" \
+      org.opencontainers.image.description="Next.js 15 frontend (production)" \
+      org.opencontainers.image.vendor="SpiceXplorer" \
+      org.opencontainers.image.version="1.0.0"
+
+# Install only curl for healthcheck
+RUN apk add --no-cache curl
+
+# Create non-root user for security
+RUN addgroup -g 1001 nodejs && adduser -u 1001 -G nodejs -D -s /sbin/nologin nextjs
+
+# Copy only the standalone build output + static assets (no source code, no full node_modules)
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+EXPOSE 4000
+
+# Health check for orchestration (K8s, Swarm, Docker compose)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:4000 || exit 1
+
+# Standalone Next.js server (no file watching, deterministic)
+CMD ["node", "server.js"]

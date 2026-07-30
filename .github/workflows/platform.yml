@@ -23,6 +23,8 @@ jobs:
           - spicexplorer-circuitgraph
           - spicexplorer-netlist2xschem
           - spicexplorer
+          - spicexplorer-waveview
+          - spicexplorer-api
     steps:
       - uses: actions/checkout@v5
       - name: platform unit ported yet?
@@ -46,7 +48,9 @@ jobs:
         run: |
           pip install -e platform/packages/spicexplorer-core \
                       -e platform/packages/spicexplorer-circuitgraph \
-                      -e platform/packages/spicexplorer-netlist2xschem
+                      -e platform/packages/spicexplorer-netlist2xschem \
+                      -e platform/packages/spicexplorer-waveview \
+                      -e platform/packages/spicexplorer
           pip install -e "platform/packages/${{ matrix.package }}" pytest pyyaml
       - name: wire the analog-db corpus (templates + examples)
         if: steps.ported.outputs.ok == 'true'

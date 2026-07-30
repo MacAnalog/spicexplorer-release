@@ -1,0 +1,9 @@
+# Frontend build context = ui/. The image installs deps from the lockfile and
+# runs `next build` itself, so never copy host build state in.
+node_modules/
+.next/
+.env
+*.env
+.dockerignore
+Dockerfile
+npm-debug.log*

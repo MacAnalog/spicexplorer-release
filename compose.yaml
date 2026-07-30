@@ -1,0 +1,39 @@
+# SpiceXplorer — lightweight local stack: api (:8000) + ui (:4000).
+#
+# This compose builds the two services from the sources in THIS repo. It is
+# deliberately LIGHTWEIGHT: the api image carries no ngspice / PDK, so live
+# SPICE simulation is disabled (the app reports pdk_ok:false and steers to
+# replay/cached mode — everything else works). Live simulation needs a local
+# ngspice + an open PDK; see docs/docker.md.
+#
+#   docker compose up --build      # or:  make up
+#   docker compose down            # or:  make down
+#
+# Override ports:  BACKEND_PORT=8010 FRONTEND_PORT=4010 docker compose up --build
+name: spicexplorer
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: spicexplorer-api:release
+    environment:
+      SPICEXPLORER_ANALOG_DB: /app/analog-db
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile.prod
+      args:
+        # Baked at `next build`: the UI proxies /api/* → this URL (the compose
+        # service name `api` resolves on the default network).
+        BACKEND_URL: http://api:8000
+    image: spicexplorer-ui:release
+    depends_on:
+      - api
+    ports:
+      - "${FRONTEND_PORT:-4000}:4000"

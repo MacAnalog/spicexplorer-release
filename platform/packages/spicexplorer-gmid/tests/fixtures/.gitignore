@@ -1,0 +1,5 @@
+# The repo root ignores *.pkl (a guard against committing generated LUTs). This
+# directory holds ONE deliberately-committed LUT test fixture (a copy of an
+# analog-db committed LUT) so the package tests are self-contained and run on a
+# fresh clone / in CI without the analog-db submodule checked out. Keep it tracked.
+!*.pkl

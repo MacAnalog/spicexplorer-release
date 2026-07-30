@@ -15,9 +15,48 @@ analog-db gmid-extract --pdk sky130            # → _shared/gmid/sky130/sky130_
 | **Module** | `spicexplorer_analog_db.gmid` |
 | **CLI** | `analog-db gmid-extract` |
 | **Config** | `_shared/pdk/<pdk>.yaml` → `gmid:` block (every knob overridable on the CLI) |
-| **Output** | `_shared/gmid/<pdk>/<device>__<corner>.pkl` (committed; 0.3–1.5 MB each) |
+| **Output** | `~/.spicexplorer/gmid/<pdk>/<device>__<corner>[__<T>C].pkl` (**out-of-repo store**, not committed) |
 | **Reader** | `pygmid.Lookup` (the `gmid` extra: `pip install -e '.[gmid]'`) |
-| **Runtime** | dev-time tool only — the LUTs are committed; nothing on a request path reads this module |
+| **Runtime** | dev-time tool only — the LUTs regenerate from the registries; nothing on a request path reads this module |
+
+## Storage & regeneration (the LUTs are NOT committed)
+
+The gm/ID LUTs are **regenerable artifacts, not source** — the max-fidelity open-PDK tables are
+large (tens of MB each) and the tsmc-n65 tables come from a licensed kit (NDA). So the whole store
+lives **out-of-repo** and is rebuilt on demand:
+
+- **Canonical store:** `gmid.out_root` in `_shared/pdk/<pdk>.yaml` (default `~/.spicexplorer/gmid`),
+  laid out `…/<pdk>/<device>__<corner>[__<T>C].pkl` + `.manifest.json`. Every PDK — open and
+  licensed — uses this one store.
+- **Reader resolution:** `gmid.find_lut_path()` / `gmid.lut()` / `LUTRegistry` search the
+  out-of-repo store **first**, then fall back to the legacy in-repo `_shared/gmid/<pdk>/` (so an
+  older checkout still reads). `gmid.store_root(pdk)` is the write location.
+- **Regenerate everything** (one command; open lane = native ngspice+`$PDK_ROOT`, tsmc = Spectre):
+
+  ```bash
+  python tools/regen_gmid_luts.py                 # the whole store the environment can build
+  python tools/regen_gmid_luts.py --pdk sky130    # one PDK, all devices × corners
+  python tools/regen_gmid_luts.py --open-only     # skip the licensed Spectre lane
+  ```
+
+- **Grids (max fidelity, 2026-07-30):** VGS **25 mV**, VDS **25 mV** (was 200 mV — a 200 mV grid
+  cost up to **40 % av0 error** at low VDS near the saturation knee), VSB **11 pts to VDD/2** (was
+  2 pts, off-grid above 0.4 V), W = **5 µm**. All 5 corners `tt/ss/ff/sf/fs` per PDK.
+- **Temperature:** recorded in the manifest (`conditions.temp_k`) and, off-nominal, in the filename
+  (`__85C`); 27 °C tables carry no suffix. So multi-temp tables never collide.
+- **Vt flavours (tsmc-n65):** `gmid.flavors` + `--flavor lvt|svt|hvt|all` keys into
+  `devices.{nmos,pmos}[flavor]` (`lvt`→`nch_lvt`, `svt`→`nch`, `hvt`→`nch_hvt`). **Note:** SVT/HVT
+  require the operator's model wrapper to include those kit sections — the shipped wrapper maps only
+  the `*_lvt` sections, so only LVT extracts until the wrapper is extended.
+- **Finger width (OPT-IN, off by default):** gm/ID is invariant under scaling by *identical fingers*
+  (add `m` fingers → same gm/ID, JD, fT; only ID scales — so **any W/L is reached from the one
+  5 µm-finger LUT**, no W axis needed). It is NOT invariant under changing the *finger width*
+  (narrow-width effects). For designs forced to sub-5 µm fingers (matching/minimum devices), the
+  registry `gmid.finger_widths: [0.5, 1, 5]` + `regen_gmid_luts.py --fingers` generate narrow
+  companions (`__wf0p5u`/`__wf1u` tagged) for the core devices; `gmid.finger_width_set(pdk, device,
+  corner).at(gm_id, L, vds, vsb, wf=…)` (leaf tool `FingerWidthSet`) interpolates across them.
+  **Default sizing uses the 5 µm table only** — interpolation happens solely when you call
+  `finger_width_set`.
 
 ## Why we generate the decks (and not pygmid's sweeper)
 
@@ -128,20 +167,13 @@ nch = gmid.lut("sky130")                              # core nmos @ tt (registry
 pch = gmid.lut("sky130", "sky130_fd_pr__pfet_01v8")   # the pmos
 ```
 
-## Committed LUTs
+## The generated LUT set (out-of-repo)
 
-The core-rail nmos at `tt` is committed for every PDK, plus both core pmos (sky130, ihp), so the
-sizing notebooks and tests run against real data with no simulation step:
-
-| PDK | device @ corner | grid (L × VGS × VDS × VSB) | size |
-|---|---|---|---|
-| `sky130` | `sky130_fd_pr__nfet_01v8` @ tt | 8 × 37 × 10 × 2 | 0.6 MB |
-| `sky130` | `sky130_fd_pr__pfet_01v8` @ tt | 8 × 37 × 10 × 2 | 0.6 MB |
-| `gf180mcu` | `nfet_03v3` @ tt | 6 × 67 × 18 × 2 | 1.5 MB |
-| `ihp-sg13g2` | `sg13_lv_nmos` @ tt | 6 × 31 × 9 × 2 | 0.35 MB |
-| `ihp-sg13g2` | `sg13_lv_pmos` @ tt | 6 × 31 × 9 × 2 | 0.35 MB |
-
-More are one `gmid-extract` away — register a corner set as `gmid.corners` and run `--corner all`.
+`tools/regen_gmid_luts.py` builds the full store: every PDK's n+p cores (plus ihp LV **and** HV) at
+all 5 corners, on the max-fidelity 25 mV grid, into `~/.spicexplorer/gmid/<pdk>/`. Historic table
+sizes above (0.35–1.5 MB) were the old coarse grids; the 25 mV / 11-VSB grids are tens of MB each —
+which is exactly why they are no longer committed. Extend a single device/corner ad-hoc with
+`gmid-extract`; rebuild the whole set with the regen script.
 
 **Ground-truth validation.** `tests/test_gmid_ground_truth.py` cross-checks the committed IHP nmos
 **and** pmos LUTs against the independently-characterized iic-jku `analog-circuit-design/gmid`

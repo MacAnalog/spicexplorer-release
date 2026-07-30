@@ -208,16 +208,18 @@ def test_parse_pmos_stores_positive_magnitude_axes():
 
 
 def test_registry_corners_defaults_and_reads():
-    assert gmid.registry_corners("sky130") == ["tt", "ss", "ff"]
+    assert gmid.registry_corners("sky130") == ["tt", "ss", "ff", "sf", "fs"]
 
 
 def test_lut_convenience_loads_and_errors_clearly():
-    # the common case: one call, registry-default device, the committed tt LUT
+    # the common case: one call, registry-default device, the tt LUT (out-of-repo store or the
+    # legacy in-repo fallback — the reader searches both)
     nch = gmid.lut("sky130")
     assert nch["INFO"]  # a Lookup (or dict) with the header populated
-    # an uncommitted (device × corner): a clear error naming what's committed + the extract command
+    # an absent LUT: a clear error naming where it searched + the regen command. Use a device that
+    # never exists so this is robust to which corners the local store happens to hold.
     with pytest.raises(FileNotFoundError, match="gmid-extract --pdk sky130"):
-        gmid.lut("sky130", corner="ss")
+        gmid.lut("sky130", "sky130_fd_pr__nonexistent_device")
 
 
 # ── LUT manifest (the registry record beside each .pkl) ──────────────────────────────────────────
@@ -243,10 +245,12 @@ def test_manifest_reader_and_list_luts():
     rows = gmid.list_luts("sky130")
     assert {r["device"] for r in rows} >= {"sky130_fd_pr__nfet_01v8", "sky130_fd_pr__pfet_01v8"}
     assert all(r["manifest"] for r in rows)                 # every committed LUT has its manifest
-    m = gmid.manifest("sky130", "sky130_fd_pr__pfet_01v8")  # matches the committed pfet LUT grid
-    assert m["pdk"] == "sky130" and m["dimensions"]["L_um"]["n"] == 8 and m["lut_file"].endswith(".pkl")
+    m = gmid.manifest("sky130", "sky130_fd_pr__pfet_01v8")  # matches the pfet LUT grid (any store)
+    # L count is grid-dependent (>=8; the densified registry grid is 12) — assert a floor, not a
+    # brittle exact count, so grid refinements don't break the reader test.
+    assert m["pdk"] == "sky130" and m["dimensions"]["L_um"]["n"] >= 8 and m["lut_file"].endswith(".pkl")
     with pytest.raises(FileNotFoundError, match="gmid-extract"):
-        gmid.manifest("sky130", "sky130_fd_pr__pfet_01v8", corner="ss")  # uncommitted corner
+        gmid.manifest("sky130", "sky130_fd_pr__nonexistent_device")  # absent → clear regen error
 
 
 # ── simulator block + per-L parallel extraction (the native/docker-less lane) ────────────────────

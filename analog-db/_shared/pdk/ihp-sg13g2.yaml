@@ -38,16 +38,18 @@ op_probe: {inner_prefix: n, params: [gm, gds]}
 gmid:
   family: psp
   device: sg13_lv_nmos                   # default device (the lv nmos); --device sg13_hv_nmos etc.
-  corners: [tt, ss, ff]                  # `--corner all` extracts each into its own __<corner>.pkl
+  corners: [tt, ss, ff, sf, fs]          # `--corner all` extracts each into its own __<corner>.pkl
   probe: "n.xm1.n{device}"
   width_um: 5                            # single characterization width (µm); the LUT is per-unit-W
   nfing: 1
+  finger_widths: [0.5, 1, 5]             # characterised finger widths (µm); companions apply to CORE (LV) devices only
   temp_k: 300
-  sweep:
-    vgs: [0, 0.05, 1.5]                  # (start, step, stop) V — lv rail
-    vds: [0, 0.2, 1.5]   # coarse VDS (the gm/ID method needs few VDS); --vds for finer
-    vsb: [0, -0.4, -0.4]                # 2 body-bias points (0, 0.4 V); --vsb for more
-    length_um: [0.13, 0.15, 0.2, 0.5, 1, 2]
+  out_root: ~/.spicexplorer/gmid         # out-of-repo store (LUTs regenerate via scripts/regen_gmid_luts.py; not committed)
+  sweep:                                 # max-fidelity 25 mV grid — LV rail (HV device widens via regen overrides)
+    vgs: [0, 0.025, 1.5]                 # (start, step, stop) V — lv rail
+    vds: [0, 0.025, 1.5]                 # fine VDS resolves the saturation knee (gds/av0/ro)
+    vsb: [0, -0.075, -0.75]              # 11 body-bias points 0..VDD/2 (was 2 pts, off-grid above 0.4 V)
+    length_um: [0.13, 0.15, 0.18, 0.22, 0.3, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0]  # LV; HV overrides L in regen (min-L ~0.45)
   info: "IHP sg13g2, 1.5 V lv, PSP/OSDI"
   simulator:                              # optional ngspice runtime knobs (CLI --runner/--workers override)
     runner: auto                          # auto = host ngspice+$PDK_ROOT when available, else docker

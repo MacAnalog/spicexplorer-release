@@ -15,3 +15,9 @@ sandbox/*
 # BARE NAME (resolved on the ngspice sourcepath). `.include` does NOT search that path, so driving
 # them through the optimizer natively needs copies with absolute paths — machine-specific, never committed.
 raw_optimize/_abs/
+
+# gm/ID LUTs are regenerable artifacts, not source. The canonical store is OUT-OF-REPO
+# (~/.spicexplorer/gmid/<pdk>/, the gmid.out_root); rebuild with tools/regen_gmid_luts.py.
+# See _shared/GMID.md. (Small offline test fixtures live in packages/spicexplorer-gmid/tests/.)
+_shared/gmid/**/*.pkl
+_shared/gmid/**/*.manifest.json

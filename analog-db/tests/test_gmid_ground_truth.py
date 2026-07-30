@@ -55,9 +55,10 @@ PAIRS = [
 @pytest.mark.parametrize("device,matfile", PAIRS)
 def test_ihp_lut_matches_iic_jku_ground_truth(device: str, matfile: str):
     assert GT is not None  # narrowed by skipif
-    ours_path = paths.shared_root() / "gmid" / "ihp-sg13g2" / f"{device}__tt.pkl"
+    from spicexplorer_analog_db import gmid
+    ours_path = gmid.find_lut_path("ihp-sg13g2", device, "tt")  # out-of-repo store, then in-repo fallback
     if not ours_path.is_file():
-        pytest.skip(f"{ours_path.name} not committed")
+        pytest.skip(f"{ours_path.name} not present (run tools/regen_gmid_luts.py --pdk ihp-sg13g2)")
     ours, ref = Lookup(str(ours_path)), Lookup(str(GT / matfile))
 
     worst = {"jd": 0.0, "av0": 0.0, "ft": 0.0, "vgs": 0.0}

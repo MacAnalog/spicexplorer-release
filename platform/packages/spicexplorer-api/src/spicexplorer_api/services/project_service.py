@@ -402,13 +402,25 @@ def list_examples() -> list[dict[str, Any]]:
 def _example_yaml_path(example_key: str, examples_root: Path | None = None) -> Path:
     if examples_root is None:
         examples_root = REPO_ROOT / "examples"
-    yp = (examples_root / example_key).resolve()
-    # Defence-in-depth: stay inside examples/ and require the canonical filename
-    # family (project_setup.yaml + variants like project_setup_advanced.yaml —
-    # the same pattern list_examples discovers).
-    if examples_root.resolve() not in yp.parents or not (
-        yp.name.startswith("project_setup") and yp.suffix == ".yaml"
-    ):
+    # Traversal guard on the KEY STRING (example_key can come from an API request,
+    # e.g. copy_example): reject absolute keys and any ``..`` segment. We guard the
+    # key rather than the post-.resolve() location because examples/ legitimately
+    # contains symlinks — notably the analog-db corpus, which resolves OUTSIDE
+    # examples/ — and a "resolved path must stay under examples/" check wrongly
+    # rejects those. Committed symlinks are trusted; an API caller cannot plant one.
+    key = Path(example_key)
+    if key.is_absolute() or ".." in key.parts:
+        raise ValueError(f"invalid example key: {example_key!r}")
+    # Join WITHOUT .resolve(): the returned path must stay lexically under
+    # examples/ so callers can ``relative_to(examples_root)`` it (the display key,
+    # asset seeding). The ``..``/absolute guard above already blocks traversal;
+    # reads/copies still follow committed symlinks (e.g. examples/analog-db) via
+    # the OS, and .exists() dereferences them — so resolving here buys nothing but
+    # breaks the relative-path callers for symlinked corpora.
+    yp = examples_root / key
+    # Require the canonical filename family (project_setup.yaml + variants like
+    # project_setup_advanced.yaml — the same pattern list_examples discovers).
+    if not (yp.name.startswith("project_setup") and yp.suffix == ".yaml"):
         raise ValueError(f"invalid example key: {example_key!r}")
     if not yp.exists():
         raise FileNotFoundError(f"example not found: {example_key}")
@@ -466,13 +478,18 @@ def _seed_example_assets(yp: Path, pd: Path) -> None:
         entries = (doc.get("assets") or {}).get("xschem") or []
     except Exception:
         return
-    examples_root = (REPO_ROOT / "examples").resolve()
     for rel in entries:
         relp = Path(str(rel))
+        # relp is the traversal guard: no ``..`` and not absolute, so it can only
+        # reference files WITHIN the demo's own directory subtree. That makes the
+        # join safe without a post-.resolve() "must stay under examples/" check —
+        # which would wrongly drop assets reached through a committed corpus
+        # symlink (e.g. examples/analog-db -> the analog-db unit), leaving the
+        # seeded xschem/ empty for those demos.
         if relp.is_absolute() or ".." in relp.parts or relp.suffix not in (".sch", ".sym"):
             continue
         src = (yp.parent / relp).resolve()
-        if examples_root not in src.parents or not src.is_file():
+        if not src.is_file():
             continue
         dest = pd / "xschem" / relp
         try:

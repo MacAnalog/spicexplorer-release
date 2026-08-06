@@ -1,0 +1,42 @@
+# Analysis binding for the SELF-BIASED AZC 3-stage OTA (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# Loop-gain / stability probe in the unity buffer: ngspice does Middlebrook voltage injection
+# at the VIPRB marker (`alter @VIPRB[acmag]=1` in .control — netlist bytes unchanged); the
+# Spectre lane composes a native `stb stb probe=VIPRB` off the same marker. Injection at the
+# DC-short keeps the op point the CLOSED-loop buffer one.
+# FSTART = 0.01 Hz is the class value (see the stb template's "CHOOSING FSTART").
+# MEASURED (binding pass 2026-08-01, ihp-sg13g2 tt, landed sizing): loopgain_db = 80.062
+# (= ac_open_loop dcgain 80.062 bit-close), ugf_loop = 3.7825 MHz vs ugf 3.7827 MHz,
+# pm_loop = 88.743 deg vs the biaswrap ac_open_loop pm 88.757 (delta 0.014 deg — two
+# independent routes agree), pm_loop_first = pm_loop (single 0 dB crossing),
+# gm_loop = 36.886 dB (a real phase crossover, not the sentinel).
+# SCOPE CAVEAT (load-bearing): this bench certifies ONLY the probed main loop's return
+# ratio. At this sizing the cell nonetheless carries a REAL ~35-40 MHz / 0.17-0.28 Vpp
+# limit cycle in the unity buffer (tran_step; sustained at constant amplitude under trap,
+# damped-trap xmu=0.49, AND gear at forced 0.5 ns steps — only coarse-step gear numerically
+# kills it), i.e. a LOCAL loop inside the AZC RC/feedforward network oscillates while the
+# main-loop T(s) reads 88.7 deg of margin. pm_loop passing its spec does NOT certify this
+# cell stable; see thd/iip3/tran_step notes.
+# `produces:` names the datasheet metric ids this circuit's datasheet.yaml binds
+# (pm_loop_deg carries the spec; the other three are report-only). pm_loop = -999 is the
+# "no crossing measured" sentinel, phref_ok = 0 says the phase reference tripped.
+schema: spicexplorer/analysis@1
+id: stb
+template: stb_selfbias
+description: "Loop gain (stb) of the unity buffer — loopgain_db/ugf_loop/pm_loop/gm_loop; Middlebrook injection at VIPRB on ngspice, native stb on Spectre."
+# FSTART 0.01 -> 1e-4 (2026-08-04): the stb bench anchors phase at its first swept point and
+# blanks pm_loop/gm_loop to the -999 sentinel when |phref_dev| > 30 deg. For a high-gain amp
+# the dominant pole f_p = UGF/A0 is sub-Hz, so 0.01 Hz already sits PAST it — and because
+# every stabilising move lowers UGF (hence f_p), the guard fires HARDER on a correct fix than
+# on the broken design. Measured on amp_006@gf180: the committed (unstable) sizing reports
+# pm_loop -16.5, while the stabilised one reports -999 at 0.01 Hz and +66.0 at 1e-4. pm_loop
+# and gm_loop are FSTART-INVARIANT; only the guard moves.
+params:
+  VDD: 1.8
+  VCM: 300m
+  CL: 10p
+  FSTART: 1e-4     # class value; see the stb template's "CHOOSING FSTART"
+  FSTOP: 1G
+  PPD: 101
+flags: []
+produces: [pm_loop_deg, loopgain_db, ugf_loop_hz, gm_loop_db]

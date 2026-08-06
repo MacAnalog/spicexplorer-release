@@ -1,0 +1,31 @@
+# Analysis binding for the SELF-BIASED SMCNR two-stage (5-port AnalogGym convention, no
+# ibias port — the 100 nA sink is internal) — uses the class's ibias-free template variant so
+# no external current source is left driving a dangling node.
+# Two-tone IIP3 in the unity buffer: 6.25 mV tones at 9/10 kHz share the F0 = gcd = 1 kHz
+# fundamental (n1=9, n2=10 — the exact class tone ratio), so the IM3 products at 8/11 kHz
+# (bins 8/11) and the IM5 products at 7/12 kHz (bins 7/12) land on exact F0 bins — the
+# in-deck coherent DFT then has no leakage. The campaign grid for a sub-3-MHz cell (/100):
+# FRESH ac_open_loop @ ihp-sg13g2 tt, 2026-08-01 reads ugf = 152.0 kHz, so both tones sit
+# ~15x under the closed-loop rolloff — the same in-band placement amp_022 uses.
+# COHERENT WINDOW: TSTART = 1m = 1 WHOLE beat period (the integer-beat contract is
+# load-bearing) >= 20x the FRESH measured 8.01 us settling (20x = 160.2 us; 1 beat = 125x);
+# TSTOP-TSTART = 20m = 20 beat periods; TSTEP = 500n <= 1/(200*F2).
+# DRIVE: ASIG = 6.25 mV per tone ALWAYS — the class default (geometric centre of the
+# measured valid window: compression above ~14 mV, the deck's own floor below ~2.5 mV).
+# Plain decimal (0.00625), never a SPICE suffix — ASIG/F0/F1/F2 reach .control arithmetic.
+# REPORTING: `produces:` names DATASHEET METRIC IDS (analysis.schema.json), not measure
+# names — the wiring itself is datasheet.yaml metrics.iip3_dbv.{analysis: iip3,
+# extract.meas: iip3_dbv}. The template also prints im3_dbc, a_f1/a_f2/a_drv, gain_tone,
+# a_im3l/h, a_im5l/h, a_floor, im5_im3_db, iip3_comp_db into
+# `corners.<corner>.analyses.iip3.measures`. TRUST CHECKS (ihp-sg13g2 tt, 2026-08-01):
+# iip3_dbv = 23.163 dBV, im3_dbc = -134.5 dBc; a_im3l = 1.037e-9 sits 47.2 dB above
+# a_floor = 4.539e-12; iip3_comp_db 0.28 dB (small residual-compression estimate);
+# gain_tone 1.000259. gain_tone < 0.5 would mean the dead-output guard fired and iip3_dbv
+# is the -999 sentinel.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_selfbias
+description: "IIP3 — two-tone intermodulation intercept; tran+coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.5, VCM: 0.5, CL: 10p, ASIG: 0.00625, F0: 1.0e3, F1: 9.0e3, F2: 1.0e4, TSTEP: 500n, TSTART: 1m, TSTOP: 21m}
+flags: []
+produces: [iip3_dbv]

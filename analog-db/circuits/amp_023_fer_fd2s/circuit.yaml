@@ -4,13 +4,16 @@
 # assembled and simulated. The original FOUNDRY 28nm decks + spectre run set are retained under
 # `references`. The upstream IBIAS port and VCMR (CM reference) port are INTERNALIZED as ideal
 # sources (sizing knobs x_ibias_val / x_vcmr_val) so the entry matches the amplifier class's
-# self-biased differential-output convention (amp_020, dc_op_diff/ac_open_loop_diff templates).
+# self-biased differential-output convention (dc_op_diff/ac_open_loop_diff templates).
 schema: spicexplorer/circuit@1
 id: amp_023_fer_fd2s
 class: amplifier
 display_name: "Fully-differential 2-stage: NMOS folded-cascode + CS, Miller + RC-CMFB"
 compensation: miller_nulling
 stages: 2
+realization: transistor
+cm_control: regulated
+signal_path: fully_differential
 ports: [vinp, vinn, voutp, voutn, vdd, vss]
 provenance:
   source: Arcadia-1/ferrosim (imported via netlist-crawler)
@@ -22,7 +25,7 @@ artifacts:
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
 pdks: [ihp-sg13g2, sky130, gf180mcu, FOUNDRY-n65]
-analyses: [ac_open_loop, dc_op, noise, tran_step]
+analyses: [ac_open_loop, dc_op, noise, tran_step, thd, iip3, stb, cmrr_vcm, psrr_vdd]
 references:
   - {tool: spectre, dir: spectre/28nm, node: 28nm}
 optimize:

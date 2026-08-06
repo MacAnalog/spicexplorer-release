@@ -6,6 +6,8 @@ endpoints, diode-connected pin fan-out, the four diff verdicts (identical / pin-
 device-pin), and JSON serialization.
 """
 
+import logging
+import time
 from pathlib import Path
 
 import pytest
@@ -21,6 +23,7 @@ from spicexplorer_circuitgraph import (
     shortest_paths_between,
 )
 from spicexplorer_circuitgraph.model.nodes import DeviceType, MosfetNode, MosPolarityType
+from spicexplorer_circuitgraph.paths import DEFAULT_MAX_PATHS
 from spicexplorer_core.spice_engine import NetlistView
 
 _FIX = Path(__file__).resolve().parent / "fixtures"
@@ -469,3 +472,100 @@ def test_block_voltage_sources_composes_with_through_supply():
     for kw in ({}, {"through_supply": True}):
         paths = find_paths_between(g, "a", "b", block_voltage_sources=True, **kw)
         assert paths and all("V1" not in p.components for p in paths)
+
+
+# --- the search is BOUNDED, not post-filtered ------------------------------------------------
+def test_readme_through_supply_example_terminates_quickly():
+    """The README's own call on the real 24-device cascode fixture.
+
+    ``max_paths`` used to be a slice applied AFTER a complete enumeration, so this call had to
+    enumerate every simple path through the supply rails first — it did not finish in 120 s. The
+    search is now bounded, so it returns in well under a second; the budget here is deliberately
+    loose so it only ever fires on the unbounded behavior coming back.
+    """
+    g = _cascode()
+    start = time.perf_counter()
+    paths = find_paths_between(g, "vinp", "vout", through_supply=True)
+    elapsed = time.perf_counter() - start
+    assert elapsed < 15, f"unbounded path search: {elapsed:.1f}s"
+    assert len(paths) == DEFAULT_MAX_PATHS
+
+
+def test_bounded_result_holds_the_shortest_paths():
+    """Truncation keeps the SHORTEST paths, not whatever the DFS reached first.
+
+    ``all_simple_paths`` is a depth-first walk: on this fixture its first 1000 paths are of
+    lengths 4 and 9–17, skipping every path of length 5–8. Slicing that stream would return an
+    arbitrary sample labeled as "the paths".
+    """
+    g = _cascode()
+    capped = find_paths_between(g, "vinp", "vout", through_supply=True, max_paths=40)
+    assert len(capped) == 40
+    lengths = sorted({p.length for p in capped})
+    # contiguous from the true minimum: no length band is skipped over
+    assert lengths == list(range(lengths[0], lengths[0] + len(lengths)))
+    shortest = shortest_paths_between(g, "vinp", "vout", through_supply=True)
+    assert lengths[0] == shortest[0].length
+
+
+def test_truncation_is_reported_not_silent(caplog):
+    g = _cascode()
+    with caplog.at_level(logging.WARNING, logger="spicexplorer_circuitgraph.paths"):
+        find_paths_between(g, "vinp", "vout", through_supply=True, max_paths=5)
+    assert "max_paths=5" in caplog.text and "NOT the complete set" in caplog.text
+
+
+def test_an_unbounded_small_search_is_still_available():
+    # max_paths=None restores the complete enumeration; on a small graph it is the same answer as
+    # a cap larger than the path count.
+    g = _g(OTA_CORE)
+    every = find_paths_between(g, "vinp", "out2", max_paths=None)
+    assert every and every == find_paths_between(g, "vinp", "out2", max_paths=10_000)
+
+
+def test_max_paths_rejects_a_non_positive_cap():
+    with pytest.raises(ValueError, match="positive count"):
+        find_paths_between(_g(OTA_CORE), "vinp", "out2", max_paths=0)
+
+
+# --- truncation is on the RESULT, not only in a log line --------------------------------------
+def test_a_truncated_result_says_so_on_itself():
+    """A caller cannot branch on a WARNING. `.truncated`/`.cap` make the sample visible in code."""
+    g = _cascode()
+    capped = find_paths_between(g, "vinp", "vout", through_supply=True, max_paths=5)
+    assert capped.truncated is True and capped.cap == 5
+    assert len(capped) == 5
+    # still a plain list everywhere else (equality against a list, indexing, iteration)
+    assert capped == list(capped)
+
+
+def test_a_complete_result_is_not_reported_as_truncated(caplog):
+    # `len(paths) >= max_paths` also trips on a COMPLETE answer that happens to be exactly the cap
+    # — and then the one signal a caller has that the answer is partial is a false positive.
+    g = _g(OTA_CORE)
+    complete = find_paths_between(g, "vinp", "out2", max_paths=None)
+    assert not complete.truncated
+    with caplog.at_level(logging.WARNING, logger="spicexplorer_circuitgraph.paths"):
+        exact = find_paths_between(g, "vinp", "out2", max_paths=len(complete))
+    assert len(exact) == len(complete) and exact.truncated is False
+    assert "NOT the complete set" not in caplog.text  # the whole answer, warned about as a sample
+    assert find_paths_between(g, "vinp", "out2", max_paths=len(complete) - 1).truncated is True
+
+
+def test_shortest_paths_between_inherits_the_cap_and_reports_it():
+    # The second public entry point forwards straight into find_paths_between, so its max_paths
+    # defaults to DEFAULT_MAX_PATHS too — a graph with more equally-shortest paths than that comes
+    # back truncated, and until now nothing but a log line said so.
+    g = _cascode()
+    full = shortest_paths_between(g, "vinp", "vout", through_supply=True)
+    assert full.cap == DEFAULT_MAX_PATHS and not full.truncated
+    capped = shortest_paths_between(g, "vinp", "vout", through_supply=True, max_paths=1)
+    assert len(capped) == 1 and capped.truncated is True
+
+
+def test_an_empty_result_carries_the_flags_too():
+    # The early "no path exists" exit returns the same type, so a caller can read .truncated
+    # without first checking whether the list is empty.
+    two_islands = "* islands\nR1 a b 1k\nR2 c d 1k\n.end\n"
+    paths = find_paths_between(_g(two_islands), "a", "d")
+    assert paths == [] and paths.truncated is False and paths.cap == DEFAULT_MAX_PATHS

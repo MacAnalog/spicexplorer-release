@@ -138,6 +138,18 @@ class Circuit:
         return "reference" if (self.references and not self.pdks) else "verifiable"
 
     @property
+    def is_published(self) -> bool:
+        """False iff the manifest DE-PUBLISHES this circuit (``published: false``).
+
+        Orthogonal to :attr:`kind`. A de-published circuit is dropped from the generated
+        scoreboard index / paper tabulation but stays fully verifiable: bindings, sizing, params
+        and raw decks are still generated, drift-guarded and resolvable — which is what lets a
+        composite keep composing a retired cell as its core block. ``kind: reference`` is NOT a
+        de-publish marker: it means "imported foreign deck" (PDK-free, carries ``references``).
+        """
+        return bool(self.manifest.get("published", True))
+
+    @property
     def is_reference_only(self) -> bool:
         """A pure reference circuit: reference bindings and no open-PDK (verifiable) bindings."""
         return self.kind == "reference" or (bool(self.references) and not self.pdks)

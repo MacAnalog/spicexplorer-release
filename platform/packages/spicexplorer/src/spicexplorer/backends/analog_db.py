@@ -38,6 +38,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
+import numpy as np
 import yaml
 from spicexplorer_core.pvt import Corner, ModelInclude, SupplyOverride
 
@@ -104,6 +105,7 @@ _TB_ANALYSIS: dict[str, str] = {
     # analysis: pac} / {meas: onoise_pnoise_total}), not datasheet conformance.
     "pac_gain": "pac",
     "pac_zin": "pac",
+    "psrr_vdd_chop": "pac",
     "pnoise_chopped": "pnoise",
 }
 
@@ -528,6 +530,66 @@ class MetricEval:
     spec_max: float | None
 
 
+class _DifferentialSimResult:
+    """A ``SimResult`` view that reads a fully-differential DUT's output as the DIFFERENCE of
+    its output pair, published under the POSITIVE leg's name.
+
+    A fully-differential amp has no single-ended ``vout`` (:func:`differential_output`), so every
+    Tier-1 registry recipe must read ``v(voutp) - v(voutn)``. The registry's own ``ref`` key cannot
+    express that uniformly: on the transient path it SUBTRACTS, but on the AC path it DIVIDES (the
+    series-sense ``zin_mag`` ratio). Injecting ``ref=voutn`` into an AC recipe would therefore return
+    ``voutp/voutn`` ≈ -1 — measured live on amp_023/ihp-sg13g2 as dcgain ≈ -4e-13 dB and PM = 180°,
+    a silently wrong number rather than the true 65.9 dB / 71.9°. Substituting the difference wave
+    under the positive leg's name is instead kind- and engine-neutral: every ``meas`` sees the
+    differential signal it is defined on, and the numbers match the deck's own in-deck ``.meas``.
+
+    Everything else (``scalar``, and any other attribute a caller reaches for) delegates to the
+    wrapped result, so the op-point / integrated-noise scalar reads are untouched.
+    """
+
+    def __init__(self, inner: Any, plus: str, minus: str) -> None:
+        self._inner = inner
+        self._plus = plus
+        self._minus = minus
+
+    def __getattr__(self, name: str) -> Any:  # delegate raw_dir/raw_path/log_path/…
+        return getattr(self._inner, name)
+
+    def wave(self, name: str, analysis: str) -> np.ndarray:
+        """Delegate on the PROTOCOL signature — exactly as :meth:`scalar` must (see below).
+
+        This used to accept and forward an ``is_real`` third positional argument. ngspice's
+        ``SpicelibSimResult.wave`` happens to take one, so the open PDKs never noticed;
+        ``SpectreSimResult.wave`` takes only ``(name, analysis)``, so on the licensed lane every
+        DIFFERENTIAL WAVE read raised ``TypeError: wave() takes 3 positional arguments but 4 were
+        given`` and ``evaluate`` recorded it as NaN — ``t_settle`` went missing on the 5
+        fully-differential FOUNDRY-n65 amplifiers whose datasheet does NOT spell out an explicit
+        ``ref`` (amp_020/023/025/029/030); the two that do (amp_026/027) bypass this wrapper
+        entirely via ``_measure_source`` and were fine, which is why the failure looked circuit-
+        specific rather than structural. No caller ever passed the third argument THROUGH this
+        wrapper (the ``SimResult`` protocol is two-argument and the registry's ``_real_wave``
+        takes the real part itself), so dropping it is behaviour-identical on ngspice.
+        """
+        if name != self._plus:
+            return self._inner.wave(name, analysis)
+        plus = np.asarray(self._inner.wave(self._plus, analysis))
+        minus = np.asarray(self._inner.wave(self._minus, analysis))
+        return plus - minus
+
+    def scalar(self, name: str, analysis: str) -> float:
+        """Delegate on the PROTOCOL signature — scalars need no differential view.
+
+        This used to accept and forward an ``is_real`` third argument. ngspice's result
+        happens to take one, so the open PDKs never noticed; ``SpectreSimResult.scalar``
+        takes two, so on the licensed lane EVERY scalar read of a fully-differential cell
+        raised ``TypeError`` and was recorded as NaN — i_supply (hence power), vos, and
+        t_settle went missing on 8 of the corpus's FOUNDRY-n65 amplifiers while the AC-path
+        metrics beside them looked healthy. The wrapper only substitutes the differential
+        WAVE; anything scalar must pass straight through, engine-neutrally.
+        """
+        return self._inner.scalar(name, analysis)
+
+
 @dataclass
 class CircuitRun:
     """One in-library run of an analog-db circuit + its datasheet-metric evaluation.
@@ -552,6 +614,11 @@ class CircuitRun:
     #: the class OCEAN calculator and open an ``OceanMetricsSession`` on the run's raw dir.
     root: str | os.PathLike[str] | None = None
     vb_env_file: str | os.PathLike[str] | None = None
+    #: ``(voutp, voutn)`` for a fully-differential DUT (:func:`differential_output`), else None.
+    #: Set by :func:`run_circuit` so the registry route reads the DIFFERENCE of the pair — the
+    #: Spectre calculator route already consulted it, the registry route defaulted to the
+    #: non-existent single-ended ``vout`` and raised on every metric.
+    differential: tuple[str, str] | None = None
 
     @property
     def analysis(self) -> str:
@@ -618,6 +685,135 @@ class CircuitRun:
                          self.circuit, self.testbench, exc)
             return {}
 
+    def default_out(self) -> str:
+        """The output node a datasheet recipe reads when it names none.
+
+        ``vout`` by amplifier convention — but a fully-differential DUT has no such net, so it
+        resolves to the differential POSITIVE leg (``voutp``) and the read is taken across the
+        pair (see :class:`_DifferentialSimResult`)."""
+        return self.differential[0] if self.differential else "vout"
+
+    def _measure_source(self, recipe: dict[str, Any]) -> Any:
+        """The result ``recipe`` should be measured against.
+
+        A fully-differential DUT reading its own output node gets the DIFFERENCE view; anything
+        else (a single-ended DUT, a probe/bias net, or a recipe that already carries its own
+        explicit ``ref`` — the datasheet-authored ``out - ref`` transient read) gets the raw
+        result untouched."""
+        if self.differential is None or "ref" in recipe:
+            return self.result
+        plus, minus = self._out(self.differential[0]), self._out(self.differential[1])
+        if recipe.get("out") != plus:
+            return self.result
+        return _DifferentialSimResult(self.result, plus, minus)
+
+    def _measure_metric(self, m: MetricTarget, calc_values: dict[str, float]) -> float:
+        """One metric's value: the Spectre OCEAN calculator row when the class defines one, else
+        the engine-neutral Tier-1 registry recipe. Raises whatever the read raises — :meth:`evaluate`
+        degrades a raise to NaN for THAT metric alone."""
+        from spicexplorer_core.measurements import measure
+
+        calc_key = str(m.recipe.get("meas", ""))
+        if calc_key and calc_key in calc_values:  # Spectre calculator route (preferred)
+            return float(calc_values[calc_key])
+        default_out = self.default_out()
+        recipe = {**m.recipe, "out": self._out(str(m.recipe.get("out", default_out)))}
+        if "ref" in recipe:  # differential tran read (out - ref), e.g. voutp/voutn
+            recipe["ref"] = self._out(str(recipe["ref"]))
+        if str(recipe.get("meas", "")) in ("icmr_min", "icmr_max", "icmr_range"):
+            # The DC-sweep (ICMR) recipe needs the swept-input net and the tracking
+            # threshold. Both are properties of the BENCH, not of the metric, so they come
+            # from the linearity binding the same way `t_settle` takes VTOL/TSTART below —
+            # the datasheet `extract` stays minimal. Every amplifier linearity template
+            # variant (`linearity`, `linearity_selfbias`) drives `Vinp vinp`, and the
+            # closed-lane bench sweeps that same `DEV: VINP`, so `vinp` is the swept net on
+            # both lanes. Defaulted 2026-08-04: amp_032/amp_033 ship the minimal
+            # `extract: {meas: icmr_range}` and the registry's `recipe["vin"]` raised
+            # KeyError, so `icmr_range` recorded NaN on FOUNDRY-n65 even though their sweeps
+            # track cleanly (amp_001/amp_022 only worked because they spell both keys out).
+            recipe.setdefault("vin", "vinp")
+            if "vtrack" not in recipe and self.params.get("VTRACK") is not None:
+                from spicexplorer_core.eng import parse_value
+
+                recipe["vtrack"] = float(parse_value(str(self.params["VTRACK"])))
+        if "vin" in recipe:  # the DC-sweep (ICMR) recipes read the swept input net too
+            recipe["vin"] = self._out(str(recipe["vin"]))
+        if self.engine == _SPECTRE and self.testbench in ("thd", "iip3"):
+            # the closed lane ran a NATIVE pss instead of the deck's tran (ngspice has
+            # no PSS) — swap the FFT recipes for their harmonic-phasor twins
+            meas0 = str(recipe.get("meas", ""))
+            if meas0 in ("thd", "thd_pct", "thd_db"):
+                recipe["meas"] = meas0.replace("thd", "thd_pss", 1)
+                recipe.pop("f0", None)  # the pss fundamental already encodes it
+            elif meas0 in ("iip3", "iip3_dbv", "im3_dbc"):
+                from spicexplorer_core.measurements import two_tone_indices
+
+                _f0, n1, n2 = two_tone_indices(
+                    float(recipe.pop("f1")), float(recipe.pop("f2"))
+                )
+                recipe["meas"] = {
+                    "iip3": "iip3_pss",
+                    "iip3_dbv": "iip3_pss_dbv",
+                    "im3_dbc": "im3_pss_dbc",
+                }[meas0]
+                recipe["n1"], recipe["n2"] = n1, n2
+        if recipe.get("meas") == "vos" and "ref" not in recipe:
+            # the dc_op template contract, the sibling of the i_supply shim below. Every
+            # dc_op variant defines `vos` as a NODE DIFFERENCE in its ngspice `.control`
+            # block, and the reference leg follows the VARIANT:
+            #   dc_op_diff / dc_op_chopper_diff / dc_op_chopper_rrl (differential DUT)
+            #       vos = v(voutp) - v(voutn)   — the output offset / CMFB-servo residual
+            #   dc_op_biaswrap (single-ended, Lfb closes unity DC feedback)
+            #       vos = v(vout)  - v(vinp)    — the input-referred systematic offset
+            # `out` is already the right hot leg (`default_out()` → voutp / vout), so only
+            # the reference is missing. Spectre drops `.control` entirely, so without this
+            # the closed lane had no vos at all (KeyError → NaN on 10 FOUNDRY-n65 amplifiers);
+            # a datasheet extract that names its own `ref` still wins.
+            #
+            # NOT every template that defines `vos` defines it as a node pair. The support
+            # class's `dc_vcm_sense` computes `vos = v(vcm_out) - ${VCM}`, i.e. against the
+            # bench LITERAL, so a `ref` of vinp would silently measure a different quantity.
+            # Guessing a reference there would turn an honest KeyError→NaN into a plausible
+            # WRONG number, which is the strictly worse failure — a blank cell is visibly
+            # missing, a wrong one gets published. So inject only for the node-pair variants
+            # this contract actually covers, and leave anything else to raise.
+            if self.differential is not None:
+                recipe["ref"] = self._out(self.differential[1])
+            elif str(self.testbench).startswith("dc_op"):
+                recipe["ref"] = self._out("vinp")
+            # else: no node-pair contract for this bench — do not guess a reference. The
+            # read then raises and `evaluate` records NaN, which is the honest outcome.
+        if recipe.get("meas") == "i_supply" and "probe" not in recipe:
+            # the dc_op template contract: the ngspice deck's own `let i_supply =
+            # abs(i(Vdd))` current vector (written as `i(i_supply)`); the translated
+            # Spectre deck reports the supply source current
+            recipe["probe"] = "i(i_supply)" if self.engine == _NGSPICE else "VDD:p"
+        if m.analysis == "noise" and m.recipe.get("out", default_out) == default_out:
+            if self.engine == _NGSPICE:
+                # the ngspice noise template already integrates in-deck (`inoise_total`/
+                # `onoise_total` land in the Integrated Noise plot) — a scalar read, not
+                # a density integration. The `_diff` template integrates across the output
+                # PAIR (`noise v(voutp,voutn) …`), so this holds for an FD DUT too.
+                inp = recipe.get("meas") == "inoise_total"
+                return float(
+                    self.result.scalar("v(inoise_total)" if inp else "v(onoise_total)", "noise")
+                )
+            # Spectre lands density spectra in the noise.noise PSF as `in`/`out` (P5c) —
+            # the registry recipe integrates them over the swept band
+            recipe["out"] = "in" if recipe.get("meas") == "inoise_total" else "out"
+        if recipe.get("meas") == "t_settle" and "tol" not in recipe and "tol_frac" not in recipe:
+            # the tran_step binding's own tolerance/step-instant (VTOL/TSTART params)
+            from spicexplorer_core.eng import parse_value
+
+            vtol = self.params.get("VTOL")
+            recipe["tol"] = float(parse_value(str(vtol))) if vtol is not None else None
+            if recipe["tol"] is None:
+                recipe.pop("tol")
+                recipe["tol_frac"] = 0.01
+            if "t_start" not in recipe and self.params.get("TSTART") is not None:
+                recipe["t_start"] = float(parse_value(str(self.params["TSTART"])))
+        return float(measure(self._measure_source(recipe), recipe, default_analysis=m.analysis))
+
     def evaluate(self, *, only: Iterable[str] | None = None) -> dict[str, MetricEval]:
         """Measure each datasheet metric bound to THIS testbench and check its spec band.
 
@@ -632,9 +828,25 @@ class CircuitRun:
         stays the **ngspice** path and the Spectre fallback only for op-point/derived metrics
         with no calculator row (``i_supply``, ``t_settle``, ``icmr``). Metrics are matched to a
         calculator row by their extract ``meas`` (the datasheet metric *name* — e.g. ``vn_in`` —
-        can differ from the calculator/``meas`` name — ``inoise_total``)."""
-        from spicexplorer_core.measurements import measure
+        can differ from the calculator/``meas`` name — ``inoise_total``).
 
+        **Per-metric isolation:** a metric whose read raises (absent trace, unknown ``meas``,
+        malformed recipe) records **NaN** with a warning naming it, instead of aborting the whole
+        circuit. `MetricTarget.satisfied(nan)` is False, so a NaN never passes a spec band, and
+        the optimizer's scorer already treats a NaN metric as the maximal penalty — one broken
+        recipe therefore costs exactly that one metric, not every other metric on the bench.
+
+        ⚠️ **Scope of that degradation — measured, corpus-wide, not a tidy-up.** At analog-db
+        ``ed4d7c48``, **224** datasheet metrics across **44 of 81** circuits name a ``meas`` the
+        Tier-1 registry does not define (**74** distinct names; **173** of them on SINGLE-ended
+        circuits, so this is NOT an FD-only problem; 16 of the 17 FD circuits are affected).
+        Each reports ``value=nan, satisfied=False`` — a confident *wrong verdict*, not
+        "unmeasured": measured live, ``buf_001_super_follower/ihp-sg13g2/dc_op`` reports
+        ``v_offset`` NaN/False against its ``[-0.9, -0.2]`` band while the run's own raw already
+        carries ``result.scalar('v_offset', 'op') = -0.4052969699537445``, comfortably inside it.
+        Whether to fall back to that in-deck scalar, and whether ``MetricEval`` should gain a
+        third "not measured" state, are **owner decisions** — see ``doc/TODO.md`` §21, which
+        ``tests/test_analog_db_meas_registry_gap.py`` re-derives and keeps honest."""
         want = set(only) if only is not None else None
         calc_values = self._spectre_calc_values() if self.engine == _SPECTRE else {}
         evals: dict[str, MetricEval] = {}
@@ -646,66 +858,15 @@ class CircuitRun:
                     continue
             elif m.analysis != self.analysis:
                 continue
-            calc_key = str(m.recipe.get("meas", ""))
-            if calc_key and calc_key in calc_values:  # Spectre calculator route (preferred)
-                value = float(calc_values[calc_key])
-                evals[m.name] = MetricEval(m.name, value, m.satisfied(value), m.spec_min, m.spec_max)
-                continue
-            recipe = {**m.recipe, "out": self._out(str(m.recipe.get("out", "vout")))}
-            if "ref" in recipe:  # differential tran read (out - ref), e.g. voutp/voutn
-                recipe["ref"] = self._out(str(recipe["ref"]))
-            if "vin" in recipe:  # the DC-sweep (ICMR) recipes read the swept input net too
-                recipe["vin"] = self._out(str(recipe["vin"]))
-            if self.engine == _SPECTRE and self.testbench in ("thd", "iip3"):
-                # the closed lane ran a NATIVE pss instead of the deck's tran (ngspice has
-                # no PSS) — swap the FFT recipes for their harmonic-phasor twins
-                meas0 = str(recipe.get("meas", ""))
-                if meas0 in ("thd", "thd_pct", "thd_db"):
-                    recipe["meas"] = meas0.replace("thd", "thd_pss", 1)
-                    recipe.pop("f0", None)  # the pss fundamental already encodes it
-                elif meas0 in ("iip3", "iip3_dbv", "im3_dbc"):
-                    from spicexplorer_core.measurements import two_tone_indices
-
-                    _f0, n1, n2 = two_tone_indices(
-                        float(recipe.pop("f1")), float(recipe.pop("f2"))
-                    )
-                    recipe["meas"] = {
-                        "iip3": "iip3_pss",
-                        "iip3_dbv": "iip3_pss_dbv",
-                        "im3_dbc": "im3_pss_dbc",
-                    }[meas0]
-                    recipe["n1"], recipe["n2"] = n1, n2
-            if recipe.get("meas") == "i_supply" and "probe" not in recipe:
-                # the dc_op template contract: the ngspice deck's own `let i_supply =
-                # abs(i(Vdd))` current vector (written as `i(i_supply)`); the translated
-                # Spectre deck reports the supply source current
-                recipe["probe"] = "i(i_supply)" if self.engine == _NGSPICE else "VDD:p"
-            if m.analysis == "noise" and m.recipe.get("out", "vout") == "vout":
-                if self.engine == _NGSPICE:
-                    # the ngspice noise template already integrates in-deck (`inoise_total`/
-                    # `onoise_total` land in the Integrated Noise plot) — a scalar read, not
-                    # a density integration
-                    inp = recipe.get("meas") == "inoise_total"
-                    value = float(
-                        self.result.scalar("v(inoise_total)" if inp else "v(onoise_total)", "noise")
-                    )
-                    evals[m.name] = MetricEval(m.name, value, m.satisfied(value), m.spec_min, m.spec_max)
-                    continue
-                # Spectre lands density spectra in the noise.noise PSF as `in`/`out` —
-                # the registry recipe integrates them over the swept band
-                recipe["out"] = "in" if recipe.get("meas") == "inoise_total" else "out"
-            if recipe.get("meas") == "t_settle" and "tol" not in recipe and "tol_frac" not in recipe:
-                # the tran_step binding's own tolerance/step-instant (VTOL/TSTART params)
-                from spicexplorer_core.eng import parse_value
-
-                vtol = self.params.get("VTOL")
-                recipe["tol"] = float(parse_value(str(vtol))) if vtol is not None else None
-                if recipe["tol"] is None:
-                    recipe.pop("tol")
-                    recipe["tol_frac"] = 0.01
-                if "t_start" not in recipe and self.params.get("TSTART") is not None:
-                    recipe["t_start"] = float(parse_value(str(self.params["TSTART"])))
-            value = float(measure(self.result, recipe, default_analysis=m.analysis))
+            try:
+                value = self._measure_metric(m, calc_values)
+            except Exception as exc:  # one bad recipe must not sink the whole bench
+                _LOG.warning(
+                    "metric %r (meas=%r) on %s/%s/%s could not be measured (%s: %s); recording NaN",
+                    m.name, m.recipe.get("meas"), self.circuit, self.pdk, self.testbench,
+                    type(exc).__name__, exc,
+                )
+                value = float("nan")
             evals[m.name] = MetricEval(m.name, value, m.satisfied(value), m.spec_min, m.spec_max)
         return evals
 
@@ -794,6 +955,7 @@ def _spectre_context(
     *,
     supply: float | None = None,
     differential: tuple[str, str] | None = None,
+    template: str | None = None,
 ) -> dict[str, Any]:
     """The render context for the Spectre template DB (bench params + computed extras).
 
@@ -823,6 +985,24 @@ def _spectre_context(
     # differential) — one template serves both output conventions.
     hot, ref = differential if differential else ("vout", "0")
     ctx["NOISE_OUT"], ctx["OUTN"] = hot, ref
+    # CM_OUTP/CM_OUTN — the fully-differential OUTPUT PAIR, and ONLY for an FD DUT. They feed
+    # the CM-path rejection rows of cmrr_vcm/psrr_vdd (`-dB20|vocm|`, vocm = (voutp+voutn)/2),
+    # which the `_diff` testbench templates measure alongside the differential figure and the
+    # FD datasheets declare as cmrr_cm_db/psrr_cm_db. Those rows carry
+    # `requires: [CM_OUTP, CM_OUTN]`, so leaving these UNSET on a single-ended DUT is what
+    # skips them: a single-ended deck has no output pair, and the single-ended context's
+    # OUTN is the ground reference `0` — rendering the CM expression against it would report
+    # -dB20(vout/2), i.e. the differential CMRR + 6 dB, as if it were a CM-path figure.
+    if differential:
+        ctx["CM_OUTP"], ctx["CM_OUTN"] = differential
+    # NOISE_IPROBE: the input SOURCE INSTANCE Spectre refers the noise to. The closed-lane
+    # deck is a translation of the ngspice testbench template, so the instance name follows
+    # the template VARIANT, and a class bench that hardcodes one name is wrong for the others:
+    # the self-biased variants drive through `VAC` on `sigin` (there is no VINP in that deck
+    # at all), so `iprobe=VINP` named a nonexistent instance and Spectre returned no
+    # input-referred density — `inoise_total` came back NaN on 16 FOUNDRY-n65 amplifiers while
+    # the analysis itself reported status ok.
+    ctx["NOISE_IPROBE"] = "VAC" if (template or "").startswith("noise_biaswrap") else "VINP"
     f1, f2 = ctx.get("F1"), ctx.get("F2")
     if isinstance(f1, float) and isinstance(f2, float):
         from spicexplorer_core.measurements import two_tone_indices
@@ -845,6 +1025,7 @@ def _spectre_analyses(
     root: str | os.PathLike[str] | None = None,
     circuit_class: str = "amplifier",
     differential: tuple[str, str] | None = None,
+    template: str | None = None,
 ) -> tuple[Any, ...]:
     """The Spectre analysis-statement tuple for a testbench (per the PSF-key contract).
 
@@ -862,7 +1043,29 @@ def _spectre_analyses(
     real template config error (`SpectreTemplateError`) always surfaces — only a missing
     DB/bench entry falls back.
     """
-    context = _spectre_context(testbench, params, supply=supply, differential=differential)
+    # The bench map is keyed on the ANALYSIS ID, not the testbench TEMPLATE, so a variant
+    # template silently borrows the majority variant's bench. That is fine for every bench
+    # whose analysis statement is variant-independent (the variant-dependent NAMES are
+    # resolved in `_spectre_context`) — but NOT for `stb`. The class `stb`/`stb_selfbias`
+    # templates break the loop with ONE 0 V marker (`VIPRB`), which the emitter turns into
+    # one `iprobe`; the fully-differential `stb_diff` template breaks it with an ANTIPHASE
+    # PAIR (`VIPRB`/`VIPRBM`), and both become iprobes. `stb … probe=VIPRB` then opens only
+    # half the loop — the other half stays closed through VIPRBM — so Spectre measures a
+    # return ratio of ~1 (measured 2026-08-04, FOUNDRY-n65 tt: loopgain_db −0.13 … −2.26 dB on
+    # amp_020/023/025/027/031, whose ngspice antiphase reading equals their dc_gain_db of
+    # 16.6 … 39.6 dB), never crosses 0 dB, and reports "Gain(dB) is always less than zero…
+    # No gain margin or phase margin" — pm_loop/gm_loop NaN and a garbage loopgain_db
+    # published with status ok. A real differential binding needs a Spectre `diffstbprobe`
+    # emitted across the marker pair; until that exists, REFUSE rather than mis-measure.
+    if testbench == "stb" and str(template or "").startswith("stb_diff"):
+        raise EngineUnavailable(
+            "stb_diff (differential loop probe) has no Spectre binding: the native `stb` "
+            "bench probes a single iprobe and cannot break an antiphase VIPRB/VIPRBM pair "
+            "(it would report a ~0 dB return ratio and no margins). Bind a `diffstbprobe` "
+            "across the pair before running this bench on the closed lane."
+        )
+    context = _spectre_context(testbench, params, supply=supply, differential=differential,
+                               template=template)
     try:
         from .spectre_templates import bench_analyses
 
@@ -963,10 +1166,12 @@ def bench_ocean_measurements(
     consumes it for every metric the class defines a calculator row for (Tier-1 stays the
     ngspice path + the op-point/derived Spectre fallback). AC exprs are rewritten to the
     differential output for a fully-differential DUT (``differential_output``)."""
-    params = load_analysis(circuit, testbench, root=root).get("params", {})
+    analysis_doc = load_analysis(circuit, testbench, root=root)
+    params = analysis_doc.get("params", {})
     supply = pdk_supply(pdk, root=root) if pdk else None
     diff = differential_output(circuit, root=root)
-    context = _spectre_context(testbench, params, supply=supply, differential=diff)
+    context = _spectre_context(testbench, params, supply=supply, differential=diff,
+                               template=analysis_doc.get("template"))
     from .ocean_metrics import OceanMeasurement
     from .spectre_templates import bench_measurements
 
@@ -974,13 +1179,20 @@ def bench_ocean_measurements(
         testbench, context, circuit_class=circuit_class(circuit, root=root), root=root
     )
     if diff:
-        # fully-differential DUT: read the AC metrics on the DIFFERENCE v(voutp)-v(voutn) —
+        # fully-differential DUT: read the metrics on the DIFFERENCE v(voutp)-v(voutn) —
         # the class calculator's single-ended v("vout") does not exist on this DUT. (The noise
         # row rides getData("in"), iprobe-based, so it is already FD-agnostic.)
+        #
+        # The rewrite is keyed on the EXPRESSION, not on the result kind. It used to be
+        # gated to `m.result == "ac"`, which silently skipped the `pss_fd` rows — the thd/
+        # iip3 benches. Those rows kept `v("vout")` on an FD deck, so OCEAN resolved a
+        # nonexistent net and `iip3_dbv`/`im3_dbc`/`thd_pct`/`hd2_db`/`hd3_db` came back NaN
+        # on every fully-differential cell (amp_020/023/025/026/027/029/030 on FOUNDRY-n65)
+        # while the pss itself converged and the bench still reported status ok.
         p, n = diff
         repl = f'(v("{p}")-v("{n}"))'
         measurements = [
-            m if (m.result != "ac" or 'v("vout")' not in m.expr)
+            m if 'v("vout")' not in m.expr
             else OceanMeasurement(name=m.name, result=m.result,
                                   expr=m.expr.replace('v("vout")', repl))
             for m in measurements
@@ -1020,7 +1232,8 @@ def build_spectre_run(
         # otherwise the bridge falls back to its own (possibly remote) default profile
         vb_env_file = os.environ.get("SPICEXPLORER_VB_ENV_FILE") or None
     corner_obj = resolve_corner(circuit, pdk, corner, root=root)
-    params = load_analysis(circuit, testbench, root=root).get("params", {})
+    analysis_doc = load_analysis(circuit, testbench, root=root)
+    params = analysis_doc.get("params", {})
     spec = deck_spec_from_ngspice(
         deck,
         pdk=pdk,
@@ -1029,6 +1242,7 @@ def build_spectre_run(
             testbench, params, supply=supply, root=root,
             circuit_class=circuit_class(circuit, root=root),
             differential=differential_output(circuit, root=root),
+            template=analysis_doc.get("template"),
         ),
         # sizing defaults + PDK core-rail supply + caller sizing experiments (last wins)
         parameters={
@@ -1104,7 +1318,14 @@ def run_circuit(
     else:  # pragma: no cover - probe only reports available for a known engine
         raise EngineUnavailable(f"{circuit}/{pdk}: unroutable engine {cap.engine!r}")
 
-    metrics = load_datasheet_metrics(circuit, root=root)
+    # A fully-differential DUT has no single-ended `vout`; its datasheet recipes must read the
+    # output PAIR. The Spectre calculator route already consulted `differential_output`
+    # (`bench_ocean_measurements`), but the registry route kept the `vout` default and raised
+    # `IndexError: PlotData object doesn't contain trace "v(vout)"` on EVERY metric of the 17
+    # fully-differential analog-db circuits (amp_020/023/025/026/027/028/029/030/031, cmp_002,
+    # dp_001, ia_001..005, sup_003) — most of which route to the OPEN ngspice lane.
+    diff = differential_output(circuit, root=root)
+    metrics = load_datasheet_metrics(circuit, root=root, out=diff[0] if diff else "vout")
     try:
         params = load_analysis(circuit, testbench, root=root).get("params", {})
     except AnalogDbUnavailable:
@@ -1112,4 +1333,5 @@ def run_circuit(
     return CircuitRun(
         circuit=circuit, pdk=pdk, engine=cap.engine, testbench=testbench, corner=corner,
         result=result, metrics=metrics, params=params, root=root, vb_env_file=vb_env_file,
+        differential=diff,
     )

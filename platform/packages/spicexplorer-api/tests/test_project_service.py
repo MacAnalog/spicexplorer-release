@@ -223,7 +223,7 @@ def test_list_examples_follows_committed_manifest(ps):
     keys = [e["key"] for e in ps.list_examples()]
     assert keys == manifest
     assert "analog-db/circuits/amp_001_5t/project_setup.yaml" not in keys  # de-duped mirror
-    assert "analog-db/circuits/amp_020_two_stage_miller_cmfb/project_setup.yaml" in keys
+    assert "analog-db/circuits/amp_008_leung_nmcf/project_setup.yaml" in keys  # a raw-deck demo
 
 
 def test_manifest_examples_skips_invalid_entries(ps, tmp_path):

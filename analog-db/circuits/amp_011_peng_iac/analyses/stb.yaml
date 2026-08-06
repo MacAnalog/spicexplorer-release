@@ -1,0 +1,38 @@
+# Analysis binding for a SELF-BIASED AnalogGym DUT (no ibias port) — the class's ibias-free
+# stb variant. Loop-gain / stability probe in the unity buffer: ngspice does Middlebrook
+# voltage injection at the VIPRB marker (`alter @VIPRB[acmag]=1` in .control — netlist bytes
+# unchanged); the Spectre lane composes a native `stb stb probe=VIPRB` off the same marker.
+# Injection at the DC-short keeps the op point the CLOSED-loop buffer one.
+# FSTART = 0.01 Hz is the class value (see the stb template's "CHOOSING FSTART").
+# MEASURED @ ihp-sg13g2 tt (2026-08-01, landed sizing): loopgain_db 109.59 / ugf_loop 1.761M /
+# pm_loop 82.29 (= pm_loop_first, SINGLE 0 dB crossing) / gm_loop -999 sentinel (the loop
+# phase never reaches -180 deg in-band; min excursion -106 deg). Cross-check: fresh
+# ac_open_loop same day reads dcgain 109.589 / ugf 1.761M / pm 83.29 — pm_loop within ~1 deg
+# (independent routes to the same loop, biaswrap read shifts ~1 deg).
+# HAZARD — a stable-looking probe on a circuit that OSCILLATES: tran_step shows the follower
+# in sustained ~2.06 MHz, 0.43 V pk-pk self-oscillation (persists with VSTEP=0 and under
+# method=gear, so it is the circuit, not the integrator). The Middlebrook probe only breaks
+# the EXTERNAL signal loop; the DUT's internal self-bias loop is not probed, and every
+# small-signal bench linearizes about an equilibrium the transient dynamics never hold. So
+# pm_loop = 82 deg here certifies only the probed loop — the ihp-sg13g2 SIZING is still
+# broken in the time domain (a re-size, not a re-bind, is the fix).
+schema: spicexplorer/analysis@1
+id: stb
+template: stb_selfbias
+description: "Loop gain (stb) of the unity buffer — loopgain_db/ugf_loop/pm_loop/gm_loop; Middlebrook injection at VIPRB on ngspice, native stb on Spectre."
+# FSTART 0.01 -> 1e-4 (2026-08-04): the stb bench anchors phase at its first swept point and
+# blanks pm_loop/gm_loop to the -999 sentinel when |phref_dev| > 30 deg. For a high-gain amp
+# the dominant pole f_p = UGF/A0 is sub-Hz, so 0.01 Hz already sits PAST it — and because
+# every stabilising move lowers UGF (hence f_p), the guard fires HARDER on a correct fix than
+# on the broken design. Measured on amp_006@gf180: the committed (unstable) sizing reports
+# pm_loop -16.5, while the stabilised one reports -999 at 0.01 Hz and +66.0 at 1e-4. pm_loop
+# and gm_loop are FSTART-INVARIANT; only the guard moves.
+params:
+  VDD: 1.8
+  VCM: 240m
+  CL: 10p
+  FSTART: 1e-4     # class value; see the stb template's "CHOOSING FSTART"
+  FSTOP: 1G
+  PPD: 101
+flags: []
+produces: [pm_loop_deg, loopgain_db, ugf_loop_hz, gm_loop_db]

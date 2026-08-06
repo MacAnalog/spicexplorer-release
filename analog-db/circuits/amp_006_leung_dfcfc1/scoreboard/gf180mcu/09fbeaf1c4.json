@@ -14,8 +14,8 @@
         "ac_open_loop": {
           "measures": {
             "dcgain": 154.8494,
-            "pm": 71.7108,
-            "ugf": 2165778.0
+            "pm": 91.46423,
+            "ugf": 3321304.0
           },
           "status": "ok"
         },
@@ -32,10 +32,29 @@
           },
           "status": "ok"
         },
+        "iip3": {
+          "measures": {
+            "a_drv": 0.006249378,
+            "a_f1": 0.006250201,
+            "a_f2": 0.006250094,
+            "a_floor": 2.500865e-13,
+            "a_im3h": 8.344743e-10,
+            "a_im3l": 8.274517e-10,
+            "a_im5h": 2.85911e-13,
+            "a_im5l": 2.776649e-13,
+            "gain_tone": 1.000115,
+            "gain_tone_db": 0.0009950605,
+            "iip3_comp_db": 0.007438361,
+            "iip3_dbv": 24.66233,
+            "im3_dbc": -137.489,
+            "im5_im3_db": -69.3036
+          },
+          "status": "ok"
+        },
         "noise": {
           "measures": {
-            "inoise_total": 0.01394981,
-            "onoise_total": 0.01616584
+            "inoise_total": 2.62959e-05,
+            "onoise_total": 13.752
           },
           "status": "ok"
         },
@@ -45,11 +64,38 @@
           },
           "status": "ok"
         },
+        "stb": {
+          "measures": {
+            "gm_loop": 6.288644,
+            "loopgain_db": 164.6734,
+            "phref_dev": -17.1446,
+            "phref_ok": 1.0,
+            "pm_loop": 19.33523,
+            "pm_loop_first": 19.33523,
+            "ugf_loop": 3300328.0
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "measures": {
+            "a1": 0.1000133,
+            "a1_in": 0.09999841,
+            "a2": 4.849919e-06,
+            "a3": 1.285157e-06,
+            "a4": 1.66342e-07,
+            "a5": 1.604445e-08,
+            "gain_tone": 1.000149,
+            "thd_db": -85.9869,
+            "thd_pct": 0.005019421,
+            "vout_op": 0.300472
+          },
+          "status": "ok"
+        },
         "tran_step": {
           "measures": {
-            "t_settle": 0.0001989967,
-            "tcross": 0.0001999967,
-            "vfinal": 0.256533
+            "t_settle": 1.363451e-06,
+            "tcross": 2.363451e-06,
+            "vfinal": 0.5005736
           },
           "status": "ok"
         }
@@ -57,7 +103,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-24T23:14:23+00:00"
+        "run_at": "2026-08-01T18:17:48+00:00"
       }
     }
   },
@@ -72,13 +118,29 @@
         "spec": "pass",
         "value": 154.8494
       },
-      "i_supply": {
+      "gm_loop_db": {
         "spec": "none",
+        "value": 6.288644
+      },
+      "i_supply": {
+        "spec": "pass",
         "value": 0.001029663
       },
-      "pm_deg": {
+      "iip3_dbv": {
         "spec": "pass",
-        "value": 71.7108
+        "value": 24.66233
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 164.6734
+      },
+      "pm_deg": {
+        "spec": "fail",
+        "value": 91.46423
+      },
+      "pm_loop_deg": {
+        "spec": "fail",
+        "value": 19.33523
       },
       "psrr_vdd_db": {
         "spec": "pass",
@@ -86,15 +148,23 @@
       },
       "t_settle": {
         "spec": "fail",
-        "value": 0.0001989967
+        "value": 1.363451e-06
+      },
+      "thd_pct": {
+        "spec": "pass",
+        "value": 0.005019421
       },
       "ugf_hz": {
         "spec": "pass",
-        "value": 2165778.0
+        "value": 3321304.0
       },
-      "vn_in": {
+      "ugf_loop_hz": {
         "spec": "none",
-        "value": 0.01394981
+        "value": 3300328.0
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 2.62959e-05
       }
     }
   },
@@ -140,8 +210,8 @@
     ],
     "performance": {
       "dc_gain_db": 154.8494,
-      "pm_deg": 71.7108,
-      "ugf_hz": 2165778.0
+      "pm_deg": 91.46423,
+      "ugf_hz": 3321304.0
     },
     "power_w": 0.0018533934000000002
   },

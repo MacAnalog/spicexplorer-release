@@ -18,10 +18,10 @@
 .lib sky130.lib.spice tt
 .temp 27
 
-.param VDD=1.5
+.param VDD=1.8
 .param VCM=0.6
 .param IBIAS=20u
-.param CL=500f
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD} ac 1     ; 1 V supply-ripple stimulus
 Vss  vss 0 dc 0

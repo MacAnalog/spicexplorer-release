@@ -169,10 +169,17 @@ class Optimization_Log_Visualizer:
     # Re-computing Loss
     # ------------------------------------------------------------
     def recompute_loss_from_optimization_config(self, optimizer: Spice_Constraint_Satisfaction) -> None:
+        """Re-score every logged point against `optimizer`'s current target specs.
+
+        Writes BOTH halves of the re-score: the per-spec `fit_summary` *and* the entry's
+        total `point.score`. Dropping the score left `get_score()` — the loss axis of every
+        plot, `filter_top_n`, the best-point pick — reporting the score from the config the
+        run was originally executed under, i.e. the re-score silently did nothing."""
         for i, entry in enumerate(self.optimization_log):
             performance_array  = entry.get_performance_params()
             total_score, fit_summary = optimizer.compute_fitness(performance_array=performance_array)
             self.optimization_log.update_entry_fit_summary(index=i, fit_summary=fit_summary)
+            self.optimization_log.update_entry_score(index=i, score=total_score)
 
     # ------------------------------------------------------------
     # Plotting Methods

@@ -1,0 +1,34 @@
+# Analysis binding for the SELF-BIASED 3-stage AZ cell (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# THD in the unity buffer: tran + the template's in-deck coherent DFT (ngspice); the Spectre
+# lane composes a native pss at F0 (HARMS).
+# F0 GRID: fresh biaswrap ugf @ ihp-sg13g2 tt = 5.52 MHz (2026-08-01, landed sizing,
+# CL=10p) -> the campaign's 3-30 MHz bucket -> the 1 MHz class grid divided by 10:
+# F0 = 100 kHz.
+# COHERENT WINDOW (the template requires (TSTOP-TSTART) to be whole F0 periods): T = 10 us;
+# TSTOP-TSTART = 160u = 16 whole periods (even count); TSTEP = 20n = T/500 <= 1/(500*F0).
+# TSTART = 40u = 4 whole periods. The campaign's "TSTART >= 20x t_settle" contract is
+# UNSATISFIABLE here: at the corpus-standard CL=10p this heavy-load-compensated 3-stage
+# cell's unity buffer never settles — tran_step rails at its window (t_settle = 199 us
+# sentinel-by-window; measured tail ripple ~7.6 MHz, ~600 mV p2p sustained; stb pm_loop
+# -92.1 deg confirms) — so no finite TSTART discards the transient. 4 periods is the family
+# startup-discard minimum, kept for the day a re-compensated sizing lands.
+# REPORTING: `produces:` names the DATASHEET METRIC ID (thd_pct); the other measures (thd_db,
+# a1..a5, a1_in, gain_tone, vout_op) ride `corners.<corner>.analyses.thd.measures`.
+# VALIDITY (MEASURED ihp-sg13g2 tt 2026-08-01): the oscillation collapses the solver mid-tran
+# ("Timestep too small ... trouble with node vout" at ~111 us of the 200 us window), so the
+# in-deck DFT runs on a TRUNCATED, non-coherent window — a1_in reads 45 mV where the ideal
+# 100 mV source would give exactly 100 mV, the proof of truncation. The recorded
+# thd_pct = 13.09 % therefore FAILS the 2 % spec (the right verdict) but its digits are
+# oscillation- and truncation-dominated: qualitative failure evidence only, NOT a distortion
+# measurement. Drive-halving crosscheck (ASIG 0.1 -> 0.05): thd_pct 13.1 -> 20.3 %, a2
+# 3.0m -> 5.5m (UP), a4 unchanged — nothing follows the HD2 ~x2 / HD3 ~x4 drive slopes, i.e.
+# the harmonic bins are set by the autonomous ~7.6 MHz oscillation, not by drive
+# nonlinearity. The failure is the CIRCUIT at CL=10p, not this binding.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_selfbias
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 300m, CL: 10p, ASIG: 0.1, F0: 0.1e6, TSTEP: 20n, TSTART: 40u, TSTOP: 200u, HARMS: 7}
+flags: []
+produces: [thd_pct]

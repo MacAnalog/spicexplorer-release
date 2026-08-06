@@ -23,6 +23,10 @@
           "error": "amp_018_telescopic_cascode/dc_op@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_018_telescopic_cascode \u00d7 dc_op \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm5.msky130_fd_pr__nfet_01v8 xdut.tail ibias vss vss xdut.xm5:sky130_fd_pr__nfet_01v8__model l=    5.050000000000000e-01     w=    1.700820000000000e+02     nf=    2.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.000",
           "status": "sim_error"
         },
+        "iip3": {
+          "error": "amp_018_telescopic_cascode/iip3@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_018_telescopic_cascode \u00d7 iip3 \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm5.msky130_fd_pr__nfet_01v8 xdut.tail ibias vss vss xdut.xm5:sky130_fd_pr__nfet_01v8__model l=    5.050000000000000e-01     w=    1.700820000000000e+02     nf=    2.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.00000",
+          "status": "sim_error"
+        },
         "linearity": {
           "status": "disabled"
         },
@@ -34,6 +38,14 @@
           "error": "amp_018_telescopic_cascode/psrr_vdd@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_018_telescopic_cascode \u00d7 psrr_vdd \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm5.msky130_fd_pr__nfet_01v8 xdut.tail ibias vss vss xdut.xm5:sky130_fd_pr__nfet_01v8__model l=    5.050000000000000e-01     w=    1.700820000000000e+02     nf=    2.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=   ",
           "status": "sim_error"
         },
+        "stb": {
+          "error": "amp_018_telescopic_cascode/stb@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_018_telescopic_cascode \u00d7 stb \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm5.msky130_fd_pr__nfet_01v8 xdut.tail ibias vss vss xdut.xm5:sky130_fd_pr__nfet_01v8__model l=    5.050000000000000e-01     w=    1.700820000000000e+02     nf=    2.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.0000000",
+          "status": "sim_error"
+        },
+        "thd": {
+          "error": "amp_018_telescopic_cascode/thd@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_018_telescopic_cascode \u00d7 thd \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm5.msky130_fd_pr__nfet_01v8 xdut.tail ibias vss vss xdut.xm5:sky130_fd_pr__nfet_01v8__model l=    5.050000000000000e-01     w=    1.700820000000000e+02     nf=    2.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.0000000",
+          "status": "sim_error"
+        },
         "tran_step": {
           "error": "amp_018_telescopic_cascode/tran_step@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_018_telescopic_cascode \u00d7 tran_step \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm5.msky130_fd_pr__nfet_01v8 xdut.tail ibias vss vss xdut.xm5:sky130_fd_pr__nfet_01v8__model l=    5.050000000000000e-01     w=    1.700820000000000e+02     nf=    2.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd= ",
           "status": "sim_error"
@@ -42,7 +54,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-21T02:20:07+00:00"
+        "run_at": "2026-08-01T18:26:33+00:00"
       }
     }
   },

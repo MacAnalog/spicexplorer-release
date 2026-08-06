@@ -25,7 +25,7 @@
 
 .param VDD=1.8
 .param VCM=300m
-.param CL=560p
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD} ac 1     ; 1 V supply-ripple stimulus
 Vss  vss 0 dc 0
@@ -44,34 +44,34 @@ XDUT vss vdd vinn vinp vout amp_017_tan_clia
   write
   quit
 .endc
-.param CAPACITOR_0=347f
-.param CAPACITOR_1=240f
-.param CURRENT_0_BIAS=630n
-.param x_dut_xm73_l=1u
-.param x_dut_xm73_m=2400
-.param x_dut_xm73_w=1u
-.param x_dut_xm61_l=1u
+.param CAPACITOR_0=6.1268e-13
+.param CAPACITOR_1=1.07905e-12
+.param CURRENT_0_BIAS=2.32803e-06
+.param x_dut_xm73_l=6.06012e-06
+.param x_dut_xm73_m=120
+.param x_dut_xm73_w=8.66379e-07
+.param x_dut_xm61_l=3.69717e-06
 .param x_dut_xm14_m=1
-.param x_dut_xm61_w=0.22u
-.param x_dut_xm5_l=1u
-.param x_dut_xm5_m=117
-.param x_dut_xm5_w=1u
-.param x_dut_xm68_l=0.5u
+.param x_dut_xm61_w=15u
+.param x_dut_xm5_l=8.61839e-06
+.param x_dut_xm5_m=25
+.param x_dut_xm5_w=40u
+.param x_dut_xm68_l=3.62521e-07
 .param x_dut_xm68_m=6
-.param x_dut_xm68_w=1u
-.param x_dut_xm69_l=0.9u
+.param x_dut_xm68_w=6.92229e-05
+.param x_dut_xm69_l=8.93969e-06
 .param x_dut_xm69_m=3
-.param x_dut_xm69_w=1u
-.param x_dut_xm70_l=0.48u
+.param x_dut_xm69_w=4.83075e-06
+.param x_dut_xm70_l=6.51574e-06
 .param x_dut_xm70_m=2
-.param x_dut_xm70_w=1u
-.param x_dut_xm71_l=1u
+.param x_dut_xm70_w=2.63904e-05
+.param x_dut_xm71_l=6.91501e-06
 .param x_dut_xm71_m=1
-.param x_dut_xm71_w=0.253u
-.param x_dut_xm9_l=1u
-.param x_dut_xm9_m=100
-.param x_dut_xm9_w=1u
-.param RESISTOR_0=247.56K
+.param x_dut_xm71_w=7.77678e-05
+.param x_dut_xm9_l=1.58621e-06
+.param x_dut_xm9_m=12
+.param x_dut_xm9_w=6.11104e-05
+.param RESISTOR_0=889198
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

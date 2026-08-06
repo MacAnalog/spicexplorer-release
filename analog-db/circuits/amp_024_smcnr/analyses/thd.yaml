@@ -1,0 +1,32 @@
+# Analysis binding for the SELF-BIASED SMCNR two-stage (5-port AnalogGym convention, no
+# ibias port — the 100 nA sink is internal) — uses the class's ibias-free template variant so
+# no external current source is left driving a dangling node.
+# THD in the unity buffer: tran + the template's in-deck coherent DFT (ngspice); the Spectre
+# lane composes a native pss at F0 (HARMS).
+# F0 = 10 kHz — the campaign grid for a sub-3-MHz cell (FRESH ac_open_loop @ ihp-sg13g2 tt,
+# 2026-08-01: ugf = 152.0 kHz, so the 1 MHz class default sits ABOVE the loop crossover and
+# would measure an open buffer; /100 puts the tone ~15x under the ~152 kHz closed-loop
+# rolloff, the same in-band placement amp_022 uses at its bandwidth).
+# COHERENT WINDOW (the template requires (TSTOP-TSTART) to be whole F0 periods, see its
+# header): F0 = 10 kHz -> T = 100 us; TSTART = 200u = 2 whole periods, the smallest whole-
+# period count clearing 20x the FRESH measured 8.01 us settling (tran_step to 2 mV, same
+# 2026-08-01 run; 20x = 160.2 us); TSTOP = 1.8m leaves 16 whole measured periods.
+# TSTEP = 200n = T/500 <= 1/(500*F0).
+# DRIVE: ASIG = 0.1 class default — unity-buffer output swings 0.4..0.6 V about VCM = 0.5,
+# comfortably inside the 0..1.5 V rails of this PMOS-input core.
+# DRIVE-HALVING CHECK (ihp-sg13g2 tt, 2026-08-01, ASIG 0.1 -> 0.05): HD2 a2/a1
+# 1.489e-4 -> 7.433e-5 (x2.00) and HD3 a3/a1 9.425e-6 -> 2.360e-6 (x3.99) — textbook 2x/4x
+# small-distortion scaling, so the window/step/settling choices are trusted. thd_pct at the
+# shipped 0.1 drive: 0.01492 % (thd_db -76.5), gain_tone 1.000372.
+# REPORTING: `produces:` names DATASHEET METRIC IDS (analysis.schema.json), not measure
+# names — the wiring itself is datasheet.yaml metrics.thd_pct.{analysis: thd, extract.meas:
+# thd_pct}. The template also prints thd_db, a1..a5, a1_in, gain_tone, vout_op into
+# `corners.<corner>.analyses.thd.measures`. gain_tone < 0.5 means the dead-output guard
+# fired and thd_pct is the 999 sentinel, not a measurement.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_selfbias
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.5, VCM: 0.5, CL: 10p, ASIG: 0.1, F0: 1.0e4, TSTEP: 200n, TSTART: 200u, TSTOP: 1.8m, HARMS: 7}
+flags: []
+produces: [thd_pct]

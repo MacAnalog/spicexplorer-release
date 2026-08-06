@@ -21,104 +21,104 @@ schema: spicexplorer/sizing@1
 pdk: gf180mcu
 variables:
 - name: x_dut_xmbp_w
-  default: 6.3111u
+  default: 6.3111e-06
   min: 2u
   max: 64u
   unit: m
   description: On-chip reference PMOS (diode-connected, vdd->ibias). PRIMARY power/PSRR trade knob.
 - name: x_dut_xmbp_l
-  default: 2u
+  default: 2e-06
   min: 0.5u
   max: 10u
   unit: m
   description: Reference PMOS length; longer = lower current, better matching.
 - name: x_dut_xmb0_w
-  default: 34.533u
+  default: 3.4533e-05
   min: 2u
   max: 100u
   unit: m
   description: Bias-mirror NMOS unit
 - name: x_dut_xmb0_l
-  default: 2u
+  default: 2e-06
   min: 0.5u
   max: 10u
   unit: m
 - name: x_dut_xmbc_m
-  default: '1'
+  default: 1
   is_integer: true
   min: 1
   max: 8
   description: Tail mirror multiplicity
 - name: x_dut_xmbo_m
-  default: '1'
+  default: 1
   is_integer: true
   min: 1
   max: 8
   description: Output sink multiplicity
 - name: x_dut_xm1_w
-  default: 68.542u
+  default: 6.8542e-05
   min: 4u
   max: 100u
   unit: m
   description: Input pair
 - name: x_dut_xm1_l
-  default: 0.7u
+  default: 7e-07
   min: 0.28u
   max: 10u
   unit: m
 - name: x_dut_xm3_w
-  default: 69.545u
+  default: 6.9545e-05
   min: 4u
   max: 100u
   unit: m
   description: Level-shifted PMOS mirror (M3m/M5)
 - name: x_dut_xm3_l
-  default: 0.5u
+  default: 5e-07
   min: 0.28u
   max: 10u
   unit: m
 - name: x_dut_xm4_w
-  default: 10u
+  default: 1e-05
   min: 2u
   max: 100u
   unit: m
   description: M4 compound-diode level shifter (~zero DC current by design)
 - name: x_dut_xm4_l
-  default: 0.5u
+  default: 5e-07
   min: 0.28u
   max: 10u
   unit: m
 - name: x_dut_xm6_w
-  default: 60u
+  default: 6e-05
   min: 8u
   max: 100u
   unit: m
   description: M6 output PMOS
 - name: x_dut_xm6_l
-  default: 1u
+  default: 1e-06
   min: 0.28u
   max: 10u
   unit: m
 - name: r_z
-  default: 10k
+  default: 10000
   min: 100
   max: 50k
   unit: ohm
   description: Nulling resistor (Miller compensation)
 - name: c_comp
-  default: 15p
+  default: 1.5e-11
   min: 0.2p
   max: 20p
   unit: F
   description: Miller capacitor
 - name: x_dut_xmbf_w
-  default: 5u
+  default: 5e-06
   min: 1u
   max: 40u
   unit: m
   description: M_mirror_f sink (level-shifter anchor; carries ~0 by design)
 - name: r_nd
-  default: 500k
+  default: 500000
   min: 10k
   max: 10MEG
   unit: ohm

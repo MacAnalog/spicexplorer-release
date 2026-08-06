@@ -6,6 +6,8 @@ subfamily: ota
 realization: behavioral
 display_name: Behavioral fully-differential amplifier macromodel (Gm/Rout/Cout VCCS)
 stages: 1
+cm_control: not_applicable
+signal_path: fully_differential
 ports:
 - vinp
 - vinn

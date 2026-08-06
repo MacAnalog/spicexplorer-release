@@ -7,6 +7,8 @@ realization: transistor
 display_name: Fan CCIA two-stage opamp core with embedded output chopper (statically transparent)
 stages: 2
 compensation: miller
+cm_control: partial
+signal_path: fully_differential
 ports: [vinp, vinn, voutp, voutn, vdd, vss]
 provenance:
   source: drawings/ccia-02-QinwenFan-chopper-ripple-reduction (hand-drawn xschem, two-stage-opamp-core.sch, ver-B wiring)
@@ -30,12 +32,12 @@ provenance:
     (plan_hierarchical_composition D3/D4). The drawn Cm_1=1p was an unedited xschem
     default (Cm_2 was symbolic Cm); both Miller caps are knobs tied to match. NO
     explicit CMFB is drawn — output common mode is set by device ratioing, so vocm
-    is sizing/corner-sensitive (cf. amp_020's knife-edge note).
+    is sizing/corner-sensitive (a no-CMFB knife-edge).
 artifacts:
   schematic: pdk/ihp-sg13g2/schematic/two-stage-opamp-core.sch
   abstract_netlist: abstract/netlist.spice
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
-pdks: [ihp-sg13g2, FOUNDRY-n65]
-analyses: [ac_open_loop, dc_op, noise, tran_step]
+pdks: [ihp-sg13g2, FOUNDRY-n65, sky130, gf180mcu]
+analyses: [ac_open_loop, dc_op, noise, tran_step, thd, iip3, stb, cmrr_vcm, psrr_vdd]
 status: draft

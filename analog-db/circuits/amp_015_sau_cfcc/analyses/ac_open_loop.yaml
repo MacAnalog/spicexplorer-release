@@ -4,6 +4,14 @@ id: ac_open_loop
 template: ac_open_loop_biaswrap
 description: "Open-loop AC gain/phase via the AnalogGym bias-wrap (Lfb/Cin)."
 enabled: true
-params: {VDD: 1.8, VCM: 300m, CL: 500p, FSTART: 0.1, FSTOP: 1G, PPD: 50}
+# FSTART 0.1 -> 1e-4 (2026-08-03): the bench references phase to its FIRST swept point
+# (`let ph = 180 + phc - phc[0]`) and reads dcgain as `FIND vdb(vout) AT=FSTART`. Both
+# assume FSTART sits BELOW the dominant pole. These are >=115 dB cells, so f_p = UGF/A0
+# lands at 0.04-0.2 Hz — at or under the old 0.1 Hz reference. Measured on amp_006@gf180:
+# the raw phase is -179.4 deg at 1 uHz but -258.0 deg at 0.1 Hz, so 78.6 deg of real lag
+# was being subtracted out of every point INCLUDING the UGF crossing (pm read +72.7 where
+# it is truly -5.9), and dcgain read the rolloff (150.0 dB against a 163.6 dB plateau).
+# Lowering the reference is a no-op wherever it already sat below the pole.
+params: {VDD: 1.8, VCM: 300m, CL: 10p, FSTART: 1e-4, FSTOP: 1G, PPD: 50}
 flags: []
 produces: [dc_gain_db, ugf_hz, pm_deg]

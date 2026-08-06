@@ -60,6 +60,14 @@ metrics:
     analysis: tran_chopper_ripple
     extract: {meas: gain_cl}
     spec: {min: 5, unit: V/V}
+  # psrr_chop_cm_db (RAW baseband output-CM response to a 1 V vdd ripple with all choppers
+  # running, -dB20|vocm|; the physical PSRR adds the clocked differential gain) is DELIBERATELY
+  # NOT a datasheet metric — the pac_gain precedent. It comes off the `spectre_only_payload`
+  # psrr_vdd_chop bench, but a datasheet metric is PDK-AGNOSTIC, so declaring it here made this
+  # circuit's ngspice ihp-sg13g2 binding promise a number it structurally cannot compute (the
+  # psrr_vdd_chopper_diff template never prints it, so the log parser can never record it — a
+  # blank cell, not a measurement). Conformance stays engine-neutral; read the figure through
+  # the platform registry instead: {meas: rejection_db, analysis: pac, out: vocm}.
   vos_residual:
     display: "Clocked residual offset"
     description: "WINDOW-SENSITIVE (divides by the underread clocked gain_cl; see gain_cl caveat). Window-A output average input-referred through the clocked gain"

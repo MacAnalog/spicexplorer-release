@@ -1,0 +1,113 @@
+# AUTHORED composite manifest (spicexplorer/composition@1, plan_hierarchical_composition
+# P4-4b — CORE-CM CLOSURE, the standing follow-on to the amp_026 chopper CM finding).
+# `analog-db generate` flattens this into abstract/netlist.spice + pdk/<pdk>/sizing.yaml
+# (both GENERATED + drift-guarded).
+schema: spicexplorer/composition@1
+of: amp_034_fan_chopper_cmfb
+notes: >-
+  CM closure of amp_026_fan_chopper_ota with a REAL 5T CMFB (cmfb_002_5t_pmos_input),
+  not the behavioral servo amp_030 uses.
+
+  ACTUATOR CHOICE — measured, not assumed. Run open-loop on the sized ihp-sg13g2 core
+  (the amplifier/dc_cmfb_plant_sign math: sweep the candidate actuation node, read
+  vocm), the two candidates give OPPOSITE plant parity:
+    * whole {vb4} tree (tail XM1 + fold sources XM6/XM7 + output sources XM8/XM9):
+      cm_plant_delta = +1.19 V -> NON-inverting plant. Raising vb4 starves the fold
+      load, so out1 collapses and the INVERTING stage 2 drives vocm UP; that stage-1
+      path outguns the direct gm8*rout2 term. A non-inverting plant needs the -inv
+      servo, which is not accessioned (it exists only as a drawings/shared wiring
+      variant). It also modulates the tail, i.e. the input-pair gm, with the CM
+      correction.
+    * output sources XM8/XM9 ALONE, on a split gate node vb4o:
+      cm_plant_delta = -1.06 V -> INVERTING plant, monotonic, balance gate
+      vcmfb_bal ~ 0.55-0.57 V over vocm in [0.45, 0.65] and an achievable output-CM
+      window [0.00, 1.12] V. That is exactly the plant the CANONICAL cmfb_00x blocks
+      (vcmfb = A*(cm_sense - vref)) drive.
+  So the composite OMITs XM8/XM9 from the core instance and re-instantiates them itself
+  on vb4o (plan D3 "instantiator owns bias", one level deeper: the class-A output
+  current sources ARE the CM actuator). The core keeps its own {vb4} for XM1/XM6/XM7,
+  so the CM loop never touches the differential gm.
+
+  FLAVOR CHOICE — cmfb_002 (PMOS-input) over cmfb_003 (NMOS-input). Both are canonical
+  polarity, so parity does not decide it; the committed dc_cmfb_transfer baselines at
+  the blocks' validated vref = 0.5 V do:
+    slope 17.7 vs 11.1 V/V | gain_servo 25.2 vs 21.2 dB | vcmfb_max 1.200 vs 0.896 V |
+    vcmfb_nat 0.279 vs 0.251 V | r_sense_in 4.2e11 vs 9.4e10 Ohm.
+  The actuator is a PMOS current-source gate that must be able to ride UP toward vdd to
+  starve the output branch on a CM excursion: cmfb_002 reaches the rail, cmfb_003 tops
+  out at 0.896 V. It also has the higher slope (hence the smaller static CM error
+  (vcmfb_bal - vcmfb_nat)/slope ~ 16 mV vs ~28 mV), the higher loop gain, and the lighter
+  load on the sensed outputs. The SRMC consumer (amp_031) picked the same flavor for a
+  different plant; the two choices are not in tension — the rule is plant-specific.
+
+  OPERATING POINT — vcm_ref defaults to 0.5 V, NOT the 0.6 V the core's other benches
+  use for the INPUT common mode. Re-running both blocks' dc_cmfb_transfer at vref = 0.6
+  collapses them at their committed (SRMC-campaign) sizing: cmfb_002's PMOS pair runs
+  out of tail headroom (slope 17.7 -> 0.20, gain 25.2 -> -13.9 dB) and cmfb_003's output
+  can no longer reach past 0.197 V. 0.5 V is the sizing these blocks were validated at,
+  and the core's plant reaches it comfortably (vb4o_bal 0.5635 V, mid-rail). Commanding
+  0.6 V needs a CMFB re-size, which is a sizing campaign, not a composition.
+
+  LOOP SIGN: vocm UP -> cm_sense UP -> vcmfb = A*(cm_sense - vref) UP -> vb4o UP ->
+  XM8/XM9 |Vsg| DOWN -> output pull-up current DOWN -> vocm DOWN. NEGATIVE feedback.
+  No range-referencing level shift is needed (amp_030 needed one only because its
+  behavioral servo was unclamped and saturated to +600 V); a real 5T error amp is
+  rail-clamped by construction, so vb4o is driven directly.
+  ACCEPTANCE: dc_cm_bias_sweep over the composite-owned {vcm_ref} must measure
+  cm_interior_pts = 5 (the output CM tracks the command), and cmrr_cm_corr_db /
+  psrr_cm_corr_db must clear amp_026's +10.4 / -2.4 dB by the CM loop gain.
+
+  COMPENSATION ({c_cm} on vb4o) — a REQUIREMENT that emerged from measurement, not a
+  trim. The 2026-08-05 role-based gm/ID re-size of cmfb_002's FOUNDRY-n65 binding raised the
+  CM loop gain ~8.7x (static CM error 33.6 -> 3.9 mV, servo current 54 -> 9 uA) and that
+  gain made the loop OSCILLATE: 70 mV p-p on vocm, undecayed across every octant of the
+  20 us tran window — including 0-2 us, BEFORE the disturbance is applied. dc_op
+  (vocm 0.60389) and ac_open_loop (57.8 dB / 6.49 MHz / 36.7 deg) both reported a clean
+  operating point the circuit cannot hold, which is exactly the trap amp_035 documented:
+  *AC rejection figures are meaningless until a transient proves the point is dynamically
+  stable*. 1p is the stability knee (p2p decays to 0.02 mV by 17 us); the committed 5p is
+  ~5x past it and settles FASTER than the uncompensated carry-over did (t_cm_settle 0.41
+  vs 0.91 us). ihp-sg13g2 keeps c_cm = 1f (OFF): its CMFB sizing is low-gain enough
+  (slope 17.7, static error 14.5 mV) to be damped on its own — verified unchanged.
+instances:
+  - name: core
+    block: amp_026_fan_chopper_ota
+    pin: 43c5f13906fb
+    ports: {vinp: vinp, vinn: vinn, voutp: voutp, voutn: voutn, vdd: vdd, vss: vss}
+    # The CM actuator: the composite owns the class-A output current sources so it can
+    # give them a gate node separate from the core's {vb4} bias tree (see notes).
+    omit: [XM8, XM9]
+  - name: cmfb
+    block: cmfb_002_5t_pmos_input
+    pin: cf3a412052ba
+    ports: {vinp: voutp, vinn: voutn, vcmfb: vb4o, vref: vref_cm, vdd: vdd, vss: vss}
+nets:
+  - "Vrefcm vref_cm vss dc {vcm_ref}"
+  - "XM8O voutp vb4o vdd vdd pmos w=x_dut_xm8o_w l=x_dut_xm8o_l m=x_dut_xm8o_m"
+  - "XM9O voutn vb4o vdd vdd pmos w=x_dut_xm9o_w l=x_dut_xm9o_l m=x_dut_xm9o_m"
+  # CM-loop compensation on the servo output. NOT a trim — see the COMPENSATION note.
+  - "Ccm vb4o vss 'c_cm'"
+sizing:
+  variables:
+    - {name: vcm_ref, description: "Commanded output common-mode reference into the CMFB (composite-owned). 0.5 V is the CMFB blocks' validated sensed-CM operating point — see the OPERATING POINT note", default: 0.5, min: 0.0, max: 1.2, unit: V}
+    # The lifted-out class-A output current sources. Defaults reproduce amp_026's
+    # ihp-sg13g2 baseline design point (x_dut_xm8_w 20u; l/m came from the core's
+    # sources_vb4_l / frozen-m ties) so the composite is a like-for-like CM-closure
+    # comparison against 79d896aa47.
+    - {name: x_dut_xm8o_w, description: "Class-A output PMOS current-source width, voutp side (CMFB-driven gate vb4o; was the core's XM8)", default: 20u, min: 0.15u, max: 100u, unit: m}
+    - {name: x_dut_xm8o_l, description: "Class-A output PMOS current-source length, voutp side (was tied to the core's sources_vb4_l)", default: 1u, min: 0.13u, max: 10u, unit: m}
+    # XM9O carries NO sizing rows: abstract/params.yaml ties it to XM8O (group pair_xm8o_xm9o,
+    # tie [w,l,m]) — the CM actuator pair MUST match. A row here would double-define the symbol
+    # in the generated _dut.spice (the tie line, emitted later, wins anyway). Size the pair
+    # through x_dut_xm8o_*; dissolve the tie first if the two ever need to differ.
+    - {name: x_dut_xm8o_m, description: "XM8O m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+    - {name: c_cm, description: "CM-loop compensation cap on the servo output vb4o. 1f = OFF (ihp-sg13g2, whose CMFB sizing is low-gain enough to be damped on its own); the FOUNDRY-n65 binding NEEDS it — see the COMPENSATION note", default: 1f, min: 0, max: 1n, unit: F}
+  # PER-PDK refinements. A composite-owned device is REAL geometry, and the block it was
+  # lifted out of is sized per PDK — amp_026's output PMOS is 20u on ihp-sg13g2 (hand-seeded)
+  # but 11.257u on FOUNDRY-n65 (optimizer campaign), with vb4 0.55 vs 0.786. One shared default
+  # would silently carry the ihp numbers into the FOUNDRY kit.
+  by_pdk:
+    FOUNDRY-n65:
+      - {name: x_dut_xm8o_w, default: 11.257u}
+      - {name: c_cm, description: "REQUIRED on FOUNDRY-n65, not a trim: the 2026-08-05 role-based cmfb_002 re-size raised the CM loop gain ~8.7x (that is what cut the static CM error 33.6 -> 3.9 mV) and the loop went UNSTABLE — 70 mV p-p sustained, undecayed in every octant of the 20 us window INCLUDING before the kick. dc_op and ac_open_loop reported a clean point the circuit does not hold. 1p is the stability knee; 5p is ~5x past it and settles FASTER than the uncompensated carry-over (t_cm_settle 0.41 vs 0.91 us)", default: 5p}
+      - {name: vcm_ref, description: "Commanded output common-mode reference into the CMFB (composite-owned). 0.6 V = mid-rail: unlike ihp, the FOUNDRY-n65 binding runs DEVICE, whose lower |Vth| leaves the CMFB's PMOS input pair enough tail headroom at a 0.6 V sensed CM", default: 0.6}

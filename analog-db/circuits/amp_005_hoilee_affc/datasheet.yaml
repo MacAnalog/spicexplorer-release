@@ -10,7 +10,7 @@ default_conditions:
     typical: 27
   cload:
     unit: F
-    typical: 1.0e-10
+    typical: 1e-11
   vcm:
     unit: V
     typical: 0.3
@@ -46,14 +46,17 @@ metrics:
       unit: deg
       min: 60.0
       max: 90.0
-  vn_in:
-    display: Input-referred noise
-    unit: V/sqrt(Hz)
+  vn_in_integrated:
+    display: Input-referred noise (integrated 1 Hz - 1 MHz)
+    description: Total integrated input-referred rms noise over the standardized
+      1 Hz - 1 MHz band, unity/closed-loop bias config, CL=10p (ngspice inoise_total
+      is already volts rms integrated over the swept band). Replaces the old vn_in
+      entry that mapped inoise_total under V/sqrt(Hz) — that unit was dimensionally
+      wrong.
+    unit: V
     analysis: noise
     extract:
       meas: inoise_total
-    spec:
-      max: any
   i_supply:
     display: Supply current
     unit: A
@@ -61,7 +64,7 @@ metrics:
     extract:
       meas: i_supply
     spec:
-      max: any
+      max: 0.00555556
   t_settle:
     display: Settling time
     unit: s
@@ -93,3 +96,67 @@ metrics:
     spec:
       min: 40
       unit: dB
+  thd_pct:
+    display: Total harmonic distortion (100 mV @ 100 kHz, buffer)
+    description: tran + in-deck coherent DFT on ngspice; native PSS harmonics on
+      Spectre. F0 = 100 kHz sits ~35x under the fresh 3.50 MHz ugf (campaign F0 grid,
+      3-30 MHz band).
+    unit: '%'
+    analysis: thd
+    extract:
+      meas: thd_pct
+      f0: 0.1e6
+    spec:
+      max: 2.0
+      unit: '%'
+  iip3_dbv:
+    display: Input IP3 (two-tone 90/100 kHz, 6.25 mV/tone, buffer)
+    description: Single-point IM3 extrapolation; tran + coherent DFT on ngspice,
+      native PSS on Spectre. Tones ~35x under the fresh 3.50 MHz ugf (campaign grid,
+      3-30 MHz band). ampl_in below MUST track the analysis binding's ASIG (it is the
+      intercept's input reference).
+    unit: dBV
+    analysis: iip3
+    extract:
+      meas: iip3_dbv
+      f1: 0.09e6
+      f2: 0.1e6
+      ampl_in: 0.00625
+    spec:
+      min: -10
+      unit: dBV
+  pm_loop_deg:
+    display: Loop phase margin (stb, unity buffer)
+    description: Phase margin of the Middlebrook-probed buffer loop (VIPRB marker);
+      crosschecks ac_open_loop's pm_deg. -999 sentinel = no crossover (fails the min
+      spec by design).
+    unit: deg
+    analysis: stb
+    extract:
+      meas: pm_loop
+    spec:
+      min: 60
+      unit: deg
+  loopgain_db:
+    display: DC loop gain (stb, unity buffer)
+    description: Loop-gain magnitude read at FSTART; tracks ac_open_loop's dcgain on
+      this cell. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: loopgain_db
+  ugf_loop_hz:
+    display: Loop unity-gain frequency (stb)
+    unit: Hz
+    analysis: stb
+    extract:
+      meas: ugf_loop
+  gm_loop_db:
+    display: Loop gain margin (stb)
+    description: Gain margin at the phase crossover; ngspice measure name is gm_loop
+      (the Spectre bench emits gm_loop_db — the split is absorbed here). -999 sentinel =
+      no phase crossover in-band. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: gm_loop

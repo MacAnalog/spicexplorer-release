@@ -86,22 +86,22 @@ XDUT vdd vout vinp vinn vss amp_033_ti_ldo_ref_selfbias
   write
   quit
 .endc
-.param x_dut_xmbp_w=10.844u
-.param x_dut_xmbp_l=2u
-.param x_dut_xmb0_w=12u
-.param x_dut_xmb0_l=2u
-.param x_dut_xmbc_w=8.316u
+.param x_dut_xmbp_w=1.0844e-05
+.param x_dut_xmbp_l=2e-06
+.param x_dut_xmb0_w=1.2e-05
+.param x_dut_xmb0_l=2e-06
+.param x_dut_xmbc_w=8.316e-06
 .param x_dut_xmbc_m=1
-.param x_dut_xmbo_w=4u
+.param x_dut_xmbo_w=4e-06
 .param x_dut_xmbo_m=1
-.param x_dut_xm1_w=86.42u
-.param x_dut_xm1_l=0.7u
-.param x_dut_xm3_w=20u
-.param x_dut_xm3_l=1u
-.param x_dut_xm5_w=37.76u
-.param x_dut_xm5_l=2.646u
-.param r_z=30.853k
-.param c_comp=4.508p
+.param x_dut_xm1_w=8.642e-05
+.param x_dut_xm1_l=7e-07
+.param x_dut_xm3_w=2e-05
+.param x_dut_xm3_l=1e-06
+.param x_dut_xm5_w=3.776e-05
+.param x_dut_xm5_l=2.646e-06
+.param r_z=30853
+.param c_comp=4.508e-12
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

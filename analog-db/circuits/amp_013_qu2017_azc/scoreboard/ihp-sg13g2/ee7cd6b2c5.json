@@ -1,0 +1,185 @@
+{
+  "area": {
+    "active_gate_area_um2": 204.0,
+    "c_count": 3,
+    "c_total_f": 1.524e-12,
+    "mos_count": 25,
+    "r_count": 4,
+    "r_total_ohm": 460000.0
+  },
+  "circuit": "amp_013_qu2017_azc",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 80.06226,
+            "pm": 88.75742,
+            "ugf": 3782651.0
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 90.20458
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 4.855819e-05,
+            "vos": -0.000716171
+          },
+          "status": "ok"
+        },
+        "iip3": {
+          "error": "amp_013_qu2017_azc/iip3@ihp-sg13g2/tt: no measures parsed:\nvalid\nWarning from checkvalid: vector a_im3l is not available or has zero length.\nError: RHS \"0.5*(a_im3l+a_im3h + abs(a_im3l-a_im3h))\" invalid\nWarning from checkvalid: vector a_im5l is not available or has zero length.\nError: RHS \"0.5*(a_im5l+a_im5h + abs(a_im5l-a_im5h))\" invalid\nWarning from checkvalid: vector a_dr1 is not available or has zero length.\nError: RHS \"0.5*(a_dr1+a_dr2 - abs(a_dr1-a_dr2))\" invalid\nWarning from checkvalid: v",
+          "status": "sim_error"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.0002912606,
+            "onoise_total": 1.653121
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 76.80025
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "measures": {
+            "gm_loop": 36.88551,
+            "loopgain_db": 80.06226,
+            "phref_dev": -1.48899e-05,
+            "phref_ok": 1.0,
+            "pm_loop": 88.74323,
+            "pm_loop_first": 88.74323,
+            "ugf_loop": 3782476.0
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "error": "amp_013_qu2017_azc/thd@ihp-sg13g2/tt: ngspice error:\n Reference value :  1.84304e-04\r Reference value :  1.84328e-04\r Reference value :  1.84356e-04\r Reference value :  1.84374e-04\r Reference value :  1.84403e-04\r Reference value :  1.84427e-04\r Reference value :  1.84451e-04\r Reference value :  1.84475e-04\r Reference value :  1.84494e-04\r Reference value :  1.84514e-04\r Reference value :  1.84544e-04\r Reference value :  1.84567e-04\r Reference value :  1.84587e-04\r Reference value :  1.84612e-04",
+          "status": "sim_error"
+        },
+        "tran_step": {
+          "error": "amp_013_qu2017_azc/tran_step@ihp-sg13g2/tt: no measures parsed:\ne :  6.34604e-05\n Reference value :  6.34838e-05\n Reference value :  6.35064e-05\n Reference value :  6.35342e-05\n Reference value :  6.35584e-05\n Reference value :  6.35815e-05\n Reference value :  6.36055e-05\n Reference value :  6.36274e-05\n Reference value :  6.36509e-05\n Reference value :  6.36708e-05\n Reference value :  6.36937e-05\n Reference value :  6.37177e-05\n Reference value :  6.37391e-05\n Reference value :  6.37602e-05\n Re",
+          "status": "sim_error"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-08-04T04:37:04+00:00"
+      }
+    }
+  },
+  "design_id": "ee7cd6b2c5",
+  "metrics": {
+    "tt": {
+      "cmrr_db": {
+        "spec": "pass",
+        "value": 90.20458
+      },
+      "dc_gain_db": {
+        "spec": "fail",
+        "value": 80.06226
+      },
+      "gm_loop_db": {
+        "spec": "none",
+        "value": 36.88551
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 4.855819e-05
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 80.06226
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 88.75742
+      },
+      "pm_loop_deg": {
+        "spec": "pass",
+        "value": 88.74323
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 76.80025
+      },
+      "ugf_hz": {
+        "spec": "pass",
+        "value": 3782651.0
+      },
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 3782476.0
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 0.0002912606
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "CAPACITOR_0": 8.1e-13,
+      "CAPACITOR_1": 4.04e-13,
+      "CAPACITOR_2": 3.1e-13,
+      "CURRENT_0_BIAS": "1e-06",
+      "RESISTOR_0": 35000,
+      "RESISTOR_1": 35000,
+      "RESISTOR_2": 350000,
+      "RESISTOR_3": 40000,
+      "x_dut_xm10_l": "1e-06",
+      "x_dut_xm10_m": 4,
+      "x_dut_xm10_w": "1e-06",
+      "x_dut_xm11_l": "1e-06",
+      "x_dut_xm11_m": 4,
+      "x_dut_xm11_w": "1e-06",
+      "x_dut_xm12_l": "1e-06",
+      "x_dut_xm12_m": 4,
+      "x_dut_xm12_w": "1e-06",
+      "x_dut_xm13_l": "1e-06",
+      "x_dut_xm13_m": 4,
+      "x_dut_xm13_w": "1e-06",
+      "x_dut_xm16_l": "1e-06",
+      "x_dut_xm16_m": 4,
+      "x_dut_xm16_w": "1e-06",
+      "x_dut_xm18_l": "1e-06",
+      "x_dut_xm18_m": 4,
+      "x_dut_xm18_w": "1e-06",
+      "x_dut_xm19_l": "1e-06",
+      "x_dut_xm19_m": 4,
+      "x_dut_xm20_w": "7e-06",
+      "x_dut_xm24_l": "1e-06",
+      "x_dut_xm24_m": 4,
+      "x_dut_xm24_w": "1e-06",
+      "x_dut_xm3_l": "1e-06",
+      "x_dut_xm3_w": "1e-06",
+      "x_dut_xm5_m": 4,
+      "x_dut_xm6_l": "1e-06",
+      "x_dut_xm6_m": 4,
+      "x_dut_xm6_w": "1e-06"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 204.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 80.06226,
+      "pm_deg": 88.75742,
+      "ugf_hz": 3782651.0
+    },
+    "power_w": 8.7404742e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

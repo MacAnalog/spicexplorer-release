@@ -33,7 +33,7 @@
 
 .param VDD=1.5
 .param VCM=0.9
-.param CL=500f
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD}
 Vss  vss 0 dc 0
@@ -82,8 +82,8 @@ Vinn vinn vcm dc 0 ac -0.5
 .param x_dut_xmbd_l=0.4u
 .param x_dut_xmi1_l=0.3u
 .param x_dut_xmca_l=0.28u
-.param x_dut_rza_value=800
-.param x_dut_cca_value=350e-15
+.param x_dut_rza_value=1500
+.param x_dut_cca_value=2e-12
 .param x_dut_rca_value=2e5
 .param x_dut_cma_value=150e-15
 .param x_ibias_val=20e-6

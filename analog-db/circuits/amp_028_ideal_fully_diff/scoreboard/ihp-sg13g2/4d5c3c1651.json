@@ -13,9 +13,9 @@
       "analyses": {
         "ac_open_loop": {
           "measures": {
-            "dcgain": 60.0,
-            "pm": 90.0942,
-            "ugf": 15528150.0
+            "dcgain": 59.99994,
+            "pm": 90.2733,
+            "ugf": 2652695.0
           },
           "status": "ok"
         },
@@ -31,7 +31,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-21T02:23:20+00:00"
+        "run_at": "2026-08-04T04:40:49+00:00"
       }
     }
   },
@@ -40,7 +40,7 @@
     "tt": {
       "dc_gain_db": {
         "spec": "pass",
-        "value": 60.0
+        "value": 59.99994
       },
       "i_supply": {
         "spec": "pass",
@@ -48,7 +48,7 @@
       },
       "ugf_hz": {
         "spec": "pass",
-        "value": 15528150.0
+        "value": 2652695.0
       },
       "vos": {
         "spec": "pass",
@@ -72,8 +72,8 @@
       "tt"
     ],
     "performance": {
-      "dc_gain_db": 60.0,
-      "ugf_hz": 15528150.0
+      "dc_gain_db": 59.99994,
+      "ugf_hz": 2652695.0
     },
     "power_w": 0.0
   },

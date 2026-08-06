@@ -3,6 +3,6 @@ schema: spicexplorer/analysis@1
 id: tran_step
 template: tran_step
 description: "Unity-gain step settling; t_settle to |err| < VTOL."
-params: {VDD: 1.5, VCM: 0.6, IBIAS: 20u, CL: 500f, VSTEP: 0.2, VTOL: 2m, TSTART: 1u, TSTEP: 1n, TSTOP: 5u}
+params: {VDD: 1.5, VCM: 0.6, IBIAS: 20u, CL: 10p, VSTEP: 0.2, VTOL: 2m, TSTART: 1u, TSTEP: 1n, TSTOP: 5u}
 flags: []
 produces: [t_settle]

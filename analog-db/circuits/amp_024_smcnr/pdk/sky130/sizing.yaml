@@ -2,6 +2,10 @@
 # sky130 binding: bare-µm convention (.option scale=1u), W/L floor 0.42/0.15. Upstream geometry kept (long channels, subthreshold at 100 nA): mirrors
 # W = 0.25u / L = 10u with the 1:2:10 m-bank, big-area input pair for 1/f noise.
 schema: spicexplorer/sizing@1
+# Per-PDK testbench conditions: sky130's core family is 1v8, but this binding was
+# inheriting the authored ihp-sg13g2 rail (1.5 V), which left the tail current
+# source in deep triode and modulated it at the tone. VCM stays 0.5 — mid-rail 0.9 measured 23.32 %.
+analysis_params: {VDD: 1.8}
 pdk: sky130
 variables:
   - {name: x_dut_xm7_w,   description: "PMOS bias-bank unit width (m = 1/2/10)", default: 0.42, min: 0.42, max: 20, unit: m}
@@ -11,7 +15,7 @@ variables:
   - {name: x_dut_xm1_w,   description: "NMOS mirror-load width",                default: 1.5, min: 0.42, max: 20, unit: m}
   - {name: x_dut_xm1_l,   description: "NMOS load / CS length",                 default: 10,  min: 0.15, max: 20, unit: m}
   - {name: x_dut_xm4_w,   description: "Stage-2 NMOS CS unit width (m=10)",     default: 1.5, min: 0.42, max: 20, unit: m}
-  - {name: x_rz,     description: "Nulling resistor (ohms)",               default: 1e5,  min: 1e3, max: 1e6, unit: ohm}
+  - {name: x_rz,     description: "Nulling resistor (ohms)",               default: 2e5,  min: 1e3, max: 1e6, unit: ohm}
   - {name: x_c0,     description: "Single-Miller cap (F)",                 default: 2e-12, min: 1e-13, max: 1e-11, unit: F}
   - {name: x_ibias_val, description: "Internal bias sink current (A)",     default: 1e-7, min: 1e-8, max: 1e-5, unit: A, freeze: true}
   # Frozen per-device literals (P4 atomic sweep): defaults reproduce the authored

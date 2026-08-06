@@ -14,8 +14,8 @@
         "ac_open_loop": {
           "measures": {
             "dcgain": 109.589,
-            "pm": 86.54685,
-            "ugf": 2752258.0
+            "pm": 83.29289,
+            "ugf": 1761195.0
           },
           "status": "ok"
         },
@@ -32,10 +32,14 @@
           },
           "status": "ok"
         },
+        "iip3": {
+          "error": "amp_011_peng_iac/iip3@ihp-sg13g2/tt: no measures parsed:\nvalid\nWarning from checkvalid: vector a_im3l is not available or has zero length.\nError: RHS \"0.5*(a_im3l+a_im3h + abs(a_im3l-a_im3h))\" invalid\nWarning from checkvalid: vector a_im5l is not available or has zero length.\nError: RHS \"0.5*(a_im5l+a_im5h + abs(a_im5l-a_im5h))\" invalid\nWarning from checkvalid: vector a_dr1 is not available or has zero length.\nError: RHS \"0.5*(a_dr1+a_dr2 - abs(a_dr1-a_dr2))\" invalid\nWarning from checkvalid: vec",
+          "status": "sim_error"
+        },
         "noise": {
           "measures": {
-            "inoise_total": 0.04706464,
-            "onoise_total": 0.01386963
+            "inoise_total": 8.915803e-05,
+            "onoise_total": 4.358741
           },
           "status": "ok"
         },
@@ -45,11 +49,27 @@
           },
           "status": "ok"
         },
+        "stb": {
+          "measures": {
+            "gm_loop": -999.0,
+            "loopgain_db": 109.5903,
+            "phref_dev": -0.0999461,
+            "phref_ok": 1.0,
+            "pm_loop": 82.28603,
+            "pm_loop_first": 82.28603,
+            "ugf_loop": 1760883.0
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "error": "amp_011_peng_iac/thd@ihp-sg13g2/tt: no measures parsed:\n: vector re2 is not available or has zero length.\nError: RHS \"2*sqrt(re2^2+im2^2)\" invalid\nWarning from checkvalid: vector vac is not available or has zero length.\nError: RHS \"(mean(vac*c3)*np - vac[0]*c3[0])/nd\" invalid\nWarning from checkvalid: vector vac is not available or has zero length.\nError: RHS \"(mean(vac*s3)*np - vac[0]*s3[0])/nd\" invalid\nWarning from checkvalid: vector re3 is not available or has zero length.\nError: RHS \"2*sqrt(r",
+          "status": "sim_error"
+        },
         "tran_step": {
           "measures": {
-            "t_settle": 0.0001989933,
-            "tcross": 0.0001999933,
-            "vfinal": 0.490001
+            "t_settle": 0.0001989984,
+            "tcross": 0.0001999984,
+            "vfinal": 0.3417262
           },
           "status": "ok"
         }
@@ -57,7 +77,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-24T22:08:48+00:00"
+        "run_at": "2026-08-01T18:20:30+00:00"
       }
     }
   },
@@ -72,13 +92,25 @@
         "spec": "pass",
         "value": 109.589
       },
-      "i_supply": {
+      "gm_loop_db": {
         "spec": "none",
+        "value": -999.0
+      },
+      "i_supply": {
+        "spec": "pass",
         "value": 2.060992e-05
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 109.5903
       },
       "pm_deg": {
         "spec": "pass",
-        "value": 86.54685
+        "value": 83.29289
+      },
+      "pm_loop_deg": {
+        "spec": "pass",
+        "value": 82.28603
       },
       "psrr_vdd_db": {
         "spec": "pass",
@@ -86,15 +118,19 @@
       },
       "t_settle": {
         "spec": "fail",
-        "value": 0.0001989933
+        "value": 0.0001989984
       },
       "ugf_hz": {
-        "spec": "pass",
-        "value": 2752258.0
+        "spec": "fail",
+        "value": 1761195.0
       },
-      "vn_in": {
+      "ugf_loop_hz": {
         "spec": "none",
-        "value": 0.04706464
+        "value": 1760883.0
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 8.915803e-05
       }
     }
   },
@@ -141,8 +177,8 @@
     ],
     "performance": {
       "dc_gain_db": 109.589,
-      "pm_deg": 86.54685,
-      "ugf_hz": 2752258.0
+      "pm_deg": 83.29289,
+      "ugf_hz": 1761195.0
     },
     "power_w": 3.7097855999999996e-05
   },

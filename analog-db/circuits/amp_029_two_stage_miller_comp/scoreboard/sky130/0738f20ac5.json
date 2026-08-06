@@ -1,0 +1,256 @@
+{
+  "area": {
+    "active_gate_area_um2": 58.0,
+    "c_count": 2,
+    "c_total_f": 1.2e-12,
+    "mos_count": 10,
+    "r_count": 2,
+    "r_total_ohm": 60000.0
+  },
+  "circuit": "amp_029_two_stage_miller_comp",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 70.94121,
+            "pm": 72.66247,
+            "ugf": 30311140.0
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_cm_db": -62.36542,
+            "cmrr_db": 300.0
+          },
+          "status": "ok"
+        },
+        "dc_cm_bias_sweep": {
+          "measures": {
+            "cm_interior_pts": 0.0,
+            "vocm_1": 1.734613,
+            "vocm_2": 1.742222,
+            "vocm_3": 1.744427,
+            "vocm_4": 1.74585,
+            "vocm_5": 1.747181
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0001621956,
+            "vocm": 0.864671,
+            "vos": 1.634248e-13
+          },
+          "status": "ok"
+        },
+        "iip3": {
+          "measures": {
+            "a_drv": 0.006249378,
+            "a_f1": 0.1900539,
+            "a_f2": 0.1711756,
+            "a_floor": 0.0008623614,
+            "a_im3h": 0.0009229061,
+            "a_im3l": 0.0009957635,
+            "a_im5h": 0.0004685774,
+            "a_im5l": 0.0006584108,
+            "cm_drift_v": -0.0149353,
+            "gain_tone": 27.39083,
+            "gain_tone_db": 28.7521,
+            "iip3_comp_db": 14.35491,
+            "iip3_dbv": -21.7295,
+            "im3_dbc": -44.7057,
+            "im5_im3_db": -3.59319,
+            "vocm_op": 0.7386057,
+            "vod_op": 0.3225731
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 7.391955e-05,
+            "onoise_total": 0.1604106
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_cm_db": -81.86216,
+            "psrr_vdd_db": 234.7986
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "measures": {
+            "gm_loop": 35.44408,
+            "loopgain_db": 70.94122,
+            "phref_dev": -4.95486e-07,
+            "phref_ok": 1.0,
+            "pm_loop": 72.61292,
+            "pm_loop_first": 72.61292,
+            "ugf_loop": 30311140.0
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "measures": {
+            "a1": 0.1998849,
+            "a1_in": 0.09999841,
+            "a2": 2.318059e-12,
+            "a3": 1.365041e-07,
+            "a4": 3.303704e-12,
+            "a5": 5.75119e-10,
+            "cm_drift_v": -5.59668e-06,
+            "gain_tone": 1.99888,
+            "thd_db": -123.313,
+            "thd_pct": 6.829196e-05,
+            "vocm_op": 0.8647157,
+            "vod_op": -4.23972e-12
+          },
+          "status": "ok"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 1.980663e-06,
+            "tcross": 2.980663e-06,
+            "vfinal": -0.004074249
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-08-05T01:53:28+00:00"
+      }
+    }
+  },
+  "design_id": "0738f20ac5",
+  "metrics": {
+    "tt": {
+      "cm_interior_pts": {
+        "spec": "fail",
+        "value": 0.0
+      },
+      "cmrr_cm_corr_db": {
+        "spec": "none",
+        "value": 8.575789999999998
+      },
+      "cmrr_cm_db": {
+        "spec": "none",
+        "value": -62.36542
+      },
+      "cmrr_db": {
+        "spec": "none",
+        "value": 300.0
+      },
+      "dc_gain_db": {
+        "spec": "pass",
+        "value": 70.94121
+      },
+      "gm_loop_db": {
+        "spec": "none",
+        "value": 35.44408
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 0.0001621956
+      },
+      "iip3_dbv": {
+        "spec": "fail",
+        "value": -21.7295
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 70.94122
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 72.66247
+      },
+      "pm_loop_deg": {
+        "spec": "pass",
+        "value": 72.61292
+      },
+      "psrr_cm_corr_db": {
+        "spec": "none",
+        "value": -10.920950000000005
+      },
+      "psrr_cm_db": {
+        "spec": "none",
+        "value": -81.86216
+      },
+      "psrr_vdd_db": {
+        "spec": "none",
+        "value": 234.7986
+      },
+      "t_settle": {
+        "spec": "pass",
+        "value": 1.980663e-06
+      },
+      "thd_pct": {
+        "spec": "pass",
+        "value": 6.829196e-05
+      },
+      "ugf_hz": {
+        "spec": "pass",
+        "value": 30311140.0
+      },
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 30311140.0
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 7.391955e-05
+      },
+      "vos": {
+        "spec": "pass",
+        "value": 1.634248e-13
+      }
+    }
+  },
+  "parameters": {
+    "analysis_params": {
+      "VCM": 0.9,
+      "VDD": 1.8
+    },
+    "sizing": {
+      "i_bias": "20u",
+      "vbl": 0.64753,
+      "x_dut_c1_value": "0.6p",
+      "x_dut_r1_value": "30k",
+      "x_dut_xm1_l": 0.5,
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": 10,
+      "x_dut_xm3_l": 1,
+      "x_dut_xm3_m": 1,
+      "x_dut_xm3_w": 10,
+      "x_dut_xm5_l": 0.5,
+      "x_dut_xm5_m": 1,
+      "x_dut_xm5_w": 12,
+      "x_dut_xm6_l": 1,
+      "x_dut_xm6_m": 1,
+      "x_dut_xm6_w": 2,
+      "x_dut_xm7_m": 1,
+      "x_dut_xm7_w": 6,
+      "x_dut_xm8_m": 1,
+      "x_dut_xm8_w": 2
+    }
+  },
+  "pdk": "sky130",
+  "ppa": {
+    "active_gate_area_um2": 58.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 70.94121,
+      "pm_deg": 72.66247,
+      "ugf_hz": 30311140.0
+    },
+    "power_w": 0.00029195208
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

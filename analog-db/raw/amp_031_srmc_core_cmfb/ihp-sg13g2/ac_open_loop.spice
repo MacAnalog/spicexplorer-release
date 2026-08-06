@@ -26,7 +26,7 @@
 
 .param VDD=1.2
 .param VCM=0.5
-.param CL=50f
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD}
 Vss  vss 0 dc 0
@@ -71,14 +71,14 @@ Vinn vinn vcm dc 0 ac -0.5
 .param x_dut_xm1_l=4.2775106088068857e-07
 .param x_dut_xm2_w=1.5914426355899998e-06
 .param x_dut_xm2_l=5.757246674262767e-07
-.param x_dut_c1_value=5.825188706426775e-13
-.param x_dut_r1_value=2102.5223381221017
+.param x_dut_c1_value=5e-12
+.param x_dut_r1_value=7.0e3
 .param x_dut_rm1p_value=1Meg
 .param gm_val=100u
 .param rout_val=10Meg
 .param rin_val=1.0e12
-.param cout_val=100f
-.param cin_val=10f
+.param cout_val=300f
+.param cin_val=1f
 .param vb2=0.7002027602191484
 .param vref_cm=0.5
 .param x_dut_xm1_m=1

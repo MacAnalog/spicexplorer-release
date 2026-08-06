@@ -7,7 +7,11 @@ schema: spicexplorer/sizing@1
 pdk: ihp-sg13g2
 variables:
   - {name: gm_val, description: "Servo amplifier transconductance (behavioral VCCS)", default: 100u, min: 1u, max: 10m, unit: S}
-  - {name: rout_val, description: "Servo amplifier output resistance (DC gain = gm_val*rout_val)", default: 10Meg, min: 100k, max: 1G, unit: Ohm}
+  # rout_val min RECONCILED 100k -> 1k (cf. #56). Composites that instantiate this servo re-seed it
+  # far BELOW the donor default (amp_030 rout_val_servo = 10k, ia_004 rout_val_cmfb = 1k), and the
+  # 100k floor put those shipped defaults out of bounds. The bound is widened HERE, at the donor, so
+  # a regeneration inherits the reconciled bound instead of silently reverting the composites again.
+  - {name: rout_val, description: "Servo amplifier output resistance (DC gain = gm_val*rout_val)", default: 10Meg, min: 1k, max: 1G, unit: Ohm}
   - {name: cout_val, description: "Servo amplifier output capacitance (dominant pole with rout_val + CL)", default: 100f, min: 1f, max: 10p, unit: F}
   - {name: rin_val, description: "Servo amplifier differential input resistance (near-ideal sense load)", default: 1e12, min: 1Meg, max: 1e14, unit: Ohm}
   - {name: cin_val, description: "Servo amplifier differential input capacitance", default: 10f, min: 1f, max: 1p, unit: F}

@@ -19,9 +19,16 @@ self-contained *corner* sections, never the raw device-model sections (which fai
 with a wall of undefined-parameter errors).
 Corner includes arrive via ``apply_corner`` → ``render_spectre_deck(corner_includes=…)``.
 
-Case rule: the composed deck's **parameter namespace is lowercase** (SPICE is
+Case rule: the *composed* deck's **parameter namespace is lowercase** (SPICE is
 case-insensitive, Spectre is not — the translator folds every parameter symbol to
-lowercase), so injection keys are folded to lowercase on merge.
+lowercase), so :func:`render_spectre_deck` folds injection keys to lowercase on merge —
+it owns both sides of the deck, so the fold stays self-consistent. A *native* deck is
+the engineer's own file and may declare ``VDD``/``ILOAD``: :func:`render_native_scs`
+therefore resolves each injection key against the deck's declarations — **exact spelling
+first**, then a case-insensitive fallback when the deck declares exactly one variant —
+writes it back with the **deck's** casing, warns on any key the deck never declares, and
+refuses (:class:`AmbiguousParameterCaseError`) when a non-exact key could mean either of
+two declared case-variants.
 
 Composition-layer mapping (``Project_Setup``): one :class:`SpectreDeckSpec` per
 testbench (its stimulus + DUT blocks); ``dut_params``/testbench params inject through
@@ -39,6 +46,7 @@ from typing import Any, Mapping, Sequence
 
 __all__ = [
     "SpectreDeckSpec",
+    "AmbiguousParameterCaseError",
     "render_spectre_deck",
     "render_native_scs",
     "deck_spec_from_ngspice",
@@ -414,12 +422,75 @@ def _parse_param_tokens(body: str) -> "dict[str, str]":
     return params
 
 
+def _declared_params(lines: Sequence[str]) -> "dict[str, list[str]]":
+    """Every ``parameters``-declared name, grouped by lowercase key in declaration order.
+
+    Spectre is case-SENSITIVE, so an injection has to reuse the deck's casing — hence the
+    lowercase key. A bucket with more than one entry holds **distinct Spectre symbols** that
+    merely look alike; which one an injected key means is decided by
+    :func:`_resolve_injection_key`, never by declaration order. The shape is authored, not
+    hypothetical: the committed ``cmp_002_strongarm`` run decks declare
+    ``parameters vdd=0.9 … VDD=0.9`` on one statement."""
+    declared: dict[str, list[str]] = {}
+    for line in lines:
+        m = _PARAMS_RE.match(line)
+        if m is not None:
+            for key in _parse_param_tokens(m.group(1)):
+                bucket = declared.setdefault(key.lower(), [])
+                if key not in bucket:
+                    bucket.append(key)
+    return declared
+
+
+class AmbiguousParameterCaseError(ValueError):
+    """An injected key matches no declared spelling, but several case-variants exist.
+
+    Raised instead of guessing: the candidates are DIFFERENT Spectre symbols, so picking one
+    silently either moves a rail nobody asked to move or leaves the live one baked."""
+
+
+def _resolve_injection_key(key: str, variants: "dict[str, list[str]]", source: str) -> str | None:
+    """Which declared spelling does ``key`` mean? ``None`` when the deck declares none.
+
+    The resolution rule, in order:
+
+    1. **An exact spelling match always wins.** The caller named a symbol the deck declares,
+       so that is the symbol — full stop. "First declaration wins" (the previous rule) broke
+       exactly here: on the committed ``cmp_002_strongarm`` run decks
+       (``parameters vdd=0.9 … VDD=0.9``, whose testbench drives
+       ``v_vdd_supply (VDD 0) vsource dc=VDD`` — the lowercase ``vdd`` is read by nothing),
+       an explicit ``{'VDD': 0.81}`` was redirected onto the DEAD ``vdd`` and the live rail
+       kept its baked value. That is the O-3 pathology (a silently inert injection) restored.
+    2. **Exactly one declared case-variant** and no exact match → that variant. This is the
+       real O-3 case the case-insensitive fallback exists for: the deck declares ``VDD``, the
+       optimizer/PVT layer injects ``vdd``.
+    3. **Two or more case-variants** and no exact match → :class:`AmbiguousParameterCaseError`.
+       There is no evidence in the deck for either choice, and both wrong answers are silent
+       at run time, so refuse rather than guess.
+    """
+    spellings = variants.get(key.lower())
+    if not spellings:
+        return None
+    if key in spellings:  # rule 1 — exact spelling wins outright
+        return key
+    if len(spellings) == 1:  # rule 2 — the sole variant
+        return spellings[0]
+    raise AmbiguousParameterCaseError(  # rule 3 — refuse to guess
+        f"{source}: injected Spectre parameter {key!r} matches no declared spelling, and the "
+        f"deck declares {len(spellings)} case-variants of it ({', '.join(spellings)}), which "
+        f"Spectre treats as DISTINCT symbols. Guessing would either move a symbol nothing "
+        f"reads or leave the live one at its baked value — both silent at run time. Inject "
+        f"one of {spellings} verbatim, or rename the collision in the deck."
+    )
+
+
 def render_native_scs(
     text: str,
     *,
     parameters: Mapping[str, Any] | None = None,
     corner_includes: Sequence[str] | None = None,
     temp: float | None = None,
+    source: "str | Path | None" = None,
 ) -> str:
     """Inject per-candidate overrides into a **native** Spectre `.scs` deck, in place.
 
@@ -429,19 +500,72 @@ def render_native_scs(
     engineer keeps full native control of stimulus, analyses and saves:
 
     * ``parameters`` — the deck's ``parameters`` statement(s) have `parameters` (design
-      vars, lowercased — SPICE folds case, Spectre doesn't) merged over their defaults;
-      an injected key the deck doesn't declare is appended (inert if unused). This is how
-      design variables are swept: the bridge runs a fixed file per run, and in local mode
-      ignores its ``params`` arg, so injection must happen here.
+      vars, supply overrides) merged over their defaults. Injection keys are resolved
+      against the deck's declarations and written back with the deck's own casing: SPICE
+      folds case but Spectre does not, so a lowercased ``vdd=1.1`` written next to a
+      declared ``VDD=0.9`` would leave the deck running its baked default and the override
+      inert — every optimizer candidate then simulates the identical circuit, and every PVT
+      voltage corner runs at the baked rail. An injected key that matches **no** declared
+      parameter is appended (inert if unused) and logged as a WARNING, matching the ngspice
+      lane's `update_params` posture (warn + keep the deck's own behaviour, never abort).
+
+      Resolution is :func:`_resolve_injection_key`: an **exact spelling match always wins**,
+      otherwise the sole declared case-variant is used, otherwise (two-plus variants, no
+      exact match) :class:`AmbiguousParameterCaseError` is raised. Case-insensitive
+      MATCHING never means case-insensitive REWRITING either: exactly ONE symbol moves per
+      injected key. A deck that declares two case-variants of a name (the committed
+      `cmp_002_strongarm` run decks carry `parameters vdd=0.9 … VDD=0.9`) declares two
+      distinct Spectre symbols; rewriting both would silently retarget an unrelated rail,
+      so every other spelling keeps the deck's own value and the collision is named in a
+      WARNING.
+      This is how design variables are swept: the bridge runs a fixed file per run, and in
+      local mode ignores its ``params`` arg, so injection must happen here.
     * ``corner_includes`` — when given (a PVT corner), model ``include "…" section=…``
       lines are replaced wholesale (mirroring ngspice ``apply_corner`` strip+inject); a
       DUT ``include "dut.scs"`` (no ``section=``) is left untouched.
     * ``temp`` — appends a ``tempOptions options temp=…`` statement.
+    * ``source`` — the deck's path/name, used only to make the ambiguity error locatable.
 
     If the deck declares no ``parameters`` statement, one is inserted after the
     ``global 0`` / header when there is something to inject.
+
+    :raises AmbiguousParameterCaseError: an injected key matches no declared spelling while
+        two or more case-variants of it are declared.
     """
-    inject = {str(k).lower(): v for k, v in (parameters or {}).items()}
+    lines = _logical_lines(text)
+    variants = _declared_params(lines)
+    where = str(source) if source is not None else "<in-memory .scs>"
+    # Fold the injection onto the DECK's spelling; anything the deck never declares is
+    # kept (appended) but announced — a silently-ignored injection is the failure mode
+    # this branch exists to prevent.
+    inject: dict[str, Any] = {}
+    undeclared: list[str] = []
+    collisions: list[str] = []
+    for key, value in (parameters or {}).items():
+        deck_key = _resolve_injection_key(str(key), variants, where)
+        if deck_key is None:
+            undeclared.append(str(key))
+            inject[str(key)] = value
+        else:
+            inject[deck_key] = value
+            others = [s for s in variants[str(key).lower()] if s != deck_key]
+            if others:
+                collisions.append(f"{key!r} → {deck_key} (also declared as {', '.join(others)})")
+    if undeclared:
+        logger.warning(
+            "⚠️ Spectre parameter(s) %s are not declared by this .scs — appending them, but "
+            "nothing in the deck reads them (the deck keeps its own behaviour). Declared: %s",
+            ", ".join(undeclared),
+            ", ".join(s for spellings in variants.values() for s in spellings) or "(none)",
+        )
+    if collisions:
+        logger.warning(
+            "⚠️ This .scs declares CASE-VARIANT parameter names, which Spectre treats as "
+            "DISTINCT symbols: %s. Only the resolved spelling is rewritten; the other "
+            "spelling(s) keep the deck's own value. Rename them in the deck if one value was "
+            "meant to drive both.",
+            "; ".join(collisions),
+        )
     includes = list(corner_includes) if corner_includes is not None else None
 
     out: list[str] = []
@@ -449,11 +573,19 @@ def render_native_scs(
     includes_written = includes is None  # only touch includes when a corner is given
     header_idx = -1  # last index of a `simulator lang`/`global` header line, for insertion
 
-    for line in _logical_lines(text):
+    for line in lines:
         m = _PARAMS_RE.match(line)
         if m is not None:
             merged = _parse_param_tokens(m.group(1))
-            merged.update({k: _fmt(v) for k, v in inject.items()})
+            for key in list(merged):  # rewrite in place, under the deck's own casing
+                # EXACT spelling only — `_resolve_injection_key` already decided which
+                # spelling an injected key means, and a case-VARIANT of it is a different
+                # Spectre symbol. Matching on `.lower()` here moved BOTH, so one injected
+                # `vdd` rewrote `vdd` AND `VDD` on the committed cmp_002 run decks.
+                if key in inject:
+                    merged[key] = _fmt(inject[key])
+            if not params_written:  # undeclared keys ride on the FIRST parameters statement
+                merged.update({k: _fmt(inject[k]) for k in undeclared})
             out.append("parameters " + " ".join(f"{k}={v}" for k, v in merged.items()))
             params_written = True
             continue

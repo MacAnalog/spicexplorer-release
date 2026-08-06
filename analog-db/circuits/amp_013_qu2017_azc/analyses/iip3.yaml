@@ -1,0 +1,31 @@
+# Analysis binding for the SELF-BIASED AZC 3-stage OTA (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# Two-tone IIP3 in the unity buffer: 6.25 mV tones sharing F0 = gcd(F1,F2) so the IM3
+# (2F1-F2, 2F2-F1) and IM5 products land on exact DFT bins — zero leakage.
+# F0 GRID: fresh ac_open_loop @ ihp-sg13g2 tt (2026-08-01, landed sizing) reads
+# ugf = 3.78 MHz — the 3-30 MHz band, so the campaign 0.9/1.0 MHz grid divides by 10:
+# F1/F2 = 90/100 kHz, F0 = gcd = 10 kHz (n1=9, n2=10 — the 9:10 tone ratio exactly).
+# COHERENT WINDOW: beat period 1/F0 = 100 us; TSTART = 100u = 1 WHOLE beat period (the
+# integer-beat contract is load-bearing) >= 20x any sane linear settling estimate
+# (tau ~ 1/(2*pi*ugf) ~ 42 ns; t_settle itself is unmeasurable at this sizing, see below);
+# TSTOP-TSTART = 2000u = 20 beat periods; TSTEP = 50n = 1/(200*F2).
+# DRIVE: ASIG = 0.00625 per tone ALWAYS (class rule — geometric centre of the measured
+# valid window). Plain decimals for ASIG/F0/F1/F2 — they reach .control arithmetic.
+# HONEST STATUS — INVALID AT THE LANDED ihp-sg13g2 SIZING (binding pass 2026-08-01, tt):
+# the unity buffer carries a REAL ~35-40 MHz / 0.17-0.28 Vpp limit cycle (see thd.yaml /
+# stb.yaml for the three-integrator evidence; stb's pm_loop 88.7 deg probes only the main
+# loop and cannot see this local oscillator). The uV-scale IM3 bins of this bench cannot
+# exist on top of a ~0.2 Vpp oscillation, and the tran collapses to ~2 ns steps and ABORTS
+# near ~0.2 ms — far short of the 2.1 ms coherent window — so the DFT runs on a broken
+# window. Treat ANY recorded iip3_dbv from this sizing as oscillation floor / leakage, not
+# a measurement (a_im3 vs a_floor and the gain_tone gate are the tells). The binding itself
+# is correct for the measured ugf and stands ready for a re-sizing that kills the limit
+# cycle. gain_tone < 0.5 means the dead-output guard fired and iip3_dbv is the -999
+# sentinel.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_selfbias
+description: "IIP3 — two-tone intermodulation intercept; tran+coherent DFT (ngspice) / native PSS (Spectre). INVALID at the landed ihp sizing — real ~40 MHz limit cycle; see header."
+params: {VDD: 1.8, VCM: 300m, CL: 10p, ASIG: 0.00625, F0: 0.01e6, F1: 0.09e6, F2: 0.1e6, TSTEP: 50n, TSTART: 100u, TSTOP: 2100u}
+flags: []
+produces: [iip3_dbv]

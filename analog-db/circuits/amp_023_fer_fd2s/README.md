@@ -2,7 +2,7 @@
 
 **Promoted** from the `ferrosim_opamp` reference entry (Arcadia-1/ferrosim, MIT). Class
 `amplifier` (existing), **differential self-biased convention** (`vinp vinn voutp voutn vdd
-vss`, as amp_020 — the `_diff` templates).
+vss`, the `_diff` templates).
 
 Stage 1: NMOS-input folded cascode (Sooch-style bias ladder off one reference). Stage 2: NMOS
 common-source with PMOS current-source loads. Miller + nulling-R per side. CMFB: RC sense of

@@ -35,7 +35,8 @@ print(dev.W, dev.ID, dev.passed)           # width [µm], bias current [A], all 
 # 3b. current-first / JD flow: fix the bias current + inversion level
 dev = size_for_current_density(nch, ID=50e-6, gm_id=12, L=1.0, vds=0.9)
 
-# 4. explore the trade-off curves
+# 4. explore the trade-off curves (the range must stay inside the reachable gm/ID band —
+#    see "Reachability" below; sweeping past the weak-inversion peak raises OutOfGridError)
 sw = nch.sweep(gm_id=(5, 25), L=0.5, vds=0.9)   # arrays: jd, ft, av0, vgs over gm/ID
 
 # 5. passives from PDK constants
@@ -50,25 +51,102 @@ source module.
 
 | Module | Surface | What it's for |
 |---|---|---|
-| `tables` | `DeviceTable` (`.load`, `.at`, `.look_up`, `.gm_id_for_jd`, `.sweep`, `.manifest`; grids `L_grid`/`VGS_grid`/`VDS_grid`/`VSB_grid`), `Sweep` | Typed, fail-loud wrapper over a pygmid `Lookup`. `at()` → `OperatingPoint`; `sweep()` → trade-off arrays. |
-| `sizing` | `size_for_gm`, `size_for_current_density` | The two de-normalisation flows (gm-first / current-first). |
+| `tables` | `DeviceTable` (`.load`, `.at`, `.look_up`, `.gm_id_for_jd`, `.gm_id_band`, `.sweep`, `.w_char`, `.manifest`; grids `L_grid`/`VGS_grid`/`VDS_grid`/`VSB_grid`), `Sweep` | Typed, fail-loud wrapper over a pygmid `Lookup`. `at()` → `OperatingPoint`; `sweep()` → trade-off arrays; `gm_id_band()` → the reachable gm/ID interval of a bias slice. |
+| `fingerwidth` | `FingerWidthSet` (`.load`, `.at`, `.gm_id_for_jd`, `.table_at`, `.finger_widths`) | One `DeviceTable` per characterised **finger width**, linearly interpolated across it. |
+| `sizing` | `size_for_gm`, `size_for_current_density` | The two de-normalisation flows (gm-first / current-first); either table type. |
 | `passives` | `size_resistor`, `size_capacitor` | Closed-form passive sizing from PDK sheet-R / area-C constants. |
-| `registry` | `LUTRegistry` (`.list_available`, `.find`, `.load`) | Enumerate + load committed LUTs under a root dir by `(pdk, device, corner)`, attaching the manifest. |
+| `registry` | `LUTRegistry` (`.list_available`, `.find`, `.load`) | Enumerate + load committed LUTs under a root dir by `(pdk, device, corner[, temp_c, wf_um])`, attaching the manifest. |
 | `contract` | `OperatingPoint`, `SizedDevice`, `SizedPassive`, `SizingReport`, `SanityGate`, `GeometryBounds`, and the manifest models `LUTManifest`, `AxisSpec`, `LUTConditions`, `LUTModelRecord`, `LUTProvenance` | The single Pydantic-v2 I/O contract (one source of truth; feeds OpenAPI/TS/MCP later). |
-| `errors` | `GmidError`, `OutOfGridError` | Fail-loud: off-grid / NaN lookups raise with the characterized grid in the message — never a silent edge clamp. |
+| `errors` | `GmidError`, `OutOfGridError` | Fail-loud: off-grid / NaN / un-interpolable lookups raise with the characterized grid in the message — never a silent edge clamp, and never a bare `ValueError` out of scipy (a degenerate bias slice such as `VDS=0` is reported as `OutOfGridError` naming the offending axis). |
 
 `gm_id_for_jd(jd, L, vds, vsb=0.0)` is the **weak-inversion entry point**: where gm/ID plateaus, JD
 resolves better. It inverts the table to the gm/ID giving a target current density [A/µm], round-trips
 the inversion (5 % tol), and raises `OutOfGridError` if the target JD doesn't invert consistently —
 `size_for_current_density(..., jd=…)` uses it under the hood.
 
+### Reachability: the gm/ID band, not the VGS grid
+
+gm/ID is **not monotonic in V<sub>GS</sub>** — it climbs towards weak inversion, peaks, then
+collapses as the device turns off. pygmid inverts **only the falling branch** and pchip-*extrapolates*
+past its ends, returning finite garbage (negative JD, kilovolt V<sub>GS</sub>, negative widths) with
+nothing but a warning printed to stdout. So the reachability domain is that branch, not the
+V<sub>GS</sub> grid:
+
+```python
+lo, hi, vgs_peak = nch.gm_id_band(L=0.13, vds=0.4)   # e.g. (1.02, 27.79, 0.25) on the IHP nmos
+```
+
+`at()` and `sweep()` both gate every requested gm/ID against `[lo, hi]` — a **closed** interval, so
+whatever the band certifies those two accept — and raise `OutOfGridError` naming the band when it
+falls outside. On LUTs whose peak sits at an **interior** V<sub>GS</sub> (most IHP `sg13g2` slices) an
+above-peak request solves back to a V<sub>GS</sub> that *is* inside the grid, so a V<sub>GS</sub>-range
+check alone silently passed it — that is the band the guard closes. `at()` additionally rejects a
+non-positive current density, and the sizing flows reject a non-finite or non-positive `gm`, `ID`,
+`jd` or `W`: **a negative width is never returned with `passed=True`**.
+
+`gm_id_band()` is a public entry point, so it gates its own bias axes like the others (an off-grid
+`L`/`VDS`/`VSB` raises rather than pchip-extrapolating into a confident-looking band), rejects a
+slice that carries no current (VDS=0 degenerates, ID→0 — including the slices whose ID/W locus is a
+single *denormal* sample), and never returns a non-positive lower bound. The solved-V<sub>GS</sub>
+backstop inside `at()`/`sweep()` carries a float-noise tolerance of `1e-9·span`: on a LUT peaking at
+the V<sub>GS</sub> grid edge the band maximum inverts to ≈`-4e-18 V`, and rejecting *that* would
+contradict the closed interval above. Anything further out still raises.
+
+### Finger width: `FingerWidthSet` and the `finger_width` gate
+
+A LUT's normalised parameters (JD, gm/gds, C/W, the solved V<sub>GS</sub>) are invariant under
+*adding identical fingers*, but they depend on the **finger width itself** — a 0.5 µm and a 5 µm
+finger read a few-to-tens of % apart. So a single `DeviceTable` only describes fingers at its own
+characterization width, `nch.w_char`.
+
+```python
+from spicexplorer_gmid import FingerWidthSet, size_for_gm
+
+fs = FingerWidthSet.load({0.5: ".../…__wf0p5u.pkl", 1.0: ".../…__wf1u.pkl", 5.0: ".../….pkl"})
+op  = fs.at(gm_id=15, L=0.5, vds=0.9, wf=2.0)          # linearly interpolated across finger width
+dev = size_for_gm(fs, gm=1e-3, gm_id=15, L=0.5, vds=0.9, wf=2.0)   # wf is REQUIRED for a set
+```
+
+Both sizing entry points take either table type. `wf` is passed through as the keyword-only argument
+`FingerWidthSet` requires (omitting it on a set raises `GmidError`); on a plain `DeviceTable` `wf` is
+the finger width you intend to *draw* — it picks the finger count when no `wf_max` is given. On a set,
+an interior `wf` blends two per-table JD→gm/ID inversions, and the **blend** is held to the same 5 %
+round-trip contract each table is (JD runs exponentially in gm/ID, so the straight line between two
+consistent answers is not itself consistent — measured up to 7.59 % off on the production
+{0.5, 1.0, 5.0} µm sky130 store). An interior `wf` that cannot honour it raises rather than returning
+a `SizedDevice` that disagrees with its own operating point.
+
+Every `SizedDevice` also carries a **`finger_width` gate** comparing the realised `W/nf` against the
+width the operating point was characterized at, over the window
+`[w_char/wf_ratio_max .. w_char·wf_ratio_max]` (default `wf_ratio_max` 2×). It is **three-state**:
+
+| you passed | narrow side (`< w_char/2`) | wide side (`> 2·w_char`) |
+|---|---|---|
+| `wf=` | `fail` (vetoes `passed`) | `fail` (vetoes `passed`) |
+| `wf_max=` only | `fail` (vetoes `passed`) | `unchecked` (advisory) |
+| neither | `unchecked` (advisory) | `unchecked` (advisory) |
+
+An `unchecked` gate reports `ok=False` and its measurement in `detail`, but **does not** flip
+`SizedDevice.passed` — with no `wf`/`wf_max` and `nf=1`, `W/nf` is not a finger choice at all, it is
+the total width the physics demanded, so the ledger is reporting LUT *coverage* rather than caller
+geometry. (Gating it unconditionally turned every device under `w_char/2` red — below ~7.5 µA on the
+5 µm sky130 LUT, i.e. the whole low-current half of the design space.) Note what the gate does **not**
+police: `wf_max` fingering *wider* than `w_char` inside the 2× window stays green — `wf_max=10` on a
+5 µm table realises a 7.46 µm finger, +49.1 %, `status="ok"`. Only gross narrowing is a hard fail, and
+the 2× default is argued from narrow-width-effect physics, **not measured against a live PDK sweep**.
+
+`wf_ratio_max` is a *widening* factor and must be ≥ 1 (below 1 the window inverts); NaN and anything
+under 1 raise `GmidError` rather than silently reversing the gate. `math.inf` is accepted and means
+"no opinion" — the window `[0 .. inf]`, i.e. the gate switched off.
+
 ## LUT registry & manifests
 
-Each committed LUT is a `<pdk>/<device>__<corner>.pkl` data file paired with a
-`<pdk>/<device>__<corner>.manifest.json` sidecar (the typed `LUTManifest`: the full run dimensions —
-`L`/`VGS`/`VDS`/`VSB` grids — plus `conditions` (temp/W/nfing), `corner`, the model corner lines,
-stored params, and extraction `provenance`). `DeviceTable.load()` auto-attaches the sidecar;
-`LUTRegistry` enumerates and loads by name:
+Each committed LUT is a `<pdk>/<stem>.pkl` data file paired with a `<pdk>/<stem>.manifest.json`
+sidecar (the typed `LUTManifest`: the full run dimensions — `L`/`VGS`/`VDS`/`VSB` grids — plus
+`conditions` (temp/W/nfing), `corner`, the model corner lines, stored params, and extraction
+`provenance`). The stem is `<device>__<corner>[__<T>C][__wf<W>u]`: the extractor tags a LUT only when
+it is *off* the historic nominal (27 °C, a 5 µm finger), so the original names keep working.
+`DeviceTable.load()` auto-attaches the sidecar; `LUTRegistry` enumerates and loads by name:
 
 ```python
 from spicexplorer_gmid import LUTRegistry
@@ -79,22 +157,28 @@ for m in reg.list_available("sky130"):           # omit the pdk arg for the whol
 
 nch = reg.load("sky130", "sky130_fd_pr__nfet_01v8")   # corner="tt" default; manifest attached
 nch.manifest.conditions                          # the characterization conditions
+
+cold = reg.load("sky130", "sky130_fd_pr__nfet_01v8", temp_c=-40, wf_um=1.0)   # a tagged variant
 ```
 
-`reg.find(pdk, device, corner="tt")` returns just the `LUTManifest` (raises `KeyError`, listing what
-*is* committed, when absent); `reg.load(...)` raises if the manifest's `.pkl` is missing. The registry
-**never imports the analog-db package** — it reads the sidecars directly, so the tool stays decoupled
-from the DB.
+`reg.find(pdk, device, corner="tt", *, temp_c=None, wf_um=None)` returns just the `LUTManifest`
+(raises `KeyError`, listing what *is* committed, when absent); `reg.load(...)` raises if the
+addressed `.pkl` is missing. Two fail-loud details worth knowing: the `.pkl` is resolved from the
+**addressed stem**, never from the manifest's `lut_file` field (the extractor writes that field
+un-suffixed, so trusting it would serve the 27 °C/5 µm table under an `__85C`/`__wf1u` manifest); and
+an explicitly addressed variant whose sidecar records a *different* temperature or width raises
+`GmidError` rather than being served. The registry **never imports the analog-db package** — it reads
+the sidecars directly, so the tool stays decoupled from the DB.
 
 ## What the contract carries
 
 | Model | Fields |
 |---|---|
 | `OperatingPoint` | `gm_id, L, vds, vsb, vgs, jd, av0, ft, cgg_w, cdd_w` (the LUT view at one bias) |
-| `SizedDevice` | `W, L, nf, ID, gm, cgg, cdd, op, gates`; `.passed`, `.wf` |
+| `SizedDevice` | `W, L, nf, ID, gm, cgg, cdd, op, gates`; `.passed` (every **blocking** gate holds), `.wf` |
 | `SizedPassive` | `kind, target, value` + geometry (`squares`/`area_um2`) |
 | `SizingReport` | named `devices` + `passives` + `assumptions` ledger |
-| `SanityGate` | `name, ok, detail` — saturation head-room, intrinsic-gain/fT finiteness, geometry envelope |
+| `SanityGate` | `name, ok, detail, status` (`"ok"`/`"unchecked"`/`"fail"`), `.blocking` — saturation head-room, intrinsic-gain/fT finiteness, finger width vs `w_char`, geometry envelope. `"unchecked"` is an advisory: reported with `ok=False`, never a veto. An omitted `status` mirrors `ok`, so a two-state gate needs no change. |
 
 Off-grid / NaN lookups raise `OutOfGridError` **with the characterized grid in the message** — never
 a silent clamp to an edge value (a confidently-wrong size).

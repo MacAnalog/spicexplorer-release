@@ -406,16 +406,49 @@ def test_structural_role_matching_is_opt_in():
 # ---------------------------------------------------------------------------
 # on_unknown policy flows through the comparison builder
 # ---------------------------------------------------------------------------
-def test_on_unknown_skip_can_mask_an_unsupported_device():
-    # A BJT (Q…) reusing existing nets is dropped under the default skip policy, so the two
-    # netlists compare equal even though one has an extra device. This is the documented contract
-    # of skip — use on_unknown="raise" for strictness.
+def test_on_unknown_skip_cannot_mask_an_unsupported_device():
+    # A BJT (Q…) reusing existing nets is dropped under the default skip policy — so the two
+    # graphs' SURVIVING devices are isomorphic even though one netlist has an extra device.
+    # The skipped-component census is what stops that from being reported as "same circuit".
     base = "* a\nM1 d g s b sg13_lv_nmos\n.end\n"
     with_bjt = "* b\nM1 d g s b sg13_lv_nmos\nQ1 d g s npn\n.end\n"  # Q reuses nets d/g/s
-    assert compare_netlists(base, with_bjt, pdk=IHP_SG13G2).equivalent
-    # under raise, building the second netlist aborts instead of silently dropping the BJT
+    result = compare_netlists(base, with_bjt, pdk=IHP_SG13G2)
+    assert not result.equivalent
+    assert "skipped different devices" in result.reason and "Q1" in result.reason
+    # two netlists that skip the SAME devices still compare on what they do model
+    assert compare_netlists(with_bjt, with_bjt, pdk=IHP_SG13G2).equivalent
+    # under raise, building either netlist aborts instead of silently dropping the BJT
     with pytest.raises(ValueError):
         compare_netlists(base, with_bjt, pdk=IHP_SG13G2, on_unknown="raise")
+
+
+def test_an_equivalence_that_rests_on_skipped_devices_says_so():
+    # Both sides carry a clamp diode neither build can model — and they point OPPOSITE ways.
+    # The surviving devices are isomorphic, so the verdict is "equivalent"; it covers only what
+    # was typed, and nothing in the result used to admit that.
+    a = "* a\nR1 vin vout 1k\nD1 vout 0 dclamp\n.end\n"
+    b = "* b\nR1 vin vout 1k\nD1 0 vout dclamp\n.end\n"
+    result = compare_netlists(a, b, pdk=IHP_SG13G2)
+    assert result.equivalent
+    assert result.rests_on_skipped
+    assert result.skipped_a == ("D1",) and result.skipped_b == ("D1",)
+    assert "D1" in result.reason and "skipped" in result.reason
+
+
+def test_a_fully_typed_equivalence_carries_no_caveat():
+    result = compare_netlists(OTA_CORE, OTA_CORE, pdk=IHP_SG13G2)
+    assert result.equivalent and not result.rests_on_skipped
+    assert result.skipped_a == () and result.skipped_b == ()
+    assert "skipped" not in result.reason
+
+
+def test_the_skip_census_rides_on_a_negative_verdict_too():
+    base = "* a\nM1 d g s b sg13_lv_nmos\n.end\n"
+    with_bjt = "* b\nM1 d g s b sg13_lv_nmos\nQ1 d g s npn\n.end\n"
+    result = compare_netlists(base, with_bjt, pdk=IHP_SG13G2)
+    assert not result.equivalent
+    assert result.skipped_a == () and result.skipped_b == ("Q1",)
+    assert result.rests_on_skipped
 
 
 # ---------------------------------------------------------------------------
@@ -513,3 +546,47 @@ def test_real_subckt_testbench_self_equivalent_and_detects_port_swap():
             lines[i] = " ".join(parts)
             break
     assert not compare_netlists(text, "\n".join(lines), pdk=IHP_SG13G2).equivalent
+
+
+# ---------------------------------------------------------------------------
+# The skip census is compared by SHAPE, never by instance name
+# ---------------------------------------------------------------------------
+# Two decks that ARE the same circuit and differ only in what they call things — the module
+# docstring's own contract ("renaming an instance M1 -> M7 does not change the circuit"). The
+# unmodelable clamp diode is `D1` on one side and `DCLAMP` on the other, which is exactly what
+# two independent netlisters (xschem vs a Virtuoso cellview, the live xvport netcheck at
+# netlist2xschem/virtuoso_export/endcheck.py:194) do to each other.
+_SKIP_A = "* a\nM1 d g 0 0 sg13_lv_nmos\nR1 d g 1k\nD1 d 0 dclamp\n.end\n"
+_SKIP_B = "* b\nMN_A d g 0 0 sg13_lv_nmos\nRLOAD d g 1k\nDCLAMP d 0 dclamp\n.end\n"
+
+
+def test_renaming_an_unmodelable_device_is_not_a_different_circuit():
+    result = compare_netlists(_SKIP_A, _SKIP_B, pdk=IHP_SG13G2)
+    assert result.equivalent, result.reason
+    # the names are still reported — as a diagnostic, not as the decision
+    assert result.skipped_a == ("D1",) and result.skipped_b == ("DCLAMP",)
+    assert result.rests_on_skipped
+
+
+def test_a_genuinely_different_skip_census_is_still_not_equivalent():
+    # Same modeled circuit, but the second deck drops a SECOND diode the first does not have.
+    # Nothing else can catch this: a skipped device adds no component and no net, so the
+    # surviving graphs are isomorphic.
+    two_diodes = _SKIP_A.replace("D1 d 0 dclamp\n", "D1 d 0 dclamp\nD2 d 0 dclamp\n")
+    result = compare_netlists(_SKIP_A, two_diodes, pdk=IHP_SG13G2)
+    assert not result.equivalent
+    assert "skipped different devices" in result.reason and "D2" in result.reason
+    # and a drop of a DIFFERENT KIND is caught too (a 2-net 'D' vs a 3-net 'Q')
+    bjt = _SKIP_A.replace("D1 d 0 dclamp\n", "Q1 d g 0 npn\n")
+    assert not compare_netlists(_SKIP_A, bjt, pdk=IHP_SG13G2).equivalent
+
+
+def test_the_skip_shape_is_wiring_aware_not_just_a_count():
+    # The shape carries how many modeled pins touch each net the dropped device was wired to, so
+    # a diode across a 3-pin node is not the same loss as one across a 2-pin node. `d` here has
+    # three modeled pins on it (M1.drain, R1, C1) and `g` two (M1.gate, R1).
+    deck = "* a\nM1 d g 0 0 sg13_lv_nmos\nR1 d g 1k\nC1 d 0 1p\nD1 d 0 dclamp\n.end\n"
+    moved = deck.replace("D1 d 0 dclamp", "D1 g 0 dclamp")
+    assert _g(deck).skipped_shapes() == [("D", 2, (3, 3))]
+    assert _g(moved).skipped_shapes() == [("D", 2, (2, 3))]
+    assert not compare_netlists(deck, moved, pdk=IHP_SG13G2).equivalent

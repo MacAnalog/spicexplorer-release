@@ -1,0 +1,36 @@
+# Analysis binding for the SELF-BIASED AZC 3-stage OTA (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# THD in the unity buffer: tran + the template's in-deck coherent DFT (ngspice); the Spectre
+# lane composes a native pss at F0 (HARMS).
+# F0 GRID: fresh ac_open_loop @ ihp-sg13g2 tt (2026-08-01, landed sizing) reads
+# ugf = 3.78 MHz — the 3-30 MHz band, so the campaign 1 MHz grid divides by 10: F0 = 100 kHz.
+# COHERENT WINDOW (the template requires (TSTOP-TSTART) to be whole F0 periods): T = 10 us;
+# TSTOP-TSTART = 160 us = 16 whole periods (even count). TSTEP = 20n = 1/(500*F0).
+# TSTART = 40u = 4 whole periods: t_settle is unmeasurable at this sizing (real limit cycle,
+# below), so the 20x-t_settle rule is anchored on the linear closed-loop estimate
+# (tau ~ 1/(2*pi*ugf) ~ 42 ns; 20x any sane settling estimate << 20 us) rounded up to the
+# 4-period safety minimum. ASIG = 0.1 about VCM = 0.3: vout swings 0.2..0.4 V, well inside
+# the 0/1.8 rails.
+# HONEST STATUS — INVALID AT THE LANDED ihp-sg13g2 SIZING (binding pass 2026-08-01, tt):
+# the unity buffer carries a REAL ~35-40 MHz / 0.17-0.28 Vpp limit cycle (sustained at
+# constant amplitude under trap, damped-trap xmu=0.49, and gear at forced 0.5 ns steps; the
+# Middlebrook stb probe still reads pm_loop 88.7 deg — the oscillator is a LOCAL loop the
+# main-loop return ratio cannot see). A steady-state distortion figure does not exist on an
+# oscillating buffer: the tran forces ~2 ns steps and ABORTS at ~180 us (before TSTOP), the
+# surviving window is not a whole period count, and the DFT bins are oscillation + leakage —
+# the scratch run read gain_tone = 1.03 (outside the (0.5,1] SE gate) and thd_pct ~ 3.3%;
+# the drive-halving cross-check (ASIG 0.05) collapses even harder ("timestep too small ...
+# trouble with node vout" at 15.4 us, zero data rows), so HD2/HD3 x2/x4 scaling is
+# unverifiable — the limit cycle, not the drive, owns the bins. Treat ANY recorded thd_pct
+# from this sizing as oscillation floor, not distortion — its spec-fail verdict is honest,
+# the value is not a measurement. The binding itself (F0/TSTEP/TSTART/TSTOP/ASIG) is
+# correct for the measured ugf and stands ready for a re-sizing that kills the limit cycle.
+# gain_tone < 0.5 means the template's dead-output guard fired and thd_pct is the 999
+# sentinel, not a measurement.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_selfbias
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre). INVALID at the landed ihp sizing — real ~40 MHz limit cycle; see header."
+params: {VDD: 1.8, VCM: 300m, CL: 10p, ASIG: 0.1, F0: 1.0e5, TSTEP: 20n, TSTART: 40u, TSTOP: 200u, HARMS: 7}
+flags: []
+produces: [thd_pct]

@@ -14,8 +14,8 @@
         "ac_open_loop": {
           "measures": {
             "dcgain": 106.8282,
-            "pm": 75.08087,
-            "ugf": 2325825.0
+            "pm": 82.25309,
+            "ugf": 2169200.0
           },
           "status": "ok"
         },
@@ -32,10 +32,29 @@
           },
           "status": "ok"
         },
+        "iip3": {
+          "measures": {
+            "a_drv": 0.006249378,
+            "a_f1": 0.006249289,
+            "a_f2": 0.006249162,
+            "a_floor": 3.424961e-13,
+            "a_im3h": 1.201841e-10,
+            "a_im3l": 9.904792e-11,
+            "a_im5h": 4.197276e-13,
+            "a_im5l": 3.878416e-13,
+            "gain_tone": 0.9999654,
+            "gain_tone_db": -0.00030078,
+            "iip3_comp_db": 0.07581879,
+            "iip3_dbv": 33.07731,
+            "im3_dbc": -154.319,
+            "im5_im3_db": -49.1376
+          },
+          "status": "ok"
+        },
         "noise": {
           "measures": {
-            "inoise_total": 0.02630082,
-            "onoise_total": 0.02945735
+            "inoise_total": 0.0001043244,
+            "onoise_total": 5.117581
           },
           "status": "ok"
         },
@@ -45,10 +64,37 @@
           },
           "status": "ok"
         },
+        "stb": {
+          "measures": {
+            "gm_loop": 18.55469,
+            "loopgain_db": 106.8286,
+            "phref_dev": -0.0580035,
+            "phref_ok": 1.0,
+            "pm_loop": 81.67415,
+            "pm_loop_first": 81.67415,
+            "ugf_loop": 2168863.0
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "measures": {
+            "a1": 0.09999463,
+            "a1_in": 0.09999841,
+            "a2": 2.326716e-07,
+            "a3": 4.611557e-07,
+            "a4": 1.371501e-07,
+            "a5": 2.753851e-08,
+            "gain_tone": 0.9999622,
+            "thd_db": -105.43,
+            "thd_pct": 0.0005351635,
+            "vout_op": 0.2395128
+          },
+          "status": "ok"
+        },
         "tran_step": {
           "measures": {
-            "t_settle": 8.79881e-07,
-            "tcross": 1.879881e-06,
+            "t_settle": 3.15469e-07,
+            "tcross": 1.315469e-06,
             "vfinal": 0.4395064
           },
           "status": "ok"
@@ -57,7 +103,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-24T23:13:44+00:00"
+        "run_at": "2026-08-01T18:20:22+00:00"
       }
     }
   },
@@ -72,13 +118,29 @@
         "spec": "pass",
         "value": 106.8282
       },
-      "i_supply": {
+      "gm_loop_db": {
         "spec": "none",
+        "value": 18.55469
+      },
+      "i_supply": {
+        "spec": "pass",
         "value": 0.0001183191
+      },
+      "iip3_dbv": {
+        "spec": "pass",
+        "value": 33.07731
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 106.8286
       },
       "pm_deg": {
         "spec": "pass",
-        "value": 75.08087
+        "value": 82.25309
+      },
+      "pm_loop_deg": {
+        "spec": "pass",
+        "value": 81.67415
       },
       "psrr_vdd_db": {
         "spec": "pass",
@@ -86,15 +148,23 @@
       },
       "t_settle": {
         "spec": "pass",
-        "value": 8.79881e-07
+        "value": 3.15469e-07
+      },
+      "thd_pct": {
+        "spec": "pass",
+        "value": 0.0005351635
       },
       "ugf_hz": {
         "spec": "pass",
-        "value": 2325825.0
+        "value": 2169200.0
       },
-      "vn_in": {
+      "ugf_loop_hz": {
         "spec": "none",
-        "value": 0.02630082
+        "value": 2168863.0
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 0.0001043244
       }
     }
   },
@@ -134,8 +204,8 @@
     ],
     "performance": {
       "dc_gain_db": 106.8282,
-      "pm_deg": 75.08087,
-      "ugf_hz": 2325825.0
+      "pm_deg": 82.25309,
+      "ugf_hz": 2169200.0
     },
     "power_w": 0.00021297438
   },

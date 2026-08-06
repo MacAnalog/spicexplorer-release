@@ -93,9 +93,11 @@ def test_generate_skips_disabled_and_unbound(ota):
     # a scaffolded `enabled: false` analysis is skipped with a reason, not exported
     assert reasons.get("amp_018_telescopic_cascode/linearity") == "disabled"
     assert "raw/amp_018_telescopic_cascode/ihp-sg13g2/linearity.spice" not in decks
-    # tan_clia binds only sky130 + gf180 → no ihp deck at all (not even an error)
-    assert "raw/amp_017_tan_clia/sky130/ac_open_loop.spice" in decks
-    assert "raw/amp_017_tan_clia/ihp-sg13g2/ac_open_loop.spice" not in decks
+    # an UNBOUND pdk yields no deck at all (not even an error). ldo_005_buffered_ref binds
+    # ihp-sg13g2 + gf180mcu only — it has no sky130 binding. (This used to assert on
+    # amp_017_tan_clia, which has bound ihp-sg13g2 since #55 and now binds all four PDKs.)
+    assert "raw/ldo_005_buffered_ref/ihp-sg13g2/dc_op.spice" in decks
+    assert "raw/ldo_005_buffered_ref/sky130/dc_op.spice" not in decks
     # every amp_001_5t analysis × pdk + a _dut is present
     for pdk in ota.pdks:
         assert f"raw/amp_001_5t/{pdk}/_dut.spice" in decks

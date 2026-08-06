@@ -19,6 +19,7 @@ from dataclasses import dataclass
 
 import networkx as nx
 
+from ._eng import spice_number
 from .graph import CircuitGraph
 from .model.edges import PinTypeMOSFET
 from .model.nodes import (
@@ -94,17 +95,27 @@ def norm_value(value: str | float) -> str:
     """Canonicalize one parameter value so eng-equal forms compare equal.
 
     Numbers (and eng strings like ``"0.18u"``) are parsed and rendered to a fixed precision;
-    anything that is not numeric is kept as a stripped, lower-cased string.
+    anything that is not numeric — a model name, a parameter symbol, a braced expression — is kept
+    as a stripped, lower-cased string.
+
+    The values compared here come from a **netlist**, so they are read with ngspice's scale-factor
+    rules (:func:`~spicexplorer_circuitgraph._eng.spice_number`): case-insensitive, ``M`` is milli
+    and only ``MEG`` is mega. Reading them with the YAML DSL's case-*sensitive* parser instead —
+    which is what this used to do — made ``1M`` compare equal to ``1meg`` and unequal to ``1m``
+    (the opposite of what the simulator does with those same three cards) and made every upper-case
+    suffix fail to parse, so ``w=1U`` and ``w=1u`` were reported as different widths.
+
+    A malformed numeric token now raises rather than degrading to a string: two devices whose
+    widths are both typos should not quietly compare "equal because both unparsable", nor
+    "different" while the deck is broken.
     """
     if isinstance(value, (int, float)):
         return format(float(value), f".{_PARAM_SIG_FIGS}g")
     text = str(value).strip()
-    try:
-        from spicexplorer_core.eng import parse_value
-
-        return format(float(parse_value(text)), f".{_PARAM_SIG_FIGS}g")
-    except Exception:
+    number = spice_number(text)
+    if number is None:
         return text.lower()
+    return format(number, f".{_PARAM_SIG_FIGS}g")
 
 
 def param_signature(params: dict[str, str | float]) -> frozenset[tuple[str, str]]:

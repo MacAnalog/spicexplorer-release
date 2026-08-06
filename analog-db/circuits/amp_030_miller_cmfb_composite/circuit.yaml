@@ -7,6 +7,8 @@ realization: mixed
 display_name: "Two-stage Miller OTA + behavioral CMFB servo (COMPOSITE: amp_029 + cmfb_001_ideal_rsense_servo)"
 stages: 2
 compensation: miller
+cm_control: regulated
+signal_path: fully_differential
 ports: [vinp, vinn, voutp, voutn, vdd, vss]
 provenance:
   source: composition.yaml (composer P4 — the registry's first composed entry)
@@ -28,5 +30,5 @@ artifacts:
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
 pdks: [ihp-sg13g2, FOUNDRY-n65]
-analyses: [ac_open_loop, dc_op, dc_cm_bias_sweep, ac_cm_reg, tran_cm_kick, noise, tran_step]
+analyses: [ac_open_loop, dc_op, dc_cm_bias_sweep, ac_cm_reg, tran_cm_kick, noise, tran_step, thd, iip3, stb, cmrr_vcm, psrr_vdd]
 status: draft

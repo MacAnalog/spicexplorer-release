@@ -1,0 +1,23 @@
+# Analysis binding: noise_diff template — input-referred noise of the differential path
+# (self-biased FD DUT, behavioral CMFB servos internal; direct-drive at matched DC inputs,
+# differential output sensed via ngspice's two-node .noise form).
+# BAND STANDARDIZED (2026-08-01 campaign): FSTART 1, FSTOP 1G so the paper's noise column is
+# one uniform condition across the corpus — TOTAL integrated input-referred noise, 1 Hz-1 MHz,
+# CL = 10p. ngspice inoise_total is already volts rms integrated over the swept band; the
+# datasheet binds it as vn_in_integrated (unit V).
+# VCM 0.5 (NOT the corpus-common 0.6): the SRMC system CM — 0.6 rails the behavioral servos
+# through the filter's DC-coupled R path (see circuit.yaml notes); every bench of this circuit
+# runs at 0.5.
+schema: spicexplorer/analysis@1
+id: noise
+template: noise_diff
+description: "Total integrated input-referred noise, 1 Hz - 1 MHz, differential path; vn_in_integrated."
+params:
+  FSTART: 1
+  FSTOP: 1MEG  # in-band ceiling: every sizable amp's closed-loop BW is >=2 MHz; integrating past it turns inoise_total into an out-of-band artifact (inoise = onoise / a gain that has fallen below unity)
+  PPD: 21
+  CL: 10p
+  VCM: 0.5
+  VDD: 1.2
+flags: []
+produces: [vn_in_integrated]

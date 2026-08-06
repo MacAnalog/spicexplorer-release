@@ -5,6 +5,6 @@ schema: spicexplorer/analysis@1
 id: ac_open_loop
 template: ac_open_loop_biaswrap_ibias
 description: "Bias-wrapped open-loop AC gain/phase for dc_gain_db, ugf_hz, pm_deg."
-params: {VDD: 1.5, VCM: 0.6, IBIAS: 20u, CL: 500f, FSTART: 1, FSTOP: 1G, PPD: 50}
+params: {VDD: 1.5, VCM: 0.6, IBIAS: 20u, CL: 10p, FSTART: 1, FSTOP: 1G, PPD: 50}
 flags: [bias_wrap]
 produces: [dc_gain_db, ugf_hz, pm_deg]

@@ -1,0 +1,25 @@
+# Analysis binding for the SELF-BIASED Peng TCFC 3-stage OTA (no ibias port) — uses the
+# class's ibias-free template variant so no external current source is left driving a
+# dangling node. Two-tone IIP3 in the unity buffer.
+# TONE GRID: fresh ac_open_loop @ ihp-sg13g2 tt (2026-08-01, landed sizing) reads
+# ugf = 2.126 MHz < 3 MHz -> the campaign grid divides by 100: tones F1/F2 = 9/10 kHz
+# (exact 9:10 ratio) share the F0 = gcd = 1 kHz fundamental (n1=9, n2=10), so the IM3
+# products at 8/11 kHz (bins 8/11) and IM5 at 7/12 kHz (bins 7/12) land on exact F0 bins —
+# the in-deck coherent DFT then has no leakage.
+# COHERENT WINDOW (integer-beat contract is load-bearing): beat period 1/F0 = 1 ms;
+# TSTART = 4m = 4 WHOLE beat periods >= 20x the measured t_settle (198.998 us, tran_step
+# same run — biaswrap-dominated, so an upper bound for this plain unity buffer);
+# TSTOP - TSTART = 20m = 20 beat periods. TSTEP = 500n <= 1/(200*F2).
+# DRIVE: ASIG = 6.25 mV per tone ALWAYS — the class-wide honest intercept level (see the
+# iip3.spice header's measured valid-window sweep). Plain decimal (0.00625), never a SPICE
+# suffix — ASIG/F0/F1/F2 reach .control arithmetic.
+# TRUST CHECKS: a_im3 must sit well above a_floor (>= 20 dB); gain_tone < 0.5 means the
+# dead-output guard fired and iip3_dbv is the -999 sentinel; iip3_comp_db estimates the
+# residual compression error.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_selfbias
+description: "IIP3 — two-tone (9/10 kHz) intermodulation intercept; tran + coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 240m, CL: 10p, ASIG: 0.00625, F0: 1.0e3, F1: 9.0e3, F2: 1.0e4, TSTEP: 500n, TSTART: 4m, TSTOP: 24m}
+flags: []
+produces: [iip3_dbv]

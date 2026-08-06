@@ -32,7 +32,13 @@ _CASES = [(cid, pdk) for cid, pdks in sorted(_SNAPSHOT.items()) for pdk in sorte
 
 @pytest.mark.parametrize(("cid", "pdk"), _CASES, ids=[f"{c}@{p}" for c, p in _CASES])
 def test_numeric_parity_with_pre_migration_deck(cid, pdk):
-    """Same devices, same fields, same resolved numbers as before the atomic migration."""
+    """Same devices, same fields, same resolved numbers as the committed baseline snapshot.
+
+    Originally the atomic-migration acceptance oracle (pre-migration decks). The corpus
+    was INTENTIONALLY resized on 2026-08-02 (campaign winners committed as defaults), so
+    the snapshot was re-baselined with the same oracle at the committed geometry: from
+    here on it trips on ACCIDENTAL rendering/unit/tie regressions, and is refreshed only
+    together with a deliberate corpus resize — never to make a red test green."""
     old = _SNAPSHOT[cid][pdk]
     new = ppa.resolve_deck_geometry(dut_path(model.load_circuit(cid), pdk).read_text())
     assert set(new) == set(old), f"device set changed: {sorted(set(new) ^ set(old))}"

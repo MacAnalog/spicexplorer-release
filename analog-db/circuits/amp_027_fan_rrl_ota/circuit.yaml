@@ -6,6 +6,8 @@ subfamily: ota
 realization: transistor
 display_name: "Fan ripple-reduction-loop SC-integrator opamp core (telescopic + DDA-CMFB)"
 stages: 1
+cm_control: regulated
+signal_path: fully_differential
 ports: [vinp, vinn, voutp, voutn, vdd, vss]
 provenance:
   source: drawings/ccia-02-QinwenFan-chopper-ripple-reduction (hand-drawn xschem, integrator-switchcap-opamp.sch)
@@ -23,6 +25,6 @@ artifacts:
   abstract_netlist: abstract/netlist.spice
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
-pdks: [ihp-sg13g2, FOUNDRY-n65]
-analyses: [ac_open_loop, dc_op, noise, tran_step, ac_cm_reg, tran_cm_kick]
+pdks: [ihp-sg13g2, FOUNDRY-n65, sky130, gf180mcu]
+analyses: [ac_open_loop, dc_op, noise, tran_step, ac_cm_reg, tran_cm_kick, thd, iip3, stb, cmrr_vcm, psrr_vdd]
 status: draft

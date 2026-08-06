@@ -1,0 +1,33 @@
+# Analysis binding for the SELF-BIASED error amp (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# Two-tone IIP3 in the unity buffer: 6.25 mV tones at 90/100 kHz share the F0 = gcd =
+# 10 kHz fundamental (n1=9, n2=10, the exact 9:10 ratio the class fixes), so the IM3
+# products at 80/110 kHz (bins 8/11) and the IM5 products at 70/120 kHz (bins 7/12) land on
+# exact F0 bins — the in-deck coherent DFT then has no leakage.
+# TONE PLACEMENT per the campaign F0 grid, keyed on the FRESH open-loop ugf: measured
+# ugf = 18.65 MHz (ac_open_loop @ gf180mcu tt, 2026-08-01, landed sizing) sits in the
+# 3-30 MHz band -> the whole grid divides by 10 from the >=30 MHz reference (0.9/1.0 MHz).
+# This supersedes the pilot's 0.9/1.0 MHz, which had keyed off bw_cl (22.64 MHz) instead
+# of ugf.
+# COHERENT WINDOW: TSTART = 100u = 1 whole beat period (1/F0) = 243x the measured 411 ns
+# settling (the integer-beat contract is load-bearing — TSTART must be whole beats);
+# TSTOP-TSTART = 2000u = 20 beat periods; TSTEP = 50n = 1/(200*F2).
+# DRIVE: ASIG = 6.25 mV per tone — the class default (see the iip3.spice header's measured
+# valid-window sweep: compression bounds the intercept above ~14 mV, the deck's own floor
+# below ~2.5 mV; 6.25 mV is the geometric centre). Plain decimal (0.00625), never a SPICE
+# suffix — ASIG/F0/F1/F2 reach .control arithmetic.
+# REPORTING: `produces:` names the DATASHEET METRIC ID (analysis.schema.json) this bench
+# feeds — datasheet.yaml binds metrics.iip3_dbv.{analysis: iip3, extract.meas: iip3_dbv}
+# with extract f1/f2/ampl_in mirroring these params. The other measures (im3_dbc,
+# a_f1/a_f2/a_drv, gain_tone, a_im3l/h, a_im5l/h, a_floor, im5_im3_db, iip3_comp_db) still
+# ride the recorded `corners.<corner>.analyses.iip3.measures` block. TRUST CHECKS: a_im3
+# must sit well above a_floor; iip3_comp_db estimates residual compression error (usable
+# one-sided only at this drive); gain_tone < 0.5 means the dead-output guard fired and
+# iip3_dbv is the -999 sentinel.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_selfbias
+description: "IIP3 — two-tone intermodulation intercept; tran+coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 3.3, VCM: 1.2, CL: 10p, ASIG: 0.00625, F0: 0.01e6, F1: 0.09e6, F2: 0.1e6, TSTEP: 50n, TSTART: 100u, TSTOP: 2100u}
+flags: []
+produces: [iip3_dbv]

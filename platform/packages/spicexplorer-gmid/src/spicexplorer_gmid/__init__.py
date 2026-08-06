@@ -19,7 +19,10 @@ Quickstart::
     nch = DeviceTable.load("…/_shared/gmid/sky130/sky130_fd_pr__nfet_01v8__tt.pkl")
     op  = nch.at(gm_id=15, L=0.5, vds=0.9)            # OperatingPoint: jd, vgs, av0, ft, caps
     dev = size_for_gm(nch, gm=1e-3, gm_id=15, L=0.5, vds=0.9)   # SizedDevice(W, ID, op, gates)
-    assert dev.passed                                 # all sanity gates hold
+    assert dev.passed                                 # every BLOCKING sanity gate holds
+
+``gates`` is three-state: a gate whose ``status`` is ``"unchecked"`` is an advisory the caller never
+asked to be gated on (see :class:`SanityGate`) and is reported without vetoing ``passed``.
 """
 
 from .contract import (

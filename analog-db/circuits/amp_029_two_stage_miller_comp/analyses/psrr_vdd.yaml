@@ -1,0 +1,25 @@
+# Analysis binding: positive-supply rejection (class psrr_vdd_diff template — the FD
+# counterpart of psrr_vdd; this cell is self-biased with voutp/voutn, so the SE unity-buffer
+# bench does not fit). The differential loop is closed by the template's CM-pinned VCVS network,
+# inputs AC-quiet, Vdd carries the 1 V ripple; psrr_vdd_db = -db(voutp-voutn) at FSTART.
+# CAVEAT (template header, "SOLVER-RESOLUTION CEILING"): on this perfectly symmetric netlist
+# the supply disturbs both half-circuits identically, so the differential figure saturates near
+# the 300 dB floor-cap — "beyond solver resolution", not physical. The secondary psrr_cm_db
+# (output-CM supply rejection through the cell's CM path) is the always-physical,
+# discriminating figure and rides the scoreboard analyses block. On THIS cell there is NO CM
+# servo (cm_control: partial), so psrr_cm_db measures the raw, unregulated CM supply path —
+# expect it weak relative to amp_020 (the servo'd sibling); that is the honest finding.
+# Params mirror the circuit's other benches (VDD 1.2, VCM 0.6, CL 10p, FSTART 1k).
+schema: spicexplorer/analysis@1
+id: psrr_vdd
+template: psrr_vdd_diff
+description: "PSRR+ — 1 V supply ripple into the CM-pinned differential unity-feedback loop, DC-band floor (+ psrr_cm_db CM-path figure)."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 10p
+  FSTART: 1k
+  FSTOP: 1G
+  PPD: 101
+flags: []
+produces: [psrr_vdd_db]

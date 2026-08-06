@@ -18,8 +18,8 @@ variables:
   - {name: x_dut_xm6_l,  description: "Bias diode length (mirror L for tail + sinks)", default: 1u, min: 0.13u, max: 10u, unit: m}
   - {name: x_dut_xm7_w,  description: "Output sink width (mirror ratio vs XM6 sets stage-2 current)", default: 6u, min: 0.15u, max: 100u, unit: m}
   - {name: x_dut_xm8_w,  description: "Tail mirror width (ratio vs XM6 sets the tail current)", default: 2u, min: 0.15u, max: 100u, unit: m}
-  - {name: x_dut_r1_value, description: "Per-side Miller zero-nulling resistor", default: 2k, min: 100, max: 50k, unit: ohm}
-  - {name: x_dut_c1_value, description: "Per-side Miller compensation cap (0.3p: the open-CM settle tail scales with the Miller cap — 1p put t_settle at 9.3 us vs the 5 us spec; 0.3p settles 3.1 us with pm 77)", default: 0.3p, min: 0.05p, max: 20p, unit: F}
+  - {name: x_dut_r1_value, description: "Per-side Miller zero-nulling resistor", default: 30k, min: 100, max: 50k, unit: ohm}
+  - {name: x_dut_c1_value, description: "Per-side Miller compensation cap (0.3p: the open-CM settle tail scales with the Miller cap — 1p put t_settle at 9.3 us vs the 5 us spec; 0.3p settles 3.1 us with pm 77)", default: 0.4p, min: 0.05p, max: 20p, unit: F}
   - {name: i_bias, description: "Bias reference current into the XM6 diode (drawn as a 1 mA literal — re-seeded)", default: 20u, min: 1u, max: 500u, unit: A}
   - {name: vbl, description: "Stage-1 PMOS load gate bias (the drawing's floating net X; knife-edge CM knob; see notes — the tt interior window is ~0.2 mV wide, so this default is centered to 4 decimals; ANY perturbation rails the OP, which is the structural cm_interior_pts finding)", default: 0.7087, min: 0.0, max: 1.2, unit: V}
   # Frozen per-device m literals

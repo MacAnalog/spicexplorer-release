@@ -1,0 +1,41 @@
+# Analysis binding: loop-gain / stability probe of the DIFFERENTIAL loop (class stb_diff
+# template — the FD counterpart of stb; this cell is self-biased with voutp/voutn, so the SE
+# unity-buffer probe does not fit). The differential unity feedback is closed by the template's
+# CM-pinned VCVS network (input CM held at VCM = the ac_open_loop_diff operating point) and the
+# loop is broken by antiphase Middlebrook injection at the VIPRB/VIPRBM marker pair; the probed
+# transmission is exactly Add, so pm_loop here crosschecks ac_open_loop's pm_deg.
+# PILOT-MEASURED (ihp-sg13g2 tt, 2026-08-01, both benches at the CURRENT CL=10p bindings):
+#   stb_diff  loopgain_db 65.92504 / ugf_loop 68.2889M / pm_loop 26.182 / gm_loop 27.95
+#   ac_open_loop (fresh)  dcgain 65.92503 / ugf 68.2980M / pm 26.261  -> deltas: ugf 0.013%
+#   (interpolation), pm 0.08 deg (reference-convention residual). The 26-deg margin is the
+#   CIRCUIT at this sizing (it fails its own pm_deg >= 60 spec), not a bench artifact; a real
+#   in-band phase crossover exists here, so gm_loop is a live 28 dB reading (on cells whose
+#   phase never reaches -180 in-band, gm_loop = -999 is CORRECT sentinel behavior).
+# FSTART 0.01 is the SE-corpus class value (see stb.spice "CHOOSING FSTART"); this cell's
+# dominant pole sits ~35 kHz (ugf/10^(dcgain/20)), so |phref_dev| at 0.01 Hz is negligible and
+# the phase-reference guard has ~30 deg of headroom. NO Spectre lane: stb_diff has no
+# spectre-benches.yaml entry (a native differential stb needs a diffstbprobe pair — see the
+# template header).
+# REPORTING: `produces:` names DATASHEET METRIC IDS. pm_loop_deg/loopgain_db/ugf_loop_hz/
+# gm_loop_db are wired in datasheet.yaml; pm_loop_first/phref_dev/phref_ok ride the scoreboard
+# entry's analyses block.
+schema: spicexplorer/analysis@1
+id: stb
+template: stb_diff
+description: "Differential loop gain (stb) — loopgain_db/ugf_loop/pm_loop/gm_loop by antiphase Middlebrook injection at the VIPRB/VIPRBM pair (ngspice only)."
+# FSTART 0.01 -> 1e-4 (2026-08-04): the stb bench anchors phase at its first swept point and
+# blanks pm_loop/gm_loop to the -999 sentinel when |phref_dev| > 30 deg. For a high-gain amp
+# the dominant pole f_p = UGF/A0 is sub-Hz, so 0.01 Hz already sits PAST it — and because
+# every stabilising move lowers UGF (hence f_p), the guard fires HARDER on a correct fix than
+# on the broken design. Measured on amp_006@gf180: the committed (unstable) sizing reports
+# pm_loop -16.5, while the stabilised one reports -999 at 0.01 Hz and +66.0 at 1e-4. pm_loop
+# and gm_loop are FSTART-INVARIANT; only the guard moves.
+params:
+  VDD: 1.5
+  VCM: 0.9
+  CL: 10p
+  FSTART: 1e-4     # class value; see the stb template's "CHOOSING FSTART"
+  FSTOP: 1G
+  PPD: 101
+flags: []
+produces: [pm_loop_deg, loopgain_db, ugf_loop_hz, gm_loop_db]

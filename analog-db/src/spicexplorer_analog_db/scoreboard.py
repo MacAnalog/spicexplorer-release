@@ -103,6 +103,40 @@ def set_baseline(circuit: Circuit, pdk: str, did: str) -> Path:
     return f
 
 
+# --------------------------------------------------------------------------- FD CM-path fix
+
+# Fully-differential CMRR/PSRR: the `_diff` benches report `cmrr_cm_db`/`psrr_cm_db` as the RAW
+# output-CM residual to a 1 V input-CM (supply) ride, `-db|vocm|` — the CM-loop's own rejection,
+# WITHOUT the differential gain. That is a CM-to-CM ratio, not a rejection *figure*: a proper
+# CMRR/PSRR is (differential gain)/(the disturbance gain), so the residual is short by exactly
+# the differential open-loop gain `dc_gain_db` (the single-ended unity-buffer benches already
+# fold this in via the closed loop; the FD CM path does not close a CM loop, so it cannot).
+# We derive the corrected physical figure here — `corrected = dc_gain_db + cm_residual` (dB) —
+# and store it ALONGSIDE the raw measure (which is kept intact, and still drives the
+# datasheet metric, for traceability). Single-ended cells are untouched.
+_FD_CM_CORRECTED = {
+    # corrected metric  -> raw CM-residual metric it is derived from
+    "cmrr_cm_corr_db": "cmrr_cm_db",
+    "psrr_cm_corr_db": "psrr_cm_db",
+}
+
+
+def _apply_fd_cm_correction(circuit: Circuit, metrics_by_corner: dict[str, Any]) -> None:
+    """For fully-differential cells, add `cmrr_cm_corr_db`/`psrr_cm_corr_db`
+    (= `dc_gain_db` + the raw CM residual) into each corner's metric block, in place."""
+    if circuit.manifest.get("signal_path") != "fully_differential":
+        return
+    for metrics in metrics_by_corner.values():
+        dcg = metrics.get("dc_gain_db") or {}
+        dc_val = dcg.get("value")
+        if dc_val is None:
+            continue
+        for corr, raw in _FD_CM_CORRECTED.items():
+            r = metrics.get(raw) or {}
+            if r.get("value") is not None:
+                metrics[corr] = {"value": float(dc_val) + float(r["value"]), "spec": "none"}
+
+
 # --------------------------------------------------------------------------- write / upsert
 
 
@@ -147,6 +181,7 @@ def record(
     entry["metrics"] = {
         c: ppa.metric_values(circuit, block["analyses"]) for c, block in entry["corners"].items()
     }
+    _apply_fd_cm_correction(circuit, entry["metrics"])
     entry["ppa"] = ppa.ppa_rollup(
         circuit, entry["metrics"], entry["area"], entry["parameters"].get("analysis_params")
     )
@@ -234,7 +269,10 @@ def build_index() -> dict[str, Any]:
     per-circuit entries + baselines. Drift-guarded like catalog.json (Tier 0)."""
     classes: dict[str, Any] = {}
     for c in load_all_circuits():
-        if c.is_reference_only:
+        # `kind: reference` = imported foreign deck (never run here, so nothing to score).
+        # `published: false` = DE-PUBLISHED: still verifiable and still drift-guarded everywhere
+        # else, but deliberately out of this index and out of the paper tabulation.
+        if c.is_reference_only or not c.is_published:
             continue
         base = baselines(c)
         for pdk in sorted({e["pdk"] for e in load_entries(c)}):
@@ -247,6 +285,14 @@ def build_index() -> dict[str, Any]:
                     "pareto": e["design_id"] in front,
                     "ppa": e.get("ppa", {}),
                     "spec": _spec_counts(e),
+                    # full per-corner datasheet metric values (2026-08-01): ppa.performance
+                    # carries only the class PPA trio, which forced every consumer that
+                    # wanted thd/iip3/noise/loop columns (the paper extractor first) back
+                    # to the per-circuit entry files. {corner: {metric: value}}.
+                    "metrics": {
+                        corner: {m: v.get("value") for m, v in (block or {}).items()}
+                        for corner, block in (e.get("metrics") or {}).items()
+                    },
                 }
                 for e in entries
             ]

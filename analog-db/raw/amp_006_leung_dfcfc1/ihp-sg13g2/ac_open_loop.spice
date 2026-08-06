@@ -27,7 +27,7 @@
 
 .param VDD=1.8
 .param VCM=300m
-.param CL=100p
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD}
 Vss  vss 0 dc 0
@@ -40,8 +40,8 @@ CLoad vout 0 {CL}
 XDUT vss vdd vinn vinp vout amp_006_leung_dfcfc1
 .control
   set filetype=ascii
-  ac dec 50 0.1 1G
-  meas ac dcgain FIND vdb(vout) AT=0.1
+  ac dec 50 1e-4 1G
+  meas ac dcgain FIND vdb(vout) AT=1e-4
   meas ac ugf    WHEN vdb(vout)=0 FALL=1
   let phc = cph(vout)*180/3.14159265
   let ph  = 180 + phc - phc[0]
@@ -49,36 +49,36 @@ XDUT vss vdd vinn vinp vout amp_006_leung_dfcfc1
   write
   quit
 .endc
-.param CAPACITOR_0=2.873729650249834e-11
-.param CAPACITOR_1=1.1677356202161408e-11
-.param CURRENT_0_BIAS=2.7475365729811497e-05
-.param x_dut_xm7_l=6.1371043927757915e-06
+.param CAPACITOR_0=2.87373e-11
+.param CAPACITOR_1=1.16774e-11
+.param CURRENT_0_BIAS=2.74754e-05
+.param x_dut_xm7_l=6.1371e-06
 .param x_dut_xm7_m=4
-.param x_dut_xm7_w=6.727501335456891e-06
-.param x_dut_xm11_l=6.961233692739564e-07
+.param x_dut_xm7_w=6.7275e-06
+.param x_dut_xm11_l=6.96123e-07
 .param x_dut_xm11_m=200
-.param x_dut_xm11_w=1.5050838612086615e-06
-.param x_dut_xm12_l=2.0426615436427065e-06
+.param x_dut_xm11_w=1.50508e-06
+.param x_dut_xm12_l=2.04266e-06
 .param x_dut_xm12_m=400
-.param x_dut_xm12_w=7.486644750587914e-06
-.param x_dut_xm16_l=1.5898538473791919e-06
+.param x_dut_xm12_w=7.48664e-06
+.param x_dut_xm16_l=1.58985e-06
 .param x_dut_xm16_m=16
-.param x_dut_xm16_w=7.219679123554545e-07
-.param x_dut_xm20_l=7.015457403026442e-06
+.param x_dut_xm16_w=7.21968e-07
+.param x_dut_xm20_l=7.01546e-06
 .param x_dut_xm15_m=4
-.param x_dut_xm20_w=3.54881707550977e-06
-.param x_dut_xm22_l=8.08116214349495e-06
+.param x_dut_xm20_w=3.54882e-06
+.param x_dut_xm22_l=8.08116e-06
 .param x_dut_xm22_m=4
-.param x_dut_xm22_w=5.4970099186658744e-06
-.param x_dut_xm24_l=4.485850128583984e-06
+.param x_dut_xm22_w=5.49701e-06
+.param x_dut_xm24_l=4.48585e-06
 .param x_dut_xm24_m=1
-.param x_dut_xm24_w=6.8038300585277925e-06
-.param x_dut_xm25_l=8.947732565577995e-07
+.param x_dut_xm24_w=6.80383e-06
+.param x_dut_xm25_l=8.94773e-07
 .param x_dut_xm25_m=400
-.param x_dut_xm25_w=3.8444735044268176e-07
-.param x_dut_xm10_l=1.7462013837225688e-06
+.param x_dut_xm25_w=3.84447e-07
+.param x_dut_xm10_l=1.7462e-06
 .param x_dut_xm10_m=100
-.param x_dut_xm10_w=2.8014023725957963e-06
+.param x_dut_xm10_w=2.8014e-06
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

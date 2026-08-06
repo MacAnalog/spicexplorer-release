@@ -2,7 +2,8 @@
 
 Two demos in one, on **two amplifier topologies**:
 
-- **`amp_020`** — the unsized two-stage Miller OTA (`analog-db amp_020_two_stage_miller_cmfb`).
+- **`amp_029`** — the unsized two-stage Miller OTA (`analog-db amp_029_two_stage_miller_comp`;
+  the successor of the retired `amp_020_two_stage_miller_cmfb` — same 10-transistor topology).
 - **`amp_008`** — the three-stage **nested-Miller (NMCF)** op-amp (`analog-db amp_008_leung_nmcf`), a
   wider 15-knob search space that exercises the same path on a harder problem.
 
@@ -18,7 +19,7 @@ Both on `ihp-sg13g2` / ngspice.
      **no `devices:` list**: it is computed by the **recursive netlist walk**
      (`spicexplorer_core.measurements.area`), which discovers *every* transistor in the DUT deck and
      resolves each multiplier from the deck's own `.param` ties — no simulation. (A hand-authored
-     device list previously undercounted: amp_020 omitted the voutn twins XM9/XM10, and amp_008 saw
+     device list previously undercounted: the 2-stage OTA omitted the voutn twins XM9/XM10, and amp_008 saw
      7 of 24 devices — ~10× low once the ×4…×32 multipliers are counted.)
 
    Both are scored, normalized (by their spec `range`), and aggregated into the single objective
@@ -35,11 +36,11 @@ Both on `ihp-sg13g2` / ngspice.
 
 | File | What |
 |---|---|
-| `amp_020_baseline.yaml` / `amp_020_area_power.yaml` | two-stage OTA: perf-only / + `power` + `active_area`. |
+| `amp_029_baseline.yaml` / `amp_029_area_power.yaml` | two-stage OTA: perf-only / + `power` + `active_area`. |
 | `amp_008_baseline.yaml` / `amp_008_area_power.yaml` | three-stage NMCF: perf-only / + `power` + `active_area`. |
 | `run_demo.py` | Sweeps `{baseline, area+power} × {nevergrad, ax}` for a chosen circuit; prints a comparison table. |
 
-`run_demo.py` flags: `--circuit {amp_020,amp_008,both}` (default `amp_020`), `--budget N`,
+`run_demo.py` flags: `--circuit {amp_029,amp_008,both}` (default `amp_029`), `--budget N`,
 `--batch-size N` (Ax only — candidates per generation call; `1` = exact serial parity), and
 `--parallel-sim`. Flip the engine per-YAML by editing `optimizer_config.type:` (or let the script
 sweep both).
@@ -61,13 +62,14 @@ and writes per-trial ngspice output to `/tmp/sxsim` (keeps a bind-mounted `examp
 ## Results (seed 48 — indicative: short budget, run-to-run variance)
 
 > **Note:** the `active_area` column below predates the recursive netlist-walk fix — it was
-> produced by the old hand-listed `devices:` recipe (amp_020: 8 of 10 devices; amp_008: 7 of 24).
-> Under the netlist walk the area is larger and complete (amp_020 default ≈ 20.8 µm²; amp_008
+> produced by the old hand-listed `devices:` recipe (2-stage OTA: 8 of 10 devices; amp_008: 7 of 24),
+> on the now-retired amp_020 vehicle. Under the netlist walk the area is larger and complete
+> (amp_029 default = 58.0 µm² over all 10 devices; amp_008
 > default ≈ 236 µm² with the ×4…×32 multipliers), and the specs' `target`/`range` were rescaled to
 > match. Re-run in the container to refresh these numbers; the exact per-device breakdown for any
 > candidate is `python -m spicexplorer_core.measurements.area <deck> --table`.
 
-**amp_020, two-stage OTA (budget 10):**
+**two-stage OTA (budget 10) — measured on the retired amp_020 vehicle; re-run on amp_029:**
 
 ```
 run                         score       dcgain          ugf           pm        power  active_area

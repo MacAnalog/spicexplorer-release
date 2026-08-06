@@ -7,7 +7,7 @@ description: "Step settling (t_settle) in the diff unity-follower configuration.
 params:
   VDD: 1.2
   VCM: 0.6
-  CL: 50f
+  CL: 10p
   VSTEP: 50m
   TSTART: 1u
   TSTEP: 1n

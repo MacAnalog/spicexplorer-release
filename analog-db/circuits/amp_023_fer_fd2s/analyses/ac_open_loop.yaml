@@ -1,10 +1,10 @@
-# Analysis binding (plan D-4): differential open-loop AC via ac_open_loop_diff (amp_020
-# pattern) — the symmetric FD topology + internal CMFB keep the output defined at matched
+# Analysis binding (plan D-4): differential open-loop AC via ac_open_loop_diff (the FD
+# `_diff` pattern) — the symmetric FD topology + internal CMFB keep the output defined at matched
 # inputs, no bias-wrap needed.
 schema: spicexplorer/analysis@1
 id: ac_open_loop
 template: ac_open_loop_diff
 description: "Open-loop differential AC gain/phase for dc_gain_db, ugf_hz, pm_deg."
-params: {VDD: 1.5, VCM: 0.9, CL: 500f, FSTART: 100, FSTOP: 1G, PPD: 50}
+params: {VDD: 1.5, VCM: 0.9, CL: 10p, FSTART: 100, FSTOP: 1G, PPD: 50}
 flags: []
 produces: [dc_gain_db, ugf_hz, pm_deg]

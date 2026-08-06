@@ -15,19 +15,19 @@ variables:
   - {name: x_dut_xm4_w,  description: "First-stage NMOS fold-sink width (gate vb1)", default: 10u, min: 0.15u, max: 100u, unit: m}
   - {name: x_dut_xm4_l,  description: "First-stage NMOS fold-sink length", default: 1u, min: 0.13u, max: 10u, unit: m}
   - {name: x_dut_xm6_w,  description: "PMOS fold current-source width (gate vb4)", default: 10u, min: 0.15u, max: 100u, unit: m}
-  - {name: x_dut_xm8_w,  description: "Class-A output PMOS current-source width (gate vb4)", default: 10u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm8_w,  description: "Class-A output PMOS current-source width (gate vb4)", default: 20u, min: 0.15u, max: 100u, unit: m}
   - {name: x_dut_xm10_w, description: "PMOS cascode width (gate vb3)", default: 10u, min: 0.15u, max: 100u, unit: m}
   - {name: x_dut_xm10_l, description: "PMOS cascode length", default: 0.3u, min: 0.13u, max: 5u, unit: m}
   - {name: x_dut_xm12_w, description: "Folded NMOS cascode width (gate vb2)", default: 5u, min: 0.15u, max: 100u, unit: m}
   - {name: x_dut_xm12_l, description: "Folded NMOS cascode length", default: 0.3u, min: 0.13u, max: 5u, unit: m}
-  - {name: x_dut_xm14_w, description: "Class-A output NMOS common-source width (big W/L: gm2 must clear the Miller RHP zero)", default: 10u, min: 0.15u, max: 100u, unit: m}
+  - {name: x_dut_xm14_w, description: "Class-A output NMOS common-source width (big W/L: gm2 must clear the Miller RHP zero)", default: 20u, min: 0.15u, max: 100u, unit: m}
   - {name: x_dut_xm14_l, description: "Class-A output NMOS common-source length", default: 0.25u, min: 0.13u, max: 10u, unit: m}
   - {name: x_dut_xm16_w, description: "Chopper TG NMOS pass-device width (all 4 legs)", default: 2u, min: 0.15u, max: 50u, unit: m}
   - {name: x_dut_xm16_l, description: "Chopper TG NMOS pass-device length (all 4 legs)", default: 0.13u, min: 0.13u, max: 5u, unit: m}
   - {name: x_dut_xm17_w, description: "Chopper TG PMOS pass-device width (all 4 legs)", default: 2u, min: 0.15u, max: 50u, unit: m}
   - {name: x_dut_xm17_l, description: "Chopper TG PMOS pass-device length (all 4 legs)", default: 0.13u, min: 0.13u, max: 5u, unit: m}
-  - {name: x_dut_cm1_value, description: "Per-side Miller compensation cap (pair tied; drawn 1p was an unedited default)", default: 2p, min: 0.05p, max: 20p, unit: F}
-  - {name: vb1, description: "First-stage NMOS fold-sink gate bias (drawn as an external 0.5 V port; retuned — 0.5 collapses the knife-edge stage-1 output node, no CMFB)", default: 0.398118, min: 0.0, max: 1.2, unit: V}
+  - {name: x_dut_cm1_value, description: "Per-side Miller compensation cap (pair tied; drawn 1p was an unedited default)", default: 6p, min: 0.05p, max: 20p, unit: F}
+  - {name: vb1, description: "First-stage NMOS fold-sink gate bias (drawn as an external 0.5 V port; retuned — 0.5 collapses the knife-edge stage-1 output node, no CMFB)", default: 0.3983759766, min: 0.0, max: 1.2, unit: V}
   - {name: vb2, description: "Folded NMOS cascode gate bias (drawn as an external 0.5 V port; lowered for out1 headroom at the gm2-boosted stage-2 gate level)", default: 0.65, min: 0.0, max: 1.2, unit: V}
   - {name: vb3, description: "PMOS cascode gate bias (drawn as an external 0.5 V port)", default: 0.45, min: 0.0, max: 1.2, unit: V}
   - {name: vb4, description: "PMOS current-source gate bias — tail + fold + output sources (drawn 0.5 V)", default: 0.55, min: 0.0, max: 1.2, unit: V}

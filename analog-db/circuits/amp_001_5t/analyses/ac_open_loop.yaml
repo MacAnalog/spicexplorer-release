@@ -8,7 +8,7 @@ params:
   FSTART: 1k
   FSTOP: 100MEG
   PPD: 101
-  CL: 50f
+  CL: 10p
   VCM: 0.8
   VDD: 1.5
   IBIAS: 20u

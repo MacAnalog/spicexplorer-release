@@ -53,6 +53,9 @@ canonical_metrics:
   - icmr_min
   - icmr_max
   - vos              # input-referred offset
+  - vocm             # dc_op: settled output COMMON mode (voutp+voutn)/2 — where a CMFB'd
+                     #   entry's CM loop landed vs its commanded reference; on a no-CMFB
+                     #   core it is the device-ratio knife-edge value
   - i_supply
   - slew_rate
   - t_settle
@@ -69,6 +72,7 @@ canonical_metrics:
   - zin_ohm          # differential input impedance |Zin| at FSIG, static network
   - zin_chop_ohm     # CHOPPED differential input impedance (avg input current under clocking)
   - vos_residual     # residual input-referred offset under chopping
+  - psrr_chop_cm_db  # RAW baseband output-CM supply rejection with clocks running (PSS+PAC); CMFB-limited (the output chopper cannot modulate the CM), report-only
   - f_chop_hz        # chopping frequency the clocked figures were measured at
   # --- open-loop figures of the internal amplifier (constituent-block char.) ---
   - dc_gain_db
@@ -96,6 +100,8 @@ templates:
   - pac_zin_chopper_diff     #   ...its template file
   - pnoise_chopped           # analysis id for pnoise_chopped_diff (P3-2c chopped input-referred noise)
   - pnoise_chopped_diff      #   ...its template file
+  - psrr_vdd_chop            # analysis id for psrr_vdd_chopper_diff (clocked supply rejection, PSS+PAC baseband)
+  - psrr_vdd_chopper_diff    #   ...its template file
   - dc_op_chopper_diff       # chopper subfamily OP with clocks held transparent
   - cmrr_vcm                 # common-mode rejection in the buffer/closed config
   - cmrr_vcm_selfbias        # …for self-biased DUTs (no ibias port)

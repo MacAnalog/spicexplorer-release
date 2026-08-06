@@ -1,0 +1,36 @@
+# Analysis binding for the SELF-BIASED AnalogGym DUT (no ibias port) — the class's
+# ibias-free template variant, same unity-buffer DC op point tran_step_biaswrap proves out.
+# Two-tone IIP3 in the unity buffer: 6.25 mV tones at 0.9/1.0 MHz share the F0 = gcd =
+# 100 kHz fundamental (n1=9, n2=10), so the IM3 products at 0.8/1.1 MHz (bins 8/11) and the
+# IM5 products at 0.7/1.2 MHz (bins 7/12) land on exact F0 bins — leakage-free coherent DFT.
+# F0 GRID: fresh ac_open_loop @ ihp-sg13g2 tt (2026-08-01) reads ugf = 34.84 MHz >= 30 MHz
+# -> top grid (F1/F2 = 0.9/1.0 MHz); the recorded scoreboard ugf (3.1 MHz) is stale
+# (predates the CL 500p -> 10p standardization) — do not re-derive from it.
+# COHERENT WINDOW: TSTART = 50u = 5 WHOLE beat periods (1/F0 = 10u) — the integer-beat
+# contract is load-bearing; t_settle is UNMEASURABLE at CL=10p (limit cycle, see below) but
+# the step transient decays into its steady oscillation within ~2 us, so 50u covers ~25x
+# that decay. TSTOP-TSTART = 200u = 20 beat periods; TSTEP = 5n = 1/(200*F2).
+# DRIVE: ASIG = 6.25 mV per tone ALWAYS (class contract — geometric centre of the measured
+# valid window, see the iip3.spice header). Plain decimal, never a SPICE suffix.
+# KNOWN CIRCUIT LIMITATION (not a binding artifact): at the corpus-standard CL = 10p this
+# large-cap-load CFCC OTA is UNSTABLE in unity feedback (fresh pm = -63.1 deg, stb
+# pm_loop = -63.4). MEASURED in THIS bench's raw (2026-08-01): a steady 21.53 MHz /
+# 4.2 mV oscillation rides the 6.25 mV tones for the whole window (off-bin, so its
+# coherent leakage into the ~1 MHz bins stays under a_floor = 5.3e-7). The IM3 bins read
+# AT/BELOW the deck floor (a_im3l 5.2e-8, a_im3h 1.9e-7 vs a_floor 5.3e-7; im5_im3_db =
+# +6.5 — the floor tell-tale), so the a_im3 >= a_floor + 20 dB trust gate FAILS and
+# iip3_dbv = 1.0 dBV is a floor-limited read, NOT a certified intercept (true 3rd-order
+# IM sits below this deck's resolution at the oscillating op point). gain_tone = 1.005
+# (slightly >1 — peaking of the unstable loop). Values kept, honest-but-untrusted; the
+# failure is the circuit at this load, not the window.
+# REPORTING: `produces:` names DATASHEET METRIC IDS. The template also prints im3_dbc,
+# a_f1/a_f2/a_drv, gain_tone, a_im3l/h, a_im5l/h, a_floor, im5_im3_db, iip3_comp_db; those
+# ride the recorded `corners.<corner>.analyses.iip3.measures` block. gain_tone < 0.5 means
+# the dead-output guard fired and iip3_dbv is the -999 sentinel.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_selfbias
+description: "IIP3 — two-tone intermodulation intercept; tran+coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 300m, CL: 10p, ASIG: 0.00625, F0: 0.1e6, F1: 0.9e6, F2: 1.0e6, TSTEP: 5n, TSTART: 50u, TSTOP: 250u}
+flags: []
+produces: [iip3_dbv]

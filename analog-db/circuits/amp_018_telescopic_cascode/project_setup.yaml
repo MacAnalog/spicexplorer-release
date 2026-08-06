@@ -160,7 +160,11 @@ project:
       reward_type: none
       enable: true
     - name: v(inoise_total)
-      description: Input-referred noise
+      description: "Total input-referred rms noise integrated over the standardized 1 Hz - 1 MHz band, unity-buffer\
+        \ config, CL=10p (campaign 2026-08-01). ngspice inoise_total is already volts rms over the swept band. REPLACES\
+        \ the old vn_in entry, which mapped the same inoise_total measure under V/sqrt(Hz) \u2014 dimensionally\
+        \ wrong. NO spec; the optimize block is retained from vn_in (its v(inoise_total) hook is unchanged), though\
+        \ its 1.2 mV target predates the band widening."
       testbench: tb_noise
       sim_type: noise
       goal: minimize

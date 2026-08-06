@@ -1,0 +1,29 @@
+# Analysis binding for the SELF-BIASED AnalogGym DUT (no ibias port; internal I0 bias) —
+# uses the class's ibias-free template variant so no external current source is left driving
+# a dangling node. Two-tone IIP3 in the unity buffer: 6.25 mV tones at 9/10 kHz share the
+# F0 = gcd = 1 kHz fundamental (n1=9, n2=10, the exact 9:10 tone ratio), so the IM3 products
+# at 8/11 kHz (bins 8/11) and the IM5 products at 7/12 kHz (bins 7/12) land on exact F0 bins
+# — the in-deck coherent DFT then has no leakage.
+# F0 GRID (campaign rule, fresh numbers): ugf = 2.777 MHz @ ihp-sg13g2 tt (ac_open_loop,
+# 2026-08-01, landed sizing) is < 3 MHz -> the 0.9/1.0 MHz base grid divides by 100 ->
+# F1/F2 = 9/10 kHz, ~278x under the closed-loop bandwidth, safely in-band.
+# COHERENT WINDOW: TSTART = 1m = exactly 1 beat period (the integer-beat contract is
+# load-bearing) = ~48x the measured 1.035 us settling (tran_step t_settle, same fresh run);
+# TSTOP-TSTART = 20m = 20 beat periods; TSTEP = 500n = 1/(200*F2).
+# DRIVE: ASIG = 6.25 mV per tone — the class default (see the iip3.spice header's measured
+# valid-window sweep: compression bounds the intercept above ~14 mV, the deck's own floor
+# below ~2.5 mV; 6.25 mV is the geometric centre). Plain decimal (0.00625), never a SPICE
+# suffix — ASIG/F0/F1/F2 reach .control arithmetic.
+# REPORTING: produces names iip3_dbv — this circuit's datasheet.yaml binds it (2026-08-01
+# rollout). The remaining measures (im3_dbc, a_f1/a_f2/a_drv, gain_tone, a_im3l/h, a_im5l/h,
+# a_floor, im5_im3_db, iip3_comp_db) still ride the recorded
+# `corners.<corner>.analyses.iip3.measures` block. TRUST CHECKS: a_im3 must sit well above
+# a_floor; iip3_comp_db estimates residual compression error (usable one-sided only at this
+# drive); gain_tone < 0.5 means the dead-output guard fired and iip3_dbv is the -999 sentinel.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_selfbias
+description: "IIP3 — two-tone intermodulation intercept; tran+coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 300m, CL: 10p, ASIG: 0.00625, F0: 1.0e3, F1: 9.0e3, F2: 1.0e4, TSTEP: 500n, TSTART: 1m, TSTOP: 21m}
+flags: []
+produces: [iip3_dbv]

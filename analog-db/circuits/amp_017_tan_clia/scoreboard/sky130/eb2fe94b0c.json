@@ -23,12 +23,24 @@
           "error": "amp_017_tan_clia/dc_op@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_017_tan_clia \u00d7 dc_op \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm12.msky130_fd_pr__nfet_01v8 xdut.vb4 xdut.vb3 xdut.net6 vss xdut.xm12:sky130_fd_pr__nfet_01v8__model l=    1.000000000000000e+00     w=    2.000000000000000e-01     nf=    1.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.0000000000000",
           "status": "sim_error"
         },
+        "iip3": {
+          "error": "amp_017_tan_clia/iip3@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_017_tan_clia \u00d7 iip3 \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm12.msky130_fd_pr__nfet_01v8 xdut.vb4 xdut.vb3 xdut.net6 vss xdut.xm12:sky130_fd_pr__nfet_01v8__model l=    1.000000000000000e+00     w=    2.000000000000000e-01     nf=    1.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.000000000000000",
+          "status": "sim_error"
+        },
         "noise": {
           "error": "amp_017_tan_clia/noise@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_017_tan_clia \u00d7 noise \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm12.msky130_fd_pr__nfet_01v8 xdut.vb4 xdut.vb3 xdut.net6 vss xdut.xm12:sky130_fd_pr__nfet_01v8__model l=    1.000000000000000e+00     w=    2.000000000000000e-01     nf=    1.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.0000000000000",
           "status": "sim_error"
         },
         "psrr_vdd": {
           "error": "amp_017_tan_clia/psrr_vdd@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_017_tan_clia \u00d7 psrr_vdd \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm12.msky130_fd_pr__nfet_01v8 xdut.vb4 xdut.vb3 xdut.net6 vss xdut.xm12:sky130_fd_pr__nfet_01v8__model l=    1.000000000000000e+00     w=    2.000000000000000e-01     nf=    1.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.0000000",
+          "status": "sim_error"
+        },
+        "stb": {
+          "error": "amp_017_tan_clia/stb@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_017_tan_clia \u00d7 stb \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm12.msky130_fd_pr__nfet_01v8 xdut.vb4 xdut.vb3 xdut.net6 vss xdut.xm12:sky130_fd_pr__nfet_01v8__model l=    1.000000000000000e+00     w=    2.000000000000000e-01     nf=    1.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.000000000000000e+",
+          "status": "sim_error"
+        },
+        "thd": {
+          "error": "amp_017_tan_clia/thd@sky130/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_017_tan_clia \u00d7 thd \u00d7 sky130 \u00d7 tt\n\nError on line 55 or its substitute:\n  m.xdut.xm12.msky130_fd_pr__nfet_01v8 xdut.vb4 xdut.vb3 xdut.net6 vss xdut.xm12:sky130_fd_pr__nfet_01v8__model l=    1.000000000000000e+00     w=    2.000000000000000e-01     nf=    1.000000000000000e+00     ad=    0.000000000000000e+00     as=    0.000000000000000e+00     pd=    0.000000000000000e+",
           "status": "sim_error"
         },
         "tran_step": {
@@ -39,7 +51,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-21T02:19:53+00:00"
+        "run_at": "2026-08-01T18:25:50+00:00"
       }
     }
   },

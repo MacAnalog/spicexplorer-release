@@ -14,8 +14,8 @@
         "ac_open_loop": {
           "measures": {
             "dcgain": 102.4355,
-            "pm": 77.16659,
-            "ugf": 1627118.0
+            "pm": 86.35532,
+            "ugf": 1791967.0
           },
           "status": "ok"
         },
@@ -32,10 +32,29 @@
           },
           "status": "ok"
         },
+        "iip3": {
+          "measures": {
+            "a_drv": 0.006249378,
+            "a_f1": 0.006249987,
+            "a_f2": 0.006249856,
+            "a_floor": 3.743649e-13,
+            "a_im3h": 2.567094e-10,
+            "a_im3l": 2.216467e-10,
+            "a_im5h": 5.273186e-13,
+            "a_im5l": 4.65801e-13,
+            "gain_tone": 1.000076,
+            "gain_tone_db": 0.0006642608,
+            "iip3_comp_db": 0.04459535,
+            "iip3_dbv": 29.78187,
+            "im3_dbc": -147.729,
+            "im5_im3_db": -53.7474
+          },
+          "status": "ok"
+        },
         "noise": {
           "measures": {
-            "inoise_total": 0.003925555,
-            "onoise_total": 0.0179532
+            "inoise_total": 0.0001014827,
+            "onoise_total": 2.117856
           },
           "status": "ok"
         },
@@ -45,10 +64,37 @@
           },
           "status": "ok"
         },
+        "stb": {
+          "measures": {
+            "gm_loop": 10.90749,
+            "loopgain_db": 102.4358,
+            "phref_dev": -0.041365,
+            "phref_ok": 1.0,
+            "pm_loop": 85.95403,
+            "pm_loop_first": 85.95403,
+            "ugf_loop": 1790775.0
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "measures": {
+            "a1": 0.1000068,
+            "a1_in": 0.09999841,
+            "a2": 2.515485e-06,
+            "a3": 9.559937e-07,
+            "a4": 1.458392e-07,
+            "a5": 8.194688e-08,
+            "gain_tone": 1.000084,
+            "thd_db": -91.3855,
+            "thd_pct": 0.002696031,
+            "vout_op": 0.3000023
+          },
+          "status": "ok"
+        },
         "tran_step": {
           "measures": {
-            "t_settle": 2.999682e-06,
-            "tcross": 3.999682e-06,
+            "t_settle": 8.6244e-07,
+            "tcross": 1.86244e-06,
             "vfinal": 0.5000579
           },
           "status": "ok"
@@ -57,7 +103,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-21T02:13:39+00:00"
+        "run_at": "2026-08-01T18:18:45+00:00"
       }
     }
   },
@@ -72,29 +118,53 @@
         "spec": "pass",
         "value": 102.4355
       },
-      "i_supply": {
+      "gm_loop_db": {
         "spec": "none",
+        "value": 10.90749
+      },
+      "i_supply": {
+        "spec": "pass",
         "value": 0.0002384962
+      },
+      "iip3_dbv": {
+        "spec": "pass",
+        "value": 29.78187
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 102.4358
       },
       "pm_deg": {
         "spec": "pass",
-        "value": 77.16659
+        "value": 86.35532
+      },
+      "pm_loop_deg": {
+        "spec": "pass",
+        "value": 85.95403
       },
       "psrr_vdd_db": {
         "spec": "pass",
         "value": 59.25542
       },
       "t_settle": {
-        "spec": "fail",
-        "value": 2.999682e-06
+        "spec": "pass",
+        "value": 8.6244e-07
+      },
+      "thd_pct": {
+        "spec": "pass",
+        "value": 0.002696031
       },
       "ugf_hz": {
-        "spec": "none",
-        "value": 1627118.0
+        "spec": "fail",
+        "value": 1791967.0
       },
-      "vn_in": {
+      "ugf_loop_hz": {
         "spec": "none",
-        "value": 0.003925555
+        "value": 1790775.0
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 0.0001014827
       }
     }
   },
@@ -137,8 +207,8 @@
     ],
     "performance": {
       "dc_gain_db": 102.4355,
-      "pm_deg": 77.16659,
-      "ugf_hz": 1627118.0
+      "pm_deg": 86.35532,
+      "ugf_hz": 1791967.0
     },
     "power_w": 0.00042929316000000004
   },

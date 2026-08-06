@@ -1,0 +1,24 @@
+# Analysis binding: positive-supply rejection (class psrr_vdd_diff template — the FD
+# counterpart of psrr_vdd; self-biased voutp/voutn cell, SE unity-buffer bench does not fit).
+# Differential loop closed by the template's CM-pinned VCVS network at the SRMC system CM
+# (VCM 0.5), inputs AC-quiet, Vdd carries the 1 V ripple; psrr_vdd_db = -db(voutp-voutn) at
+# FSTART.
+# CAVEAT (template header, "SOLVER-RESOLUTION CEILING"): on this perfectly symmetric netlist
+# the differential figure saturates near the 300 dB floor-cap — "beyond solver resolution",
+# not physical. The secondary psrr_cm_db (output-CM supply rejection through the PMOS-tail
+# stages + behavioral CMFB servos) is the always-physical, discriminating figure.
+# FSTART 10: matches this circuit's ac_open_loop/cmrr_vcm bindings and the slow CM-servo DC
+# band (see cmrr_vcm.yaml).
+schema: spicexplorer/analysis@1
+id: psrr_vdd
+template: psrr_vdd_diff
+description: "PSRR+ — 1 V supply ripple into the CM-pinned differential unity-feedback loop, DC-band floor (+ psrr_cm_db CM-path figure)."
+params:
+  VDD: 1.2
+  VCM: 0.5
+  CL: 10p
+  FSTART: 10
+  FSTOP: 1G
+  PPD: 101
+flags: []
+produces: [psrr_vdd_db]

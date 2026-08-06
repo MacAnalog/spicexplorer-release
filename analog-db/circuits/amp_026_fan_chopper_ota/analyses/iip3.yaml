@@ -1,0 +1,33 @@
+# Analysis binding: two-tone IIP3 in the DIFFERENTIAL unity-feedback follower
+# (amplifier/iip3_diff — tran_step_diff's network, each tone split +/- ASIG/2).
+# ASIG = 6.25 mV PER TONE (applied differential amplitude) — the campaign-standard honest
+# intercept level (50 mV was off the 3:1 IM3 slope on the SE pilots); iip3_dbv is
+# input-referred to this ASIG binding.
+# F0 GRID (campaign rule): fresh ac_open_loop (ihp tt, 2026-08-01) reads ugf = 12.33 MHz —
+# the 3-30 MHz band, so the SE-corpus 0.9/1.0 MHz grid divides by 10: tones F1/F2 =
+# 90/100 kHz share F0 = gcd = 10 kHz (n1=9, n2=10 — the 9:10 ratio exactly), IM3 at
+# 80/110 kHz = bins 8/11, IM5 at 70/120 kHz = bins 7/12, all exact bins.
+# INTEGER-BEAT WINDOW (load-bearing): beat period 1/F0 = 100 us. TSTART = 100u = 1 whole
+# beat period >= 20x the fresh follower t_settle (8.16 us); TSTOP - TSTART = 2000u =
+# 20 beat periods (even -> cm_drift_v's halves hold whole beats); TSTEP = 50n =
+# 1/(200*F2). Tones sit ~62x under the follower's closed-loop crossover (~6.2 MHz).
+# TRUST CHECKS (template header): gain_tone ~ 2 when live (guard threshold 2/3; sentinels
+# iip3_dbv = -999 / im3_dbc = +999); a_im3 must sit >= 20 dB above a_floor; cm_drift_v
+# must be << ASIG (this cell's CM control is partial — ratioed, no explicit CMFB — so the
+# drift is watched extra carefully and recorded).
+# VALIDATION RECORD (ihp-sg13g2 tt, 2026-08-01) — HONEST CIRCUIT-LEVEL FAILURE at the
+# hand-seeded sizing, NOT a binding defect: gain_tone = 57.4 (gate ~2) — even at
+# 6.25 mV/tone the follower does not track; the loop toggles between latch basins
+# entrained by the tones (see thd.yaml's drive-halving record + tran_step's railed
+# vfinal = -0.48 V; fresh open-loop pm 25.1 deg). a_im3l sits only 19.7 dB above
+# a_floor (marginally under the 20 dB gate), and iip3_dbv = -37.5 dBV is the intercept
+# of a relay waveform, not of a linear follower — untrustworthy by the template's own
+# guards, kept as the honest record. cm_drift_v = 1.0e-9 V stayed << ASIG (the
+# partial/ratioed CM held station while the differential loop toggled).
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_diff
+description: "IIP3 — FD follower two-tone intermodulation; tran + in-deck coherent DFT."
+params: {VDD: 1.2, VCM: 0.6, CL: 10p, ASIG: 0.00625, F0: 1.0e4, F1: 0.9e5, F2: 1.0e5, TSTEP: 50n, TSTART: 100u, TSTOP: 2100u}
+flags: []
+produces: [iip3_dbv]

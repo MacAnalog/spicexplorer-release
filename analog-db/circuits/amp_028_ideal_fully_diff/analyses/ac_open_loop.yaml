@@ -9,7 +9,7 @@ params:
   FSTART: 10
   FSTOP: 1G
   PPD: 101
-  CL: 50f
+  CL: 10p
   VCM: 0.6
   VDD: 1.2
 flags: []

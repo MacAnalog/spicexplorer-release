@@ -1,15 +1,19 @@
-# Analysis binding (plan D-4): noise_diff template — input-referred noise density of the
+# Analysis binding (plan D-4): noise_diff template — input-referred noise of the
 # differential path (self-biased DUT).
+# BAND STANDARDIZED 2026-08-01 (campaign): FSTART 1, FSTOP 1G — the paper's noise column is
+# ONE uniform condition, total integrated input-referred noise 1 Hz - 1 MHz in the
+# closed-loop bias config at CL=10p; ngspice inoise_total is volts rms already integrated
+# over this swept band (see datasheet.yaml vn_in_integrated). PPD unchanged.
 schema: spicexplorer/analysis@1
 id: noise
 template: noise_diff
-description: "Input-referred noise density at 1 kHz (vn_in)."
+description: "Total integrated input-referred noise, 1 Hz - 1 MHz (inoise_total, V rms)."
 params:
   FSTART: 1
-  FSTOP: 10MEG
+  FSTOP: 1MEG  # in-band ceiling: every sizable amp's closed-loop BW is >=2 MHz; integrating past it turns inoise_total into an out-of-band artifact (inoise = onoise / a gain that has fallen below unity)
   PPD: 21
-  CL: 50f
+  CL: 10p
   VCM: 0.6
   VDD: 1.2
 flags: []
-produces: [vn_in]
+produces: [vn_in_integrated]

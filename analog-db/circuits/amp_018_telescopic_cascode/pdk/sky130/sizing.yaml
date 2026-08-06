@@ -3,21 +3,21 @@
 schema: spicexplorer/sizing@1
 pdk: sky130
 variables:
-  - {name: x_dut_xm1_w,    description: "Input pair W",      default: 27.241,  min: 0.42, max: 200, unit: m}
-  - {name: x_dut_xm1_l,    description: "Input pair L",      default: 0.246,   min: 0.15, max: 10,  unit: m}
-  - {name: x_dut_xm1c_w,  description: "NMOS cascode W",    default: 48.148,  min: 0.42, max: 200, unit: m}
-  - {name: x_dut_xm1c_l,  description: "NMOS cascode L",    default: 5.274,   min: 0.15, max: 10,  unit: m}
-  - {name: x_dut_xm3_w,    description: "PMOS load W",       default: 99.145,  min: 0.42, max: 200, unit: m}
-  - {name: x_dut_xm3_l,    description: "PMOS load L",       default: 1.391,   min: 0.15, max: 10,  unit: m}
-  - {name: x_dut_xm3c_w,  description: "PMOS cascode W",    default: 78.432,  min: 0.42, max: 200, unit: m}
-  - {name: x_dut_xm3c_l,  description: "PMOS cascode L",    default: 4.589,   min: 0.15, max: 10,  unit: m}
-  - {name: x_dut_xm5_w,      description: "Tail W",            default: 170.082, min: 0.42, max: 200, unit: m}
-  - {name: x_dut_xm5_l,      description: "Tail L",            default: 0.505,   min: 0.15, max: 10,  unit: m}
+  - {name: x_dut_xm1_w,    description: "Input pair W",      default: 50,  min: 0.42, max: 200, unit: m}
+  - {name: x_dut_xm1_l,    description: "Input pair L",      default: 0.5,   min: 0.15, max: 10,  unit: m}
+  - {name: x_dut_xm1c_w,  description: "NMOS cascode W",    default: 50,  min: 0.42, max: 200, unit: m}
+  - {name: x_dut_xm1c_l,  description: "NMOS cascode L",    default: 0.5,   min: 0.15, max: 10,  unit: m}
+  - {name: x_dut_xm3_w,    description: "PMOS load W",       default: 50,  min: 0.42, max: 200, unit: m}
+  - {name: x_dut_xm3_l,    description: "PMOS load L",       default: 1,   min: 0.15, max: 10,  unit: m}
+  - {name: x_dut_xm3c_w,  description: "PMOS cascode W",    default: 50,  min: 0.42, max: 200, unit: m}
+  - {name: x_dut_xm3c_l,  description: "PMOS cascode L",    default: 1,   min: 0.15, max: 10,  unit: m}
+  - {name: x_dut_xm5_w,      description: "Tail W",            default: 40, min: 0.42, max: 200, unit: m}
+  - {name: x_dut_xm5_l,      description: "Tail L",            default: 1,   min: 0.15, max: 10,  unit: m}
   - {name: x_dut_xm5_ng,     description: "Tail fingers",      default: 2,        min: 1,     max: 5, is_integer: true}
-  - {name: x_dut_xm6_w,      description: "Mirror ref W",      default: 118.161, min: 0.42, max: 200, unit: m}
-  - {name: x_dut_xm6_l,      description: "Mirror ref L",      default: 9.666,   min: 0.15, max: 10,  unit: m}
-  - {name: x_dut_v_bias_1,  description: "NMOS cascode bias", default: 0.509,    min: 0,     max: 1.8,  unit: V}
-  - {name: x_dut_v_bias_2,  description: "PMOS cascode bias", default: 1.032,    min: 0,     max: 1.8,  unit: V}
+  - {name: x_dut_xm6_w,      description: "Mirror ref W",      default: 20, min: 0.42, max: 200, unit: m}
+  - {name: x_dut_xm6_l,      description: "Mirror ref L",      default: 1,   min: 0.15, max: 10,  unit: m}
+  - {name: x_dut_v_bias_1,  description: "NMOS cascode bias", default: 0.81,    min: 0,     max: 1.8,  unit: V}
+  - {name: x_dut_v_bias_2,  description: "PMOS cascode bias", default: 1.28,    min: 0,     max: 1.8,  unit: V}
   # Frozen per-device literals (P4 atomic sweep): defaults reproduce the authored
   # netlist literals exactly; freeze keeps them out of the search space.
   - {name: x_dut_xm1_m, description: "XM1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

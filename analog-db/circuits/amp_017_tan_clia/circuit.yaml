@@ -5,6 +5,9 @@ class: amplifier
 display_name: "3-stage OTA \u2014 CLIA compensation (Tan)"
 compensation: CLIA
 stages: 3
+realization: transistor
+cm_control: not_applicable
+signal_path: single_ended
 ports:
 - vss
 - vdd
@@ -27,6 +30,8 @@ artifacts:
 pdks:
 - sky130
 - gf180mcu
+- FOUNDRY-n65
+- ihp-sg13g2
 analyses:
 - ac_open_loop
 - dc_op
@@ -34,4 +39,7 @@ analyses:
 - tran_step
 - psrr_vdd
 - cmrr_vcm
+- thd
+- iip3
+- stb
 status: incomplete

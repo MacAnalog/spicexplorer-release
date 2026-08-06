@@ -1,0 +1,24 @@
+# Analysis binding: two-tone IIP3 in the DIFFERENTIAL unity-feedback follower
+# (amplifier/iip3_diff — tran_step_diff's network, each tone split +/- ASIG/2; the SE iip3
+# template's node `vout` is structurally dead on this FD member).
+# ASIG = 6.25 mV PER TONE (applied differential amplitude) — the honest intercept level the
+# SE bench measured (50 mV was 0.5-1.4 dB biased with a sign set by the 5th-order
+# coefficient; see iip3.spice's ASIG sweep). The one-wire follower's closed-loop gain is 2,
+# so each output node swings ~6.25 mV/tone, matching the SE bench's per-side swing at the
+# same binding, and iip3_dbv is input-referred to the ASIG binding exactly as there.
+# BIN PLACEMENT + COHERENT WINDOW: tones 0.9/1.0 MHz share F0 = gcd = 100 kHz (n1=9,
+# n2=10), so IM3 (0.8/1.1 MHz = bins 8/11) and IM5 (0.7/1.2 MHz = bins 7/12) land on exact
+# bins. TSTART = 50u = 5 beat periods (>> the 102 ns scoreboard t_settle), TSTOP - TSTART =
+# 200u = 20 beat periods (even -> cm_drift_v's halves hold whole beats), TSTEP = 5n <=
+# 1/(200*F2). Tones sit ~34x under the follower's closed-loop crossover (~ugf/2 = 34 MHz).
+# TRUST CHECKS (template header): gain_tone ~ 2 when live (guard threshold 2/3; sentinels
+# iip3_dbv = -999 / im3_dbc = +999); a_im3 must sit far above a_floor; iip3_comp_db is the
+# 5th-order compression estimate (one-sided-usable only at this shipped drive); cm_drift_v
+# must be << ASIG or the record is not stationary and the intercept is meaningless.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_diff
+description: "IIP3 — FD follower two-tone intermodulation; tran + in-deck coherent DFT."
+params: {VDD: 1.5, VCM: 0.9, CL: 10p, ASIG: 0.00625, F0: 0.1e6, F1: 0.9e6, F2: 1.0e6, TSTEP: 5n, TSTART: 50u, TSTOP: 250u}
+flags: []
+produces: [iip3_dbv]

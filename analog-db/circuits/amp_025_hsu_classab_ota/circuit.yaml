@@ -7,6 +7,8 @@ realization: mixed
 display_name: Hsu bandpass-IA two-stage OTA core with class-AB output (behavioral CMFB)
 stages: 2
 compensation: miller-rz
+cm_control: regulated
+signal_path: fully_differential
 ports: [vinp, vinn, voutp, voutn, vdd, vss]
 provenance:
   source: drawings/ccia-01-YuPinHsu-bandpass-class-ab-output (hand-drawn xschem, two-stage-ota-core.sch)
@@ -27,6 +29,6 @@ artifacts:
   abstract_netlist: abstract/netlist.spice
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
-pdks: [ihp-sg13g2, FOUNDRY-n65]
-analyses: [ac_open_loop, dc_op, noise, tran_step, ac_cm_reg, tran_cm_kick]
+pdks: [ihp-sg13g2, FOUNDRY-n65, sky130, gf180mcu]
+analyses: [ac_open_loop, dc_op, noise, tran_step, ac_cm_reg, tran_cm_kick, thd, iip3, stb, cmrr_vcm, psrr_vdd]
 status: draft

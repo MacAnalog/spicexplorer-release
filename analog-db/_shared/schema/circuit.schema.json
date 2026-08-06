@@ -17,6 +17,11 @@
       "enum": ["verifiable", "reference"],
       "description": "Circuit kind (D-9). Omitted == 'verifiable' (open-PDK, lowered, T1-T4). 'reference' == carries only foreign/proprietary reference bindings (see `references`); the harness runs a reference-only T0 subset and skips T1-T4."
     },
+    "published": {
+      "type": "boolean",
+      "default": true,
+      "description": "PUBLICATION flag — orthogonal to `kind`. Omitted == true. `false` DE-PUBLISHES the circuit: it is dropped from the generated scoreboard index (scoreboard.json) and from the paper tabulation, while remaining a fully VERIFIABLE circuit — its open-PDK bindings, sizing, params and raw decks are still generated, drift-guarded and resolvable (so e.g. a composite can keep composing it as a core block). Do NOT de-publish with `kind: reference`: that kind means 'imported FOREIGN deck' (PDK-free, carries `references`) and makes the harness skip T1-T4."
+    },
     "id": {
       "type": "string",
       "pattern": "^[a-z0-9]+(_[a-z0-9]+)*$",
@@ -33,6 +38,8 @@
     "subfamily": {"type": "string", "description": "Soft sub-family label within a class (plan_hierarchical_composition D7/S8) - e.g. `ccia` on an `ia` circuit. Descriptive only; selects nothing by itself (bench sets branch on it by convention)."},
     "tier": {"type": "string", "description": "Descriptive abstraction-tier facet (plan S4.1) - gm_block | ota | ia | ldo | frontend | support. NOT a verified edge; class stays the binding contract.", "examples": ["gm_block", "ota", "ia", "ldo", "frontend", "support"]},
     "realization": {"type": "string", "enum": ["transistor", "behavioral", "mixed"], "description": "Fidelity axis orthogonal to identity (plan S3.5): transistor-level, behavioral (G/E/R/C macromodel), or mixed (behavioral leaves inside a transistor design)."},
+    "signal_path": {"type": "string", "enum": ["single_ended", "fully_differential", "pseudo_differential"], "description": "OUTPUT signal path. Named for the output on purpose: essentially every amplifier here has a differential INPUT pair, so a bare `differential` flag would be ambiguous. single_ended has one output port (`vout`) referenced to ground; fully_differential has `voutp`/`voutn`, is measured as their difference, and needs a common-mode feedback loop to set the output CM. Authored, not inferred: this replaces two disagreeing heuristics - port-name sniffing for `voutp`/`voutn` (paper `extract_from_pin.py`) and `'cmrr_vcm' not in analyses` (ppa campaign generate_campaign.py). It selects the testbench variant a class serves (`thd` vs `thd_diff`), so an SE bench can no longer be silently applied to an FD cell - which measured plausible distortion off a dead node."},
+    "cm_control": {"type": "string", "enum": ["regulated", "partial", "unregulated", "not_applicable"], "description": "MEASURED common-mode control state of a fully_differential cell — whether a CM disturbance actually returns, not whether the schematic contains something named CMFB. Set from the tran_cm_kick bench: `regulated` = cm_resid_v ~ 0 (CM returns); `partial` = CM recovers most of the kick but retains a residual; `unregulated` = CM does not return. `not_applicable` for single_ended cells and behavioral macromodels. Gates the FD LARGE-SIGNAL benches (thd/iip3/linearity), which sweep the cell away from its operating point and produce meaningless numbers if the output CM is free to drift — an SE bench applied to an uncontrolled FD cell measured plausible distortion off a dead node. Small-signal benches (ac, noise, cmrr, psrr, stb) run at the operating point and do NOT depend on this."},
     "ports": {
       "type": "array",
       "items": {"type": "string"},

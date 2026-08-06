@@ -66,15 +66,34 @@ class GraphComparison:
     naturally. When equivalent, :attr:`component_mapping` / :attr:`net_mapping` give one valid
     name correspondence from the first graph to the second (there may be more than one when the
     circuit is symmetric). :attr:`reason` always carries a human-readable explanation.
+
+    :attr:`skipped_a` / :attr:`skipped_b` carry each side's ``skipped_components`` — the devices
+    the *build* could not model and dropped (``on_unknown="skip"``, the default). They are part of
+    the result because an "equivalent" verdict that rests on them is a **partial** verdict: both
+    netlists could carry a clamp diode that neither graph models, and the isomorphism would say
+    nothing about whether the two diodes are wired the same way. :attr:`rests_on_skipped` is the
+    one-line test, and the equivalent-case :attr:`reason` names the devices.
     """
 
     equivalent: bool
     reason: str
     component_mapping: dict[str, str] = field(default_factory=dict)
     net_mapping: dict[str, str] = field(default_factory=dict)
+    skipped_a: tuple[str, ...] = ()
+    skipped_b: tuple[str, ...] = ()
 
     def __bool__(self) -> bool:
         return self.equivalent
+
+    @property
+    def rests_on_skipped(self) -> bool:
+        """True when the verdict was reached over graphs that dropped at least one device.
+
+        Read it before trusting an ``equivalent=True``: the two netlists agree on everything that
+        could be typed, and nothing is known about the rest. Build with ``on_unknown="raise"`` to
+        make the gap an error instead.
+        """
+        return bool(self.skipped_a or self.skipped_b)
 
 
 class IOPort:
@@ -191,6 +210,18 @@ def _io_port_name(
     return str(label)
 
 
+def _describe_skip_shape(shape: tuple[str, int, tuple[int, ...]]) -> str:
+    """Render one name-free skip shape for an error message."""
+    letter, n_nets, degrees = shape
+    signature = ",".join(str(d) for d in degrees) or "-"
+    return f"a {letter!r}-class device on {n_nets} net(s) [degrees {signature}]"
+
+
+def _skip_names(graph: CircuitGraph) -> str:
+    """The references a build dropped, for the human reading the reason (never the decision)."""
+    return ", ".join(graph.skipped_components) if graph.skipped_components else "nothing"
+
+
 def _census_diff(a: Counter, b: Counter, label_fn) -> str:
     """Format the two-way difference of two multisets for an error message."""
     only_a = a - b
@@ -250,9 +281,38 @@ def compare_graphs(
     are matched case-insensitively (SPICE semantics); an anchored net that is absent from its
     netlist raises :class:`ValueError` (the anchor must apply, not silently evaporate).
 
+    Devices the *build* dropped are never ignored: if the two graphs' skip censuses differ, the
+    comparison is a definitive "not equivalent" (a graph built with ``on_unknown="skip"`` describes
+    only the part of its netlist that could be typed, so an isomorphism over the survivors proves
+    nothing about the whole). The censuses are compared as name-free **shapes** — device letter +
+    wired-net count + net-degree signature (:meth:`~spicexplorer_circuitgraph.graph.CircuitGraph.
+    skipped_shapes`) — so this stays inside the name-independence contract above: renaming an
+    unmodelable ``D1`` to ``DCLAMP`` is not a different circuit. When the two censuses *agree*
+    and are non-empty the comparison still runs, but the result says so: the skipped references
+    ride on :attr:`GraphComparison.skipped_a` / :attr:`~GraphComparison.skipped_b` (and are named
+    in the equivalent-case reason), because an equivalence resting on devices neither graph models
+    is a partial answer the caller has to be able to see. ``on_unknown="raise"`` refuses to build
+    such a graph in the first place.
+
     Returns a :class:`GraphComparison` (truthy when equivalent) carrying a reason and, on a match,
     one valid component/net name correspondence from ``a`` to ``b``.
     """
+    # Every exit carries both skip censuses — see GraphComparison.rests_on_skipped.
+    def verdict(
+        equivalent: bool,
+        reason: str,
+        component_mapping: dict[str, str] | None = None,
+        net_mapping: dict[str, str] | None = None,
+    ) -> GraphComparison:
+        return GraphComparison(
+            equivalent,
+            reason,
+            component_mapping or {},
+            net_mapping or {},
+            tuple(a.skipped_components),
+            tuple(b.skipped_components),
+        )
+
     opts = _Options(
         match_polarity=match_polarity,
         match_params=match_params,
@@ -274,10 +334,36 @@ def compare_graphs(
 
     # Cheap, well-diagnosed pre-checks before the (worst-case exponential) VF2 search. Each is a
     # *necessary* condition for the labeled isomorphism, so a mismatch is a definitive "no".
+    #
+    # Skipped devices first: a build that dropped a device (`on_unknown="skip"`) produced an
+    # INCOMPLETE picture of its netlist, so an isomorphism over what survived is not evidence
+    # that the two netlists are the same circuit. Compare the census of dropped devices and
+    # refuse when it differs — otherwise a round-trip that silently deleted a component would
+    # certify itself as equivalent.
+    #
+    # The census is compared by SHAPE, never by instance name (see `CircuitGraph.skipped_shapes`).
+    # This function's contract is that renaming an instance does not change the circuit, and it
+    # holds for every device that IS modeled; keying the census on the raw reference made it false
+    # for exactly the devices that are not, so two netlists differing only in whether their ESD
+    # clamp is called `D1` or `DCLAMP` came back "not equivalent". The names still ride on
+    # `skipped_a`/`skipped_b` and in the reason text, where they are diagnostics rather than the
+    # decision.
+    skipped_a = Counter(a.skipped_shapes())
+    skipped_b = Counter(b.skipped_shapes())
+    if skipped_a != skipped_b:
+        diff = _census_diff(skipped_a, skipped_b, _describe_skip_shape)
+        return verdict(
+            False,
+            f"the two builds skipped different devices ({diff}); the first dropped "
+            f"{_skip_names(a)} and the second {_skip_names(b)}; at least one graph is an "
+            "incomplete picture of its netlist",
+        )
     if a.net_count != b.net_count:
-        return GraphComparison(False, f"net count differs: {a.net_count} vs {b.net_count}")
+        return verdict(
+            False, f"net count differs: {a.net_count} vs {b.net_count}"
+        )
     if a.component_count != b.component_count:
-        return GraphComparison(
+        return verdict(
             False, f"component count differs: {a.component_count} vs {b.component_count}"
         )
 
@@ -285,14 +371,14 @@ def compare_graphs(
     sig_b = Counter(_component_signature(c, opts) for c in b.get_components())
     if sig_a != sig_b:
         diff = _census_diff(sig_a, sig_b, _describe_signature)
-        return GraphComparison(False, f"device population differs ({diff})")
+        return verdict(False, f"device population differs ({diff})")
 
     if opts.match_supply:
         rail_a = Counter(n.supply_type for n in a.get_nets() if n.supply_type)
         rail_b = Counter(n.supply_type for n in b.get_nets() if n.supply_type)
         if rail_a != rail_b:
             diff = _census_diff(rail_a, rail_b, str)
-            return GraphComparison(False, f"supply-rail population differs ({diff})")
+            return verdict(False, f"supply-rail population differs ({diff})")
 
     if io_a or io_b:
         # Census of the anchored ports on each side — anchored nets are guaranteed present (checked
@@ -302,7 +388,7 @@ def compare_graphs(
         port_b = Counter(io_b[n.name.lower()] for n in b.get_nets() if n.name.lower() in io_b)
         if port_a != port_b:
             diff = _census_diff(port_a, port_b, lambda lbl: _io_port_name(lbl, io_ports, io_ports_b))
-            return GraphComparison(False, f"anchored I/O ports differ ({diff})")
+            return verdict(False, f"anchored I/O ports differ ({diff})")
 
     ga = _signature_graph(a, opts, io_a)
     gb = _signature_graph(b, opts, io_b)
@@ -313,11 +399,11 @@ def compare_graphs(
     pins_b = Counter(d["pin"] for _u, _v, d in gb.edges(data=True))
     if pins_a != pins_b:
         diff = _census_diff(pins_a, pins_b, str)
-        return GraphComparison(False, f"pin-connection population differs ({diff})")
+        return verdict(False, f"pin-connection population differs ({diff})")
 
     matcher = MultiGraphMatcher(ga, gb, node_match=_node_match, edge_match=_edge_match)
     if not matcher.is_isomorphic():
-        return GraphComparison(
+        return verdict(
             False,
             "same device and pin population but no wiring-preserving isomorphism exists "
             "(the topology differs)",
@@ -329,10 +415,20 @@ def compare_graphs(
     for (kind, name), (_kind_b, name_b) in matcher.mapping.items():
         (comp_map if kind == "comp" else net_map)[name] = name_b
 
-    return GraphComparison(
+    # An equivalence reached over graphs that dropped devices covers only what was modeled — say
+    # so in the reason itself, so a caller reading `.reason` (a log line, an LLM, a report) cannot
+    # mistake it for a whole-netlist verdict.
+    caveat = ""
+    if a.skipped_components:
+        caveat = (
+            f" — but this covers only what could be typed: both builds skipped "
+            f"{len(a.skipped_components)} device(s) "
+            f"({', '.join(sorted(set(a.skipped_components)))}), which the comparison never saw"
+        )
+    return verdict(
         True,
         f"equivalent: matched {a.component_count} components and {a.net_count} nets "
-        "under a wiring-preserving isomorphism",
+        f"under a wiring-preserving isomorphism{caveat}",
         component_mapping=comp_map,
         net_mapping=net_map,
     )

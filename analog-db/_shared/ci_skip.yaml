@@ -39,7 +39,7 @@ exclude:
   #   reason: "transient decks require longer sim budget — pending timeout parameter"
 
   # Exclude one testbench for a specific circuit across all its PDKs:
-  # - circuit: amp_020_two_stage_miller_cmfb
+  # - circuit: amp_0xx_example
   #   testbench: cmrr_vcm
   #   reason: "CMRR bench needs VCMFB loop closed — testbench template under revision"
 

@@ -6,7 +6,7 @@ default_conditions:
     typical: 1.2
   cload:
     unit: fF
-    typical: 50
+    typical: 10000
   corner:
     typical: tt
   temp:
@@ -69,18 +69,17 @@ metrics:
     spec:
       max: 500e-6
       unit: A
-  vn_in:
-    display: Input-referred noise (integrated)
-    description: "ngspice inoise_total = total noise INTEGRATED over the bench band\
-      \ (see analyses/noise.yaml FSTART..FSTOP) \u2014 a voltage, not a density; the\
-      \ bound is a characterization band at the family's measured magnitude"
+  vn_in_integrated:
+    display: Total integrated input-referred noise (1 Hz - 1 MHz, FD follower)
+    description: ngspice inoise_total is volts rms already integrated over the swept
+      band (standardized 1 Hz - 1 MHz, closed-loop bias config, CL=10p) \u2014 the paper's
+      uniform noise column. Replaces the old vn_in entry, which bound the SAME measure
+      (already unit V here) over the narrower 1 Hz - 10 MHz band with a spec the cell
+      already failed (1.16 mV vs max 1 mV); report-only under the standardized band.
     unit: V
     analysis: noise
     extract:
       meas: inoise_total
-    spec:
-      max: 0.001
-      unit: V
   t_settle:
     display: Settling time
     description: Unity-gain differential-follower settling (see tran_step_diff.spice)
@@ -91,6 +90,118 @@ metrics:
     spec:
       max: 1.0e-05
       unit: s
+  thd_pct:
+    display: Total harmonic distortion (50 mV @ 100 kHz, FD follower)
+    description: tran + in-deck coherent DFT in the differential unity-feedback
+      follower (thd_diff); F0 grid set by the fresh 10.3 MHz ugf (CL=10p); ASIG=0.05
+      low-swing-core drive. Live only with the cout_val=10p CM-servo fix, and an
+      HONEST FAIL at this sizing — the core's linear window is tiny (gain_tone 1.69
+      vs healthy ~1.94, ~12 % THD; see analyses/thd.yaml).
+    unit: '%'
+    analysis: thd
+    extract:
+      meas: thd_pct
+      f0: 1.0e5
+    spec:
+      max: 2.0
+      unit: '%'
+  iip3_dbv:
+    display: Input IP3 (two-tone 90/100 kHz, 6.25 mV/tone, FD follower)
+    description: Single-point IM3 extrapolation, tran + coherent DFT (iip3_diff);
+      campaign drive 6.25 mV/tone. ampl_in below MUST track the analysis binding's
+      ASIG (it is the intercept's input reference). HONEST FAIL at this sizing
+      (-26.3 dBV, tt) — the core is grossly nonlinear (a_im3 only ~10.6 dB above the
+      real >=9th-order product floor; see analyses/iip3.yaml), so read this as an
+      upper bound.
+    unit: dBV
+    analysis: iip3
+    extract:
+      meas: iip3_dbv
+      f1: 9.0e4
+      f2: 1.0e5
+      ampl_in: 0.00625
+    spec:
+      min: -10
+      unit: dBV
+  pm_loop_deg:
+    display: Loop phase margin (stb, differential loop)
+    description: Phase margin of the antiphase-Middlebrook-probed differential loop
+      (stb_diff); crosschecks ac_open_loop's pm_deg — both probe Add at the same OP.
+      Marginal at the current sizing + CL=10p (fresh ac_open_loop pm = 22.5 deg), so
+      this spec honestly FAILS. -999 sentinel = no crossover (fails the min spec by
+      design).
+    unit: deg
+    analysis: stb
+    extract:
+      meas: pm_loop
+    spec:
+      min: 60
+      unit: deg
+  loopgain_db:
+    display: DC loop gain (stb, differential loop)
+    description: Loop-gain magnitude read at FSTART; crosschecks ac_open_loop's
+      dcgain on this cell. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: loopgain_db
+  ugf_loop_hz:
+    display: Loop unity-gain frequency (stb)
+    unit: Hz
+    analysis: stb
+    extract:
+      meas: ugf_loop
+  gm_loop_db:
+    display: Loop gain margin (stb)
+    description: Gain margin at the phase crossover. -999 sentinel = no phase
+      crossover in-band. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: gm_loop
+  cmrr_db:
+    display: Common-mode rejection (differential figure)
+    description: 'CMRR of the CM-pinned differential unity-feedback loop, DC-band
+      floor (cmrr_vcm_diff). NO spec ON PURPOSE: on this perfectly symmetric FD
+      netlist the differential response to a CM ride is solver round-off and the
+      figure saturates at the ~250-300 dB resolution cap — a min-spec would silently
+      pass any cell. The physical discriminator is cmrr_cm_db (the CM loop''s
+      rejection), which rides the scoreboard analyses block.'
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_db
+  cmrr_cm_db:
+    display: CM-loop rejection of a CM ride (cmrr_vcm)
+    description: Output-CM response to the same 1 V CM ride — the always-physical,
+      discriminating rejection figure. NO spec — report-only companion to cmrr_db
+      (whose differential figure is solver-capped on symmetric FD netlists).
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_cm_db
+  psrr_vdd_db:
+    display: Positive-supply rejection (differential figure)
+    description: 'PSRR+ of the CM-pinned differential unity-feedback loop, DC-band
+      floor (psrr_vdd_diff). NO spec ON PURPOSE: on this perfectly symmetric FD
+      netlist the supply disturbs both half-circuits identically, so the differential
+      figure saturates at the ~250-300 dB solver-resolution cap — a min-spec would
+      silently pass any cell. The physical discriminator is psrr_cm_db (the CM path''s
+      supply rejection), which rides the scoreboard analyses block.'
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_vdd_db
+  psrr_cm_db:
+    display: CM-path supply rejection (psrr_vdd)
+    description: Output-CM supply rejection through the cell's CM path + CMFB —
+      the always-physical, discriminating figure. NO spec — report-only companion
+      to psrr_vdd_db (whose differential figure is solver-capped on symmetric FD
+      netlists).
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_cm_db
   zcm_lf_ohm:
     display: CM output impedance (low frequency)
     description: "Closed-loop common-mode output impedance at FSTART \u2014 the CM\
@@ -145,7 +256,15 @@ metrics:
     spec:
       max: 5e-6
       unit: s
-notes: "2026-07-18/19 dual-engine campaign findings (drawings/SIZING_VALIDATION_REPORT.md;\
+notes: "2026-08-01 large-signal binding campaign: the note-(1) servo fix is now APPLIED\
+  \ as cout_val 100f -> 10p (10p = the declared knob max; 100p is out of bounds —\
+  \ measured equivalent for stability here): at 100f even the QUIESCENT one-wire follower\
+  \ walks vcmfb to a rail within 20 us, killing tran_step/thd/iip3; at 10p quiescent is\
+  \ bit-stable and the step tracks. Fresh ac_open_loop at the CL=10p standardization reads\
+  \ pm 22.5 deg / ugf 10.3 MHz (the old scoreboard 73.9 deg / 22.35 MHz predates CL=10p)\
+  \ — pm_deg/pm_loop_deg now honestly FAIL; re-compensation for CL=10p is an open\
+  \ sizing task. THD/IIP3: the core's linear window is tiny (gain collapses with drive);\
+  \ thd bound at the low-swing ASIG=0.05.\n2026-07-18/19 dual-engine campaign findings (drawings/SIZING_VALIDATION_REPORT.md;\
   \ machine copy drawings/sizing-and-specs.yaml ccia_01_two_stage_ota_core): (1) the\
   \ under-damped behavioral CMFB has a MEASURED fix candidate \u2014 servo cout_val\
   \ 100f -> 100p (100f lets a 100 nA CM kick escape the interior basin; 100p regulates\

@@ -5,14 +5,14 @@ Dispatch is by reference-designator prefix. MOS polarity is resolved via the PDK
 
 An **unrecognized** device returns ``None``; the caller (the graph build) decides whether to
 skip-and-warn or raise — the prototype unconditionally aborted the whole build, which this
-replaces. Two cases yield ``None``:
+replaces. ``None`` means an unknown prefix (a ``D``/``Q``/``J``/``T`` element), or a **non-X**
+primitive whose terminal count contradicts its type — so the build never adds a half-connected
+phantom node.
 
-* an unknown prefix (e.g. a generic subckt instance ``X…`` that is not ``XM/XR/XC/XL`` — those
-  are modeled as typed-port subckt instances elsewhere), and
-* an **arity mismatch**: the netlist wires a different number of nets than the typed node's fixed
-  pin set. This catches a subckt instance that slipped through the ``XM/XR/XC/XL`` heuristic
-  (e.g. ``Xmirror``) *and* a device with an unexpected terminal count — so the build never adds a
-  half-connected phantom node.
+An **arity mismatch on an ``X`` reference** is not a skip: the ``XM/XR/XC/XL`` compound prefixes
+are only a heuristic over X-instances, so a mismatch means the device is a subcircuit instance
+(``Xmirror``, or the 3-terminal PDK passive ``XRZ a b vdd ppolyf_u_3k``) rather than the
+primitive its prefix implies, and it is re-typed as a :class:`SubcktInstanceNode`.
 
 Controlled sources (``G`` = VCCS, ``E`` = VCVS) are supported in their **linear 4-terminal** form
 only (``G1 n+ n- nc+ nc- value``); the behavioral shapes (POLY, ``value=``, ``table=``,
@@ -117,24 +117,46 @@ class DeviceFactory:
     def create(self, reference: str, view: NetlistViewLike) -> ComponentNode | None:
         """Return a typed node for ``reference``, or ``None`` if it can't be modeled cleanly.
 
-        ``None`` means either an unrecognized prefix or an arity mismatch (the netlist wires a
-        different number of nets than the typed node's fixed pin set) — in both cases the build
-        skips it rather than creating a phantom.
+        On an **arity mismatch** for an ``X``-instance (the netlist wires a different number of
+        nets than the prefix's primitive has pins), the reference is re-typed as a black-box
+        :class:`SubcktInstanceNode`: the ``XM/XR/XC/XL`` prefixes are only a heuristic over
+        X-instances, so a 3-terminal PDK passive like the gf180 nulling resistor
+        ``XRZ net_b net1 vdd ppolyf_u_3k`` is a *subcircuit* wearing a resistor's prefix.
+        Dropping it re-emits the amplifier with its Miller cap but no RZ — a deck that still
+        looks valid and has silently lost its LHP zero.
+
+        ``None`` is left for a genuinely unmodelable device (an unrecognized prefix, or a
+        non-``X`` primitive with the wrong terminal count) — the build skips it, records it in
+        :attr:`~spicexplorer_circuitgraph.graph.CircuitGraph.skipped_components`, and never
+        creates a phantom.
         """
         node = self._typed_node(reference, view)
         if node is None:
             return None
         n_nets = len(wired_nets(node, view))
-        if n_nets != len(node._PIN_ORDER):
-            logger.warning(
-                "skipping %s: netlist wires %d nets but %s expects %d pins",
-                reference,
-                n_nets,
-                type(node).__name__,
-                len(node._PIN_ORDER),
-            )
-            return None
-        return node
+        if n_nets == len(node._PIN_ORDER):
+            return node
+        if reference.upper().startswith("X") and not isinstance(node, SubcktInstanceNode):
+            instance = self._subckt_instance(reference, view)
+            if instance is not None:
+                logger.info(
+                    "%s: netlist wires %d nets but %s expects %d pins — re-typing it as an "
+                    "instance of subcircuit %r",
+                    reference,
+                    n_nets,
+                    type(node).__name__,
+                    len(node._PIN_ORDER),
+                    instance.subckt_name,
+                )
+                return instance
+        logger.warning(
+            "skipping %s: netlist wires %d nets but %s expects %d pins",
+            reference,
+            n_nets,
+            type(node).__name__,
+            len(node._PIN_ORDER),
+        )
+        return None
 
     def _typed_node(self, reference: str, view: NetlistViewLike) -> ComponentNode | None:
         """Type the device by prefix (no arity check — that is :meth:`create`'s job)."""
@@ -190,39 +212,46 @@ class DeviceFactory:
         if ref_u.startswith(self.VCCS_PREFIXES + self.VCVS_PREFIXES):
             return self._controlled_source(reference, view)
 
-        # Generic subcircuit instance (the XM/XR/XC/XL primitives were matched above). Model it as
-        # a black-box component with an open, named port set: formal .SUBCKT-header port names when
-        # resolvable, else positional "1".."N". Ports always equal the instance's net count, so this
-        # never trips the arity guard.
+        # Generic subcircuit instance (the XM/XR/XC/XL primitives were matched above).
         if ref_u.startswith("X"):
-            instance_nets = view.get_component_nodes(reference)
-            if not instance_nets:  # portless/unwired instance — don't create a phantom node
-                logger.warning("skipping %s: subckt instance has no connected nets", reference)
-                return None
-            formal = view.get_subcircuit_ports(reference)
-            # Use the formal .SUBCKT port names only when resolvable, correctly sized, AND unique:
-            # edges/connections are keyed by port name, so duplicate names would collide. Otherwise
-            # fall back to positional "1".."N", which is always unique.
-            if formal and len(formal) == len(instance_nets) and len(set(formal)) == len(formal):
-                names: list[str] = formal
-            else:
-                if formal:
-                    logger.warning(
-                        "subckt %s: formal ports %s unusable (wrong count or duplicates); "
-                        "using positional port names",
-                        reference,
-                        formal,
-                    )
-                names = [str(i) for i in range(1, len(instance_nets) + 1)]
-            return SubcktInstanceNode(
-                name=reference,
-                device_type=DeviceType.SUBCKT,
-                _PIN_ORDER=tuple(SubcktPort(name) for name in names),
-                subckt_name=view.get_component_value(reference),
-                params=view.get_component_parameters(reference),
-            )
+            return self._subckt_instance(reference, view)
 
         return None
+
+    def _subckt_instance(self, reference: str, view: NetlistViewLike) -> SubcktInstanceNode | None:
+        """Model an ``X…`` reference as a black-box component with an open, named port set.
+
+        Ports are the formal ``.SUBCKT``-header names when resolvable, else positional
+        ``"1"``..``"N"``. They always equal the instance's net count, so this never trips the
+        arity guard — which is also why it is :meth:`create`'s fallback when a compound
+        ``XM/XR/XC/XL`` prefix typed a device the terminal count contradicts.
+        """
+        instance_nets = view.get_component_nodes(reference)
+        if not instance_nets:  # portless/unwired instance — don't create a phantom node
+            logger.warning("skipping %s: subckt instance has no connected nets", reference)
+            return None
+        formal = view.get_subcircuit_ports(reference)
+        # Use the formal .SUBCKT port names only when resolvable, correctly sized, AND unique:
+        # edges/connections are keyed by port name, so duplicate names would collide. Otherwise
+        # fall back to positional "1".."N", which is always unique.
+        if formal and len(formal) == len(instance_nets) and len(set(formal)) == len(formal):
+            names: list[str] = formal
+        else:
+            if formal:
+                logger.warning(
+                    "subckt %s: formal ports %s unusable (wrong count or duplicates); "
+                    "using positional port names",
+                    reference,
+                    formal,
+                )
+            names = [str(i) for i in range(1, len(instance_nets) + 1)]
+        return SubcktInstanceNode(
+            name=reference,
+            device_type=DeviceType.SUBCKT,
+            _PIN_ORDER=tuple(SubcktPort(name) for name in names),
+            subckt_name=view.get_component_value(reference),
+            params=view.get_component_parameters(reference),
+        )
 
     def _controlled_source(self, reference: str, view: NetlistViewLike) -> ComponentNode | None:
         """A linear 4-terminal ``G`` (VCCS) / ``E`` (VCVS) card.

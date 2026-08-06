@@ -41,12 +41,17 @@ metrics:
     analysis: ac_closed_loop
     extract: {meas: bw_cl}
     spec: {min: 1.0e6, unit: Hz}
-  vn_in:
-    display: "Input-referred noise"
-    unit: "V/sqrt(Hz)"
+  vn_in_integrated:
+    display: "Integrated input-referred noise"
+    description: "TOTAL input-referred rms noise over the standardized 1 Hz - 1 MHz band
+      (unity/closed-loop bias config, CL=10p) — the paper's uniform noise column. ngspice
+      inoise_total is already volts rms integrated over the swept band. REPLACES the old
+      vn_in entry, which mapped the same inoise_total under V/sqrt(Hz) — dimensionally
+      wrong (campaign calibration 2026-08-01; amp_022@ihp cross-checked 2.47e-4 V against
+      the platform registry)."
+    unit: V
     analysis: noise
     extract: {meas: inoise_total}
-    spec: {max: 1.0e-3, unit: "V/sqrt(Hz)"}   # gf180mcu measured 1.4e-4
   t_settle:
     display: "Settling time"
     unit: s
@@ -59,7 +64,7 @@ metrics:
     unit: A
     analysis: dc_op
     extract: {meas: i_supply}
-    spec: {max: 5.0e-3, unit: A}          # gf180mcu measured 2.32 mA
+    spec: {max: 3.0303e-3, unit: A}       # 10 mW ceiling / 3.3 V rail (was 5.0e-3 = 16.5 mW)
   psrr_vdd_db:
     display: "Positive-supply rejection"
     description: "PSRR+ in the unity-buffer config, DC-band floor (design-review 2026-07-05 rollout)."
@@ -74,3 +79,64 @@ metrics:
     analysis: cmrr_vcm
     extract: {meas: cmrr_db}
     spec: {min: 40, unit: dB}
+  thd_pct:
+    display: "Total harmonic distortion (100 mV @ 100 kHz, buffer)"
+    description: "tran+FFT on ngspice; native PSS harmonics on Spectre. F0 = 100 kHz per the
+      campaign grid (fresh ugf 11.63 MHz @ ihp tt sits in the 3-30 MHz band -> class 1 MHz
+      grid / 10; see analyses/thd.yaml)."
+    unit: '%'
+    analysis: thd
+    extract:
+      meas: thd_pct
+      f0: 1.0e5
+    spec:
+      max: 2.0
+      unit: '%'
+  iip3_dbv:
+    display: "Input IP3 (two-tone 90/100 kHz, 6.25 mV/tone, buffer)"
+    description: "Single-point IM3 extrapolation; tran+coherent DFT on ngspice, native PSS
+      on Spectre. Tones at 90/100 kHz per the campaign grid (class 0.9/1.0 MHz / 10, 9:10
+      ratio kept; see analyses/iip3.yaml). ampl_in below MUST track the analysis binding's
+      ASIG (it is the intercept's input reference)."
+    unit: dBV
+    analysis: iip3
+    extract:
+      meas: iip3_dbv
+      f1: 9.0e4
+      f2: 1.0e5
+      ampl_in: 0.00625
+    spec:
+      min: -10
+      unit: dBV
+  pm_loop_deg:
+    display: "Loop phase margin"
+    description: "TRUE buffer-loop phase margin by Middlebrook voltage injection at the
+      VIPRB marker (closed-loop op point — no biaswrap needed, unlike ac_open_loop's pm).
+      Cross-check: must sit within ~2 deg of ac_open_loop's pm (same loop, two routes).
+      -999 sentinel = no 0 dB crossing (fails this min spec by design)."
+    unit: deg
+    analysis: stb
+    extract: {meas: pm_loop}
+    spec: {min: 45, unit: deg}       # same floor as pm_deg (ac_open_loop route)
+  loopgain_db:
+    display: "DC loop gain"
+    description: "Loop-gain magnitude read at FSTART (0.01 Hz — phref_dev audits the lag
+      already present there). No spec: informational alongside dc_gain_db."
+    unit: dB
+    analysis: stb
+    extract: {meas: loopgain_db}
+  ugf_loop_hz:
+    display: "Loop unity-gain frequency"
+    description: "Loop 0 dB crossover of the Middlebrook probe. No spec: informational
+      alongside ugf_hz (the biaswrap shifts the open-loop read ~1%)."
+    unit: Hz
+    analysis: stb
+    extract: {meas: ugf_loop}
+  gm_loop_db:
+    display: "Loop gain margin"
+    description: "Gain margin at the -180 deg phase crossing. No spec: -999 sentinel means
+      the loop phase never reaches -180 deg inside the 0.01 Hz - 1 MHz band (no margin to
+      measure — the loud sentinel, not a failure)."
+    unit: dB
+    analysis: stb
+    extract: {meas: gm_loop}

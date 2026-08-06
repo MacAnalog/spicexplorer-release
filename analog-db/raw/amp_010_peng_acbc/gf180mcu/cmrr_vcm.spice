@@ -25,7 +25,7 @@
 
 .param VDD=1.8
 .param VCM=300m
-.param CL=100p
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD}          ; supply quiet — isolate the common-mode path
 Vss  vss 0 dc 0
@@ -44,39 +44,39 @@ XDUT vss vdd vinn vinp vout amp_010_peng_acbc
   write
   quit
 .endc
-.param CAPACITOR_0=10p
-.param CAPACITOR_1=3p
-.param CURRENT_0_BIAS=20u
-.param x_dut_xm7_l=1u
+.param CAPACITOR_0=36p
+.param CAPACITOR_1=7.93828e-12
+.param CURRENT_0_BIAS=6.66258e-06
+.param x_dut_xm7_l=8.8761e-06
 .param x_dut_xm7_m=4
-.param x_dut_xm7_w=1u
-.param x_dut_xm11_l=1u
+.param x_dut_xm7_w=1.09979e-05
+.param x_dut_xm11_l=3.46796e-06
 .param x_dut_xm11_m=4
-.param x_dut_xm11_w=1u
-.param x_dut_xm12_l=1u
+.param x_dut_xm11_w=2.98117e-05
+.param x_dut_xm12_l=1.34902e-06
 .param x_dut_xm12_m=4
-.param x_dut_xm12_w=1u
-.param x_dut_xm16_l=1u
+.param x_dut_xm12_w=6.68014e-05
+.param x_dut_xm16_l=9.69744e-06
 .param x_dut_xm16_m=16
-.param x_dut_xm16_w=1u
-.param x_dut_xm20_l=1u
+.param x_dut_xm16_w=3.59657e-05
+.param x_dut_xm20_l=1.18415e-06
 .param x_dut_xm15_m=4
-.param x_dut_xm20_w=1u
-.param x_dut_xm23_l=1u
+.param x_dut_xm20_w=6.00905e-06
+.param x_dut_xm23_l=2.509e-06
 .param x_dut_xm23_m=4
-.param x_dut_xm23_w=1u
-.param x_dut_xm24_l=1u
+.param x_dut_xm23_w=4.93767e-05
+.param x_dut_xm24_l=1.01574e-06
 .param x_dut_xm24_m=4
-.param x_dut_xm24_w=1u
-.param x_dut_xm25_l=1u
+.param x_dut_xm24_w=2.19453e-06
+.param x_dut_xm25_l=9.03637e-06
 .param x_dut_xm25_m=4
-.param x_dut_xm25_w=1u
-.param x_dut_xm59_l=1u
+.param x_dut_xm25_w=3.85424e-05
+.param x_dut_xm59_l=7.95109e-06
 .param x_dut_xm59_m=4
-.param x_dut_xm59_w=1u
-.param x_dut_xm10_l=1u
+.param x_dut_xm59_w=9.20476e-05
+.param x_dut_xm10_l=1.11387e-06
 .param x_dut_xm10_m=4
-.param x_dut_xm10_w=1u
+.param x_dut_xm10_w=9.42504e-05
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

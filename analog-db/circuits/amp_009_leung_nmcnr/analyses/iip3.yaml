@@ -1,0 +1,27 @@
+# Analysis binding for the SELF-BIASED 3-stage NMCNR OTA (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# Two-tone IIP3 in the unity buffer. F0 GRID: fresh ac_open_loop @ ihp-sg13g2 tt (2026-08-01,
+# this sizing) reads ugf = 1.439 MHz — the < 3 MHz band of the campaign grid, so the whole
+# base grid (0.9/1.0 MHz) divides by 100: tones at 9/10 kHz share F0 = gcd = 1 kHz (n1=9,
+# n2=10, the exact 9:10 ratio), so the IM3 products at 8/11 kHz (bins 8/11) and the IM5
+# products at 7/12 kHz (bins 7/12) land on exact F0 bins — the in-deck coherent DFT then has
+# no leakage. Both tones sit ~144x under the ugf.
+# COHERENT WINDOW: TSTART = 2m = 2 whole beat periods (>> 20x the fresh 559 ns settling,
+# tran_step same run); TSTOP-TSTART = 20m = 20 beat periods; TSTEP = 500n = 1/(200*F2).
+# DRIVE: ASIG = 6.25 mV per tone — the class default (see the iip3.spice header's measured
+# valid-window sweep: compression bounds the intercept above ~14 mV, the deck's own floor
+# below ~2.5 mV; 6.25 mV is the geometric centre). Plain decimal (0.00625), never a SPICE
+# suffix — ASIG/F0/F1/F2 reach .control arithmetic.
+# REPORTING: `produces:` names DATASHEET METRIC IDS — datasheet.metrics.iip3_dbv binds
+# {analysis: iip3, extract.meas: iip3_dbv}. The other measures (im3_dbc, a_f1/a_f2/a_drv,
+# gain_tone, a_im3l/h, a_im5l/h, a_floor, im5_im3_db, iip3_comp_db) still ride the recorded
+# `corners.<corner>.analyses.iip3.measures` block. TRUST CHECKS: a_im3 must sit well above
+# a_floor; iip3_comp_db estimates residual compression error (usable one-sided only at this
+# drive); gain_tone < 0.5 means the dead-output guard fired and iip3_dbv is the -999 sentinel.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_selfbias
+description: "IIP3 — two-tone intermodulation intercept; tran+coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 300m, CL: 10p, ASIG: 0.00625, F0: 1.0e3, F1: 9.0e3, F2: 1.0e4, TSTEP: 500n, TSTART: 2m, TSTOP: 22m}
+flags: []
+produces: [iip3_dbv]

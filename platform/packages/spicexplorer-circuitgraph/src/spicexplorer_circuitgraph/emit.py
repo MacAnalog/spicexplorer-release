@@ -18,10 +18,13 @@ lookup: an IHP graph (``sg13_lv_nmos``) can be emitted with Skywater names
 Passives and sources keep their original value token — cross-PDK *passive* naming is out of
 scope (device retargeting is specifically about nmos/pmos devices).
 
-Subcircuit instances are emitted as instance lines referencing ``subckt_name``; nested ``.subckt``
-*definitions* are not emitted (a black-box instance node does not carry the definition body). The
-``subckt``/``ports`` arguments optionally wrap the emitted devices in one definition — the useful
-shape for handing a DUT to another deck.
+Subcircuit instances are emitted as instance lines referencing ``subckt_name``. Their ``.subckt``
+*definitions* are emitted too **when the graph carries them** — i.e. when it was built with
+``recurse=True``, which stores an expanded child graph per instance in ``CircuitGraph.subgraphs``.
+Each unique master is written once, flattened to the top level. A black-box graph (``recurse=False``)
+has no definition body to write and emits instance lines only, exactly as before. The
+``subckt``/``ports`` arguments are a separate feature: they wrap the *top-level* devices in one
+definition — the useful shape for handing a DUT to another deck.
 """
 
 from __future__ import annotations
@@ -32,6 +35,7 @@ from typing import TYPE_CHECKING, ClassVar, Protocol, Sequence
 
 from spicexplorer_core.spice_engine import NetlistDialect
 
+from ._eng import format_number, spice_number
 from .model.nodes import (
     CapacitorNode,
     ComponentNode,
@@ -46,7 +50,7 @@ from .model.nodes import (
     VcvsNode,
     VoltageSourceNode,
 )
-from .pdk import Pdk, mos_flavor
+from .pdk import Pdk, model_flavor, split_flavor
 
 if TYPE_CHECKING:
     from .graph import CircuitGraph
@@ -94,6 +98,14 @@ def to_netlist(
     original model/value token. ``dialect`` picks the output syntax (default ``spice`` — the
     historical output, unchanged). ``subckt="name"`` (with an explicit ``ports`` list) wraps the
     device lines in one subcircuit definition.
+
+    A graph built with ``recurse=True`` also emits a ``.subckt`` **definition** per referenced
+    master (see :meth:`BaseNetlistEmitter._definitions`), so a hierarchical deck round-trips.
+
+    Raises :class:`ValueError` when the dialect's net renaming would merge two distinct nets —
+    a short is silent, so the emitter refuses rather than producing a valid-looking wrong deck
+    (see :meth:`BaseNetlistEmitter._check_net_renaming`) — and when a MOS device's voltage-class
+    flavor has no counterpart in the target ``pdk`` (see :meth:`~.pdk.Pdk.model_for`).
     """
     emitter = _EMITTERS[NetlistDialect.coerce(dialect)]
     return emitter.emit(graph, pdk=pdk, title=title, subckt=subckt, ports=ports)
@@ -117,8 +129,11 @@ class BaseNetlistEmitter:
         subckt: str | None = None,
         ports: Sequence[str] | None = None,
     ) -> str:
+        components = graph.get_components(sort=True)
+        self._check_net_renaming(graph, components, ports)
         lines = self._header(graph, title)
-        body = [self._device_line(comp, graph, pdk) for comp in graph.get_components(sort=True)]
+        lines.extend(self._definitions(graph, pdk))
+        body = [self._device_line(comp, graph, pdk) for comp in components]
         if subckt is not None:
             if not ports:
                 raise ValueError(
@@ -157,6 +172,119 @@ class BaseNetlistEmitter:
         # Remaining k=v params (the value/model token lives in the value slot, never duplicated).
         emit_params = _retarget_fingers(comp.params, pdk) if isinstance(comp, MosfetNode) else comp.params
         return [(k, _fmt_param(v)) for k, v in sorted(emit_params.items()) if k != "Value"]
+
+    # -- hierarchy ----------------------------------------------------------
+    def _definitions(self, graph: "CircuitGraph", pdk: Pdk | None) -> list[str]:
+        """One flat definition block per unique subckt master under :attr:`CircuitGraph.subgraphs`.
+
+        A graph built with ``recurse=True`` carries an expanded child graph per subckt instance.
+        Those children used to be **write-only** — the emitter wrote the instance line and dropped
+        the definition, so the deck referenced a master that was nowhere in the file and no
+        hierarchical netlist could round-trip. Every reachable master is emitted once (deduped by
+        master name; children before their parent), flattened to the top level rather than nested,
+        which is legal in every dialect here and keeps the ``subckt=``/``ports=`` wrapper — a
+        *different* feature, wrapping the top level — from swallowing them.
+
+        A graph built without ``recurse=True`` has no subgraphs and emits exactly as before.
+        """
+        blocks: list[str] = []
+        self._collect_definitions(graph, pdk, set(), blocks)
+        return blocks
+
+    def _collect_definitions(
+        self,
+        graph: "CircuitGraph",
+        pdk: Pdk | None,
+        seen: set[str],
+        out: list[str],
+    ) -> None:
+        for ref in sorted(graph.subgraphs):
+            child = graph.subgraphs[ref]
+            inst = graph._comp_map.get(ref)
+            if not isinstance(inst, SubcktInstanceNode) or not inst.subckt_name:
+                raise ValueError(
+                    f"{ref}: an expanded child graph is present but {ref!r} is not a resolvable "
+                    f"subcircuit instance; cannot name its .subckt definition"
+                )
+            master = inst.subckt_name
+            if master in seen:
+                continue
+            seen.add(master)
+            self._collect_definitions(child, pdk, seen, out)  # nested masters first
+            if child.skipped_components:
+                # The child build DROPPED a device it could not type (a diode, a BJT, a switch —
+                # routine inside an ESD clamp or a bandgap). Writing the body anyway emits a
+                # definition that parses and simulates a circuit missing those devices: exactly the
+                # silent-wrong this emitter exists to remove, one hierarchy level down. Neither
+                # `compare_graphs`'s census nor `rests_on_skipped` sees it (both read the TOP level
+                # only), so the deck would certify itself clean. Fail like the two guards above.
+                raise ValueError(
+                    f"{ref}: cannot emit a definition for master {master!r}: the child build "
+                    f"dropped {', '.join(child.skipped_components)}; the definition would be an "
+                    f"incomplete circuit that still parses — build with on_unknown='raise' to see "
+                    f"the device, or emit without recurse=True"
+                )
+            port_names = [p.name for p in inst.ports()]
+            if not port_names:
+                raise ValueError(
+                    f"{ref}: subcircuit {master!r} has no ports; a definition without a port list "
+                    f"would not re-parse"
+                )
+            if not any(p in child._net_map for p in port_names):
+                # The instance fell back to positional port names ('1'..'N') because the formal
+                # list was unusable, while the body below carries the child's real net names — so
+                # the header would touch nothing and every body net would float. A definition
+                # whose ports name no net of its own body would not re-parse as this circuit.
+                raise ValueError(
+                    f"{ref}: subcircuit {master!r} ports {port_names} name no net of its body "
+                    f"(the instance wires a different number of nets than the definition "
+                    f"declares); the emitted definition would be disconnected from its ports"
+                )
+            comps = child.get_components(sort=True)
+            self._check_net_renaming(child, comps, port_names)
+            out.append(self._subckt_open(master, port_names))
+            out.extend(self._device_line(comp, child, pdk) for comp in comps)
+            out.append(self._subckt_close(master))
+
+    # -- net-renaming invariant ---------------------------------------------
+    def _net_name(self, name: str) -> str:
+        """The name a source net is emitted under (identity; renaming dialects override)."""
+        return name
+
+    def _check_net_renaming(
+        self,
+        graph: "CircuitGraph",
+        components: Sequence[ComponentNode],
+        ports: Sequence[str] | None,
+    ) -> None:
+        """Fail loudly if this dialect's net renaming would MERGE two distinct source nets.
+
+        The invariant is *distinct nets in ⇒ distinct nets out*: the emitted deck must contain
+        exactly as many distinct nets as the graph it came from. A non-injective rename shorts
+        nets together in a deck that still parses and still looks valid — ``vin+`` and ``vin-``
+        both landing on ``vin_`` ties the two inputs of every differential amplifier to one
+        node, and nothing downstream would catch it.
+
+        Case-only differences are **exempt**: SPICE resolves node names case-insensitively, so
+        ``VOUT`` and ``vout`` already *are* one node and folding them (see
+        :meth:`SpectreEmitter.sanitize_net`) is the fix, not the bug.
+        """
+        source_nets: set[str] = set()
+        for comp in components:
+            source_nets.update(graph.connections(comp).values())
+        source_nets.update(ports or ())
+        merged: dict[str, set[str]] = {}
+        for name in source_nets:
+            merged.setdefault(self._net_name(name), set()).add(name.lower())
+        shorted = {out: names for out, names in merged.items() if len(names) > 1}
+        if shorted:
+            detail = "; ".join(
+                f"{{{', '.join(sorted(names))}}} -> {out!r}" for out, names in sorted(shorted.items())
+            )
+            raise ValueError(
+                f"{type(self).__name__}: net-name sanitization is not injective for this graph "
+                f"({detail}); emitting would SHORT those nets together — rename the source nets"
+            )
 
     # -- dialect hooks -------------------------------------------------------
     def _header(self, graph: "CircuitGraph", title: str | None) -> list[str]:
@@ -210,6 +338,27 @@ class HspiceEmitter(SpiceEmitter):
 _LEADING_DIGIT = re.compile(r"^\d")
 _INVALID_ID_CHAR = re.compile(r"[^A-Za-z0-9_]")
 _NUMERIC_NET = re.compile(r"^\d+$")
+# A number carrying NO scale factor — every dialect reads it identically, so it is emitted verbatim
+# and only suffixed tokens get rewritten (see `SpectreEmitter._expr`).
+_NUMERIC_LITERAL = re.compile(r"^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$")
+# Per-character codes for the characters a Spectre identifier cannot hold. Collapsing them all
+# to one `_` (as a *reference* name may) is not injective, and for a NET that is silent garbage:
+# `vin+` and `vin-` — the house differential convention (`.subckt opamp vin- vin+ …`) — would
+# both become `vin_`, shorting the two inputs of the amplifier in a deck that still parses.
+# `+`/`-` get short mnemonics because they are the common case and the emitted deck is read by
+# humans; everything else gets a `_x<hex>` escape of its ASCII code point. No code is a prefix
+# of another, so distinct characters always yield distinct codes.
+_NET_CHAR_CODE: dict[str, str] = {
+    "+": "_p",  # differential plus
+    "-": "_m",  # differential minus / hyphen
+    ".": "_d",  # hierarchy dot
+    "<": "_lb",  # bus subscript open
+    ">": "_rb",  # bus subscript close
+    "[": "_ls",
+    "]": "_rs",
+    "/": "_h",  # hierarchy separator
+    "!": "_g",  # global-net marker
+}
 # `dc <v> [ac <v>] [pulse(...)|sin(...)]` or a single token — the source-value shapes the
 # readers produce. pulse args are the SPICE positional list `(V1 V2 [TD [TR [TF [PW [PER]]]]])`;
 # sin args are `(VO VA FREQ [TD])`.
@@ -233,8 +382,9 @@ class SpectreEmitter(BaseNetlistEmitter):
     Identifier rules (live-trial landmines): a Spectre identifier can't start with a digit
     (``5t`` lexes as a number) and can't contain punctuation (``ota-5t`` lexes as a subtraction) —
     ``sanitize_ref`` maps invalid characters to ``_`` and prefixes digit-led names with ``x``.
-    Net names follow the same rule, except purely numeric nodes (``0`` is ground) which are
-    legal Spectre nodes and stay literal.
+    ``sanitize_net`` is the stricter twin for *nets*: it encodes each invalid character
+    distinguishably (so ``vin+``/``vin-`` cannot merge), and purely numeric nodes (``0`` is
+    ground) are legal Spectre nodes and stay literal.
     """
 
     dialect = NetlistDialect.SPECTRE
@@ -263,13 +413,27 @@ class SpectreEmitter(BaseNetlistEmitter):
 
     @staticmethod
     def sanitize_ref(name: str) -> str:
-        """Map invalid identifier characters to ``_``; prefix digit-led names with ``x``."""
+        """Map invalid identifier characters to ``_``; prefix digit-led names with ``x``.
+
+        Reference names (instances, masters, subckt definitions) only need to *lex*: a
+        collision here is a duplicate-instance error Spectre reports loudly, so the lossy
+        ``_`` collapse is fine and the historical spelling (``ota-5t`` → ``ota_5t``) is kept.
+        Nets get the injective :meth:`sanitize_net` instead.
+        """
         safe = _INVALID_ID_CHAR.sub("_", name)
         return f"x{safe}" if _LEADING_DIGIT.match(safe) else safe
 
     @classmethod
     def sanitize_net(cls, name: str) -> str:
         """Nets follow the identifier rule, but purely numeric nodes (``0``, ``1``) are legal.
+
+        Unlike :meth:`sanitize_ref` this is **injective over the character alphabet**: each
+        invalid character gets its own code from :data:`_NET_CHAR_CODE` (``vin+`` → ``vin_p``,
+        ``vin-`` → ``vin_m``) instead of collapsing to one ``_``. Two distinct nets merging is
+        not a Spectre error — it is a short, and ``vin+``/``vin-`` both becoming ``vin_`` ties
+        an amplifier's inputs together in a deck that still looks valid. Identity on already-legal
+        names means a source that *also* spells a net like an escape (``vin_p`` next to ``vin+``)
+        can still collide; :meth:`BaseNetlistEmitter._check_net_renaming` turns that into a raise.
 
         Node names are **case-folded to lowercase**. SPICE is case-insensitive (ngspice folds
         ``VOUT`` and ``vout`` to one node), but Spectre ``lang=spectre`` is case-SENSITIVE — so
@@ -282,15 +446,38 @@ class SpectreEmitter(BaseNetlistEmitter):
         model cards); only nets pass through here. Numeric ground/nodes stay literal."""
         if _NUMERIC_NET.match(name):
             return name
-        return cls.sanitize_ref(name).lower()
+        safe = _INVALID_ID_CHAR.sub(lambda m: _net_char_code(m.group(0)), name)
+        if _LEADING_DIGIT.match(safe):
+            safe = f"x{safe}"
+        return safe.lower()
+
+    def _net_name(self, name: str) -> str:
+        return self.sanitize_net(name)
 
     @staticmethod
     def _expr(value: str | float) -> str | float:
-        """SPICE ``{expr}`` braces → bare Spectre expression (``c={CL}`` → ``c=CL``)."""
+        """Render one SPICE value token as Spectre.
+
+        Two rewrites, both about the two languages disagreeing:
+
+        * ``{expr}`` braces → a bare Spectre expression (``c={CL}`` → ``c=CL``);
+        * an **eng-suffixed number** → a plain literal (``w=1U`` → ``w=1e-06``). SPICE scale
+          factors are case-insensitive with ``M``=milli; Spectre's are case-SENSITIVE, ``M`` is
+          mega, and ``U``/``P`` are not scale factors at all — so a token copied across verbatim
+          does not merely round differently, it means something else. ``w=1U`` reaches Spectre as
+          *one metre*, ``c=1P`` as *one farad*, ``r=1meg`` as *one milliohm*. Numbers already
+          written without a suffix (``1.8``, ``1e-6``) pass through untouched, so the only lines
+          this changes are the ones that were wrong.
+
+        A token that is not a number at all (a parameter symbol, a model name) passes through.
+        """
         if isinstance(value, str):
             v = value.strip()
             if v.startswith("{") and v.endswith("}"):
                 return v[1:-1].strip()
+            number = spice_number(v)
+            if number is not None and not _NUMERIC_LITERAL.match(v):
+                return format_number(number)
         return value
 
     @staticmethod
@@ -429,6 +616,11 @@ class SpectreEmitter(BaseNetlistEmitter):
         return f"{ref} {nets} {value}{body}".rstrip()
 
 
+def _net_char_code(char: str) -> str:
+    """The Spectre-legal code for one character a net name may not carry (see :data:`_NET_CHAR_CODE`)."""
+    return _NET_CHAR_CODE.get(char, f"_x{ord(char):02x}")
+
+
 def _value_is_numericish(value: str) -> bool:
     """True for value tokens (``1k``, ``2p``, ``{expr}``, ``1.4e-9``) vs model names (``rupolym``)."""
     return bool(re.match(r"^[+-]?(\d|\.\d|\{|\()", value.strip()))
@@ -493,11 +685,30 @@ def _value_slot(comp: ComponentNode, pdk: Pdk | None) -> str:
                     comp.name, pdk.name, comp.spice_model,
                 )
             else:
-                renamed = pdk.model_for(
-                    DeviceType.MOS, comp.polarity, mos_flavor(comp.spice_model)
-                )
+                # `model_flavor` (not `mos_flavor`) — the source device's voltage/threshold class
+                # comes from its PDK's own PdkDevice declaration, since a model NAME spells the
+                # class differently in every PDK.
+                flavor = model_flavor(comp.spice_model)
+                renamed, note = pdk.resolve_model(DeviceType.MOS, comp.polarity, flavor)
                 if renamed:
+                    if note:
+                        # A THRESHOLD substitution: loud, named, and not fatal (see
+                        # `Pdk.resolve_model`) — the emitted device is the same oxide class.
+                        logger.warning("%s: %s", comp.name, note)
                     return renamed
+                voltage_class = split_flavor(flavor)[0]
+                if voltage_class:
+                    # NEVER fall through to the core device: that silently swaps a 3.3 V part onto
+                    # a 1.8 V model, and the deck still simulates — it just answers a different
+                    # circuit. A missing device is a table gap the operator must close.
+                    raise ValueError(
+                        f"{comp.name}: {comp.spice_model!r} is a {voltage_class!r}-class "
+                        f"{comp.polarity.value} device and {pdk.name} declares no "
+                        f"{voltage_class!r} {comp.polarity.value} model; retargeting it to the "
+                        f"core device would silently change its voltage class — declare the "
+                        f"{voltage_class!r} device in the {pdk.name} table, or emit without pdk= "
+                        f"to keep the source models"
+                    )
                 logger.warning(
                     "%s: %s has no %s device; keeping source model %r (mixed-PDK netlist)",
                     comp.name, pdk.name, comp.polarity.value, comp.spice_model,

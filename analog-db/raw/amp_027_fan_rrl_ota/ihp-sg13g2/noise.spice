@@ -22,7 +22,7 @@
 
 .param VDD=1.2
 .param VCM=0.6
-.param CL=50f
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD}
 Vss  vss 0 dc 0
@@ -36,7 +36,7 @@ XDUT vinp vinn voutp voutn vdd vss amp_027_fan_rrl_ota
 
 .control
   set filetype=ascii
-  noise v(voutp,voutn) Vinp dec 21 1 10MEG
+  noise v(voutp,voutn) Vinp dec 21 1 1MEG
   print inoise_total onoise_total
   write
   quit

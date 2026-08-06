@@ -6,6 +6,9 @@ class: amplifier
 display_name: "5-transistor OTA (single-stage)"
 compensation: none
 stages: 1
+realization: transistor
+cm_control: not_applicable
+signal_path: single_ended
 ports: [vdd, vout, vinp, vinn, ibias, vss]
 provenance:
   source: analog-circuit-design          # IIC-JKU / Pretl, ihp-sg13g2 methodology

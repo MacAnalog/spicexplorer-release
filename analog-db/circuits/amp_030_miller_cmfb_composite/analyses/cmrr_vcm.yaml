@@ -1,0 +1,25 @@
+# Analysis binding: common-mode rejection (class cmrr_vcm_diff template — the FD counterpart
+# of cmrr_vcm; this composite is self-biased with voutp/voutn, so the SE unity-buffer bench
+# does not fit). The differential loop is closed by the template's CM-pinned VCVS network and
+# the SAME 1 V AC rides both inputs; cmrr_db = -db(voutp-voutn) at FSTART, exactly the SE math.
+# CAVEAT (template header, "SOLVER-RESOLUTION CEILING"): this netlist is perfectly symmetric,
+# so the differential response to a pure CM ride is matrix round-off and cmrr_db saturates near
+# the 300 dB floor-cap — "beyond solver resolution", not a physical rejection. The secondary
+# cmrr_cm_db (output-CM response to the same ride — here the composed
+# cmfb_001_ideal_rsense_servo CM loop's rejection) is the always-physical, discriminating
+# figure and rides the scoreboard analyses block.
+# Params mirror the circuit's other benches (VDD 1.2, VCM 0.6, CL 10p); FSTART 1k is the
+# FD-pilot class default — well inside this cell's flat DC band.
+schema: spicexplorer/analysis@1
+id: cmrr_vcm
+template: cmrr_vcm_diff
+description: "CMRR — 1 V AC common-mode ride on both inputs of the CM-pinned differential unity-feedback loop, DC-band floor (+ cmrr_cm_db CM-loop figure)."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 10p
+  FSTART: 1k
+  FSTOP: 1G
+  PPD: 101
+flags: []
+produces: [cmrr_db]

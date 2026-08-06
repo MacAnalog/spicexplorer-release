@@ -11,7 +11,7 @@ description: "Output-CM disturbance recovery: cm_kick_v, cm_resid_v, t_cm_settle
 params:
   VDD: 1.2
   VCM: 0.5
-  CL: 50f
+  CL: 10p
   ICM: 200n
   TKICK: 50u
   TMID: 52u

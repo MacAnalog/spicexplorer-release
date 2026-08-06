@@ -30,7 +30,7 @@
 
 .param VDD=1.8
 .param VCM=300m
-.param CL=500p
+.param CL=10p
 .param VSTEP=0.2
 
 Vdd  vdd 0 dc {VDD}
@@ -53,9 +53,9 @@ XDUT vss vdd vinn vinp vout amp_016_song_dacfc
   write
   quit
 .endc
-.param CAPACITOR_0=1.5p
-.param CAPACITOR_1=0.7p
-.param CURRENT_0_BIAS=5u
+.param CAPACITOR_0=1.5e-12
+.param CAPACITOR_1=7e-13
+.param CURRENT_0_BIAS=5e-06
 .param x_dut_xm69_l=1
 .param x_dut_xm2_m=4
 .param x_dut_xm69_w=1

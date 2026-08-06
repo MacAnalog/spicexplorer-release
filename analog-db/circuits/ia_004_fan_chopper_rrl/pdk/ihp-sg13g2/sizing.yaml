@@ -6,7 +6,7 @@ pdk: ihp-sg13g2
 variables:
   # -- instance cmfb: cmfb_001_ideal_rsense_servo (ihp-sg13g2) --
   - {name: "gm_val_cmfb", description: "Servo amplifier transconductance (behavioral VCCS)", default: "100u", min: "1u", max: "10m", unit: "S"}
-  - {name: "rout_val_cmfb", description: "Servo amplifier output resistance (DC gain = gm_val*rout_val)", default: "1k", min: "100k", max: "1G", unit: "Ohm"}
+  - {name: "rout_val_cmfb", description: "Servo amplifier output resistance (DC gain = gm_val*rout_val)", default: "1k", min: "1k", max: "1G", unit: "Ohm"}
   - {name: "cout_val_cmfb", description: "Servo amplifier output capacitance (dominant pole with rout_val + CL)", default: "100f", min: "1f", max: "10p", unit: "F"}
   - {name: "rin_val_cmfb", description: "Servo amplifier differential input resistance (near-ideal sense load)", default: "1e12", min: "1Meg", max: "1e14", unit: "Ohm"}
   - {name: "cin_val_cmfb", description: "Servo amplifier differential input capacitance", default: "10f", min: "1f", max: "1p", unit: "F"}

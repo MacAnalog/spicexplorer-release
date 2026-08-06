@@ -25,7 +25,7 @@
 
 .param VDD=1.5
 .param VCM=0.6
-.param CL=500f
+.param CL=10p
 .param IBIAS=20u
 
 Vdd  vdd 0 dc {VDD}

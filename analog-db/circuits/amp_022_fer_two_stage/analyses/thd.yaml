@@ -1,10 +1,19 @@
 # Analysis binding: large-signal THD in the unity buffer (class template). 100 mV @ 1 MHz —
 # the same drive the P5d live proofs used (native-PSS 0.076 % == tran+FFT 0.077 % on
-# FOUNDRY-n65). ngspice runs the tran; the Spectre lane composes a native pss at F0 (HARMS).
+# FOUNDRY-n65). ngspice runs the tran + the template's in-deck coherent DFT; the Spectre lane
+# composes a native pss at F0 (HARMS).
+# COHERENT WINDOW (the template requires both to be whole F0 periods, see its header):
+# F0 = 1 MHz -> T = 1 us; TSTART = 4u discards 4 periods of startup, TSTOP = 20u leaves
+# 16 whole measured periods. TSTEP = 2n = T/500 <= 1/(200*F0).
+# REPORTING: `produces:` names DATASHEET METRIC IDS (analysis.schema.json), not measure
+# names — the scoreboard/conformance wiring itself is datasheet.yaml
+# `metrics.thd_pct.{analysis: thd, extract.meas: thd_pct}` -> ppa.metric_values().
+# The template also prints thd_db / a1 / a2 / a3 / vout_op; those ride the recorded
+# `corners.<corner>.analyses.thd.measures` block, but only thd_pct is a canonical metric.
 schema: spicexplorer/analysis@1
 id: thd
 template: thd
-description: "THD — unity-buffer large-signal sine; tran+FFT (ngspice) / native PSS (Spectre)."
-params: {VDD: 1.5, VCM: 0.6, IBIAS: 20u, CL: 500f, ASIG: 0.1, F0: 1.0e6, TSTEP: 2n, TSTOP: 20u, HARMS: 7}
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.5, VCM: 0.6, IBIAS: 20u, CL: 10p, ASIG: 0.1, F0: 1.0e6, TSTEP: 2n, TSTART: 4u, TSTOP: 20u, HARMS: 7}
 flags: []
-produces: []
+produces: [thd_pct]

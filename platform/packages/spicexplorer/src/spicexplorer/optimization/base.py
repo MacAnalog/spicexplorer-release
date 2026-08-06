@@ -49,6 +49,7 @@ from spicexplorer.core.utils import (
     compute_error,
     compute_reward,
     get_bode_fitness_loss,
+    is_scoreable_metric,
     linear_denormalize,
     log_denormalize,
     plot_complex_response,
@@ -1586,19 +1587,32 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         for spec in self.target_specs.enabled_targets():
             spec_fitness: np.float64 = np.float64(0.0)
             # a - Compute the spec score
-            if spec.name in performance_array and performance_array[spec.name] is not None and not np.isnan(performance_array[spec.name]):
+            if (
+                spec.name in performance_array
+                and performance_array[spec.name] is not None
+                and is_scoreable_metric(performance_array[spec.name], log_scale=spec.log_scale)
+            ):
                 spec_fitness = self.compute_fitness_for_spec(curr_val=performance_array[spec.name], target_spec=spec)
                 spec_fitness = np.clip(spec_fitness, -1 * MAX_PENALTY, MAX_REWARD) # cap the score to avoid overflow
             else:
                 if self.verbose:
                     logger.debug(f"Target spec name '{spec.name}' not found in performance array keys: {list(performance_array.keys())}")
                     logger.debug(f"assigning large penalty to the {spec.name} spec")
-                # A missing/NaN metric means the sim failed or diverged: score it as the maximal
-                # penalty for EVERY error type, so a failed sim strictly dominates any converged
-                # in-band violation (matching the documented run_and_wait failure contract above). The
-                # old RELATIVE_SIGMOID carve-out scored a failure as only -weight (≈ -1) — bounded like
-                # a sigmoid violation — which let a crashed sim OUTSCORE a bad-but-converged design and
-                # pulled the optimizer toward crashes.
+                # A missing/degenerate metric means the sim failed or diverged: score it as the
+                # maximal penalty for EVERY error type, so a failed sim strictly dominates any
+                # converged in-band violation (matching the documented run_and_wait failure contract
+                # above). The old RELATIVE_SIGMOID carve-out scored a failure as only -weight (≈ -1) —
+                # bounded like a sigmoid violation — which let a crashed sim OUTSCORE a bad-but-
+                # converged design and pulled the optimizer toward crashes.
+                # "Degenerate" is `is_scoreable_metric`: NON-FINITE (`nan`/`±inf`), or
+                # non-positive under `log_scale`. The gate used to be a bare `isnan`, so `-inf`
+                # (and a `log_scale` metric at 0, which the decade transform turns into `-inf`)
+                # slipped through and earned an infinite reward that clipped to +MAX_REWARD — a
+                # permanent global best for the worst possible candidate. It is deliberately NOT
+                # goal-aware: the Tier-1 library does return ±inf as a PERFECT sentinel too, but
+                # it is the SAME value a diverged solve returns, and the shipped EXCEED+reward
+                # specs are all `dcgain`, where +inf means the AC blew up. See
+                # `is_scoreable_metric`.
                 spec_fitness = -1 * np.float64(MAX_PENALTY)  # assign the maximal penalty if the spec is not found
             # b - Log the spec score
             fit_summary[spec.name] = {

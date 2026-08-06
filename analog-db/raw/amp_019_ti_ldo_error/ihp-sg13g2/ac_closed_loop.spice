@@ -39,25 +39,25 @@ XDUT vdd vout vinp vinn ibias vss amp_019_ti_ldo_error
   write
   quit
 .endc
-.param x_dut_xmb0_w=100u
-.param x_dut_xmb0_l=0.5u
+.param x_dut_xmb0_w=0.0001
+.param x_dut_xmb0_l=5e-07
 .param x_dut_xmbc_m=1
 .param x_dut_xmbo_m=1
-.param x_dut_xm1_w=100u
-.param x_dut_xm1_l=0.45u
-.param x_dut_xm3_w=150u
-.param x_dut_xm3_l=0.45u
-.param x_dut_xm4_w=10u
-.param x_dut_xm4_l=0.5u
-.param x_dut_xm7_w=100u
-.param x_dut_xm7_l=0.45u
-.param x_dut_xm6_w=16u
-.param x_dut_xm6_l=0.45u
+.param x_dut_xm1_w=0.0001
+.param x_dut_xm1_l=4.5e-07
+.param x_dut_xm3_w=0.00015
+.param x_dut_xm3_l=4.5e-07
+.param x_dut_xm4_w=1e-05
+.param x_dut_xm4_l=5e-07
+.param x_dut_xm7_w=0.0001
+.param x_dut_xm7_l=4.5e-07
+.param x_dut_xm6_w=1.6e-05
+.param x_dut_xm6_l=4.5e-07
 .param r_z=680
-.param c_comp=40p
-.param x_dut_xmbe_w=5u
-.param x_dut_xmbf_w=5u
-.param r_nd=500k
+.param c_comp=4e-11
+.param x_dut_xmbe_w=5e-06
+.param x_dut_xmbf_w=5e-06
+.param r_nd=500000
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

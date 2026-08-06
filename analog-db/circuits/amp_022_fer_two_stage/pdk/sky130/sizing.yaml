@@ -5,6 +5,10 @@
 # members come from the generated tie block. Defaults reproduce the pre-atomic knobs exactly:
 # the legacy x_n_l is now THREE independent L knobs and x_p_l TWO, all still 0.4.
 schema: spicexplorer/sizing@1
+# Per-PDK testbench conditions: sky130's core family is 1v8, but this binding was
+# inheriting the authored ihp-sg13g2 rail (1.5 V), which left the tail current
+# source in deep triode and modulated it at the tone. VCM stays 0.6 — mid-rail 0.9 measured WORSE (12.47 %).
+analysis_params: {VDD: 1.8}
 pdk: sky130
 variables:
   - {name: x_dut_xmbd_w, description: "NMOS bias diode/mirror width (XMBD; XMBS tied)", default: 4, min: 0.42, max: 100, unit: m}

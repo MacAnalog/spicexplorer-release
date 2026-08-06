@@ -1,0 +1,28 @@
+# Analysis binding for the SELF-BIASED 3-stage NMCF OTA (no ibias port — internal I0
+# bias) — uses the class's ibias-free template variant so no external current source is
+# left driving a dangling node.
+# THD in the unity buffer: tran + the template's in-deck coherent DFT (ngspice); the
+# Spectre lane composes a native pss at F0 (HARMS).
+# F0 GRID: fresh ac_open_loop @ ihp-sg13g2 tt (2026-08-01, this sizing) reads ugf =
+# 3.164 MHz — the 3-30 MHz band of the campaign grid, so the whole amp_022 grid divides
+# by 10: F0 = 100 kHz (~16x under the ~ugf/2 closed-loop crossover).
+# COHERENT WINDOW (whole F0 periods, even count — template header): T = 10 us; TSTART =
+# 20u = 2 whole periods, discarding ~87x the fresh tran_step t_settle (228.8 ns, same
+# run); TSTOP = 180u leaves 16 whole measured periods. TSTEP = 20n = T/500 <= 1/(200*F0).
+# DRIVE: ASIG = 0.05 — the low-swing-core value, NOT the 0.1 class default: VCM = 0.3 V
+# sits only 300 mV above vss, so the buffer trough at 0.1 V drive reaches 0.2 V and the
+# MEASURED drive-halving @ ihp tt fails the clean-slope gate there (0.1 -> 0.05: HD2c
+# x2.31, HD3c x7.56 — 5th-order terms already mixing in). From 0.05 the halving check is
+# clean: 0.05 -> 0.025 gives HD2c x2.04, HD3c x4.62 (vs ideal x2/x4). thd_pct = 0.00306 %
+# at the shipped drive (ihp tt, 2026-08-01).
+# REPORTING: `produces:` names DATASHEET METRIC IDS (thd_pct is wired in datasheet.yaml).
+# The template also prints thd_db, a1..a5, a1_in, gain_tone, vout_op; those ride the
+# recorded `corners.<corner>.analyses.thd.measures` block. gain_tone <= 0.5 means the
+# dead-output guard fired and thd_pct is the 999 sentinel, not a measurement.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_selfbias
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 0.3, CL: 10p, ASIG: 0.05, F0: 0.1e6, TSTEP: 20n, TSTART: 20u, TSTOP: 180u, HARMS: 7}
+flags: []
+produces: [thd_pct]

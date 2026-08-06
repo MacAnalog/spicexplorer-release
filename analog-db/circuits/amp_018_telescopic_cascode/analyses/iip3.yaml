@@ -1,0 +1,21 @@
+# Analysis binding: two-tone IIP3 in the unity buffer (class template, base/ibias variant).
+# GRID: FRESH ac_open_loop @ihp-sg13g2 tt (2026-08-01) reads ugf = 300.2 kHz (< 3 MHz), so the
+# campaign grid divides by 100: F1/F2 = 9/10 kHz (exact 9:10 tone ratio), F0 = gcd = 1 kHz.
+# 6.25 mV/tone tones share the F0 fundamental (n1=9, n2=10) so IM3 at 2F1-F2 = 8 kHz (bin 8)
+# and 2F2-F1 = 11 kHz (bin 11) land on exact F0 bins — no DFT leakage.
+# COHERENT WINDOW (integer-beat contract is load-bearing): beat period 1/F0 = 1 ms; fresh
+# tran_step t_settle = 2.43 us -> 20x = 48.6 us -> TSTART = 1m (1 whole beat period);
+# TSTOP - TSTART = 20m = 20 beat periods. TSTEP = 500n = 1/(200*F2).
+# ASIG = 6.25 mV per tone ALWAYS (campaign rule; see amp_022's binding for the slope study —
+# 50 mV was off the 3:1 IM3 slope).
+# REPORTING: `produces:` names DATASHEET METRIC IDS — the wiring is datasheet.yaml
+# `metrics.iip3_dbv.{analysis: iip3, extract.meas: iip3_dbv}`. The template also prints
+# im3_dbc / a_f1 / a_f2 / gain_tone / a_im3l / a_im3h / a_im5l / a_im5h / a_floor /
+# im5_im3_db / iip3_comp_db as trust checks into `corners.<corner>.analyses.iip3.measures`.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3
+description: "IIP3 — two-tone intermodulation intercept (6.25 mV/tone @ 9/10 kHz); tran+coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.5, VCM: 0.8, IBIAS: 5u, CL: 10p, ASIG: 0.00625, F0: 1.0e3, F1: 9.0e3, F2: 1.0e4, TSTEP: 500n, TSTART: 1m, TSTOP: 21m}
+flags: []
+produces: [iip3_dbv]

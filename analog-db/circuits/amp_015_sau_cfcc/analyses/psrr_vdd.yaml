@@ -4,6 +4,6 @@ schema: spicexplorer/analysis@1
 id: psrr_vdd
 template: psrr_vdd_selfbias
 description: "PSRR+ — 1 V supply ripple into the unity buffer, DC-band floor."
-params: {VDD: 1.8, VCM: 300m, CL: 500p, FSTART: 1k, FSTOP: 1G, PPD: 101}
+params: {VDD: 1.8, VCM: 300m, CL: 10p, FSTART: 1k, FSTOP: 1G, PPD: 101}
 flags: []
 produces: [psrr_vdd_db]

@@ -21,6 +21,8 @@ compensation: "Rz + Cc from the first-stage node to the output"
 stages: 2
 subfamily: ota
 realization: transistor
+cm_control: not_applicable
+signal_path: single_ended
 ports: [vdd, vout, vinp, vinn, vss]   # vinp=VREF (non-inv), vinn=divider tap (inv)
 provenance:
   source: drawings/ldo-005-ti-ldo-buffer-ref/gf180/ref_amp/ref_amp.sch
@@ -36,8 +38,8 @@ artifacts:
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
   schematic: pdk/gf180mcu/schematic/ref_amp.sch
-pdks: [gf180mcu]
-analyses: [dc_op, ac_open_loop, ac_closed_loop, psrr_vdd, cmrr_vcm, noise, tran_step, linearity]
+pdks: [gf180mcu, FOUNDRY-n65, ihp-sg13g2, sky130]
+analyses: [dc_op, ac_open_loop, ac_closed_loop, psrr_vdd, cmrr_vcm, noise, tran_step, linearity, thd, iip3, stb]
 optimize:
   budget: 30
   knobs_from: pdk/{pdk}/sizing.yaml

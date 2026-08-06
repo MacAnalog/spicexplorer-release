@@ -13,10 +13,10 @@
 .lib sky130.lib.spice tt
 .temp 27
 
-.param VDD=1.5
+.param VDD=1.8
 .param VCM=0.6
 .param IBIAS=20u
-.param CL=500f
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD}
 Vss  vss 0 dc 0
@@ -30,7 +30,7 @@ XDUT vdd vout vinp vinn ibias vss amp_022_fer_two_stage
 
 .control
   set filetype=ascii
-  noise v(vout) Vinp dec 50 1k 100MEG
+  noise v(vout) Vinp dec 50 1 1MEG
   print inoise_total onoise_total
   write
   quit

@@ -10,8 +10,8 @@ import pytest
 from _spicexplorer_fixtures import REPO_ROOT
 from spicexplorer.core.domains import Project_Setup
 
-BASELINE_YAML = REPO_ROOT / "examples/ax_area_power/amp_020_baseline.yaml"
-AREA_POWER_YAML = REPO_ROOT / "examples/ax_area_power/amp_020_area_power.yaml"
+BASELINE_YAML = REPO_ROOT / "examples/ax_area_power/amp_029_baseline.yaml"
+AREA_POWER_YAML = REPO_ROOT / "examples/ax_area_power/amp_029_area_power.yaml"
 
 
 def _searched_frozen(setup):
@@ -80,7 +80,9 @@ def test_area_power_yaml_specs_and_derived_context():
                    if p.freeze and p.val is not None}
     rep = ctx.report(frozen_only)
     assert rep["transistor_count"] == 10 and rep["coverage"]["complete"]  # all 10, incl. XM9/XM10
-    assert ctx.compute(frozen_only)["active_area"] == pytest.approx(20.8, rel=1e-3)
+    # 58.0 µm² = the amp_029 deck's OWN default sizing (the frozen-only vector overrides nothing
+    # geometric); cross-check with `python -m spicexplorer_core.measurements.area <deck> --table`.
+    assert ctx.compute(frozen_only)["active_area"] == pytest.approx(58.0, rel=1e-3)
 
 
 def test_baseline_yaml_has_no_derived_context():

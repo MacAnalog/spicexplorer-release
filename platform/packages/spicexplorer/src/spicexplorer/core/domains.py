@@ -1197,5 +1197,16 @@ class OptimizationLog:
             raise IndexError("Index out of range")
         self.log[index].fit_summary = fit_summary
 
+    def update_entry_score(self, index: int, score: float | np.float64) -> None:
+        """Update the total score of an existing log entry at the specified index.
+
+        The sibling of `update_entry_fit_summary`: re-scoring a log under a different
+        optimizer config has to move `point.score` too, or `get_score()` (every plot's
+        loss axis, `filter_top_n`, the best-point pick) keeps reporting the OLD score."""
+        if index < 0 or index >= len(self.log):
+            logger.error(f"Index {index} out of range for OptimizationLog of size {len(self.log)}")
+            raise IndexError("Index out of range")
+        self.log[index].point.score = score
+
 
 

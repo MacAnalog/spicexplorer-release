@@ -27,6 +27,13 @@ registry** and appear in
 Tier-0 (schema + provenance + deck-exists) and skips T1–T4. See [`corpora/ferrosim/`](corpora/ferrosim/)
 and [`corpora/analoggym-sensing-fe/`](corpora/analoggym-sensing-fe/) for corpus provenance.
 
+`kind` is **not** how a cell is retired. A verifiable circuit that should stop appearing in the
+published benchmark sets **`published: false`** in its `circuit.yaml` — the de-publish marker,
+orthogonal to `kind`. It drops out of the generated `scoreboard.json` index and the paper
+tabulation, but stays fully lowered, drift-guarded and resolvable, which is what lets a composite
+keep composing a retired cell as its core block (`amp_030_miller_cmfb_composite` still composes the
+de-published `amp_029_two_stage_miller_comp`).
+
 Works **standalone** as a benchmark and as the `examples/analog-db/` submodule of
 [`spicexplorer-platform`](https://github.com/MacAnalog/spicexplorer-platform). Built per the platform
 plan `doc/plan_examples_db.md` (in the meta-repo).

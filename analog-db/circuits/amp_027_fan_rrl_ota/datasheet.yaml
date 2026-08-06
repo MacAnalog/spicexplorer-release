@@ -6,7 +6,7 @@ default_conditions:
     typical: 1.2
   cload:
     unit: fF
-    typical: 50
+    typical: 10000
   corner:
     typical: tt
   temp:
@@ -69,18 +69,16 @@ metrics:
     spec:
       max: 200e-6
       unit: A
-  vn_in:
-    display: Input-referred noise (integrated)
-    description: "ngspice inoise_total = total noise INTEGRATED over the bench band\
-      \ (see analyses/noise.yaml FSTART..FSTOP) \u2014 a voltage, not a density; the\
-      \ bound is a characterization band at the family's measured magnitude"
+  vn_in_integrated:
+    display: Total integrated input-referred noise (1 Hz - 1 MHz, FD follower bias)
+    description: ngspice inoise_total is volts rms already integrated over the swept
+      band (standardized 1 Hz - 1 MHz, closed-loop bias config, CL=10p) \u2014 the paper's
+      uniform noise column. Replaces the old vn_in entry (same measure over the
+      narrower 1 Hz - 10 MHz band, with a loose characterization spec). Report-only.
     unit: V
     analysis: noise
     extract:
       meas: inoise_total
-    spec:
-      max: 0.001
-      unit: V
   t_settle:
     display: Settling time
     description: Unity-gain differential-follower settling (see tran_step_diff.spice)
@@ -137,3 +135,113 @@ metrics:
     spec:
       max: 5e-6
       unit: s
+  thd_pct:
+    display: Total harmonic distortion (50 mV diff @ 100 kHz, FD follower)
+    description: tran + in-deck coherent DFT on the differential output of the
+      unity-feedback FD follower (thd_diff); F0 = 100 kHz per the campaign grid
+      (fresh ugf 3.61 MHz sits in the 3-30 MHz band, grid /10). Drive-halving
+      verified on the polynomial slope (HD2 x2.00, HD3 x4.11). HD2-dominant via
+      the follower's systematic vod_op ~ 0.19 V asymmetry; fresh tt reads 3.18%
+      — an honest spec fail at this sizing. 999 sentinel = dead-output guard.
+    unit: '%'
+    analysis: thd
+    extract:
+      meas: thd_pct
+      f0: 0.1e6
+    spec:
+      max: 2.0
+      unit: '%'
+  iip3_dbv:
+    display: Input IP3 (two-tone 90/100 kHz, 6.25 mV/tone, FD follower)
+    description: Single-point IM3 extrapolation on the differential output
+      (iip3_diff); tones per the campaign grid (fresh ugf 3.61 MHz -> 3-30 MHz
+      band, grid /10). ampl_in below MUST track the analysis binding's ASIG (it
+      is the intercept's input reference). -999 sentinel = dead-output guard.
+    unit: dBV
+    analysis: iip3
+    extract:
+      meas: iip3_dbv
+      f1: 0.09e6
+      f2: 0.1e6
+      ampl_in: 0.00625
+    spec:
+      min: -10
+      unit: dBV
+  pm_loop_deg:
+    display: Loop phase margin (stb, FD loop)
+    description: Phase margin of the antiphase-Middlebrook-probed differential
+      loop (stb_diff, VIPRB/VIPRBM pair); crosschecks ac_open_loop's pm_deg —
+      fresh ihp-sg13g2 tt reads 89.91 vs 89.94 deg. -999 sentinel = no crossover
+      (fails the min spec by design).
+    unit: deg
+    analysis: stb
+    extract:
+      meas: pm_loop
+    spec:
+      min: 60
+      unit: deg
+  loopgain_db:
+    display: DC loop gain (stb, FD loop)
+    description: Loop-gain magnitude read at FSTART; bit-identical to
+      ac_open_loop's dcgain on this cell. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: loopgain_db
+  ugf_loop_hz:
+    display: Loop unity-gain frequency (stb)
+    unit: Hz
+    analysis: stb
+    extract:
+      meas: ugf_loop
+  gm_loop_db:
+    display: Loop gain margin (stb)
+    description: Gain margin at the phase crossover; ngspice measure name is
+      gm_loop. -999 sentinel = no phase crossover in-band (correct on this cell,
+      see analyses/stb.yaml). Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: gm_loop
+  cmrr_db:
+    display: Common-mode rejection (differential figure, FD loop)
+    description: -db(voutp-voutn) under a 1 V CM ride (cmrr_vcm_diff), DC-band
+      floor. NO spec BY DESIGN — on this perfectly symmetric FD netlist the
+      differential figure saturates at the solver-resolution cap (~250-300 dB,
+      matrix round-off, not physical rejection); a min-spec would silently pass
+      any cell. The CM-loop figure cmrr_cm_db is the physical discriminator.
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_db
+  cmrr_cm_db:
+    display: CM-loop rejection of a CM ride (cmrr_vcm)
+    description: Output-CM response to the same 1 V CM ride — the DDA-CMFB
+      servo's always-physical, discriminating rejection figure. NO spec —
+      report-only companion to cmrr_db (whose differential figure is
+      solver-capped on symmetric FD netlists).
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_cm_db
+  psrr_vdd_db:
+    display: Positive-supply rejection (differential figure, FD loop)
+    description: -db(voutp-voutn) under a 1 V vdd ripple (psrr_vdd_diff),
+      DC-band floor. NO spec BY DESIGN — the supply disturbs both symmetric
+      half-circuits identically, so the differential figure saturates at the
+      solver-resolution cap (~250-300 dB, not physical); a min-spec would
+      silently pass any cell. psrr_cm_db is the physical discriminator.
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_vdd_db
+  psrr_cm_db:
+    display: CM-path supply rejection (psrr_vdd)
+    description: Output-CM supply rejection through the telescopic cascode stack
+      + DDA-CMFB servo — the always-physical, discriminating figure. NO spec —
+      report-only companion to psrr_vdd_db (whose differential figure is
+      solver-capped on symmetric FD netlists).
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_cm_db

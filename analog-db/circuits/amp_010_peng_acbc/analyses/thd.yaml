@@ -1,0 +1,35 @@
+# Analysis binding for the self-biased AnalogGym DUT (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# THD in the unity buffer: tran + the template's in-deck coherent DFT (ngspice); the Spectre
+# lane composes a native pss at F0 (HARMS).
+# F0 = 10 kHz per the campaign F0 grid: fresh ugf (ac_open_loop, 2026-08-01, landed sizing)
+# is 1.346 MHz @ ihp-sg13g2 tt / 558 kHz @ gf180mcu tt — both < 3 MHz, so the 1 MHz base
+# grid divides by 100.
+# COHERENT WINDOW (the template requires (TSTOP-TSTART) to be whole F0 periods): F0 = 10 kHz
+# -> T = 100 us; TSTOP-TSTART = 1.6m = 16 whole periods (even count); TSTEP = 200n =
+# 1/(500*F0). TSTART = 400u = 4 whole periods — on gf180mcu that is ~12x the 20*t_settle
+# rule floor (fresh t_settle 1.61 us -> 32 us); on ihp-sg13g2 the 20*t_settle rule is
+# UNSATISFIABLE at this sizing: the unity buffer never settles (limit-cycle oscillation, see
+# the CIRCUIT HEALTH note below), so TSTART is the 4-period rule minimum, documented.
+# CIRCUIT HEALTH (ihp-sg13g2 tt, 2026-08-01, landed sizing): the TRUE unity-buffer loop is
+# conditionally UNSTABLE — stb reads pm_loop -82.7 deg at the last 0 dB crossing (12.0 MHz)
+# with gm_loop -8.0 dB, and a 3 ms step-response probe shows a sustained ~+/-50 mV limit
+# cycle around vout=0.5. THD numbers on ihp at this sizing are therefore oscillator
+# residue, not amplifier linearity, and the multi-ms coherent window costs hours of ngspice
+# wall-clock there (the limit cycle forces ns-scale internal steps — the CLI runner's 300 s
+# cap times out). gf180mcu (healthy loop: pm_loop 88.5 deg, gm_loop +22.5 dB) is where this
+# binding's numbers were proven — MEASURED @ gf180mcu tt 2026-08-01: thd_pct 0.1629
+# (thd_db -55.76), gain_tone 1.0121 (0.10 dB of in-band closed-loop peaking, NOT a
+# dead-output artifact), vout_op 0.3021; drive-halving trust check ASIG 0.1 -> 0.05 scales
+# HD2 x2.03 / HD3 x4.12 (weakly-nonlinear regime confirmed).
+# REPORTING: produces names the datasheet metric id (thd_pct); the remaining measures
+# (thd_db, a1..a5, a1_in, gain_tone, vout_op) ride the recorded
+# `corners.<corner>.analyses.thd.measures` block. gain_tone < 0.5 means the template's
+# dead-output guard fired and thd_pct is the 999 sentinel, not a measurement.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_selfbias
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 0.3, CL: 10p, ASIG: 0.1, F0: 1.0e4, TSTEP: 200n, TSTART: 400u, TSTOP: 2m, HARMS: 7}
+flags: []
+produces: [thd_pct]

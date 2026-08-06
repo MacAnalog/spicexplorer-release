@@ -1,0 +1,25 @@
+# Analysis binding for the SELF-BIASED Peng TCFC 3-stage OTA (no ibias port) — uses the
+# class's ibias-free template variant so no external current source is left driving a
+# dangling node. THD in the unity buffer: tran + the template's in-deck coherent DFT
+# (ngspice); the Spectre lane composes a native pss at F0 (HARMS).
+# F0 GRID: fresh ac_open_loop @ ihp-sg13g2 tt (2026-08-01, landed sizing) reads
+# ugf = 2.126 MHz < 3 MHz -> the campaign grid divides by 100: F0 = 10 kHz (~4.7x under
+# the closed-loop crossover ~ugf/2, comfortably in-band).
+# COHERENT WINDOW (the template requires (TSTOP-TSTART) to be whole F0 periods): T = 100 us;
+# TSTART = 4m = 40 whole periods >= 20x the measured t_settle (198.998 us, tran_step same
+# run — that settle is dominated by the biaswrap Lfb bias transient, so it upper-bounds the
+# plain unity buffer used here); TSTOP = 5.6m leaves 16 whole periods (even count).
+# TSTEP = 200n = T/500 <= 1/(200*F0).
+# DRIVE: ASIG = 0.1 class default. Headroom: VCM = 0.24 V, so vout swings 0.14..0.34 V on
+# the 0..1.8 V rails — the same low-VCM operating band the AnalogGym benches prove out
+# (tran_step steps 0.24 -> 0.44 with vfinal clean). Drive-halving check @ ihp tt: see the
+# validation note in the campaign record — HD2/HD3 scale ~x2/~x4 as required.
+# TRUST CHECKS: gain_tone < 0.5 means the template's dead-output guard fired and thd_pct is
+# the 999 sentinel, not a measurement.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_selfbias
+description: "THD — unity-buffer large-signal sine (10 kHz, in-band for this 2.1 MHz-UGF cell); tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 240m, CL: 10p, ASIG: 0.1, F0: 1.0e4, TSTEP: 200n, TSTART: 4m, TSTOP: 5.6m, HARMS: 7}
+flags: []
+produces: [thd_pct]

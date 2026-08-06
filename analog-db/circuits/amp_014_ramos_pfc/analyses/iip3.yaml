@@ -1,0 +1,37 @@
+# Analysis binding for the SELF-BIASED 3-stage PFC OTA (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# Two-tone IIP3 in the unity buffer: 6.25 mV tones at 9/10 kHz share the F0 = gcd = 1 kHz
+# fundamental (n1=9, n2=10), so the IM3 products at 8/11 kHz (bins 8/11) and the IM5 products
+# at 7/12 kHz (bins 7/12) land on exact F0 bins — the in-deck coherent DFT then has no
+# leakage. GRID: fresh ac_open_loop @ ihp-sg13g2 tt (2026-08-01, landed sizing) reads ugf =
+# 1.942 MHz < 3 MHz -> the campaign grid divides by 100 (F1/F2 = 9k/10k, exact 9:10 ratio
+# kept), both tones ~194x under the buffer's closed-loop crossover.
+# COHERENT WINDOW: TSTART = 2m = 2 whole beat periods (1/F0 = 1 ms; >> 20x the fresh 582.7 ns
+# tran_step t_settle — the integer-beat contract is load-bearing); TSTOP-TSTART = 20m =
+# 20 beat periods; TSTEP = 100n = 1/(1000*F2), deliberately 5x tighter than the 1/(200*F2)
+# contract: at 500n the IM5 bins were interpolation-noise (a_im5l 7.5e-12) and a_floor sat
+# 4x under IM3; at 100n IM5 collapses 10x to its real level (im5_im3_db -26.3 dB, clean
+# 3rd-order behavior, iip3_comp_db 1.05 dB) while IM3 holds (~1.3-1.6e-11 V, reproducible
+# across both steps -> a real signal). Do NOT go below 100n: TSTEP 50n makes the harness
+# fail the run on ngspice's progress chatter (measured 2026-08-01).
+# HONEST CAVEAT: even at 100n, a_im3 sits only ~13 dB above the a_floor trust bin (the
+# campaign asks >= 20 dB). This is the CIRCUIT, not the binding: 102 dB of DC loop gain
+# leaves ~46 dB of loop suppression at the 9/10 kHz grid, pushing IM3 to -172 dBc — at the
+# resolution limit of any coherent-DFT deck. iip3_dbv = 41.8 dBV is therefore an
+# extrapolation from a near-floor IM3: treat it as "extremely linear at this grid", not a
+# precision intercept.
+# DRIVE: ASIG = 6.25 mV per tone — the class default (see the iip3.spice header's measured
+# valid-window sweep). Plain decimal (0.00625), never a SPICE suffix — ASIG/F0/F1/F2 reach
+# .control arithmetic.
+# REPORTING: the template also prints im3_dbc, a_f1/a_f2/a_drv, gain_tone, a_im3l/h,
+# a_im5l/h, a_floor, im5_im3_db, iip3_comp_db; those ride the recorded
+# `corners.<corner>.analyses.iip3.measures` block. TRUST CHECKS: a_im3 must sit well above
+# a_floor; gain_tone <= 0.5 means the dead-output guard fired and iip3_dbv is the -999
+# sentinel.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_selfbias
+description: "IIP3 — two-tone intermodulation intercept; tran+coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 400m, CL: 10p, ASIG: 0.00625, F0: 1.0e3, F1: 9.0e3, F2: 1.0e4, TSTEP: 100n, TSTART: 2m, TSTOP: 22m}
+flags: []
+produces: [iip3_dbv]

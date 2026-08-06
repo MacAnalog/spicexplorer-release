@@ -1,0 +1,25 @@
+# Analysis binding: common-mode rejection (class cmrr_vcm_diff template — the FD counterpart
+# of cmrr_vcm; self-biased voutp/voutn cell, SE unity-buffer bench does not fit). Differential
+# loop closed by the template's CM-pinned VCVS network at the SRMC system CM (VCM 0.5, like
+# every other bench of this circuit); the SAME 1 V AC rides both inputs and
+# cmrr_db = -db(voutp-voutn) at FSTART.
+# CAVEAT (template header, "SOLVER-RESOLUTION CEILING"): this netlist is perfectly symmetric
+# (down to the paired behavioral servos), so cmrr_db saturates near the 300 dB floor-cap —
+# "beyond solver resolution", not physical. The secondary cmrr_cm_db (output-CM response = the
+# CMFB servos' rejection of the input-CM ride) is the always-physical, discriminating figure.
+# FSTART 10 (not the SE 1k): matches this circuit's own ac_open_loop FSTART and sits safely in
+# the DC band of its slow (~100 us-scale, see tran_cm_kick) CM servo dynamics, so the reported
+# floor is the true low-frequency value rather than a mid-transition read.
+schema: spicexplorer/analysis@1
+id: cmrr_vcm
+template: cmrr_vcm_diff
+description: "CMRR — 1 V AC common-mode ride on both inputs of the CM-pinned differential unity-feedback loop, DC-band floor (+ cmrr_cm_db CM-loop figure)."
+params:
+  VDD: 1.2
+  VCM: 0.5
+  CL: 10p
+  FSTART: 10
+  FSTOP: 1G
+  PPD: 101
+flags: []
+produces: [cmrr_db]

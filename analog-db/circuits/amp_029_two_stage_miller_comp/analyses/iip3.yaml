@@ -1,0 +1,44 @@
+# Analysis binding: two-tone IIP3 in the DIFFERENTIAL unity-feedback follower
+# (amplifier/iip3_diff — tran_step_diff's network, each tone split +/- ASIG/2; the SE iip3
+# template's node `vout` is structurally dead on this FD member).
+# TONE PLACEMENT per the campaign F0 grid, keyed on the FRESH open-loop ugf: measured
+# ugf = 24.39 MHz (ac_open_loop @ ihp-sg13g2 tt, 2026-08-01, CL=10p) sits in the 3-30 MHz
+# band -> the whole grid divides by 10 from the >=30 MHz reference (0.9/1.0 MHz). Tones
+# 90/100 kHz share F0 = gcd = 10 kHz (n1=9, n2=10, the exact 9:10 ratio the class fixes),
+# so IM3 (80/110 kHz = bins 8/11) and IM5 (70/120 kHz = bins 7/12) land on exact bins and
+# the in-deck coherent DFT has no leakage. Tones sit ~122x under the follower's closed-loop
+# crossover (~ugf/2 = 12.2 MHz).
+# DRIVE: ASIG = 6.25 mV PER TONE (applied differential amplitude) — the class default (see
+# iip3.spice's measured ASIG sweep; 50 mV read 0.5-1.4 dB biased). The one-wire follower's
+# closed-loop gain is 2, so each output node swings ~6.25 mV/tone, matching the SE bench's
+# per-side swing, and iip3_dbv is input-referred to the ASIG binding exactly as there.
+# Plain decimal (0.00625), never a SPICE suffix — ASIG/F0/F1/F2 reach .control arithmetic.
+# COHERENT WINDOW: TSTART = 100u = 1 whole beat period (1/F0) = 31x the measured 3.229 us
+# settling (tran_step t_settle, same run; the integer-beat contract is load-bearing —
+# TSTART must be whole beats >= 20x t_settle); TSTOP - TSTART = 2000u = 20 beat periods
+# (even -> cm_drift_v's halves hold whole beats); TSTEP = 50n = 1/(200*F2).
+# HONEST CIRCUIT FAILURE — READ iip3_dbv WITH THE STORY (ihp-sg13g2 tt, 2026-08-01):
+# gain_tone = 15.1 (OUTSIDE the FD live-gate (2/3, 2]) and iip3_dbv = -19.1 dBV. This is
+# the CIRCUIT, not the binding: cm_control: partial — no CM servo, and the knife-edge vbl
+# bias has CM gain ~2500 (circuit.yaml), so the follower's inherent ASIG/2 input-CM wobble
+# is amplified by the unregulated CM path and converted to differential by the bench
+# operating point's asymmetry (vod_op = 0.154 here). At this small drive the conversion is
+# barely compressed (thd's 16x-larger drive reads gain_tone 4.79), so the "intercept"
+# characterizes the CM-conversion path, not the DUT's differential linearity; it honestly
+# FAILS the -10 dBV spec. amp_030 (composed CMFB) is where a clean IIP3 is measurable.
+# Trust anchors that DO hold: a_im3 sits 58 dB above a_floor (bins are real, no leakage)
+# and cm_drift_v ~ 1.5e-8 << ASIG (stationary record).
+# REPORTING: `produces:` names the DATASHEET METRIC ID — datasheet.yaml binds
+# metrics.iip3_dbv.{analysis: iip3, extract.meas: iip3_dbv} with extract f1/f2/ampl_in
+# mirroring these params. TRUST CHECKS (template header): gain_tone ~ 2 when live (guard
+# threshold 2/3; sentinels iip3_dbv = -999 / im3_dbc = +999); a_im3 must sit far above
+# a_floor; iip3_comp_db is the 5th-order compression estimate (one-sided-usable only at
+# this drive); cm_drift_v must be << ASIG or the record is not stationary and the
+# intercept is meaningless.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_diff
+description: "IIP3 — FD follower two-tone intermodulation; tran + in-deck coherent DFT."
+params: {VDD: 1.2, VCM: 0.6, CL: 10p, ASIG: 0.00625, F0: 0.01e6, F1: 0.09e6, F2: 0.1e6, TSTEP: 50n, TSTART: 100u, TSTOP: 2100u}
+flags: []
+produces: [iip3_dbv]

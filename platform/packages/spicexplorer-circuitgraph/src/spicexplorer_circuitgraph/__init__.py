@@ -65,6 +65,7 @@ from .paths import (
     DiffKind,
     GraphPath,
     PathDiff,
+    PathList,
     PathSegment,
     PathStep,
     StepDiffKind,
@@ -81,7 +82,9 @@ from .pdk import (
     Pdk,
     PdkDevice,
     get_pdk,
+    model_flavor,
     mos_flavor,
+    split_flavor,
 )
 from .port_spec import get_port_spec
 from .serialization import (
@@ -131,6 +134,8 @@ __all__ = [
     "Pdk",
     "PdkDevice",
     "mos_flavor",
+    "model_flavor",
+    "split_flavor",
     "IHP_SG13G2",
     "SKYWATER_SKY130",
     "GF180MCU",
@@ -181,6 +186,7 @@ __all__ = [
     "shortest_paths_between",
     "diff_paths",
     "GraphPath",
+    "PathList",
     "PathStep",
     "PathDiff",
     "PathSegment",

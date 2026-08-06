@@ -6,7 +6,7 @@ description: "CM output impedance vs f: zcm_lf_ohm (servo stiffness) + cm_peakin
 params:
   VDD: 1.2
   VCM: 0.6
-  CL: 50f
+  CL: 10p
   FSTART: 100
   FSTOP: 1G
   PPD: 41

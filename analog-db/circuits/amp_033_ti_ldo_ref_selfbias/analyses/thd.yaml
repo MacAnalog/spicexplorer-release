@@ -1,0 +1,35 @@
+# Analysis binding for the SELF-BIASED reference amp (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# VCM = 0.8 V is this block's TRUE in-LDO input common mode (it sits on VREF, and the divider
+# tap on vinn regulates to the same level) — NOT amp_032's 1.2 V. On gf180 6 V devices this is
+# a low CM for an NMOS input pair, so the tail-sink headroom is the thing to watch here.
+# THD in the unity buffer: tran + the template's in-deck coherent DFT (ngspice); the Spectre
+# lane composes a native pss at F0 (HARMS).
+# F0 = 100 kHz per the campaign F0 grid: fresh ac_open_loop @ gf180mcu tt (2026-08-01, landed
+# sizing) reads ugf = 7.286 MHz, in the 3-30 MHz band -> the base grid (thd F0 = 1 MHz) divides
+# by 10. The earlier F0 = 1 MHz binding sat only ~7x under ugf (~17 dB of loop gain at the
+# tone) and read thd_pct = 2.40%; at 100 kHz the buffer loop has ~37 dB at the tone — the
+# grid-uniform condition the paper column compares under.
+# COHERENT WINDOW (the template requires (TSTOP-TSTART) to be whole F0 periods, see its
+# header): F0 = 100 kHz -> T = 10 us; TSTART = 40u = 4 whole periods, >> 20x the measured
+# 219 ns settling (tran_step t_settle to 1 mV, same fresh run); TSTOP = 200u leaves 16 whole
+# measured periods. TSTEP = 20n = T/500 <= 1/(500*F0).
+# DRIVE: ASIG = 0.1 (class default). vout_op ~ 0.80 V on 3.3 V rails, gain_tone ~ 1.007 —
+# plenty of headroom, no low-swing derate needed. Drive-halving check @ gf180mcu tt
+# (2026-08-01): ASIG 0.1 -> 0.05 moves HD2 -50.6 -> -57.3 dBc (x2.16) and HD3 -63.0 ->
+# -75.9 dBc (x4.40) — clean weakly-nonlinear scaling, the DFT is reading real distortion.
+# gain_tone = 1.0066 sits a hair ABOVE the nominal (0.5,1] SE window because this buffer's
+# true closed-loop gain is 1.0067 (fresh ac_closed_loop gain_cl, same run; its datasheet spec
+# allows 0.97..1.03) — the tone gain tracks it to 0.02%, so this is the circuit, not the bench.
+# REPORTING: `produces:` names DATASHEET METRIC IDS (analysis.schema.json) — datasheet.yaml
+# binds metrics.thd_pct to this analysis. The remaining measures (thd_db, a1..a5, a1_in,
+# gain_tone, vout_op) still ride the recorded `corners.<corner>.analyses.thd.measures` block.
+# gain_tone < 0.5 means the template's dead-output guard fired and thd_pct is the 999
+# sentinel, not a measurement.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_selfbias
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 3.3, VCM: 0.8, CL: 10p, ASIG: 0.1, F0: 0.1e6, TSTEP: 20n, TSTART: 40u, TSTOP: 200u, HARMS: 7}
+flags: []
+produces: [thd_pct]

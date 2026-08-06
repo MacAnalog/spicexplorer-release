@@ -5,7 +5,7 @@ default_conditions:
     typical: 1.8
   cload:
     unit: pF
-    typical: 5
+    typical: 10
   corner:
     typical: tt
   temp:
@@ -93,14 +93,17 @@ metrics:
       weight: 100.0
       error_type: relative-sigmoid
       enable: true
-  vn_in:
-    display: Input-referred noise
-    unit: V/sqrt(Hz)
+  vn_in_integrated:
+    display: Integrated input-referred noise (1 Hz - 1 MHz)
+    description: Total integrated input-referred rms noise over the standardized paper
+      band (1 Hz - 1 MHz, unity-buffer bias config, CL 10p). ngspice inoise_total is
+      already volts rms integrated over the swept band. REPLACES the old vn_in entry,
+      which mapped the same inoise_total measure under V/sqrt(Hz) — dimensionally wrong
+      for an integrated total.
+    unit: V
     analysis: noise
     extract:
       meas: inoise_total
-    spec:
-      max: any
   i_supply:
     display: Supply current
     unit: A
@@ -140,3 +143,65 @@ metrics:
     spec:
       min: 40
       unit: dB
+  thd_pct:
+    display: Total harmonic distortion (100 mV @ 10 kHz, buffer)
+    description: tran+FFT on ngspice; native PSS harmonics on Spectre. F0 = 10 kHz per the
+      campaign grid (fresh ugf 2.03 MHz < 3 MHz -> divide the 1 MHz default by 100).
+    unit: '%'
+    analysis: thd
+    extract:
+      meas: thd_pct
+      f0: 10.0e3
+    spec:
+      max: 2.0
+      unit: '%'
+  iip3_dbv:
+    display: Input IP3 (two-tone 9/10 kHz, 6.25 mV/tone, buffer)
+    description: Single-point IM3 extrapolation; tran+coherent DFT on ngspice, native PSS
+      on Spectre. Tones at 9/10 kHz per the campaign grid (ugf < 3 MHz -> /100); ampl_in
+      below MUST track the analysis binding's ASIG (it is the intercept's input reference).
+    unit: dBV
+    analysis: iip3
+    extract:
+      meas: iip3_dbv
+      f1: 9.0e3
+      f2: 10.0e3
+      ampl_in: 0.00625
+    spec:
+      min: -10
+      unit: dBV
+  pm_loop_deg:
+    display: Loop phase margin
+    description: Phase margin of the unity-buffer loop by Middlebrook injection at the
+      VIPRB marker — the same loop ac_open_loop's pm_deg characterizes, by an independent
+      route (-999 sentinel = no crossover, which FAILS this min spec by design).
+    unit: deg
+    analysis: stb
+    extract:
+      meas: pm_loop
+    spec:
+      min: 60.0
+      unit: deg
+  loopgain_db:
+    display: DC loop gain
+    description: Loop-gain magnitude read at FSTART (0.01 Hz); characterization only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: loopgain_db
+  ugf_loop_hz:
+    display: Loop unity-gain frequency
+    description: Loop crossover of the Middlebrook probe; characterization only.
+    unit: Hz
+    analysis: stb
+    extract:
+      meas: ugf_loop
+  gm_loop_db:
+    display: Loop gain margin
+    description: Gain margin at the -180 deg loop-phase crossing; -999 sentinel = the loop
+      phase never reaches -180 deg in-band (no gain margin exists there). Characterization
+      only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: gm_loop

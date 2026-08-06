@@ -1,0 +1,38 @@
+# Analysis binding for the self-biased CLIA 3-stage OTA (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# Loop-gain / stability probe in the unity buffer: ngspice does Middlebrook voltage injection
+# at the VIPRB marker (`alter @VIPRB[acmag]=1` in .control — netlist bytes unchanged); the
+# Spectre lane composes a native `stb stb probe=VIPRB` off the same marker. Injection at the
+# DC-short keeps the op point the CLOSED-loop buffer one, so this bench needs none of the
+# biaswrap this amp's ac_open_loop needs.
+# FSTART = 0.01 Hz is the class value (see the stb template's "CHOOSING FSTART").
+# PILOT @ gf180mcu tt (2026-08-01, landed sizing): loopgain_db = 131.7508 vs ac_open_loop
+# dcgain 131.7434 (0.007 dB), ugf_loop = 5.951 MHz vs ugf 5.937 MHz (the biaswrap Lfb/Cin
+# shifts the open-loop read ~0.2%), pm_loop = pm_loop_first = -73.63 deg (single 0 dB
+# crossing) vs the bias-wrapped ac_open_loop pm -69.18 deg (4.4 deg apart — two different
+# loop lanes, BOTH negative), gm_loop = -13.93 dB (loop gain still +13.9 dB at the -180 deg
+# phase crossing), phref_dev = -0.24 deg / phref_ok = 1. VERDICT: the unity-gain loop is
+# UNSTABLE at the landed sizing — this is the CIRCUIT (the tran_step bench rings with
+# vfinal 1.06 V vs the 0.5 V follower value, and thd/iip3 read a limit cycle), not the
+# binding. pm_loop here is at the LAST 0 dB crossing (the PM-rescue convention), the
+# loop-stability oracle for the datasheet's pm_loop_deg.
+schema: spicexplorer/analysis@1
+id: stb
+template: stb_selfbias
+description: "Loop gain (stb) of the unity buffer — loopgain_db/ugf_loop/pm_loop/gm_loop; Middlebrook injection at VIPRB on ngspice, native stb on Spectre."
+# FSTART 0.01 -> 1e-4 (2026-08-04): the stb bench anchors phase at its first swept point and
+# blanks pm_loop/gm_loop to the -999 sentinel when |phref_dev| > 30 deg. For a high-gain amp
+# the dominant pole f_p = UGF/A0 is sub-Hz, so 0.01 Hz already sits PAST it — and because
+# every stabilising move lowers UGF (hence f_p), the guard fires HARDER on a correct fix than
+# on the broken design. Measured on amp_006@gf180: the committed (unstable) sizing reports
+# pm_loop -16.5, while the stabilised one reports -999 at 0.01 Hz and +66.0 at 1e-4. pm_loop
+# and gm_loop are FSTART-INVARIANT; only the guard moves.
+params:
+  VDD: 1.8
+  VCM: 300m
+  CL: 10p
+  FSTART: 1e-4     # class value; see the stb template's "CHOOSING FSTART"
+  FSTOP: 1G
+  PPD: 101
+flags: []
+produces: [pm_loop_deg, loopgain_db, ugf_loop_hz, gm_loop_db]

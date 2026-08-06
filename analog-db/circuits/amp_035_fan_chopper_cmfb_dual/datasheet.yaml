@@ -1,0 +1,217 @@
+# Datasheet for the CM-closed composite (see composition.yaml). Specs are inherited from
+# amp_026 (the core) so the two entries are directly comparable, EXCEPT where the CMFB
+# changes what is physically expected — vos tightens, and the two CM-loop benches
+# (dc_cm_bias_sweep / tran_cm_kick) are new because the core has no CM loop to test.
+# The headline of this entry is cmrr_cm_db / psrr_cm_db (and the scoreboard's
+# *_cm_corr_db = dc_gain_db + raw residual), not the solver-capped differential figures.
+schema: spicexplorer/datasheet@1
+cace_format: '5.2'
+default_conditions:
+  supply:
+    unit: V
+    typical: 1.2
+  cload:
+    unit: fF
+    typical: 10000
+  corner:
+    typical: tt
+  temp:
+    unit: degC
+    typical: 27
+  vcm:
+    unit: V
+    typical: 0.6
+metrics:
+  dc_gain_db:
+    display: DC open-loop differential gain
+    description: Differential large-signal DC gain, vdb(voutp,voutn); folded-cascode first stage + class-A
+      second stage
+    unit: dB
+    analysis: ac_open_loop
+    extract:
+      meas: dcgain
+    spec:
+      min: 50
+      unit: dB
+  ugf_hz:
+    display: Unity-gain frequency
+    unit: Hz
+    analysis: ac_open_loop
+    extract:
+      meas: ugf
+    spec:
+      unit: Hz
+      min: 5000000.0
+  pm_deg:
+    display: Phase margin
+    description: Two-stage, per-side Miller-compensated into the 50 fF load
+    unit: deg
+    analysis: ac_open_loop
+    extract:
+      meas: pm
+    spec:
+      unit: deg
+      min: 60.0
+      max: 90
+  vos:
+    display: Output offset
+    description: voutp - voutn at matched DC inputs. Unlike the core (amp_026), a REAL CMFB now holds
+      the output COMMON mode; the differential offset here is device mismatch only, so the band is tightened
+      100 -> 50 mV
+    unit: V
+    analysis: dc_op
+    extract:
+      meas: vos
+    spec:
+      typ: 0
+      min: -0.05
+      max: 0.05
+      unit: V
+  vocm:
+    display: Settled output common mode
+    description: "(voutp+voutn)/2 at the DC operating point — where the CMFB loop landed against
+      the commanded {vcm_ref}. The gap is the static CM error (vcmfb_bal - vcmfb_nat)/cmfb_slope;
+      on the core (amp_026) there is no command at all, just a device-ratio knife edge."
+    unit: V
+    analysis: dc_op
+    extract: {meas: vocm, out: voutp, ref: voutn}
+  i_supply:
+    display: Supply current
+    unit: A
+    analysis: dc_op
+    extract:
+      meas: i_supply
+    spec:
+      max: 500e-6
+      unit: A
+  vn_in_integrated:
+    display: Total integrated input-referred noise (1 Hz - 1 MHz)
+    description: ngspice inoise_total is volts rms already integrated over the swept band (standardized
+      1 Hz - 1 MHz, CM-pinned differential unity-feedback bias config, CL=10p) \u2014 the paper's uniform
+      noise column. Replaces the old vn_in entry, which bound the same measure over the narrower 1 Hz
+      - 10 MHz band with a band-specific spec.
+    unit: V
+    analysis: noise
+    extract:
+      meas: inoise_total
+  t_settle:
+    display: Settling time
+    description: Unity-gain differential-follower settling (see tran_step_diff.spice)
+    unit: s
+    analysis: tran_step
+    extract:
+      meas: t_settle
+      out: voutp
+      ref: voutn
+    spec:
+      max: 1.0e-05
+      unit: s
+  pm_loop_deg:
+    display: Loop phase margin (stb, FD follower)
+    description: Phase margin of the antiphase-Middlebrook-probed differential loop (stb_diff); crosschecks
+      ac_open_loop's pm_deg — same loop, two routes. -999 sentinel = no crossover (fails the min spec
+      by design). NOTE this sizing is marginal (fresh pm 25.1 deg), so the min-60 spec fails honestly
+      today.
+    unit: deg
+    analysis: stb
+    extract:
+      meas: pm_loop
+    spec:
+      min: 60
+      unit: deg
+  loopgain_db:
+    display: DC loop gain (stb, FD follower)
+    description: Loop-gain magnitude read at FSTART; tracks ac_open_loop's dcgain. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: loopgain_db
+  ugf_loop_hz:
+    display: Loop unity-gain frequency (stb)
+    unit: Hz
+    analysis: stb
+    extract:
+      meas: ugf_loop
+  gm_loop_db:
+    display: Loop gain margin (stb)
+    description: Gain margin at the phase crossover; -999 sentinel = no phase crossover in-band. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: gm_loop
+  cmrr_db:
+    display: Common-mode rejection (differential figure)
+    description: 'NO spec ON PURPOSE (solver-resolution ceiling): on this perfectly symmetric FD netlist
+      the differential response to a pure CM ride is matrix round-off, so cmrr_db saturates at the ~250-300
+      dB cap. The physical discriminator is cmrr_cm_db (and its scoreboard-derived cmrr_cm_corr_db = dc_gain_db
+      + the raw CM residual) — that is the figure this entry exists to fix.'
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_db
+  cmrr_cm_db:
+    display: CM-loop rejection of a CM ride (cmrr_vcm)
+    description: Output-CM response to the 1 V CM ride. On the core (amp_026, NO CMFB) this reads -49.3
+      dB, i.e. the unregulated CM path AMPLIFIES the ride ~290x; with the 5T CMFB closed it must improve
+      by the CM loop gain. Report-only (the scoreboard derives the physical cmrr_cm_corr_db from it).
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_cm_db
+  psrr_vdd_db:
+    display: Positive-supply rejection (differential figure)
+    description: 'NO spec ON PURPOSE (solver-resolution ceiling): the supply disturbs both symmetric half-circuits
+      identically, so the differential figure saturates at the ~250-300 dB cap. The physical discriminator
+      is psrr_cm_db / the scoreboard''s psrr_cm_corr_db.'
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_vdd_db
+  psrr_cm_db:
+    display: CM-path supply rejection (psrr_vdd)
+    description: Output-CM supply rejection through the CM path. On the core (amp_026, NO CMFB) this reads
+      -62.0 dB (supply ripple amplified ~1250x onto the output CM, psrr_cm_corr_db = -2.4 dB); closing
+      the real 5T CMFB is the fix this entry tests. Report-only.
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_cm_db
+  cm_interior_pts:
+    display: CM-closure acceptance (interior op points)
+    description: Of 5 commanded vcm_ref values (0.44 - 0.56 V), how many put the output CM inside 0.5
+      +/- 0.15 V. 5 = the CMFB tracks the command; the P4-4b acceptance gate. amp_026 alone has no CM
+      command at all.
+    unit: count
+    analysis: dc_cm_bias_sweep
+    extract:
+      meas: cm_interior_pts
+    spec:
+      min: 5
+      unit: count
+  cm_resid_v:
+    display: CM kick residual
+    description: Output CM at TEND minus the pre-kick level after a 5 uA CM current kick is released.
+      ~0 means the loop returned to its commanded point; a large residual is the latched/basin-escape
+      signature. cmfb_002 is rail-clamped by construction, so ~0 is the expectation.
+    unit: V
+    analysis: tran_cm_kick
+    extract:
+      meas: cm_resid_v
+    spec:
+      min: -0.01
+      max: 0.01
+      unit: V
+  cm_kick_v:
+    display: CM kick excursion (loop stiffness)
+    description: Peak output-CM excursion during the 5 uA kick — smaller = stiffer CM loop. Report-only.
+    unit: V
+    analysis: tran_cm_kick
+    extract:
+      meas: cm_kick_v
+  t_cm_settle:
+    display: CM recovery time
+    description: Time from the kick release until |vocm - vocm(TEND)| stays under VTOL = 2 mV. Report-only.
+    unit: s
+    analysis: tran_cm_kick
+    extract:
+      meas: t_cm_settle

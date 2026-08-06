@@ -1,0 +1,97 @@
+# AUTHORED composite manifest (spicexplorer/composition@1). Plan P4-4b, SECOND HALF:
+# stage-1 CM closure. amp_034 regulates only the OUTPUT common mode; this entry adds the
+# loop its caveat section names.
+schema: spicexplorer/composition@1
+of: amp_035_fan_chopper_cmfb_dual
+notes: >-
+  DUAL-loop CM closure of amp_026_fan_chopper_ota: amp_034's output loop, plus a second
+  real 5T CMFB around the FIRST stage. Three instances share one core.
+
+  WHY. amp_034 closes the output CM but leaves stage 1 open, and that residue is
+  measurable: the core's hand-tuned vb1 = 0.398 balances the fold nodes only near a 0.6 V
+  INPUT common mode, so dropping the input CM to 0.5 V rails stage 1 high and drags the
+  output to ~0.026 V — verified on the bare core too (amp_026 dc_op at VCM 0.5 reads
+  vocm = 0.004 V). One knob, hand-set, is the only thing holding the first stage's
+  operating point. This entry replaces that knob with a loop.
+
+  ACTUATOR — and why it only became available once amp_034 existed. In the bare core
+  {vb4} gates FIVE devices: the tail XM1, the fold sources XM6/XM7 AND the output sources
+  XM8/XM9. Driving it was a NON-inverting plant (cm_plant_delta +1.19 V) because the
+  huge stage-1 path outran the direct output term, which is why amp_034 split XM8/XM9 out
+  onto vb4o instead. With those two gone, {vb4} is a CLEAN STAGE-1-ONLY actuator, and
+  re-measuring the plant with the output loop closed gives:
+    vb4 0.35 -> out1 CM 1.1115 | vb4 0.75 -> out1 CM 0.0189
+    cm_plant_delta = -1.093 V  -> INVERTING plant -> canonical servo (cmfb_002/003)
+    out1 CM at the committed vb4 = 0.55 is 0.3265 V; achievable window [0.00, 1.15] V.
+  So the two loops are actuated on the two halves of what used to be one bias net, and
+  BOTH want the canonical polarity.
+
+  FLAVOR — cmfb_002 (PMOS-input) for BOTH loops, but for different reasons. Loop 1 (output,
+  sensed CM 0.5 V): amp_034's measured in-loop A/B. Loop 2 (stage 1, sensed CM 0.327 V):
+  forced. An NMOS input pair needs ntail <= 0.327 - Vth_n < 0 at the IHP LV Vth — it cannot
+  sense a 0.33 V common mode at all, while the PMOS pair has ~0.85 V of tail headroom there.
+
+  SENSE LOADING — the one real design change vs loop 1. out1_p/out1_n are CASCODED
+  high-impedance nodes carrying the whole first-stage gain; the CMFB's resistive averager
+  hangs RMP+RMN across them. The block's 1 MOhm default would be a ~2 MOhm differential
+  load on a multi-MOhm node and would eat the gain it is supposed to protect, so loop 2
+  overrides x_dut_rmp_value to 50 MOhm (100 MOhm differential, in-bounds for the block).
+  The divider is unaffected — the CMFB's own input is a MOS gate (r_sense_in ~4e11 Ohm) —
+  and the CM loop only needs kHz-MHz bandwidth, so the slower sense pole is free.
+
+  LOOP SIGNS. Output: vocm UP -> vcmfb_out UP -> vb4o UP -> XM8O/XM9O |Vsg| DOWN -> vocm
+  DOWN. Stage 1: out1 CM UP -> vcmfb_s1 UP -> vb4 UP -> XM6/XM7 starve -> out1 CM DOWN.
+  Both negative, both with the canonical block.
+
+  COMPENSATION — {c_cm_s1}, and it is NOT optional. Uncompensated, the two CM loops make
+  the DC solution DYNAMICALLY UNSTABLE: the op solver finds vocm = 0.5125 V and reports
+  healthy small-signal figures about it, but a plain transient with ZERO disturbance walks
+  away from it (0.5125 -> 0.628 -> 0.224 V), and a 1 uA CM kick never returns. That is the
+  failure mode this repo has hit before -- "an underdamped escape from the interior basin
+  is a servo-compensation problem, not polarity" (amplifier/dc_cmfb_plant_sign header) --
+  and the fix is the same shape: split the two CM loops' poles by hanging a capacitor on
+  the INNER (stage-1) servo output. Measured, ICM = 20 uA CM kick, cm_resid_v:
+    none -258 mV (diverges) | 20p -76 mV | 30p -27.6 mV | 50p +5.0 mV |
+    70p -2.0 mV | 100p +0.41 mV
+  and with 100p a zero-kick transient holds 0.5124775 V to seven digits at every sample.
+  Default 100p (10x margin over the ~20p edge where recovery first appears); the 50p knee
+  is where cm_resid_v first enters the +/-10 mV datasheet band. This is a real area cost
+  and the honest headline number of this entry alongside the rejection.
+instances:
+  - name: core
+    block: amp_026_fan_chopper_ota
+    pin: 43c5f13906fb
+    ports: {vinp: vinp, vinn: vinn, voutp: voutp, voutn: voutn, vdd: vdd, vss: vss}
+    # loop-1 actuator: the composite owns the output current sources (see amp_034).
+    # loop-2 actuator: {vb4} itself — tapped out, and its knob source dropped, so the
+    # stage-1 servo drives it (plan D3, instantiator owns bias).
+    taps: {out1_p: stg1_p, out1_n: stg1_n, vb4: vb4_ctl}
+    omit: [XM8, XM9, Vb4]
+  - name: cmfb_out
+    block: cmfb_002_5t_pmos_input
+    pin: cf3a412052ba
+    ports: {vinp: voutp, vinn: voutn, vcmfb: vb4o, vref: vref_out, vdd: vdd, vss: vss}
+  - name: cmfb_s1
+    block: cmfb_002_5t_pmos_input
+    pin: cf3a412052ba
+    ports: {vinp: stg1_p, vinn: stg1_n, vcmfb: vb4_ctl, vref: vref_s1, vdd: vdd, vss: vss}
+    # do not load the cascoded stage-1 output nodes (see SENSE LOADING above)
+    override: {x_dut_rmp_value: 50Meg}
+nets:
+  - "Vrefout vref_out vss dc {vcm_ref}"
+  - "Ccm_s1 vb4_ctl vss 'c_cm_s1'"
+  - "Vrefs1 vref_s1 vss dc {vcm_ref_stg1}"
+  - "XM8O voutp vb4o vdd vdd pmos w=x_dut_xm8o_w l=x_dut_xm8o_l m=x_dut_xm8o_m"
+  - "XM9O voutn vb4o vdd vdd pmos w=x_dut_xm9o_w l=x_dut_xm9o_l m=x_dut_xm9o_m"
+sizing:
+  variables:
+    - {name: vcm_ref, description: "Commanded OUTPUT common mode (loop 1). 0.5 V is cmfb_002's validated sensed-CM operating point", default: 0.5, min: 0.0, max: 1.2, unit: V}
+    - {name: vcm_ref_stg1, description: "Commanded STAGE-1 common mode (loop 2) — the measured out1 CM at the core's committed vb4 = 0.55, so the composite starts from amp_034's operating point instead of moving it", default: 0.3265, min: 0.0, max: 1.2, unit: V}
+    - {name: x_dut_xm8o_w, description: "Class-A output PMOS current-source width, voutp side (loop-1 actuator; was the core's XM8)", default: 20u, min: 0.15u, max: 100u, unit: m}
+    - {name: x_dut_xm8o_l, description: "Class-A output PMOS current-source length, voutp side", default: 1u, min: 0.13u, max: 10u, unit: m}
+    # XM9O carries NO sizing rows: abstract/params.yaml ties it to XM8O (group pair_xm8o_xm9o,
+    # tie [w,l,m]) — the CM actuator pair MUST match. A row here would double-define the symbol
+    # in the generated _dut.spice (the tie line, emitted later, wins anyway). Size the pair
+    # through x_dut_xm8o_*; dissolve the tie first if the two ever need to differ.
+    - {name: x_dut_xm8o_m, description: "XM8O m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+    - {name: c_cm_s1, description: "Stage-1 CM servo compensation cap on vb4_ctl — REQUIRED, not a trim: without it the two CM loops make the DC operating point dynamically unstable (see COMPENSATION in the notes). Default 100p is ~10x the ~20p divergence edge; 50p is the knee where the kick residual enters the +/-10 mV band", default: 100p, min: 1p, max: 1n, unit: F}

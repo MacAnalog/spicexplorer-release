@@ -6,7 +6,7 @@ description: "CM disturbance recovery: cm_kick_v (stiffness), cm_resid_v (latch-
 params:
   VDD: 1.2
   VCM: 0.6
-  CL: 50f
+  CL: 10p
   ICM: 5u
   TKICK: 2u
   TMID: 5u

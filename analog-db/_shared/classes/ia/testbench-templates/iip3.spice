@@ -1,37 +1,196 @@
-** AUTHORED TEMPLATE — amplifier/iip3: two-tone third-order intercept in the unity buffer.
-** Two equal-amplitude tones (ASIG at F1 and F2, series-stacked on the input, offset VCM)
-** intermodulate through the DUT; the IM3 products at 2F1-F2 / 2F2-F1 set the intercept.
-** F1/F2 MUST share a common fundamental F0 = gcd(F1,F2) (e.g. 0.9/1.0 MHz -> 100 kHz):
-** ngspice lane: plain tran written to the raw — the platform registry computes
-** {meas: iip3_dbv, f1, f2, ampl_in} by coherent FFT at F0 (tones + IM3 are exact bins).
-** Spectre lane: the platform composes a NATIVE pss at F0 instead (tones + IM3 are plain
-** harmonics of the fd-PSF -> {meas: iip3_pss_*}); ngspice has no PSS. The record must
-** capture whole beat periods: TSTOP >= a few / F0.
-** Bindings: DUT PORT_LINE VDD VCM IBIAS CL ASIG F1 F2 TSTEP TSTOP PDK_INCLUDE.
+** AUTHORED TEMPLATE — ia/iip3: two-tone third-order intercept, FULLY DIFFERENTIAL.
+**
+** WHAT CHANGED (2026-07-31). This file used to be a copy of the SINGLE-ENDED amplifier/iip3
+** deck — a unity buffer around v(vout), with `Vfb vinn vout` and an `Ibias vdd ibias` source —
+** and its .control was `tran` + `write` + `quit` with no print and no .meas. NO ia member has
+** a single-ended `vout` port or an `ibias` port (every one of ia_001..ia_005 is
+** vinp vinn voutp voutn ...), so it did not merely fail to measure: assembled against
+** ia_001_hsu_bandpass_classab it left `vout`, `vinn` and `ibias` dangling, ngspice reported
+** `singular matrix: check node vout`, gmin stepping and source stepping both failed, and the
+** run ended in "no measures parsed". The DUT's real voutp/voutn were never loaded or read.
+**
+** Two equal-amplitude tones (differential amplitude ASIG each, at F1 and F2, series-stacked
+** per side about VCM) intermodulate through the DUT; the IM3 products at 2F1-F2 / 2F2-F1 set
+** the intercept. analog-db's runner parses measures out of the ngspice LOG only — there is no
+** registry route — so every amplitude is extracted IN-DECK by a coherent single-bin DFT.
+** Spectre lane: the platform composes a NATIVE pss at F0 (tones + IM3 are plain harmonics of
+** the fd-PSF); both lanes use the same convention, worst-side IM3 over the weaker tone.
+**
+** BIN PLACEMENT: F1/F2 MUST be integer multiples of a common fundamental F0 = gcd(F1,F2), so
+** the tones AND both IM3 products land on EXACT bins of F0 and the rectangular-window DFT has
+** zero scalloping/leakage error. Shipped for this class: F1/F2 = 9/10 kHz -> F0 = 1 kHz,
+** n1=9, n2=10, IM3 at 8 kHz and 11 kHz. Those sit inside ia_001's measured passband
+** (hpf_hz = 4.14 Hz, bw_cl_hz = 47.87 kHz) with the IM3 products well clear of the top
+** corner — the amplifier class's 0.9/1.0 MHz tones are two decades ABOVE this class's
+** bandwidth and must not be copied over.
+**
+** ENDPOINT-DUPLICATION CORRECTION: `linearize` returns N+1 points spanning exactly W beat
+** periods, so its last sample REPEATS its first; leaving it in biases every bin by
+** |vac[0]|/N. That bias is an absolute floor under every bin, and the IM3 products are the
+** smallest bins in this deck, so it is exactly where it does the most damage. mean()*np
+** recovers the raw sum; the vac[0]*c[0] term drops the duplicate, making the window exactly
+** rectangular. `a_floor` (below) is the trust check that it worked.
+**
+** a_floor is a DIAGNOSTIC bin at 5*F0, whose lowest-order intermodulation product of these
+** two tones is NINTH order (9m + 10n = 5 has no solution with |m|+|n| < 9) — i.e. it reads the
+** deck's numerical floor, not the DUT. It is NOT a metric; it is the trust check, and
+** im3_hdr_db = 20*log10(a_im3/a_floor) is how far the measured IM3 clears it. A small
+** headroom means the intercept is floor-limited and meaningless, so it is GATED, not merely
+** printed (see the guards below).
+**
+** COMPRESSION IS THE DEFAULT BINDING'S JOB. An intercept is a SMALL-SIGNAL extrapolation: if
+** the drive compresses, iip3 reads optimistically and is not an intercept at all (the
+** amplifier class shipped a 50 mV drive that was 1.40 dB optimistic for exactly this reason).
+** ASIG must be chosen from a measured drive sweep in which iip3_dbv is FLAT. gain_tone_db is
+** emitted so compression is auditable in every run: it must equal the small-signal
+** closed-loop gain (ia_001: 25.89 dB from ac_closed_loop). A gain_tone_db that has sagged
+** below that means the drive is compressing and iip3_dbv is optimistic.
+**
+** MEASURED DRIVE SWEEP on ia_001_hsu_bandpass_classab @ ihp-sg13g2 (F1/F2 = 9/10 kHz,
+** TSTART=8m, 10-beat window, TSTEP=500n) — iip3_dbv is NOT flat, so the binding matters:
+**   ASIG    gain_tone_db  im3_dbc   im3_hdr_db  iip3_dbv   d(im3_dbc)/doubling (cubic=12.04)
+**   0.25m      25.703     -85.540      15.38    -29.2719          —
+**   0.5m       25.701     -73.067      35.05    -29.4878       +12.473
+**   1m         25.693     -60.772      55.72    -29.6148       +12.295
+**   2m         25.656     -47.800      91.25    -30.0799       +12.972
+**   4m         25.401     -31.184      62.06    -32.3676       +16.616
+** IM3 grows FASTER than cubic everywhere (fifth-order terms adding in phase), sharply so above
+** ~1 mV, so the error runs PESSIMISTIC here rather than optimistic — the OPPOSITE sign to the
+** amplifier class's compression, and a reminder that a bigger drive is not conservative in
+** either direction. There is no perfectly flat plateau in the measurable range: the residual
+** is 0.216 dB between 0.25m and 0.5m and 0.127 dB between 0.5m and 1m, while 4 mV is 3.10 dB
+** off the 0.25 mV reading. Going below 0.25 mV trades that residual for floor headroom
+** (im3_hdr_db is already down to 15.4 dB there, from 35.0 dB at 0.5 mV). ASIG = 0.5m is the
+** shipped compromise for this cell — ~0.2 dB of residual non-flatness with 35 dB of headroom
+** over the deck's own numerical floor. Re-run the sweep for any other DUT rather than
+** assuming this number transfers.
+**
+** TSTEP INVARIANCE (the check that the endpoint correction worked), ASIG=0.5m:
+**   TSTEP      1u          500n        250n
+**   a_im3   2.136695e-06  2.141137e-06  2.142797e-06   (0.29 % over a 4x step change)
+**   a_floor 3.6575e-08    3.7844e-08    3.6963e-08     (FLAT — no longer a 1/N artifact)
+**   iip3    -29.4822      -29.4878      -29.4903 dBV   (0.008 dB spread)
+** An uncorrected endpoint bias would show up as a_floor falling as 1/N and a_im3 dragging
+** with it; both are flat, which is what says the bins are measuring the circuit.
+**
+** SELF-REFERENCING DRIVE. The input tone amplitude is DFT'd from the deck itself (a_in, the
+** F1 bin on v(vinp)-v(vinn)) and the intercept is referred to THAT, not to the ${ASIG}
+** binding. This makes the result immune to a mis-bound or mis-parsed stimulus and to any
+** attenuation ahead of the DUT — if the drive is not what the binding says, a_in says so.
+**
+** `write` runs BEFORE `linearize`: `linearize` makes a NEW plot holding only the scratch
+** vectors, so writing after it shrinks the raw to DFT scalars and loses every circuit node.
+** (The amplifier class shipped that defect — a 28-variable raw with no v(vout) in it.)
+**
+** DEAD-OUTPUT GUARD: gain_tone = a_fund/a_in must clear 0.1 V/V (-20 dB). A dead node that is
+** still capacitively fed through returns a small but non-zero a_fund and would otherwise
+** produce a perfectly plausible intercept out of nothing. On a fail — or when the IM3 does
+** not clear the numerical floor by 6 dB — iip3_dbv/im3_dbc become the loud 999 sentinel,
+** NOT NaN (a NaN makes the runner discard the whole analysis).
+**
+** BINDING FORM: ASIG, F0, F1 and F2 are substituted into control-language arithmetic below.
+** ngspice's control parser DOES read engineering suffixes there (verified 2026-07-31:
+** `let x = 2*pi*1k` -> 6283.185, `let x = 2m` -> 2e-3), so `9k` / `2m` are safe; plain
+** decimals and scientific notation are equally fine.
+**
+** Measures: a_f1 a_f2 (tone amplitudes), a_im3l a_im3h (IM3 products), a_fund a_im3
+** (worst-side pair), a_in (measured differential drive), a_floor, im3_hdr_db, gain_tone,
+** gain_tone_db, im3_dbc, iip3_dbv. Diagnostic names are kept OUT of
+** raw_project._SPEC_REGISTRY so they never silently become optimizer objectives.
+**
+** Assumes a self-biased, differential-in/differential-out DUT port order:
+**   .subckt <id> vinp vinn voutp voutn vdd vss
+** Bindings: DUT PORT_LINE VDD VCM CL ASIG F0 F1 F2 TSTEP TSTART TSTOP PDK_INCLUDE.
 ${PDK_INCLUDE}
 
 .param VDD=${VDD}
 .param VCM=${VCM}
-.param IBIAS=${IBIAS}
 .param CL=${CL}
 .param ASIG=${ASIG}
 
 Vdd  vdd 0 dc {VDD}
 Vss  vss 0 dc 0
-Ibias vdd ibias dc {IBIAS}
-CLoad vout 0 {CL}
-
-* unity buffer; two series-stacked tones — the lower source carries the VCM offset
-Vton vinp mid sin(0 {ASIG} ${F1})
-Vtwo mid  0   sin({VCM} {ASIG} ${F2})
-Vfb  vinn vout dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+Vcm  vcm 0 dc {VCM}
+* balanced differential two-tone drive: each tone contributes +/- ASIG/2 per side, so the
+* DIFFERENTIAL amplitude of each tone is ASIG (the same convention as ia/thd_diff)
+Vinp vinp mtp sin(0 {ASIG/2} ${F1})
+Vmtp mtp vcm  sin(0 {ASIG/2} ${F2})
+Vinn vinn mtn sin(0 {-ASIG/2} ${F1})
+Vmtn mtn vcm  sin(0 {-ASIG/2} ${F2})
 
 ${PORT_LINE} ${DUT}
 
 .control
   set filetype=ascii
-  tran ${TSTEP} ${TSTOP}
+  tran ${TSTEP} ${TSTOP} ${TSTART}
+  * raw FIRST — see the header; `linearize` below switches the current plot
   write
+  let vd = v(voutp) - v(voutn)
+  let vi = v(vinp) - v(vinn)
+  linearize vd vi
+  let t = time
+  let vac = vd - mean(vd)
+  let vin_ac = vi - mean(vi)
+  let np = length(vac)
+  let nd = np - 1
+* --- coherent single-bin DFT: amplitude at f is 2*|(1/N) sum vac*e^-jwt| over the N
+* --- NON-redundant samples (see the endpoint note in the header)
+  let c_f1 = cos(2*pi*${F1}*t)
+  let s_f1 = sin(2*pi*${F1}*t)
+  let re_f1 = (mean(vac*c_f1)*np - vac[0]*c_f1[0])/nd
+  let im_f1 = (mean(vac*s_f1)*np - vac[0]*s_f1[0])/nd
+  let a_f1  = 2*sqrt(re_f1^2+im_f1^2)
+  let c_f2 = cos(2*pi*${F2}*t)
+  let s_f2 = sin(2*pi*${F2}*t)
+  let re_f2 = (mean(vac*c_f2)*np - vac[0]*c_f2[0])/nd
+  let im_f2 = (mean(vac*s_f2)*np - vac[0]*s_f2[0])/nd
+  let a_f2  = 2*sqrt(re_f2^2+im_f2^2)
+  let c_3l = cos(2*pi*(2*${F1}-${F2})*t)
+  let s_3l = sin(2*pi*(2*${F1}-${F2})*t)
+  let re_3l = (mean(vac*c_3l)*np - vac[0]*c_3l[0])/nd
+  let im_3l = (mean(vac*s_3l)*np - vac[0]*s_3l[0])/nd
+  let a_im3l = 2*sqrt(re_3l^2+im_3l^2)
+  let c_3h = cos(2*pi*(2*${F2}-${F1})*t)
+  let s_3h = sin(2*pi*(2*${F2}-${F1})*t)
+  let re_3h = (mean(vac*c_3h)*np - vac[0]*c_3h[0])/nd
+  let im_3h = (mean(vac*s_3h)*np - vac[0]*s_3h[0])/nd
+  let a_im3h = 2*sqrt(re_3h^2+im_3h^2)
+  let c_fl = cos(2*pi*5*${F0}*t)
+  let s_fl = sin(2*pi*5*${F0}*t)
+  let re_fl = (mean(vac*c_fl)*np - vac[0]*c_fl[0])/nd
+  let im_fl = (mean(vac*s_fl)*np - vac[0]*s_fl[0])/nd
+  let a_floor = 2*sqrt(re_fl^2+im_fl^2)
+* --- the SAME F1 bin taken on the drive: the reference the intercept is referred to ---
+  let re_in = (mean(vin_ac*c_f1)*np - vin_ac[0]*c_f1[0])/nd
+  let im_in = (mean(vin_ac*s_f1)*np - vin_ac[0]*s_f1[0])/nd
+  let a_in  = 2*sqrt(re_in^2+im_in^2)
+* --- worst-side IM3 over the weaker tone; min/max of two scalars without branching ---
+  let a_fund = 0.5*(a_f1+a_f2 - abs(a_f1-a_f2))
+  let a_im3  = 0.5*(a_im3l+a_im3h + abs(a_im3l-a_im3h))
+* --- floors keep log10() finite when a bin lands on zero (a NaN aborts the run) ---
+  let a_fund_g = a_fund + 1e-18
+  let a_im3_g  = a_im3 + 1e-18
+  let a_in_g   = a_in + 1e-18
+  let im3_dbc_raw = 20*log10(a_im3_g/a_fund_g)
+* input-referred: OIP3 = 20log10(a_fund) - im3_dbc/2 and the measured gain is a_fund/a_in,
+* so IIP3 = OIP3 - 20log10(a_fund/a_in) = 20log10(a_in) - im3_dbc/2
+  let gain_tone = a_fund/a_in_g
+  let gain_tone_db = 20*log10(gain_tone + 1e-18)
+  let iip3_dbv_raw = 20*log10(a_in_g) - im3_dbc_raw/2
+  let im3_hdr_db = 20*log10(a_im3_g/(a_floor + 1e-18))
+* --- guards. Do NOT write `>` inside a `let` — the control preprocessor strips it as an
+* --- output redirection and silently truncates the RHS. Masks use `<=`, inverted by 1-mask.
+* --- a dead (feedthrough-only) output, or an IM3 that does not clear the deck's own
+* --- numerical floor by 6 dB, both make the intercept meaningless -> loud 999 sentinel.
+  let dead  = (gain_tone <= 0.1)
+  let nofl  = (im3_hdr_db <= 6)
+  let bad   = 0.5*(dead+nofl + abs(dead-nofl))
+  let ok    = 1 - bad
+  let iip3_dbv = ok*iip3_dbv_raw + bad*999
+  let im3_dbc  = ok*im3_dbc_raw  + bad*999
+  print a_f1 a_f2 a_im3l a_im3h a_fund a_im3 a_in a_floor im3_hdr_db gain_tone gain_tone_db im3_dbc iip3_dbv
   quit
 .endc
 .end

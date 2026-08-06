@@ -1,7 +1,7 @@
 """Tests for the recursive netlist-driven active-area walk
 (:mod:`spicexplorer_core.measurements.area`): the brace/eng ``.param`` resolver, the
 device walk + coverage accounting on a self-contained inline deck, and — when the
-analog-db submodule is present — the two demo decks (amp_020, amp_008) where a
+analog-db submodule is present — the two demo decks (amp_029, amp_008) where a
 hand-authored recipe previously undercounted the silicon."""
 from __future__ import annotations
 
@@ -89,20 +89,20 @@ def test_walk_reports_passive_geometry_separately():
 # ── the two demo decks (gated on the analog-db submodule) ────────────────────────
 
 _RAW = project_root() / "examples/analog-db/raw"
-_AMP020 = _RAW / "amp_020_two_stage_miller_cmfb/ihp-sg13g2/dc_op.spice"
+_AMP029 = _RAW / "amp_029_two_stage_miller_comp/ihp-sg13g2/dc_op.spice"
 _AMP008 = _RAW / "amp_008_leung_nmcf/ihp-sg13g2/dc_op.spice"
 
 
-@pytest.mark.skipif(not _AMP020.exists(), reason="analog-db submodule (amp_020) not present")
-def test_amp020_counts_all_ten_transistors_including_xm9_xm10():
-    rep = area.active_area_report(_AMP020, scale=1e12)
+@pytest.mark.skipif(not _AMP029.exists(), reason="analog-db submodule (amp_029) not present")
+def test_amp029_counts_all_ten_transistors_including_xm9_xm10():
+    rep = area.active_area_report(_AMP029, scale=1e12)
     assert rep["transistor_count"] == 10
     assert rep["coverage"]["complete"] is True
     refs = {d["ref"] for d in rep["devices"] if d["counted"]}
     # XM9/XM10 (the voutn 2nd-stage twins) were the two the hand-list omitted.
     assert {"XM9", "XM10"} <= refs
-    # default sizing: Σ over all 10 devices ≈ 20.8 µm²
-    assert rep["active_area"] == pytest.approx(20.8, rel=1e-3)
+    # default sizing: Σ over all 10 devices = 58.0 µm²
+    assert rep["active_area"] == pytest.approx(58.0, rel=1e-3)
 
 
 @pytest.mark.skipif(not _AMP008.exists(), reason="analog-db submodule (amp_008) not present")

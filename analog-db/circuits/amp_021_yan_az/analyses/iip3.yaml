@@ -1,0 +1,35 @@
+# Analysis binding for the SELF-BIASED 3-stage AZ cell (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# Two-tone IIP3 in the unity buffer: 6.25 mV tones at 90/100 kHz share the F0 = gcd = 10 kHz
+# fundamental (n1=9, n2=10 — the class 9:10 ratio kept exactly), so the IM3 products at
+# 80/110 kHz (bins 8/11) and IM5 at 70/120 kHz (bins 7/12) land on exact F0 bins — the
+# in-deck coherent DFT then has no leakage.
+# F0 GRID: fresh biaswrap ugf @ ihp-sg13g2 tt = 5.52 MHz (2026-08-01, landed sizing,
+# CL=10p) -> the campaign's 3-30 MHz bucket -> the 0.9/1.0 MHz class grid divided by 10.
+# COHERENT WINDOW: TSTOP-TSTART = 2m = 20 beat periods; TSTART = 200u = 2 WHOLE beat periods
+# (the integer-beat contract is load-bearing); TSTEP = 50n <= 1/(200*F2).
+# The campaign's "TSTART >= 20x t_settle" contract is UNSATISFIABLE here: at the
+# corpus-standard CL=10p this heavy-load-compensated 3-stage cell's unity buffer never
+# settles (sustained ~7.6 MHz oscillation, stb pm_loop -92.1 deg) — no finite TSTART
+# discards the transient. 2 whole beats is kept for the day a re-compensated sizing lands.
+# DRIVE: ASIG = 6.25 mV per tone — the class default (compression bounds the intercept
+# above ~14 mV, the deck's own floor below ~2.5 mV). Plain decimal (0.00625), never a SPICE
+# suffix — ASIG/F0/F1/F2 reach .control arithmetic.
+# REPORTING: `produces:` names the DATASHEET METRIC ID (iip3_dbv); the other measures
+# (im3_dbc, a_f1/a_f2/a_drv, gain_tone, a_im3l/h, a_im5l/h, a_floor, im5_im3_db,
+# iip3_comp_db) ride `corners.<corner>.analyses.iip3.measures`. TRUST CHECKS: a_im3 must sit
+# well above a_floor; gain_tone < 0.5 means the dead-output guard fired and iip3_dbv is the
+# -999 sentinel.
+# VALIDITY (MEASURED ihp-sg13g2 tt 2026-08-01): the oscillation collapses the solver mid-tran
+# — "Timestep too small ... trouble with node vout/vinn" at a run-to-run-random 25-83 us,
+# far short of TSTART=200u, at every TSTEP tried (50n/20n/10n) — so this analysis records an
+# HONEST sim_error on this PDK at the landed sizing. A 2.2 ms two-tone window cannot complete
+# while the buffer oscillates. The failure is the CIRCUIT at CL=10p, not this binding; the
+# binding stays campaign-conformant for the day a re-compensated sizing lands.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_selfbias
+description: "IIP3 — two-tone intermodulation intercept; tran+coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 300m, CL: 10p, ASIG: 0.00625, F0: 0.01e6, F1: 0.09e6, F2: 0.1e6, TSTEP: 50n, TSTART: 200u, TSTOP: 2.2m}
+flags: []
+produces: [iip3_dbv]

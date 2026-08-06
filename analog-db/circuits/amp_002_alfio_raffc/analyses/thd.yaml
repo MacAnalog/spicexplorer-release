@@ -1,0 +1,35 @@
+# Analysis binding for the self-biased AnalogGym convention (no ibias port) — uses the
+# class's ibias-free template variant so no external current source is left driving a
+# dangling node. THD in the unity buffer: tran + the template's in-deck coherent DFT
+# (ngspice); the Spectre lane composes a native pss at F0 (HARMS).
+# F0 GRID (2026-08-01, fresh reads): ugf = 2.39 MHz @ ihp-sg13g2 tt / 2.30 MHz @ gf180mcu tt
+# — right at the campaign grid's 3 MHz band edge. F0 = 100k (the /10 grid, one consistent
+# grid with iip3's 90k/100k) is a deliberate boundary call: it places the tone ~23x under
+# the buffer bandwidth, the SAME in-band ratio the amp_022/amp_032 pilots use (1 MHz under
+# ~22.6 MHz), where the strict /100 grid (F0=10k, ~230x under) would also make the window
+# 1.6 ms — unrunnable inside the native runner's 300 s budget on the ihp lane (see below).
+# COHERENT WINDOW: F0 = 100k -> T = 10 us; TSTOP-TSTART = 160u = 16 whole periods (even);
+# TSTEP = 20n = 1/(500*F0); TSTART = 40u = 4 whole periods = 3.2x the 20x-t_settle floor
+# (gf180mcu t_settle = 0.63 us, tran_step fresh 2026-08-01; 20x = 12.6 us) and also clears
+# the ihp lane's measured startup-into-limit-cycle (~15 us). ASIG = 0.1 (SE default; 0.3
+# +/- 0.1 V clears both rails by 0.2 V).
+# CIRCUIT CAVEAT (ihp-sg13g2 tt, landed sizing): the unity-gain buffer is UNSTABLE — it
+# limit-cycles at ~20.6 MHz / ~150 mVpp (measured 1 ms transient; stb pm_loop = -143 deg,
+# gm_loop = -11.7 dB). DECEPTIVE READ, measured 2026-08-01: thd_pct there is only 0.146%
+# because the coherent DFT bins at 100k..500k barely see the 20.6 MHz oscillation — but the
+# drive-halving check exposes it (ASIG 0.1 -> 0.05: HD3 improves x1.1, not the polynomial
+# x4; a4/a5 are drive-INVARIANT limit-cycle leakage, not distortion). Do NOT quote the ihp
+# thd_pct as a distortion figure; the same check passes direction on the stable gf180mcu
+# lane (HD2 -11.2 dB, HD3 -16.9 dB per half-drive). Fix the ihp sizing, then re-check.
+# REPORTING: `produces:` stays empty DELIBERATELY — it names datasheet metric ids; thd_pct
+# rides the datasheet via its extract.meas entry. The full measure set (thd_pct, thd_db,
+# a1..a5, a1_in, gain_tone, vout_op) rides the recorded
+# `corners.<corner>.analyses.thd.measures` block. gain_tone < 0.5 means the template's
+# dead-output guard fired and thd_pct is the 999 sentinel, not a measurement.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_selfbias
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 300m, CL: 10p, ASIG: 0.1, F0: 0.1e6, TSTEP: 20n, TSTART: 40u, TSTOP: 200u, HARMS: 7}
+flags: []
+produces: []

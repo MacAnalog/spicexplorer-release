@@ -4,6 +4,6 @@ schema: spicexplorer/analysis@1
 id: cmrr_vcm
 template: cmrr_vcm_selfbias
 description: "CMRR — 1 V AC common-mode on both inputs of the unity buffer, DC-band floor."
-params: {VDD: 1.8, VCM: 300m, CL: 100p, FSTART: 1k, FSTOP: 1G, PPD: 101}
+params: {VDD: 1.8, VCM: 300m, CL: 10p, FSTART: 1k, FSTOP: 1G, PPD: 101}
 flags: []
 produces: [cmrr_db]

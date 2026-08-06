@@ -21,7 +21,7 @@
 
 .param VDD=1.8
 .param VCM=300m
-.param CL=1500p
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD}          ; supply quiet — isolate the common-mode path
 Vss  vss 0 dc 0
@@ -40,10 +40,10 @@ XDUT vss vdd vinn vinp vout amp_013_qu2017_azc
   write
   quit
 .endc
-.param CAPACITOR_0=810f
-.param CAPACITOR_1=404f
-.param CAPACITOR_2=310f
-.param CURRENT_0_BIAS=1u
+.param CAPACITOR_0=8.1e-13
+.param CAPACITOR_1=4.04e-13
+.param CAPACITOR_2=3.1e-13
+.param CURRENT_0_BIAS=1e-06
 .param x_dut_xm3_l=1
 .param x_dut_xm5_m=4
 .param x_dut_xm3_w=1
@@ -74,10 +74,10 @@ XDUT vss vdd vinn vinp vout amp_013_qu2017_azc
 .param x_dut_xm10_l=1
 .param x_dut_xm10_m=4
 .param x_dut_xm10_w=1
-.param RESISTOR_0=35K
-.param RESISTOR_1=35k
-.param RESISTOR_2=350k
-.param RESISTOR_3=40k
+.param RESISTOR_0=35000
+.param RESISTOR_1=35000
+.param RESISTOR_2=350000
+.param RESISTOR_3=40000
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

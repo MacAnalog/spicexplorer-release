@@ -6,6 +6,7 @@ subfamily: ccia
 realization: mixed
 display_name: Hsu bandpass CCIA with class-AB output (capacitive feedback + pseudo-resistor bias)
 compensation: "Miller RC (Cc + nulling Rz) per side inside the class-AB OTA"
+signal_path: fully_differential
 ports:
 - vinp
 - vinn

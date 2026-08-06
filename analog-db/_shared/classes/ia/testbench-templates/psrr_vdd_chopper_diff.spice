@@ -1,0 +1,73 @@
+** AUTHORED TEMPLATE — ia/psrr_vdd_chopper_diff: positive-supply rejection of a chopper IA
+** measured IN OPERATION (all chopper clocks RUNNING at FCHOP) via Spectre PSS+PAC. The twin
+** of pac_gain_chopper_diff, with the small-signal excitation moved from the inputs to the
+** SUPPLY: the periodic steady state pins the clocked operating point, and the periodic AC
+** computes the baseband supply feed-through the signal band actually sees. This is the figure
+** a static .ac on the frozen chopper CANNOT see — the chopper up-modulates the low-frequency
+** supply-induced disturbance to FCHOP, so the BASEBAND (harmonic-0) response is what remains
+** in-band.
+**
+** READ (registry, Spectre lane): the DIFFERENTIAL supply feed-through cancels on a symmetric
+** netlist (matrix round-off), so the always-physical figure is the OUTPUT-CM response:
+**   {meas: rejection_db, analysis: pac, out: vocm}  -> -dB20|vocm baseband transfer| = raw CM
+**   supply rejection; the corrected PSRR adds the differential gain (dc_gain / gain_cl), the
+**   same fold-in the FD static benches get. vocm is synthesized here by a 1 Gohm averager
+**   (Ravp/Ravn) so it is a readable node without loading the outputs.
+** ngspice lane: no PSS — the .control runs a frozen-clock .ac EYEBALL only (clocks at t=0).
+**
+** CM ANCHOR (RCM): identical rationale to pac_gain_chopper_diff — the no-CMFB core has no CM
+** periodic steady state on its own, so RCM to vref pins the per-phase output CM and lets the
+** chopped orbit close. It is a bench reference (a real CCIA gets it from its CMFB + next-stage
+** load), NOT part of the DUT.
+** Bindings: DUT PORT_LINE VDD VCM CL FCHOP TEDGE RCM FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+.param FCHOP=${FCHOP}
+.param TCHOP={1/FCHOP}
+.param TEDGE=${TEDGE}
+.param RCM=${RCM}
+
+* SUPPLY-ripple stimulus: the `ac 1` marker feeds BOTH lanes (ngspice .ac eyeball via mag=,
+* Spectre pac via pacmag=), so the same deck drives either analysis.
+Vdd  vdd 0 dc {VDD} ac 1
+Vss  vss 0 dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+Vref vref 0 dc {VCM}
+* bench-side output-CM anchor/load (see header): pins the per-phase output CM so the chopped
+* orbit has a periodic steady state on the CMFB-less core.
+Rcmp voutp vref {RCM}
+Rcmn voutn vref {RCM}
+Vcm  vcm 0 dc {VCM}
+* signal inputs held QUIET at VCM — isolate the supply path
+Vinp vinp vcm dc 0
+Vinn vinn vcm dc 0
+* differential + common-mode output sense nodes (high-Z, non-loading):
+*   vout  = voutp - voutn        (differential; saturates on a symmetric deck)
+*   vocm  = (voutp + voutn)/2    (the always-physical CM response)
+Evd vout 0 voutp voutn 1
+Ravp voutp vocm 1G
+Ravn voutn vocm 1G
+
+* chopper clocks: complementary pairs, all phases aligned at FCHOP (RUNNING — the pss
+* fundamental; on the ngspice eyeball .ac they freeze at their t=0 values)
+Vck_in_a  clk_chin      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_in_b  clk_chin_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_fb_a  clk_chfb      0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_fb_b  clk_chfb_not  0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_out_a clk_chout     0 pulse(0 {VDD} 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+Vck_out_b clk_chout_not 0 pulse({VDD} 0 0 {TEDGE} {TEDGE} {TCHOP/2-TEDGE} {TCHOP})
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  * EYEBALL ONLY (frozen clocks — one chop phase); the golden number is Spectre PSS+PAC
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  write
+  quit
+.endc
+.end

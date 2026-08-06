@@ -7,6 +7,7 @@ realization: transistor
 display_name: Fan capacitively-coupled chopper CCIA with positive-feedback input-impedance boost
 stages: 2
 compensation: miller
+signal_path: fully_differential
 ports:
 - vinp
 - vinn

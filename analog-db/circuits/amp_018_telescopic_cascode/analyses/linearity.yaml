@@ -5,6 +5,6 @@ id: linearity
 template: linearity
 description: "ICMR via buffer-connected DC sweep (distilled from the legacy cascode TB)."
 enabled: false
-params: {VDD: 1.5, VCM: 0.8, IBIAS: 5u, CL: 50f, VTRACK: 20m, VSWEEP_STEP: 0.01}
+params: {VDD: 1.5, VCM: 0.8, IBIAS: 5u, CL: 10p, VTRACK: 20m, VSWEEP_STEP: 0.01}
 flags: []
 produces: []

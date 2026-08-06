@@ -1,0 +1,32 @@
+# Analysis binding: clocked positive-supply rejection via Spectre PSS+PAC (clocks running at
+# FCHOP). The psrr_vdd_chopper_diff template rides a 1 V supply ripple, holds the inputs quiet,
+# pins the output CM with the RCM anchor, and reads the BASEBAND (harmonic-0) output-CM response
+# vocm — the physical CM supply rejection the chopper leaves in-band. Params mirror pac_gain
+# (TSTAB spans the ~0.7 ms no-CMFB CM relaxation so the pss shooting starts near a settled orbit).
+# NO DATASHEET METRIC BINDS HERE, on purpose (the pac_gain precedent, cf. stb): this bench is
+# `spectre_only_payload` — its figure exists only on the closed lane — while a datasheet metric is
+# PDK-AGNOSTIC, so declaring psrr_chop_cm_db here made the ngspice ihp-sg13g2 binding promise a
+# number it structurally cannot compute (the psrr_vdd_chopper_diff template never prints it, so the
+# log parser can never record it -> a blank cell, not a measurement). Conformance stays
+# engine-neutral; read the figure through the platform registry instead:
+#   {meas: rejection_db, analysis: pac, out: vocm}
+schema: spicexplorer/analysis@1
+id: psrr_vdd_chop
+template: psrr_vdd_chopper_diff
+description: "Clocked supply rejection — PSS+PAC baseband CM response to a 1 V vdd ripple, clocks running."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 50f
+  FCHOP: 5k
+  TEDGE: 50n
+  RCM: 30k
+  FSTART: 1
+  FSTOP: 2k
+  PPD: 8
+  HARMS: 15
+  TSTAB: 10m
+  METHOD: gear2
+  MAXSB: 15
+flags: [spectre_only_payload]
+produces: []

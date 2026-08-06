@@ -602,6 +602,7 @@ class SpectreSimulator:
                 parameters=injected,
                 corner_includes=self._params.get("corner_includes"),
                 temp=self._params.get("temp"),
+                source=self._native_scs,  # names the deck if the injection is ambiguous
             )
         else:
             assert self._deck_spec is not None

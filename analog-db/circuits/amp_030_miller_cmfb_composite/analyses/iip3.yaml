@@ -1,0 +1,34 @@
+# Analysis binding: two-tone IIP3 in the DIFFERENTIAL unity-feedback follower
+# (amplifier/iip3_diff — tran_step_diff's network, each tone split +/- ASIG/2; the SE iip3
+# template's node `vout` is structurally dead on this FD member). On this COMPOSITE the DUT
+# includes the cmfb_001_ideal_rsense_servo behavioral CM servo.
+# TONE PLACEMENT per the campaign F0 grid, keyed on the FRESH open-loop ugf: measured
+# ugf = 13.764 MHz (ac_open_loop @ ihp-sg13g2 tt, 2026-08-01, CL=10p) sits in the 3-30 MHz
+# band -> the whole grid divides by 10 from the >=30 MHz reference (0.9/1.0 MHz). Tones
+# 90/100 kHz share F0 = gcd = 10 kHz (n1=9, n2=10, the exact 9:10 ratio the class fixes),
+# so IM3 (80/110 kHz = bins 8/11) and IM5 (70/120 kHz = bins 7/12) land on exact bins and
+# the in-deck coherent DFT has no leakage. Tones sit ~69x under the follower's closed-loop
+# crossover (~ugf/2 = 6.9 MHz).
+# DRIVE: ASIG = 6.25 mV PER TONE (applied differential amplitude) — the class default (see
+# iip3.spice's measured ASIG sweep; 50 mV read 0.5-1.4 dB biased). The one-wire follower's
+# closed-loop gain is 2, so each output node swings ~6.25 mV/tone, matching the SE bench's
+# per-side swing, and iip3_dbv is input-referred to the ASIG binding exactly as there.
+# Plain decimal (0.00625), never a SPICE suffix — ASIG/F0/F1/F2 reach .control arithmetic.
+# COHERENT WINDOW: TSTART = 100u = 1 whole beat period (1/F0) = 1242x the measured 80.5 ns
+# settling (tran_step t_settle, same run; the integer-beat contract is load-bearing —
+# TSTART must be whole beats >= 20x t_settle); TSTOP - TSTART = 2000u = 20 beat periods
+# (even -> cm_drift_v's halves hold whole beats); TSTEP = 50n = 1/(200*F2).
+# REPORTING: `produces:` names the DATASHEET METRIC ID — datasheet.yaml binds
+# metrics.iip3_dbv.{analysis: iip3, extract.meas: iip3_dbv} with extract f1/f2/ampl_in
+# mirroring these params. TRUST CHECKS (template header): gain_tone ~ 2 when live (guard
+# threshold 2/3; sentinels iip3_dbv = -999 / im3_dbc = +999); a_im3 must sit far above
+# a_floor; iip3_comp_db is the 5th-order compression estimate (one-sided-usable only at
+# this drive); cm_drift_v must be << ASIG or the record is not stationary and the
+# intercept is meaningless.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_diff
+description: "IIP3 — FD follower two-tone intermodulation; tran + in-deck coherent DFT."
+params: {VDD: 1.2, VCM: 0.6, CL: 10p, ASIG: 0.00625, F0: 0.01e6, F1: 0.09e6, F2: 0.1e6, TSTEP: 50n, TSTART: 100u, TSTOP: 2100u}
+flags: []
+produces: [iip3_dbv]

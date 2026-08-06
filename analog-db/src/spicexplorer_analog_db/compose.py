@@ -35,7 +35,7 @@ from typing import Any
 
 import yaml
 
-from . import model
+from . import model, params
 
 COMPOSITION_FILE = "composition.yaml"
 
@@ -386,13 +386,52 @@ def _render_variable_row(row: dict[str, Any]) -> str:
     return f"  - {{{body}}}"
 
 
+def _own_variables(doc: dict[str, Any], pdk: str) -> list[dict[str, Any]]:
+    """The composite's OWN sizing rows for one PDK: ``sizing.variables`` with
+    ``sizing.by_pdk[pdk]`` merged key-wise over the row of the same ``name`` (unknown
+    names append). A composite-owned device is real geometry, and a block's sized W/L is
+    per-PDK — one shared default would carry one kit's numbers into another."""
+    sizing = doc.get("sizing") or {}
+    own = [dict(v) for v in (sizing.get("variables") or [])]
+    index = {v.get("name"): i for i, v in enumerate(own)}
+    for var in (sizing.get("by_pdk") or {}).get(pdk) or []:
+        name = var.get("name")
+        if name in index:
+            own[index[name]] = {**own[index[name]], **var}
+        else:
+            index[name] = len(own)
+            own.append(dict(var))
+    return own
+
+
+def composite_tied_symbols(circuit: model.Circuit) -> set[str]:
+    """Symbols the composite's AUTHORED ``abstract/params.yaml`` defines through a tie.
+
+    Composition can create a tie that neither block had: e.g. the CMFB block sizes its tail
+    XM1 and its bias diode XM3 independently, but in the composite the two are detected as a
+    ``mirror_length`` pair, so ``..._xm1_..._l`` becomes a TIED FOLLOWER. A materialized sizing
+    row for such a symbol would DOUBLE-DEFINE it in the generated ``_dut.spice`` (the later tie
+    line wins), so the composer must not emit one — same reason a hand-authored circuit never
+    writes a sizing row for a tied symbol (plan D-4; enforced by the Tier-1 ``params:sizing``
+    check). Empty until the composite has adopted ``abstract/params.yaml``.
+    """
+    p = circuit.dir / "abstract" / "params.yaml"
+    if not p.is_file():
+        return set()
+    with p.open() as fh:
+        pdoc = yaml.safe_load(fh) or {}
+    return params.tied_symbols(pdoc) if isinstance(pdoc, dict) else set()
+
+
 def compose_sizing(circuit: model.Circuit, pdk: str, composed_netlist: str) -> str:
     """The composite's ``pdk/<pdk>/sizing.yaml``: block variables renamed per instance,
     parent ``override:``s applied to defaults, variables whose symbol no longer appears in
-    the composed netlist dropped (e.g. an omitted knob source), then the composite's own
-    ``sizing.variables`` appended verbatim."""
+    the composed netlist — or is a TIED follower in the composite's params.yaml — dropped,
+    then the composite's own ``sizing.variables`` appended, refined for this PDK by
+    ``sizing.by_pdk[pdk]``."""
     doc = load_composition(circuit)
     instances = _instances(circuit, doc)
+    tied = composite_tied_symbols(circuit)
     rows: list[str] = []
     for inst in instances:
         rows.append(f"  # -- instance {inst.name}: {inst.block.id} ({pdk}) --")
@@ -403,15 +442,27 @@ def compose_sizing(circuit: model.Circuit, pdk: str, composed_netlist: str) -> s
                 new["default"] = inst.override[var["name"]]
             if new["name"] not in composed_netlist:
                 continue  # its device/knob was omitted or replaced by parent wiring
+            if new["name"] in tied:
+                continue  # the composite's params.yaml tie already defines it (no shadow row)
             rows.append(_render_variable_row(new))
-    own = (doc.get("sizing") or {}).get("variables") or []
+    own = [v for v in _own_variables(doc, pdk) if str(v.get("name", "")) not in tied]
     if own:
         rows.append("  # -- composite-owned knobs --")
         rows.extend(_render_variable_row(dict(v)) for v in own)
+    # per-PDK testbench conditions (VDD/VCM where the kits' rails differ): the composite
+    # is the instantiator, so it owns them — the blocks' own analysis_params describe the
+    # blocks standalone and do not compose.
+    conds = ((doc.get("sizing") or {}).get("analysis_params_by_pdk") or {}).get(pdk) or {}
+    cond_block = ""
+    if conds:
+        cond_block = "analysis_params:\n" + "".join(
+            f"  {k}: {_render_scalar(v) if isinstance(v, str) else v}\n" for k, v in conds.items()
+        )
     return (
         _GEN_SIZING_HEADER
         + "schema: spicexplorer/sizing@1\n"
         + f"pdk: {pdk}\n"
+        + cond_block
         + "variables:\n"
         + "\n".join(rows)
         + "\n"

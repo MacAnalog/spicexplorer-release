@@ -1,0 +1,64 @@
+# Datasheet for the CM-closed CCIA composite (see composition.yaml). Deliberately NARROW:
+# this entry exists to answer ONE question — what the clocked CM supply rejection becomes
+# once the core's common mode is actually regulated — so it binds the clocked PSS+PAC bench
+# plus the DC op point that proves the loop closed, and nothing else. The full CCIA bench
+# suite (ripple/Zin/pac_gain/pnoise) stays on ia_002 until this variant is sized.
+schema: spicexplorer/datasheet@1
+cace_format: '5.2'
+default_conditions:
+  supply:
+    unit: V
+    typical: 1.2
+  cload:
+    unit: fF
+    typical: 50
+  corner:
+    typical: tt
+  temp:
+    unit: degC
+    typical: 27
+  vcm:
+    unit: V
+    typical: 0.6
+metrics:
+  # psrr_chop_cm_db — RAW baseband output-CM response to a 1 V vdd ripple with all choppers
+  # running (PSS+PAC), -dB20|vocm|. THE headline of this entry: ia_002 (no CMFB) reads
+  # -52.9 dB, and chopping cannot improve it because the output chopper leaves vocm invariant,
+  # so whatever this reads is the CMFB's doing. It is DELIBERATELY NOT a datasheet metric —
+  # the pac_gain precedent. It comes off the `spectre_only_payload` psrr_vdd_chop bench, but a
+  # datasheet metric is PDK-AGNOSTIC, so declaring it here made this circuit's ngspice
+  # ihp-sg13g2 binding promise a number it structurally cannot compute (the
+  # psrr_vdd_chopper_diff template never prints it, so the log parser can never record it — a
+  # blank cell, not a measurement). Conformance stays engine-neutral; read the figure through
+  # the platform registry instead: {meas: rejection_db, analysis: pac, out: vocm}.
+  i_supply:
+    display: Supply current
+    unit: A
+    analysis: dc_op
+    extract:
+      meas: i_supply
+    spec:
+      max: 500e-6
+      unit: A
+  vos:
+    display: Output offset
+    description: voutp - voutn at matched DC inputs, clocks held transparent
+    unit: V
+    analysis: dc_op
+    extract:
+      meas: vos
+    spec:
+      min: -50e-3
+      typ: 0
+      max: 50e-3
+      unit: V
+  vocm:
+    display: Settled output common mode (clocks transparent)
+    description: (voutp+voutn)/2 at the DC operating point — where the CMFB landed against the commanded
+      {vcm_ref}. On ia_002 there is no command at all, just the core's device-ratio knife edge.
+    unit: V
+    analysis: dc_op
+    extract:
+      meas: vocm
+      out: voutp
+      ref: voutn

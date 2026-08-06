@@ -1,0 +1,74 @@
+# AUTHORED composite manifest (spicexplorer/composition@1). The CLOCKED counterpart of
+# amp_034_fan_chopper_cmfb: the same CM closure, applied one level up so the chopper
+# clocks are actually running and the PSS+PAC bench can measure the CM rejection
+# IN OPERATION (plan P4-4b; doc/review_chopper_cm_rejection_2026-08-04.md).
+schema: spicexplorer/composition@1
+of: ia_006_fan_chopper_cmfb
+notes: >-
+  ia_002_fan_chopper_simple with a REAL 5T CMFB (cmfb_002_5t_pmos_input) closed around its
+  output common mode — the identical seam amp_034 uses on the static core: OMIT the class-A
+  output PMOS current sources XM8/XM9 from the block and re-instantiate them here on their
+  own gate node vb4o, driven by the CMFB.
+
+  WHY THIS ENTRY EXISTS. review_chopper_cm_rejection_2026-08-04 measured ia_002's clocked
+  CM supply rejection at -52.9 dB raw (vs -59.5 dB with the chopper static) and showed WHY
+  chopping cannot help: the output chopper swaps voutp<->voutn, and vocm = (voutp+voutn)/2
+  is invariant under that swap, so the modulator never touches the CM path. The rejection
+  is set entirely by the core's CM behaviour, and ia_002's core has no CMFB. That doc's
+  recommendation was "size a CMFB'd variant, then re-run this bench" — this is the variant,
+  and psrr_vdd_chop is that bench.
+
+  The actuator, the flavor (PMOS-input cmfb_002 over NMOS-input cmfb_003) and the loop sign
+  are all inherited from amp_034's measured selection — see
+  doc/review_amp034_cm_closure_2026-08-05.md. Nothing about the clocked network changes the
+  CM plant: the choppers sit between the fold nodes and the second-stage gates (out1 -> g2)
+  and between the outputs and the feedback caps; the output current sources they feed are
+  the same devices, on the same node.
+
+  LOOP SIGN: vocm UP -> cm_sense UP -> vcmfb = A*(cm_sense - vref_cm) UP -> vb4o UP ->
+  XM8O/XM9O |Vsg| DOWN -> output pull-up DOWN -> vocm DOWN. Negative feedback.
+instances:
+  - name: core
+    block: ia_002_fan_chopper_simple
+    pin: db0af98f1e15
+    ports: {vinp: vinp, vinn: vinn, voutp: voutp, voutn: voutn, vref: vref,
+            clk_chin: clk_chin, clk_chin_not: clk_chin_not,
+            clk_chfb: clk_chfb, clk_chfb_not: clk_chfb_not,
+            clk_chout: clk_chout, clk_chout_not: clk_chout_not,
+            vdd: vdd, vss: vss}
+    # The CM actuator (plan D3, one level deeper: the class-A output current sources ARE
+    # the CM actuator, so the instantiator owns them).
+    omit: [XM8, XM9]
+  - name: cmfb
+    block: cmfb_002_5t_pmos_input
+    pin: cf3a412052ba
+    # Sense the IA outputs; drive the split-out output-source gate. NOTE the CMFB reference
+    # is the composite-owned {vcm_ref}, NOT the IA's `vref` port (which is the input-side
+    # DC-servo reference for the Rb pseudo-resistors — a different node with a different job).
+    ports: {vinp: voutp, vinn: voutn, vcmfb: vb4o, vref: vref_cm, vdd: vdd, vss: vss}
+nets:
+  - "Vrefcm vref_cm vss dc {vcm_ref}"
+  - "XM8O voutp vb4o vdd vdd pmos w=x_dut_xm8o_w l=x_dut_xm8o_l m=x_dut_xm8o_m"
+  - "XM9O voutn vb4o vdd vdd pmos w=x_dut_xm9o_w l=x_dut_xm9o_l m=x_dut_xm9o_m"
+  # CM-loop compensation on the servo output — same requirement as amp_034 (see its
+  # COMPENSATION note): the 2026-08-05 role-based cmfb_002 FOUNDRY-n65 re-size raises the CM
+  # loop gain enough to make the uncompensated loop oscillate.
+  - "Ccm vb4o vss 'c_cm'"
+sizing:
+  variables:
+    - {name: vcm_ref, description: "Commanded output common-mode reference into the CMFB (composite-owned; NOT the IA's input-side vref port)", default: 0.5, min: 0.0, max: 1.2, unit: V}
+    - {name: x_dut_xm8o_w, description: "Class-A output PMOS current-source width, voutp side (CMFB-driven gate vb4o; was the core's XM8)", default: 20u, min: 0.15u, max: 100u, unit: m}
+    - {name: x_dut_xm8o_l, description: "Class-A output PMOS current-source length, voutp side", default: 1u, min: 0.13u, max: 10u, unit: m}
+    # XM9O carries NO sizing rows: abstract/params.yaml ties it to XM8O (group pair_xm8o_xm9o,
+    # tie [w,l,m]) — the CM actuator pair MUST match. A row here would double-define the symbol
+    # in the generated _dut.spice (the tie line, emitted later, wins anyway). Size the pair
+    # through x_dut_xm8o_*; dissolve the tie first if the two ever need to differ.
+    - {name: x_dut_xm8o_m, description: "XM8O m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+    - {name: c_cm, description: "CM-loop compensation cap on the servo output vb4o. 1f = OFF (ihp-sg13g2); the FOUNDRY-n65 binding NEEDS it — see amp_034's COMPENSATION note", default: 1f, min: 0, max: 1n, unit: F}
+  # Same reason as amp_034: a composite-owned device is REAL geometry and the block it was
+  # lifted out of is sized per PDK (ia_002's output PMOS is 20u on ihp, 11.257u on FOUNDRY).
+  by_pdk:
+    FOUNDRY-n65:
+      - {name: x_dut_xm8o_w, default: 11.257u}
+      - {name: c_cm, default: 5p}
+      - {name: vcm_ref, description: "Commanded output common-mode reference (composite-owned). 0.6 V = mid-rail; the FOUNDRY-n65 binding's pch_lvt leaves the CMFB's PMOS input pair enough tail headroom there", default: 0.6}

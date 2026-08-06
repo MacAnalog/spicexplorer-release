@@ -20,7 +20,7 @@
 .param VDD=1.5
 .param VCM=0.8
 .param IBIAS=20u
-.param CL=50f
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD}
 Vss  vss 0 dc 0
@@ -34,7 +34,7 @@ XDUT vdd vout vinp vinn ibias vss amp_001_5t
 
 .control
   set filetype=ascii
-  noise v(vout) Vinp dec 101 1k 100MEG
+  noise v(vout) Vinp dec 101 1 1MEG
   print inoise_total onoise_total
   write
   quit

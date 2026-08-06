@@ -3,17 +3,20 @@
 # so the plain (unwrapped) noise bench sits near-rail (v(vout)≈2.97 V of 3.3 V) — a non-representative
 # bias. The biaswrap (Lfb/Cin) restores the mid-rail high-gain op point (v(vout)≈1.37 V), matching the
 # amp's own ac_open_loop_biaswrap_ibias bench (design-review 2026-07-05, M5; sim-validated).
+# Band standardized 2026-08-01 (campaign): FSTART 1 Hz, FSTOP 1 MHz so the datasheet's
+# vn_in_integrated (ngspice inoise_total = TOTAL input-referred rms noise over the swept
+# band, in volts) is one uniform condition across the corpus. PPD/CL unchanged.
 schema: spicexplorer/analysis@1
 id: noise
 template: noise_biaswrap_ibias
-description: "Input-referred noise over the audio-to-GBW band (closed-loop bias)."
+description: "Total integrated input-referred noise, 1 Hz - 1 MHz (closed-loop bias)."
 params:
   VDD: 3.3
   VCM: 1.2
   IBIAS: 1m
   CL: 10p
-  FSTART: 1k
-  FSTOP: 100MEG
+  FSTART: 1
+  FSTOP: 1MEG  # in-band ceiling: every sizable amp's closed-loop BW is >=2 MHz; integrating past it turns inoise_total into an out-of-band artifact (inoise = onoise / a gain that has fallen below unity)
   PPD: 101
 flags: []
-produces: [vn_in]
+produces: [vn_in_integrated]

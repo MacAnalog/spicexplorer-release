@@ -1,0 +1,87 @@
+** AUTHORED TEMPLATE — amplifier/cmrr_vcm_diff: common-mode rejection of a fully-differential
+** (self-biased, voutp/voutn) DUT, in the same CM-pinned differential unity-feedback network
+** stb_diff uses.
+**
+** CONFIGURATION (see stb_diff.spice for the full why). The differential loop is closed by two
+** ideal VCVSs, fbn/fbp = VCM +/- (voutp-voutn)/2, feeding the inputs through 0 V sources; the
+** feedback carries the differential output ONLY, so the input CM is pinned at VCM and the DC
+** operating point is the matched-inputs-at-VCM point of dc_op_diff/ac_open_loop_diff. No CM
+** loop is closed by the bench — the output CM is left to the DUT's own CMFB, and being a
+** small-signal bench this works on every FD cell that has a DC OP, regardless of CMFB quality.
+**
+** STIMULUS + MATH (the exact FD analog of cmrr_vcm.spice). BOTH feedback sources carry the
+** SAME +1 V AC, so both inputs ride up together:
+**     vinn = fbn + vac,  vinp = fbp + vac
+**  => vin_d = vinp - vinn = -(voutp-voutn)   (the unity differential feedback, unchanged)
+**     vin_c = VCM + vac                       (the common mode moves by a full volt)
+** With vout_d = Add*vin_d + Adc*vin_c (Adc = the cell's CM->differential conversion gain, the
+** thing mismatch creates and CMRR measures):
+**     vout_d = -Add*vout_d + Adc*vac  =>  vout_d = Adc/(1+Add) * vac ~= vac/CMRR,
+** where CMRR = Add/Adc — so cmrr_db = -20*log10|vout_d| (vac = 1), read at FSTART (the DC-band
+** floor), exactly mirroring the SE bench's vout ~= vac/CMRR derivation.
+**
+** SOLVER-RESOLUTION CEILING (why the 1e-15 floor exists). The corpus netlists are written
+** perfectly symmetric (matched W/L, no mismatch corners in the tt deck), so the TRUE
+** small-signal Adc of the deck is zero and the AC solve's vout_d response to a pure CM
+** stimulus cancels to matrix round-off — ~1e-16 relative to the ~1 V node signals in a double-
+** precision LU solve. Any |vout_d| below ~1e-13 is solver noise, not physics, and -db() of it
+** would report a plausible-looking 260..320 dB "CMRR" (or -db(0) = Inf, which the runner
+** cannot parse). The `+ 1e-15` magnitude floor therefore CAPS the reportable figure at 300 dB:
+** a cmrr_db at or near 300 means "beyond what the matrix solver can resolve on a symmetric
+** netlist" — a statement about the deck, NOT a physical rejection. Consumers should treat
+** anything above ~200 dB as unresolved-by-construction; the measured CMRR of real silicon is
+** set by mismatch, which this nominal deck does not model.
+**
+** cmrr_cm_db — the SECONDARY, always-physical figure. Because the differential response of a
+** symmetric cell saturates the solver, the bench also reports the OUTPUT-CM response to the
+** same 1 V input-CM ride: vocm = (voutp+voutn)/2, cmrr_cm_db = -db|vocm|. That is the closed
+** CM-loop's rejection of an input-CM disturbance — finite, CMFB-quality-dependent, and
+** therefore the discriminating number between FD cells whose cmrr_db all read "perfect".
+** (Naming: the cm figure is NOT a canonical datasheet metric; it rides the scoreboard entry's
+** analyses block like stb's loop measures do.)
+**
+** DIFFERENTIAL-GAIN CORRECTION (downstream, scoreboard.record). cmrr_cm_db here is the RAW CM
+** residual -db|vocm| — a CM-to-CM ratio, NOT yet a rejection FIGURE. A CMRR is (differential
+** gain)/(CM disturbance gain), so the physical FD CMRR adds the differential open-loop gain
+** back: cmrr_cm_corr_db = dc_gain_db + cmrr_cm_db (the SE unity-buffer cmrr_db folds this in via
+** its closed loop; the FD CM path does not close a CM loop, so the deck cannot, and the term is
+** added when the scoreboard entry is assembled). cmrr_cm_corr_db is the figure the paper prints.
+**
+** Bindings: DUT PORT_LINE VDD VCM CL FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD}          ; supply quiet — isolate the common-mode path
+Vss  vss 0 dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+
+* differential unity feedback, CM pinned at VCM (see stb_diff.spice)
+Vcm  vcm 0 dc {VCM}
+Efbn fbn vcm voutp voutn 0.5
+Efbp fbp vcm voutp voutn -0.5
+
+* ... and the SAME +1 V AC lifted onto BOTH inputs: pure common-mode ride, zero differential
+Vfbn vinn fbn dc 0 ac 1
+Vfbp vinp fbp dc 0 ac 1
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  let vodm = v(voutp) - v(voutn)
+  let vocm = (v(voutp) + v(voutn))/2
+  * 1e-15 magnitude floor: caps the figure at 300 dB = "beyond solver resolution" (see header);
+  * also keeps -db() finite on a bit-symmetric netlist whose true response is exactly 0.
+  let cmrr   = -db(mag(vodm) + 1e-15)
+  let cmrrcm = -db(mag(vocm) + 1e-15)
+  meas ac cmrr_db    FIND cmrr   AT=${FSTART}
+  meas ac cmrr_cm_db FIND cmrrcm AT=${FSTART}
+  write
+  quit
+.endc
+.end

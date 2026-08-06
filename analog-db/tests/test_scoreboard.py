@@ -143,9 +143,12 @@ def test_catalog_carries_baseline_ppa():
 
 
 def test_migration_preserved_the_symbolic_crosscheck():
-    """The telescopic's ihp baseline carried a netlist2tf sym-vs-sim report — it must survive."""
+    """The telescopic's migrated ihp entry carried a netlist2tf sym-vs-sim report — it
+    must survive AS A RECORDED ENTRY. It need not stay the *baseline*: since the
+    2026-08 sizing campaign, baselines track the best current design point, and the
+    migrated entry keeps its historical design_id beside it."""
     c = model.load_circuit("amp_018_telescopic_cascode")
-    did = scoreboard.baselines(c)["ihp-sg13g2"]
-    entry = json.loads(scoreboard.entry_path(c, "ihp-sg13g2", did).read_text())
-    cc = entry["corners"]["tt"].get("symbolic_crosscheck")
-    assert cc and "dc_gain_db" in (cc.get("metrics") or {})
+    entries = scoreboard.load_entries(c, "ihp-sg13g2")
+    assert any("dc_gain_db" in ((e["corners"]["tt"].get("symbolic_crosscheck") or {})
+                                .get("metrics") or {})
+               for e in entries), "migrated symbolic_crosscheck entry lost"

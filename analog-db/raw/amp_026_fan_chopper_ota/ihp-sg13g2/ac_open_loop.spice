@@ -26,7 +26,7 @@
 
 .param VDD=1.2
 .param VCM=0.6
-.param CL=50f
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD}
 Vss  vss 0 dc 0
@@ -66,19 +66,19 @@ Vinn vinn vcm dc 0 ac -0.5
 .param x_dut_xm4_w=10u
 .param x_dut_xm4_l=1u
 .param x_dut_xm6_w=10u
-.param x_dut_xm8_w=10u
+.param x_dut_xm8_w=20u
 .param x_dut_xm10_w=10u
 .param x_dut_xm10_l=0.3u
 .param x_dut_xm12_w=5u
 .param x_dut_xm12_l=0.3u
-.param x_dut_xm14_w=10u
+.param x_dut_xm14_w=20u
 .param x_dut_xm14_l=0.25u
 .param x_dut_xm16_w=2u
 .param x_dut_xm16_l=0.13u
 .param x_dut_xm17_w=2u
 .param x_dut_xm17_l=0.13u
-.param x_dut_cm1_value=2p
-.param vb1=0.398118
+.param x_dut_cm1_value=6p
+.param vb1=0.3983759766
 .param vb2=0.65
 .param vb3=0.45
 .param vb4=0.55

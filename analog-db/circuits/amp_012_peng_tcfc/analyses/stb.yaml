@@ -1,0 +1,34 @@
+# Analysis binding for the SELF-BIASED Peng TCFC 3-stage OTA (no ibias port) — uses the
+# class's ibias-free template variant so no external current source is left driving a
+# dangling node. Loop-gain / stability probe in the unity buffer: ngspice does Middlebrook
+# voltage injection at the VIPRB marker (`alter @VIPRB[acmag]=1` in .control — netlist bytes
+# unchanged); the Spectre lane composes a native `stb stb probe=VIPRB` off the same marker.
+# Injection at the DC-short keeps the op point the CLOSED-loop buffer one, so this bench
+# needs none of the biaswrap this amp's ac_open_loop uses.
+# FSTART = 0.01 Hz is the class value (see the stb template's "CHOOSING FSTART" — the lowest
+# FSTART at which every single-ended amp of this corpus clears the 30-deg phase-reference
+# guard).
+# CROSS-CHECK @ ihp-sg13g2 tt (2026-08-01, landed sizing): pm_loop must sit within ~2 deg of
+# the fresh ac_open_loop pm (66.37 deg at ugf 2.126 MHz) — both probe the same unity loop
+# (the biaswrap Lfb/Cin shifts the open-loop read slightly). gm_loop = -999 is the loud
+# "no -180 deg crossing in-band" sentinel, not a failure.
+schema: spicexplorer/analysis@1
+id: stb
+template: stb_selfbias
+description: "Loop gain (stb) of the unity buffer — loopgain_db/ugf_loop/pm_loop/gm_loop; Middlebrook injection at VIPRB on ngspice, native stb on Spectre."
+# FSTART 0.01 -> 1e-4 (2026-08-04): the stb bench anchors phase at its first swept point and
+# blanks pm_loop/gm_loop to the -999 sentinel when |phref_dev| > 30 deg. For a high-gain amp
+# the dominant pole f_p = UGF/A0 is sub-Hz, so 0.01 Hz already sits PAST it — and because
+# every stabilising move lowers UGF (hence f_p), the guard fires HARDER on a correct fix than
+# on the broken design. Measured on amp_006@gf180: the committed (unstable) sizing reports
+# pm_loop -16.5, while the stabilised one reports -999 at 0.01 Hz and +66.0 at 1e-4. pm_loop
+# and gm_loop are FSTART-INVARIANT; only the guard moves.
+params:
+  VDD: 1.8
+  VCM: 240m
+  CL: 10p
+  FSTART: 1e-4     # class value; see the stb template's "CHOOSING FSTART"
+  FSTOP: 1G
+  PPD: 101
+flags: []
+produces: [pm_loop_deg, loopgain_db, ugf_loop_hz, gm_loop_db]

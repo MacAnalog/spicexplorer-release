@@ -30,7 +30,7 @@
 
 .param VDD=1.8
 .param VCM=400m
-.param CL=100p
+.param CL=10p
 .param VSTEP=0.2
 
 Vdd  vdd 0 dc {VDD}
@@ -53,30 +53,30 @@ XDUT vss vdd vinn vinp vout amp_014_ramos_pfc
   write
   quit
 .endc
-.param CAPACITOR_0=63p
-.param CAPACITOR_1=25p
-.param CURRENT_0_BIAS=24u
-.param x_dut_xm7_l=1u
+.param CAPACITOR_0=6.3e-11
+.param CAPACITOR_1=2.5e-11
+.param CURRENT_0_BIAS=2.4e-05
+.param x_dut_xm7_l=1e-06
 .param x_dut_xm7_m=71
-.param x_dut_xm7_w=1u
-.param x_dut_xm10_l=1u
+.param x_dut_xm7_w=1e-06
+.param x_dut_xm10_l=1e-06
 .param x_dut_xm10_m=81
-.param x_dut_xm10_w=1u
-.param x_dut_xm11_l=1u
+.param x_dut_xm10_w=1e-06
+.param x_dut_xm11_l=1e-06
 .param x_dut_xm11_m=400
-.param x_dut_xm11_w=1u
-.param x_dut_xm19_l=1u
+.param x_dut_xm11_w=1e-06
+.param x_dut_xm19_l=1e-06
 .param x_dut_xm14_m=20
-.param x_dut_xm19_w=1u
-.param x_dut_xm21_l=1u
+.param x_dut_xm19_w=1e-06
+.param x_dut_xm21_l=1e-06
 .param x_dut_xm21_m=1
-.param x_dut_xm21_w=1u
-.param x_dut_xm23_l=1u
+.param x_dut_xm21_w=1e-06
+.param x_dut_xm23_l=1e-06
 .param x_dut_xm23_m=203
-.param x_dut_xm23_w=1u
-.param x_dut_xm9_l=1u
+.param x_dut_xm23_w=1e-06
+.param x_dut_xm9_l=1e-06
 .param x_dut_xm9_m=148
-.param x_dut_xm9_w=1u
+.param x_dut_xm9_w=1e-06
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

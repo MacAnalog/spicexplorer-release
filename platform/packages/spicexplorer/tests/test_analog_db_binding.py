@@ -125,7 +125,7 @@ def test_differential_output_detection():
     from spicexplorer.backends.analog_db import differential_output
 
     assert differential_output("amp_022_fer_two_stage") is None  # single-ended vout
-    assert differential_output("amp_020_two_stage_miller_cmfb") == ("voutp", "voutn")
+    assert differential_output("amp_030_miller_cmfb_composite") == ("voutp", "voutn")
 
 
 @_needs_db
@@ -148,6 +148,6 @@ def test_fd_ac_metrics_use_differential_output():
     """A fully-differential DUT's AC calculator exprs read v(voutp)-v(voutn), not v(vout)."""
     from spicexplorer.backends.analog_db import bench_ocean_measurements
 
-    ac = {m.name: m for m in bench_ocean_measurements("amp_020_two_stage_miller_cmfb", "ac_open_loop", pdk=_PDK)}
+    ac = {m.name: m for m in bench_ocean_measurements("amp_030_miller_cmfb_composite", "ac_open_loop", pdk=_PDK)}
     assert '(v("voutp")-v("voutn"))' in ac["dcgain"].expr
     assert 'v("vout")' not in ac["dcgain"].expr and 'v("vout")' not in ac["pm"].expr

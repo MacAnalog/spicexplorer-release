@@ -1,9 +1,12 @@
 # AnalogGym analysis binding (noise).
+# Band standardized 2026-08-01 for the paper's uniform noise column: total integrated
+# input-referred noise, 1 Hz - 1 MHz (FSTART 1k -> 1), unity/closed-loop bias config,
+# CL = 10p. PPD unchanged.
 schema: spicexplorer/analysis@1
 id: noise
 template: noise_biaswrap
-description: "Input-referred noise via the AnalogGym self-bias bias-wrap (Lfb/Cin)."
+description: "Input-referred noise via the AnalogGym self-bias bias-wrap (Lfb/Cin); total integrated 1 Hz - 1 MHz."
 enabled: true
-params: {VDD: 1.8, VCM: 240m, CL: 150p, FSTART: 1k, FSTOP: 1G, PPD: 50}
+params: {VDD: 1.8, VCM: 240m, CL: 10p, FSTART: 1, FSTOP: 1MEG, PPD: 50}
 flags: []
-produces: [vn_in]
+produces: [vn_in_integrated]

@@ -1,0 +1,44 @@
+# Analysis binding for the SELF-BIASED AnalogGym DUT (no ibias port) — the class's
+# ibias-free template variant. Loop-gain / stability probe in the unity buffer: ngspice
+# does Middlebrook voltage injection at the VIPRB marker (`alter @VIPRB[acmag]=1` in
+# .control — netlist bytes unchanged); the Spectre lane composes a native
+# `stb stb probe=VIPRB` off the same marker. Injection at the DC-short keeps the op point
+# the CLOSED-loop buffer one — the same op point tran_step_biaswrap proves out, so this
+# bench needs none of the Lfb/Cin wrap ac_open_loop needs.
+# FSTART = 0.01 Hz is the class value (see the stb template's "CHOOSING FSTART").
+# MEASURED @ ihp-sg13g2 tt (2026-08-01, landed sizing, CL=10p): loopgain_db = 73.8335 =
+# fresh ac_open_loop dcgain 73.8335 (bit-identical); ugf_loop = 34.829 MHz vs ugf
+# 34.838 MHz; pm_loop = -63.43 deg vs pm -63.10 (delta 0.33 deg — two independent routes
+# agree the loop is UNSTABLE at this load); gm_loop = -4.99 dB (negative gain margin, same
+# verdict); phref_ok = 1, phref_dev = -2e-4 deg.
+# KNOWN CIRCUIT LIMITATION (not a binding artifact): this CFCC 3-stage OTA is compensated
+# for 500 pF-class loads (Chong & Chan JSSC 2012); at the corpus-standard CL = 10p the
+# unity loop is unstable — the tran_step buffer sustains a ~21 MHz / 9.2 mV pk-pk limit
+# cycle. pm_loop < 0 here is the honest reading, and pm_loop_deg's min-45 spec fails BY
+# DESIGN. The AC read of an unstable loop is the small-signal loop transmission about the
+# (limit-cycle-averaged) op point — the sign and magnitude are trustworthy, per the
+# PM-rescue finding (negative-PM reads certify real instability; pm_loop uses the LAST
+# 0 dB crossing exactly to avoid first-crossing false passes).
+# REPORTING: `produces:` names DATASHEET METRIC IDS. The template also prints
+# pm_loop_first, phref_dev, phref_ok; those ride the recorded measures block. -999 is the
+# "no crossing measured" sentinel; phref_ok = 0 says the phase-reference guard tripped.
+schema: spicexplorer/analysis@1
+id: stb
+template: stb_selfbias
+description: "Loop gain (stb) of the unity buffer — loopgain_db/ugf_loop/pm_loop/gm_loop; Middlebrook injection at VIPRB on ngspice, native stb on Spectre."
+# FSTART 0.01 -> 1e-4 (2026-08-04): the stb bench anchors phase at its first swept point and
+# blanks pm_loop/gm_loop to the -999 sentinel when |phref_dev| > 30 deg. For a high-gain amp
+# the dominant pole f_p = UGF/A0 is sub-Hz, so 0.01 Hz already sits PAST it — and because
+# every stabilising move lowers UGF (hence f_p), the guard fires HARDER on a correct fix than
+# on the broken design. Measured on amp_006@gf180: the committed (unstable) sizing reports
+# pm_loop -16.5, while the stabilised one reports -999 at 0.01 Hz and +66.0 at 1e-4. pm_loop
+# and gm_loop are FSTART-INVARIANT; only the guard moves.
+params:
+  VDD: 1.8
+  VCM: 300m
+  CL: 10p
+  FSTART: 1e-4     # class value; see the stb template's "CHOOSING FSTART"
+  FSTOP: 1G
+  PPD: 101
+flags: []
+produces: [pm_loop_deg, loopgain_db, ugf_loop_hz, gm_loop_db]

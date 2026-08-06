@@ -14,8 +14,8 @@
         "ac_open_loop": {
           "measures": {
             "dcgain": 102.3455,
-            "pm": 66.37213,
-            "ugf": 2126388.0
+            "pm": 71.71717,
+            "ugf": 2010995.0
           },
           "status": "ok"
         },
@@ -32,10 +32,29 @@
           },
           "status": "ok"
         },
+        "iip3": {
+          "measures": {
+            "a_drv": 0.006249333,
+            "a_f1": 0.006249367,
+            "a_f2": 0.006249227,
+            "a_floor": 9.737853e-07,
+            "a_im3h": 1.16362e-06,
+            "a_im3l": 8.853365e-07,
+            "a_im5h": 9.586426e-07,
+            "a_im5l": 9.83083e-07,
+            "gain_tone": 0.999983,
+            "gain_tone_db": -0.000147705,
+            "iip3_comp_db": 18.34167,
+            "iip3_dbv": -6.78225,
+            "im3_dbc": -74.6003,
+            "im5_im3_db": -1.46442
+          },
+          "status": "ok"
+        },
         "noise": {
           "measures": {
-            "inoise_total": 0.04742514,
-            "onoise_total": 0.0229527
+            "inoise_total": 9.38203e-05,
+            "onoise_total": 3.220028
           },
           "status": "ok"
         },
@@ -45,11 +64,27 @@
           },
           "status": "ok"
         },
+        "stb": {
+          "measures": {
+            "gm_loop": -999.0,
+            "loopgain_db": 102.3457,
+            "phref_dev": -0.0347523,
+            "phref_ok": 1.0,
+            "pm_loop": 71.36688,
+            "pm_loop_first": 71.36688,
+            "ugf_loop": 2010761.0
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "error": "amp_012_peng_tcfc/thd@ihp-sg13g2/tt: no measures parsed:\n: vector re2 is not available or has zero length.\nError: RHS \"2*sqrt(re2^2+im2^2)\" invalid\nWarning from checkvalid: vector vac is not available or has zero length.\nError: RHS \"(mean(vac*c3)*np - vac[0]*c3[0])/nd\" invalid\nWarning from checkvalid: vector vac is not available or has zero length.\nError: RHS \"(mean(vac*s3)*np - vac[0]*s3[0])/nd\" invalid\nWarning from checkvalid: vector re3 is not available or has zero length.\nError: RHS \"2*sqrt(",
+          "status": "sim_error"
+        },
         "tran_step": {
           "measures": {
-            "t_settle": 0.000198973,
-            "tcross": 0.000199973,
-            "vfinal": 0.4438758
+            "t_settle": 0.0001989979,
+            "tcross": 0.0001999979,
+            "vfinal": 0.493392
           },
           "status": "ok"
         }
@@ -57,7 +92,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-24T22:09:27+00:00"
+        "run_at": "2026-08-01T18:24:41+00:00"
       }
     }
   },
@@ -72,13 +107,29 @@
         "spec": "pass",
         "value": 102.3455
       },
-      "i_supply": {
+      "gm_loop_db": {
         "spec": "none",
+        "value": -999.0
+      },
+      "i_supply": {
+        "spec": "pass",
         "value": 6.801144e-05
+      },
+      "iip3_dbv": {
+        "spec": "pass",
+        "value": -6.78225
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 102.3457
       },
       "pm_deg": {
         "spec": "pass",
-        "value": 66.37213
+        "value": 71.71717
+      },
+      "pm_loop_deg": {
+        "spec": "pass",
+        "value": 71.36688
       },
       "psrr_vdd_db": {
         "spec": "pass",
@@ -86,15 +137,19 @@
       },
       "t_settle": {
         "spec": "fail",
-        "value": 0.000198973
+        "value": 0.0001989979
       },
       "ugf_hz": {
         "spec": "pass",
-        "value": 2126388.0
+        "value": 2010995.0
       },
-      "vn_in": {
+      "ugf_loop_hz": {
         "spec": "none",
-        "value": 0.04742514
+        "value": 2010761.0
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 9.38203e-05
       }
     }
   },
@@ -134,8 +189,8 @@
     ],
     "performance": {
       "dc_gain_db": 102.3455,
-      "pm_deg": 66.37213,
-      "ugf_hz": 2126388.0
+      "pm_deg": 71.71717,
+      "ugf_hz": 2010995.0
     },
     "power_w": 0.000122420592
   },

@@ -1,0 +1,134 @@
+{
+  "area": {
+    "active_gate_area_um2": 137.863,
+    "c_count": 6,
+    "c_total_f": 3.5600000000000005e-11,
+    "mos_count": 46,
+    "r_count": 4,
+    "r_total_ohm": 22000000.0
+  },
+  "circuit": "ia_006_fan_chopper_cmfb",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0001549738,
+            "vocm": 0.5203056,
+            "vos": -2.61425e-11
+          },
+          "status": "ok"
+        },
+        "psrr_vdd_chop": {
+          "error": "ia_006_fan_chopper_cmfb/psrr_vdd_chop@ihp-sg13g2/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 ia_006_fan_chopper_cmfb \u00d7 psrr_vdd_chop \u00d7 ihp-sg13g2 \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n Reference value :  1.00000e+00\nNo. of Data Rows : 27\nASCII raw file \"rawspice.raw\"\nngspice-45 done\n",
+          "status": "sim_error"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-08-05T15:18:17+00:00"
+      }
+    }
+  },
+  "design_id": "7f67ec187c",
+  "metrics": {
+    "tt": {
+      "i_supply": {
+        "spec": "pass",
+        "value": 0.0001549738
+      },
+      "vocm": {
+        "spec": "none",
+        "value": 0.5203056
+      },
+      "vos": {
+        "spec": "pass",
+        "value": -2.61425e-11
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "vb1_core": 0.5,
+      "vb2_core": 0.75,
+      "vb3_core": 0.45,
+      "vb4_core": 0.55,
+      "vcm_ref": 0.5,
+      "x_dut_cfb1_core_value": "0.8p",
+      "x_dut_cin1_core_value": "16p",
+      "x_dut_cm1_core_value": "1p",
+      "x_dut_rb1_core_value": "10Meg",
+      "x_dut_rmp_cmfb_value": "1Meg",
+      "x_dut_xm10_core_l": "0.3u",
+      "x_dut_xm10_core_m": 1,
+      "x_dut_xm10_core_w": "10u",
+      "x_dut_xm12_core_l": "0.3u",
+      "x_dut_xm12_core_m": 1,
+      "x_dut_xm12_core_w": "5u",
+      "x_dut_xm14_core_l": "0.5u",
+      "x_dut_xm14_core_m": 1,
+      "x_dut_xm14_core_w": "6u",
+      "x_dut_xm16_core_l": "0.13u",
+      "x_dut_xm16_core_m": 1,
+      "x_dut_xm16_core_w": "2u",
+      "x_dut_xm17_core_l": "0.13u",
+      "x_dut_xm17_core_m": 1,
+      "x_dut_xm17_core_w": "2u",
+      "x_dut_xm1_cmfb_l": "0.267u",
+      "x_dut_xm1_cmfb_m": 1,
+      "x_dut_xm1_cmfb_w": "0.329u",
+      "x_dut_xm1_core_l": "1u",
+      "x_dut_xm1_core_m": 1,
+      "x_dut_xm1_core_w": "20u",
+      "x_dut_xm20_core_l": "0.13u",
+      "x_dut_xm20_core_m": 1,
+      "x_dut_xm20_core_w": "2u",
+      "x_dut_xm21_core_l": "0.13u",
+      "x_dut_xm21_core_m": 1,
+      "x_dut_xm21_core_w": "2u",
+      "x_dut_xm24_core_l": "0.13u",
+      "x_dut_xm24_core_m": 1,
+      "x_dut_xm24_core_w": "2u",
+      "x_dut_xm25_core_l": "0.13u",
+      "x_dut_xm25_core_m": 1,
+      "x_dut_xm25_core_w": "2u",
+      "x_dut_xm2_cmfb_l": "1.31u",
+      "x_dut_xm2_cmfb_m": 1,
+      "x_dut_xm2_cmfb_w": "2.32u",
+      "x_dut_xm2_core_l": "0.5u",
+      "x_dut_xm2_core_m": 1,
+      "x_dut_xm2_core_w": "20u",
+      "x_dut_xm3_cmfb_l": "0.259u",
+      "x_dut_xm3_cmfb_m": 1,
+      "x_dut_xm3_cmfb_w": "0.881u",
+      "x_dut_xm4_cmfb_l": "0.27u",
+      "x_dut_xm4_cmfb_m": 1,
+      "x_dut_xm4_cmfb_w": "1.42u",
+      "x_dut_xm4_core_l": "1u",
+      "x_dut_xm4_core_m": 1,
+      "x_dut_xm4_core_w": "4.7u",
+      "x_dut_xm6_core_m": 1,
+      "x_dut_xm6_core_w": "10u",
+      "x_dut_xm7_cmfb_l": "0.22u",
+      "x_dut_xm7_cmfb_m": 1,
+      "x_dut_xm7_cmfb_w": "0.293u",
+      "x_dut_xm8o_l": "1u",
+      "x_dut_xm8o_m": 1,
+      "x_dut_xm8o_w": "20u",
+      "x_dut_xm9o_l": "1u",
+      "x_dut_xm9o_m": 1,
+      "x_dut_xm9o_w": "20u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 137.863,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {},
+    "power_w": 0.00018596856000000002
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

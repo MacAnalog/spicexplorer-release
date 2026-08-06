@@ -3,6 +3,6 @@ schema: spicexplorer/analysis@1
 id: ac_open_loop
 template: ac_open_loop
 description: "Open-loop AC gain/phase."
-params: {VDD: 1.5, VCM: 0.8, IBIAS: 5u, CL: 50f, FSTART: 1, FSTOP: 100G, PPD: 101}
+params: {VDD: 1.5, VCM: 0.8, IBIAS: 5u, CL: 10p, FSTART: 1, FSTOP: 100G, PPD: 101}
 flags: []
 produces: [dc_gain_db, ugf_hz, pm_deg]

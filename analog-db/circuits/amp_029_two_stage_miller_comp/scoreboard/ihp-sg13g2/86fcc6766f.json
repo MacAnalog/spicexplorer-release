@@ -1,0 +1,252 @@
+{
+  "area": {
+    "active_gate_area_um2": 58.0,
+    "c_count": 2,
+    "c_total_f": 8e-13,
+    "mos_count": 10,
+    "r_count": 2,
+    "r_total_ohm": 60000.0
+  },
+  "circuit": "amp_029_two_stage_miller_comp",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 50.46528,
+            "pm": 64.59102,
+            "ugf": 30903100.0
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_cm_db": -37.70747,
+            "cmrr_db": 243.6657
+          },
+          "status": "ok"
+        },
+        "dc_cm_bias_sweep": {
+          "measures": {
+            "cm_interior_pts": 0.0,
+            "vocm_1": 6.723545e-07,
+            "vocm_2": 2.051667e-06,
+            "vocm_3": 1.104468,
+            "vocm_4": 1.141035,
+            "vocm_5": 1.145094
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0001795321,
+            "vocm": 0.5383778,
+            "vos": 7.69063e-10
+          },
+          "status": "ok"
+        },
+        "iip3": {
+          "measures": {
+            "a_drv": 0.006249378,
+            "a_f1": 0.08054108,
+            "a_f2": 0.0728419,
+            "a_floor": 2.247618e-07,
+            "a_im3h": 6.070972e-05,
+            "a_im3l": 8.707197e-05,
+            "a_im5h": 4.017513e-06,
+            "a_im5l": 6.92678e-06,
+            "cm_drift_v": -2.97252e-07,
+            "gain_tone": 11.65586,
+            "gain_tone_db": 21.33089,
+            "iip3_comp_db": 1.727081,
+            "iip3_dbv": -14.8574,
+            "im3_dbc": -58.4501,
+            "im5_im3_db": -21.9869,
+            "vocm_op": 0.5211727,
+            "vod_op": 0.1566933
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 4.204394e-05,
+            "onoise_total": 0.01212656
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_cm_db": -68.11415,
+            "psrr_vdd_db": 214.1571
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "measures": {
+            "gm_loop": 33.99032,
+            "loopgain_db": 50.46528,
+            "phref_dev": -4.08253e-08,
+            "phref_ok": 1.0,
+            "pm_loop": 64.58694,
+            "pm_loop_first": 64.58694,
+            "ugf_loop": 30903100.0
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "measures": {
+            "a1": 0.1988001,
+            "a1_in": 0.09999841,
+            "a2": 2.240848e-12,
+            "a3": 2.47765e-06,
+            "a4": 2.52867e-12,
+            "a5": 2.203571e-08,
+            "cm_drift_v": 1.216622e-07,
+            "gain_tone": 1.988033,
+            "thd_db": -98.0872,
+            "thd_pct": 0.001246351,
+            "vocm_op": 0.5391268,
+            "vod_op": -3.36693e-12
+          },
+          "status": "ok"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 4.118534e-06,
+            "tcross": 5.118534e-06,
+            "vfinal": -0.01811892
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-08-05T01:53:33+00:00"
+      }
+    }
+  },
+  "design_id": "86fcc6766f",
+  "metrics": {
+    "tt": {
+      "cm_interior_pts": {
+        "spec": "fail",
+        "value": 0.0
+      },
+      "cmrr_cm_corr_db": {
+        "spec": "none",
+        "value": 12.75781
+      },
+      "cmrr_cm_db": {
+        "spec": "none",
+        "value": -37.70747
+      },
+      "cmrr_db": {
+        "spec": "none",
+        "value": 243.6657
+      },
+      "dc_gain_db": {
+        "spec": "pass",
+        "value": 50.46528
+      },
+      "gm_loop_db": {
+        "spec": "none",
+        "value": 33.99032
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 0.0001795321
+      },
+      "iip3_dbv": {
+        "spec": "fail",
+        "value": -14.8574
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 50.46528
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 64.59102
+      },
+      "pm_loop_deg": {
+        "spec": "pass",
+        "value": 64.58694
+      },
+      "psrr_cm_corr_db": {
+        "spec": "none",
+        "value": -17.648869999999995
+      },
+      "psrr_cm_db": {
+        "spec": "none",
+        "value": -68.11415
+      },
+      "psrr_vdd_db": {
+        "spec": "none",
+        "value": 214.1571
+      },
+      "t_settle": {
+        "spec": "pass",
+        "value": 4.118534e-06
+      },
+      "thd_pct": {
+        "spec": "pass",
+        "value": 0.001246351
+      },
+      "ugf_hz": {
+        "spec": "pass",
+        "value": 30903100.0
+      },
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 30903100.0
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 4.204394e-05
+      },
+      "vos": {
+        "spec": "pass",
+        "value": 7.69063e-10
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "i_bias": "20u",
+      "vbl": 0.7087,
+      "x_dut_c1_value": "0.4p",
+      "x_dut_r1_value": "30k",
+      "x_dut_xm1_l": "0.5u",
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": "10u",
+      "x_dut_xm3_l": "1u",
+      "x_dut_xm3_m": 1,
+      "x_dut_xm3_w": "10u",
+      "x_dut_xm5_l": "0.5u",
+      "x_dut_xm5_m": 1,
+      "x_dut_xm5_w": "12u",
+      "x_dut_xm6_l": "1u",
+      "x_dut_xm6_m": 1,
+      "x_dut_xm6_w": "2u",
+      "x_dut_xm7_m": 1,
+      "x_dut_xm7_w": "6u",
+      "x_dut_xm8_m": 1,
+      "x_dut_xm8_w": "2u"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 58.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 50.46528,
+      "pm_deg": 64.59102,
+      "ugf_hz": 30903100.0
+    },
+    "power_w": 0.00021543852
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

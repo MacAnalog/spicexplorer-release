@@ -1,0 +1,36 @@
+# Analysis binding: two-tone IIP3 in the DIFFERENTIAL unity-feedback follower
+# (amplifier/iip3_diff — thd_diff's network, each tone split +/- ASIG/2; the SE iip3
+# template's node `vout` does not exist on this FD member).
+# ASIG = 6.25 mV PER TONE (applied differential amplitude) — the campaign-fixed honest
+# intercept drive (the 50 mV the SE bench once shipped read 0.5-1.4 dB biased; see
+# iip3.spice's ASIG sweep). iip3_dbv is input-referred to this ASIG binding exactly as on
+# the SE bench.
+# F0 GRID (campaign rule): FRESH ac_open_loop ugf = 10.32 MHz (2026-08-01, CL=10p) ->
+# 3-30 MHz bucket -> reference grid / 10: tones F1/F2 = 90/100 kHz, F0 = gcd = 10 kHz
+# (n1=9, n2=10 — the 9:10 ratio kept exactly), so IM3 (80/110 kHz = bins 8/11) and IM5
+# (70/120 kHz = bins 7/12) land on exact bins.
+# COHERENT WINDOW (integer-beat contract, load-bearing): TSTART = 100u = 1 WHOLE beat
+# period (1/F0) >= 20x the FRESH tran_step t_settle (385.5 ns -> 7.7 us floor);
+# TSTOP - TSTART = 2000u = 20 beat periods (even -> cm_drift_v's halves hold whole
+# beats); TSTEP = 50n = 1/(200*F2).
+# PREREQUISITE (2026-08-01): live only with the sizing.yaml cout_val -> 10p CM-servo fix
+# (at 100f the follower's CM loop is transient-unstable — see thd.yaml / sizing.yaml).
+# TRUST CHECKS: gain_tone ~ 2 when live (guard threshold 2/3; sentinels iip3_dbv = -999 /
+# im3_dbc = +999); a_im3 must sit far above a_floor; cm_drift_v must be << ASIG or the
+# record is not stationary and the intercept is meaningless.
+# MEASURED (2026-08-01, tt) — TWO GATES MISS FOR CIRCUIT REASONS, VALUES KEPT HONESTLY:
+# gain_tone = 2.178 (> the nominal 2 ceiling) — the cell's gain-EXPANSION nonlinearity at
+# small drive (same trend the thd binding measured: 1.04 @ 0.1 -> 1.69 @ 0.05 -> 2.01 @
+# 0.025 -> 2.18 here), not a mis-bound stimulus (a_drv = 6.2496m = ASIG exactly);
+# a_im3 = 2.26e-4 sits only ~10.6 dB above a_floor = 6.66e-5 (not the >= 20 dB target)
+# because the 5*F0 "floor" bin carries REAL >= 9th-order IM products of this grossly
+# nonlinear core, not numerical floor (im5_im3_db = -10.0, iip3_comp_db = 6.8 dB agree).
+# cm_drift_v = -1.18e-5 << ASIG (stationary ✓). iip3_dbv = -26.3 dBV — an honest FAIL of
+# the -10 dBV spec at this hand-seeded sizing; treat it as an upper bound on linearity.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_diff
+description: "IIP3 — FD follower two-tone (90/100 kHz, 6.25 mV/tone) intermodulation; tran + in-deck coherent DFT."
+params: {VDD: 1.2, VCM: 0.6, CL: 10p, ASIG: 0.00625, F0: 1.0e4, F1: 9.0e4, F2: 1.0e5, TSTEP: 50n, TSTART: 100u, TSTOP: 2100u}
+flags: []
+produces: [iip3_dbv]

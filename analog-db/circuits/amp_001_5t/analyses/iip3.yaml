@@ -1,10 +1,45 @@
-# Analysis binding: two-tone IIP3 in the unity buffer (class template). 50 mV tones at
-# 0.9/1.0 MHz on the 100 kHz common fundamental; TSTOP covers 10 beat periods.
-# ngspice runs the tran; the Spectre lane composes a native pss at 100 kHz.
+# Analysis binding: two-tone IIP3 in the unity buffer (class template). 6.25 mV tones at
+# 9/10 kHz share the F0 = gcd = 1 kHz fundamental (n1=9, n2=10), so the IM3 products at
+# 2F1-F2 = 8 kHz (bin 8) and 2F2-F1 = 11 kHz (bin 11) — and the IM5 products at 7 kHz
+# (bin 7) and 12 kHz (bin 12) — land on exact F0 bins; the in-deck coherent DFT then has no
+# leakage.
+# F0 GRID (campaign rule, 2026-08-01): the tone grid follows the FRESH ac_open_loop ugf —
+# ugf < 3 MHz -> the 0.9/1.0 MHz base grid divides by 100 (9:10 tone ratio kept exactly).
+# MEASURED ugf on this cell at CL=10p: 1.214 MHz (ihp-sg13g2 tt, 2026-08-01), i.e. the
+# previous 0.9/1.0 MHz tones sat AT loop crossover (gain_tone 0.784 — the intercept was
+# being read in a regime with no loop suppression). Measured @ihp tt, this window: old grid
+# iip3_dbv +2.620, new grid +16.017 dBV (gain_tone 0.9751, im3_dbc -120.2, a_im3 56.8 dB
+# above a_floor, iip3_comp_db 0.026). NOTE the 2026-07-31 calibration (next paragraph) was
+# taken before the bench CL moved to 10p, and its absolute values do NOT reproduce on the
+# current tree (that pass logged +15.653 dBV on ihp at the old grid vs +2.620 measured
+# now); the 6.25 mV drive RULE stands — the absolute numbers to trust are the fresh ones.
+# COHERENT WINDOW: TSTART = 2m = 2 whole beat periods (1/F0; >= 20x the fresh t_settle =
+# 599 ns — the integer-beat contract is load-bearing), TSTOP-TSTART = 20m = 20 beat
+# periods; TSTEP = 500n = 1/(200*F2).
+#
+# DRIVE = 6.25 mV per tone ALWAYS (campaign rule; calibrated 2026-07-31 at the old grid):
+# an intercept is only an intercept while IM3 is on its 3:1 slope, and 50 mV was not — an
+# ASIG sweep measured the 50 mV point 1.40 dB optimistic on amp_001@sky130 vs the converged
+# -9.445 dBV asymptote; 6.25 mV is the geometric centre of the valid window (compression
+# above, the deck's numerical floor below). The Spectre lane reads the same $ASIG, so both
+# lanes move together.
+#
+# REPORTING: `produces:` names DATASHEET METRIC IDS (analysis.schema.json), not measure
+# names — the scoreboard/conformance wiring itself is datasheet.yaml
+# `metrics.iip3_dbv.{analysis: iip3, extract.meas: iip3_dbv}` -> ppa.metric_values().
+# The template also prints im3_dbc / a_f1 / a_f2 / a_drv / gain_tone / gain_tone_db /
+# a_im3l / a_im3h / a_im5l / a_im5h / a_floor / im5_im3_db / iip3_comp_db into
+# `corners.<corner>.analyses.iip3.measures`. TWO OF THOSE ARE TRUST CHECKS, READ THEM:
+# iip3_comp_db estimates |IIP3 error| from residual 5th-order compression (an ESTIMATE, not
+# a bound — conservative at 6.25 mV, understating at higher drive on slew-limited cells).
+# a_floor is the numerical floor a_im3 must sit far above (>= 20 dB). gain_tone < 0.5 means
+# the dead-output guard fired and iip3_dbv is the -999 sentinel, not a measurement. im3_dbc
+# is in the class canonical vocabulary but no datasheet metric binds it here yet (owner
+# decision).
 schema: spicexplorer/analysis@1
 id: iip3
 template: iip3
-description: "IIP3 — two-tone intermodulation intercept; tran+FFT (ngspice) / native PSS (Spectre)."
-params: {VDD: 1.5, VCM: 0.8, IBIAS: 20u, CL: 50f, ASIG: 0.05, F1: 0.9e6, F2: 1.0e6, TSTEP: 25n, TSTOP: 100u}
+description: "IIP3 — two-tone intermodulation intercept; tran+coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.5, VCM: 0.8, IBIAS: 20u, CL: 10p, ASIG: 0.00625, F0: 1k, F1: 9k, F2: 10k, TSTEP: 500n, TSTART: 2m, TSTOP: 22m}
 flags: []
-produces: []
+produces: [iip3_dbv]

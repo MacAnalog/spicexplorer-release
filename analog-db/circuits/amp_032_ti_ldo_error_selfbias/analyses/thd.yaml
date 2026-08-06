@@ -1,0 +1,29 @@
+# Analysis binding for the SELF-BIASED error amp (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# THD in the unity buffer: tran + the template's in-deck coherent DFT (ngspice); the Spectre
+# lane composes a native pss at F0 (HARMS).
+# F0 = 100 kHz per the campaign F0 grid, keyed on the FRESH open-loop ugf: measured
+# ugf = 18.65 MHz (ac_open_loop @ gf180mcu tt, 2026-08-01, landed sizing) sits in the
+# 3-30 MHz band -> the whole grid divides by 10 from the >=30 MHz reference (F0 = 1 MHz).
+# This supersedes the pilot's F0 = 1 MHz, which had keyed off bw_cl (22.64 MHz) instead of
+# ugf; the grid rule uses ugf so the tone keeps real loop suppression (~45 dB at 100 kHz
+# here) and the harmonics through HARMS=7 (700 kHz) all stay deep in-band.
+# COHERENT WINDOW (the template requires (TSTOP-TSTART) to be whole F0 periods, see its
+# header): F0 = 100 kHz -> T = 10 us; TSTART = 20u = 2 whole periods = 49x the measured
+# 411 ns settling (tran_step t_settle to 1 mV, same run; rule: >= 20x t_settle rounded UP
+# to whole periods, 2-4 periods min); TSTOP = 180u leaves 16 whole measured periods (even
+# count). TSTEP = 20n = 1/(500*F0).
+# DRIVE-HALVING CHECK (gf180mcu tt, 2026-08-01): ASIG 0.1 -> 0.05 scaled HD2 (a2/a1)
+# x2.10 and HD3 (a3/a1) x4.40 — weakly-nonlinear slopes, the DFT bins are real distortion.
+# REPORTING: `produces:` names the DATASHEET METRIC ID (analysis.schema.json) this bench
+# feeds — datasheet.yaml binds metrics.thd_pct.{analysis: thd, extract.meas: thd_pct}.
+# The other measures (thd_db, a1..a5, a1_in, gain_tone, vout_op) still ride the recorded
+# `corners.<corner>.analyses.thd.measures` block. gain_tone < 0.5 means the template's
+# dead-output guard fired and thd_pct is the 999 sentinel, not a measurement.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_selfbias
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 3.3, VCM: 1.2, CL: 10p, ASIG: 0.1, F0: 0.1e6, TSTEP: 20n, TSTART: 20u, TSTOP: 180u, HARMS: 7}
+flags: []
+produces: [thd_pct]

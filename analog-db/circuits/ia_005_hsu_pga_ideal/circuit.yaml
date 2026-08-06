@@ -5,6 +5,7 @@ tier: ia
 subfamily: pga
 realization: mixed
 display_name: Hsu 3-bit binary cap-feedback PGA (ideal-amp core)
+signal_path: fully_differential
 ports:
 - vinp
 - vinn

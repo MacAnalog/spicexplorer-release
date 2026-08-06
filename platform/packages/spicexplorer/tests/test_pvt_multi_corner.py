@@ -23,7 +23,7 @@ import numpy as np
 import pytest
 from _spicexplorer_fixtures import REPO_ROOT, requires_ngspice, requires_pdk, slow
 from spicexplorer.core.domains import Corner, Project_Setup, PVTConfig
-from spicexplorer.core.utils import aggregate_corner_scores
+from spicexplorer.core.utils import CORNER_SCORE_AGGREGATORS, aggregate_corner_scores
 from spicexplorer_core.pvt import (
     ModelInclude,
     SupplyOverride,
@@ -153,22 +153,52 @@ def test_corner_rejects_both_singular_and_plural_supply():
     assert proj_ok["pvt"]["corners"][0]["supplies"] == [{"node": "VDD", "value": 1.5}]
 
 
-def test_aggregate_corner_scores_math():
-    # Constraint-first: a corner total < 0 fails; >= 0 passes. If ANY corner
+@pytest.mark.parametrize("strategy", sorted(CORNER_SCORE_AGGREGATORS))
+def test_aggregate_corner_scores_is_monotone_in_every_corner(strategy):
+    """AGG-2 (property): improving ONE corner must never LOWER the aggregate.
+
+    Replaces the old by-example pin. `mean` divided by ``len(subset)``, so lifting a
+    marginal corner out of the failing subset shrank the denominator: {-10, -2} averaged
+    -6, and improving the -2 corner to +1 dropped the aggregate to -10. Gradient-free
+    search reads that as "the improvement hurt" and walks back toward the failure.
+
+    The property is checked over a deterministic sample of corner sets and deltas that
+    both stay inside a sign class and cross the pass/fail boundary — the boundary is where
+    the subset (and, before the fix, the denominator) changes.
+    """
+    rng = np.random.default_rng(20260730)
+    for _ in range(200):
+        n = int(rng.integers(2, 6))
+        scores = {f"c{i}": np.float64(v) for i, v in enumerate(rng.uniform(-12.0, 12.0, n))}
+        base = aggregate_corner_scores(scores, strategy)
+        for name in scores:
+            for delta in (0.0, 1e-3, 0.5, 2.0, 25.0):  # 0.0 pins "no change ⇒ no change"
+                improved = dict(scores)
+                improved[name] = np.float64(scores[name] + delta)
+                after = aggregate_corner_scores(improved, strategy)
+                assert after >= base - 1e-9, (
+                    f"{strategy}: raising {name} by {delta} lowered the aggregate "
+                    f"{base} -> {after} for {scores}"
+                )
+
+
+def test_aggregate_corner_scores_masking_and_errors():
+    # Constraint-first (AGG-1): a corner total < 0 fails; >= 0 passes. If ANY corner
     # fails, only the failing corners' penalties aggregate — a passing corner's positive
     # reward can never mask a failure. Only when ALL pass do rewards aggregate.
+    # `mean` always divides by the TOTAL corner count (AGG-2), never by the subset size.
 
-    # ONE failing corner: every strategy collapses to that corner's penalty (the good
-    # corners' +10 / +3 are discarded, so mean/sum can't out-vote the -4 failure).
+    # ONE failing corner: the good corners' +10 / +3 are discarded, so mean/sum can't
+    # out-vote the -4 failure — the aggregate stays negative for every strategy.
     one_fail = {"tt": np.float64(10.0), "ss": np.float64(-4.0), "ff": np.float64(3.0)}
     assert aggregate_corner_scores(one_fail, "sum") == pytest.approx(-4.0)
-    assert aggregate_corner_scores(one_fail, "mean") == pytest.approx(-4.0)
+    assert aggregate_corner_scores(one_fail, "mean") == pytest.approx(-4.0 / 3)
     assert aggregate_corner_scores(one_fail, "min") == pytest.approx(-4.0)
 
     # MULTIPLE failing corners: aggregate ONLY the penalties (ignore the passing +10).
     two_fail = {"tt": np.float64(10.0), "ss": np.float64(-4.0), "ff": np.float64(-6.0)}
     assert aggregate_corner_scores(two_fail, "sum") == pytest.approx(-10.0)
-    assert aggregate_corner_scores(two_fail, "mean") == pytest.approx(-5.0)
+    assert aggregate_corner_scores(two_fail, "mean") == pytest.approx(-10.0 / 3)
     assert aggregate_corner_scores(two_fail, "min") == pytest.approx(-6.0)
 
     # ALL corners pass: aggregate the (positive) rewards exactly as before.

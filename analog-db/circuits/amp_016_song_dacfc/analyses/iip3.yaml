@@ -1,0 +1,36 @@
+# Analysis binding for this SELF-BIASED AnalogGym DUT (no ibias port) — class iip3_selfbias
+# template, same posture as amp_032's iip3. Two-tone IIP3 in the unity buffer.
+# F0 GRID: fresh ac_open_loop @ ihp-sg13g2 tt (2026-08-01, landed sizing) reads
+# ugf = 1.908 MHz < 3 MHz -> the campaign 0.9/1.0 MHz grid divided by 100:
+# F1 = 9 kHz, F2 = 10 kHz (exact 9:10 ratio kept), F0 = gcd = 1 kHz (n1=9, n2=10), so the
+# IM3 products at 8/11 kHz (bins 8/11) and IM5 at 7/12 kHz (bins 7/12) land on exact F0
+# bins — no leakage in the rectangular-window coherent DFT.
+# COHERENT WINDOW: beat period 1/F0 = 1 ms; TSTART = 2m = 2 whole beat periods,
+# TSTOP - TSTART = 20m = 20 beat periods; TSTEP = 100n << 1/(200*F2) = 500n — NOT the
+# campaign cap: at a 200 ns max step the sibling thd tran ABORTS riding this cell's
+# ~18.5 MHz limit cycle (period ~54 ns) too coarsely ("timestep too small", measured),
+# so the cap here stays near the oscillation's own scale. Runtime is unchanged either
+# way (the integrator is internally limited to ~26 ns by the oscillation). The
+# integer-beat TSTART contract is load-bearing.
+# DRIVE: ASIG = 0.00625 per tone — the class default (geometric centre of the measured
+# valid window; see the template header). Plain decimal, never a SPICE suffix — ASIG and
+# F0/F1/F2 reach .control arithmetic.
+# TSTART CAVEAT (honest): the 20x-t_settle rule cannot bind — this buffer NEVER settles
+# at the landed sizing (sustained ~18.5 MHz, ~120 mVpp limit cycle at the quiescent
+# VCM = 0.3 op point, 1 ns-step verified; see thd.yaml). The output MEAN settles in
+# ~2 us << 1 beat period. The 6.25 mV tones ride a ~60 mV-amplitude oscillation, so
+# read iip3_dbv as the honest "intercept of an oscillating buffer": the a_im3-above-
+# a_floor trust check and the 3:1-slope assumption are NOT expected to hold cleanly.
+# REPORTING: `produces:` names DATASHEET METRIC IDS — datasheet.yaml binds iip3_dbv off
+# this analysis (its extract.ampl_in tracks this ASIG). The other measures (im3_dbc,
+# a_f1/a_f2/a_drv, gain_tone, a_im3l/h, a_im5l/h, a_floor, im5_im3_db, iip3_comp_db)
+# ride the recorded `corners.<corner>.analyses.iip3.measures` block. gain_tone < 0.5
+# means the dead-output guard fired and iip3_dbv is the -999 sentinel.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_selfbias
+description: "IIP3 — two-tone intermodulation intercept; tran+coherent DFT (ngspice) / native PSS (Spectre)."
+enabled: true
+params: {VDD: 1.8, VCM: 300m, CL: 10p, ASIG: 0.00625, F0: 1.0e3, F1: 9.0e3, F2: 1.0e4, TSTEP: 100n, TSTART: 2m, TSTOP: 22m}
+flags: []
+produces: [iip3_dbv]

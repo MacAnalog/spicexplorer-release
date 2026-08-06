@@ -1,9 +1,22 @@
 # AnalogGym analysis binding (noise).
+# BAND STANDARDIZED 2026-08-01 (campaign): FSTART 1k -> 1 (FSTOP already 1G, PPD unchanged)
+# so the paper's noise column is one uniform condition across the corpus: TOTAL integrated
+# input-referred noise, 1 Hz - 1 MHz, unity/closed-loop bias config, CL = 10p. ngspice
+# inoise_total is already volts rms integrated over the swept band; the datasheet binds it
+# as vn_in_integrated (unit V) — the old vn_in entry declared it V/sqrt(Hz), which was
+# dimensionally wrong and is replaced (same swap as amp_022). MEASURED here (ihp-sg13g2 tt):
+# 1k-1G read inoise_total 6.8464e-3 V, 1-1G reads 6.8497e-3 V — the input-referred integral
+# barely moves because the wideband tail dominates it (onoise_total DOES grow 0.1024 ->
+# 0.8037 V from the added sub-1k 1/f band, but the high loop gain there divides it away).
+# NOTE (honest): the noise bench linearizes at the biaswrap DC op point; at this landed
+# sizing the closed-loop buffer actually carries a sustained ~18.5 MHz limit cycle (see
+# thd.yaml), which an AC-noise analysis cannot see — treat the figure as the small-signal
+# model's noise, not a bench-measurable one.
 schema: spicexplorer/analysis@1
 id: noise
 template: noise_biaswrap
-description: "Input-referred noise via the AnalogGym self-bias bias-wrap (Lfb/Cin)."
+description: "Input-referred noise via the AnalogGym self-bias bias-wrap (Lfb/Cin); total integrated 1 Hz - 1 MHz."
 enabled: true
-params: {VDD: 1.8, VCM: 300m, CL: 500p, FSTART: 1k, FSTOP: 1G, PPD: 50}
+params: {VDD: 1.8, VCM: 300m, CL: 10p, FSTART: 1, FSTOP: 1MEG, PPD: 50}
 flags: []
-produces: [vn_in]
+produces: [vn_in_integrated]

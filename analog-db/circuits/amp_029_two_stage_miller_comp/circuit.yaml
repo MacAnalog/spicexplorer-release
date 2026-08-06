@@ -4,18 +4,30 @@ class: amplifier
 tier: ota
 subfamily: ota
 realization: transistor
+# RETIRED from the published benchmark (generic textbook two-stage Miller, out of scope), but KEPT
+# fully verifiable because amp_030_miller_cmfb_composite composes it as its core block (this is the
+# pre-CMFB core that amp_030's servo repairs). `published: false` is the de-publish marker: it drops
+# the cell from the scoreboard index / paper tabulation while its four open-PDK bindings, abstract
+# netlist, params and sizing stay lowered, drift-guarded and resolvable for that composition.
+# It is NOT `kind: reference` — that kind means "imported FOREIGN deck" (PDK-free, carries
+# `references:`) and would skip T1-T4 on a cell that really does have open-PDK bindings.
+kind: verifiable
+published: false
 display_name: "Two-stage Miller OTA, fully differential (no CM control)"
 stages: 2
 compensation: miller
+cm_control: partial
+signal_path: fully_differential
 ports: [vinp, vinn, voutp, voutn, vdd, vss]
 provenance:
   source: drawings/OTA-Two-Stage (hand-drawn xschem, two-stage-miller-comp.sch)
+  license: PolyForm-Noncommercial-1.0.0   # MacAnalog's own work (repo license)
   aliases: [two-stage-miller-comp]
-  designer: "Stefan Schippers (xschem examples); landed by Noorizadeh"
+  designer: "Noorizadeh (MacAnalog group), hand-drawn in xschem"
   notes: >-
-    The plain-Miller sibling of amp_020 (which adds the resistive common-mode
-    servo this drawing omits — 'no CM control' is the topology's defining
-    difference, not a defect). Common-source second stage = high output
+    A plain-Miller FD OTA with no common-mode control ('no CM control' is the
+    topology's defining feature, not a defect); the resistive CM servo it omits
+    is added by amp_030, which composes this core. Common-source second stage = high output
     impedance = an OTA (subfamily: ota, drawings/README.md). Deviations from
     the drawing: the first-stage load-gate net X is FLOATING as drawn — landed
     as the internal knob source {vbl}; the 1 mA bias literal became the
@@ -31,14 +43,14 @@ provenance:
     77.4 deg / 97 MHz / 3.1 us, all pass); cm_interior_pts stays 0 by design —
     no gain-spec-compatible sizing widens the window to the bench's 20-30 mV
     sample spacing, i.e. the robustness fail is the topology, not the sizing.
-    amp_020 (same drawing family) adds the resistive CM servo that makes this
-    amplifier usable. Kept as the pedagogical/topological sibling and a future
-    CMFB-composition target (amp_030 composes the fix).
+    amp_030 composes this core with the resistive CM servo (CMFB) that makes the
+    amplifier usable. Kept (de-published, `published: false`) as the pre-CMFB core
+    that amp_030's composition repairs.
 artifacts:
   schematic: pdk/ihp-sg13g2/schematic/two-stage-miller-comp.sch
   abstract_netlist: abstract/netlist.spice
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
-pdks: [ihp-sg13g2, FOUNDRY-n65]
-analyses: [ac_open_loop, dc_op, dc_cm_bias_sweep, noise, tran_step]
+pdks: [ihp-sg13g2, FOUNDRY-n65, sky130, gf180mcu]
+analyses: [ac_open_loop, dc_op, dc_cm_bias_sweep, noise, tran_step, thd, iip3, stb, cmrr_vcm, psrr_vdd]
 status: draft

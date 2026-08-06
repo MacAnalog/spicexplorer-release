@@ -7,7 +7,7 @@ params:
   VDD: 1.5
   VCM: 0.8
   IBIAS: 20u
-  CL: 50f
+  CL: 10p
   VSTEP: 0.2
   VTOL: 2m          # settle band: |vout - vinp| < 2 mV (1% of the step)
   TSTART: 1u

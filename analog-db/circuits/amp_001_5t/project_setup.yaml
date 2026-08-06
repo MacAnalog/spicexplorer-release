@@ -103,17 +103,6 @@ project:
       weight: 100.0
       error_type: relative-sigmoid
       enable: true
-    - name: v(inoise_total)
-      description: Input-referred noise
-      testbench: tb_noise
-      sim_type: noise
-      goal: minimize
-      target: 0.0012
-      range: 0.001
-      tolerance: 1.0e-06
-      weight: 100.0
-      error_type: relative-sigmoid
-      enable: true
     - name: tsettle
       description: Settling time
       testbench: tb_tran

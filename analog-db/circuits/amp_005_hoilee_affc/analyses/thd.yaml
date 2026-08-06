@@ -1,0 +1,24 @@
+# Analysis binding for the SELF-BIASED 3-stage AFFC OTA (no ibias port — the internal
+# CURRENT_0_BIAS source biases the core) — uses the class's ibias-free template variant so no
+# external current source is left driving a dangling node. THD in the unity buffer: tran + the
+# template's in-deck coherent DFT (ngspice); the Spectre lane composes a native pss at F0.
+# F0 GRID: fresh ac_open_loop @ ihp-sg13g2 tt (2026-08-01, landed sizing) reads ugf = 3.50 MHz
+# (3-30 MHz band -> the campaign's F0 grid divided by 10): F0 = 100 kHz sits ~35x under the
+# crossover, the same in-band placement the amp_022 consumer uses at its bandwidth.
+# COHERENT WINDOW (the template requires (TSTOP-TSTART) to be whole F0 periods, EVEN count):
+# F0 = 100 kHz -> T = 10 us; TSTART = 40u = 4 whole periods, discarding ~73x the fresh
+# tran_step t_settle (548 ns to 2 mV, same run); TSTOP = 200u leaves 16 whole measured
+# periods. TSTEP = 20n = T/500 <= 1/(500*F0).
+# DRIVE: ASIG = 0.1 (class default) — vout swings 0.2..0.4 V about VCM = 0.3, clear of both
+# rails at VDD = 1.8.
+# REPORTING: produces names the DATASHEET METRIC ID (thd_pct); the other measures (thd_db,
+# a1..a5, a1_in, gain_tone, vout_op) still ride the recorded
+# corners.<corner>.analyses.thd.measures block. gain_tone <= 0.5 means the template's
+# dead-output guard fired and thd_pct is the 999 sentinel, not a measurement.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_selfbias
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 300m, CL: 10p, ASIG: 0.1, F0: 0.1e6, TSTEP: 20n, TSTART: 40u, TSTOP: 200u, HARMS: 7}
+flags: []
+produces: [thd_pct]

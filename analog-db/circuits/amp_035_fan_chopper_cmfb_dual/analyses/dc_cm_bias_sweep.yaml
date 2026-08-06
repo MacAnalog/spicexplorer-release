@@ -1,0 +1,34 @@
+# Analysis binding: the P4-4b CM-CLOSURE ACCEPTANCE check. The swept knob is the
+# composite-owned CMFB reference {vcm_ref} — a healthy closure makes the output CM TRACK
+# the command, so all 5 samples must land inside VCM +/- VBAND (cm_interior_pts = 5).
+# The core alone (amp_026) has no CM loop at all: its output CM is a device-ratio knife
+# edge set by {vb4}, unresponsive to any command.
+#
+# VCM = 0.6 IS THE INPUT COMMON MODE, NOT THE COMMANDED OUTPUT CM. The template uses the
+# one binding for both the input sources and the interior band centre, and this DUT is the
+# rare case where they differ: the core's stage-1 CM is still open-loop (only the OUTPUT CM
+# is regulated here), and its hand-tuned vb1 = 0.398 balances the fold nodes ONLY near a
+# 0.6 V input CM. Dropping the INPUT CM to 0.5 rails stage 1 high and the output to ~0.026 V
+# — verified on the BARE core too (amp_026 dc_op at VCM 0.5 reads vocm = 0.004 V), so it is
+# an inherited core property, not a CMFB failure. Hence VCM stays 0.6 and VBAND 0.15 is wide
+# enough to hold the 0.46-0.54 V commanded band ([0.45, 0.75]).
+#
+# SWEEP RANGE: +/-40 mV around 0.5 V, NOT the wider band amp_030 uses. cmfb_002 is sized
+# (2026-07-20 campaign) for a 0.5 V sensed CM and its PMOS input pair runs out of tail
+# headroom by 0.6 V — see the OPERATING POINT note in composition.yaml.
+schema: spicexplorer/analysis@1
+id: dc_cm_bias_sweep
+template: dc_cm_bias_sweep
+description: "Output-CM vs the commanded CMFB reference vcm_ref: 5-point alterparam sweep; cm_interior_pts=5 proves the real 5T CMFB closes amp_026's no-CMFB knife edge."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  VBAND: 0.15
+  CMKNOB: vcm_ref
+  VB1: 0.46
+  VB2: 0.48
+  VB3: 0.50
+  VB4: 0.52
+  VB5: 0.54
+flags: []
+produces: [vocm_1, vocm_2, vocm_3, vocm_4, vocm_5, cm_interior_pts]

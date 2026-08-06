@@ -1,0 +1,54 @@
+schema: spicexplorer/circuit@1
+id: amp_035_fan_chopper_cmfb_dual
+class: amplifier
+tier: ota
+subfamily: ota
+realization: transistor
+display_name: 'Fan CCIA chopper OTA + DUAL 5T CMFB (COMPOSITE: amp_026 + 2x cmfb_002_5t_pmos_input)'
+stages: 2
+compensation: miller
+cm_control: regulated
+signal_path: fully_differential
+ports:
+- vinp
+- vinn
+- voutp
+- voutn
+- vdd
+- vss
+provenance:
+  source: composition.yaml (composer P4) — dual-loop CM closure of amp_026_fan_chopper_ota
+  paper: Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, "A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled
+    Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes", IEEE JSSC 46(7):1534-1543,
+    Jul. 2011 (the CORE only; the CMFB closure is owner work)
+  designer: 'Composition by Noorizadeh (MacAnalog group); blocks: amp_026 (Fan core, hand-drawn xschem)
+    + 2x cmfb_002_5t_pmos_input (owner 5T CMFB, 2026-07-20 campaign winner)'
+  notes: 'Plan P4-4b SECOND HALF. amp_034_fan_chopper_cmfb closes the OUTPUT common mode and gains +43.4
+    dB of CM rejection, but leaves stage 1 open — and that residue is measurable: the core''s hand-tuned
+    vb1 = 0.398 balances the fold nodes only near a 0.6 V INPUT common mode, so a 0.5 V input CM rails
+    stage 1 and drags the output to ~0.026 V (the BARE core does the same, vocm = 0.004 V). This entry
+    replaces that hand-set knob with a second loop. The stage-1 actuator only became usable once amp_034
+    existed: in the bare core {vb4} gates the tail AND the fold sources AND the output sources, making
+    it a NON-inverting plant (+1.19 V); with XM8/XM9 lifted onto vb4o it is a clean stage-1-only actuator
+    and measures INVERTING (-1.093 V), so the canonical cmfb_00x drives it. Both loops therefore use
+    the canonical block. Loop 2 is forced to the PMOS-input flavor: it senses a 0.327 V common mode,
+    where an NMOS pair would need a negative tail voltage. Its sense resistors are overridden to 50
+    MOhm so the averager does not load the cascoded stage-1 nodes. See doc/review_amp035_dual_cm_closure_2026-08-05.md.'
+artifacts:
+  composition: composition.yaml
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks:
+- ihp-sg13g2
+analyses:
+- ac_open_loop
+- dc_op
+- dc_cm_bias_sweep
+- tran_cm_kick
+- cmrr_vcm
+- psrr_vdd
+- stb
+- tran_step
+- noise
+status: draft

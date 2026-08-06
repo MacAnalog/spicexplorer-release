@@ -37,6 +37,22 @@ expressions:
     notes: >-
       rejection figure of the unity-buffer disturbance benches (CMRR/PSRR): the output
       residual IS the reciprocal rejection, so the figure is MINUS the residual gain.
+  neg_cm_gain_db_at:
+    result: ac
+    expr: '-value(dB20(mag((v("{OUTP}") + v("{OUTN}"))/2)) {FREQ})'
+    notes: >-
+      CM-PATH rejection figure of the fully-differential disturbance benches
+      (cmrr_vcm_diff / psrr_vdd_diff): the OUTPUT-COMMON-MODE response
+      vocm = (voutp+voutn)/2 to the bench's 1 V CM/supply ride, as -dB20|vocm|.
+      Twin of `neg_gain_db_at`, which reads the DIFFERENTIAL residual instead. On a
+      perfectly symmetric FD netlist the differential residual cancels to matrix
+      round-off, so cmrr_db/psrr_vdd_db saturate near the ngspice templates' 300 dB
+      floor-cap ("beyond solver resolution", NOT a physical rejection) — this CM figure
+      is the always-physical, CMFB-quality-dependent discriminator, and is the exact
+      Spectre twin of the `_diff` templates' `-db(mag(vocm))` ngspice measures.
+      NO magnitude floor here (the ngspice `+1e-15` exists to keep -db() finite on a
+      bit-symmetric cancellation; the CM path does not cancel) — an unfloored figure
+      keeps the >150 dB implausibility check meaningful instead of capping into it.
   bw_3db:
     result: ac
     expr: 'bandwidth(v("{OUT}") 3 "low")'
@@ -103,6 +119,25 @@ expressions:
       tran_cm_kick — recovery time from the release edge until |vocm - vocm(TEND)|
       stays below VTOL; cross(... -1 "falling") = the LAST falling crossing (the OCEAN
       analogue of the ngspice meas FALL=LAST). Live-validated against the waveform.
+  cm_vocm_at:
+    result: dc
+    expr: 'value((v("{OUTP}") + v("{OUTN}"))/2 {VB})'
+    notes: >-
+      dc_cm_bias_sweep — the output common mode at ONE sampled bias-knob value (the swept
+      `dc_param_points` abscissa IS the knob). The per-point twin of the ngspice template's
+      `print vocm_k`.
+  cm_interior_pts:
+    result: dc
+    expr: >-
+      let(((w (v("{OUTP}") + v("{OUTN}"))/2) (lo {VCM}-{VBAND}) (hi {VCM}+{VBAND}) (n 0))
+      foreach(x list({VB1} {VB2} {VB3} {VB4} {VB5})
+      when((value(w x) > lo) && (value(w x) < hi) n = n+1)) n)
+    notes: >-
+      dc_cm_bias_sweep — how many of the FIVE sampled bias points put the output CM inside
+      VCM ± VBAND. Mirrors the ngspice template's final `let cm_interior_pts = Σ (vocm_k gt
+      lo) & (vocm_k lt hi)` exactly, including the STRICT inequalities: 5 = the knob has a
+      usable interior window, 0 = the output rails at every sampled bias (no interior
+      operating point at this sizing).
   # -- operating point ---------------------------------------------------------
   node_v:
     result: dc
@@ -161,10 +196,48 @@ expressions:
     result: stb_margin
     expr: 'getData("phaseMargin")'
     notes: loop phase margin (deg) — Spectre's own stb margin computation.
-  gm_loop_db:
+  # NAME CONTRACT: these keys are matched against the datasheet `extract.meas` string, and
+  # every amplifier datasheet spells the loop measures the way the NGSPICE stb template
+  # emits them — `pm_loop` / `ugf_loop` / `gm_loop` / `loopgain_db`. This row was called
+  # `gm_loop_db` (the datasheet METRIC id, not its meas) and no datasheet ever asked for
+  # that name, so `gm_loop` fell through to the Tier-1 registry — which spells it
+  # `gain_margin_db` — and raised KeyError: 'gm_loop' -> NaN on all 32 tsmc-n65 amps while
+  # the bench still reported status ok. `ugf_loop` had no row at ALL (same KeyError). Keep
+  # these keyed by the MEAS name, never the metric id.
+  gm_loop:
     result: stb_margin
     expr: 'getData("gainMargin")'
-    notes: loop gain margin (dB) — matches the registry gain_margin_db to 4 digits live.
+    notes: >-
+      loop gain margin (dB) at the -180 deg phase crossing — matches the registry
+      gain_margin_db to 4 digits live. NaN when the loop phase never reaches -180 inside
+      the swept band, which is a REAL property of a dominant-pole-compensated loop, NOT a
+      plumbing failure: once bound, the tsmc-n65 tt corpus reads finite on 17 of the 24
+      measurable cells (1.15 .. 62.12 dB) and NaN on 7 (amp_001/002/004/008/017/018/021).
+      Those 7 are honest NaNs — do not backfill them with a sentinel.
+  ugf_loop:
+    result: stb_margin
+    expr: 'getData("phaseMarginFreq")'
+    notes: >-
+      loop unity-gain crossover (Hz) — the frequency Spectre's own stb margin evaluates
+      the phase margin AT, i.e. where |T| crosses 0 dB. Cross-checked live against an
+      independent crossing search on the loopGain wave
+      (`cross(dB20(getData("loopGain")) 0 1 "either")`): 3.75822e6 vs 3.75830e6 (amp_003),
+      2.83639e6 vs 2.83651e6 (amp_018), 2.25968e6 vs 2.25986e6 (amp_002) — agreement to
+      ~1e-4 relative.
+      CROSSING CONVENTION — this is the FIRST 0 dB crossing (the one Spectre's own
+      phaseMargin is evaluated at), whereas the ngspice stb template deliberately takes the
+      LAST (highest-frequency) one. They coincide on 23 of the 24 tsmc-n65 cells this bench
+      can measure (single crossing; independently re-derived PM at that crossing matches
+      pm_loop to <0.005 deg on all 23). The exception is amp_002_alfio_raffc AT ITS
+      tsmc-n65 SIZING, which is CONDITIONALLY STABLE: |T| falls through 0 dB at 2.2597 MHz,
+      rises back to +10.29 dB, and finally crosses at 5.7358 MHz where the margin is
+      -91.49 deg. So its recorded pm_loop/ugf_loop (65.51 deg @ 2.26 MHz) describe the
+      FIRST crossing and do NOT flag that hazard — the ngspice convention would report the
+      -91.5 deg. Keep pm_loop and ugf_loop on the SAME convention (both native): a UGF
+      taken at a different crossing than the PM is a worse lie than either alone. The other
+      three PDK lanes cross once on this cell (pm_loop 68.5/84.4/75.1 ~= their AC pm), so
+      the peaking is a property of the tsmc-n65 sizing, not of the topology. Flagged for
+      review rather than silently re-conventioned.
   loopgain_db:
     result: stb
     expr: 'value(dB20(getData("loopGain")) {FREQ})'

@@ -19,7 +19,7 @@
 .lib sky130.lib.spice tt
 .temp 27
 
-.param VDD=1.5
+.param VDD=1.8
 .param VCM=0.5
 .param CL=10p
 
@@ -47,7 +47,7 @@ XDUT vss vdd vinn vinp vout amp_024_smcnr
 .param x_dut_xm1_w=1.5
 .param x_dut_xm1_l=10
 .param x_dut_xm4_w=1.5
-.param x_rz=1e5
+.param x_rz=2e5
 .param x_c0=2e-12
 .param x_ibias_val=1e-7
 .param x_dut_xm7_m=1

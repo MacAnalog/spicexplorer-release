@@ -7,6 +7,7 @@ realization: transistor
 display_name: Fan capacitively-coupled chopper CCIA (simple, no input-impedance boost)
 stages: 2
 compensation: miller
+signal_path: fully_differential
 ports:
 - vinp
 - vinn
@@ -56,5 +57,5 @@ pdks:
 - ihp-sg13g2
 - tsmc-n65
 analyses: [dc_op, tran_chopper_ripple, tran_zin_chopped,
-           pac_gain, pac_zin, pnoise_chopped]
+           pac_gain, pac_zin, pnoise_chopped, psrr_vdd_chop]
 status: draft

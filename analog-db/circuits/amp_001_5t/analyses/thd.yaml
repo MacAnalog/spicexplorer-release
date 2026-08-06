@@ -1,9 +1,30 @@
-# Analysis binding: large-signal THD in the unity buffer (class template). 100 mV @ 1 MHz.
-# ngspice runs the tran; the Spectre lane composes a native pss at F0 (HARMS).
+# Analysis binding: large-signal THD in the unity buffer (class template). 100 mV @ 10 kHz.
+# ngspice runs the tran + the template's in-deck coherent DFT; the Spectre lane composes a
+# native pss at F0 (HARMS).
+# F0 GRID (campaign rule, 2026-08-01): F0 follows the FRESH ac_open_loop ugf — ugf < 3 MHz
+# -> the 1 MHz base grid divides by 100. MEASURED ugf on this cell at CL=10p: 1.214 MHz
+# (ihp-sg13g2 tt, 2026-08-01), i.e. the previous F0 = 1 MHz sat AT loop crossover
+# (gain_tone 0.781, no loop suppression at the tone); F0 = 10 kHz puts the tone back inside
+# the loop band. Measured effect @ihp tt: thd_pct 0.2797 -> 0.1089 %, gain_tone 0.9747.
+# COHERENT WINDOW (the template requires both to be whole F0 periods, see its header):
+# F0 = 10 kHz -> T = 100 us; TSTART = 400u discards 4 periods of startup (>= 20x the fresh
+# t_settle = 599 ns, rounded up to whole periods, 2-4 min), TSTOP = 2m leaves 16 whole
+# measured periods (even count). TSTEP = 200n = T/500 <= 1/(500*F0).
+# DRIVE-SCALING CHECK (2026-08-01, ihp tt): halving ASIG 0.1 -> 0.05 scales HD2 x2.17 and
+# HD3 x5.54; halving again 0.05 -> 0.025 gives x2.03 / x4.27 — the slope converges to the
+# clean quadratic/cubic, so the x5.54 first step is a real (modest) 5th-order contribution
+# at the 100 mV drive, NOT a DFT-floor artifact (a floor would flatten the ratios, not
+# steepen them). ASIG stays 0.1 — the class default; this 1.5 V cell has ample headroom
+# (vout_op ~0.80, 0.1 V excursion clears both rails).
+# REPORTING: `produces:` names DATASHEET METRIC IDS (analysis.schema.json), not measure
+# names — the scoreboard/conformance wiring itself is datasheet.yaml
+# `metrics.thd_pct.{analysis: thd, extract.meas: thd_pct}` -> ppa.metric_values().
+# The template also prints thd_db / a1 / a2 / a3 / vout_op; those ride the recorded
+# `corners.<corner>.analyses.thd.measures` block, but only thd_pct is a canonical metric.
 schema: spicexplorer/analysis@1
 id: thd
 template: thd
-description: "THD — unity-buffer large-signal sine; tran+FFT (ngspice) / native PSS (Spectre)."
-params: {VDD: 1.5, VCM: 0.8, IBIAS: 20u, CL: 50f, ASIG: 0.1, F0: 1.0e6, TSTEP: 2n, TSTOP: 20u, HARMS: 7}
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.5, VCM: 0.8, IBIAS: 20u, CL: 10p, ASIG: 0.1, F0: 10k, TSTEP: 200n, TSTART: 400u, TSTOP: 2m, HARMS: 7}
 flags: []
-produces: []
+produces: [thd_pct]

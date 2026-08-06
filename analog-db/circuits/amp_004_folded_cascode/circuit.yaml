@@ -5,6 +5,9 @@ class: amplifier
 display_name: "Folded-cascode OTA (CORA benchmark design)"
 compensation: none
 stages: 1
+realization: transistor
+cm_control: not_applicable
+signal_path: single_ended
 ports: [vinn, vinp, vout, vdd, ibias, vss]      # = the CORA opamp port order (vin- vin+ vout vdd ib vss)
 provenance:
   source: CORA
@@ -17,7 +20,7 @@ artifacts:
   datasheet: datasheet.yaml
   schematic: abstract/schematic.svg
 pdks: [ihp-sg13g2, sky130, gf180mcu, tsmc-n65]
-analyses: [ac_open_loop, dc_op, noise, tran_step, psrr_vdd, cmrr_vcm]
+analyses: [ac_open_loop, dc_op, noise, tran_step, psrr_vdd, cmrr_vcm, thd, iip3, stb]
 optimize:
   budget: 5
   knobs_from: pdk/{pdk}/sizing.yaml

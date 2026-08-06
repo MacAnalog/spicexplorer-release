@@ -1,0 +1,186 @@
+{
+  "area": {
+    "active_gate_area_um2": 1272.799,
+    "c_count": 2,
+    "c_total_f": 6.2918800000000004e-12,
+    "mos_count": 34,
+    "r_count": 1,
+    "r_total_ohm": 1464660.0
+  },
+  "circuit": "amp_011_peng_iac",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 109.5903,
+            "pm": 82.29374,
+            "ugf": 1761191.0
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 133.574
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 2.060994e-05,
+            "vos": -0.00022442
+          },
+          "status": "ok"
+        },
+        "iip3": {
+          "error": "amp_011_peng_iac/iip3@ihp-sg13g2/tt: no measures parsed:\nvalid\nWarning from checkvalid: vector a_im3l is not available or has zero length.\nError: RHS \"0.5*(a_im3l+a_im3h + abs(a_im3l-a_im3h))\" invalid\nWarning from checkvalid: vector a_im5l is not available or has zero length.\nError: RHS \"0.5*(a_im5l+a_im5h + abs(a_im5l-a_im5h))\" invalid\nWarning from checkvalid: vector a_dr1 is not available or has zero length.\nError: RHS \"0.5*(a_dr1+a_dr2 - abs(a_dr1-a_dr2))\" invalid\nWarning from checkvalid: vec",
+          "status": "sim_error"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 8.915808e-05,
+            "onoise_total": 4.35874
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 64.47837
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "measures": {
+            "gm_loop": -999.0,
+            "loopgain_db": 109.5903,
+            "phref_dev": -0.00099926,
+            "phref_ok": 1.0,
+            "pm_loop": 82.28605,
+            "pm_loop_first": 82.28605,
+            "ugf_loop": 1760880.0
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "error": "amp_011_peng_iac/thd@ihp-sg13g2/tt: no measures parsed:\n: vector re2 is not available or has zero length.\nError: RHS \"2*sqrt(re2^2+im2^2)\" invalid\nWarning from checkvalid: vector vac is not available or has zero length.\nError: RHS \"(mean(vac*c3)*np - vac[0]*c3[0])/nd\" invalid\nWarning from checkvalid: vector vac is not available or has zero length.\nError: RHS \"(mean(vac*s3)*np - vac[0]*s3[0])/nd\" invalid\nWarning from checkvalid: vector re3 is not available or has zero length.\nError: RHS \"2*sqrt(r",
+          "status": "sim_error"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 0.0001989912,
+            "tcross": 0.0001999912,
+            "vfinal": 0.5251188
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-08-04T04:29:19+00:00"
+      }
+    }
+  },
+  "design_id": "f4ade491c1",
+  "metrics": {
+    "tt": {
+      "cmrr_db": {
+        "spec": "pass",
+        "value": 133.574
+      },
+      "dc_gain_db": {
+        "spec": "pass",
+        "value": 109.5903
+      },
+      "gm_loop_db": {
+        "spec": "none",
+        "value": -999.0
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 2.060994e-05
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 109.5903
+      },
+      "pm_deg": {
+        "spec": "pass",
+        "value": 82.29374
+      },
+      "pm_loop_deg": {
+        "spec": "pass",
+        "value": 82.28605
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 64.47837
+      },
+      "t_settle": {
+        "spec": "fail",
+        "value": 0.0001989912
+      },
+      "ugf_hz": {
+        "spec": "fail",
+        "value": 1761191.0
+      },
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 1760880.0
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 8.915808e-05
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "CAPACITOR_0": 1.95593e-12,
+      "CAPACITOR_1": 4.33595e-12,
+      "CURRENT_0_BIAS": 7.11568e-07,
+      "RESISTOR_0": 1464660.0,
+      "x_dut_xm10_l": 2.35871e-06,
+      "x_dut_xm10_m": 24,
+      "x_dut_xm10_w": 4.87694e-06,
+      "x_dut_xm11_l": 9.76431e-07,
+      "x_dut_xm11_m": 9,
+      "x_dut_xm11_w": 4.46085e-06,
+      "x_dut_xm14_m": 2,
+      "x_dut_xm19_l": 2.10349e-06,
+      "x_dut_xm19_w": 4.71809e-07,
+      "x_dut_xm23_l": 5.10637e-07,
+      "x_dut_xm23_m": 3,
+      "x_dut_xm23_w": 9.59292e-06,
+      "x_dut_xm65_m": 4,
+      "x_dut_xm66_l": 8.12091e-07,
+      "x_dut_xm66_m": 16,
+      "x_dut_xm66_w": 9.69077e-07,
+      "x_dut_xm68_l": 2.89636e-06,
+      "x_dut_xm68_m": 3,
+      "x_dut_xm68_w": 8.7129e-06,
+      "x_dut_xm70_l": 8.05216e-06,
+      "x_dut_xm70_m": 3,
+      "x_dut_xm70_w": 1.68369e-06,
+      "x_dut_xm7_l": 8.39134e-07,
+      "x_dut_xm7_w": 2.21936e-06,
+      "x_dut_xm9_l": 1.89058e-06,
+      "x_dut_xm9_m": 3,
+      "x_dut_xm9_w": 9.90145e-06
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 1272.799,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 109.5903,
+      "pm_deg": 82.29374,
+      "ugf_hz": 1761191.0
+    },
+    "power_w": 3.7097892e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

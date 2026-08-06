@@ -56,7 +56,12 @@ benches:
     analyses:
       - {template: pss, args: {FUND: $F0}}
     calculator:
-      - {name: thd_pct, expr: thd_pct, args: {OUT: vout, NHARM: $HARMS}}
+      # Summation width pinned to 5 to match this class's own ngspice templates
+      # (thd/thd_diff both compute sqrt(a2^2+a3^2+a4^2+a5^2)/a1), so a THD number means
+      # the same thing on either lane. $HARMS stays the PSS harmonic budget. Latent
+      # today — no tsmc-n65 ia row carries a THD figure — but it would bite the moment
+      # one did, exactly as it did in the amplifier class.
+      - {name: thd_pct, expr: thd_pct, args: {OUT: vout, NHARM: 5}}
       - {name: hd2_db, expr: hd2_db, args: {OUT: vout}}
       - {name: hd3_db, expr: hd3_db, args: {OUT: vout}}
   tran_chopper_ripple:
@@ -90,4 +95,12 @@ benches:
     analyses:
       - {template: pss, args: {FUND: $FCHOP, HARMS: $HARMS, TSTAB: $TSTAB}}
       - {template: pnoise, args: {OUT: voutp, REF: voutn}}
+    calculator: []
+  psrr_vdd_chop:
+    # clocked positive-supply rejection: PSS pins the running-clock orbit, PAC computes the
+    # baseband supply feed-through. Read via the registry {meas: rejection_db, analysis: pac,
+    # out: vocm} (CM path — the differential residual cancels on a symmetric deck).
+    analyses:
+      - {template: pss, args: {FUND: $FCHOP, HARMS: $HARMS, TSTAB: $TSTAB}}
+      - {template: pac}
     calculator: []

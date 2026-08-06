@@ -6,6 +6,7 @@ subfamily: ccia
 realization: mixed
 display_name: "Fan CCIA + composed ripple-reduction loop (COMPOSITE: ia_002 + sup_003)"
 stages: 2
+signal_path: fully_differential
 ports: [vinp, vinn, voutp, voutn, vref, clk_chin, clk_chin_not, clk_chfb, clk_chfb_not, clk_chout, clk_chout_not, clk_phi_1, clk_phi_2, vdd, vss]
 provenance:
   source: composition.yaml (composer P4 — the CCIA-02 system composite)

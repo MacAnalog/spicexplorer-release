@@ -1,0 +1,159 @@
+{
+  "area": {
+    "active_gate_area_um2": 56.0,
+    "c_count": 2,
+    "c_total_f": 2e-12,
+    "mos_count": 10,
+    "r_count": 2,
+    "r_total_ohm": 4000.0
+  },
+  "circuit": "amp_029_two_stage_miller_comp",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": -151.42234677
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 454.04329701
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "error": "bench produced no finite measures (run or measure step failed)",
+          "status": "sim_error"
+        },
+        "iip3": {
+          "measures": {
+            "iip3_dbv": 4.8858900096,
+            "im3_dbc": -97.936579325
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 76.730779929
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 390.7675655
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "measures": {
+            "loopgain_db": -157.44294691
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "measures": {
+            "hd2_db": -28.865188759,
+            "hd3_db": -61.701411178,
+            "thd_pct": 3.6045709646
+          },
+          "status": "ok"
+        },
+        "tran_cm_kick": {
+          "error": "AnalogDbUnavailable: closed-lane run did not complete",
+          "status": "sim_error"
+        },
+        "tran_step": {
+          "error": "bench produced no finite measures (run or measure step failed)",
+          "status": "sim_error"
+        }
+      },
+      "provenance": {
+        "engine": "spectre (virtuoso-bridge, operator corner wrapper)",
+        "generator": "analog-db spectre-lane live record",
+        "run_at": "2026-08-03T04:17:41+00:00"
+      }
+    }
+  },
+  "design_id": "fc6d01de41",
+  "metrics": {
+    "tt": {
+      "cmrr_db": {
+        "spec": "none",
+        "value": 454.04329701
+      },
+      "dc_gain_db": {
+        "spec": "fail",
+        "value": -151.42234677
+      },
+      "iip3_dbv": {
+        "spec": "pass",
+        "value": 4.8858900096
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": -157.44294691
+      },
+      "pm_deg": {
+        "spec": "fail",
+        "value": null
+      },
+      "pm_loop_deg": {
+        "spec": "fail",
+        "value": null
+      },
+      "psrr_vdd_db": {
+        "spec": "none",
+        "value": 390.7675655
+      },
+      "thd_pct": {
+        "spec": "fail",
+        "value": 3.6045709646
+      },
+      "ugf_hz": {
+        "spec": "fail",
+        "value": null
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 76.730779929
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "i_bias": "20u",
+      "vbl": 0.71,
+      "x_dut_c1_value": "1p",
+      "x_dut_r1_value": "2k",
+      "x_dut_xm1_l": "0.5u",
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": "10u",
+      "x_dut_xm3_l": "1u",
+      "x_dut_xm3_m": 1,
+      "x_dut_xm3_w": "10u",
+      "x_dut_xm5_l": "0.5u",
+      "x_dut_xm5_m": 1,
+      "x_dut_xm5_w": "12u",
+      "x_dut_xm6_l": "1u",
+      "x_dut_xm6_m": 1,
+      "x_dut_xm6_w": "2u",
+      "x_dut_xm7_m": 1,
+      "x_dut_xm7_w": "6u",
+      "x_dut_xm8_m": 8.09173e-05,
+      "x_dut_xm8_w": "2u"
+    }
+  },
+  "pdk": "tsmc-n65",
+  "ppa": {
+    "active_gate_area_um2": 56.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": -151.42234677
+    }
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

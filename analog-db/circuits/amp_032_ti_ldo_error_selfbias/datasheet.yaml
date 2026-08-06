@@ -83,12 +83,15 @@ metrics:
     analysis: ac_closed_loop
     extract: {meas: bw_cl}
     spec: {min: 5e6, unit: Hz}
-  vn_in:
-    display: "Integrated input-referred noise"
+  vn_in_integrated:
+    display: "Total integrated input-referred noise (1 Hz - 1 MHz, buffer)"
+    description: "ngspice inoise_total is volts rms already integrated over the swept band
+      (standardized 1 Hz - 1 MHz, closed-loop bias config, CL=10p) — the paper's uniform noise
+      column. Replaces the old vn_in entry (same measure over the narrower 10 Hz - 100 MHz band,
+      spec max 500 uV); the spec is dropped with the band change — report-only, like amp_022."
     unit: V
     analysis: noise
     extract: {meas: inoise_total}
-    spec: {max: 500e-6, unit: V}
   t_settle:
     display: "Unity-gain step settling time"
     unit: s
@@ -101,3 +104,55 @@ metrics:
     analysis: linearity
     extract: {meas: icmr_range}
     spec: {min: 1.0, unit: V}
+  thd_pct:
+    display: "Total harmonic distortion (100 mV @ 100 kHz, buffer)"
+    description: "tran + in-deck coherent DFT on ngspice; native PSS harmonics on Spectre.
+      F0 = 100 kHz per the campaign ugf-keyed grid (ugf = 18.65 MHz -> 3-30 MHz band)."
+    unit: '%'
+    analysis: thd
+    extract:
+      meas: thd_pct
+      f0: 0.1e6
+    spec: {max: 2.0, unit: '%'}
+  iip3_dbv:
+    display: "Input IP3 (two-tone 90/100 kHz, 6.25 mV/tone, buffer)"
+    description: "Single-point IM3 extrapolation; tran + coherent DFT on ngspice, native PSS
+      on Spectre. Tones per the campaign ugf-keyed grid (ugf = 18.65 MHz -> 3-30 MHz band).
+      ampl_in MUST track the analysis binding's ASIG (it is the intercept's input reference)."
+    unit: dBV
+    analysis: iip3
+    extract:
+      meas: iip3_dbv
+      f1: 0.09e6
+      f2: 0.1e6
+      ampl_in: 0.00625
+    spec: {min: -10, unit: dBV}
+  pm_loop_deg:
+    display: "Loop phase margin (stb, unity buffer)"
+    description: "Phase margin of the Middlebrook-probed buffer loop (VIPRB marker);
+      crosschecks ac_open_loop's pm_deg — fresh gf180mcu tt reads 82.70 vs 82.32 deg.
+      Spec min mirrors pm_deg's 60. -999 sentinel = no crossover (fails the min spec by design)."
+    unit: deg
+    analysis: stb
+    extract: {meas: pm_loop}
+    spec: {min: 60, unit: deg}
+  loopgain_db:
+    display: "DC loop gain (stb, unity buffer)"
+    description: "Loop-gain magnitude read at FSTART; matches ac_open_loop's dcgain on this
+      cell to 0.0003 dB. Report-only."
+    unit: dB
+    analysis: stb
+    extract: {meas: loopgain_db}
+  ugf_loop_hz:
+    display: "Loop unity-gain frequency (stb)"
+    unit: Hz
+    analysis: stb
+    extract: {meas: ugf_loop}
+  gm_loop_db:
+    display: "Loop gain margin (stb)"
+    description: "Gain margin at the phase crossover; ngspice measure name is gm_loop (the
+      Spectre bench emits gm_loop_db — the split is absorbed here). -999 sentinel = no phase
+      crossover in-band (true here: loop phase never reaches -180 deg below 1 MHz). Report-only."
+    unit: dB
+    analysis: stb
+    extract: {meas: gm_loop}

@@ -1,0 +1,36 @@
+# Analysis binding for this SELF-BIASED AnalogGym DUT (no ibias port) — class thd_selfbias
+# template, same posture as amp_032's thd. THD in the unity buffer: tran + the template's
+# in-deck coherent DFT (ngspice); the Spectre lane composes a native pss at F0 (HARMS).
+# F0 GRID: fresh ac_open_loop @ ihp-sg13g2 tt (2026-08-01, landed sizing) reads
+# ugf = 1.908 MHz < 3 MHz -> the campaign 1 MHz grid divided by 100: F0 = 10 kHz.
+# COHERENT WINDOW (whole F0 periods): T = 100 us; TSTART = 400u = 4 whole periods,
+# TSTOP = 2m leaves 16 whole measured periods (even count). TSTEP = 50n = T/2000
+# <= 1/(500*F0) — tighter than the campaign's 1/(500*F0) = 200n: a 200 ns max step
+# spans ~4 periods of this cell's ~18.5 MHz limit cycle (period ~54 ns, see below) and
+# the tran ABORTS ("timestep too small ... trouble with node vout" at t ~ 308 us,
+# measured); 50 ns caps the step near the oscillation's own scale and the run completes.
+# ASIG = 0.1 about VCM = 0.3: excursion 0.2..0.4 V, far inside the 0/1.8 rails.
+# TSTART CAVEAT (honest): the 20x-t_settle rule CANNOT bind here — tran_step's t_settle
+# is TSTOP-pinned (~199 us of a 200 us window) because the unity-gain buffer at this
+# landed sizing NEVER settles: it carries a sustained ~18.5 MHz, ~120 mVpp limit cycle,
+# present with NO stimulus at the quiescent VCM = 0.3 op point (probed at 1 ns steps to
+# rule out an integration artifact; ~53 mVpp on gf180mcu too — an internal DACFC-loop
+# instability the Middlebrook main-loop stb does not see: stb/ac_open_loop both read
+# pm ~ 106 deg). The MEAN of the output settles in ~2 us, so 4 periods = 400 us >> 20x
+# the deterministic settling; no TSTART can discard a non-decaying ripple.
+# CONSEQUENCE: thd_pct here measures the tone's harmonic bins ON TOP of a real
+# oscillation — treat it as the honest "distortion of an oscillating buffer", not a
+# clean small-signal THD. See the datasheet entry + scoreboard notes; the drive-halving
+# trust check (HD2 ~x2 / HD3 ~x4) is NOT expected to hold on this cell.
+# REPORTING: `produces:` names DATASHEET METRIC IDS — datasheet.yaml binds thd_pct off
+# this analysis. The template also prints thd_db / a1..a5 / a1_in / gain_tone / vout_op
+# into `corners.<corner>.analyses.thd.measures`. gain_tone < 0.5 means the dead-output
+# guard fired and thd_pct is the 999 sentinel, not a measurement.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_selfbias
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+enabled: true
+params: {VDD: 1.8, VCM: 300m, CL: 10p, ASIG: 0.1, F0: 1.0e4, TSTEP: 50n, TSTART: 400u, TSTOP: 2m, HARMS: 7}
+flags: []
+produces: [thd_pct]

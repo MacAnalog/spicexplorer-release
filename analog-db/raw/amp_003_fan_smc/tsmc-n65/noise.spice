@@ -28,8 +28,8 @@
 .lib tsmc_n65_models.scs tt
 .temp 27
 
-.param VDD=1.8
-.param VCM=300m
+.param VDD=1.2
+.param VCM=0.4
 .param CL=10p
 
 Vdd  vdd 0 dc {VDD}
@@ -43,7 +43,7 @@ CLoad vout 0 {CL}
 XDUT vss vdd vinn vinp vout amp_003_fan_smc
 .control
   set filetype=ascii
-  noise v(vout) Vac dec 50 1k 1G
+  noise v(vout) Vac dec 50 1 1MEG
   print inoise_total onoise_total
   write
   quit

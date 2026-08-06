@@ -16,7 +16,7 @@
 .param VDD=1.8
 .param VCM=0.9
 .param IBIAS=-34u
-.param CL=5p
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD}
 Vss  vss 0 dc 0
@@ -30,7 +30,7 @@ XDUT vinn vinp vout vdd ibias vss amp_004_folded_cascode
 
 .control
   set filetype=ascii
-  noise v(vout) Vinp dec 101 1k 100MEG
+  noise v(vout) Vinp dec 101 1 1MEG
   print inoise_total onoise_total
   write
   quit

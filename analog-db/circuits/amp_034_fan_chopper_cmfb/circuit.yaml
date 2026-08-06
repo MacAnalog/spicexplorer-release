@@ -1,0 +1,39 @@
+schema: spicexplorer/circuit@1
+id: amp_034_fan_chopper_cmfb
+class: amplifier
+tier: ota
+subfamily: ota
+realization: transistor
+display_name: "Fan CCIA chopper OTA core + real 5T CMFB (COMPOSITE: amp_026 + cmfb_002_5t_pmos_input)"
+stages: 2
+compensation: miller
+cm_control: regulated
+signal_path: fully_differential
+ports: [vinp, vinn, voutp, voutn, vdd, vss]
+provenance:
+  source: composition.yaml (composer P4) — CM closure of amp_026_fan_chopper_ota
+  paper: "Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, \"A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes\", IEEE JSSC 46(7):1534-1543, Jul. 2011 (the CORE only; the CMFB closure is owner work)"
+  designer: "Composition by Noorizadeh (MacAnalog group); blocks: amp_026 (Fan core, hand-drawn xschem) + cmfb_002_5t_pmos_input (owner 5T CMFB, 2026-07-20 campaign winner)"
+  notes: >-
+    The CM-closure answer to doc/review_chopper_cm_rejection_2026-08-04.md. amp_026 has
+    NO CMFB, so its output common mode is a device-ratio knife edge and its CM rejection
+    is structurally poor (ihp-sg13g2 tt baseline: cmrr_cm_corr_db +10.4 dB,
+    psrr_cm_corr_db -2.4 dB). Chopping cannot fix it — the output chopper swaps
+    voutp<->voutn and vocm = (voutp+voutn)/2 is invariant under that swap. This entry
+    closes the CM loop with a REAL (transistor-level) CMFB rather than an ideal servo.
+    ACTUATOR (measured open-loop with the amplifier/dc_cmfb_plant_sign math, not assumed
+    — see composition.yaml): the class-A output PMOS current sources XM8/XM9 are LIFTED
+    OUT of the core's shared {vb4} bias tree and re-instantiated by the composite on
+    their own gate node vb4o. Driving the whole vb4 tree instead is a NON-inverting plant
+    (cm_plant_delta +1.19 V) needing the un-accessioned -inv servo; the split-out output
+    pair alone is INVERTING (-1.06 V) — exactly what the canonical cmfb_00x blocks drive.
+    Tail XM1 and fold sources XM6/XM7 keep the unregulated {vb4}, so the CM correction
+    never modulates the input-pair gm.
+artifacts:
+  composition: composition.yaml
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks: [ihp-sg13g2, tsmc-n65]
+analyses: [ac_open_loop, dc_op, dc_cm_bias_sweep, tran_cm_kick, cmrr_vcm, psrr_vdd, stb, tran_step, noise]
+status: draft

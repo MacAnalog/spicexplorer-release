@@ -1,0 +1,25 @@
+# Analysis binding for a SELF-BIASED AnalogGym DUT (no ibias port) — the class's ibias-free
+# thd variant. THD in the unity buffer: tran + in-deck coherent DFT (ngspice); the Spectre
+# lane composes a native pss at F0 (HARMS).
+# F0 GRID: fresh ac_open_loop @ ihp-sg13g2 tt (2026-08-01) reads ugf = 1.76 MHz < 3 MHz ->
+# campaign grid /100: F0 = 10 kHz (period 100 us). COHERENT WINDOW: TSTOP-TSTART = 1.6m =
+# 16 whole F0 periods (even); TSTEP = 200n = 1/(500*F0); TSTART = 400u = 4 whole periods.
+# TSTART NOTE: the 20x-t_settle rule is unappliable here — tran_step's t_settle is pegged at
+# TSTOP (199 us sentinel-ish) because the follower NEVER settles: the DUT self-oscillates at
+# ~2.06 MHz, 0.43 V pk-pk, sustained (see stb.yaml — the ring persists with VSTEP=0 and under
+# method=gear, so it is the circuit, not the integrator). The linear closed-loop settling
+# implied by ugf 1.76 MHz would be sub-us, so 400 us covers any legitimate startup by >100x.
+# ASIG = 0.1 (class default; swing 0.24 +/- 0.1 V sits well inside the 1.8 V rails).
+# STATUS @ ihp-sg13g2 tt (2026-08-01, landed sizing): the tran ABORTS at ~11 us ("timestep
+# too small, trouble with node vout") once the self-oscillation builds — the recorded
+# sim_error IS the honest result at this sizing. Tracking the 2 MHz ring needs TSTEP ~10n,
+# which at this window is a multi-GB raw (impractical), and a completed DFT would anyway bury
+# the ring off the a2..a5 harmonic bins and report a deceptively finite thd_pct. Binding
+# follows the campaign rules and is ready for a re-sized cell.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_selfbias
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 240m, CL: 10p, ASIG: 0.1, F0: 1.0e4, TSTEP: 200n, TSTART: 400u, TSTOP: 2m, HARMS: 7}
+flags: []
+produces: [thd_pct]

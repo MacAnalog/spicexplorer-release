@@ -1,0 +1,70 @@
+# HAND-SIZED for tsmc-n65 by gm/ID role decomposition (2026-08-05) — NOT a search, and
+# no longer the `analog-db add-binding` carry-over. The carry-over simply re-noted the
+# ihp-sg13g2 geometry onto 65 nm LVT devices; measured in-loop (amp_034, dc_op, Spectre)
+# that gave a servo drawing 54 uA with its tail IN TRIODE, and 33.6 mV of static CM error.
+#
+# DIAGNOSIS (in-loop op dump of the carry-over):
+#   XM3/XM7 string   42.0 uA  gm/ID 4.1/4.6   <- 71 % of the 59.4 uA CMFB overhead
+#   XM1 tail         12.0 uA  REGION=1 TRIODE, av0 1.1 (|Vdsat| 0.372 > |Vds| 0.224)
+#   XM4/XM5 pair      5/7 uA  av0 42/15       -> ro5 167k dominates the output node
+#   XM2/XM6 mirror    7/5 uA  gm/ID 17 (weak) -> mirr 0.230 V, so vcmfb_nat ~ 0.42 V
+#   A = gm4*(ro2||ro5) = 85u*(500k||167k) = 10.6 V/V, and the plant needs vb4o = 0.775 V,
+#   so the loop must hold (0.775-0.42)/10.6 = 33.5 mV. Measured 33.6 mV.
+#
+# THE HEADROOM IDENTITY that decides the design. The output-side pair device XM5 has
+# |Vds5| = ptail - vb4o and ptail = vsense + |Vgs_pair|, so
+#     |Vds5| - |Vdsat5| = (vsense + |Vgs| - vb4o) - (|Vgs| - |Vth|) = |Vth| - (vb4o - vsense)
+# — INDEPENDENT of the pair's inversion level. With the plant's vb4o = 0.775 V and
+# vsense = 0.6 V that is ~85 mV on a |Vth| ~ 0.26 V device, so ro5 is capped and
+# ro2||ro5 is ro5-limited: SERVO GAIN CANNOT BE BOUGHT with pair current or pair length.
+# The lever is the OTHER term of (vb4o_bal - vcmfb_nat)/A. In a 5T the output settles
+# where the mirror's two Vds match, i.e. vcmfb_nat ~ `mirr` = Vgs of XM6, so driving the
+# mirror into STRONG inversion walks vcmfb_nat from 0.230 V up to 0.673 V — right under
+# the plant's gate — and the residual error falls with the numerator, not the gain.
+#
+# ROLES (one physical reason each; ID from the gm/ID LUTs at ~/.spicexplorer/gmid/tsmc-n65,
+# nch_lvt/pch_lvt tt, script kept at doc/review_cmfb_tsmc_resize_2026-08-05.md):
+#   XM3/XM7 string  it only has to BIAS -> 3 uA. XM7's Vgs is pinned by KVL at
+#                   vdd - |Vgs3| = 0.868 V (deep strong inversion), so L=10u is what
+#                   keeps its W above the 0.15 um floor.
+#   XM1 tail        |Vds1| = vdd - ptail is FIXED by the sensed CM -> gm/ID floor
+#                   2/|Vds1| ~ 6. Sized at 12 (measured |Vds| 0.316 vs |Vdsat| 0.134).
+#   XM4/XM5 pair    gm/ID 17 at 3 uA/side for gm; L=1u. ro5 is headroom-capped (above).
+#   XM2/XM6 mirror  gm/ID ~2.8 ON PURPOSE (raises vcmfb_nat) with L=6u for ro2. L=6u is
+#                   the SHORTEST LUT length whose W still clears the 0.15 um floor at
+#                   that inversion level.
+#
+# MEASURED in-loop (amp_034_fan_chopper_cmfb, tsmc-n65, tt, Spectre, dc_op) — carry-over
+# -> this sizing:
+#   static CM error   33.57 mV -> 3.88 mV     (8.7x)
+#   servo current     54.0 uA  -> 9.0 uA      (6.0x)
+#   amp_034 i_supply  184.7 uA -> 138.2 uA    (-25 %)
+#   mirr (=vcmfb_nat) 0.230 V  -> 0.673 V     (predicted 0.691)
+#   XM1 tail          TRIODE   -> saturation
+# A variant that ALSO placed the plant gate (XM8O/XM9O 11.257u -> 5.255u, vb4o 0.775 ->
+# 0.654) reached -2.31 mV but cost gm8 347 -> 220 uS (-4 dB of CM plant gain) and would
+# have re-sized amp_026's optimizer-campaign output stage; 3.88 mV did not justify that.
+#
+# NOTE the L bounds are wider than the other bindings' 2u: the mirror and the string
+# diode NEED long channels here (see roles above), and clamping them at 2u is exactly
+# what produced the carry-over's behaviour.
+schema: spicexplorer/sizing@1
+pdk: tsmc-n65
+variables:
+  - {name: x_dut_xm4_w, description: "PMOS input pair width (XM4/XM5) — gm/ID 17 at 3 uA/side", default: 6.65u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm4_l, description: "PMOS input pair length", default: 1u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm2_w, description: "NMOS mirror width (XM6 diode / XM2 output) — narrow ON PURPOSE: Vgs=mirr IS vcmfb_nat", default: 0.168u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm2_l, description: "NMOS mirror length (long: sets ro2 and the servo pole; 6u is the shortest length whose W clears the 0.15u floor at this inversion level)", default: 6u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm1_w, description: "PMOS tail width (gate on the bias string) — gm/ID 12 at 6 uA, clear of the 2/|Vds1| ~ 6 triode floor", default: 3.82u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm1_l, description: "PMOS tail length", default: 1u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm7_w, description: "Bias-string NMOS diode width (Vgs pinned by KVL at vdd - |Vgs3| = 0.868 V)", default: 0.180u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm7_l, description: "Bias-string NMOS diode length (10u: the length that keeps W above the floor at a 0.868 V pinned Vgs)", default: 10u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_xm3_w, description: "Bias-string PMOS diode width — W3 = W1 * I_string/I_tail at the same L, so the tail mirror ratio is purely geometric (3 uA string, 6 uA tail)", default: 1.91u, min: 0.15u, max: 20u, unit: m}
+  - {name: x_dut_xm3_l, description: "Bias-string PMOS diode length (= XM1's, to keep the ratio geometric)", default: 1u, min: 0.13u, max: 10u, unit: m}
+  - {name: x_dut_rmp_value, description: "CM-detector averaging resistor (RMN tied; high-R to avoid loading the sensed outputs)", default: 1Meg, min: 10k, max: 100Meg, unit: Ohm}
+  # Frozen per-device literals: defaults reproduce the drawn m=1 exactly.
+  - {name: x_dut_xm1_m, description: "XM1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm2_m, description: "XM2 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm3_m, description: "XM3 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm4_m, description: "XM4 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
+  - {name: x_dut_xm7_m, description: "XM7 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}

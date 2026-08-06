@@ -5,19 +5,19 @@ schema: spicexplorer/sizing@1
 pdk: tsmc-n65
 variables:
   # -- instance core: amp_029_two_stage_miller_comp (tsmc-n65) --
-  - {name: "x_dut_xm1_core_w", description: "NMOS input pair width", default: "10u", min: "0.15u", max: "100u", unit: "m"}
-  - {name: "x_dut_xm1_core_l", description: "NMOS input pair length", default: "0.5u", min: "0.13u", max: "10u", unit: "m"}
-  - {name: "x_dut_xm3_core_w", description: "Stage-1 PMOS current-source load width", default: "10u", min: "0.15u", max: "100u", unit: "m"}
-  - {name: "x_dut_xm3_core_l", description: "Stage-1 load length (long for load gds)", default: "1u", min: "0.13u", max: "10u", unit: "m"}
-  - {name: "x_dut_xm5_core_w", description: "Stage-2 PMOS driver width", default: "12u", min: "0.15u", max: "100u", unit: "m"}
-  - {name: "x_dut_xm5_core_l", description: "Stage-2 PMOS driver length", default: "0.5u", min: "0.13u", max: "10u", unit: "m"}
-  - {name: "x_dut_xm6_core_w", description: "Bias diode width (ref current density)", default: "2u", min: "0.15u", max: "50u", unit: "m"}
-  - {name: "x_dut_xm6_core_l", description: "Bias diode length (mirror L for tail + sinks)", default: "1u", min: "0.13u", max: "10u", unit: "m"}
-  - {name: "x_dut_xm7_core_w", description: "Output sink width (mirror ratio vs XM6 sets stage-2 current)", default: "6u", min: "0.15u", max: "100u", unit: "m"}
-  - {name: "x_dut_xm8_core_w", description: "Tail mirror width (ratio vs XM6 sets the tail current)", default: "2u", min: "0.15u", max: "100u", unit: "m"}
-  - {name: "x_dut_r1_core_value", description: "Per-side Miller zero-nulling resistor", default: "2k", min: 100, max: "50k", unit: "ohm"}
-  - {name: "x_dut_c1_core_value", description: "Per-side Miller compensation cap", default: "1p", min: "0.05p", max: "20p", unit: "F"}
-  - {name: "i_bias_core", description: "Bias reference current into the XM6 diode (drawn as a 1 mA literal \u2014 re-seeded)", default: "20u", min: "1u", max: "500u", unit: "A"}
+  - {name: "x_dut_xm1_core_w", description: "NMOS input pair width \u2014 sets gm1, hence UGF = gm1/(2*pi*Cc). 57.1 um at 73 uA/side put the pair at vgt = -52.7 mV (deep subthreshold) with gm1 = 1.65 mS, which outran p2; 5 um at 10 uA/side lands gm1 = 207 uS, inside the open-PDK family (159-203 uS)", default: 5e-06, min: "0.15u", max: "100u", unit: "m"}
+  - {name: "x_dut_xm1_core_l", description: "NMOS input pair length (0.392 -> 0.5 um; a round bin, still short enough that the pair is not the gain bottleneck)", default: 5e-07, min: "0.13u", max: "10u", unit: "m"}
+  - {name: "x_dut_xm3_core_w", description: "Stage-1 PMOS current-source load width \u2014 at 47.3 um it was forced to pass 72.9 uA at gm/ID 5.69 with only +37.6 mV of saturation headroom (one CM perturbation from triode). 5 um at 10 uA sits +190 mV clear and its lower gds is where the DC gain comes from", default: 5e-06, min: "0.15u", max: "100u", unit: "m"}
+  - {name: "x_dut_xm3_core_l", description: "Stage-1 load length (long for load gds)", default: 2e-06, min: "0.13u", max: "10u", unit: "m"}
+  - {name: "x_dut_xm5_core_w", description: "Stage-2 PMOS driver width \u2014 36 -> 40 um at 12x the current raises gm5 from 64.8 uS to 555 uS, lifting p2 = gm5/(2*pi*CL) from 1.03 MHz (13.5x below crossover) to ~8.8 MHz and dropping 1/gm5 from 15.4 kohm into nulling-resistor range", default: 4e-05, min: "0.15u", max: "100u", unit: "m"}
+  - {name: "x_dut_xm5_core_l", description: "Stage-2 PMOS driver length \u2014 8.66 um of channel on a 65 nm node was the single worst knob; 2 um is the shortest length that still keeps stage-2 output gds low", default: 2e-06, min: "0.13u", max: "10u", unit: "m"}
+  - {name: "x_dut_xm6_core_w", description: "Bias diode width (ref current density) \u2014 THE ROOT CAUSE at 34.4 um: it is what drove XM7/XM6 to 0.187 and XM8/XM6 to 2.352. 3.5 um restores both ratios", default: 3.5e-06, min: "0.15u", max: "50u", unit: "m"}
+  - {name: "x_dut_xm6_core_l", description: "Bias diode length (GROUP-TIED mirror L for XM6/XM7/XM8/XM10 \u2014 this one knob also pulls the tail and both output sinks off their 6.39 um channels)", default: 2e-06, min: "0.13u", max: "10u", unit: "m"}
+  - {name: "x_dut_xm7_core_w", description: "Output sink width (mirror ratio vs XM6 sets stage-2 current) \u2014 10.5/3.5 = 3.00, the invariant on gf180/ihp/sky130. THIS ratio, not the driver, sets stage-2 current: 11.25 -> 66 uA/side, which lifts XM7/XM10 out of triode (-112 mV -> +472 mV headroom)", default: 1.05e-05, min: "0.15u", max: "100u", unit: "m"}
+  - {name: "x_dut_xm8_core_w", description: "Tail mirror width (ratio vs XM6 sets the tail current) \u2014 80.9 um gave ratio 2.352 and a 146 uA tail; 3.5 um restores the open-PDK 1:1 ratio and a 20 uA tail (10 uA/side). Stage 1 must be the CHEAP stage", default: 3.5e-06, min: "0.15u", max: "100u", unit: "m"}
+  - {name: "x_dut_r1_core_value", description: "Per-side Miller zero-nulling resistor \u2014 must EXCEED 1/gm5 so the zero moves from the RHP into the LHP and lands near p2 as phase lead. At 701 ohm (1/22 of 1/gm5) the zero sat in the RHP at 889 kHz, 15.6x below UGF. The dimensionless invariant R1*gm5 is 13.1-14.6 on the three open PDKs and was 0.045 here; 8 kohm restores it to ~4.4. Measured peak: 3k -> +40.96 deg, 8k -> +71.15, 12k -> +64.48, 20k -> +42.08 deg", default: 8000.0, min: 100, max: "50k", unit: "ohm"}
+  - {name: "x_dut_c1_core_value", description: "Per-side Miller compensation cap \u2014 sets UGF = gm1/(2*pi*Cc). 12.15 pF against a 10 pF load (Cc/CL = 1.215 vs 0.04-0.06 on the open PDKs) was backwards", default: "1p", min: "0.05p", max: "20p", unit: "F"}
+  - {name: "i_bias_core", description: "Bias reference current into the XM6 diode (drawn as a 1 mA literal \u2014 re-seeded). 20 uA is the value all three open PDKs use", default: 2e-05, min: "1u", max: "500u", unit: "A"}
   - {name: "x_dut_xm1_core_m", description: "XM1 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
   - {name: "x_dut_xm3_core_m", description: "XM3 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
   - {name: "x_dut_xm5_core_m", description: "XM5 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
@@ -26,7 +26,7 @@ variables:
   - {name: "x_dut_xm8_core_m", description: "XM8 m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
   # -- instance servo: cmfb_001_ideal_rsense_servo (tsmc-n65) --
   - {name: "gm_val_servo", description: "Servo amplifier transconductance (behavioral VCCS)", default: "100u", min: "1u", max: "10m", unit: "S"}
-  - {name: "rout_val_servo", description: "Servo amplifier output resistance (DC gain = gm_val*rout_val)", default: "10k", min: "100k", max: "1G", unit: "Ohm"}
+  - {name: "rout_val_servo", description: "Servo amplifier output resistance (DC gain = gm_val*rout_val)", default: "10k", min: "1k", max: "1G", unit: "Ohm"}
   - {name: "cout_val_servo", description: "Servo amplifier output capacitance (dominant pole with rout_val + CL)", default: "100f", min: "1f", max: "10p", unit: "F"}
   - {name: "rin_val_servo", description: "Servo amplifier differential input resistance (near-ideal sense load)", default: "1e12", min: "1Meg", max: "1e14", unit: "Ohm"}
   - {name: "cin_val_servo", description: "Servo amplifier differential input capacitance", default: "10f", min: "1f", max: "1p", unit: "F"}

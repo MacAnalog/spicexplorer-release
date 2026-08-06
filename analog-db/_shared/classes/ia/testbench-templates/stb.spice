@@ -1,33 +1,228 @@
-** AUTHORED TEMPLATE — amplifier/stb: loop-gain (stability) probe in the unity buffer.
-** VIPRB is the loop-probe MARKER: a 0 V source in the feedback path (vinn <- vout). On
-** the ngspice lane it is electrically a short, so the deck runs as a plain closed-loop
-** AC response (ngspice has no stb analysis — eyeball check only). On the Spectre lane
-** the platform's emitter translates VIPRB* -> the `iprobe` primitive and composes
-** `stb stb probe=VIPRB ...`, so the TRUE loop gain lands in the stb.stb PSF:
-** {meas: pm_loop|gain_margin_db|loopgain_db, out: loopGain}, or OCEAN
-** phaseMargin(getData("loopGain")) via the class calculator set.
-** Bindings: DUT PORT_LINE VDD VCM IBIAS CL FSTART FSTOP PPD PDK_INCLUDE.
+** AUTHORED TEMPLATE — ia/stb: TRUE differential loop gain, phase margin and gain margin of a
+** fully-differential DUT closed in DIFFERENTIAL UNITY FEEDBACK, by Middlebrook voltage
+** injection at the VIPRB/VIPRBN loop-break markers.
+**
+** WHAT CHANGED (2026-07-31). This file used to be a copy of the SINGLE-ENDED amplifier/stb
+** deck — a unity buffer around v(vout), with `VIPRB vinn vout` and an `Ibias vdd ibias`
+** source — and its .control was `ac` + `write` + `quit` with no print and no .meas. NO ia
+** member has a single-ended `vout` port or an `ibias` port (every one of ia_001..ia_005 is
+** vinp vinn voutp voutn ...), so it did not merely fail to measure: assembled against
+** ia_001_hsu_bandpass_classab it left `vout`, `vinn` and `ibias` dangling, ngspice reported
+** `singular matrix: check node vout`, gmin stepping and source stepping both failed, and the
+** run ended in "no measures parsed". Replaced with the differential deck below.
+**
+** WHAT THIS BENCH IS FOR — READ BEFORE BINDING IT. This deck wraps the DUT in EXTERNAL
+** differential unity feedback and measures the loop that wrap creates. That is the right
+** bench for a fully-differential OTA / gain stage characterised as a constituent block (the
+** reason metrics.yaml copies the amplifier suite into this class). It is NOT the right bench
+** for an IA that already closes its own loop INSIDE the subckt. Every committed ia member
+** (ia_001..ia_005) is of the second kind: ia_001's cap feedback is Cf1 (sum_p <- voutp) and
+** Cf2 (voutn -> sum_n), both internal, and its ports expose no node on that path. Wrapping
+** such a DUT in a second, external loop measures the COMPOSITE, not the IA's own loop — a
+** plausible number that answers a question nobody asked. For those cells the correct route is
+** an IN-DUT loop-break marker, exactly as ldo/ac_loopgain does it: put a 0 V source in the
+** internal feedback path of the abstract netlist and drive it through the LP_PROBE binding.
+** NO committed ia circuit carries such a marker today (ia_001's only 0 V-class sources are the
+** Vb1/Vb2/Vb3/Vcmref bias supplies), so that route cannot be exercised yet and this template
+** deliberately does not pretend to offer it.
+**
+** VIPRB/VIPRBN stay plain 0 V sources in the NETLIST — that is the marker convention the
+** Spectre emitter maps to `iprobe` for `stb stb probe=VIPRB` (spectre-benches.yaml), and a 0 V
+** source with no AC spec is an ideal short, invisible to every other analysis. Only this
+** deck's .control turns them into generators, via `alter`.
+**
+** THE FEEDBACK MUST BE COMMON-MODE DECOUPLED — this is the trap, and a naive wrap fails
+** SILENTLY. Tying vinn straight to voutp and vinp straight to voutn does close the
+** differential loop correctly, but it ALSO closes a unity common-mode loop (vin_cm becomes
+** vout_cm), which fights the DUT's own CMFB and leaves the common mode with no absolute
+** reference. Measured on amp_020_two_stage_miller_cmfb @ ihp-sg13g2 with that naive wrap: the
+** operating point collapses to v(vinp) = v(vinn) = v(voutp) = v(voutn) = 4.04e-06 V — the
+** whole amplifier sits at ground, dead — and the bench then reports loopgain_db = -151.72 dB,
+** ugf_loop = 0, has_xover = 0. Note it does NOT crash and does not warn; it just quietly
+** measures a dead circuit. So the feedback network here passes the DIFFERENTIAL signal only
+** and re-references the common mode to VCM, using two plain linear VCVS:
+**     Efbn fbn vcm voutp voutn 0.5   ->  fbn = VCM + vod/2
+**     Efbp fbp vcm voutn voutp 0.5   ->  fbp = VCM - vod/2
+** The input common mode is then exactly VCM regardless of the output CM, and the DUT's
+** internal CMFB is left alone to set the output CM. The VCVS are ideal (infinite input
+** impedance, zero output impedance), so they neither load the DUT outputs nor add a pole.
+**
+** MARKER ORIENTATION IS LOAD-BEARING. The two markers are declared with OPPOSITE polarity
+**     VIPRB  vinn fbn dc 0      ->  v(vinn) - v(fbn) = +0.5
+**     VIPRBN fbp  vinp dc 0     ->  v(vinp) - v(fbp) = -0.5
+** so that a POSITIVE acmag of 0.5 on both produces a 1 V DIFFERENTIAL injection. This avoids
+** needing a negative acmag or an `acphase` alter, neither of which is portable. It also makes
+** the injection purely differential: the +0.5 and -0.5 cancel in the input common mode.
+**
+** MATH (exact, not a small-signal approximation). Write vod = v(voutp)-v(voutn),
+** vid = v(vinp)-v(vinn), and Adm the differential gain once around the rest of the loop.
+** The markers force vinn = fbn + 0.5 and vinp = fbp - 0.5, and fbp - fbn = -vod, so
+**     vid = (fbp - 0.5) - (fbn + 0.5) = -vod - 1,   and   vod = Adm*vid
+**  => vod = -Adm/(1+Adm),  vid = -1/(1+Adm),  so  T = vod/vid = Adm  identically.
+** The cross-connection (vinn <- +vod/2, vinp <- -vod/2) is what makes the wrap NEGATIVE
+** feedback for a differential pair, so the DC solution is the well-defined vod = 0 point.
+** The only assumption is Middlebrook's impedance condition: low-Z source side into a high-Z
+** load side. Here the break is (ideal VCVS output, zero impedance) -> (MOSFET gate, purely
+** capacitive), so it is satisfied exactly and single voltage injection suffices — no Tian
+** dual injection.
+**
+** VALIDATED 2026-07-31 against an independent bench with a known answer. Applied to
+** amp_020_two_stage_miller_cmfb @ ihp-sg13g2 (a genuinely open-loop fully-differential OTA —
+** the DUT shape this bench is for), swept 0.1 Hz .. 100 MHz at 101 pts/dec, this deck returns
+**     loopgain_db 24.790100   ugf_loop 22009730 Hz   pm_loop 90.161840 deg
+** and that circuit's OWN ac_open_loop_diff bench, over the same sweep, returns
+**     dcgain      24.790100   ugf      22009730 Hz   pm      90.161850 deg
+** i.e. agreement to 0.0000 dB, exact on the frequency grid, and 1e-5 deg — which is what
+** T = Adm predicts, and confirms both the injection algebra and the CM decoupling.
+**
+** DEGENERATE-SWEEP BEHAVIOUR, measured on the same cell with FSTOP clipped to 1 kHz so |T|
+** never reaches 0 dB: has_xover 0, pm_loop 999, pm_loop_first 999, gm_loop 999, and
+** ugf_loop pinned at FSTOP = 1000 Hz. Nothing plausible is published. For contrast, the
+** amplifier class's seed expression evaluated on a no-crossing sweep returns a perfectly
+** believable 180.0 deg.
+**
+** PHASE REFERENCE. At DC the loop gain is REAL, so its phase is exactly 0 or +/-180. The
+** reference is SNAPPED to that multiple of 180 rather than normalised to the phase at FSTART
+** (the `180 + phc - phc[0]` idiom the ac_open_loop templates use): FSTART already carries some
+** dominant-pole lag, and normalising it away INFLATES the margin by exactly that much.
+** phref_dev = the loop lag already present at FSTART is emitted so the assumption is
+** auditable — and, unlike the amplifier version which only PRINTED it, it is GATED here.
+** As |phref_dev| approaches 90 deg the snapped reference flips branch and every phase figure
+** silently jumps by 180 deg; the amplifier round caught that happening in the field. So
+** |phref_dev| >= 45 deg (a factor-2 margin on the flip, and only a 3.01 dB loopgain_db error)
+** sentinels every phase-derived measure instead of publishing it. FSTART must be low enough
+** to keep phref_dev small — this class's ac_closed_loop benches sweep from 0.1 Hz and stb
+** should too. FSTART = 1k, the amplifier default, was measured to be too high for most of that
+** corpus (16 of 21 cells past 30 deg) and is the wrong starting point here.
+**
+** NO SEED IS EVER PUBLISHED AS A MEASUREMENT. This is the defect that made the amplifier
+** version report pm_loop = 101.630 with status ok on a loop that has NO crossover at all.
+** Its seed was `pm_loop = minimum(tph*ma + 999*mb)` — "the worst phase anywhere in the band" —
+** which is a perfectly plausible-looking angle whenever |T| never reaches 0 dB. Reproduced
+** synthetically 2026-07-31 on a flat 40 dB loop swept 1 Hz..1 kHz (no crossing by
+** construction): that expression returns 180.0 deg. Here instead:
+**   - has_xover is computed FIRST and published as its own measure: 1 only if |T| is above
+**     0 dB somewhere AND below it somewhere, i.e. a crossing provably exists in the swept band;
+**   - every phase measure is seeded with the loud 999 sentinel, and a `meas` that finds no
+**     crossing leaves that seed intact (verified: the failure prints
+**     "meas ac <name> ... failed!", which does NOT match the runner's `<name> = failed`
+**     pattern, so it is not folded back into a NaN either);
+**   - the published value is then masked by has_xover AND the phase-reference validity, so a
+**     `meas` that succeeded on a degenerate sweep still cannot publish a number.
+** ugf_loop = 0 is the honest "the loop gain never reaches unity in the swept band"; a
+** ugf_loop pinned at FSTOP means it never falls below unity. Both are loud, not plausible.
+**
+** CROSSING CONVENTION — pm_loop is taken at the LAST (highest-frequency) 0 dB crossing, not
+** the first: a loop whose |T| dips below 1, is lifted back above 1 by a resonance, then falls
+** again has a benign FIRST crossing and a lethal LAST one, so taking the first certifies
+** unstable loops as stable. pm_loop_first is emitted alongside; pm_loop_first != pm_loop is
+** the flag that |T| crosses 0 dB more than once and the loop needs a Nyquist look.
+**
+** NGSPICE PARSER GOTCHA — do NOT write `>` inside a `let` expression. The control-language
+** preprocessor strips it as an output redirection and silently truncates the RHS
+** (`let m = (tdb > 0)` becomes the invalid `let m = (tdb`). All masks are built from `<=`
+** and inverted with `1 - mask`.
+**
+** Measures: loopgain_db (|T| at FSTART), ugf_loop, pm_loop, pm_loop_first, gm_loop,
+** phref_dev, has_xover, phref_ok. Names are outside raw_project._SPEC_REGISTRY on purpose, so
+** they stay recorded diagnostics and never silently become optimizer objectives.
+**
+** Assumes a self-biased, differential-in/differential-out DUT port order:
+**   .subckt <id> vinp vinn voutp voutn vdd vss
+** Bindings: DUT PORT_LINE VDD VCM CL FSTART FSTOP PPD PDK_INCLUDE.
 ${PDK_INCLUDE}
 
 .param VDD=${VDD}
 .param VCM=${VCM}
-.param IBIAS=${IBIAS}
 .param CL=${CL}
 
 Vdd  vdd 0 dc {VDD}
 Vss  vss 0 dc 0
-Ibias vdd ibias dc {IBIAS}
-CLoad vout 0 {CL}
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
 
-Vinp vinp 0 dc {VCM} ac 1
-VIPRB vinn vout dc 0
+* COMMON-MODE-DECOUPLED differential unity feedback (see the header — a naive direct tie
+* collapses the operating point). The two ideal VCVS pass only the differential output signal
+* and re-reference it to VCM, so the input common mode is VCM no matter what the DUT's CMFB
+* does with the output common mode.
+Vcm  vcm 0 dc {VCM}
+Efbn fbn vcm voutp voutn 0.5
+Efbp fbp vcm voutn voutp 0.5
+
+* the loop break: two 0 V markers, declared with OPPOSITE polarity so a positive acmag on
+* both is a purely differential injection — see the header.
+VIPRB  vinn fbn dc 0
+VIPRBN fbp  vinp dc 0
 
 ${PORT_LINE} ${DUT}
 
 .control
   set filetype=ascii
+  * break the loop: both markers become 0.5 V AC generators of opposite polarity, i.e. a
+  * 1 V differential injection. At DC they stay ideal shorts, so this measurement rides on
+  * the CLOSED-loop operating point — which is the whole point of an stb bench.
+  alter @VIPRB[acmag] = 0.5
+  alter @VIPRBN[acmag] = 0.5
   ac dec ${PPD} ${FSTART} ${FSTOP}
+  * raw first, while the plot still holds every circuit node
   write
+
+  let vod = v(voutp) - v(voutn)
+  let vid = v(vinp) - v(vinn)
+  let tloop = vod/vid
+  let tdb   = db(tloop)
+  let ntdb  = 0 - tdb
+  let f     = real(frequency)
+  let tphc  = cph(tloop)*180/3.14159265
+  * snap the DC phase reference to the exact 0/+-180 the loop must have at DC (see header)
+  let ph0   = 180*floor(tphc[0]/180 + 0.5)
+  let tph   = 180 + tphc - ph0
+  let phref_dev = tphc[0] - ph0
+
+* --- does a 0 dB crossing provably EXIST in the swept band? (masks use `<=`; see the gotcha)
+  let mb = (tdb <= 0)
+  let ma = 1 - mb
+  let anyb = 1 - (mean(mb) <= 0)
+  let anya = 1 - (mean(ma) <= 0)
+  let has_xover = anyb*anya
+* --- is the snapped DC phase reference trustworthy? (branch flip approaches at 90 deg)
+  let phref_ok = (abs(phref_dev) <= 45)
+  let ok_ph = has_xover*phref_ok
+
+  let loopgain_db = tdb[0]
+  meas ac loopgain_db FIND tdb AT=${FSTART}
+
+* --- ugf: honest reductions, loud at both degenerate ends (0 = never reaches unity;
+* --- pinned at FSTOP = never falls below unity)
+  let ugf_loop = maximum(f*ma)
+  meas ac ugf_loop WHEN tdb=0 FALL=LAST
+
+* --- phase measures: seeded with the sentinel, refined by meas, then MASKED IN PLACE. A meas
+* --- that finds no crossing leaves the seed; a meas that succeeds on a degenerate sweep is
+* --- overridden by the mask. Neither can publish a seed as a measurement.
+* --- The mask REUSES each measure's own name rather than a scratch name on purpose: `meas`
+* --- always echoes "<name> = <value>" to the log at the moment it runs, and the runner's
+* --- parser is LAST-WINS, so a scratch name would leak the UNGATED value into the results
+* --- under a plausible label. (Measured: an earlier draft using `pm_meas` published
+* --- pm_meas = 76.459020 on ia_001 next to pm_loop = 999 — exactly the silently-wrong number
+* --- this gate exists to suppress.) Writing back to the same name and printing it below makes
+* --- the gated value the last one seen, so the leak cannot happen.
+  let pm_loop = 999
+  meas ac pm_loop FIND tph WHEN tdb=0 FALL=LAST
+  let pm_loop = ok_ph*pm_loop + (1 - ok_ph)*999
+
+  let pm_loop_first = 999
+  meas ac pm_loop_first FIND tph WHEN tdb=0 FALL=1
+  let pm_loop_first = ok_ph*pm_loop_first + (1 - ok_ph)*999
+
+* --- gain margin at the FIRST -180 deg loop crossing (where |T| is largest, i.e. the
+* --- worst-case margin). Same seed-then-mask discipline; gated on the phase reference only,
+* --- since a phase crossing can exist with no 0 dB crossing.
+  let gm_loop = 999
+  meas ac gm_loop FIND ntdb WHEN tph=0 FALL=1
+  let gm_loop = phref_ok*gm_loop + (1 - phref_ok)*999
+
+  print loopgain_db ugf_loop pm_loop pm_loop_first gm_loop phref_dev has_xover phref_ok
   quit
 .endc
 .end

@@ -6,26 +6,26 @@
 ** Source: pdk/tsmc-n65/netlist.spice (run `analog-db generate` to refresh).
 *----------------------------------------------------------*
 ** params: 20 free + 30 frozen knobs (sizing.yaml) · 44 tied · 0 ratio-derived (abstract/params.yaml)
-.param x_dut_xmbd_w=4u
-.param x_dut_xmpd1_w=6u
-.param x_dut_xmpd2_w=1.5u
-.param x_dut_xmnd1_w=0.75u
-.param x_dut_xmi1_w=6u
-.param x_dut_xmsa_w=6u
-.param x_dut_xmca_w=6u
-.param x_dut_xmna_w=4u
-.param x_dut_xmka_w=3u
-.param x_dut_xm2a_w=8u
-.param x_dut_xmla_w=6u
-.param x_dut_xmepd_w=3u
-.param x_dut_xmncd_w=1.5u
-.param x_dut_xmbd_l=0.4u
-.param x_dut_xmi1_l=0.3u
-.param x_dut_xmca_l=0.2u
-.param x_dut_rza_value=800
-.param x_dut_cca_value=350e-15
-.param x_dut_rca_value=2e5
-.param x_dut_cma_value=150e-15
+.param x_dut_xmbd_w=7.30243e-06
+.param x_dut_xmpd1_w=4.8766e-05
+.param x_dut_xmpd2_w=2.14197e-05
+.param x_dut_xmnd1_w=3.3087e-05
+.param x_dut_xmi1_w=6.20889e-06
+.param x_dut_xmsa_w=50u
+.param x_dut_xmca_w=8.90959e-06
+.param x_dut_xmna_w=7.49699e-06
+.param x_dut_xmka_w=50u
+.param x_dut_xm2a_w=3.40943e-05
+.param x_dut_xmla_w=4.39607e-05
+.param x_dut_xmepd_w=50u
+.param x_dut_xmncd_w=2.65057e-05
+.param x_dut_xmbd_l=4.23709e-06
+.param x_dut_xmi1_l=1.81752e-07
+.param x_dut_xmca_l=9.78754e-06
+.param x_dut_rza_value=3400
+.param x_dut_cca_value=1.2e-12
+.param x_dut_rca_value=363576
+.param x_dut_cma_value=7.16119e-13
 .param x_ibias_val=20e-6
 .param x_vcmr_val=0.75
 .param x_dut_xmbd_m=1

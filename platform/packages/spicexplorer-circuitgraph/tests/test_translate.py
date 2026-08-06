@@ -187,9 +187,11 @@ def test_translates_pulse_source(tmp_path: Path) -> None:
         ".end\n"
     )
     d = translate_ngspice_to_spectre(p, pdk="tsmc-n65", source_pdk="ihp-sg13g2")
+    # The timing args carry SPICE scale factors, which Spectre reads by DIFFERENT (case-sensitive)
+    # rules — they are resolved to plain seconds rather than copied through as `1u`/`1n`.
     assert (
         "vsource dc=vcm type=pulse val0=vcm val1=vcm+vstep "
-        "delay=1u rise=1n fall=1n width=1 period=1" in d.stimulus
+        "delay=1e-06 rise=1e-09 fall=1e-09 width=1 period=1" in d.stimulus
     )
 
 

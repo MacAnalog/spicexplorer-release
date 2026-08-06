@@ -7,73 +7,73 @@ variables:
 - name: x_dut_xm3_w
   description: NMOS input pair width (XM3/XM4)
   default: 0.12u
-  min: 0.15u
+  min: 0.12u
   max: 50u
   unit: m
 - name: x_dut_xm3_l
   description: NMOS input pair length
   default: 0.06u
-  min: 0.13u
+  min: 0.06u
   max: 2u
   unit: m
 - name: x_dut_xm6_w
   description: PMOS input pair width (XM6/XM7)
   default: 0.12u
-  min: 0.15u
+  min: 0.12u
   max: 50u
   unit: m
 - name: x_dut_xm6_l
   description: PMOS input pair length
   default: 0.06u
-  min: 0.13u
+  min: 0.06u
   max: 2u
   unit: m
 - name: x_dut_xm5_w
   description: Stage-1 NMOS tail width (gate vb2)
   default: 0.12u
-  min: 0.15u
+  min: 0.12u
   max: 50u
   unit: m
 - name: x_dut_xm5_l
   description: Stage-1 NMOS tail length
   default: 0.06u
-  min: 0.13u
+  min: 0.06u
   max: 2u
   unit: m
 - name: x_dut_xm8_w
   description: Stage-1 PMOS tail width (CMFB loop-1 actuator, gate vcmfb1)
   default: 0.12u
-  min: 0.15u
+  min: 0.12u
   max: 50u
   unit: m
 - name: x_dut_xm8_l
   description: Stage-1 PMOS tail length
   default: 0.06u
-  min: 0.13u
+  min: 0.06u
   max: 2u
   unit: m
 - name: x_dut_xm1_w
   description: Output NMOS driver width (XM1/XM9)
   default: 0.12u
-  min: 0.15u
+  min: 0.12u
   max: 50u
   unit: m
 - name: x_dut_xm1_l
   description: Output NMOS driver length
   default: 0.06u
-  min: 0.13u
+  min: 0.06u
   max: 2u
   unit: m
 - name: x_dut_xm2_w
   description: Output PMOS source width (CMFB loop-2 actuator, XM2/XM10)
   default: 0.12u
-  min: 0.15u
+  min: 0.12u
   max: 50u
   unit: m
 - name: x_dut_xm2_l
   description: Output PMOS source length
   default: 0.06u
-  min: 0.13u
+  min: 0.06u
   max: 2u
   unit: m
 - name: x_dut_c1_value

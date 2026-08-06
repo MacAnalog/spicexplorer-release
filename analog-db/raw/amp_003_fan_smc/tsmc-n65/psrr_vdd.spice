@@ -19,8 +19,8 @@
 .lib tsmc_n65_models.scs tt
 .temp 27
 
-.param VDD=1.8
-.param VCM=300m
+.param VDD=1.2
+.param VCM=0.4
 .param CL=10p
 
 Vdd  vdd 0 dc {VDD} ac 1     ; 1 V supply-ripple stimulus

@@ -14,9 +14,49 @@
 pdk: tsmc-n65
 sim_engine: spectre                      # native lane: licensed Spectre via virtuoso-bridge (no ngspice; see NDA note above)
 supply: {default: 1.2, unit: V}          # nominal 1.2 V core rail (CRN65 core devices)
-devices:                                  # public CRN65 nomenclature (identifiers only, no kit bytes)
-  nmos: {core: nch_lvt, lvt: nch_lvt, svt: nch, hvt: nch_hvt}   # core alias = lvt (back-compat)
-  pmos: {core: pch_lvt, lvt: pch_lvt, svt: pch, hvt: pch_hvt}
+# Device identifiers (public CRN65 nomenclature only — no kit bytes, no model text).
+#
+# The kit's names decompose as  <base>[_flavor][_domain][_dnw][_mac][x]:
+#   base      nch / pch
+#   flavor    (none)=SVT | _lvt | _hvt | _na (native, near-zero Vt)
+#   domain    (none)=1.2 V core | _25 = 2.5 V I/O device
+#             _25ud18 = the 2.5 V device UNDER-driven at 1.8 V
+#             _25od33 = the 2.5 V device OVER-driven at 3.3 V
+#   _dnw      deep-n-well (isolated bulk) companion of any of the above
+#   _mac      model variant that derives AS/AD/PS/PD from the instance itself
+#   x         alternate/extracted companion (…x, _macx, _dnwx)
+# Every combination in the kit list follows that grammar, e.g. nch_lvt_dnw_macx.
+#
+# ⚠ The DOMAIN voltages above are read off the naming convention, NOT confirmed against the
+# kit (which must not be read here). Confirm `_25ud18`=1.8 V and `_25od33`=3.3 V with the
+# operator BEFORE retargeting any circuit onto them — getting it wrong reintroduces exactly
+# the oxide-overvoltage problem these entries exist to solve.
+#
+# ⚠ gm/ID LUTs exist ONLY for lvt (nch_lvt/pch_lvt). Declaring a flavor here does NOT make it
+# sizable: each needs its own `gmid-extract-spectre` pass. Same operator work that blocks
+# svt/hvt today.
+#
+# ⚠ The I/O devices carry their own geometry rules (larger min L than the 0.06 µm core figure
+# below). `geometry:` is core-device only; do not apply it to a _25* device.
+devices:
+  nmos:
+    core: nch_lvt       # back-compat alias — core flavour used by existing bindings
+    lvt: nch_lvt
+    svt: nch
+    hvt: nch_hvt
+    native: nch_na
+    io25: nch_25        # 2.5 V I/O
+    io18: nch_25ud18    # 1.8 V rail  (unconfirmed — see note above)
+    io33: nch_25od33    # 3.3 V rail  (unconfirmed — see note above)
+  pmos:
+    core: pch_lvt
+    lvt: pch_lvt
+    svt: pch
+    hvt: pch_hvt
+    native: pch_na
+    io25: pch_25
+    io18: pch_25ud18
+    io33: pch_25od33
 corners:
   lib_file: tsmc_n65_models.scs           # neutral operator-supplied wrapper (see NDA note above)
   sections: [tt, ss, ff, sf, fs]

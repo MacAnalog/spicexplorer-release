@@ -14,8 +14,8 @@
         "ac_open_loop": {
           "measures": {
             "dcgain": 51.50358,
-            "pm": 80.94179,
-            "ugf": 20891840.0
+            "pm": 63.36683,
+            "ugf": 19155020.0
           },
           "status": "ok"
         },
@@ -32,8 +32,23 @@
           "status": "ok"
         },
         "iip3": {
-          "error": "amp_022_fer_two_stage/iip3@ihp-sg13g2/tt: no measures parsed:\n          0\nibias                                 0.386758\nvout                                  0.599174\nvinp                                       0.6\nmid                                        0.6\nvinn                                  0.599174\nxdut.b                                0.283826\nxdut.a                                0.297581\nxdut.c                                 1.06015\nxdut.pbias                             1.04314\nvfb",
-          "status": "sim_error"
+          "measures": {
+            "a_drv": 0.006249378,
+            "a_f1": 0.006236999,
+            "a_f2": 0.006236949,
+            "a_floor": 2.375219e-12,
+            "a_im3h": 1.189939e-09,
+            "a_im3l": 9.621037e-10,
+            "a_im5h": 2.427318e-12,
+            "a_im5l": 2.388247e-12,
+            "gain_tone": 0.998011,
+            "gain_tone_db": -0.017293,
+            "iip3_comp_db": 0.04428548,
+            "iip3_dbv": 23.11207,
+            "im3_dbc": -134.389,
+            "im5_im3_db": -53.808
+          },
+          "status": "ok"
         },
         "linearity": {
           "measures": {
@@ -45,8 +60,8 @@
         },
         "noise": {
           "measures": {
-            "inoise_total": 0.0002443081,
-            "onoise_total": 0.006773442
+            "inoise_total": 4.444369e-05,
+            "onoise_total": 0.01078781
           },
           "status": "ok"
         },
@@ -57,17 +72,36 @@
           "status": "ok"
         },
         "stb": {
-          "error": "amp_022_fer_two_stage/stb@ihp-sg13g2/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_022_fer_two_stage \u00d7 stb \u00d7 ihp-sg13g2 \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n Reference value :  1.00000e+03\nNo. of Data Rows : 607\nASCII raw file \"rawspice.raw\"\nngspice-45 done\nNote: Starting dynamic gmin stepping\nNote: Dynamic gmin stepping completed\n",
-          "status": "sim_error"
+          "measures": {
+            "gm_loop": 19.73092,
+            "loopgain_db": 51.50358,
+            "phref_dev": 1.005108e-07,
+            "phref_ok": 1.0,
+            "pm_loop": 63.42192,
+            "pm_loop_first": 63.42192,
+            "ugf_loop": 19106130.0
+          },
+          "status": "ok"
         },
         "thd": {
-          "error": "amp_022_fer_two_stage/thd@ihp-sg13g2/tt: no measures parsed:\nvalue :  1.27766e-05\n Reference value :  1.30306e-05\n Reference value :  1.32866e-05\n Reference value :  1.35446e-05\n Reference value :  1.37966e-05\n Reference value :  1.40506e-05\n Reference value :  1.43066e-05\n Reference value :  1.45606e-05\n Reference value :  1.48146e-05\n Reference value :  1.50706e-05\n Reference value :  1.53266e-05\n Reference value :  1.55786e-05\n Reference value :  1.58326e-05\n Reference value :  1.60886e-05\n R",
-          "status": "sim_error"
+          "measures": {
+            "a1": 0.09979882,
+            "a1_in": 0.09999841,
+            "a2": 2.222594e-05,
+            "a3": 1.655426e-06,
+            "a4": 8.963156e-08,
+            "a5": 9.392825e-09,
+            "gain_tone": 0.9980041,
+            "thd_db": -73.0212,
+            "thd_pct": 0.02233262,
+            "vout_op": 0.5991745
+          },
+          "status": "ok"
         },
         "tran_step": {
           "measures": {
-            "t_settle": 3.7553e-08,
-            "tcross": 1.037553e-06,
+            "t_settle": 4.528e-08,
+            "tcross": 1.04528e-06,
             "vfinal": 0.7988389
           },
           "status": "ok"
@@ -76,7 +110,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-21T02:21:23+00:00"
+        "run_at": "2026-08-04T04:37:39+00:00"
       }
     }
   },
@@ -91,6 +125,10 @@
         "spec": "pass",
         "value": 51.50358
       },
+      "gm_loop_db": {
+        "spec": "none",
+        "value": 19.73092
+      },
       "i_supply": {
         "spec": "pass",
         "value": 0.000245975
@@ -99,9 +137,21 @@
         "spec": "pass",
         "value": 1.295
       },
+      "iip3_dbv": {
+        "spec": "pass",
+        "value": 23.11207
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 51.50358
+      },
       "pm_deg": {
         "spec": "pass",
-        "value": 80.94179
+        "value": 63.36683
+      },
+      "pm_loop_deg": {
+        "spec": "pass",
+        "value": 63.42192
       },
       "psrr_vdd_db": {
         "spec": "pass",
@@ -109,15 +159,23 @@
       },
       "t_settle": {
         "spec": "pass",
-        "value": 3.7553e-08
+        "value": 4.528e-08
+      },
+      "thd_pct": {
+        "spec": "pass",
+        "value": 0.02233262
       },
       "ugf_hz": {
         "spec": "pass",
-        "value": 20891840.0
+        "value": 19155020.0
       },
-      "vn_in": {
-        "spec": "pass",
-        "value": 0.0002443081
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 19106130.0
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 4.444369e-05
       }
     }
   },
@@ -148,8 +206,8 @@
     ],
     "performance": {
       "dc_gain_db": 51.50358,
-      "pm_deg": 80.94179,
-      "ugf_hz": 20891840.0
+      "pm_deg": 63.36683,
+      "ugf_hz": 19155020.0
     },
     "power_w": 0.0003689625
   },

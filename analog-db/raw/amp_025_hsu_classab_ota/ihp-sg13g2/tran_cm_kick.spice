@@ -29,7 +29,7 @@
 
 .param VDD=1.2
 .param VCM=0.6
-.param CL=50f
+.param CL=10p
 .param ICM=5u
 
 Vdd  vdd 0 dc {VDD}
@@ -87,12 +87,12 @@ XDUT vinp vinn voutp voutn vdd vss amp_025_hsu_classab_ota
 .param x_dut_xm19_w=2u
 .param x_dut_xm19_l=0.5u
 .param x_dut_c1_value=1p
-.param x_dut_r1_value=10k
+.param x_dut_r1_value=100k
 .param x_dut_rmp_value=1Meg
 .param gm_val=100u
 .param rout_val=10Meg
 .param rin_val=1.0e12
-.param cout_val=100f
+.param cout_val=10p
 .param cin_val=10f
 .param vb1=0.55
 .param vb2=0.45

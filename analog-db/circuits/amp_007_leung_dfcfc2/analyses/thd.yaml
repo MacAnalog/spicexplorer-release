@@ -1,0 +1,25 @@
+# Analysis binding for the SELF-BIASED AnalogGym DUT (no ibias port; internal I0 bias) —
+# uses the class's ibias-free template variant so no external current source is left driving
+# a dangling node. THD in the unity buffer: tran + the template's in-deck coherent DFT
+# (ngspice); the Spectre lane composes a native pss at F0 (HARMS).
+# F0 GRID (campaign rule, fresh numbers): ugf = 2.777 MHz @ ihp-sg13g2 tt (ac_open_loop,
+# 2026-08-01, landed sizing) is < 3 MHz -> the 1 MHz base grid divides by 100 -> F0 = 10 kHz,
+# ~278x under the closed-loop bandwidth (~ugf for the unity buffer), safely in-band.
+# COHERENT WINDOW (the template requires (TSTOP-TSTART) to be whole F0 periods, see its
+# header): F0 = 10 kHz -> T = 100 us; TSTART = 400u = 4 whole periods, discarding ~19x the
+# measured 1.035 us settling (tran_step t_settle, same fresh run) many times over
+# (>= 20x t_settle rounded up to whole periods, 2-4 period minimum); TSTOP = 2m leaves 16
+# whole measured periods. TSTEP = 200n = T/500 <= 1/(500*F0).
+# DRIVE: ASIG = 0.1 class default — vout swings 0.2..0.4 V about VCM = 0.3 V, clear of both
+# rails at VDD = 1.8.
+# REPORTING: produces names thd_pct — this circuit's datasheet.yaml binds it (2026-08-01
+# rollout). The remaining measures (thd_db, a1..a5, a1_in, gain_tone, vout_op) still ride the
+# recorded `corners.<corner>.analyses.thd.measures` block. gain_tone < 0.5 means the
+# template's dead-output guard fired and thd_pct is the 999 sentinel, not a measurement.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_selfbias
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 300m, CL: 10p, ASIG: 0.1, F0: 1.0e4, TSTEP: 200n, TSTART: 400u, TSTOP: 2m, HARMS: 7}
+flags: []
+produces: [thd_pct]

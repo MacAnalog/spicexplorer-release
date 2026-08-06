@@ -10,7 +10,7 @@ default_conditions:
     typical: 27
   cload:
     unit: F
-    typical: 1.0e-10
+    typical: 1e-11
   vcm:
     unit: V
     typical: 0.4
@@ -46,14 +46,17 @@ metrics:
       unit: deg
       min: 60.0
       max: 90.0
-  vn_in:
-    display: Input-referred noise
-    unit: V/sqrt(Hz)
+  vn_in_integrated:
+    display: Input-referred noise (total, 1 Hz-1 MHz)
+    description: Total integrated input-referred rms noise over the standardized
+      1 Hz..1 MHz band, unity/closed-loop bias config, CL=10p (paper noise column,
+      2026-08-01). ngspice inoise_total is already volts rms integrated over the
+      swept band — replaces the old vn_in entry that mapped the same measure under
+      the dimensionally wrong V/sqrt(Hz) unit.
+    unit: V
     analysis: noise
     extract:
       meas: inoise_total
-    spec:
-      max: any
   i_supply:
     display: Supply current
     unit: A
@@ -61,7 +64,7 @@ metrics:
     extract:
       meas: i_supply
     spec:
-      max: any
+      max: 0.00555556
   t_settle:
     display: Settling time
     unit: s
@@ -93,3 +96,63 @@ metrics:
     spec:
       min: 40
       unit: dB
+  thd_pct:
+    display: Total harmonic distortion (100 mV @ 10 kHz, buffer)
+    description: tran+FFT on ngspice; native PSS harmonics on Spectre. F0 = 10 kHz
+      per the campaign grid (fresh ugf 1.94 MHz @ ihp-sg13g2 tt < 3 MHz -> grid/100).
+    unit: '%'
+    analysis: thd
+    extract:
+      meas: thd_pct
+      f0: 1.0e4
+    spec:
+      max: 2.0
+      unit: '%'
+  iip3_dbv:
+    display: Input IP3 (two-tone 9/10 kHz, 6.25 mV/tone, buffer)
+    description: Single-point IM3 extrapolation; tran+coherent DFT on ngspice, native
+      PSS on Spectre. Tones at 9/10 kHz per the campaign grid (fresh ugf 1.94 MHz @
+      ihp-sg13g2 tt < 3 MHz -> grid/100). ampl_in MUST track the analysis binding's
+      ASIG (it is the intercept's input reference).
+    unit: dBV
+    analysis: iip3
+    extract:
+      meas: iip3_dbv
+      f1: 9.0e3
+      f2: 1.0e4
+      ampl_in: 0.00625
+    spec:
+      min: -10
+      unit: dBV
+  pm_loop_deg:
+    display: Loop phase margin (stb)
+    description: TRUE unity-buffer loop phase margin by Middlebrook injection at the
+      VIPRB marker; cross-checks ac_open_loop's pm_deg (same loop, independent route).
+      -999 sentinel = no 0 dB crossing measured (fails this min spec by design).
+    unit: deg
+    analysis: stb
+    extract:
+      meas: pm_loop
+    spec:
+      min: 60.0
+      unit: deg
+  loopgain_db:
+    display: DC loop gain (stb)
+    unit: dB
+    analysis: stb
+    extract:
+      meas: loopgain_db
+  ugf_loop_hz:
+    display: Loop unity-gain frequency (stb)
+    unit: Hz
+    analysis: stb
+    extract:
+      meas: ugf_loop
+  gm_loop_db:
+    display: Loop gain margin (stb)
+    description: Gain margin at the first -180 deg loop-phase crossing; -999 sentinel
+      = the phase never reaches -180 deg in-band (no gain margin to measure).
+    unit: dB
+    analysis: stb
+    extract:
+      meas: gm_loop

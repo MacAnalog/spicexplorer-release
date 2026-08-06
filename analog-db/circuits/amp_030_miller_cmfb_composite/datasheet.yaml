@@ -6,7 +6,7 @@ default_conditions:
     typical: 1.2
   cload:
     unit: fF
-    typical: 50
+    typical: 10000
   corner:
     typical: tt
   temp:
@@ -70,18 +70,19 @@ metrics:
     spec:
       max: 500e-6
       unit: A
-  vn_in:
-    display: Input-referred noise (integrated)
-    description: "ngspice inoise_total = total noise INTEGRATED over the bench band\
-      \ (see analyses/noise.yaml FSTART..FSTOP) \u2014 a voltage, not a density; the\
-      \ bound is a characterization band at the family's measured magnitude"
+  vn_in_integrated:
+    display: Total integrated input-referred noise (1 Hz - 1 MHz, FD loop)
+    description: ngspice inoise_total is volts rms already integrated over the swept
+      band (standardized 1 Hz - 1 MHz, noise_diff self-biased open-loop FD bench,
+      CL=10p) \u2014 the paper's uniform noise column. Replaces the old vn_in entry, which
+      bound the same integrated measure under the pre-standardization 1 Hz - 10 MHz
+      band (6.8e-5 V there vs 4.1e-3 V here \u2014 the 1 MHz band integrates input-referred
+      noise past the ugf where the open-loop gain rolls off, which dominates the
+      integral; uniform-band comparability is the point). Report-only.
     unit: V
     analysis: noise
     extract:
       meas: inoise_total
-    spec:
-      max: 0.001
-      unit: V
   t_settle:
     display: Settling time
     description: Unity-gain differential-follower settling (see tran_step_diff.spice)
@@ -119,7 +120,7 @@ metrics:
     description: "20*log10(Zcm peak / Zcm LF) \u2014 >6 dB flags an underdamped CM\
       \ loop (uniform CM-health criterion). RECORDED SKIP with context: the gain-1\
       \ servo regulates Zcm(LF) to ~8 Ohm, so the ratio reads ~47 dB even though the\
-      \ ABSOLUTE peak (~1.7 kOhm @ 22 MHz) is stiffer than amp_020's flat 14.6 kOhm\
+      \ ABSOLUTE peak (~1.7 kOhm @ 22 MHz) is stiffer than a no-CMFB core's flat ~15 kOhm\
       \ at every frequency, and the kick response is damped (20% overshoot ratio,\
       \ zero residual). The ratio metric conflates 'very stiff LF' with 'underdamped'\
       \ for high-stiffness servos \u2014 class metric follow-up: an absolute-peak\
@@ -152,3 +153,116 @@ metrics:
     spec:
       max: 5.0e-06
       unit: s
+  thd_pct:
+    display: Total harmonic distortion (100 mV @ 100 kHz, FD follower)
+    description: tran + in-deck coherent DFT on the differential output of the
+      unity-feedback FD follower (thd_diff); F0 = 100 kHz per the campaign grid
+      (fresh ugf 13.76 MHz in the 3-30 MHz band).
+    unit: '%'
+    analysis: thd
+    extract:
+      meas: thd_pct
+      f0: 0.1e6
+    spec:
+      max: 2.0
+      unit: '%'
+  iip3_dbv:
+    display: Input IP3 (two-tone 90/100 kHz, 6.25 mV/tone, FD follower)
+    description: Single-point IM3 extrapolation; tran + coherent DFT on the FD
+      follower's differential output (iip3_diff). Tones per the campaign grid
+      (fresh ugf 13.76 MHz in the 3-30 MHz band). ampl_in below MUST track the
+      analysis binding's ASIG (it is the intercept's input reference).
+    unit: dBV
+    analysis: iip3
+    extract:
+      meas: iip3_dbv
+      f1: 0.09e6
+      f2: 0.1e6
+      ampl_in: 0.00625
+    spec:
+      min: -10
+      unit: dBV
+  pm_loop_deg:
+    display: Loop phase margin (stb, FD loop)
+    description: Phase margin of the antiphase-Middlebrook-probed differential
+      loop (stb_diff, VIPRB/VIPRBM pair); crosschecks ac_open_loop's pm_deg —
+      fresh ihp-sg13g2 tt reads ~33.3 deg on both (the stale scoreboard's 86.1
+      predates this binding set). -999 sentinel = no crossover (fails the min
+      spec by design).
+    unit: deg
+    analysis: stb
+    extract:
+      meas: pm_loop
+    spec:
+      min: 60
+      unit: deg
+  loopgain_db:
+    display: DC loop gain (stb, FD loop)
+    description: Loop-gain magnitude read at FSTART; bit-identical to
+      ac_open_loop's dcgain on this cell. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: loopgain_db
+  ugf_loop_hz:
+    display: Loop unity-gain frequency (stb)
+    unit: Hz
+    analysis: stb
+    extract:
+      meas: ugf_loop
+  gm_loop_db:
+    display: Loop gain margin (stb)
+    description: Gain margin at the phase crossover; ngspice measure name is
+      gm_loop. -999 sentinel = no phase crossover in-band. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: gm_loop
+  cmrr_db:
+    display: Common-mode rejection (differential figure, FD loop)
+    description: -db(voutp-voutn) under a 1 V CM ride (cmrr_vcm_diff), DC-band
+      floor. NO spec BY DESIGN — on this perfectly symmetric FD netlist the
+      differential figure saturates at the solver-resolution cap (~250-300 dB,
+      matrix round-off, not physical rejection); a min-spec would silently pass
+      any cell. The CM-loop figure cmrr_cm_db is the physical discriminator.
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_db
+  cmrr_cm_db:
+    display: CM-loop rejection of a CM ride (cmrr_vcm)
+    description: Output-CM response to the same 1 V CM ride — the composed
+      cmfb_001_ideal_rsense_servo CM loop's always-physical, discriminating
+      rejection figure (fresh ihp-sg13g2 tt reads 30.4 dB). NO spec —
+      report-only companion to cmrr_db (whose differential figure is
+      solver-capped on symmetric FD netlists).
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_cm_db
+  psrr_vdd_db:
+    display: Positive-supply rejection (differential figure, FD loop)
+    description: -db(voutp-voutn) under a 1 V vdd ripple (psrr_vdd_diff),
+      DC-band floor. NO spec BY DESIGN — the supply disturbs both symmetric
+      half-circuits identically, so the differential figure saturates at the
+      solver-resolution cap (~250-300 dB, not physical); a min-spec would
+      silently pass any cell. psrr_cm_db is the physical discriminator.
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_vdd_db
+  psrr_cm_db:
+    display: CM-path supply rejection (psrr_vdd)
+    description: Output-CM supply rejection through the cell's CM path + the
+      composed CMFB servo — the always-physical, discriminating figure. HONEST
+      finding (fresh ihp-sg13g2 tt) it reads ~0.02 dB — the output CM rides vdd
+      nearly 1:1. The gain-1 range-referenced servo (rout override 10k, see
+      composition.yaml) references vss and has only unity CM loop gain, so it
+      cannot reject a supply disturbance of the stage-2 PMOS sources; a real
+      transistor CMFB with loop gain would. NO spec — report-only companion to
+      psrr_vdd_db (whose differential figure is solver-capped on symmetric FD
+      netlists).
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_cm_db

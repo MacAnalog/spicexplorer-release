@@ -51,6 +51,22 @@ templates:
       same source swept STOP→START with a negated step. Composes AFTER the forward
       `dc_sweep`; its own analysis name/PSF (`dcdown.dc`) so the two directions never
       collide on `dc.dc`. Callers pass the SAME START/STOP/STEP args as the up leg.
+  dc_param_points:
+    statement: "dc dc param={PARAM} values={LB}{V1} {V2} {V3} {V4} {V5}{RB}"
+    # Spectre's value-list delimiters come in as placeholders on purpose: `[ … ]` is this
+    # template language's OPTIONAL-SEGMENT syntax (see the header), so literal brackets are
+    # eaten by the renderer. LB/RB are defaults, never passed by a bench.
+    defaults: {LB: "[", RB: "]"}
+    psf: dc.dc
+    notes: >-
+      FIVE-POINT sweep of a netlist PARAMETER (no dev= source), the closed-lane twin of the
+      ngspice `alterparam <knob>=VBk / reset / op` chain the amplifier `dc_cm_bias_sweep`
+      template runs: one operating point per sampled bias, at the SAME five knob values, so
+      the two lanes report the same figure off the same abscissa. `values=[…]` rather than
+      start/stop/step on purpose — the bench's VB1..VB5 are AUTHORED sample points, not a
+      uniform grid, and a grid would silently re-sample the knife-edge windows this bench
+      exists to detect. Like `dc_sweep`, compose WITHOUT the `dc_op` sibling: `dcOp dc` also
+      writes a `.dc` PSF and the reader prefers the exact `dc.dc` name.
   temp_sweep:
     statement: "dctemp dc param=temp start={TSTART} stop={TSTOP} step={TSTEP}"
     psf: dctemp.dc

@@ -5,6 +5,9 @@ class: amplifier
 display_name: "3-stage OTA \u2014 AFFC compensation (HoiLee)"
 compensation: AFFC
 stages: 3
+realization: transistor
+cm_control: not_applicable
+signal_path: single_ended
 ports:
 - vss
 - vdd
@@ -35,4 +38,7 @@ analyses:
 - tran_step
 - psrr_vdd
 - cmrr_vcm
+- thd
+- iip3
+- stb
 status: draft

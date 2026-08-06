@@ -1,0 +1,22 @@
+# Analysis binding: CM-loop health (time domain) — CM current-kick recovery.
+# Added 2026-07-31 to DECIDE whether this cell has working CMFB, per the rule that FD
+# large-signal benches run only where CMFB exists. cm_resid_v is the discriminator:
+# a cell whose CM does not return to its start value has no working CM control.
+schema: spicexplorer/analysis@1
+id: tran_cm_kick
+template: tran_cm_kick
+description: "CM disturbance recovery: cm_kick_v (stiffness), cm_resid_v (latch flag), t_cm_settle."
+params:
+  VDD: 1.5
+  VCM: 0.9
+  CL: 10p
+  ICM: 5u
+  TKICK: 2u
+  TMID: 5u
+  TREL: 6u
+  TEND: 19u
+  VTOL: 2m
+  TSTEP: 2n
+  TSTOP: 20u
+flags: []
+produces: [cm_kick_v, cm_resid_v, t_cm_settle]

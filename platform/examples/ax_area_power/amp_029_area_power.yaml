@@ -1,0 +1,180 @@
+# Ax-revival + area/power demo — WITH active-area + power as first-class metrics.
+#
+# Identical circuit/search to `amp_029_baseline.yaml`, plus two extra target specs:
+#   • power       — Tier-1 op-point measurement |I_supply|·VDD (µW), from the dc_op deck.
+#   • active_area — PARAM-DERIVED Σ W·L over the sized devices (µm²); computed from the
+#                   candidate sizing with NO simulation (a `{derived: …}` recipe).
+# Both are scored EXACTLY like gain/ugf/pm — same per-spec `range` normalization and the
+# same reward/penalty aggregation into the single objective (constraint-first). Aggressive
+# `minimize` targets keep steady downward pressure so the demo visibly trades area/power
+# against performance.
+#
+# `optimizer_config.type` selects the engine (nevergrad | bayesian_ax); the run script sweeps
+# both so the effect of adding area/power is shown under each optimizer.
+project:
+  name: amp_029 + area & power
+  description: Two-stage Miller OTA — gain/ugf/pm PLUS active-area & power as first-class metrics
+  simulator: ngspice
+  save_sim: false
+  parallel_sim: true
+  ws_root: ../analog-db/raw/amp_029_two_stage_miller_comp/ihp-sg13g2
+  netlist: ac_open_loop.spice
+  outdir: scratch
+  tech_spec:
+    name: ihp-sg13g2
+    constraints: {}
+  dut_params:
+  # ── searched: input pair (XM2 tied to XM1) ──
+  - name: x_dut_xm1_w
+    min_val: 1.0e-06
+    max_val: 2.0e-05
+  - name: x_dut_xm1_l
+    min_val: 2.5e-07
+    max_val: 1.0e-06
+  # ── searched: first-stage PMOS load (XM4 tied to XM3) ──
+  - name: x_dut_xm3_w
+    min_val: 1.0e-06
+    max_val: 2.0e-05
+  - name: x_dut_xm3_l
+    min_val: 2.5e-07
+    max_val: 1.0e-06
+  # ── searched: second-stage PMOS driver (XM9 tied to XM5) ──
+  - name: x_dut_xm5_w
+    min_val: 5.4e-06
+    max_val: 2.0e-05
+  - name: x_dut_xm5_l
+    min_val: 2.5e-07
+    max_val: 1.0e-06
+  # ── searched: bias-mirror diode (its L also drives XM7/XM8/XM10 via the deck ties) ──
+  - name: x_dut_xm6_w
+    min_val: 1.0e-06
+    max_val: 8.0e-06
+  - name: x_dut_xm6_l
+    min_val: 2.5e-07
+    max_val: 1.0e-06
+  # ── searched: output-branch NMOS sink (XM10 width tied to XM7) ──
+  - name: x_dut_xm7_w
+    min_val: 2.0e-06
+    max_val: 1.2e-05
+  # ── searched: tail NMOS ──
+  - name: x_dut_xm8_w
+    min_val: 1.0e-06
+    max_val: 8.0e-06
+  - name: i_bias
+    min_val: 1.0e-05
+    max_val: 0.0001
+  # ── frozen: compensation passives (R2/C2 tied to R1/C1) + the PMOS-load bias level ──
+  - name: x_dut_r1_value
+    freeze: true
+    val: 30000.0
+  - name: x_dut_c1_value
+    freeze: true
+    val: 4.0e-13
+  - name: vbl
+    freeze: true
+    val: 0.7087
+  # ── frozen: device multipliers (the twins' m are tied to these in the deck) ──
+  - name: x_dut_xm1_m
+    freeze: true
+    val: 1.0
+  - name: x_dut_xm3_m
+    freeze: true
+    val: 1.0
+  - name: x_dut_xm5_m
+    freeze: true
+    val: 1.0
+  - name: x_dut_xm6_m
+    freeze: true
+    val: 1.0
+  - name: x_dut_xm7_m
+    freeze: true
+    val: 1.0
+  - name: x_dut_xm8_m
+    freeze: true
+    val: 1.0
+  testbenches:
+  - name: ac_open_loop
+    params: []
+    netlist: ac_open_loop.spice
+    enable: true
+    description: 'raw deck: ac_open_loop (differential open-loop AC)'
+  - name: dc_op
+    params: []
+    netlist: dc_op.spice
+    enable: true
+    description: 'raw deck: dc_op (operating point, supply current)'
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48
+    budget: 15
+    name: NGOpt
+    lin_variable_bounds:
+      min: 0
+      max: 100
+    log_variable_bounds:
+      min: 1
+      max: 100
+    target_specs:
+    # ── amplifier performance (bare-name reads of the deck's `.meas` results) ──
+    - name: dcgain
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exceed
+      target: 40
+      range: 40
+      tolerance: 1
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: ugf
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exceed
+      target: 1000000.0
+      range: 10000000.0
+      tolerance: 100000.0
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: pm
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exact
+      target: 60
+      range: 45
+      tolerance: 10
+      weight: 1.0
+      reward_type: none
+      enable: true
+    # ── power: Tier-1 op-point measurement |I_supply|·VDD (µW), scored like any metric ──
+    - name: power
+      testbench: dc_op
+      sim_type: op
+      goal: minimize
+      target: 200.0        # µW — pushed down from the deck's default operating point
+      range: 500.0
+      tolerance: 10.0
+      weight: 1.0
+      reward_type: none
+      enable: true
+      measurement: {meas: power_uw, probe: i(i_supply), vdd: 1.2}   # the deck's `.param VDD=1.2`
+    # ── active area: PARAM-DERIVED Σ W·L over the sized devices (µm²); no simulation ──
+    - name: active_area
+      testbench: dc_op          # ignored for a derived spec (no sim read); a valid tb name
+      sim_type: op              # ignored for a derived spec; a valid sim_type
+      goal: minimize
+      target: 22.0              # µm² — below the 58.0 µm² default (all 10 devices), so minimized
+      range: 60.0
+      tolerance: 0.5
+      weight: 1.0
+      reward_type: none
+      enable: true
+      measurement:
+        derived: active_area
+        scale: 1.0e12           # m² → µm²
+        # No `devices:` list — active area is computed by the RECURSIVE NETLIST WALK
+        # (spicexplorer_core.measurements.area): every transistor in the DUT deck is discovered
+        # and summed Σ W·L·m with its multiplier resolved from the deck's `.param` ties. This is
+        # all 10 devices (XM1–XM10), including the voutn twins XM9/XM10 that a hand list misses.
+        # Verify with:  python -m spicexplorer_core.measurements.area \
+        #   examples/analog-db/raw/amp_029_two_stage_miller_comp/ihp-sg13g2/ac_open_loop.spice --table

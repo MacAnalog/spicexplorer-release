@@ -1,8 +1,12 @@
 # Analysis binding (plan D-4): noise_diff — input-referred noise, differential output.
+# Band STANDARDIZED 2026-08-01 to the paper's uniform noise condition: total integrated
+# input-referred noise over 1 Hz - 1 MHz (was 1k - 100MEG), closed-loop bias config, CL=10p.
+# ngspice inoise_total is volts rms already integrated over the swept band — reported as
+# vn_in_integrated (unit V) in datasheet.yaml.
 schema: spicexplorer/analysis@1
 id: noise
 template: noise_diff
-description: "Input-referred noise over the band; vn_in."
-params: {VDD: 1.5, VCM: 0.9, CL: 500f, FSTART: 1k, FSTOP: 100MEG, PPD: 50}
+description: "Total integrated input-referred noise, 1 Hz - 1 MHz; vn_in_integrated."
+params: {VDD: 1.5, VCM: 0.9, CL: 10p, FSTART: 1, FSTOP: 1MEG, PPD: 50}
 flags: []
-produces: [vn_in]
+produces: [vn_in_integrated]

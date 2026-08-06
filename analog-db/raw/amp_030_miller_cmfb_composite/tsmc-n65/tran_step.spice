@@ -22,7 +22,7 @@
 
 .param VDD=1.2
 .param VCM=0.6
-.param CL=50f
+.param CL=10p
 .param VSTEP=50m
 
 Vdd  vdd 0 dc {VDD}
@@ -51,19 +51,19 @@ XDUT vinp vinn voutp voutn vdd vss amp_030_miller_cmfb_composite
   write
   quit
 .endc
-.param x_dut_xm1_core_w=10u
-.param x_dut_xm1_core_l=0.5u
-.param x_dut_xm3_core_w=10u
-.param x_dut_xm3_core_l=1u
-.param x_dut_xm5_core_w=12u
-.param x_dut_xm5_core_l=0.5u
-.param x_dut_xm6_core_w=2u
-.param x_dut_xm6_core_l=1u
-.param x_dut_xm7_core_w=6u
-.param x_dut_xm8_core_w=2u
-.param x_dut_r1_core_value=2k
+.param x_dut_xm1_core_w=5e-06
+.param x_dut_xm1_core_l=5e-07
+.param x_dut_xm3_core_w=5e-06
+.param x_dut_xm3_core_l=2e-06
+.param x_dut_xm5_core_w=4e-05
+.param x_dut_xm5_core_l=2e-06
+.param x_dut_xm6_core_w=3.5e-06
+.param x_dut_xm6_core_l=2e-06
+.param x_dut_xm7_core_w=1.05e-05
+.param x_dut_xm8_core_w=3.5e-06
+.param x_dut_r1_core_value=8000.0
 .param x_dut_c1_core_value=1p
-.param i_bias_core=20u
+.param i_bias_core=2e-05
 .param x_dut_xm1_core_m=1
 .param x_dut_xm3_core_m=1
 .param x_dut_xm5_core_m=1

@@ -1,9 +1,13 @@
 # AnalogGym analysis binding (noise).
+# Band standardized 2026-08-01 (paper noise column): FSTART 1k -> 1 so every circuit reports
+# the SAME figure — total integrated input-referred noise, 1 Hz .. 1 MHz, closed-loop bias
+# config, CL = 10p. ngspice `inoise_total` is already volts rms integrated over the swept
+# band, hence the datasheet binds it as vn_in_integrated (unit V).
 schema: spicexplorer/analysis@1
 id: noise
 template: noise_biaswrap
-description: "Input-referred noise via the AnalogGym self-bias bias-wrap (Lfb/Cin)."
+description: "Total integrated input-referred noise, 1 Hz-1 MHz, via the AnalogGym self-bias bias-wrap (Lfb/Cin)."
 enabled: true
-params: {VDD: 1.8, VCM: 300m, CL: 100p, FSTART: 1k, FSTOP: 1G, PPD: 50}
+params: {VDD: 1.8, VCM: 300m, CL: 10p, FSTART: 1, FSTOP: 1MEG, PPD: 50}
 flags: []
-produces: [vn_in]
+produces: [vn_in_integrated]

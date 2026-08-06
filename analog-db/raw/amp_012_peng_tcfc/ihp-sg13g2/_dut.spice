@@ -6,30 +6,30 @@
 ** Source: pdk/ihp-sg13g2/netlist.spice (run `analog-db generate` to refresh).
 *----------------------------------------------------------*
 ** params: 24 free + 0 frozen knobs (sizing.yaml) · 52 tied · 23 ratio-derived (abstract/params.yaml)
-.param CAPACITOR_0=1.8719584694171476e-12
-.param CAPACITOR_1=2.5460642554730274e-12
-.param CURRENT_0_BIAS=1.2984942841619427e-06
-.param x_dut_xm66_l=4.93834968309184e-06
+.param CAPACITOR_0=1.87196e-12
+.param CAPACITOR_1=2.54606e-12
+.param CURRENT_0_BIAS=1.29849e-06
+.param x_dut_xm66_l=4.93835e-06
 .param x_dut_xm65_m=4
-.param x_dut_xm66_w=3.639279460843864e-07
-.param x_dut_xm10_l=7.48172986805076e-07
+.param x_dut_xm66_w=3.63928e-07
+.param x_dut_xm10_l=7.48173e-07
 .param x_dut_xm10_m=4
-.param x_dut_xm10_w=7.828746124040156e-06
-.param x_dut_xm11_l=5.422078967582453e-07
+.param x_dut_xm10_w=7.82875e-06
+.param x_dut_xm11_l=5.42208e-07
 .param x_dut_xm11_m=4
-.param x_dut_xm11_w=9.055586564941477e-06
-.param x_dut_xm19_l=4.312024823684264e-07
+.param x_dut_xm11_w=9.05559e-06
+.param x_dut_xm19_l=4.31202e-07
 .param x_dut_xm14_m=4
-.param x_dut_xm19_w=1.706276839105315e-06
-.param x_dut_xm23_l=6.133141401805846e-07
+.param x_dut_xm19_w=1.70628e-06
+.param x_dut_xm23_l=6.13314e-07
 .param x_dut_xm23_m=4
-.param x_dut_xm23_w=2.7926678654690997e-06
-.param x_dut_xm70_l=9.142486402054605e-06
+.param x_dut_xm23_w=2.79267e-06
+.param x_dut_xm70_l=9.14249e-06
 .param x_dut_xm70_m=4
-.param x_dut_xm70_w=4.646218630089021e-06
-.param x_dut_xm9_l=2.063372547860109e-06
+.param x_dut_xm70_w=4.64622e-06
+.param x_dut_xm9_l=2.06337e-06
 .param x_dut_xm9_m=4
-.param x_dut_xm9_w=5.50205214041051e-06
+.param x_dut_xm9_w=5.50205e-06
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

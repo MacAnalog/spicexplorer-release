@@ -1,0 +1,39 @@
+# Analysis binding: large-signal THD in the DIFFERENTIAL unity-feedback follower
+# (amplifier/thd_diff — tran_step_diff's network with the tone split +/- ASIG/2). This FD
+# cell has cm_control: partial (ratioed CM through the statically-transparent chopper, no
+# explicit CMFB); the CMFB-present owner rule says run, but cm_drift_v is watched extra
+# carefully (see VALIDATION note below).
+# ASIG = 0.1 is the applied DIFFERENTIAL stimulus peak — closed-loop gain of the one-wire
+# follower is 2, so each output swings ~100 mV about vocm. Headroom: vod_op ~ vos ~ 4e-11 V
+# (symmetric netlist), vocm = 0.599 V (fresh dc_op, ihp tt) — per-side excursion ~ASIG
+# ~ 0.1 V about mid-rail, far inside the 1.2 V rails.
+# F0 GRID (campaign rule): fresh ac_open_loop (ihp tt, 2026-08-01) reads ugf = 12.33 MHz —
+# the 3-30 MHz band, so the 1 MHz SE-corpus grid divides by 10: F0 = 100 kHz, ~62x under
+# the follower's closed-loop crossover (~ugf/2 = 6.2 MHz).
+# COHERENT WINDOW (whole F0 periods, EVEN count so cm_drift_v's half-window means stay
+# tone-blind): TSTART = 20u = 2 whole F0 periods >= 20x the fresh follower t_settle
+# (20 x 408 ns = 8.16 us; tran_step IS this operating point); TSTOP = 180u leaves 16 whole
+# periods; TSTEP = 20n = 1/(500*F0).
+# TRUST CHECKS (template header): gain_tone must sit in (2/3, 2] (guard sentinel thd_pct =
+# 999); cm_drift_v must be << ASIG or the output CM was still walking through the DFT
+# window.
+# VALIDATION RECORD (ihp-sg13g2 tt, 2026-08-01) — HONEST CIRCUIT-LEVEL FAILURE at the
+# hand-seeded sizing, NOT a binding defect: gain_tone = 6.23 (gate is (2/3, 2]),
+# thd_pct = 42.4 %, and the spectrum is a textbook square wave (a1 = 0.623, a3 = 0.232
+# ~ a1/3, a5 = 0.119 ~ a1/5 — a ±0.49 V differential relay waveform). Drive-halving
+# diagnostic (ASIG 0.1 -> 0.05): a1 essentially UNCHANGED (0.685), gain_tone doubled to
+# 13.7, HD2/HD3 did NOT scale x2/x4 — the output amplitude is set by the loop, not the
+# drive. Consistent with tran_step's vfinal = -0.48 V (the follower latches to a railed
+# differential state after a 50 mV step): the closed differential loop is BISTABLE /
+# relay-oscillating at this marginal sizing (fresh open-loop pm 25.1 deg, no CMFB,
+# knife-edge stage-1 node — see sizing.yaml's vb1 note). No F0/TSTEP/TSTART/ASIG choice
+# can fix a latching loop; the numbers are kept as recorded. cm_drift_v = -6.2e-9 V
+# stayed << ASIG throughout (the partial/ratioed CM held station even while the
+# differential loop toggled).
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_diff
+description: "THD — FD unity-feedback follower, differential tone; tran + in-deck coherent DFT."
+params: {VDD: 1.2, VCM: 0.6, CL: 10p, ASIG: 0.1, F0: 1.0e5, TSTEP: 20n, TSTART: 20u, TSTOP: 180u}
+flags: []
+produces: [thd_pct]

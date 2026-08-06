@@ -76,6 +76,15 @@ class CircuitGraph:
         self._G: nx.MultiGraph = nx.MultiGraph(name=self.name)
         # Populated when built with recurse=True: subckt instance ref -> its expanded child graph.
         self.subgraphs: dict[str, CircuitGraph] = {}
+        # References the build could NOT model (``on_unknown="skip"``), in netlist order. This
+        # graph is then an INCOMPLETE picture of its netlist, so the record is load-bearing:
+        # `compare_graphs` refuses to ignore it (two builds that dropped different devices are
+        # not "the same circuit" just because what survived happens to match).
+        self.skipped_components: list[str] = []
+        # The nets each skipped reference was wired to, so the loss can be described WITHOUT its
+        # instance name — see `skipped_shapes`. The name alone is not comparable across two
+        # independent netlisters (Virtuoso and xschem spell the same clamp diode differently).
+        self._skipped_nets: dict[str, tuple[str, ...]] = {}
         # Functional-subcircuit annotations overlaid by the matcher (e.g. detected current
         # mirrors). Empty until `match.annotate_subcircuits` runs; each entry is a MirrorGroup.
         # A non-structural overlay — it is NOT part of the contract round-trip or comparison.
@@ -100,7 +109,8 @@ class CircuitGraph:
 
         Subcircuit instances are modeled as black-box :class:`SubcktInstanceNode`s with named,
         role-tagged ports. ``on_unknown`` controls truly untypable devices (e.g. a BJT/diode):
-        ``"skip"`` warns and drops them so a raw testbench still graphs; ``"raise"`` aborts.
+        ``"skip"`` warns, drops them, and records their references in
+        :attr:`skipped_components` so the loss stays visible; ``"raise"`` aborts.
 
         With ``recurse=True``, each subckt instance is also *expanded* into a child graph stored in
         :attr:`subgraphs` (instance ref -> child) — leaving the black-box node in place, so callers
@@ -119,6 +129,12 @@ class CircuitGraph:
                 if on_unknown == "raise":
                     raise ValueError(msg)
                 logger.warning("skipping %s", msg)
+                graph.skipped_components.append(ref)
+                # Record the wiring too: it is the only name-free evidence of what was lost.
+                try:
+                    graph._skipped_nets[ref] = tuple(view.get_component_nodes(ref))
+                except Exception:  # pragma: no cover - a view that cannot report nets for a ref
+                    graph._skipped_nets[ref] = ()
                 continue
             # Add + connect atomically. The factory has already validated arity, so a component
             # node is only ever added together with its full pin↔net edge set — never a phantom
@@ -270,6 +286,34 @@ class CircuitGraph:
     def get_neighbourhood(self, comp: ComponentNode, sort: bool = True) -> list[NetNode]:
         neighbours = list(self._G.neighbors(comp))
         return sorted(neighbours, key=lambda n: n.name) if sort else neighbours
+
+    def skipped_shapes(self) -> list[tuple[str, int, tuple[int, ...]]]:
+        """One **name-free** shape per entry of :attr:`skipped_components`, in the same order.
+
+        A shape is ``(SPICE device letter, wired-net count, sorted net-degree signature)`` — the
+        most a dropped device can honestly be described by, given that the build never typed it:
+
+        * the **letter** is the device class SPICE itself dispatches on (``D`` diode, ``Q`` BJT),
+          not an arbitrary name;
+        * the **net count** distinguishes a 2-terminal drop from a 3-terminal one;
+        * the **degree signature** is how many modeled pins touch each of those nets, which pins
+          the dropped device to a place in the surviving topology.
+
+        None of the three moves when an instance is renamed, which is what makes it usable inside
+        :func:`~spicexplorer_circuitgraph.compare.compare_graphs`: that comparison's contract is
+        that ``D1`` → ``DCLAMP`` does not change the circuit, and two independent netlisters
+        (xschem and Virtuoso, say) have no reason to agree on the spelling. Comparing raw names
+        there turns a pure rename into "not equivalent"; comparing shapes still catches the thing
+        worth catching — one side dropped a diode the other did not.
+        """
+        shapes: list[tuple[str, int, tuple[int, ...]]] = []
+        for ref in self.skipped_components:
+            nets = self._skipped_nets.get(ref, ())
+            degrees = sorted(
+                self._G.degree(self._net_map[n]) for n in nets if n in self._net_map
+            )
+            shapes.append((ref[:1].upper(), len(nets), tuple(degrees)))
+        return shapes
 
     def connections(self, comp: ComponentNode, *, include_body: bool = True) -> dict[str, str]:
         """pin-name → net-name for a component, read from the live graph (deterministic order).

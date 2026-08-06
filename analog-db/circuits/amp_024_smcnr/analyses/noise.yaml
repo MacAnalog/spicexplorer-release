@@ -1,8 +1,18 @@
 # Analysis binding (plan D-4): universal noise — input-referred noise, unity-gain connected.
+# BAND STANDARDIZED 2026-08-01 (campaign): FSTOP 1MEG -> 1G (FSTART already 1, PPD unchanged)
+# so the paper's noise column is one uniform condition across the corpus: TOTAL integrated
+# input-referred noise, 1 Hz - 1 MHz, unity/closed-loop bias config, CL = 10p. ngspice
+# inoise_total is already volts rms integrated over the swept band; the datasheet binds it
+# as vn_in_integrated (unit V) — the old vn_in entry declared it V/sqrt(Hz), which was
+# dimensionally wrong and is replaced. On this ~152 kHz-ugf cell the band extension matters:
+# above the closed-loop rolloff the input-referred density RISES as onoise/|gain(f)| while
+# gain falls, so the high-frequency tail dominates the integral — inherent to "total
+# input-referred noise to 1 MHz" and uniform across the corpus; compare cells only under
+# this same band.
 schema: spicexplorer/analysis@1
 id: noise
 template: noise
-description: "Input-referred noise over the sensing band; vn_in."
+description: "Total integrated input-referred noise, 1 Hz - 1 MHz, unity-gain buffer; vn_in_integrated."
 params: {VDD: 1.5, VCM: 0.5, CL: 10p, FSTART: 1, FSTOP: 1MEG, PPD: 50}
 flags: []
-produces: [vn_in]
+produces: [vn_in_integrated]

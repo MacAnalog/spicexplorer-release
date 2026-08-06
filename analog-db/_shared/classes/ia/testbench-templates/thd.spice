@@ -1,35 +1,186 @@
-** AUTHORED TEMPLATE — amplifier/thd: large-signal harmonic distortion in the unity buffer.
-** A single sine at F0 (amplitude ASIG, offset VCM) drives the + input; the buffer output's
-** harmonic content IS the DUT's distortion. ngspice lane: plain tran written to the raw —
-** THD computed by the platform registry {meas: thd_pct, f0: F0} (coherent FFT, the .four
-** analogue; the `fourier` print in the log is an eyeball hint only). Spectre lane: the
-** platform composes a NATIVE pss at F0 instead (fd-PSF harmonics -> {meas: thd_pss_*}) —
-** ngspice has no PSS, so tran+FFT is the engine-neutral default and pss the closed-lane
-** upgrade. Bindings: DUT PORT_LINE VDD VCM IBIAS CL ASIG F0 TSTEP TSTOP PDK_INCLUDE.
+** AUTHORED TEMPLATE — ia/thd: large-signal harmonic distortion, fully differential.
+**
+** THIS FILE IS THE BODY OF ia/thd_diff.spice, VERBATIM. It used to be a copy of the
+** SINGLE-ENDED amplifier/thd deck — a unity buffer around v(vout) with an `Ibias vdd ibias`
+** source — and NO ia member has a single-ended `vout` port or an `ibias` port, so it did not
+** merely fail to measure: assembled against ia_001_hsu_bandpass_classab it left `vout`,
+** `vinn` and `ibias` as dangling bench-only nodes, ngspice reported
+** `singular matrix: check node vout`, gmin stepping and source stepping both failed, and the
+** run ended in "no measures parsed". The DUT's real voutp/voutn were never loaded or read.
+** Replaced 2026-07-31 with the differential deck below.
+**
+** Fully-differential large-signal distortion: a single tone at F0 (differential amplitude
+** ASIG about VCM) drives the closed-loop IA; THD of the differential output is computed
+** IN-DECK by a coherent single-bin DFT over harmonics 2..5 (control-script vector math —
+** no FFT windowing/padding error), so the runner's measure parser picks up thd_pct/thd_db
+** directly. analog-db's runner reads measures out of the ngspice LOG only — it has no route
+** into the platform Tier-1 registry — so a deck that merely `write`s a raw yields "no
+** measures parsed". The written raw stays available for the platform {meas: thd_pct, f0: F0}
+** cross-check; the Spectre-lane upgrade is a native pss at F0 (fd-PSF harmonics).
+**
+** The class map exposes both names — `thd` is the canonical analysis id in metrics.yaml,
+** `thd_diff` the explicit template ia_001_hsu_bandpass_classab binds — and EVERY ia member is
+** differential-in/differential-out, so there is no second single-ended form to write. Keep
+** the two files in sync; ia/thd_diff.spice is the one under live test and its header carries
+** the full rationale (and the measured evidence) for every line below.
+**
+** ENDPOINT-DUPLICATION CORRECTION (2026-07-31). `linearize` returns N+1 points spanning
+** exactly W periods, so its LAST sample repeats its FIRST. A plain mean()-based DFT leaves
+** that duplicate in and biases every bin by |vac[0]|/N. Measured here on
+** ia_001_hsu_bandpass_classab @ ihp-sg13g2 (ASIG=2m, F0=1k, TSTART=8m, 8-period window,
+** TSTEP=1u, np=8001): the bias term 2*|vac[0]|/np = 1.700e-07 V. It is an ABSOLUTE bin
+** bias, so what it costs depends entirely on the bin it lands in:
+**   a3 = 1.9864e-05 naive -> 1.9964e-05 corrected  (0.5 %  — a3 sits 117x above the bias)
+**   a4 = 2.4411e-07 naive -> 1.8117e-07 corrected  (35 %)
+**   a5 = 4.4809e-07 naive -> 3.4756e-07 corrected  (29 %)
+**   thd_pct = 0.05052399 naive -> 0.05076388 corrected (0.5 %)
+** So on THIS cell thd_pct is a3-dominated and the correction is a sub-percent effect — do NOT
+** repeat the amplifier class's "13x / a4-a5 are pure artifact" figure here, it is that cell's
+** number, not this one's. The correction is kept because it is the mathematically exact
+** rectangular window and because a4/a5 ARE artifact-comparable at this distortion level: on a
+** lower-distortion sizing the bias stops being negligible and the DFT stops measuring the
+** circuit. Cost is a few extra vector ops.
+**
+** The decisive evidence is TSTEP INVARIANCE — an endpoint bias falls as 1/N, so it shows up
+** as a thd_pct that drifts with the timestep instead of converging. Measured on ia_001,
+** TSTART=8m, 8-period window, TSTEP 4u / 2u / 1u / 0.5u (np = 2001 / 4001 / 8001 / 16001):
+**   naive     0.049976 -> 0.050308 -> 0.050524 -> 0.050633 %   (+1.31 %, still climbing,
+**                                                               and climbing TOWARDS the
+**                                                               corrected value)
+**   corrected 0.050854 -> 0.050774 -> 0.050764 -> 0.050754 %   (-0.20 %, converged)
+** The corrected form is ~6.6x more timestep-stable and the naive form is converging onto it,
+** which is what identifies the drift as the endpoint artifact and not circuit content.
+**
+** COHERENCE + SETTLING REQUIREMENT: recording starts at TSTART (the tran third argument) so
+** the closed-loop startup transient is DISCARDED. Only the WINDOW LENGTH (TSTOP-TSTART) must
+** be an integer number of F0 periods; TSTART itself need not be. A non-integer WINDOW is
+** fatal, not cosmetic, and NO endpoint correction saves it — keep the integer-window
+** requirement. >= 8 measured periods recommended and TSTEP <= 1/(200*F0).
+**
+** SETTLING IS THE BINDING'S JOB, AND IT IS THE DOMINANT UNCERTAINTY HERE — not the window.
+** This class's DC-servo / pseudo-resistor high-pass corner is very low (ia_001: hpf_hz =
+** 4.14 Hz, i.e. tau ~ 38 ms), so a TSTART of a few ms is a small fraction of one time
+** constant and the cell is still drifting through the measured window. Measured on ia_001,
+** 8-period window, corrected DFT, TSTEP=1u, TSTART swept:
+**   TSTART      8m       24m       48m       96m      160m
+**   a2     3.32e-07  2.22e-07  1.18e-07  3.96e-08  3.46e-09   <- 96x fall
+**   a3    1.9964e-5 2.0025e-5 2.0088e-5 2.0135e-5 2.0158e-5
+**   thd    0.050764  0.050911  0.051067  0.051185  0.051241 % (+0.94 %, still rising)
+** So the committed ia_001 binding (TSTART=8m) is SETTLING-limited at the ~1 % level, and its
+** a2 is dominated by startup residue rather than by real second-order distortion. Read a
+** thd_pct from this bench as settling-limited unless TSTART is several times
+** 1/(2*pi*hpf_hz); an a2 that collapses as TSTART grows is the tell. This is a BINDING
+** choice, not a template one — TSTART costs simulation time linearly and belongs in
+** analyses/thd.yaml. The window-phase null test (TSTART 8m -> 8.5m, window still 8 periods)
+** moves thd_pct 0.05052 -> 0.05150 % (1.9 %) — that residual is SETTLING, not windowing: it
+** moves a3 (the dominant bin) by the same 1.97 % and is present in the naive and corrected
+** forms alike.
+**
+** `write` runs BEFORE `linearize` on purpose: `linearize` makes a NEW plot holding only the
+** scratch vectors, so writing after it shrinks the raw from every circuit node to the DFT
+** scratch and loses v(voutp)/v(voutn) — which would break the platform cross-check above.
+** (This deck used to `write` last and shipped exactly that defect.)
+**
+** DEAD-OUTPUT GUARD. The old deck guarded nothing: it floored nothing and relied on the
+** runner's NaN check, and a NaN was the ONLY thing the runner rejected. A node that is dead
+** but capacitively fed through still returns a small a1 and a plausible-looking thd_pct —
+** numbers from nothing (that is how the amplifier class's fully-differential cells reported
+** 3.5-11.7 % THD off a dead node). The guard here is a measured GAIN, not a NaN check: the
+** differential DRIVE is DFT'd from the deck itself (a1_in, the same coherent bin taken on
+** v(vinp)-v(vinn)) and gain_tone = a1/a1_in must clear 0.1 V/V (-20 dB). Referencing the
+** MEASURED drive instead of the ${ASIG} binding also makes the guard immune to a mis-bound or
+** mis-parsed stimulus — if the source is wrong, a1_in says so. 0.1 sits far below any real
+** bench (an IA runs ~20 V/V, a unity buffer ~1) and far above the ~0.02 V/V feedthrough that
+** fooled the old guard. On a fail, thd_pct/thd_db become the loud 999 sentinel — NOT NaN,
+** which would make the runner discard the whole analysis.
+**
+** Measures: a1..a5 (harmonic amplitudes, V), a1_in (measured differential drive), gain_tone,
+** vod_op (residual differential output offset — what the DC removal cancels), vod_pp,
+** thd_pct, thd_db. Diagnostic names are deliberately kept OUT of raw_project._SPEC_REGISTRY
+** (`vod_op`, not `vout_dc`; `gain_tone`, not `gain_cl`) so they stay recorded diagnostics and
+** never silently become optimizer objectives on a project exported from this deck.
+**
+** Assumes a self-biased, differential-in/differential-out DUT port order:
+**   .subckt <id> vinp vinn voutp voutn vdd vss
+** Required bindings: DUT PORT_LINE VDD VCM CL ASIG F0 TSTEP TSTART TSTOP PDK_INCLUDE.
 ${PDK_INCLUDE}
 
 .param VDD=${VDD}
 .param VCM=${VCM}
-.param IBIAS=${IBIAS}
 .param CL=${CL}
 .param ASIG=${ASIG}
 
 Vdd  vdd 0 dc {VDD}
 Vss  vss 0 dc 0
-Ibias vdd ibias dc {IBIAS}
-CLoad vout 0 {CL}
-
-* unity buffer; the sine offset VCM doubles as the DC operating point
-Vinp vinp 0 sin({VCM} {ASIG} ${F0})
-Vfb  vinn vout dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+Vcm  vcm 0 dc {VCM}
+* balanced differential tone: +/- ASIG/2 per side about the common mode
+Vinp vinp vcm sin(0 {ASIG/2} ${F0})
+Vinn vinn vcm sin(0 {-ASIG/2} ${F0})
 
 ${PORT_LINE} ${DUT}
 
 .control
   set filetype=ascii
-  tran ${TSTEP} ${TSTOP}
-  fourier ${F0} v(vout)
+  tran ${TSTEP} ${TSTOP} ${TSTART}
+  * raw FIRST — see the header; `linearize` below switches the current plot
   write
+  let vd = v(voutp) - v(voutn)
+  let vi = v(vinp) - v(vinn)
+  linearize vd vi
+  let t = time
+  let vod_op = mean(vd)
+  let vod_pp = maximum(vd) - minimum(vd)
+  * strip the DC term before the DFT (exact for a constant); it also yields vod_op, the
+  * residual differential output offset, as a diagnostic
+  let vac = vd - vod_op
+  let vin_ac = vi - mean(vi)
+  * np = N+1 samples spanning exactly W periods; the last REPEATS the first (see the header).
+  * mean()*np recovers the raw sum, the vac[0]*c[0] term drops the duplicate, and /nd
+  * normalises over the N non-redundant samples -> an exactly rectangular window.
+  let np = length(vac)
+  let nd = np - 1
+  let w = 2*pi*${F0}
+  let c1 = cos(w*t)
+  let s1 = sin(w*t)
+  let re1 = (mean(vac*c1)*np - vac[0]*c1[0])/nd
+  let im1 = (mean(vac*s1)*np - vac[0]*s1[0])/nd
+  let a1 = 2*sqrt(re1^2+im1^2)
+  * the SAME bin taken on the drive — the reference for the dead-output guard
+  let rei = (mean(vin_ac*c1)*np - vin_ac[0]*c1[0])/nd
+  let imi = (mean(vin_ac*s1)*np - vin_ac[0]*s1[0])/nd
+  let a1_in = 2*sqrt(rei^2+imi^2)
+  let c2 = cos(2*w*t)
+  let s2 = sin(2*w*t)
+  let re2 = (mean(vac*c2)*np - vac[0]*c2[0])/nd
+  let im2 = (mean(vac*s2)*np - vac[0]*s2[0])/nd
+  let a2 = 2*sqrt(re2^2+im2^2)
+  let c3 = cos(3*w*t)
+  let s3 = sin(3*w*t)
+  let re3 = (mean(vac*c3)*np - vac[0]*c3[0])/nd
+  let im3 = (mean(vac*s3)*np - vac[0]*s3[0])/nd
+  let a3 = 2*sqrt(re3^2+im3^2)
+  let c4 = cos(4*w*t)
+  let s4 = sin(4*w*t)
+  let re4 = (mean(vac*c4)*np - vac[0]*c4[0])/nd
+  let im4 = (mean(vac*s4)*np - vac[0]*s4[0])/nd
+  let a4 = 2*sqrt(re4^2+im4^2)
+  let c5 = cos(5*w*t)
+  let s5 = sin(5*w*t)
+  let re5 = (mean(vac*c5)*np - vac[0]*c5[0])/nd
+  let im5 = (mean(vac*s5)*np - vac[0]*s5[0])/nd
+  let a5 = 2*sqrt(re5^2+im5^2)
+* --- dead-output guard: a MEASURED gain, not a NaN check (see the header) ---
+* do NOT write `>` inside a `let` — the control preprocessor strips it as an output
+* redirection and silently truncates the RHS. Masks use `<=`, inverted with 1 - mask.
+  let gain_tone = a1/(a1_in + 1e-18)
+  let dead = (gain_tone <= 0.1)
+  let live = 1 - dead
+  let thd_raw = 100*sqrt(a2^2+a3^2+a4^2+a5^2)/(a1 + 1e-18)
+  let thd_pct = live*thd_raw + dead*999
+  let thd_db = 20*log10(thd_pct/100 + 1e-18)
+  print a1 a2 a3 a4 a5 a1_in gain_tone vod_op vod_pp thd_pct thd_db
   quit
 .endc
 .end

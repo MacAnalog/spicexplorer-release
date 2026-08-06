@@ -14,15 +14,22 @@
         "ac_cm_reg": {
           "measures": {
             "cm_peaking_db": 0.0,
-            "zcm_lf_ohm": 5359.0000095
+            "zcm_lf_ohm": 5358.9999974
           },
           "status": "ok"
         },
         "ac_open_loop": {
           "measures": {
-            "dcgain": 42.683875784,
-            "pm": 67.127453922,
-            "ugf": 736768343.31
+            "dcgain": 42.683875461,
+            "pm": 90.270055864,
+            "ugf": 4993837.7416
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_cm_db": 20.668320738,
+            "cmrr_db": 278.7720333
           },
           "status": "ok"
         },
@@ -33,30 +40,53 @@
           },
           "status": "ok"
         },
+        "iip3": {
+          "measures": {
+            "iip3_dbv": -7.7003538154
+          },
+          "status": "ok"
+        },
         "noise": {
           "measures": {
-            "inoise_total": 3.8987535803e-05
+            "inoise_total": 2.1174711264e-05
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_cm_db": 10.110623528,
+            "psrr_vdd_db": 232.23840802
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "error": "EngineUnavailable",
+          "status": "sim_error"
+        },
+        "thd": {
+          "measures": {
+            "thd_pct": 4.9986265984
           },
           "status": "ok"
         },
         "tran_cm_kick": {
           "measures": {
-            "cm_resid_v": 2.2204460493e-16,
-            "t_cm_settle": 1.9757200441e-08
+            "cm_resid_v": -1.2212453271e-15,
+            "t_cm_settle": 2.9769194398e-07
           },
           "status": "ok"
         },
         "tran_step": {
           "measures": {
-            "t_settle": 2.7371384598429946e-09
+            "t_settle": 2.4954127768004614e-07
           },
           "status": "ok"
         }
       },
       "provenance": {
         "engine": "spectre (virtuoso-bridge, operator corner wrapper)",
-        "generator": "analog-db spectre-lane live record",
-        "run_at": "2026-07-27T05:32:18+00:00"
+        "generator": "analog-db FD cmrr/psrr diff-gain re-sim (virtuoso-bridge)",
+        "run_at": "2026-08-05T01:57:05.867585+00:00"
       }
     }
   },
@@ -69,35 +99,67 @@
       },
       "cm_resid_v": {
         "spec": "pass",
-        "value": 2.2204460493e-16
+        "value": -1.2212453271e-15
+      },
+      "cmrr_cm_corr_db": {
+        "spec": "none",
+        "value": 63.352196199
+      },
+      "cmrr_cm_db": {
+        "spec": "none",
+        "value": 20.668320738
+      },
+      "cmrr_db": {
+        "spec": "none",
+        "value": 278.7720333
       },
       "dc_gain_db": {
         "spec": "pass",
-        "value": 42.683875784
+        "value": 42.683875461
       },
       "i_supply": {
         "spec": "pass",
         "value": 6.312272392534721e-05
       },
-      "pm_deg": {
+      "iip3_dbv": {
         "spec": "pass",
-        "value": 67.127453922
+        "value": -7.7003538154
+      },
+      "pm_deg": {
+        "spec": "fail",
+        "value": 90.270055864
+      },
+      "psrr_cm_corr_db": {
+        "spec": "none",
+        "value": 52.794498989
+      },
+      "psrr_cm_db": {
+        "spec": "none",
+        "value": 10.110623528
+      },
+      "psrr_vdd_db": {
+        "spec": "none",
+        "value": 232.23840802
       },
       "t_cm_settle": {
         "spec": "pass",
-        "value": 1.9757200441e-08
+        "value": 2.9769194398e-07
       },
       "t_settle": {
         "spec": "pass",
-        "value": 2.7371384598429946e-09
+        "value": 2.4954127768004614e-07
+      },
+      "thd_pct": {
+        "spec": "fail",
+        "value": 4.9986265984
       },
       "ugf_hz": {
-        "spec": "pass",
-        "value": 736768343.31
+        "spec": "fail",
+        "value": 4993837.7416
       },
-      "vn_in": {
-        "spec": "pass",
-        "value": 3.8987535803e-05
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 2.1174711264e-05
       },
       "vos": {
         "spec": "pass",
@@ -105,7 +167,7 @@
       },
       "zcm_lf_ohm": {
         "spec": "pass",
-        "value": 5359.0000095
+        "value": 5358.9999974
       }
     }
   },
@@ -149,9 +211,9 @@
       "tt"
     ],
     "performance": {
-      "dc_gain_db": 42.683875784,
-      "pm_deg": 67.127453922,
-      "ugf_hz": 736768343.31
+      "dc_gain_db": 42.683875461,
+      "pm_deg": 90.270055864,
+      "ugf_hz": 4993837.7416
     },
     "power_w": 7.574726871041665e-05
   },

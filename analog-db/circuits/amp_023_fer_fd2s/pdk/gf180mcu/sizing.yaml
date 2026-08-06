@@ -104,13 +104,13 @@ variables:
   unit: m
 - name: x_dut_rza_value
   description: Nulling resistor (ohms)
-  default: 800
+  default: 1500
   min: 100
   max: 10000
   unit: ohm
 - name: x_dut_cca_value
   description: Miller cap per side (F)
-  default: 350e-15
+  default: 2e-12
   min: 5e-14
   max: 2e-12
   unit: F

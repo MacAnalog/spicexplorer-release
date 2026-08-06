@@ -1,0 +1,153 @@
+# Ax-revival + area/power demo — BASELINE (amplifier specs only).
+#
+# Two-stage Miller-compensated FD OTA (analog-db amp_029_two_stage_miller_comp) — the direct
+# successor of the retired amp_020_two_stage_miller_cmfb (same 10-transistor two-stage Miller
+# topology, refs XM1..XM10). UNSIZED: geometry (W/L) + the bias current are searched;
+# passives, the bias level and the multipliers are frozen. Drives the committed ihp-sg13g2 raw
+# decks through the optimizer.
+#
+# Knob names come from the deck's own `.param` block
+# (`examples/analog-db/raw/amp_029_two_stage_miller_comp/ihp-sg13g2/ac_open_loop.spice`):
+# 14 free + 6 frozen knobs, plus 16 TIED symbols that are NOT knobs — XM2/XM4/XM9/XM10 track
+# their twins, and x_dut_xm{7,8,10}_l track x_dut_xm6_l — so only the driving symbols appear here.
+#
+# `optimizer_config.type` is the ENGINE selector (D-1): `nevergrad` here; flip it to
+# `bayesian_ax` (or override in the run script) to run the SAME search under Ax Bayesian
+# optimization. Companion `amp_029_area_power.yaml` adds active-area + power as first-class
+# metrics — this file is the without-them reference to compare against.
+project:
+  name: amp_029 baseline (gain/ugf/pm)
+  description: Two-stage Miller OTA — amplifier specs only; Ax/Nevergrad engine-swap demo
+  simulator: ngspice
+  save_sim: false
+  parallel_sim: true
+  ws_root: ../analog-db/raw/amp_029_two_stage_miller_comp/ihp-sg13g2
+  netlist: ac_open_loop.spice
+  outdir: scratch
+  tech_spec:
+    name: ihp-sg13g2
+    constraints: {}
+  dut_params:
+  # ── searched: input pair (XM2 tied to XM1) ──
+  - name: x_dut_xm1_w
+    min_val: 1.0e-06
+    max_val: 2.0e-05
+  - name: x_dut_xm1_l
+    min_val: 2.5e-07
+    max_val: 1.0e-06
+  # ── searched: first-stage PMOS load (XM4 tied to XM3) ──
+  - name: x_dut_xm3_w
+    min_val: 1.0e-06
+    max_val: 2.0e-05
+  - name: x_dut_xm3_l
+    min_val: 2.5e-07
+    max_val: 1.0e-06
+  # ── searched: second-stage PMOS driver (XM9 tied to XM5) ──
+  - name: x_dut_xm5_w
+    min_val: 5.4e-06
+    max_val: 2.0e-05
+  - name: x_dut_xm5_l
+    min_val: 2.5e-07
+    max_val: 1.0e-06
+  # ── searched: bias-mirror diode (its L also drives XM7/XM8/XM10 via the deck ties) ──
+  - name: x_dut_xm6_w
+    min_val: 1.0e-06
+    max_val: 8.0e-06
+  - name: x_dut_xm6_l
+    min_val: 2.5e-07
+    max_val: 1.0e-06
+  # ── searched: output-branch NMOS sink (XM10 width tied to XM7) ──
+  - name: x_dut_xm7_w
+    min_val: 2.0e-06
+    max_val: 1.2e-05
+  # ── searched: tail NMOS ──
+  - name: x_dut_xm8_w
+    min_val: 1.0e-06
+    max_val: 8.0e-06
+  - name: i_bias
+    min_val: 1.0e-05
+    max_val: 0.0001
+  # ── frozen: compensation passives (R2/C2 tied to R1/C1) + the PMOS-load bias level ──
+  - name: x_dut_r1_value
+    freeze: true
+    val: 30000.0
+  - name: x_dut_c1_value
+    freeze: true
+    val: 4.0e-13
+  - name: vbl
+    freeze: true
+    val: 0.7087
+  # ── frozen: device multipliers (the twins' m are tied to these in the deck) ──
+  - name: x_dut_xm1_m
+    freeze: true
+    val: 1.0
+  - name: x_dut_xm3_m
+    freeze: true
+    val: 1.0
+  - name: x_dut_xm5_m
+    freeze: true
+    val: 1.0
+  - name: x_dut_xm6_m
+    freeze: true
+    val: 1.0
+  - name: x_dut_xm7_m
+    freeze: true
+    val: 1.0
+  - name: x_dut_xm8_m
+    freeze: true
+    val: 1.0
+  testbenches:
+  - name: ac_open_loop
+    params: []
+    netlist: ac_open_loop.spice
+    enable: true
+    description: 'raw deck: ac_open_loop (differential open-loop AC)'
+  - name: dc_op
+    params: []
+    netlist: dc_op.spice
+    enable: true
+    description: 'raw deck: dc_op (operating point, supply current)'
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48
+    budget: 15
+    name: NGOpt
+    lin_variable_bounds:
+      min: 0
+      max: 100
+    log_variable_bounds:
+      min: 1
+      max: 100
+    # dcgain / ugf / pm are read by BARE NAME from the deck's own `.meas ac …` results
+    # (computed on the DIFFERENTIAL output vodm = voutp − voutn) — no `measurement` recipe.
+    target_specs:
+    - name: dcgain
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exceed
+      target: 40
+      range: 40
+      tolerance: 1
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: ugf
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exceed
+      target: 1000000.0
+      range: 10000000.0
+      tolerance: 100000.0
+      weight: 1.0
+      reward_type: log
+      enable: true
+    - name: pm
+      testbench: ac_open_loop
+      sim_type: ac
+      goal: exact
+      target: 60
+      range: 45
+      tolerance: 10
+      weight: 1.0
+      reward_type: none
+      enable: true

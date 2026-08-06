@@ -1,0 +1,36 @@
+# Analysis binding for the self-biased AnalogGym DUT (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# Two-tone IIP3 in the unity buffer: 6.25 mV tones at 9/10 kHz share the F0 = gcd = 1 kHz
+# fundamental (n1=9, n2=10), so the IM3 products at 8/11 kHz (bins 8/11) and the IM5
+# products at 7/12 kHz (bins 7/12) land on exact F0 bins — the in-deck coherent DFT then has
+# no leakage. Tone placement per the campaign grid: fresh ugf (2026-08-01, landed sizing) is
+# 1.346 MHz @ ihp-sg13g2 tt / 558 kHz @ gf180mcu tt — both < 3 MHz, so the 0.9/1.0 MHz base
+# grid divides by 100 (9:10 ratio kept exactly).
+# COHERENT WINDOW: TSTART = 2m = 2 WHOLE beat periods (1/F0 = 1 ms; the integer-beat
+# contract is load-bearing) — on gf180mcu that is ~62x the 20*t_settle rule floor (fresh
+# t_settle 1.61 us -> 32 us); on ihp-sg13g2 the 20*t_settle rule is UNSATISFIABLE at this
+# sizing (limit-cycle oscillation, see thd.yaml's CIRCUIT HEALTH note). TSTOP-TSTART = 20m =
+# 20 beat periods; TSTEP = 500n = 1/(200*F2).
+# DRIVE: ASIG = 6.25 mV per tone — the class default (see the iip3.spice header's measured
+# valid-window sweep). Plain decimal (0.00625), never a SPICE suffix — ASIG/F0/F1/F2 reach
+# .control arithmetic.
+# CIRCUIT HEALTH (ihp-sg13g2 tt, landed sizing): the unity-buffer loop oscillates (stb
+# pm_loop -82.7 deg last-crossing / gm_loop -8.0 dB) and the ~+/-50 mV limit cycle is ~8x
+# the tone amplitude — an intercept measured through it is meaningless, and the 22 ms window
+# costs hours of ngspice wall-clock (the CLI runner's 300 s cap times out). The binding's
+# numbers were proven on gf180mcu (healthy loop) — MEASURED @ gf180mcu tt 2026-08-01:
+# iip3_dbv +15.48 dBV, im3_dbc -119.13 dBc, a_im3 ~6.9e-9 vs a_floor 9.6e-13 (77 dB of
+# floor clearance), im5_im3_db -72.96, iip3_comp_db 0.005, gain_tone 1.0119 (0.10 dB of
+# in-band closed-loop peaking, NOT a dead-output artifact).
+# REPORTING: produces names the datasheet metric id (iip3_dbv); the remaining measures
+# (im3_dbc, a_f1/a_f2/a_drv, gain_tone, a_im3l/h, a_im5l/h, a_floor, im5_im3_db,
+# iip3_comp_db) ride the recorded `corners.<corner>.analyses.iip3.measures` block. TRUST
+# CHECKS: a_im3 must sit well above a_floor; gain_tone < 0.5 means the dead-output guard
+# fired and iip3_dbv is the -999 sentinel.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_selfbias
+description: "IIP3 — two-tone intermodulation intercept; tran+coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 0.3, CL: 10p, ASIG: 0.00625, F0: 1.0e3, F1: 9.0e3, F2: 1.0e4, TSTEP: 500n, TSTART: 2m, TSTOP: 22m}
+flags: []
+produces: [iip3_dbv]

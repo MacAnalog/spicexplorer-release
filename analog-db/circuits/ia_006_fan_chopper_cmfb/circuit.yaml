@@ -1,0 +1,51 @@
+schema: spicexplorer/circuit@1
+id: ia_006_fan_chopper_cmfb
+class: ia
+tier: ia
+subfamily: ccia
+realization: transistor
+display_name: 'Fan CCIA + real 5T CMFB (COMPOSITE: ia_002 + cmfb_002_5t_pmos_input)'
+stages: 2
+compensation: miller
+cm_control: regulated
+signal_path: fully_differential
+ports:
+- vinp
+- vinn
+- voutp
+- voutn
+- vref
+- clk_chin
+- clk_chin_not
+- clk_chfb
+- clk_chfb_not
+- clk_chout
+- clk_chout_not
+- vdd
+- vss
+provenance:
+  source: composition.yaml (composer P4) — CM closure of ia_002_fan_chopper_simple
+  paper: Q. Fan, F. Sebastiano, J. H. Huijsing, K. A. A. Makinwa, "A 1.8 uW 60 nV/sqrt(Hz) Capacitively-Coupled
+    Chopper Instrumentation Amplifier in 65 nm CMOS for Wireless Sensor Nodes", IEEE JSSC 46(7):1534-1543,
+    Jul. 2011
+  designer: 'Composition by Noorizadeh (MacAnalog group); blocks: ia_002 (Fan CCIA, hand-drawn xschem)
+    + cmfb_002_5t_pmos_input (owner 5T CMFB)'
+  notes: The CLOCKED counterpart of amp_034_fan_chopper_cmfb, and the variant doc/review_chopper_cm_rejection_2026-08-04.md
+    asked for. That review measured ia_002's clocked CM supply rejection at -52.9 dB raw and proved
+    chopping CANNOT fix it (the output chopper swaps voutp<->voutn and vocm=(voutp+voutn)/2 is invariant
+    under the swap), leaving the no-CMFB core's CM behaviour as the whole story. This entry closes that
+    loop with a transistor-level 5T CMFB on a split-out output-current-source gate, and re-runs the
+    same psrr_vdd_chop PSS+PAC bench with the clocks running. The actuator, the flavor and the loop
+    sign are inherited from amp_034's MEASURED selection (doc/review_amp034_cm_closure_2026-08-05.md).
+artifacts:
+  composition: composition.yaml
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+pdks:
+- ihp-sg13g2
+- tsmc-n65
+analyses:
+- dc_op
+- psrr_vdd_chop
+status: draft

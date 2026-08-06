@@ -14,6 +14,7 @@ import pytest
 from spicexplorer_gmid import (
     AxisSpec,
     DeviceTable,
+    GmidError,
     LUTManifest,
     LUTRegistry,
 )
@@ -167,3 +168,84 @@ def test_registry_list_skips_corrupt_sidecar(registry_root: Path, tmp_path: Path
     reg = LUTRegistry(registry_root)
     luts = reg.list_available("sky130")
     assert all(l.device != "bad_device" for l in luts)  # noqa: E741
+
+
+# ── G-6: suffixed LUTs (__<T>C temperature / __wf<W>u finger width) ──────────────────────────────
+#
+# The LUT extractor tags a filename whenever it is off the historic nominal (27 °C, a 5 µm finger).
+# The registry could only ever build "<device>__<corner>", so those variants were unaddressable.
+
+DEVICE = "sky130_fd_pr__nfet_01v8"
+
+
+def _variant(pdk_dir: Path, stem: str, *, width_um: float | None = None,
+             temp_k: float | None = None) -> None:
+    """Drop a `<stem>.pkl` + `<stem>.manifest.json` pair, mirroring what the extractor writes.
+
+    ``lut_file`` is left at the un-suffixed name **on purpose**: analog-db's ``build_manifest``
+    hardcodes ``f"{device}__{corner}.pkl"``, so every tagged manifest on disk names the wrong data
+    file. The registry must not resolve the ``.pkl`` through that field.
+    """
+    shutil.copy(SKY130_PKL, pdk_dir / f"{stem}.pkl")
+    man = json.loads(SKY130_MAN.read_text())
+    if width_um is not None:
+        man["conditions"]["width_um"] = width_um
+    if temp_k is not None:
+        man["conditions"]["temp_k"] = temp_k
+    (pdk_dir / f"{stem}.manifest.json").write_text(json.dumps(man))
+
+
+@pytest.fixture
+def suffixed_root(registry_root: Path) -> Path:
+    """The plain 27 °C/5 µm LUT plus a 1 µm-finger and a −40 °C variant."""
+    pdk_dir = registry_root / "sky130"
+    _variant(pdk_dir, f"{DEVICE}__tt__wf1u", width_um=1.0)
+    _variant(pdk_dir, f"{DEVICE}__tt__-40C", temp_k=233.15)
+    return registry_root
+
+
+def test_registry_find_addresses_a_finger_width_variant(suffixed_root: Path):
+    reg = LUTRegistry(suffixed_root)
+    m = reg.find("sky130", DEVICE, wf_um=1.0)
+    assert m.conditions.width_um == pytest.approx(1.0)
+    assert reg.find("sky130", DEVICE).conditions.width_um == pytest.approx(5.0)  # untagged default
+
+
+def test_registry_find_addresses_a_temperature_variant(suffixed_root: Path):
+    reg = LUTRegistry(suffixed_root)
+    assert reg.find("sky130", DEVICE, temp_c=-40).conditions.temp_k == pytest.approx(233.15)
+    # the nominal is spelled with NO suffix, so asking for it explicitly finds the plain file
+    assert reg.find("sky130", DEVICE, temp_c=27).conditions.temp_k == pytest.approx(300.0)
+    assert reg.find("sky130", DEVICE, wf_um=5.0).conditions.width_um == pytest.approx(5.0)
+
+
+def test_registry_load_reads_the_addressed_pkl_not_the_manifests_lut_file(suffixed_root: Path):
+    """The tagged sidecars all say ``lut_file: sky130_fd_pr__nfet_01v8__tt.pkl`` — the wrong file."""
+    reg = LUTRegistry(suffixed_root)
+    tbl = reg.load("sky130", DEVICE, wf_um=1.0)
+    assert tbl.source is not None and tbl.source.name == f"{DEVICE}__tt__wf1u.pkl"
+    assert tbl.manifest is not None and tbl.manifest.conditions.width_um == pytest.approx(1.0)
+
+
+def test_registry_load_will_not_substitute_the_untagged_pkl(suffixed_root: Path):
+    """A tagged manifest whose own .pkl is missing must raise — never fall back to the nominal one."""
+    (suffixed_root / "sky130" / f"{DEVICE}__tt__wf1u.pkl").unlink()
+    reg = LUTRegistry(suffixed_root)
+    with pytest.raises(FileNotFoundError, match="wf1u"):
+        reg.load("sky130", DEVICE, wf_um=1.0)
+
+
+def test_registry_find_missing_variant_lists_the_tagged_stems(suffixed_root: Path):
+    reg = LUTRegistry(suffixed_root)
+    with pytest.raises(KeyError) as exc:
+        reg.find("sky130", DEVICE, wf_um=0.5)
+    listed = str(exc.value)
+    assert "wf0p5u" in listed and "wf1u" in listed and "-40C" in listed
+
+
+def test_registry_rejects_a_mis_tagged_variant(registry_root: Path):
+    """A file named for 1 µm whose sidecar records 5 µm is a data-integrity error, not a table."""
+    _variant(registry_root / "sky130", f"{DEVICE}__tt__wf1u")   # conditions left at 5 µm
+    reg = LUTRegistry(registry_root)
+    with pytest.raises(GmidError, match="refusing to serve"):
+        reg.find("sky130", DEVICE, wf_um=1.0)

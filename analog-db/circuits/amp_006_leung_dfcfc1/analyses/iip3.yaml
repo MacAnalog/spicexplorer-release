@@ -1,0 +1,36 @@
+# Analysis binding (iip3) — AnalogGym self-bias DUT (no ibias port), so the class's
+# ibias-free template variant: the unity buffer self-biases and needs none of the
+# Lfb/Cin biaswrap the open-loop benches use.
+# TONE GRID: fresh ac_open_loop @ ihp-sg13g2 tt (2026-08-01, landed sizing) reads
+# ugf = 1.92 MHz < 3 MHz, so the campaign 0.9/1.0 MHz base grid is divided by 100:
+# tones at 9/10 kHz share F0 = gcd = 1 kHz (n1=9, n2=10, the exact 9:10 ratio), so the IM3
+# products at 8/11 kHz and IM5 products at 7/12 kHz land on exact F0 bins — the in-deck
+# coherent DFT then has no leakage. Both tones sit ~190x under the buffer's closed-loop
+# bandwidth (~ugf).
+# COHERENT WINDOW: TSTART = 2m = 2 whole beat periods (1/F0 = 1 ms), ~260x the 20x-settling
+# floor (tran_step t_settle = 385 ns -> 20x = 7.7 us); TSTOP-TSTART = 20m = 20 beat periods;
+# TSTEP = 500n = 1/(200*F2). The integer-beat TSTART contract is load-bearing (template
+# header).
+# DRIVE: ASIG = 6.25 mV per tone — the class default (geometric centre of the measured
+# valid window; see the iip3.spice header). Plain decimal (0.00625), never a SPICE suffix —
+# ASIG/F0/F1/F2 reach .control arithmetic.
+# REPORTING: `produces:` names datasheet metric ids; iip3_dbv is wired in datasheet.yaml.
+# TRUST CHECKS: a_im3 must sit well above a_floor; gain_tone < 0.5 means the dead-output
+# guard fired and iip3_dbv is the -999 sentinel.
+# KNOWN FLOOR LIMIT (measured @ ihp-sg13g2 tt, 2026-08-01): this cell's true IM3 is BELOW
+# the deck's numerical floor — loop gain at the 9/10 kHz tones is ~46 dB (ugf/f), so the
+# closed loop suppresses IM3 past what the tran DFT resolves. Evidence: a_floor scales
+# ~proportionally with TSTEP (500n -> 2.76e-10 V, 100n -> 5.23e-11 V) and a_im3 rides only
+# ~1.6-2x above it with im5_im3_db ~ -2..-5 dB (IM5 should sit far below real IM3);
+# TSTEP = 50n exceeds the runner's 300 s ngspice budget, so the floor cannot be pushed
+# further. iip3_dbv (31.4 dBV @ this binding; 34.7 dBV @ TSTEP=100n) is therefore a
+# floor-limited LOWER-BOUND-flavored estimate, not a resolved intercept — it still clears
+# the datasheet's min -10 dBV spec by >40 dB, which IS the honest claim. TSTEP kept at the
+# class 1/(200*F2) so every corner fits the runner budget.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_selfbias
+description: "IIP3 — two-tone (9/10 kHz, 6.25 mV/tone) intermodulation intercept; tran+coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 300m, CL: 10p, ASIG: 0.00625, F0: 1.0e3, F1: 9.0e3, F2: 1.0e4, TSTEP: 500n, TSTART: 2m, TSTOP: 22m}
+flags: []
+produces: [iip3_dbv]

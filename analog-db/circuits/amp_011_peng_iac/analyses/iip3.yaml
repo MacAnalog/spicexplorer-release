@@ -1,0 +1,24 @@
+# Analysis binding for a SELF-BIASED AnalogGym DUT (no ibias port) — the class's ibias-free
+# iip3 variant. Two-tone IIP3 in the unity buffer: tones share F0 = gcd (n1=9, n2=10), so the
+# IM3 products (2F1-F2 / 2F2-F1 = bins 8/11) and IM5 (bins 7/12) land on exact F0 bins —
+# leakage-free in-deck coherent DFT.
+# F0 GRID: fresh ac_open_loop @ ihp-sg13g2 tt (2026-08-01) reads ugf = 1.76 MHz < 3 MHz ->
+# campaign grid /100: F1/F2 = 9k/10k (exact 9:10), F0 = gcd = 1k. COHERENT WINDOW: beat
+# period 1/F0 = 1 ms; TSTART = 4m = 4 WHOLE beats (the integer-beat contract is
+# load-bearing); TSTOP-TSTART = 20m = 20 whole beats; TSTEP = 500n = 1/(200*F2).
+# ASIG = 0.00625 per tone ALWAYS (class geometric-centre drive; plain decimals only —
+# ASIG/F0/F1/F2 reach .control arithmetic, never SPICE suffixes).
+# TSTART NOTE: the 20x-t_settle rule is unappliable — tran_step's t_settle is pegged at TSTOP
+# because the DUT self-oscillates (~2.06 MHz, 0.43 V pk-pk, sustained; see stb.yaml). The
+# linear settling implied by ugf 1.76 MHz is sub-us, so 4 beats = 4 ms covers it >1000x.
+# STATUS @ ihp-sg13g2 tt (2026-08-01, landed sizing): the tran ABORTS ("timestep too small,
+# trouble with node vout") once the self-oscillation builds — the recorded sim_error IS the
+# honest result at this sizing (a completed DFT would misleadingly bury the ring off the
+# harmonic bins). Binding follows the campaign rules and is ready for a re-sized cell.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_selfbias
+description: "IIP3 — two-tone intermodulation intercept; tran+coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 240m, CL: 10p, ASIG: 0.00625, F0: 1.0e3, F1: 9.0e3, F2: 1.0e4, TSTEP: 500n, TSTART: 4m, TSTOP: 24m}
+flags: []
+produces: [iip3_dbv]

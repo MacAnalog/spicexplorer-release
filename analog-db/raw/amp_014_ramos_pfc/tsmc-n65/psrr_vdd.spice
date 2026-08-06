@@ -21,7 +21,7 @@
 
 .param VDD=1.8
 .param VCM=400m
-.param CL=100p
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD} ac 1     ; 1 V supply-ripple stimulus
 Vss  vss 0 dc 0

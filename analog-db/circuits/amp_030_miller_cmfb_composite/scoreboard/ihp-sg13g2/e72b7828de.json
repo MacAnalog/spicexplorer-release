@@ -13,18 +13,25 @@
       "analyses": {
         "ac_cm_reg": {
           "measures": {
-            "cm_peaking_db": 47.09224,
+            "cm_peaking_db": 53.27285,
             "zcm_lf_ohm": 7.949938,
-            "zcm_peak_ohm": 1798.771,
-            "zcm_pk": 1798.771
+            "zcm_peak_ohm": 3664.428,
+            "zcm_pk": 3664.428
           },
           "status": "ok"
         },
         "ac_open_loop": {
           "measures": {
             "dcgain": 50.13302,
-            "pm": 86.12134,
-            "ugf": 29743800.0
+            "pm": 33.34252,
+            "ugf": 13763730.0
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_cm_db": 30.42293,
+            "cmrr_db": 250.5123
           },
           "status": "ok"
         },
@@ -47,10 +54,68 @@
           },
           "status": "ok"
         },
+        "iip3": {
+          "measures": {
+            "a_drv": 0.006249378,
+            "a_f1": 0.01223623,
+            "a_f2": 0.01223612,
+            "a_floor": 1.356421e-12,
+            "a_im3h": 1.563396e-08,
+            "a_im3l": 1.563084e-08,
+            "a_im5h": 4.67532e-12,
+            "a_im5l": 4.253118e-12,
+            "cm_drift_v": -1.01474e-13,
+            "gain_tone": 1.957974,
+            "gain_tone_db": 5.836138,
+            "iip3_comp_db": 0.006492355,
+            "iip3_dbv": 14.85335,
+            "im3_dbc": -117.871,
+            "im5_im3_db": -70.4851,
+            "vocm_op": 0.6012754,
+            "vod_op": -0.00253518
+          },
+          "status": "ok"
+        },
         "noise": {
           "measures": {
-            "inoise_total": 6.739951e-05,
-            "onoise_total": 0.01142103
+            "inoise_total": 4.220066e-05,
+            "onoise_total": 0.01129008
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_cm_db": 0.01933125,
+            "psrr_vdd_db": 232.057
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "measures": {
+            "gm_loop": 27.50744,
+            "loopgain_db": 50.13302,
+            "phref_dev": -7.61503e-08,
+            "phref_ok": 1.0,
+            "pm_loop": 33.3349,
+            "pm_loop_first": 33.3349,
+            "ugf_loop": 13763730.0
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "measures": {
+            "a1": 0.1987609,
+            "a1_in": 0.09999841,
+            "a2": 5.727155e-12,
+            "a3": 3.011808e-06,
+            "a4": 5.419051e-12,
+            "a5": 2.921631e-08,
+            "cm_drift_v": -1.82299e-13,
+            "gain_tone": 1.98764,
+            "thd_db": -96.3897,
+            "thd_pct": 0.001515364,
+            "vocm_op": 0.6012757,
+            "vod_op": -2.62635e-12
           },
           "status": "ok"
         },
@@ -58,8 +123,8 @@
           "measures": {
             "cm_kick_v": 4.03e-05,
             "cm_resid_v": 0.0,
-            "t_cm_settle": 2.9701e-08,
-            "tcross": 6.029701e-06,
+            "t_cm_settle": 9.3699e-08,
+            "tcross": 6.093699e-06,
             "vocm0": 0.6012757,
             "vocm_end": 0.6012757,
             "vocm_mid": 0.601316
@@ -68,8 +133,8 @@
         },
         "tran_step": {
           "measures": {
-            "t_settle": 3.1214e-08,
-            "tcross": 1.031214e-06,
+            "t_settle": 8.0496e-08,
+            "tcross": 1.080496e-06,
             "vfinal": 0.09402939
           },
           "status": "ok"
@@ -78,7 +143,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-21T02:23:43+00:00"
+        "run_at": "2026-08-05T01:53:45+00:00"
       }
     }
   },
@@ -91,39 +156,87 @@
       },
       "cm_peaking_db": {
         "spec": "fail",
-        "value": 47.09224
+        "value": 53.27285
       },
       "cm_resid_v": {
         "spec": "pass",
         "value": 0.0
       },
+      "cmrr_cm_corr_db": {
+        "spec": "none",
+        "value": 80.55595
+      },
+      "cmrr_cm_db": {
+        "spec": "none",
+        "value": 30.42293
+      },
+      "cmrr_db": {
+        "spec": "none",
+        "value": 250.5123
+      },
       "dc_gain_db": {
         "spec": "pass",
         "value": 50.13302
+      },
+      "gm_loop_db": {
+        "spec": "none",
+        "value": 27.50744
       },
       "i_supply": {
         "spec": "pass",
         "value": 0.0001816555
       },
-      "pm_deg": {
+      "iip3_dbv": {
         "spec": "pass",
-        "value": 86.12134
+        "value": 14.85335
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 50.13302
+      },
+      "pm_deg": {
+        "spec": "fail",
+        "value": 33.34252
+      },
+      "pm_loop_deg": {
+        "spec": "fail",
+        "value": 33.3349
+      },
+      "psrr_cm_corr_db": {
+        "spec": "none",
+        "value": 50.15235125
+      },
+      "psrr_cm_db": {
+        "spec": "none",
+        "value": 0.01933125
+      },
+      "psrr_vdd_db": {
+        "spec": "none",
+        "value": 232.057
       },
       "t_cm_settle": {
         "spec": "pass",
-        "value": 2.9701e-08
+        "value": 9.3699e-08
       },
       "t_settle": {
         "spec": "pass",
-        "value": 3.1214e-08
+        "value": 8.0496e-08
+      },
+      "thd_pct": {
+        "spec": "pass",
+        "value": 0.001515364
       },
       "ugf_hz": {
         "spec": "pass",
-        "value": 29743800.0
+        "value": 13763730.0
       },
-      "vn_in": {
-        "spec": "pass",
-        "value": 6.739951e-05
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 13763730.0
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 4.220066e-05
       },
       "vos": {
         "spec": "pass",
@@ -174,8 +287,8 @@
     ],
     "performance": {
       "dc_gain_db": 50.13302,
-      "pm_deg": 86.12134,
-      "ugf_hz": 29743800.0
+      "pm_deg": 33.34252,
+      "ugf_hz": 13763730.0
     },
     "power_w": 0.0002179866
   },

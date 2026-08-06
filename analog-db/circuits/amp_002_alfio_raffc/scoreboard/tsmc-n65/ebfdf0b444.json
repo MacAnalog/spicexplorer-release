@@ -1,0 +1,151 @@
+{
+  "area": {
+    "active_gate_area_um2": 78.0,
+    "c_count": 2,
+    "c_total_f": 1.135e-11,
+    "mos_count": 24,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "amp_002_alfio_raffc",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 0.31597367343,
+            "pm": 164.04587112,
+            "ugf": 136456.51528
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 23.877060461
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0002649125825212879
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {},
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 21.754222683
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "measures": {
+            "loopgain_db": 0.31528163267,
+            "pm_loop": 164.05948277
+          },
+          "status": "ok"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 8.660869338012711e-07
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "engine": "spectre (virtuoso-bridge, operator corner wrapper)",
+        "generator": "analog-db spectre-lane live record",
+        "run_at": "2026-08-01T18:40:01+00:00"
+      }
+    }
+  },
+  "design_id": "ebfdf0b444",
+  "metrics": {
+    "tt": {
+      "cmrr_db": {
+        "spec": "fail",
+        "value": 23.877060461
+      },
+      "dc_gain_db": {
+        "spec": "fail",
+        "value": 0.31597367343
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 0.0002649125825212879
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 0.31528163267
+      },
+      "pm_deg": {
+        "spec": "fail",
+        "value": 164.04587112
+      },
+      "pm_loop_deg": {
+        "spec": "pass",
+        "value": 164.05948277
+      },
+      "psrr_vdd_db": {
+        "spec": "fail",
+        "value": 21.754222683
+      },
+      "t_settle": {
+        "spec": "pass",
+        "value": 8.660869338012711e-07
+      },
+      "ugf_hz": {
+        "spec": "fail",
+        "value": 136456.51528
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "CAPACITOR_0": "11p",
+      "CAPACITOR_1": "0.35p",
+      "CURRENT_0_BIAS": "20u",
+      "x_dut_xm10_l": "1u",
+      "x_dut_xm10_m": "1",
+      "x_dut_xm10_w": "1u",
+      "x_dut_xm11_l": "1u",
+      "x_dut_xm11_m": "1",
+      "x_dut_xm11_w": "1u",
+      "x_dut_xm14_m": "1",
+      "x_dut_xm15_l": "1u",
+      "x_dut_xm15_m": "2",
+      "x_dut_xm15_w": "1u",
+      "x_dut_xm21_l": "1u",
+      "x_dut_xm21_m": "3",
+      "x_dut_xm21_w": "1u",
+      "x_dut_xm3_m": "1",
+      "x_dut_xm59_l": "1u",
+      "x_dut_xm59_w": "1u",
+      "x_dut_xm6_l": "1u",
+      "x_dut_xm6_w": "1u",
+      "x_dut_xm7_l": "1u",
+      "x_dut_xm7_m": "1",
+      "x_dut_xm7_w": "1u",
+      "x_dut_xm9_l": "1u",
+      "x_dut_xm9_m": "1",
+      "x_dut_xm9_w": "1u"
+    }
+  },
+  "pdk": "tsmc-n65",
+  "ppa": {
+    "active_gate_area_um2": 78.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 0.31597367343,
+      "pm_deg": 164.04587112,
+      "ugf_hz": 136456.51528
+    },
+    "power_w": 0.0004768426485383182
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

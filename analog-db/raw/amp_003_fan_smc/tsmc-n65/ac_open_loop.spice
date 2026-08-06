@@ -25,8 +25,8 @@
 .lib tsmc_n65_models.scs tt
 .temp 27
 
-.param VDD=1.8
-.param VCM=300m
+.param VDD=1.2
+.param VCM=0.4
 .param CL=10p
 
 Vdd  vdd 0 dc {VDD}
@@ -40,8 +40,8 @@ CLoad vout 0 {CL}
 XDUT vss vdd vinn vinp vout amp_003_fan_smc
 .control
   set filetype=ascii
-  ac dec 50 0.1 1G
-  meas ac dcgain FIND vdb(vout) AT=0.1
+  ac dec 50 1e-4 1G
+  meas ac dcgain FIND vdb(vout) AT=1e-4
   meas ac ugf    WHEN vdb(vout)=0 FALL=1
   let phc = cph(vout)*180/3.14159265
   let ph  = 180 + phc - phc[0]

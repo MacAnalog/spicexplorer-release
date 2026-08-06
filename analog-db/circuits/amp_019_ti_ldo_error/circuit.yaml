@@ -9,6 +9,9 @@ class: amplifier
 display_name: "TI-LDO error amplifier (12T two-stage, level-shifted mirror load)"
 compensation: "Rz + Cc from the first-stage node to the output"
 stages: 2
+realization: transistor
+cm_control: not_applicable
+signal_path: single_ended
 ports: [vdd, vout, vinp, vinn, ibias, vss]   # vinp=VFB (non-inv), vinn=VREF (inv); ibias = the
                                              # source's I_error_amp_ref exposed per class convention
 provenance:
@@ -19,6 +22,6 @@ artifacts:
   abstract_netlist: abstract/netlist.spice
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
-pdks: [gf180mcu, ihp-sg13g2, sky130]
-analyses: [dc_op, ac_open_loop, ac_closed_loop, noise, tran_step, psrr_vdd, cmrr_vcm]
+pdks: [gf180mcu, ihp-sg13g2, sky130, tsmc-n65]
+analyses: [dc_op, ac_open_loop, ac_closed_loop, noise, tran_step, psrr_vdd, cmrr_vcm, thd, iip3, stb]
 status: draft

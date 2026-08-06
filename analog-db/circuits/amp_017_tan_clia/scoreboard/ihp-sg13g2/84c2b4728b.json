@@ -1,0 +1,206 @@
+{
+  "area": {
+    "active_gate_area_um2": 7655.532,
+    "c_count": 2,
+    "c_total_f": 5.87e-13,
+    "mos_count": 25,
+    "r_count": 1,
+    "r_total_ohm": 247560.0
+  },
+  "circuit": "amp_017_tan_clia",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 108.4523,
+            "pm": -61.8223,
+            "ugf": 6586395.0
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 100.8203
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 1.636802e-05,
+            "vos": -0.00119091
+          },
+          "status": "ok"
+        },
+        "iip3": {
+          "measures": {
+            "a_drv": 0.006249547,
+            "a_f1": 0.005985739,
+            "a_f2": 0.005488717,
+            "a_floor": 0.0005634869,
+            "a_im3h": 0.002666858,
+            "a_im3l": 0.000758045,
+            "a_im5h": 0.001425961,
+            "a_im5l": 0.0003558609,
+            "gain_tone": 0.8782584,
+            "gain_tone_db": -1.12755,
+            "iip3_comp_db": 11.60827,
+            "iip3_dbv": -40.9477,
+            "im3_dbc": -6.26942,
+            "im5_im3_db": -5.43784
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.0001397936,
+            "onoise_total": 12.64688
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 63.27876
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "measures": {
+            "gm_loop": -14.9281,
+            "loopgain_db": 108.4523,
+            "phref_dev": -0.0115873,
+            "phref_ok": 1.0,
+            "pm_loop": -64.0603,
+            "pm_loop_first": -64.0603,
+            "ugf_loop": 6587054.0
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "error": "amp_017_tan_clia/thd@ihp-sg13g2/tt: ngspice error:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_017_tan_clia \u00d7 thd \u00d7 ihp-sg13g2 \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nvdd                                        1.5\nvss                               ",
+          "status": "sim_error"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 0.0001989997,
+            "tcross": 0.0001999997,
+            "vfinal": 0.6875704
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-08-03T14:24:46+00:00"
+      }
+    }
+  },
+  "design_id": "84c2b4728b",
+  "metrics": {
+    "tt": {
+      "cmrr_db": {
+        "spec": "pass",
+        "value": 100.8203
+      },
+      "dc_gain_db": {
+        "spec": "pass",
+        "value": 108.4523
+      },
+      "gm_loop_db": {
+        "spec": "none",
+        "value": -14.9281
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 1.636802e-05
+      },
+      "iip3_dbv": {
+        "spec": "fail",
+        "value": -40.9477
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 108.4523
+      },
+      "pm_deg": {
+        "spec": "fail",
+        "value": -61.8223
+      },
+      "pm_loop_deg": {
+        "spec": "fail",
+        "value": -64.0603
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 63.27876
+      },
+      "t_settle": {
+        "spec": "fail",
+        "value": 0.0001989997
+      },
+      "ugf_hz": {
+        "spec": "none",
+        "value": 6586395.0
+      },
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 6587054.0
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 0.0001397936
+      }
+    }
+  },
+  "parameters": {
+    "analysis_params": {
+      "VCM": 0.25,
+      "VDD": 1.5
+    },
+    "sizing": {
+      "CAPACITOR_0": 3.47e-13,
+      "CAPACITOR_1": 2.4e-13,
+      "CURRENT_0_BIAS": 6.3e-07,
+      "RESISTOR_0": 247560,
+      "x_dut_xm14_m": 1,
+      "x_dut_xm5_l": "1e-06",
+      "x_dut_xm5_m": 117,
+      "x_dut_xm5_w": "1e-06",
+      "x_dut_xm61_l": "1e-06",
+      "x_dut_xm61_w": 2.2e-07,
+      "x_dut_xm68_l": "5e-07",
+      "x_dut_xm68_m": 6,
+      "x_dut_xm68_w": "1e-06",
+      "x_dut_xm69_l": "9e-07",
+      "x_dut_xm69_m": 3,
+      "x_dut_xm69_w": "1e-06",
+      "x_dut_xm70_l": 4.8e-07,
+      "x_dut_xm70_m": 2,
+      "x_dut_xm70_w": "1e-06",
+      "x_dut_xm71_l": "1e-06",
+      "x_dut_xm71_m": 1,
+      "x_dut_xm71_w": 2.53e-07,
+      "x_dut_xm73_l": "1e-06",
+      "x_dut_xm73_m": 2400,
+      "x_dut_xm73_w": "1e-06",
+      "x_dut_xm9_l": "1e-06",
+      "x_dut_xm9_m": 100,
+      "x_dut_xm9_w": "1e-06"
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 7655.532,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 108.4523,
+      "pm_deg": -61.8223,
+      "ugf_hz": 6586395.0
+    },
+    "power_w": 2.455203e-05
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

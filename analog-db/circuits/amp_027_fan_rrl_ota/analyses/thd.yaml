@@ -1,0 +1,28 @@
+# Analysis binding: large-signal THD in the DIFFERENTIAL unity-feedback follower
+# (amplifier/thd_diff — tran_step_diff's network with the tone split +/- ASIG/2; the SE
+# thd template is structurally invalid on this FD member: its `vout` node is capacitively
+# fed and read "thd_pct = 3.537 %" from a dead node before the guard, see thd.spice).
+# ASIG = 0.05 differential (NOT the SE consumers' 0.1): this telescopic core swings little.
+# The one-wire follower's gain of 2 puts ~ASIG on EACH output node, and the follower DC
+# term vod_op ~ 2*(VCM - vocm) ~ 0.25 V (vocm ~ 0.47 V at this sizing) already parks voutn
+# near 0.35 V over the NMOS cascode stack — 50 mV per side (voutn down to ~0.30 V) is what
+# the tran_step binding also uses (VSTEP = 50m); 100 mV would ride the compression knee and
+# measure clipping, not linearity.
+# COHERENT WINDOW (whole F0 periods, EVEN count so cm_drift_v's half-window means stay
+# tone-blind): F0 = 100 kHz — ~18x under the follower's closed-loop crossover (~ugf/2 =
+# 1.8 MHz; live ac_open_loop ugf = 3.61 MHz — the 444 MHz on scoreboard entry 2eb25596c6
+# is not physical at CL = 10p and this i_supply, trust the live sweep). TSTART = 20u = 2
+# whole periods, >> both t_settle (175 ns) and the CM servo's t_cm_settle (22 ns) at this
+# sizing; TSTOP = 180u leaves 16 whole periods; TSTEP = 20n = 1/(500*F0) <= 1/(200*F0).
+# REPORTING: `produces:` names DATASHEET METRIC IDS, not measure names. The template also
+# prints thd_db / a1..a5 / a1_in / gain_tone (~2 when live) / vod_op / vocm_op /
+# cm_drift_v. TRUST CHECKS: gain_tone <= 2/3 = guard fired (thd_pct = 999); cm_drift_v
+# must be << ASIG or the CM was still walking through the window (this circuit's RRL/CMFB
+# is the very thing under test — read it, don't assume it).
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_diff
+description: "THD — FD unity-feedback follower, differential tone; tran + in-deck coherent DFT."
+params: {VDD: 1.2, VCM: 0.6, CL: 10p, ASIG: 0.05, F0: 1.0e5, TSTEP: 20n, TSTART: 20u, TSTOP: 180u}
+flags: []
+produces: [thd_pct]

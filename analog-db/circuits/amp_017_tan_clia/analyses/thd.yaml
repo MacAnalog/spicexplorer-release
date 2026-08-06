@@ -1,0 +1,26 @@
+# Analysis binding for the self-biased CLIA 3-stage OTA (no ibias port) — uses the class's
+# ibias-free template variant so no external current source is left driving a dangling node.
+# THD in the unity buffer: tran + the template's in-deck coherent DFT (ngspice); the Spectre
+# lane composes a native pss at F0 (HARMS).
+# F0 GRID: fresh ac_open_loop @ gf180mcu tt (2026-08-01, landed sizing) reads ugf = 5.94 MHz
+# (3-30 MHz band) -> the campaign grid divided by 10: F0 = 100 kHz.
+# COHERENT WINDOW (the template requires (TSTOP-TSTART) to be whole F0 periods, see its
+# header): F0 = 100 kHz -> T = 10 us; TSTART = 4m = 400 whole periods >= 20x the fresh
+# tran_step t_settle read (198.98 us -> 3.98 ms, rounded up); TSTOP = 4.16m leaves 16 whole
+# measured periods. TSTEP = 20n = T/500 <= 1/(200*F0). NOTE the t_settle read itself is an
+# oscillation artifact (tcross pinned at the tran_step window end, vfinal 1.06 V vs the 0.5 V
+# follower value) — the closed loop at this sizing RINGS; see datasheet.yaml thd_pct.
+# ASIG = 0.1 (class default; VCM 0.3 +/- 0.1 clears both rails by a wide margin at VDD 1.8).
+# PILOT @ gf180mcu tt (2026-08-01, landed sizing): thd_pct = 15.6 %, gain_tone = 1.83
+# (OUTSIDE the SE trust band (0.5,1] — loop peaking), and a drive-halving check (ASIG 0.05)
+# scaled HD2 x0.76 / HD3 x2.9 instead of the power-series x0.5 / x0.25, with gain_tone
+# drifting to 1.56 — the distortion is a drive-independent limit cycle of the UNSTABLE
+# unity-gain loop (stb pm_loop -73.6 deg, gm_loop -13.9 dB), i.e. the CIRCUIT, not this
+# binding. Honest values kept; see datasheet.yaml thd_pct.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_selfbias
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 300m, CL: 10p, ASIG: 0.1, F0: 0.1e6, TSTEP: 20n, TSTART: 4m, TSTOP: 4.16m, HARMS: 7}
+flags: []
+produces: [thd_pct]

@@ -5,10 +5,11 @@ Sweeps the two demo projects (baseline vs. +area/power) under BOTH optimizer eng
 (Nevergrad and Ax Bayesian) on an unsized amplifier, then prints a comparison table of the best
 design each run found. Two circuits are wired:
 
-  • amp_020 — the two-stage Miller OTA (the original demo vehicle);
+  • amp_029 — the two-stage Miller OTA (the original demo vehicle; succeeded the
+    retired amp_020_two_stage_miller_cmfb);
   • amp_008 — the THREE-stage nested-Miller (NMCF) op-amp, a wider 15-knob search space.
 
-`--circuit {amp_020,amp_008,both}` picks the vehicle; `--batch-size N` (Ax only) asks Ax for N
+`--circuit {amp_029,amp_008,both}` picks the vehicle; `--batch-size N` (Ax only) asks Ax for N
 candidates per generation call (N=1 is exact serial parity — the proven path).
 
 Live SPICE (ngspice + ihp-sg13g2 PDK) is required, so run it in the api container / EDA base
@@ -39,7 +40,7 @@ HERE = Path(__file__).resolve().parent
 
 # circuit → (baseline yaml, +area/power yaml)
 CIRCUITS = {
-    "amp_020": (HERE / "amp_020_baseline.yaml", HERE / "amp_020_area_power.yaml"),
+    "amp_029": (HERE / "amp_029_baseline.yaml", HERE / "amp_029_area_power.yaml"),
     "amp_008": (HERE / "amp_008_baseline.yaml", HERE / "amp_008_area_power.yaml"),
 }
 
@@ -104,8 +105,8 @@ def run_one(yaml_path: Path, engine: str, budget: int, sim_outdir: str | None = 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--circuit", choices=("amp_020", "amp_008", "both"), default="amp_020",
-                    help="demo vehicle: amp_020 (2-stage OTA), amp_008 (3-stage NMCF), or both")
+    ap.add_argument("--circuit", choices=("amp_029", "amp_008", "both"), default="amp_029",
+                    help="demo vehicle: amp_029 (2-stage OTA), amp_008 (3-stage NMCF), or both")
     ap.add_argument("--budget", type=int, default=12, help="trials per run (default 12)")
     ap.add_argument("--batch-size", type=int, default=1,
                     help="Ax candidates per generation call (1 = serial parity; Nevergrad ignores)")

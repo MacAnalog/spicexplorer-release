@@ -1,0 +1,39 @@
+# Analysis binding: large-signal THD in the DIFFERENTIAL unity-feedback follower
+# (amplifier/thd_diff — tran_step_diff's network with the tone split +/- ASIG/2; the SE thd
+# template is structurally invalid on this FD member, see thd_diff.spice header).
+# F0 = 100 kHz per the campaign F0 grid, keyed on the FRESH open-loop ugf: measured
+# ugf = 24.39 MHz (ac_open_loop @ ihp-sg13g2 tt, 2026-08-01, CL=10p; the circuit.yaml
+# note's 97 MHz predates the CL=10p standardization — do not trust it) sits in the
+# 3-30 MHz band -> the whole grid divides by 10 from the >=30 MHz reference (F0 = 1 MHz).
+# The tone sits ~122x under the follower's closed-loop crossover (~ugf/2 = 12.2 MHz).
+# ASIG = 0.1 is the applied DIFFERENTIAL stimulus peak (class default; headroom is fine:
+# vod_op ~ 0.08 V measured, per-side excursion ~0.14 V about vocm inside the 1.2 V rails).
+# COHERENT WINDOW (whole F0 periods, EVEN count so cm_drift_v's half-window means stay
+# tone-blind — template header): F0 = 100 kHz -> T = 10 us; TSTART = 70u = 7 whole periods
+# = 21.7x the measured 3.229 us settling (tran_step t_settle, same run; rule: >= 20x
+# t_settle rounded UP to whole periods); TSTOP = 230u leaves 16 whole measured periods
+# (even). TSTEP = 20n = 1/(500*F0).
+# HONEST CIRCUIT FAILURE — READ thd_pct WITH THE STORY (ihp-sg13g2 tt, 2026-08-01):
+# thd_pct = 51.6 % with gain_tone = 4.79, OUTSIDE the FD live-gate (2/3, 2]. This is the
+# CIRCUIT, not the binding: cm_control: partial — no CM servo at either stage, and the
+# knife-edge vbl bias has CM gain ~2500 (width x CM-gain ~ 0.5 V, circuit.yaml). The
+# one-wire follower unavoidably wobbles the input CM at ASIG/2; the unregulated CM path
+# amplifies that wobble and the bench's own operating-point asymmetry (vod_op != 0)
+# converts it to DIFFERENTIAL output, swamping the DUT's own distortion. Drive-halving
+# proof it is not weakly nonlinear: ASIG 0.1 -> 0.05 moved HD2 (a2/a1) x8.7 (expected x2),
+# gain_tone 4.79 -> 11.11, absolute a1 0.479 -> 0.555 (LARGER at half drive) — the CM
+# conversion compresses with drive; no F0/TSTEP/TSTART/ASIG choice puts gain_tone in
+# (2/3, 2]. cm_drift_v stays ~1e-9 (the CM wobble is coherent at F0, invisible to drift).
+# amp_030 (this core + composed CMFB) is where a clean THD is measurable; here the number
+# honestly characterizes the unregulated topology and FAILS the 2 % spec by design.
+# REPORTING: `produces:` names DATASHEET METRIC IDS, not measure names. The template also
+# prints thd_db / a1..a5 / a1_in / gain_tone / vod_op / vocm_op / cm_drift_v; those ride
+# the recorded measures block. TRUST CHECKS: gain_tone <= 2/3 means the guard fired
+# (thd_pct = 999 sentinel); cm_drift_v must be << ASIG.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_diff
+description: "THD — FD unity-feedback follower, differential tone; tran + in-deck coherent DFT (CM-conversion-dominated on this no-CM-control cell, see header)."
+params: {VDD: 1.2, VCM: 0.6, CL: 10p, ASIG: 0.1, F0: 0.1e6, TSTEP: 20n, TSTART: 70u, TSTOP: 230u}
+flags: []
+produces: [thd_pct]

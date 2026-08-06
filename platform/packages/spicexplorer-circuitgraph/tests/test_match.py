@@ -8,6 +8,7 @@ integration check against the real example OTAs.
 
 from __future__ import annotations
 
+import logging
 import re
 import textwrap
 from pathlib import Path
@@ -1147,3 +1148,34 @@ def test_family_roles_are_deterministic_ground_truth():
     assert StructuralRole.MOS_PSEUDO_RESISTOR in DETERMINISTIC_ROLES
     assert StructuralRole.MOS_ANALOG_SWITCH in DETERMINISTIC_ROLES
     assert DETERMINISTIC_ROLES.isdisjoint(RESIDUE_ROLES)
+
+
+def test_detection_over_an_incomplete_host_says_the_host_was_incomplete(caplog):
+    """`find_subcircuits` builds the host graph internally and throws it away.
+
+    With the default `on_unknown="skip"` a device it cannot model is dropped, so detection runs
+    over a partial netlist — a template can only be found in, or ruled out of, the part that could
+    be typed. The census has to reach the caller; nothing else can.
+    """
+    host = (
+        "* mirror plus an unmodelable device\n"
+        "M1 ref ref vss vss sg13_lv_nmos\n"
+        "M2 out ref vss vss sg13_lv_nmos\n"
+        "Q1 out ref vss npn\n"
+        ".end\n"
+    )
+    with caplog.at_level(logging.WARNING, logger="spicexplorer_circuitgraph.match"):
+        find_subcircuits(host)
+    assert "invisible to subcircuit detection" in caplog.text and "Q1" in caplog.text
+
+
+def test_a_fully_typed_host_is_not_flagged(caplog):
+    host = (
+        "* mirror\n"
+        "M1 ref ref vss vss sg13_lv_nmos\n"
+        "M2 out ref vss vss sg13_lv_nmos\n"
+        ".end\n"
+    )
+    with caplog.at_level(logging.WARNING, logger="spicexplorer_circuitgraph.match"):
+        find_subcircuits(host)
+    assert "invisible to subcircuit detection" not in caplog.text

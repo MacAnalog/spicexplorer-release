@@ -75,6 +75,22 @@
           "type": "array",
           "items": { "type": "object" },
           "description": "Composite-owned sizing variable rows (sizing@1 variable shape) appended to every generated pdk/<pdk>/sizing.yaml."
+        },
+        "by_pdk": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "object" }
+          },
+          "description": "Per-PDK refinements of `variables`, keyed by pdk id: each row is merged (key-wise) over the row of the same `name` in `variables`, or appended if the name is new. Needed whenever a composite-owned device is real geometry — a block's sized W/L is per-PDK, so one shared default would silently carry one kit's numbers into another."
+        },
+        "analysis_params_by_pdk": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {"type": ["string", "number"]}
+          },
+          "description": "Per-PDK testbench-condition overrides (sizing@1 `analysis_params`), keyed by pdk id — emitted into the generated pdk/<pdk>/sizing.yaml. The composite is the instantiator, so it owns the operating point; the blocks' own analysis_params describe them standalone and do not compose. Needed as soon as a composite binds kits with different rails (1.2 / 1.8 / 3.3 V)."
         }
       }
     }

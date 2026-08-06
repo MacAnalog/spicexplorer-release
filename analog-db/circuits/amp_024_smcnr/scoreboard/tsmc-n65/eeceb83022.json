@@ -1,0 +1,178 @@
+{
+  "area": {
+    "active_gate_area_um2": 332.5,
+    "c_count": 1,
+    "c_total_f": 2e-12,
+    "mos_count": 8,
+    "r_count": 1,
+    "r_total_ohm": 100000.0
+  },
+  "circuit": "amp_024_smcnr",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 40.995154179,
+            "pm": 420.06533709,
+            "ugf": 107281.76722
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 79.257537857
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 1.145995424282898e-06
+          },
+          "status": "ok"
+        },
+        "iip3": {
+          "measures": {
+            "iip3_dbv": 8.0392507265
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.00044743557364
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 66.75367914
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "measures": {
+            "gm_loop": 29.740246287,
+            "loopgain_db": 40.727093661,
+            "pm_loop": 59.819959714,
+            "ugf_loop": 106479.66197
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "measures": {
+            "thd_pct": 0.032149105876
+          },
+          "status": "ok"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 9.082190291898272e-06
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "engine": "spectre (virtuoso-bridge, operator corner wrapper)",
+        "generator": "analog-db spectre-lane live record",
+        "run_at": "2026-08-04T18:15:57+00:00"
+      }
+    }
+  },
+  "design_id": "eeceb83022",
+  "metrics": {
+    "tt": {
+      "cmrr_db": {
+        "spec": "pass",
+        "value": 79.257537857
+      },
+      "dc_gain_db": {
+        "spec": "pass",
+        "value": 40.995154179
+      },
+      "gm_loop_db": {
+        "spec": "none",
+        "value": 29.740246287
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 1.145995424282898e-06
+      },
+      "iip3_dbv": {
+        "spec": "pass",
+        "value": 8.0392507265
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 40.727093661
+      },
+      "pm_deg": {
+        "spec": "fail",
+        "value": 420.06533709
+      },
+      "pm_loop_deg": {
+        "spec": "fail",
+        "value": 59.819959714
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 66.75367914
+      },
+      "t_settle": {
+        "spec": "pass",
+        "value": 9.082190291898272e-06
+      },
+      "thd_pct": {
+        "spec": "pass",
+        "value": 0.032149105876
+      },
+      "ugf_hz": {
+        "spec": "fail",
+        "value": 107281.76722
+      },
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 106479.66197
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 0.00044743557364
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_c0": "2e-12",
+      "x_dut_xm0_l": "8u",
+      "x_dut_xm0_m": 1,
+      "x_dut_xm0_w": "7.5u",
+      "x_dut_xm1_l": "10u",
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": "1.5u",
+      "x_dut_xm2_m": 1,
+      "x_dut_xm3_m": 1,
+      "x_dut_xm4_m": 10,
+      "x_dut_xm4_w": "1.5u",
+      "x_dut_xm5_m": 10,
+      "x_dut_xm6_m": 2,
+      "x_dut_xm7_l": "10u",
+      "x_dut_xm7_m": 1,
+      "x_dut_xm7_w": "0.25u",
+      "x_ibias_val": "1e-7",
+      "x_rz": "1e5"
+    }
+  },
+  "pdk": "tsmc-n65",
+  "ppa": {
+    "active_gate_area_um2": 332.5,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 40.995154179,
+      "pm_deg": 420.06533709,
+      "ugf_hz": 107281.76722
+    },
+    "power_w": 1.718993136424347e-06
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

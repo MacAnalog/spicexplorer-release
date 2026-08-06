@@ -6,7 +6,7 @@ default_conditions:
     typical: 1.2
   cload:
     unit: fF
-    typical: 50
+    typical: 10000
   corner:
     typical: tt
   temp:
@@ -69,18 +69,17 @@ metrics:
     spec:
       max: 500e-6
       unit: A
-  vn_in:
-    display: Input-referred noise (integrated)
-    description: "ngspice inoise_total = total noise INTEGRATED over the bench band\
-      \ (see analyses/noise.yaml FSTART..FSTOP) \u2014 a voltage, not a density; the\
-      \ bound is a characterization band at the family's measured magnitude"
+  vn_in_integrated:
+    display: Total integrated input-referred noise (1 Hz - 1 MHz)
+    description: ngspice inoise_total is volts rms already integrated over the swept
+      band (standardized 1 Hz - 1 MHz, CM-pinned differential unity-feedback bias
+      config, CL=10p) \u2014 the paper's uniform noise column. Replaces the old vn_in
+      entry, which bound the same measure over the narrower 1 Hz - 10 MHz band with
+      a band-specific spec.
     unit: V
     analysis: noise
     extract:
       meas: inoise_total
-    spec:
-      max: 0.001
-      unit: V
   t_settle:
     display: Settling time
     description: Unity-gain differential-follower settling (see tran_step_diff.spice)
@@ -93,3 +92,124 @@ metrics:
     spec:
       max: 1.0e-05
       unit: s
+  thd_pct:
+    display: Total harmonic distortion (100 mV diff @ 100 kHz, FD follower)
+    description: tran + in-deck coherent DFT in the CM-pinned differential
+      unity-feedback follower (thd_diff); F0 = 100 kHz per the campaign grid (fresh
+      ugf 12.33 MHz sits in the 3-30 MHz band). gain_tone must sit in (2/3, 2] and
+      cm_drift_v << ASIG (partial/ratioed CM control — no explicit CMFB) or the
+      figure is not trustworthy; thd_pct = 999 is the guard sentinel. AT THE CURRENT
+      hand-seeded sizing the closed differential loop is bistable (pm 25 deg) and
+      the bench honestly reads a ~42 % square-wave record with gain_tone 6.2 — see
+      analyses/thd.yaml's validation record; the max-2 % spec fails by design until
+      the cell is re-sized.
+    unit: '%'
+    analysis: thd
+    extract:
+      meas: thd_pct
+      f0: 1.0e5
+    spec:
+      max: 2.0
+      unit: '%'
+  iip3_dbv:
+    display: Input IP3 (two-tone 90/100 kHz, 6.25 mV/tone, FD follower)
+    description: Single-point IM3 extrapolation, tran + coherent DFT in the FD
+      follower (iip3_diff); tones 90/100 kHz per the campaign grid (ugf 12.33 MHz
+      -> divide the 0.9/1.0 MHz SE grid by 10). ampl_in below MUST track the
+      analysis binding's ASIG (it is the intercept's input reference); iip3_dbv =
+      -999 is the guard sentinel. AT THE CURRENT hand-seeded sizing the follower
+      does not track even at 6.25 mV/tone (gain_tone 57, bistable loop — see
+      analyses/iip3.yaml's validation record); the recorded intercept is an honest
+      relay-waveform figure, not a linear-follower one.
+    unit: dBV
+    analysis: iip3
+    extract:
+      meas: iip3_dbv
+      f1: 0.9e5
+      f2: 1.0e5
+      ampl_in: 0.00625
+    spec:
+      min: -10
+      unit: dBV
+  pm_loop_deg:
+    display: Loop phase margin (stb, FD follower)
+    description: Phase margin of the antiphase-Middlebrook-probed differential loop
+      (stb_diff); crosschecks ac_open_loop's pm_deg — same loop, two routes. -999
+      sentinel = no crossover (fails the min spec by design). NOTE this sizing is
+      marginal (fresh pm 25.1 deg), so the min-60 spec fails honestly today.
+    unit: deg
+    analysis: stb
+    extract:
+      meas: pm_loop
+    spec:
+      min: 60
+      unit: deg
+  loopgain_db:
+    display: DC loop gain (stb, FD follower)
+    description: Loop-gain magnitude read at FSTART; tracks ac_open_loop's dcgain.
+      Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: loopgain_db
+  ugf_loop_hz:
+    display: Loop unity-gain frequency (stb)
+    unit: Hz
+    analysis: stb
+    extract:
+      meas: ugf_loop
+  gm_loop_db:
+    display: Loop gain margin (stb)
+    description: Gain margin at the phase crossover; -999 sentinel = no phase
+      crossover in-band. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: gm_loop
+  cmrr_db:
+    display: Common-mode rejection (differential figure)
+    description: 'NO spec ON PURPOSE (solver-resolution ceiling): on this perfectly
+      symmetric FD netlist the differential response to a pure CM ride is matrix
+      round-off, so cmrr_db saturates at the ~250-300 dB cap — a min-spec would
+      silently pass any cell (fresh ihp tt reads 255.3 dB, exactly the cap). The
+      physical discriminator is the secondary cmrr_cm_db measure (output-CM
+      response through the ratioed/partial CM path), which rides the scoreboard
+      analyses block — fresh ihp tt reads -51.4 dB, i.e. the unregulated CM path
+      AMPLIFIES an input-CM ride ~370x (no CMFB is drawn).'
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_db
+  cmrr_cm_db:
+    display: CM-loop rejection of a CM ride (cmrr_vcm)
+    description: Output-CM response to the same 1 V CM ride — the always-physical,
+      discriminating rejection figure. NO spec — report-only companion to cmrr_db
+      (whose differential figure is solver-capped on symmetric FD netlists).
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_cm_db
+  psrr_vdd_db:
+    display: Positive-supply rejection (differential figure)
+    description: 'NO spec ON PURPOSE (solver-resolution ceiling): the supply
+      disturbs both symmetric half-circuits identically, so the differential figure
+      saturates at the ~250-300 dB cap — a min-spec would silently pass any cell
+      (fresh ihp tt reads 240.8 dB, at the cap). The physical discriminator is the
+      secondary psrr_cm_db measure (output-CM supply rejection through the CM
+      path), which rides the scoreboard analyses block — fresh ihp tt reads
+      -64.1 dB, i.e. the unregulated CM path amplifies supply ripple ~1600x onto
+      the output CM (no CMFB is drawn).'
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_vdd_db
+  psrr_cm_db:
+    display: CM-path supply rejection (psrr_vdd)
+    description: Output-CM supply rejection through the cell's CM path + CMFB —
+      the always-physical, discriminating figure. NO spec — report-only companion
+      to psrr_vdd_db (whose differential figure is solver-capped on symmetric FD
+      netlists).
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_cm_db

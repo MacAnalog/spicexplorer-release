@@ -1,0 +1,23 @@
+# Analysis binding: large-signal THD in the unity buffer (class template, base/ibias variant).
+# GRID: FRESH ac_open_loop @ihp-sg13g2 tt (2026-08-01) reads ugf = 300.2 kHz (< 3 MHz), so the
+# campaign F0 grid divides by 100: F0 = 10 kHz (T = 100 us).
+# COHERENT WINDOW (both edges whole F0 periods, template contract): fresh tran_step t_settle =
+# 2.43 us -> 20x = 48.6 us, rounded UP to whole periods with the 2-period minimum -> TSTART =
+# 200u (2 periods); TSTOP = 1.8m leaves 16 whole measured periods. TSTEP = 200n = 1/(500*F0).
+# ASIG = 0.05 (not the 0.1 default): telescopic cascode, low output swing — the stacked NMOS
+# cascode (XM2c) and PMOS cascode (XM4c) both sit on vout, so keep the buffer excursion small
+# (vout op ~ VCM = 0.8, +/-50 mV clears both cascode saturation edges).
+# DRIVE-SCALING CHECK (MEASURED ihp-sg13g2 tt, ASIG 0.05 -> 0.025): hd2 (a2/a1) 1.7245e-4
+# -> 8.5827e-5 (x2.01), hd3 (a3/a1) 5.4414e-6 -> 1.2226e-6 (x4.45) — clean 2:1 / 4:1
+# slopes (hd3's slight excess is the a5 term), so the DFT bins are real distortion, not
+# numerical floor. thd_pct 0.01725 % at the shipped 0.05 drive.
+# REPORTING: `produces:` names DATASHEET METRIC IDS — the scoreboard/conformance wiring is
+# datasheet.yaml `metrics.thd_pct.{analysis: thd, extract.meas: thd_pct}`. The template also
+# prints thd_db / a1 / a2 / a3 / vout_op into `corners.<corner>.analyses.thd.measures`.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd
+description: "THD — unity-buffer large-signal sine (50 mV @ 10 kHz); tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.5, VCM: 0.8, IBIAS: 5u, CL: 10p, ASIG: 0.05, F0: 1.0e4, TSTEP: 200n, TSTART: 200u, TSTOP: 1.8m, HARMS: 7}
+flags: []
+produces: [thd_pct]

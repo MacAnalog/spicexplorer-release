@@ -13,7 +13,11 @@ variables:
 - name: rout_val
   description: Servo amplifier output resistance (DC gain = gm_val*rout_val)
   default: 10Meg
-  min: 100k
+  # min RECONCILED 100k -> 1k (cf. #56). Composites that instantiate this servo re-seed it far BELOW
+  # the donor default (amp_030 rout_val_servo = 10k), and the 100k floor put those shipped defaults
+  # out of bounds. Widened HERE, at the donor, so a regeneration inherits the reconciled bound
+  # instead of silently reverting the composites' rows again.
+  min: 1k
   max: 1G
   unit: Ohm
 - name: cout_val

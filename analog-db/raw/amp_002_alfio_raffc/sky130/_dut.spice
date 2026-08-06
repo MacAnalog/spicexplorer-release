@@ -6,30 +6,30 @@
 ** Source: pdk/sky130/netlist.spice (run `analog-db generate` to refresh).
 *----------------------------------------------------------*
 ** params: 27 free + 0 frozen knobs (sizing.yaml) · 35 tied · 13 ratio-derived (abstract/params.yaml)
-.param CAPACITOR_0=13p
-.param CAPACITOR_1=0.375p
-.param CURRENT_0_BIAS=28u
+.param CAPACITOR_0=1.3e-11
+.param CAPACITOR_1=3.75e-13
+.param CURRENT_0_BIAS=2.8e-05
 .param x_dut_xm6_l=6.0745
 .param x_dut_xm3_m=2
 .param x_dut_xm6_w=83.9081
-.param x_dut_xm10_l=1.0
+.param x_dut_xm10_l=1
 .param x_dut_xm10_m=2
 .param x_dut_xm10_w=20.7315
 .param x_dut_xm11_l=2.6754
 .param x_dut_xm11_m=2
-.param x_dut_xm11_w=40.0
+.param x_dut_xm11_w=40
 .param x_dut_xm15_l=6.3215
 .param x_dut_xm15_m=4
 .param x_dut_xm15_w=56.9217
-.param x_dut_xm59_l=2.0
+.param x_dut_xm59_l=2
 .param x_dut_xm14_m=2
 .param x_dut_xm59_w=14.5237
-.param x_dut_xm21_l=1.0
+.param x_dut_xm21_l=1
 .param x_dut_xm21_m=6
-.param x_dut_xm21_w=12.0
+.param x_dut_xm21_w=12
 .param x_dut_xm7_l=0.6033
 .param x_dut_xm7_m=2
-.param x_dut_xm7_w=8.0
+.param x_dut_xm7_w=8
 .param x_dut_xm9_l=0.797
 .param x_dut_xm9_m=2
 .param x_dut_xm9_w=8.0125

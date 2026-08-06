@@ -13,6 +13,7 @@ analog-db binding (with the `sim_engine` marker) present. Skips everywhere else.
 
 from __future__ import annotations
 
+import math
 import os
 from pathlib import Path
 
@@ -170,7 +171,11 @@ def test_configdriven_amp022_tsmc65_stb_and_calculator_route(tmp_path: Path) -> 
 
     # calculator route: the template DB's SKILL set on the same raw dir (native margins)
     ms = bench_ocean_measurements(_CIRCUIT, "stb", pdk=_PDK)
-    assert {m.name for m in ms} == {"pm_loop", "gm_loop_db", "loopgain_db"}
+    # rows are keyed by the datasheet `extract.meas` string (ngspice stb template spelling),
+    # NOT the metric id — `gm_loop_db`/`ugf_loop_hz` are metric ids. A row named off the
+    # metric id is dead config: the metric falls through to the registry (which spells the
+    # margin `gain_margin_db` and has no loop-UGF) and records NaN under `status: ok`.
+    assert {m.name for m in ms} == {"pm_loop", "ugf_loop", "gm_loop", "loopgain_db"}
     try:
         with OceanMetricsSession.from_vb_env(work_dir=tmp_path / "ocean") as sess:
             vals = sess.measure(run.result.raw_dir, ms, label="stb_calc")
@@ -180,8 +185,12 @@ def test_configdriven_amp022_tsmc65_stb_and_calculator_route(tmp_path: Path) -> 
     # different frequency grids; at the new op point they differ by ~2.9 deg (76.1 vs
     # 79.0). Keep the parity gate tight enough to catch sign/convention breakage.
     assert abs(vals["pm_loop"] - pm) < 4.0, (vals, pm)
-    assert abs(vals["gm_loop_db"] - gm) < 0.5, (vals, gm)
+    assert abs(vals["gm_loop"] - gm) < 0.5, (vals, gm)
     assert abs(vals["loopgain_db"] - lg) < 0.1, (vals, lg)
+    # the loop UGF must be the frequency the phase margin is evaluated at, i.e. a real
+    # 0 dB crossing of |T| inside the swept band
+    ugf_loop = vals["ugf_loop"]
+    assert math.isfinite(ugf_loop) and 1e5 < ugf_loop < 1e8, vals
 
 
 @pytest.mark.skipif(

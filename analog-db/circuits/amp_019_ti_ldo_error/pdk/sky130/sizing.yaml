@@ -10,9 +10,9 @@ variables:
 - name: x_dut_xmb0_l
   default: 0.5
 - name: x_dut_xmbc_m
-  default: '1'
+  default: 1
 - name: x_dut_xmbo_m
-  default: '1'
+  default: 1
 - name: x_dut_xm1_w
   default: 100
   description: Input pair
@@ -39,10 +39,10 @@ variables:
 - name: x_dut_xm6_l
   default: 2
 - name: r_z
-  default: 3k
+  default: 3000
   description: Upstream RZ ppolyf_u_3k placeholder geometry -> coarse 1k
 - name: c_comp
-  default: 6p
+  default: 6e-12
   description: Upstream param block says 100p, instance says 1p; coarse 2p
 - name: x_dut_xmbe_w
   default: 12
@@ -52,7 +52,7 @@ variables:
   default: 25
   description: M_mirror_f sink (level-shifter anchor; carries ~0 by design)
 - name: r_nd
-  default: 500k
+  default: 500000
   min: 10k
   max: 10MEG
   unit: ohm

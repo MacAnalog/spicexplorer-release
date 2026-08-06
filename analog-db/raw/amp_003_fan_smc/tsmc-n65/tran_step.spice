@@ -28,8 +28,8 @@
 .lib tsmc_n65_models.scs tt
 .temp 27
 
-.param VDD=1.8
-.param VCM=300m
+.param VDD=1.2
+.param VCM=0.4
 .param CL=10p
 .param VSTEP=0.2
 

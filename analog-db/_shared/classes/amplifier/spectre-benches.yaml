@@ -45,13 +45,28 @@ benches:
       - {template: dc_op}
       - {template: ac}
     calculator:
+      # OUT: vout is rewritten to (v("voutp")-v("voutn")) for a fully-differential DUT by
+      # `analog_db.bench_ocean_measurements` — one row serves both output conventions.
       - {name: cmrr_db, expr: neg_gain_db_at, args: {OUT: vout, FREQ: $FSTART}}
+      # ... but the SECOND figure the `cmrr_vcm_diff` template measures — the OUTPUT-CM
+      # response to the same CM ride — has no single-ended counterpart, so it cannot ride the
+      # rewrite: it needs the PAIR, not the difference. `requires:` gates the row on the
+      # FD-only $CM_OUTP/$CM_OUTN context extras, so it renders on a differential DUT and is
+      # SKIPPED on a single-ended one (whose datasheet does not declare cmrr_cm_db either).
+      # Without this row cmrr_cm_db had no Spectre route at all and fell through to the Tier-1
+      # registry, which has no such recipe -> KeyError -> NaN -> dropped from the metrics
+      # rollup, blanking the rejection column for all 8 FD tsmc-n65 cells.
+      - {name: cmrr_cm_db, expr: neg_cm_gain_db_at, requires: [CM_OUTP, CM_OUTN],
+         args: {OUTP: $CM_OUTP, OUTN: $CM_OUTN, FREQ: $FSTART}}
   psrr_vdd:
     analyses:
       - {template: dc_op}
       - {template: ac}
     calculator:
       - {name: psrr_vdd_db, expr: neg_gain_db_at, args: {OUT: vout, FREQ: $FSTART}}
+      # FD-only CM-path supply rejection — the psrr twin of cmrr_cm_db above (same gating).
+      - {name: psrr_cm_db, expr: neg_cm_gain_db_at, requires: [CM_OUTP, CM_OUTN],
+         args: {OUTP: $CM_OUTP, OUTN: $CM_OUTN, FREQ: $FSTART}}
   dc_op:
     analyses:
       - {template: dc_op}
@@ -65,6 +80,28 @@ benches:
       # (voutp/voutn), like the ngspice templates they mirror.
       - {name: zcm_lf_ohm, expr: cm_z_lf, args: {OUTP: voutp, OUTN: voutn, FREQ: $FSTART}}
       - {name: cm_peaking_db, expr: cm_z_peaking_db, args: {OUTP: voutp, OUTN: voutn, FREQ: $FSTART}}
+  dc_cm_bias_sweep:
+    # The closed-lane twin of the ngspice dc_cm_bias_sweep template. That deck steps ONE
+    # internal bias knob through five AUTHORED values with alterparam+reset+op; Spectre does
+    # the same in a single `dc` analysis over the netlist parameter (`dc_param_points`,
+    # values=[VB1..VB5]), so both lanes sample the same abscissa at the same five points.
+    # Sweep-only (no dc_op sibling) for the same reason as `linearity`: two `.dc` PSFs.
+    # Like the other CM benches this assumes the self-biased differential-output port
+    # contract (voutp/voutn) the ngspice template hardcodes — FD-only by construction.
+    analyses:
+      - {template: dc_param_points,
+         args: {PARAM: $CMKNOB, V1: $VB1, V2: $VB2, V3: $VB3, V4: $VB4, V5: $VB5}}
+    calculator:
+      # `name:` is the datasheet `extract.meas` string — cm_interior_pts is the published
+      # figure (amp_029/amp_030/amp_034 all declare it); without this bench it had no
+      # closed-lane route at all and blanked on every tsmc-n65 CM-closure cell.
+      - {name: cm_interior_pts, expr: cm_interior_pts, args: {OUTP: voutp, OUTN: voutn}}
+      # the five per-point reads the ngspice deck `print`s (the analyses' `produces:` list)
+      - {name: vocm_1, expr: cm_vocm_at, args: {OUTP: voutp, OUTN: voutn, VB: $VB1}}
+      - {name: vocm_2, expr: cm_vocm_at, args: {OUTP: voutp, OUTN: voutn, VB: $VB2}}
+      - {name: vocm_3, expr: cm_vocm_at, args: {OUTP: voutp, OUTN: voutn, VB: $VB3}}
+      - {name: vocm_4, expr: cm_vocm_at, args: {OUTP: voutp, OUTN: voutn, VB: $VB4}}
+      - {name: vocm_5, expr: cm_vocm_at, args: {OUTP: voutp, OUTN: voutn, VB: $VB5}}
   tran_cm_kick:
     analyses:
       - {template: dc_op}
@@ -78,7 +115,13 @@ benches:
       - {template: dc_op}
       # OUT = $NOISE_OUT (vout single / voutp differential); OUTN comes from the context
       # (0 single / voutn differential) — both set by _spectre_context from circuit.yaml ports
-      - {template: noise, args: {OUT: $NOISE_OUT, IPROBE: VINP}}
+      # IPROBE is the input SOURCE INSTANCE, and the closed-lane deck is a translation of
+      # the ngspice template, so the instance name follows the VARIANT: the self-biased
+      # (biaswrap) decks drive through VAC on `sigin` and have no VINP at all. Hardcoding
+      # VINP made Spectre reference a nonexistent instance, so it returned no
+      # input-referred density and inoise_total was NaN on 16 tsmc-n65 amplifiers while
+      # the analysis still reported status ok. $NOISE_IPROBE resolves per template.
+      - {template: noise, args: {OUT: $NOISE_OUT, IPROBE: $NOISE_IPROBE}}
     calculator:
       # input-referred integrated noise off the `in` density vector (iprobe-based, so it is
       # output-node-agnostic and works for single-ended AND differential-output DUTs)
@@ -99,7 +142,13 @@ benches:
     analyses:
       - {template: pss, args: {FUND: $F0}}
     calculator:
-      - {name: thd_pct, expr: thd_pct, args: {OUT: vout, NHARM: $HARMS}}
+      # NHARM is the SUMMATION width, not the PSS harmonic budget ($HARMS stays 7 so the
+      # solve keeps its accuracy). Pinned to 5 because the three ngspice templates all
+      # compute sqrt(a2^2+a3^2+a4^2+a5^2)/a1 — summing through the 7th here made the THD
+      # column mean something different on this kit than on the open ones. Measured cost
+      # of the truncation: 0.000 % on amp_003 (0.00293) and amp_022 (0.11606), i.e. the
+      # 6th and 7th are below the printed precision, so this buys comparability for free.
+      - {name: thd_pct, expr: thd_pct, args: {OUT: vout, NHARM: 5}}
       - {name: hd2_db, expr: hd2_db, args: {OUT: vout}}
       - {name: hd3_db, expr: hd3_db, args: {OUT: vout}}
   iip3:
@@ -127,6 +176,12 @@ benches:
       - {template: dc_op}
       - {template: stb, args: {PROBE: VIPRB}}
     calculator:
+      # `name:` MUST be the datasheet `extract.meas` string, not the metric id — a row the
+      # datasheets never name is dead, and the metric silently falls through to the Tier-1
+      # registry (which spells these `gain_margin_db` and has no loop-UGF at all) and lands
+      # NaN with the bench still `status: ok`. All 32 amplifier datasheets ask for
+      # pm_loop / ugf_loop / gm_loop / loopgain_db.
       - {name: pm_loop, expr: pm_loop}
-      - {name: gm_loop_db, expr: gm_loop_db}
+      - {name: ugf_loop, expr: ugf_loop}
+      - {name: gm_loop, expr: gm_loop}
       - {name: loopgain_db, expr: loopgain_db, args: {FREQ: $FSTART}}

@@ -282,7 +282,19 @@ def _as_graph(host: HostLike, *, pdk: Pdk | None, on_unknown: OnUnknown) -> Circ
         view = NetlistView.from_string(host, dialect="auto") if "\n" in host else NetlistView.from_file(host)
     else:
         raise TypeError(f"cannot build a CircuitGraph from a {type(host).__name__}")
-    return CircuitGraph.from_netlist(view, name="host", pdk=pdk, on_unknown=on_unknown)
+    graph = CircuitGraph.from_netlist(view, name="host", pdk=pdk, on_unknown=on_unknown)
+    if graph.skipped_components:
+        # The caller handed raw netlist text/a path, so this graph is built and discarded in here —
+        # its `skipped_components` would never be reachable. Detection ran over an INCOMPLETE host:
+        # a template can only be found in, or ruled out of, the part that could be typed. Say it
+        # once, with the census (from_netlist's own per-device warnings do not add up to a verdict).
+        logger.warning(
+            "host netlist: %d device(s) could not be modeled and are invisible to subcircuit "
+            "detection (%s); pass on_unknown='raise' to refuse an incomplete host",
+            len(graph.skipped_components),
+            ", ".join(sorted(set(graph.skipped_components))),
+        )
+    return graph
 
 
 def _resolve_options(

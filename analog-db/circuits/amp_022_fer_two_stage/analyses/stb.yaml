@@ -1,21 +1,63 @@
 # Analysis binding: loop-gain / stability probe in the unity buffer (class template).
-# Params mirror the circuit's other AC benches (VCM 0.6, IBIAS 20u, CL 500f). ngspice
-# lane = closed-loop AC only (no stb in ngspice); Spectre lane composes a native
-# `stb stb probe=VIPRB` off the template's VIPRB loop-probe marker -> loopGain PSF
-# (pm_loop / gain-margin). No datasheet metrics bind here on purpose — loop-gain
-# figures are closed-lane-only, so they ride the registry/calculator route instead of
-# datasheet conformance (which must stay engine-neutral).
+# Params mirror the circuit's other AC benches (VCM 0.6, IBIAS 20u, CL 500f). BOTH lanes
+# now measure the loop: ngspice does Middlebrook voltage injection at the VIPRB marker
+# (`alter @VIPRB[acmag]=1` in .control — netlist bytes unchanged) and prints
+# loopgain_db / ugf_loop / pm_loop / gm_loop / pm_loop_first / phref_dev / phref_ok; the
+# Spectre lane composes a native `stb stb probe=VIPRB` off the same marker -> loopGain PSF.
+# DATASHEET METRICS WIRED 2026-08-01 (campaign): the owner decision landed — the class
+# vocabulary (_shared/classes/amplifier/metrics.yaml canonical_metrics) now declares
+# loopgain_db / ugf_loop_hz / pm_loop_deg / gm_loop_db, and this circuit's datasheet.yaml
+# binds all four off this analysis (extract.meas = the ngspice measure names loopgain_db /
+# ugf_loop / pm_loop / gm_loop). Only pm_loop_deg carries a spec (min 60, mirroring the
+# existing pm_deg spec floor); the other three are report-only. Cross-engine name split
+# (_shared/engines/spectre/spectre-benches.yaml emits gm_loop_db, ngspice emits gm_loop)
+# is absorbed by the datasheet extract mapping.
+# CROSSCHECK (fresh, ihp-sg13g2 tt 2026-08-01): pm_loop 63.422 vs ac_open_loop pm 63.367
+# (0.06 deg apart — same loop), ugf_loop 19.106M vs ugf 19.155M, loopgain_db 51.50358 ==
+# dcgain bit-identical.
+# FSTART must stay well below the loop's dominant pole: the deck reads loopgain_db AT
+# FSTART, and the template's `phref_dev` measure reports the loop lag already present
+# there (a large |phref_dev| means loopgain_db is reading low by 20*log10(cos(phref_dev)));
+# beyond 30 deg the template's phase-reference guard trips and every phase-derived measure
+# comes back as the 999 sentinel with phref_ok = 0, because past 90 deg the snapped DC
+# reference silently CHANGES BRANCH and every margin would be 180 deg out.
+# FSTART 1k -> 1 (MEASURED, this branch; matched this circuit's own ac_open_loop.yaml):
+#   sky130  phref_dev -28.670 -> -0.031 deg, loopgain_db 64.56666 -> 65.70269 dB
+#           (ac_open_loop dcgain 65.70269 — bit-identical; the 1.14 dB gap was exactly
+#            20*log10(cos 28.67 deg))
+#   ihp     phref_dev  -1.029 -> -0.001 deg, loopgain_db 51.50218 -> 51.50358 dB
+#           (ac_open_loop dcgain 51.50358 — bit-identical)
+# FSTART 1 -> 0.01 (2026-07-31) — adopting the class value (see the template header's
+# "CHOOSING FSTART"; 0.01 Hz is the lowest FSTART at which all 23 single-ended amps of this
+# corpus clear the 30 deg guard). This cell was already comfortable at 1 Hz, so the move is
+# for uniformity, and it costs nothing: MEASURED at tt, FSTART 1 -> 0.01,
+#   ihp-sg13g2  phref_dev -1.02924e-3 -> -1.00888e-5 deg, loopgain_db 51.50358 -> 51.50358 dB
+#   sky130      phref_dev -3.13295e-2 -> -3.13091e-4 deg, loopgain_db 65.70269 -> 65.70269 dB
+#   gf180mcu    phref_dev -1.73637e-2 -> -1.73433e-4 deg, loopgain_db 69.72382 -> 69.72382 dB
+#   loopgain_db is unchanged to all 7 printed digits on every PDK, so it stays bit-identical
+#   to ac_open_loop's dcgain (which still reads at ITS OWN FSTART=1). pm_loop / ugf_loop /
+#   gm_loop are unchanged on all three PDKs at every FSTART tried (1k, 100, 10, 1, .1, .01,
+#   .001) — the template snaps its DC phase reference, so only the gain read AT FSTART ever
+#   moved, and only while |phref_dev| was large.
 schema: spicexplorer/analysis@1
 id: stb
 template: stb
-description: "Loop gain (stb) of the unity buffer — Spectre-lane pm_loop/gain-margin; ngspice sees the closed-loop AC only."
+description: "Loop gain (stb) of the unity buffer — loopgain_db/ugf_loop/pm_loop/gm_loop; Middlebrook injection at VIPRB on ngspice, native stb on Spectre."
+# FSTART 0.01 -> 1e-4 (2026-08-04): the stb bench anchors phase at its first swept point and
+# blanks pm_loop/gm_loop to the -999 sentinel when |phref_dev| > 30 deg. For a high-gain amp
+# the dominant pole f_p = UGF/A0 is sub-Hz, so 0.01 Hz already sits PAST it — and because
+# every stabilising move lowers UGF (hence f_p), the guard fires HARDER on a correct fix than
+# on the broken design. Measured on amp_006@gf180: the committed (unstable) sizing reports
+# pm_loop -16.5, while the stabilised one reports -999 at 0.01 Hz and +66.0 at 1e-4. pm_loop
+# and gm_loop are FSTART-INVARIANT; only the guard moves.
 params:
   VDD: 1.5
   VCM: 0.6
   IBIAS: 20u
-  CL: 500f
-  FSTART: 1k
+  CL: 10p
+  FSTART: 1e-4     # class value; see the header + the stb template's "CHOOSING FSTART"
   FSTOP: 1G
   PPD: 101
-flags: [spectre_only_payload]
-produces: []
+flags: []          # was [spectre_only_payload]: inert (nothing in src/ reads flags) and no
+                   # longer true — the ngspice lane measures the loop as of this branch.
+produces: [pm_loop_deg, loopgain_db, ugf_loop_hz, gm_loop_db]

@@ -10,7 +10,7 @@ default_conditions:
     typical: 27
   cload:
     unit: F
-    typical: 5.0e-10
+    typical: 1e-11
   vcm:
     unit: V
     typical: 0.3
@@ -46,14 +46,16 @@ metrics:
       unit: deg
       min: 60.0
       max: 90.0
-  vn_in:
-    display: Input-referred noise
-    unit: V/sqrt(Hz)
+  vn_in_integrated:
+    display: Total integrated input-referred noise (1 Hz - 1 MHz, buffer)
+    description: ngspice inoise_total is volts rms already integrated over the swept
+      band (standardized 1 Hz - 1 MHz, unity-buffer bias config, CL=10p) — the paper's
+      uniform noise column. Replaces the old vn_in entry, which bound the same measure
+      under V/sqrt(Hz) (dimensionally wrong; inoise_total is not a spot density).
+    unit: V
     analysis: noise
     extract:
       meas: inoise_total
-    spec:
-      max: any
   i_supply:
     display: Supply current
     unit: A
@@ -61,9 +63,12 @@ metrics:
     extract:
       meas: i_supply
     spec:
-      max: any
+      max: 0.00555556
   t_settle:
     display: Settling time
+    description: At the landed sizings this reads TSTOP-pinned (~199 us) and FAILS the
+      spec honestly - the buffer never settles inside the 2 mV band because of the
+      sustained ~18.5 MHz limit cycle (~120 mVpp @ ihp-sg13g2; see analyses/thd.yaml).
     unit: s
     analysis: tran_step
     extract:
@@ -93,3 +98,77 @@ metrics:
     spec:
       min: 40
       unit: dB
+  thd_pct:
+    display: Total harmonic distortion (100 mV @ 10 kHz, buffer)
+    description: tran+FFT on ngspice; native PSS harmonics on Spectre. F0 = 10 kHz
+      per the campaign grid (ugf = 1.91 MHz < 3 MHz -> the 1 MHz grid divided by 100).
+      CAVEAT (2026-08-01, ihp-sg13g2 + gf180mcu landed sizings) - the unity buffer
+      carries a sustained ~18.5 MHz limit cycle (internal-loop instability; see
+      analyses/thd.yaml), so this figure is the distortion OF AN OSCILLATING buffer
+      and the drive-halving HD scaling check does not hold.
+    unit: '%'
+    analysis: thd
+    extract:
+      meas: thd_pct
+      f0: 1.0e4
+    spec:
+      max: 2.0
+      unit: '%'
+  iip3_dbv:
+    display: Input IP3 (two-tone 9/10 kHz, 6.25 mV/tone, buffer)
+    description: Single-point IM3 extrapolation; tran+coherent DFT on ngspice, native
+      PSS on Spectre. Tones at 9/10 kHz per the campaign grid (ugf = 1.91 MHz < 3 MHz
+      -> the 0.9/1.0 MHz grid divided by 100; beat F0 = 1 kHz keeps the exact 9:10
+      ratio). ampl_in below MUST track the analysis binding's ASIG (it is the
+      intercept's input reference). CAVEAT - same sustained ~18.5 MHz limit cycle as
+      thd_pct (see analyses/iip3.yaml); the 6.25 mV tones ride a ~60 mV oscillation,
+      so the 3:1 IM3 slope assumption behind the intercept is not trustworthy here.
+    unit: dBV
+    analysis: iip3
+    extract:
+      meas: iip3_dbv
+      f1: 9.0e3
+      f2: 1.0e4
+      ampl_in: 0.00625
+    spec:
+      min: -10
+      unit: dBV
+  pm_loop_deg:
+    display: Loop phase margin (stb, unity buffer)
+    description: Phase margin of the Middlebrook-probed buffer loop (VIPRB marker);
+      crosschecks ac_open_loop's pm_deg — fresh ihp-sg13g2 tt reads 106.42 vs 106.44
+      deg. -999 sentinel = no crossover (fails the min spec by design). CAVEAT - this
+      probes the MAIN loop only; at the landed sizing the buffer still oscillates at
+      ~18.5 MHz from an INTERNAL (DACFC damping) loop this metric is blind to — a
+      passing pm_loop_deg here does NOT certify transient stability (see
+      analyses/thd.yaml; transient ripple is the oracle).
+    unit: deg
+    analysis: stb
+    extract:
+      meas: pm_loop
+    spec:
+      min: 60
+      unit: deg
+  loopgain_db:
+    display: DC loop gain (stb, unity buffer)
+    description: Loop-gain magnitude read at FSTART; bit-identical to ac_open_loop's
+      dcgain on this cell (72.12176 dB, ihp-sg13g2 tt). Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: loopgain_db
+  ugf_loop_hz:
+    display: Loop unity-gain frequency (stb)
+    unit: Hz
+    analysis: stb
+    extract:
+      meas: ugf_loop
+  gm_loop_db:
+    display: Loop gain margin (stb)
+    description: Gain margin at the phase crossover; ngspice measure name is gm_loop
+      (the Spectre bench emits gm_loop_db — the split is absorbed here). -999 sentinel =
+      no phase crossover in-band. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: gm_loop

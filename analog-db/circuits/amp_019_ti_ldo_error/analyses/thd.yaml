@@ -1,0 +1,28 @@
+# Analysis binding: large-signal THD in the unity buffer (class template, ibias family —
+# the DUT has an ibias port, so the base `thd` template drives it like every other bench
+# here: IBIAS = 1 mA class bias). The buffer is CLOSED-loop, so this bench needs none of the
+# biaswrap this amp's ac_open_loop/noise need — the designed-in systematic offset (ratioed
+# mirror_e sink) only rails an UNWRAPPED open-loop bias (same reasoning as stb.yaml).
+# F0 GRID (campaign rule, FRESH ugf): ac_open_loop @ ihp-sg13g2 tt measured ugf = 11.63 MHz
+# (2026-08-01, this branch — NOT the scoreboard), i.e. the 3-30 MHz band -> the 1 MHz class
+# grid divides by 10: F0 = 100 kHz.
+# COHERENT WINDOW (the template requires both TSTART and TSTOP-TSTART to be whole F0
+# periods, see its header): F0 = 100 kHz -> T = 10 us. tran_step @ ihp tt measured
+# t_settle = 80.7 ns (same fresh run), so 20x t_settle = 1.6 us rounds up to ONE period;
+# the campaign minimum of 2-4 startup periods governs instead -> TSTART = 40u (4 whole
+# periods, ~500x the measured settling, the pilots' discard count). TSTOP = 200u leaves
+# 16 whole measured periods (even count). TSTEP = 20n = T/500 <= 1/(500*F0).
+# DRIVE: ASIG = 0.1 class default — SE core on a 3.3 V rail at VCM 1.2, no low-swing
+# concern (drive-halving check at validation: HD2 ~x2, HD3 ~x4).
+# REPORTING: `produces:` names DATASHEET METRIC IDS (analysis.schema.json) — datasheet.yaml
+# metrics.thd_pct.{analysis: thd, extract.meas: thd_pct} is the scoreboard/conformance
+# wiring. The template also prints thd_db / a1..a5 / a1_in / gain_tone / vout_op; those ride
+# the recorded `corners.<corner>.analyses.thd.measures` block. gain_tone < 0.5 means the
+# dead-output guard fired and thd_pct is the 999 sentinel, not a measurement.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd
+description: "THD — unity-buffer large-signal sine; tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 3.3, VCM: 1.2, IBIAS: 1m, CL: 10p, ASIG: 0.1, F0: 1.0e5, TSTEP: 20n, TSTART: 40u, TSTOP: 200u, HARMS: 7}
+flags: []
+produces: [thd_pct]

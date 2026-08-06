@@ -6,7 +6,7 @@ default_conditions:
     typical: 1.2
   cload:
     unit: fF
-    typical: 50
+    typical: 10000
   corner:
     typical: tt
   temp:
@@ -110,6 +110,95 @@ metrics:
     spec:
       max: 100e-6
       unit: s
+  pm_loop_deg:
+    display: Loop phase margin (stb, FD loop)
+    description: Phase margin of the antiphase-Middlebrook-probed differential loop
+      (stb_diff, VIPRB/VIPRBM pair); crosschecks ac_open_loop's pm_deg — fresh
+      ihp-sg13g2 tt reads 15.72 vs 15.73 deg at CL=10p. That marginal stability is
+      a KNOWN sizing finding of this cell (not a bench bug); the min spec inherits
+      pm_deg's 60 and honestly FAILS until a re-sizing lands. -999 sentinel = no
+      crossover.
+    unit: deg
+    analysis: stb
+    extract:
+      meas: pm_loop
+    spec:
+      min: 60
+      unit: deg
+  loopgain_db:
+    display: DC loop gain (stb, FD loop)
+    description: Loop-gain magnitude read at FSTART; bit-identical to ac_open_loop's
+      dcgain on this cell. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: loopgain_db
+  ugf_loop_hz:
+    display: Loop unity-gain frequency (stb)
+    unit: Hz
+    analysis: stb
+    extract:
+      meas: ugf_loop
+  gm_loop_db:
+    display: Loop gain margin (stb)
+    description: Gain margin at the phase crossover; ngspice measure name is gm_loop.
+      -999 sentinel = no phase crossover in-band. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: gm_loop
+  cmrr_db:
+    display: Common-mode rejection (differential figure, FD loop)
+    description: -db(voutp-voutn) under a 1 V CM ride (cmrr_vcm_diff), DC-band
+      floor. NO spec BY DESIGN — on this perfectly symmetric FD netlist (down to
+      the paired behavioral servos) the differential figure saturates at the
+      solver-resolution cap (~250-300 dB, matrix round-off, not physical
+      rejection); a min-spec would silently pass any cell. The CM-loop figure
+      cmrr_cm_db is the physical discriminator.
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_db
+  cmrr_cm_db:
+    display: CM-loop rejection of a CM ride (cmrr_vcm)
+    description: Output-CM response to the same 1 V CM ride — the behavioral CMFB
+      servos' always-physical, discriminating rejection figure. NO spec —
+      report-only companion to cmrr_db (whose differential figure is solver-capped
+      on symmetric FD netlists).
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_cm_db
+  psrr_vdd_db:
+    display: Positive-supply rejection (differential figure, FD loop)
+    description: -db(voutp-voutn) under a 1 V vdd ripple (psrr_vdd_diff), DC-band
+      floor. NO spec BY DESIGN — the supply disturbs both symmetric half-circuits
+      identically, so the differential figure saturates at the solver-resolution
+      cap (~250-300 dB, not physical); a min-spec would silently pass any cell.
+      psrr_cm_db is the physical discriminator.
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_vdd_db
+  psrr_cm_db:
+    display: CM-path supply rejection (psrr_vdd)
+    description: Output-CM supply rejection through the PMOS-tail stages +
+      behavioral CMFB servos — the always-physical, discriminating figure. NO
+      spec — report-only companion to psrr_vdd_db (whose differential figure is
+      solver-capped on symmetric FD netlists).
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_cm_db
+  vn_in_integrated:
+    display: Total integrated input-referred noise (1 Hz - 1 MHz, differential)
+    description: ngspice inoise_total is volts rms already integrated over the swept
+      band (standardized 1 Hz - 1 MHz, noise_diff direct-drive at the SRMC system
+      CM 0.5 V, CL=10p) — the paper's uniform noise column.
+    unit: V
+    analysis: noise
+    extract:
+      meas: inoise_total
 notes: "Sized by the SpiceXplorer optimizer (scripted Nevergrad 400 + 100-loop banded\
   \ refine; drawings/SIZING_VALIDATION_REPORT.md \xA74 + sizing-and-specs.yaml): the\
   \ drawn seed is UNSTABLE (PM -17.8 deg). Sizing defaults are FULL-PRECISION. CMFB\
@@ -119,4 +208,9 @@ notes: "Sized by the SpiceXplorer optimizer (scripted Nevergrad 400 + 100-loop b
   \ must also address the 65nm loop-2 rail-marginality (servo equilibrium below rail;\
   \ achievable CM 0.474 vs ref 0.5 \u2014 report \xA76.1) and expects ~38 dB (LVT\
   \ gm/gds ceiling). Input CM MUST be 0.5 V (0.6 rails the servos through the SRMC\
-  \ filter's DC-coupled R path)."
+  \ filter's DC-coupled R path). LINEARITY (thd/iip3) DELIBERATELY NOT BOUND \u2014\
+  \ campaign owner ruling 2026-08-01: cm_control is unregulated (measured ~68 mV\
+  \ output-CM residual, see cm_resid_v), and large-signal distortion numbers taken\
+  \ while the output CM drifts are meaningless; additionally the differential loop\
+  \ at CL=10p is only marginally stable (pm_loop ~15.7 deg), so tran benches ring.\
+  \ Bind thd/iip3 only after a regulated-CM + re-sized follow-up lands."

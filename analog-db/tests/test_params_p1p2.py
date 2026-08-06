@@ -325,10 +325,15 @@ _OLD_GEOMETRY = {
         "XM3": (2.0, 2.0, 1), "XM4": (2.0, 2.0, 1),
         "XM5": (3.0, 2.0, 1), "XM6": (3.0, 2.0, 1),
     },
-    "gf180mcu": {
-        "XM1": (0.5 * _UM, 5 * _UM, 1), "XM2": (0.5 * _UM, 5 * _UM, 1),
-        "XM3": (1.5 * _UM, 5 * _UM, 1), "XM4": (1.5 * _UM, 5 * _UM, 1),
-        "XM5": (2 * _UM, 5 * _UM, 1), "XM6": (2 * _UM, 5 * _UM, 1),
+    "gf180mcu": {  # refreshed 2026-08-03: honest-gf-round winner committed as defaults
+        "XM1": (0.5 * _UM, 5 * _UM, 1),
+        "XM2": (0.5 * _UM, 5 * _UM, 1),
+        "XM3": (1.5 * _UM, 5 * _UM, 1),
+        "XM4": (1.5 * _UM, 5 * _UM, 1),
+        "XM5": (2 * _UM, 5 * _UM, 1),
+        # m was transcribed as a width-shaped 1.17172e-05 in the 2026-08-03 refresh; the deck
+        # (and every sibling PDK) carries x_dut_xm6_m=1.
+        "XM6": (2 * _UM, 5 * _UM, 1),
     },
     "tsmc-n65": {
         "XM1": (0.5 * _UM, 5 * _UM, 1), "XM2": (0.5 * _UM, 5 * _UM, 1),

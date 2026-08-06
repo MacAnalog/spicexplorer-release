@@ -11,6 +11,9 @@ class: amplifier
 display_name: "SMCNR two-stage: PMOS-input, single-Miller + nulling R (100 nA, sensing FE)"
 compensation: miller_nulling
 stages: 2
+realization: transistor
+cm_control: not_applicable
+signal_path: single_ended
 ports: [vss, vdd, vinn, vinp, vout]
 provenance:
   source: AnalogGym "Sensing Front End" (CODA-Team/AnalogGym)
@@ -22,7 +25,7 @@ artifacts:
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
 pdks: [ihp-sg13g2, sky130, gf180mcu, tsmc-n65]
-analyses: [ac_open_loop, cmrr_vcm, psrr_vdd, dc_op, noise, tran_step]
+analyses: [ac_open_loop, cmrr_vcm, psrr_vdd, dc_op, noise, tran_step, thd, iip3, stb]
 references:
   - {tool: spectre, dir: spectre/180nm, node: 180nm}
 optimize:

@@ -3,124 +3,128 @@
 # A starting point; re-tune defaults/bounds for tsmc-n65 device physics as needed.
 schema: spicexplorer/sizing@1
 pdk: tsmc-n65
+# The closed (Spectre) lane always injects the tsmc-n65 core rail (1.2 V) over the
+# cross-PDK authored VDD — record that operating point so raw decks and the entry's
+# power_w (i_supply x VDD) tell the truth about what was actually simulated.
+analysis_params: {VDD: 1.2}
 variables:
 - name: x_dut_xmbd_w
   description: NMOS bias diode / mirror / EA width
-  default: 4u
+  default: 7.30243e-06
   min: 0.18u
   max: 50u
   unit: m
 - name: x_dut_xmpd1_w
   description: PMOS bias diode + vcn source width
-  default: 6u
+  default: 4.8766e-05
   min: 0.18u
   max: 50u
   unit: m
 - name: x_dut_xmpd2_w
   description: Narrow PMOS diode (vcp rail) width
-  default: 1.5u
+  default: 2.14197e-05
   min: 0.18u
   max: 50u
   unit: m
 - name: x_dut_xmnd1_w
   description: Narrow NMOS diode (vcn rail) width
-  default: 0.75u
+  default: 3.3087e-05
   min: 0.18u
   max: 50u
   unit: m
 - name: x_dut_xmi1_w
   description: Input pair width (per finger, m=2)
-  default: 6u
+  default: 6.20889e-06
   min: 0.18u
   max: 50u
   unit: m
 - name: x_dut_xmsa_w
   description: Folded PMOS source width (per finger, m=2)
-  default: 6u
+  default: 50u
   min: 0.18u
   max: 50u
   unit: m
 - name: x_dut_xmca_w
   description: PMOS cascode width
-  default: 6u
+  default: 8.90959e-06
   min: 0.18u
   max: 50u
   unit: m
 - name: x_dut_xmna_w
   description: NMOS cascode width
-  default: 4u
+  default: 7.49699e-06
   min: 0.18u
   max: 50u
   unit: m
 - name: x_dut_xmka_w
   description: CMFB-driven bottom sink width
-  default: 3u
+  default: 50u
   min: 0.18u
   max: 50u
   unit: m
 - name: x_dut_xm2a_w
   description: Stage-2 NMOS CS width (per finger, m=4)
-  default: 8u
+  default: 3.40943e-05
   min: 0.18u
   max: 50u
   unit: m
 - name: x_dut_xmla_w
   description: Stage-2 PMOS load width (per finger, m=6)
-  default: 6u
+  default: 4.39607e-05
   min: 0.18u
   max: 50u
   unit: m
 - name: x_dut_xmepd_w
   description: CMFB EA PMOS diode width (mirror m=2)
-  default: 3u
+  default: 50u
   min: 0.18u
   max: 50u
   unit: m
 - name: x_dut_xmncd_w
   description: CMFB output NMOS diode width
-  default: 1.5u
+  default: 2.65057e-05
   min: 0.18u
   max: 50u
   unit: m
 - name: x_dut_xmbd_l
   description: Bias/load device length
-  default: 0.4u
+  default: 4.23709e-06
   min: 0.13u
   max: 10u
   unit: m
 - name: x_dut_xmi1_l
   description: Input pair / stage-2 CS length
-  default: 0.3u
+  default: 1.81752e-07
   min: 0.13u
   max: 10u
   unit: m
 - name: x_dut_xmca_l
   description: Cascode / EA-pair length
-  default: 0.2u
+  default: 9.78754e-06
   min: 0.13u
   max: 10u
   unit: m
 - name: x_dut_rza_value
   description: Nulling resistor (ohms)
-  default: 800
+  default: 3400
   min: 100
   max: 10000
   unit: ohm
 - name: x_dut_cca_value
   description: Miller cap per side (F)
-  default: 350e-15
+  default: 1.2e-12
   min: 5e-14
   max: 2e-12
   unit: F
 - name: x_dut_rca_value
   description: CM sense resistor (ohms)
-  default: 2e5
+  default: 363576
   min: 1e4
   max: 1e6
   unit: ohm
 - name: x_dut_cma_value
   description: CM sense cap (F)
-  default: 150e-15
+  default: 7.16119e-13
   min: 1e-14
   max: 1e-12
   unit: F

@@ -50,3 +50,18 @@ variables:
   default: '4'
 - name: x_dut_xm9_w
   default: 10u
+
+# Per-PDK re-bias (platform convention: analyses params are the AUTHORED operating point;
+# the closed lane injects the registry rail, and per-PDK deltas live here).
+# amp_003 is authored on a 1.8 V rail (analyses/*.yaml: VDD 1.8, VCM 300m). This binding
+# used to run that authored 1.8 V on tsmc-n65's 1.2 V core LVT devices (1.5x overvoltage,
+# once marked deliberate) — that posture is RETIRED by owner decision (2026-08-01):
+# tsmc-n65 designs run at 1.2 V and below, no exceptions. Re-biased to the kit rail.
+# VCM picked by a live Spectre dc sweep at VDD=1.2 (unity-follower dc_op, tt): the input
+# tracks 0.1-0.6 V with sub-mV offset; ac_open_loop at VCM 0.2/0.3/0.4/0.5 gives
+# 78.3/80.0/81.5/82.7 dB (ugf ~3.7 MHz, pm ~77 deg throughout). 0.4 (VDD/3) takes the
+# gain while keeping the PMOS tail saturated (Vsd ~0.55 V) and the tran_step +/-0.2 V
+# excursion inside the verified tracking band.
+analysis_params:
+  VDD: 1.2
+  VCM: 0.4

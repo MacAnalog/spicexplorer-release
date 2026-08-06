@@ -29,7 +29,7 @@
 
 .param VDD=1.2
 .param VCM=0.5
-.param CL=50f
+.param CL=10p
 .param ICM=200n
 
 Vdd  vdd 0 dc {VDD}

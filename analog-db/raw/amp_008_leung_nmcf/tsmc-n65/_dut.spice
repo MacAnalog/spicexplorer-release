@@ -6,30 +6,30 @@
 ** Source: pdk/tsmc-n65/netlist.spice (run `analog-db generate` to refresh).
 *----------------------------------------------------------*
 ** params: 24 free + 0 frozen knobs (sizing.yaml) · 36 tied · 15 ratio-derived (abstract/params.yaml)
-.param CAPACITOR_0=5p
-.param CAPACITOR_1=3p
-.param CURRENT_0_BIAS=20u
-.param x_dut_xm7_l=1u
+.param CAPACITOR_0=1.20385e-11
+.param CAPACITOR_1=1.36728e-11
+.param CURRENT_0_BIAS=7.79323e-05
+.param x_dut_xm7_l=6.3966e-06
 .param x_dut_xm7_m=4
-.param x_dut_xm7_w=1u
-.param x_dut_xm10_l=1u
+.param x_dut_xm7_w=4.66869e-05
+.param x_dut_xm10_l=7.22667e-07
 .param x_dut_xm10_m=4
-.param x_dut_xm10_w=1u
-.param x_dut_xm11_l=1u
+.param x_dut_xm10_w=3.61862e-05
+.param x_dut_xm11_l=4.56066e-07
 .param x_dut_xm11_m=4
-.param x_dut_xm11_w=1u
-.param x_dut_xm14_l=1u
+.param x_dut_xm11_w=2.54482e-06
+.param x_dut_xm14_l=8.003e-06
 .param x_dut_xm14_m=4
-.param x_dut_xm14_w=1u
-.param x_dut_xm21_l=1u
+.param x_dut_xm14_w=2.39763e-05
+.param x_dut_xm21_l=2.62257e-07
 .param x_dut_xm21_m=4
-.param x_dut_xm21_w=1u
-.param x_dut_xm23_l=1u
+.param x_dut_xm21_w=1.34718e-05
+.param x_dut_xm23_l=4.09758e-06
 .param x_dut_xm23_m=4
-.param x_dut_xm23_w=1u
-.param x_dut_xm9_l=1u
+.param x_dut_xm23_w=2.1409e-05
+.param x_dut_xm9_l=8.18444e-07
 .param x_dut_xm9_m=4
-.param x_dut_xm9_w=1u
+.param x_dut_xm9_w=4.82956e-05
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

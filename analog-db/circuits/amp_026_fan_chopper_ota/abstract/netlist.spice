@@ -26,8 +26,8 @@
 **     (gate vb4) over NMOS common-source devices XM14 (gate g2_p) / XM15 (gate g2_n);
 **     per-side Miller caps Cm1 (g2_p-voutp) / Cm2 (g2_n-voutn). NO explicit CMFB is
 **     drawn — the output common mode is set purely by device ratioing (XM8/XM9 vs
-**     XM14/XM15), so expect vocm sensitivity to sizing/corners (cf. amp_020's
-**     knife-edge note).
+**     XM14/XM15), so expect vocm sensitivity to sizing/corners (a no-CMFB
+**     knife-edge).
 **   drawing sync: the four formerly-floating source nets (XM1/XM6/XM9 rails to vdd,
 **     XM15 to vss) are FIXED IN THE DRAWING (DRAWING_REVIEW.md item 2, 2026-07-16);
 **     this entry matches the fixed two-stage-opamp-core.sch — no deviation.

@@ -19,7 +19,11 @@ deferred until the downstream tools are built — see the meta-repo roadmap, `do
 controlled sources G = VCCS / E = VCVS + subcircuit
 instances) with a configurable skip-and-warn policy, name-based supply detection, a PDK device-name
 map (IHP `sg13g2`, Skywater `sky130`, GlobalFoundries `gf180mcu`), and a round-trippable
-`CircuitGraphDoc` contract. Subcircuit
+`CircuitGraphDoc` contract. Cross-PDK retargeting is **voltage-class aware**: each `PdkDevice`
+declares a `flavor` (`""` = the core device, `"hv"` = the PDK's thick-oxide/IO part), the source
+device's class is read from its own PDK's declaration (`model_flavor`), and a class the target PDK
+does not declare is a `ValueError` — never a fall-back onto the core model, which used to land a
+3.3 V IHP device on sky130's 1.8 V `nfet_01v8` with no warning. Subcircuit
 instances are modeled as black-box components with named, role-tagged ports and can be recursively
 expanded (`recurse=True` → `graph.subgraphs`). Serialization is a pluggable strategy set, and
 `to_netlist(graph, pdk=…, dialect=…)` emits a re-parseable netlist with per-PDK device names in a
@@ -31,12 +35,27 @@ core dialect readers, and `CircuitGraph.from_netlist` consumes any `NetlistViewL
 the way out, `to_netlist(dialect="spectre"|"hspice", subckt=…, ports=…)` renders through a
 per-dialect emitter family (`SpiceEmitter` is byte-identical to the historical output; the Spectre
 emitter handles paren node lists, primitive masters, `subckt…ends`, full identifier
-sanitization — leading digits AND punctuation (`ota-5t` → `ota_5t`, nets included) — and SPICE
-`{expr}` braces → bare Spectre expressions). MOS multiplicity is emitted as `m=` VERBATIM
+sanitization — leading digits AND punctuation (`ota-5t` → `ota_5t`) — and SPICE
+`{expr}` braces → bare Spectre expressions). **Net** names get the stricter, *injective*
+`sanitize_net`: each illegal character has its own code (`vin+` → `vin_p`, `vin-` → `vin_m`), because
+collapsing them all to `_` shorted every `+`/`-` differential pair — the house port convention
+(`.subckt opamp vin- vin+ …`) — onto one node in a deck that still parsed. Emission also enforces a
+post-emit invariant: as many distinct nets out as in, or `ValueError` (case-only duplicates are
+exempt — SPICE resolves node names case-insensitively, so `VOUT`/`vout` *are* one node).
+MOS multiplicity is emitted as `m=` VERBATIM
 (`multi` stays a read-side alias only — Spectre silently IGNORES `multi=` on model-card MOS,
-proven live on CRN65 2026-07-17: `m=4` quadruples id/gm, `multi=4` does nothing). Round-trips
+proven live on CRN65 2026-07-17: `m=4` quadruples id/gm, `multi=4` does nothing).
+**Numeric values are resolved, not copied:** SPICE scale factors are case-INsensitive with `M`=milli,
+Spectre's are case-sensitive with `M`=mega and no `U`/`P` at all, so the Spectre lane renders every
+suffixed token as a plain literal (`w=1U` → `w=1e-06`; passing `1U` through meant *one metre*, `1P`
+one farad, `1meg` one milliohm). Suffix-free numbers, symbols and `{expr}` bodies are untouched, and
+the `spice`/`hspice` output still carries the source spelling byte-for-byte. Round-trips
 are verified by graph isomorphism against
-the real AnalogGym sensing-front-end decks. Design: meta `doc/plan_spectre_hspice_integration.md`.
+the real AnalogGym sensing-front-end decks — **including hierarchical ones**: a graph built with
+`recurse=True` emits a `.subckt`/`subckt…ends` **definition** per referenced master (deduped, nested
+masters first) alongside the instance line, so a deck whose DUT lives in a subcircuit re-parses into
+an isomorphic graph. A black-box graph (`recurse=False`) has no definition body and emits instance
+lines only, as before. Design: meta `doc/plan_spectre_hspice_integration.md`.
 
 **Whole-deck translation (2026-07-05, virtuoso-bridge P2 syntax half):**
 `translate_ngspice_to_spectre(netlist, pdk="tsmc-n65", source_pdk="ihp-sg13g2")` turns an
@@ -192,6 +211,8 @@ for p in shortest_paths_between(graph, "vinp", "vout"):
 
 find_paths_between(graph, "vinp", "vout", max_components=4)                 # all paths, capped length
 find_paths_between(graph, "vinp", "vout", through_supply=True)             # allow routing via rails
+find_paths_between(graph, "vinp", "vout", max_paths=50)                    # the 50 shortest
+find_paths_between(graph, "vinp", "vout", max_components=3, max_paths=None)  # unbounded (small graph)
 
 # diff_paths classifies how two paths differ — pin-only / device-only / device-pin — and splits them
 # into what is exclusive to each and what is common.
@@ -209,7 +230,12 @@ another (a diode-connected device — GATE and DRAIN on one net — fans out int
 paths). `shortest_only=True` (or `shortest_paths_between`) keeps just the minimal-length paths;
 `max_components` caps the hop count; `through_supply=True` allows routing through `VDD`/`VSS`/`GND`
 (off by default, since rails connect nearly everything). Net names resolve case-insensitively; an
-absent/ambiguous name or identical endpoints raise `ValueError`. `diff_paths(p1, p2)` matches steps
+absent/ambiguous name or identical endpoints raise `ValueError`. The **search itself is bounded** by
+`max_paths` (default `DEFAULT_MAX_PATHS = 1000`): enumeration runs shortest-first and stops at the
+cap, so the result is the *N shortest* paths and a truncation is logged at `WARNING`. This is not a
+cosmetic default — the number of simple paths grows factorially, and the `through_supply=True` call
+above did not finish in two minutes when `max_paths` was a post-filter over a complete enumeration.
+Pass `max_paths=None` for the unbounded walk on a small graph. `diff_paths(p1, p2)` matches steps
 by device (direction-insensitive pin sets) and returns a `PathDiff`: a `DiffKind` verdict
 (`IDENTICAL` / `PIN_ONLY` / `DEVICE_ONLY` / `DEVICE_PIN`) plus three `PathSegment`s (`only_in_a`,
 `only_in_b`, `common`). Every result is a pydantic model — `model_dump()` for JSON, `describe()` for
@@ -240,7 +266,23 @@ print(x1.subckt_name, [(p.name, p.role) for p in x1.ports()])
 # ...or step in: build a child graph per X… instance (the parent black box stays in place)
 g_rec = CircuitGraph.from_netlist(NetlistView.from_file(tb), pdk=IHP_SG13G2, recurse=True)
 print(g_rec.subgraphs.keys())
+
+# devices the build could not model at all (on_unknown="skip") stay visible here
+print(g.skipped_components)                                 # [] for a fully-typed deck
 ```
+
+The `XM`/`XR`/`XC`/`XL` prefixes are only a *heuristic* over `X…` instances, so an arity mismatch
+means the device is a subcircuit wearing a primitive's prefix, not a device to drop: a 3-terminal
+PDK passive like the gf180 Miller nulling resistor `XRZ net_b net1 vdd ppolyf_u_3k` graphs as a
+`SubcktInstanceNode` and round-trips (it used to be deleted, re-emitting the amplifier with its `Cc`
+but no `RZ`). Whatever genuinely can't be typed (a BJT/diode) is recorded in `skipped_components`,
+and `compare_graphs` **refuses to ignore** it — two graphs that dropped different devices are never
+reported as the same circuit. When both sides dropped the *same* references the comparison still
+runs, and the census rides out on the result: `GraphComparison.skipped_a` / `.skipped_b`,
+the `rests_on_skipped` flag, and a caveat named in `reason` — because "equivalent" over two netlists
+that each carry an unmodeled clamp diode says nothing about the diodes. `find_subcircuits` logs the
+same census once per host it builds internally, since detection over a partial netlist can only
+find, or rule out, what was typed.
 
 ### Detect functional sub-circuits (current mirrors + differential pairs)
 

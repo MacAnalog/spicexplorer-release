@@ -187,6 +187,14 @@ def bench_measurements(
     table; its ``args:`` (after ``$`` resolution) fill the expression's placeholders.
     Returns ``[]`` when the bench configures no calculator set. Exceptions as in
     :func:`bench_analyses`.
+
+    A row may carry ``requires: [NAME, …]`` — context keys that must be present for the
+    row to apply. This is the row-level analogue of the statement templates' ``[ optional ]``
+    segment, and exists for measures that are only DEFINED on one testbench-template variant
+    (the FD-only CM-path rejection rows read ``$CM_OUTP``/``$CM_OUTN``, which
+    ``_spectre_context`` sets only for a fully-differential DUT). A gated row is SKIPPED, not
+    rendered against a wrong node: on a single-ended deck there is no output pair, and a
+    silently-plausible number from the wrong nets is worse than an absent one.
     """
     from .ocean_metrics import OceanMeasurement
 
@@ -197,6 +205,9 @@ def bench_measurements(
     table = load_calculator_table(root=root)
     out: list[Any] = []
     for row in rows:
+        needs = [str(n) for n in (row.get("requires") or [])]
+        if any(n not in context for n in needs):
+            continue
         expr_name = str(row.get("expr", ""))
         if expr_name not in table:
             raise SpectreTemplateError(

@@ -9,7 +9,7 @@ default_conditions:
     typical: 0.9
   cload:
     unit: fF
-    typical: 500
+    typical: 10000
   corner:
     typical: tt
   temp:
@@ -64,15 +64,16 @@ metrics:
     spec:
       max: 0.001
       unit: A
-  vn_in:
-    display: Input-referred noise
-    unit: V/sqrt(Hz)
+  vn_in_integrated:
+    display: Total integrated input-referred noise (1 Hz - 1 MHz, FD follower)
+    description: ngspice inoise_total is volts rms already integrated over the swept
+      band (standardized 1 Hz - 1 MHz, closed-loop bias config, CL=10p) — the paper's
+      uniform noise column. Replaces the old vn_in entry, which bound the same measure
+      under V/sqrt(Hz) (dimensionally wrong; inoise_total is not a spot density).
+    unit: V
     analysis: noise
     extract:
       meas: inoise_total
-    spec:
-      max: 0.001
-      unit: V/sqrt(Hz)
   t_settle:
     display: Unity-gain differential step settling (0.2 V)
     unit: s
@@ -82,3 +83,108 @@ metrics:
     spec:
       max: 2.0e-06
       unit: s
+  thd_pct:
+    display: Total harmonic distortion (100 mV differential @ 1 MHz, FD follower)
+    description: tran + in-deck coherent DFT in the CM-pinned differential unity-feedback
+      follower (thd_diff); ASIG = 0.1 applied differential tone, each output swings
+      ~100 mV — the same per-side swing as the SE consumers' 0.1 binding.
+    unit: '%'
+    analysis: thd
+    extract:
+      meas: thd_pct
+      f0: 1.0e6
+    spec:
+      max: 2.0
+      unit: '%'
+  iip3_dbv:
+    display: Input IP3 (two-tone 0.9/1.0 MHz, 6.25 mV/tone, FD follower)
+    description: Single-point IM3 extrapolation in the differential follower (iip3_diff);
+      tran + coherent DFT. ampl_in below MUST track the analysis binding's ASIG (it is
+      the intercept's input reference).
+    unit: dBV
+    analysis: iip3
+    extract:
+      meas: iip3_dbv
+      f1: 0.9e6
+      f2: 1.0e6
+      ampl_in: 0.00625
+    spec:
+      min: -10
+      unit: dBV
+  pm_loop_deg:
+    display: Loop phase margin (stb, differential loop)
+    description: Phase margin of the antiphase-Middlebrook-probed differential loop
+      (VIPRB/VIPRBM pair); crosschecks ac_open_loop's pm_deg — fresh ihp-sg13g2 tt
+      reads 26.18 vs 26.26 deg (the low margin is the circuit at this sizing).
+      -999 sentinel = no crossover (fails the min spec by design).
+    unit: deg
+    analysis: stb
+    extract:
+      meas: pm_loop
+    spec:
+      min: 60
+      unit: deg
+  loopgain_db:
+    display: DC loop gain (stb, differential loop)
+    description: Loop-gain magnitude read at FSTART; bit-identical to ac_open_loop's
+      dcgain on this cell. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: loopgain_db
+  ugf_loop_hz:
+    display: Loop unity-gain frequency (stb)
+    unit: Hz
+    analysis: stb
+    extract:
+      meas: ugf_loop
+  gm_loop_db:
+    display: Loop gain margin (stb)
+    description: Gain margin at the phase crossover; ngspice measure name is gm_loop.
+      -999 sentinel = no phase crossover in-band. Report-only.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: gm_loop
+  cmrr_db:
+    display: Common-mode rejection (differential figure, FD follower)
+    description: 'NO spec BY DESIGN: on this perfectly symmetric FD netlist the
+      differential response to a CM ride is matrix round-off, so cmrr_db saturates at
+      the ~300 dB solver-resolution cap — a min-spec would silently pass any cell.
+      Treat >200 dB as unresolved-by-construction; the physical discriminator is the
+      secondary cmrr_cm_db (CM-loop rejection), which rides the scoreboard analyses
+      block.'
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_db
+  cmrr_cm_db:
+    display: CM-loop rejection of a CM ride (cmrr_vcm)
+    description: Output-CM response to the same 1 V CM ride — the always-physical,
+      discriminating rejection figure. NO spec — report-only companion to cmrr_db
+      (whose differential figure is solver-capped on symmetric FD netlists).
+    unit: dB
+    analysis: cmrr_vcm
+    extract:
+      meas: cmrr_cm_db
+  psrr_vdd_db:
+    display: Positive-supply rejection (differential figure, FD follower)
+    description: 'NO spec BY DESIGN: on this perfectly symmetric FD netlist the supply
+      disturbs both half-circuits identically, so psrr_vdd_db saturates at the ~300 dB
+      solver-resolution cap — a min-spec would silently pass any cell. Treat >200 dB as
+      unresolved-by-construction; the physical discriminator is the secondary psrr_cm_db
+      (CM-path supply rejection), which rides the scoreboard analyses block.'
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_vdd_db
+  psrr_cm_db:
+    display: CM-path supply rejection (psrr_vdd)
+    description: Output-CM supply rejection through the cell's CM path + CMFB —
+      the always-physical, discriminating figure. NO spec — report-only companion
+      to psrr_vdd_db (whose differential figure is solver-capped on symmetric FD
+      netlists).
+    unit: dB
+    analysis: psrr_vdd
+    extract:
+      meas: psrr_cm_db

@@ -1,0 +1,135 @@
+{
+  "area": {
+    "active_gate_area_um2": 59.623,
+    "c_count": 6,
+    "c_total_f": 3.76e-11,
+    "mos_count": 46,
+    "r_count": 4,
+    "r_total_ohm": 22000000.0
+  },
+  "circuit": "ia_006_fan_chopper_cmfb",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.0001823629382485064,
+            "vocm": 0.633848722095044,
+            "vos": 4.474198789239381e-14
+          },
+          "status": "ok"
+        },
+        "psrr_vdd_chop": {
+          "measures": {
+            "psrr_chop_cm_db": -16.166888922653516
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "spectre via virtuoso-bridge (analog-db run_circuit)",
+        "run_at": "2026-08-05T15:18:06+00:00"
+      }
+    }
+  },
+  "design_id": "1d63813dcf",
+  "metrics": {
+    "tt": {
+      "i_supply": {
+        "spec": "pass",
+        "value": 0.0001823629382485064
+      },
+      "vocm": {
+        "spec": "none",
+        "value": 0.633848722095044
+      },
+      "vos": {
+        "spec": "pass",
+        "value": 4.474198789239381e-14
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "vb1_core": 0.324117,
+      "vb2_core": 0.472198,
+      "vb3_core": 0.438401,
+      "vb4_core": 0.785955,
+      "vcm_ref": 0.6,
+      "x_dut_cfb1_core_value": "0.8p",
+      "x_dut_cin1_core_value": "16p",
+      "x_dut_cm1_core_value": "2p",
+      "x_dut_rb1_core_value": "10Meg",
+      "x_dut_rmp_cmfb_value": "1Meg",
+      "x_dut_xm10_core_l": "0.3u",
+      "x_dut_xm10_core_m": 1,
+      "x_dut_xm10_core_w": "2.398u",
+      "x_dut_xm12_core_l": "0.3u",
+      "x_dut_xm12_core_m": 1,
+      "x_dut_xm12_core_w": "0.792u",
+      "x_dut_xm14_core_l": "0.25u",
+      "x_dut_xm14_core_m": 1,
+      "x_dut_xm14_core_w": "1.043u",
+      "x_dut_xm16_core_l": "0.13u",
+      "x_dut_xm16_core_m": 1,
+      "x_dut_xm16_core_w": "2u",
+      "x_dut_xm17_core_l": "0.13u",
+      "x_dut_xm17_core_m": 1,
+      "x_dut_xm17_core_w": "2u",
+      "x_dut_xm1_cmfb_l": "0.267u",
+      "x_dut_xm1_cmfb_m": 1,
+      "x_dut_xm1_cmfb_w": "0.329u",
+      "x_dut_xm1_core_l": "1u",
+      "x_dut_xm1_core_m": 1,
+      "x_dut_xm1_core_w": "5.629u",
+      "x_dut_xm20_core_l": "0.13u",
+      "x_dut_xm20_core_m": 1,
+      "x_dut_xm20_core_w": "2u",
+      "x_dut_xm21_core_l": "0.13u",
+      "x_dut_xm21_core_m": 1,
+      "x_dut_xm21_core_w": "2u",
+      "x_dut_xm24_core_l": "0.13u",
+      "x_dut_xm24_core_m": 1,
+      "x_dut_xm24_core_w": "2u",
+      "x_dut_xm25_core_l": "0.13u",
+      "x_dut_xm25_core_m": 1,
+      "x_dut_xm25_core_w": "2u",
+      "x_dut_xm2_cmfb_l": "1.31u",
+      "x_dut_xm2_cmfb_m": 1,
+      "x_dut_xm2_cmfb_w": "2.32u",
+      "x_dut_xm2_core_l": "0.5u",
+      "x_dut_xm2_core_m": 1,
+      "x_dut_xm2_core_w": "4.933u",
+      "x_dut_xm3_cmfb_l": "0.259u",
+      "x_dut_xm3_cmfb_m": 1,
+      "x_dut_xm3_cmfb_w": "0.881u",
+      "x_dut_xm4_cmfb_l": "0.27u",
+      "x_dut_xm4_cmfb_m": 1,
+      "x_dut_xm4_cmfb_w": "1.42u",
+      "x_dut_xm4_core_l": "1u",
+      "x_dut_xm4_core_m": 1,
+      "x_dut_xm4_core_w": "2.51u",
+      "x_dut_xm6_core_m": 1,
+      "x_dut_xm6_core_w": "2.814u",
+      "x_dut_xm7_cmfb_l": "0.22u",
+      "x_dut_xm7_cmfb_m": 1,
+      "x_dut_xm7_cmfb_w": "0.293u",
+      "x_dut_xm8o_l": "1u",
+      "x_dut_xm8o_m": 1,
+      "x_dut_xm8o_w": "11.257u",
+      "x_dut_xm9o_l": "1u",
+      "x_dut_xm9o_m": 1,
+      "x_dut_xm9o_w": "11.257u"
+    }
+  },
+  "pdk": "tsmc-n65",
+  "ppa": {
+    "active_gate_area_um2": 59.623,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {},
+    "power_w": 0.00021883552589820767
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

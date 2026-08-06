@@ -22,7 +22,11 @@ canonical_metrics:
   - pm_deg
   - gm_deg          # gain margin
   - cmrr_db
+  - cmrr_cm_db        # cmrr_vcm_diff: RAW output-CM residual -db|vocm| to the CM ride (CM-loop rejection, a CM-to-CM ratio WITHOUT the differential gain) — the PHYSICAL discriminator on FD cells (differential cmrr_db saturates at the solver cap on symmetric netlists)
+  - cmrr_cm_corr_db   # DERIVED (scoreboard.record, FD cells only): the physical FD CMRR = dc_gain_db + cmrr_cm_db — the CM residual with the differential gain folded back in, so it is a true rejection figure (the SE unity-buffer cmrr_db already includes it). This is the FD paper column.
   - psrr_vdd_db
+  - psrr_cm_db        # psrr_vdd_diff: RAW CM-referred supply residual; same role as cmrr_cm_db
+  - psrr_cm_corr_db   # DERIVED (scoreboard.record, FD cells only): physical FD PSRR+ = dc_gain_db + psrr_cm_db; the FD paper column
   - psrr_vss_db
   - icmr_range       # input common-mode range (buffer-connected linearity sweep)
   - icmr_min
@@ -31,10 +35,18 @@ canonical_metrics:
   - t_settle
   - i_supply
   - vn_in
+  - vn_in_integrated # noise: TOTAL input-referred rms noise over the bench's swept band (ngspice inoise_total) — the paper's noise column
   - thd_pct
   - iip3_dbv
   - im3_dbc
+  - loopgain_db      # stb: low-frequency loop-gain magnitude of the Middlebrook probe
+  - ugf_loop_hz      # stb: loop unity-gain crossover frequency
+  - pm_loop_deg      # stb: phase margin at the loop crossover; -999 sentinel = no crossover (FAILS a min spec by design)
+  - gm_loop_db       # stb: gain margin at the phase crossover; -999 sentinel = none
   - vos
+  - vocm            # dc_op_diff: settled output COMMON mode (voutp+voutn)/2 — where a CMFB'd
+                    #   cell's CM loop actually landed vs the commanded reference (the static
+                    #   CM error); on a cell with no CM loop it is the ratioed knife-edge value
   - tc_ppm
   - area_um2
   - fom_s
@@ -76,8 +88,16 @@ templates:
   - tran_step
   - tran_step_biaswrap      # self-biased single-ended unity-gain step settling (follower)
   - thd            # large-signal harmonic distortion (buffer sine; PSS on Spectre)
+  - thd_diff                # the same coherent-DFT THD for FD DUTs (beta=1/2 follower; drive split about VCM)
+  - thd_selfbias            # the same THD for self-biased SE DUTs (no ibias port)
   - iip3           # two-tone intercept (common-fundamental tones; PSS on Spectre)
+  - iip3_diff               # two-tone intercept, FD network (same grid/bins as iip3)
+  - iip3_selfbias           # two-tone intercept for self-biased SE DUTs
   - tran_step_diff          # differential-output, self-biased unity-gain step settling
   - linearity
   - linearity_selfbias      # the same ICMR sweep for self-biased DUTs (no ibias port)
   - stb            # loop-gain probe (VIPRB marker -> iprobe; stb analysis on Spectre)
+  - stb_diff                # differential-loop probe: CM-pinned VCVS follower + antiphase Middlebrook pair
+  - stb_selfbias            # the same loop probe for self-biased SE DUTs (no ibias port)
+  - cmrr_vcm_diff           # FD CMRR: differential response to a CM ride; >200 dB = solver-resolution cap, cmrr_cm_db is the physical discriminator
+  - psrr_vdd_diff           # FD PSRR+: differential response to a vdd ride; same >200 dB caveat, psrr_cm_db discriminates

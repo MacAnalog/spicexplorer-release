@@ -11,6 +11,9 @@ class: amplifier
 display_name: "Two-stage Miller opamp (PMOS input pair, NMOS-CS second stage)"
 compensation: miller
 stages: 2
+realization: transistor
+cm_control: not_applicable
+signal_path: single_ended
 ports: [vdd, vout, vinp, vinn, ibias, vss]
 provenance:
   source: Arcadia-1/ferrosim (imported via netlist-crawler)

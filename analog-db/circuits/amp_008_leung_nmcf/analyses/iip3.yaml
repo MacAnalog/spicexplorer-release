@@ -1,0 +1,26 @@
+# Analysis binding for the SELF-BIASED 3-stage NMCF OTA (no ibias port — internal I0
+# bias) — uses the class's ibias-free template variant so no external current source is
+# left driving a dangling node.
+# Two-tone IIP3 in the unity buffer: 6.25 mV tones at 90/100 kHz share the F0 = gcd =
+# 10 kHz fundamental (n1=9, n2=10), so the IM3 products at 80/110 kHz (bins 8/11) and the
+# IM5 products at 70/120 kHz (bins 7/12) land on exact F0 bins — the in-deck coherent DFT
+# then has no leakage. Grid is the campaign grid /10: fresh ac_open_loop @ ihp-sg13g2 tt
+# (2026-08-01, this sizing) reads ugf = 3.164 MHz (the 3-30 MHz band), so both tones sit
+# ~16x under the ~ugf/2 closed-loop crossover.
+# COHERENT WINDOW: TSTART = 100u = 1 whole beat period (1/F0) >> 20x the fresh 228.8 ns
+# tran_step t_settle; TSTOP-TSTART = 2000u = 20 beat periods; TSTEP = 50n <= 1/(200*F2).
+# DRIVE: ASIG = 6.25 mV per tone — the class default (see the iip3.spice header's measured
+# valid-window sweep; geometric centre between the compression bound and the deck floor).
+# Plain decimal (0.00625), never a SPICE suffix — ASIG/F0/F1/F2 reach .control arithmetic.
+# REPORTING: `produces:` names DATASHEET METRIC IDS (iip3_dbv is wired in datasheet.yaml).
+# The other measures (im3_dbc, a_f1/a_f2/a_drv, gain_tone, a_im3l/h, a_im5l/h, a_floor,
+# im5_im3_db, iip3_comp_db) ride the recorded `corners.<corner>.analyses.iip3.measures`
+# block. TRUST CHECKS: a_im3 must sit well above a_floor; gain_tone < 0.5 means the
+# dead-output guard fired and iip3_dbv is the -999 sentinel.
+schema: spicexplorer/analysis@1
+id: iip3
+template: iip3_selfbias
+description: "IIP3 — two-tone intermodulation intercept; tran+coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 0.3, CL: 10p, ASIG: 0.00625, F0: 0.01e6, F1: 0.09e6, F2: 0.1e6, TSTEP: 50n, TSTART: 100u, TSTOP: 2100u}
+flags: []
+produces: [iip3_dbv]

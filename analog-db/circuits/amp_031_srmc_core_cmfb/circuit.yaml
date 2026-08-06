@@ -7,6 +7,8 @@ realization: mixed
 display_name: Hsu SRMC filter core amp with dual-loop CMFB (sized)
 stages: 2
 compensation: miller-rz
+cm_control: unregulated
+signal_path: fully_differential
 ports: [vinp, vinn, voutp, voutn, vdd, vss]
 provenance:
   source: drawings/bio-afe-01-YuPinHsu-reconfigable-SRMC (hand-drawn xschem, SRMC-core-amp-w-cmfb.sch)
@@ -28,6 +30,6 @@ artifacts:
   abstract_netlist: abstract/netlist.spice
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
-pdks: [ihp-sg13g2, tsmc-n65]
-analyses: [ac_open_loop, dc_op, tran_cm_kick]
+pdks: [ihp-sg13g2, tsmc-n65, sky130, gf180mcu]
+analyses: [ac_open_loop, dc_op, tran_cm_kick, stb, cmrr_vcm, psrr_vdd, noise]
 status: draft

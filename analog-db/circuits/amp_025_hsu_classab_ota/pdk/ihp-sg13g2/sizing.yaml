@@ -42,12 +42,18 @@ variables:
   - {name: x_dut_xm19_w, description: "Class-AB battery-stack sink width (gate on the drive node)", default: 2u, min: 0.15u, max: 100u, unit: m}
   - {name: x_dut_xm19_l, description: "Class-AB battery-stack sink length", default: 0.5u, min: 0.13u, max: 10u, unit: m}
   - {name: x_dut_c1_value, description: "Per-side Miller compensation cap (drawn Cc)", default: 1p, min: 0.05p, max: 20p, unit: F}
-  - {name: x_dut_r1_value, description: "Per-side Miller nulling resistor (drawn Rz)", default: 10k, min: 100, max: 200k, unit: ohm}
+  - {name: x_dut_r1_value, description: "Per-side Miller nulling resistor (drawn Rz)", default: 100k, min: 100, max: 200k, unit: ohm}
   - {name: x_dut_rmp_value, description: "CM-detector resistor half (drawn Rm)", default: 1Meg, min: 10k, max: 100Meg, unit: ohm}
   - {name: gm_val,   description: "CMFB servo macromodel transconductance (VCCS gain)", default: 100u, min: 1u, max: 10m, unit: S}
   - {name: rout_val, description: "CMFB servo macromodel output resistance", default: 10Meg, min: 100k, max: 1.0e9, unit: ohm}
   - {name: rin_val,  description: "CMFB servo macromodel input resistance (near-ideal)", default: 1.0e12, min: 1.0e9, max: 1.0e14, unit: ohm}
-  - {name: cout_val, description: "CMFB servo macromodel output capacitance", default: 100f, min: 1f, max: 10p, unit: F}
+  # cout_val 100f -> 10p (2026-08-01, large-signal binding campaign): at 100f the servo's CM
+  # loop is TRANSIENT-unstable at this sizing+CL=10p — even the quiescent one-wire follower
+  # walks vcmfb to a rail within 20 us (voutp/voutn -> 0.64/0.67, vcmfb -> -0.99), killing
+  # tran_step/thd/iip3. 10p (the declared max; the datasheet-notes candidate was 100p, out of
+  # bounds) measured bit-stable quiescent and step-tracking. Same mechanism as the notes'
+  # "cout 100f lets a 100 nA CM kick escape the interior basin" finding.
+  - {name: cout_val, description: "CMFB servo macromodel output capacitance", default: 10p, min: 1f, max: 10p, unit: F}
   - {name: cin_val,  description: "CMFB servo macromodel input capacitance", default: 10f, min: 1f, max: 1p, unit: F}
   - {name: vb1, description: "PMOS tail/current-source gate bias — XM1/XM14/XM20 (drawn as an external 0.5 V port)", default: 0.55, min: 0.0, max: 1.2, unit: V}
   - {name: vb2, description: "Folded PMOS cascode gate bias — XM10/XM11 (drawn 0.5 V)", default: 0.45, min: 0.0, max: 1.2, unit: V}

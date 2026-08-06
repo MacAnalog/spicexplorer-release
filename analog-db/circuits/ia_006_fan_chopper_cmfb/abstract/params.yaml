@@ -1,0 +1,261 @@
+# ia_006_fan_chopper_cmfb — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit ia_006_fan_chopper_cmfb --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  CCM: {Value: c_cm}
+  CFB1_CORE: {Value: x_dut_cfb1_core_value}
+  CFB2_CORE: {Value: x_dut_cfb2_core_value}
+  CIN1_CORE: {Value: x_dut_cin1_core_value}
+  CIN2_CORE: {Value: x_dut_cin2_core_value}
+  CM1_CORE: {Value: x_dut_cm1_core_value}
+  CM2_CORE: {Value: x_dut_cm2_core_value}
+  RB1_CORE: {Value: x_dut_rb1_core_value}
+  RB2_CORE: {Value: x_dut_rb2_core_value}
+  RMN_CMFB: {Value: x_dut_rmn_cmfb_value}
+  RMP_CMFB: {Value: x_dut_rmp_cmfb_value}
+  VB1_CORE: {Value: vb1_core}
+  VB2_CORE: {Value: vb2_core}
+  VB3_CORE: {Value: vb3_core}
+  VB4_CORE: {Value: vb4_core}
+  VREFCM: {Value: vcm_ref}
+  XM10_CORE: {l: x_dut_xm10_core_l, m: x_dut_xm10_core_m, w: x_dut_xm10_core_w}
+  XM11_CORE: {l: x_dut_xm11_core_l, m: x_dut_xm11_core_m, w: x_dut_xm11_core_w}
+  XM12_CORE: {l: x_dut_xm12_core_l, m: x_dut_xm12_core_m, w: x_dut_xm12_core_w}
+  XM13_CORE: {l: x_dut_xm13_core_l, m: x_dut_xm13_core_m, w: x_dut_xm13_core_w}
+  XM14_CORE: {l: x_dut_xm14_core_l, m: x_dut_xm14_core_m, w: x_dut_xm14_core_w}
+  XM15_CORE: {l: x_dut_xm15_core_l, m: x_dut_xm15_core_m, w: x_dut_xm15_core_w}
+  XM16_CORE: {l: x_dut_xm16_core_l, m: x_dut_xm16_core_m, w: x_dut_xm16_core_w}
+  XM17_CORE: {l: x_dut_xm17_core_l, m: x_dut_xm17_core_m, w: x_dut_xm17_core_w}
+  XM18_CORE: {l: x_dut_xm18_core_l, m: x_dut_xm18_core_m, w: x_dut_xm18_core_w}
+  XM19_CORE: {l: x_dut_xm19_core_l, m: x_dut_xm19_core_m, w: x_dut_xm19_core_w}
+  XM1_CMFB: {l: x_dut_xm1_cmfb_l, m: x_dut_xm1_cmfb_m, w: x_dut_xm1_cmfb_w}
+  XM1_CORE: {l: x_dut_xm1_core_l, m: x_dut_xm1_core_m, w: x_dut_xm1_core_w}
+  XM20_CORE: {l: x_dut_xm20_core_l, m: x_dut_xm20_core_m, w: x_dut_xm20_core_w}
+  XM21_CORE: {l: x_dut_xm21_core_l, m: x_dut_xm21_core_m, w: x_dut_xm21_core_w}
+  XM22_CORE: {l: x_dut_xm22_core_l, m: x_dut_xm22_core_m, w: x_dut_xm22_core_w}
+  XM23_CORE: {l: x_dut_xm23_core_l, m: x_dut_xm23_core_m, w: x_dut_xm23_core_w}
+  XM24_CORE: {l: x_dut_xm24_core_l, m: x_dut_xm24_core_m, w: x_dut_xm24_core_w}
+  XM25_CORE: {l: x_dut_xm25_core_l, m: x_dut_xm25_core_m, w: x_dut_xm25_core_w}
+  XM26_CORE: {l: x_dut_xm26_core_l, m: x_dut_xm26_core_m, w: x_dut_xm26_core_w}
+  XM27_CORE: {l: x_dut_xm27_core_l, m: x_dut_xm27_core_m, w: x_dut_xm27_core_w}
+  XM28_CORE: {l: x_dut_xm28_core_l, m: x_dut_xm28_core_m, w: x_dut_xm28_core_w}
+  XM29_CORE: {l: x_dut_xm29_core_l, m: x_dut_xm29_core_m, w: x_dut_xm29_core_w}
+  XM2_CMFB: {l: x_dut_xm2_cmfb_l, m: x_dut_xm2_cmfb_m, w: x_dut_xm2_cmfb_w}
+  XM2_CORE: {l: x_dut_xm2_core_l, m: x_dut_xm2_core_m, w: x_dut_xm2_core_w}
+  XM30_CORE: {l: x_dut_xm30_core_l, m: x_dut_xm30_core_m, w: x_dut_xm30_core_w}
+  XM31_CORE: {l: x_dut_xm31_core_l, m: x_dut_xm31_core_m, w: x_dut_xm31_core_w}
+  XM32_CORE: {l: x_dut_xm32_core_l, m: x_dut_xm32_core_m, w: x_dut_xm32_core_w}
+  XM33_CORE: {l: x_dut_xm33_core_l, m: x_dut_xm33_core_m, w: x_dut_xm33_core_w}
+  XM34_CORE: {l: x_dut_xm34_core_l, m: x_dut_xm34_core_m, w: x_dut_xm34_core_w}
+  XM35_CORE: {l: x_dut_xm35_core_l, m: x_dut_xm35_core_m, w: x_dut_xm35_core_w}
+  XM36_CORE: {l: x_dut_xm36_core_l, m: x_dut_xm36_core_m, w: x_dut_xm36_core_w}
+  XM37_CORE: {l: x_dut_xm37_core_l, m: x_dut_xm37_core_m, w: x_dut_xm37_core_w}
+  XM38_CORE: {l: x_dut_xm38_core_l, m: x_dut_xm38_core_m, w: x_dut_xm38_core_w}
+  XM39_CORE: {l: x_dut_xm39_core_l, m: x_dut_xm39_core_m, w: x_dut_xm39_core_w}
+  XM3_CMFB: {l: x_dut_xm3_cmfb_l, m: x_dut_xm3_cmfb_m, w: x_dut_xm3_cmfb_w}
+  XM3_CORE: {l: x_dut_xm3_core_l, m: x_dut_xm3_core_m, w: x_dut_xm3_core_w}
+  XM4_CMFB: {l: x_dut_xm4_cmfb_l, m: x_dut_xm4_cmfb_m, w: x_dut_xm4_cmfb_w}
+  XM4_CORE: {l: x_dut_xm4_core_l, m: x_dut_xm4_core_m, w: x_dut_xm4_core_w}
+  XM5_CMFB: {l: x_dut_xm5_cmfb_l, m: x_dut_xm5_cmfb_m, w: x_dut_xm5_cmfb_w}
+  XM5_CORE: {l: x_dut_xm5_core_l, m: x_dut_xm5_core_m, w: x_dut_xm5_core_w}
+  XM6_CMFB: {l: x_dut_xm6_cmfb_l, m: x_dut_xm6_cmfb_m, w: x_dut_xm6_cmfb_w}
+  XM6_CORE: {l: x_dut_xm6_core_l, m: x_dut_xm6_core_m, w: x_dut_xm6_core_w}
+  XM7_CMFB: {l: x_dut_xm7_cmfb_l, m: x_dut_xm7_cmfb_m, w: x_dut_xm7_cmfb_w}
+  XM7_CORE: {l: x_dut_xm7_core_l, m: x_dut_xm7_core_m, w: x_dut_xm7_core_w}
+  XM8O: {l: x_dut_xm8o_l, m: x_dut_xm8o_m, w: x_dut_xm8o_w}
+  XM9O: {l: x_dut_xm9o_l, m: x_dut_xm9o_m, w: x_dut_xm9o_w}
+groups:
+- name: pair_xm8o_xm9o
+  kind: shared_geometry
+  members: [XM8O, XM9O]
+  tie: [w, l, m]
+  description: Class-A output PMOS current sources on the CMFB-driven gate vb4o (composite-owned replacement
+    for the core's omitted XM8/XM9) — the CM actuator pair, must match.
+- name: pair_xm4_xm5_cmfb
+  kind: matched_pair
+  members: [XM4_CMFB, XM5_CMFB]
+  tie: [w, l, m]
+  description: PMOS input differential pair (XM4 gate = sensed CM, XM5 gate = vref) (ported from cmfb_002_5t_pmos_input
+    through the composer rename).
+- name: mirror_xm2_xm6_cmfb
+  kind: matched_pair
+  members: [XM2_CMFB, XM6_CMFB]
+  tie: [w, l, m]
+  description: NMOS mirror load, drawn 1:1 (XM6 diode -> XM2 output side); long L sets the servo output
+    ro / dominant pole (ported from cmfb_002_5t_pmos_input through the composer rename).
+- name: pair_rmp_rmn_cmfb
+  kind: shared_geometry
+  members: [RMP_CMFB, RMN_CMFB]
+  tie: [Value]
+  description: CM-detector averaging resistors — equal values so cm_sense sits at the true output midpoint
+    (mismatch leaks differential signal into the CM servo) (ported from cmfb_002_5t_pmos_input through
+    the composer rename).
+- name: pair_xm2_xm3_core
+  kind: matched_pair
+  members: [XM2_CORE, XM3_CORE]
+  tie: [w, l, m]
+  description: PMOS input differential pair of the embedded core (structural detection; shared source
+    = tail) (ported from ia_002_fan_chopper_simple through the composer rename).
+- name: pair_xm4_xm5_core
+  kind: shared_geometry
+  members: [XM4_CORE, XM5_CORE]
+  tie: [w, l, m]
+  description: First-stage NMOS current sinks at the two fold nodes (gates on vb1) — symmetric halves
+    (ported from ia_002_fan_chopper_simple through the composer rename).
+- name: pair_xm12_xm13_core
+  kind: shared_geometry
+  members: [XM12_CORE, XM13_CORE]
+  tie: [w, l, m]
+  description: Folded NMOS cascodes over the two first-stage output branches (gates on vb2) (ported from
+    ia_002_fan_chopper_simple through the composer rename).
+- name: pair_xm10_xm11_core
+  kind: shared_geometry
+  members: [XM10_CORE, XM11_CORE]
+  tie: [w, l, m]
+  description: PMOS cascodes of the first-stage load (gates on vb3) (ported from ia_002_fan_chopper_simple
+    through the composer rename).
+- name: pair_xm6_xm7_core
+  kind: shared_geometry
+  members: [XM6_CORE, XM7_CORE]
+  tie: [w, m]
+  description: PMOS fold current sources (gates on vb4); L tied through sources_vb4_l (ported from ia_002_fan_chopper_simple
+    through the composer rename).
+- name: sources_vb4_l_core
+  kind: shared_geometry
+  members: [XM1_CORE, XM6_CORE, XM7_CORE]
+  tie: [l]
+  description: All vb4-gated PMOS current sources (tail + fold sources + output sources) share one gate
+    net — same L so their current densities track off the single bias level (mirror-style tie; the kind
+    checker requires a diode-connected anchor for mirror_length, and vb4 is a knob source) (ported from
+    ia_002_fan_chopper_simple through the composer rename).
+- name: pair_xm14_xm15_core
+  kind: shared_geometry
+  members: [XM14_CORE, XM15_CORE]
+  tie: [w, l, m]
+  description: Class-A output NMOS common-source devices (gates on the output-chopper nodes g2_p/g2_n)
+    (ported from ia_002_fan_chopper_simple through the composer rename).
+- name: chout_tg_nmos_core
+  kind: shared_geometry
+  members: [XM16_CORE, XM18_CORE, XM28_CORE, XM30_CORE]
+  tie: [w, l, m]
+  description: NMOS pass devices of the embedded output chopper's four transmission gates (straight XM16/XM18
+    + cross XM28/XM30) — all gates must match for symmetric on-resistance and charge injection across
+    both chop phases (ported from ia_002_fan_chopper_simple through the composer rename).
+- name: chout_tg_pmos_core
+  kind: shared_geometry
+  members: [XM17_CORE, XM19_CORE, XM29_CORE, XM31_CORE]
+  tie: [w, l, m]
+  description: PMOS pass devices of the embedded output chopper's four gates (straight + cross); n and
+    p halves stay independent (different mobility) (ported from ia_002_fan_chopper_simple through the
+    composer rename).
+- name: chin_tg_nmos_core
+  kind: shared_geometry
+  members: [XM24_CORE, XM26_CORE, XM32_CORE, XM34_CORE]
+  tie: [w, l, m]
+  description: NMOS pass devices of the input chopper's four gates (straight XM24/XM26 + cross XM32/XM34)
+    — gate symmetry on the differential signal across both chop phases (ported from ia_002_fan_chopper_simple
+    through the composer rename).
+- name: chin_tg_pmos_core
+  kind: shared_geometry
+  members: [XM25_CORE, XM27_CORE, XM33_CORE, XM35_CORE]
+  tie: [w, l, m]
+  description: PMOS pass devices of the input chopper's four gates (straight + cross) (ported from ia_002_fan_chopper_simple
+    through the composer rename).
+- name: chfb_tg_nmos_core
+  kind: shared_geometry
+  members: [XM20_CORE, XM22_CORE, XM36_CORE, XM38_CORE]
+  tie: [w, l, m]
+  description: NMOS pass devices of the feedback chopper's four gates (straight XM20/XM22 + cross XM36/XM38;
+    voutp / voutn) (ported from ia_002_fan_chopper_simple through the composer rename).
+- name: chfb_tg_pmos_core
+  kind: shared_geometry
+  members: [XM21_CORE, XM23_CORE, XM37_CORE, XM39_CORE]
+  tie: [w, l, m]
+  description: PMOS pass devices of the feedback chopper's four gates (straight + cross) (ported from
+    ia_002_fan_chopper_simple through the composer rename).
+- name: pair_cin_core
+  kind: shared_geometry
+  members: [CIN1_CORE, CIN2_CORE]
+  tie: [Value]
+  description: Input coupling caps — the two legs must match; sets the closed-loop gain numerator (gain
+    = Cin/Cfb) (ported from ia_002_fan_chopper_simple through the composer rename).
+- name: pair_cfb_core
+  kind: shared_geometry
+  members: [CFB1_CORE, CFB2_CORE]
+  tie: [Value]
+  description: Feedback caps — the two legs must match; sets the closed-loop gain denominator (ported
+    from ia_002_fan_chopper_simple through the composer rename).
+- name: pair_cm_core
+  kind: shared_geometry
+  members: [CM1_CORE, CM2_CORE]
+  tie: [Value]
+  description: Per-side Miller caps must match (the originally-drawn Cm_1=1p (now symbolic Cm at source,
+    DRAWING_REVIEW item 5) was an unedited xschem default; Cm_2 was symbolic Cm) (ported from ia_002_fan_chopper_simple
+    through the composer rename).
+- name: pair_rb_core
+  kind: shared_geometry
+  members: [RB1_CORE, RB2_CORE]
+  tie: [Value]
+  description: Summing-node bias resistors to vref — the two legs must match (input CM + high-pass corner
+    symmetry) (ported from ia_002_fan_chopper_simple through the composer rename).
+- name: mirror_xm3_cmfb_l
+  kind: mirror_length
+  members: [XM3_CMFB, XM1_CMFB]
+  tie: [l]
+  description: CMFB tail XM1 mirrors the bias-string diode XM3, so their L is tied (leader XM3).
+    This tie exists only in the COMPOSITE — standalone cmfb_002 sizes the two independently and its
+    ihp-sg13g2 sizing still carries an XM1 L of 0.267u. That number never reached a deck here, because
+    the tie forces XM1's L to XM3's — the SHIPPED/MEASURED value is 0.259u. The materialized sizing
+    row for the follower is therefore dropped by the composer (it double-defined the symbol in the
+    generated _dut.spice, where the tie line wins anyway).
+- name: pair_xm16_core_xm30_core
+  kind: matched_pair
+  members: [XM16_CORE, XM30_CORE]
+  tie: [w, l, m]
+- name: pair_xm17_core_xm29_core
+  kind: matched_pair
+  members: [XM17_CORE, XM29_CORE]
+  tie: [w, l, m]
+- name: pair_xm18_core_xm28_core
+  kind: matched_pair
+  members: [XM18_CORE, XM28_CORE]
+  tie: [w, l, m]
+- name: pair_xm19_core_xm31_core
+  kind: matched_pair
+  members: [XM19_CORE, XM31_CORE]
+  tie: [w, l, m]
+- name: pair_xm20_core_xm38_core
+  kind: matched_pair
+  members: [XM20_CORE, XM38_CORE]
+  tie: [w, l, m]
+- name: pair_xm21_core_xm37_core
+  kind: matched_pair
+  members: [XM21_CORE, XM37_CORE]
+  tie: [w, l, m]
+- name: pair_xm22_core_xm36_core
+  kind: matched_pair
+  members: [XM22_CORE, XM36_CORE]
+  tie: [w, l, m]
+- name: pair_xm23_core_xm39_core
+  kind: matched_pair
+  members: [XM23_CORE, XM39_CORE]
+  tie: [w, l, m]
+- name: pair_xm24_core_xm34_core
+  kind: matched_pair
+  members: [XM24_CORE, XM34_CORE]
+  tie: [w, l, m]
+- name: pair_xm25_core_xm33_core
+  kind: matched_pair
+  members: [XM25_CORE, XM33_CORE]
+  tie: [w, l, m]
+- name: pair_xm26_core_xm32_core
+  kind: matched_pair
+  members: [XM26_CORE, XM32_CORE]
+  tie: [w, l, m]
+- name: pair_xm27_core_xm35_core
+  kind: matched_pair
+  members: [XM27_CORE, XM35_CORE]
+  tie: [w, l, m]

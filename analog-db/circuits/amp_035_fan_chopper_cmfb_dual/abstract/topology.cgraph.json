@@ -1,0 +1,1142 @@
+{
+  "components": [
+    {
+      "connections": {
+        "N": "vss",
+        "P": "vb4_ctl"
+      },
+      "device_type": "CAP",
+      "id": "CCM_S1",
+      "params": {
+        "Value": "'c_cm_s1'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "voutp",
+        "P": "core__g2_p"
+      },
+      "device_type": "CAP",
+      "id": "CM1_CORE",
+      "params": {
+        "Value": "'x_dut_cm1_core_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "voutn",
+        "P": "core__g2_n"
+      },
+      "device_type": "CAP",
+      "id": "CM2_CORE",
+      "params": {
+        "Value": "'x_dut_cm2_core_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "cmfb_out__cm_sense",
+        "P": "voutn"
+      },
+      "device_type": "RES",
+      "id": "RMN_CMFB_OUT",
+      "params": {
+        "Value": "'x_dut_rmn_cmfb_out_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "cmfb_s1__cm_sense",
+        "P": "stg1_n"
+      },
+      "device_type": "RES",
+      "id": "RMN_CMFB_S1",
+      "params": {
+        "Value": "'x_dut_rmn_cmfb_s1_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "voutp",
+        "P": "cmfb_out__cm_sense"
+      },
+      "device_type": "RES",
+      "id": "RMP_CMFB_OUT",
+      "params": {
+        "Value": "'x_dut_rmp_cmfb_out_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "stg1_p",
+        "P": "cmfb_s1__cm_sense"
+      },
+      "device_type": "RES",
+      "id": "RMP_CMFB_S1",
+      "params": {
+        "Value": "'x_dut_rmp_cmfb_s1_value'"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vss",
+        "P": "core__vb1"
+      },
+      "device_type": "VSOURCE",
+      "id": "VB1_CORE",
+      "params": {
+        "Value": "dc {vb1_core}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vss",
+        "P": "core__vb2"
+      },
+      "device_type": "VSOURCE",
+      "id": "VB2_CORE",
+      "params": {
+        "Value": "dc {vb2_core}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vss",
+        "P": "core__vb3"
+      },
+      "device_type": "VSOURCE",
+      "id": "VB3_CORE",
+      "params": {
+        "Value": "dc {vb3_core}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vss",
+        "P": "vref_out"
+      },
+      "device_type": "VSOURCE",
+      "id": "VREFOUT",
+      "params": {
+        "Value": "dc {vcm_ref}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vss",
+        "P": "vref_s1"
+      },
+      "device_type": "VSOURCE",
+      "id": "VREFS1",
+      "params": {
+        "Value": "dc {vcm_ref_stg1}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "stg1_n",
+        "GATE": "core__vb3",
+        "SOURCE": "core__casc_src_n"
+      },
+      "device_type": "MOS",
+      "id": "XM10_CORE",
+      "params": {
+        "l": "x_dut_xm10_core_l",
+        "m": "x_dut_xm10_core_m",
+        "w": "x_dut_xm10_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "stg1_p",
+        "GATE": "core__vb3",
+        "SOURCE": "core__casc_src_p"
+      },
+      "device_type": "MOS",
+      "id": "XM11_CORE",
+      "params": {
+        "l": "x_dut_xm11_core_l",
+        "m": "x_dut_xm11_core_m",
+        "w": "x_dut_xm11_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "stg1_p",
+        "GATE": "core__vb2",
+        "SOURCE": "core__fold_p"
+      },
+      "device_type": "MOS",
+      "id": "XM12_CORE",
+      "params": {
+        "l": "x_dut_xm12_core_l",
+        "m": "x_dut_xm12_core_m",
+        "w": "x_dut_xm12_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "stg1_n",
+        "GATE": "core__vb2",
+        "SOURCE": "core__fold_n"
+      },
+      "device_type": "MOS",
+      "id": "XM13_CORE",
+      "params": {
+        "l": "x_dut_xm13_core_l",
+        "m": "x_dut_xm13_core_m",
+        "w": "x_dut_xm13_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "voutp",
+        "GATE": "core__g2_p",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM14_CORE",
+      "params": {
+        "l": "x_dut_xm14_core_l",
+        "m": "x_dut_xm14_core_m",
+        "w": "x_dut_xm14_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "voutn",
+        "GATE": "core__g2_n",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM15_CORE",
+      "params": {
+        "l": "x_dut_xm15_core_l",
+        "m": "x_dut_xm15_core_m",
+        "w": "x_dut_xm15_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "stg1_n",
+        "GATE": "vdd",
+        "SOURCE": "core__g2_n"
+      },
+      "device_type": "MOS",
+      "id": "XM16_CORE",
+      "params": {
+        "l": "x_dut_xm16_core_l",
+        "m": "x_dut_xm16_core_m",
+        "w": "x_dut_xm16_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "core__g2_n",
+        "GATE": "vss",
+        "SOURCE": "stg1_n"
+      },
+      "device_type": "MOS",
+      "id": "XM17_CORE",
+      "params": {
+        "l": "x_dut_xm17_core_l",
+        "m": "x_dut_xm17_core_m",
+        "w": "x_dut_xm17_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "stg1_p",
+        "GATE": "vdd",
+        "SOURCE": "core__g2_p"
+      },
+      "device_type": "MOS",
+      "id": "XM18_CORE",
+      "params": {
+        "l": "x_dut_xm18_core_l",
+        "m": "x_dut_xm18_core_m",
+        "w": "x_dut_xm18_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "core__g2_p",
+        "GATE": "vss",
+        "SOURCE": "stg1_p"
+      },
+      "device_type": "MOS",
+      "id": "XM19_CORE",
+      "params": {
+        "l": "x_dut_xm19_core_l",
+        "m": "x_dut_xm19_core_m",
+        "w": "x_dut_xm19_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "cmfb_out__ptail",
+        "GATE": "cmfb_out__bias",
+        "SOURCE": "vdd"
+      },
+      "device_type": "MOS",
+      "id": "XM1_CMFB_OUT",
+      "params": {
+        "l": "x_dut_xm1_cmfb_out_l",
+        "m": "x_dut_xm1_cmfb_out_m",
+        "w": "x_dut_xm1_cmfb_out_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "cmfb_s1__ptail",
+        "GATE": "cmfb_s1__bias",
+        "SOURCE": "vdd"
+      },
+      "device_type": "MOS",
+      "id": "XM1_CMFB_S1",
+      "params": {
+        "l": "x_dut_xm1_cmfb_s1_l",
+        "m": "x_dut_xm1_cmfb_s1_m",
+        "w": "x_dut_xm1_cmfb_s1_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "core__tail",
+        "GATE": "vb4_ctl",
+        "SOURCE": "vdd"
+      },
+      "device_type": "MOS",
+      "id": "XM1_CORE",
+      "params": {
+        "l": "x_dut_xm1_core_l",
+        "m": "x_dut_xm1_core_m",
+        "w": "x_dut_xm1_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "stg1_p",
+        "GATE": "vss",
+        "SOURCE": "core__g2_n"
+      },
+      "device_type": "MOS",
+      "id": "XM20_CORE",
+      "params": {
+        "l": "x_dut_xm20_core_l",
+        "m": "x_dut_xm20_core_m",
+        "w": "x_dut_xm20_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "core__g2_n",
+        "GATE": "vdd",
+        "SOURCE": "stg1_p"
+      },
+      "device_type": "MOS",
+      "id": "XM21_CORE",
+      "params": {
+        "l": "x_dut_xm21_core_l",
+        "m": "x_dut_xm21_core_m",
+        "w": "x_dut_xm21_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "stg1_n",
+        "GATE": "vss",
+        "SOURCE": "core__g2_p"
+      },
+      "device_type": "MOS",
+      "id": "XM22_CORE",
+      "params": {
+        "l": "x_dut_xm22_core_l",
+        "m": "x_dut_xm22_core_m",
+        "w": "x_dut_xm22_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "core__g2_p",
+        "GATE": "vdd",
+        "SOURCE": "stg1_n"
+      },
+      "device_type": "MOS",
+      "id": "XM23_CORE",
+      "params": {
+        "l": "x_dut_xm23_core_l",
+        "m": "x_dut_xm23_core_m",
+        "w": "x_dut_xm23_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "vb4o",
+        "GATE": "cmfb_out__mirr",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM2_CMFB_OUT",
+      "params": {
+        "l": "x_dut_xm2_cmfb_out_l",
+        "m": "x_dut_xm2_cmfb_out_m",
+        "w": "x_dut_xm2_cmfb_out_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "vb4_ctl",
+        "GATE": "cmfb_s1__mirr",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM2_CMFB_S1",
+      "params": {
+        "l": "x_dut_xm2_cmfb_s1_l",
+        "m": "x_dut_xm2_cmfb_s1_m",
+        "w": "x_dut_xm2_cmfb_s1_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "core__fold_p",
+        "GATE": "vinp",
+        "SOURCE": "core__tail"
+      },
+      "device_type": "MOS",
+      "id": "XM2_CORE",
+      "params": {
+        "l": "x_dut_xm2_core_l",
+        "m": "x_dut_xm2_core_m",
+        "w": "x_dut_xm2_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "cmfb_out__bias",
+        "GATE": "cmfb_out__bias",
+        "SOURCE": "vdd"
+      },
+      "device_type": "MOS",
+      "id": "XM3_CMFB_OUT",
+      "params": {
+        "l": "x_dut_xm3_cmfb_out_l",
+        "m": "x_dut_xm3_cmfb_out_m",
+        "w": "x_dut_xm3_cmfb_out_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "cmfb_s1__bias",
+        "GATE": "cmfb_s1__bias",
+        "SOURCE": "vdd"
+      },
+      "device_type": "MOS",
+      "id": "XM3_CMFB_S1",
+      "params": {
+        "l": "x_dut_xm3_cmfb_s1_l",
+        "m": "x_dut_xm3_cmfb_s1_m",
+        "w": "x_dut_xm3_cmfb_s1_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "core__fold_n",
+        "GATE": "vinn",
+        "SOURCE": "core__tail"
+      },
+      "device_type": "MOS",
+      "id": "XM3_CORE",
+      "params": {
+        "l": "x_dut_xm3_core_l",
+        "m": "x_dut_xm3_core_m",
+        "w": "x_dut_xm3_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "cmfb_out__mirr",
+        "GATE": "cmfb_out__cm_sense",
+        "SOURCE": "cmfb_out__ptail"
+      },
+      "device_type": "MOS",
+      "id": "XM4_CMFB_OUT",
+      "params": {
+        "l": "x_dut_xm4_cmfb_out_l",
+        "m": "x_dut_xm4_cmfb_out_m",
+        "w": "x_dut_xm4_cmfb_out_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "cmfb_s1__mirr",
+        "GATE": "cmfb_s1__cm_sense",
+        "SOURCE": "cmfb_s1__ptail"
+      },
+      "device_type": "MOS",
+      "id": "XM4_CMFB_S1",
+      "params": {
+        "l": "x_dut_xm4_cmfb_s1_l",
+        "m": "x_dut_xm4_cmfb_s1_m",
+        "w": "x_dut_xm4_cmfb_s1_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "core__fold_p",
+        "GATE": "core__vb1",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM4_CORE",
+      "params": {
+        "l": "x_dut_xm4_core_l",
+        "m": "x_dut_xm4_core_m",
+        "w": "x_dut_xm4_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "vb4o",
+        "GATE": "vref_out",
+        "SOURCE": "cmfb_out__ptail"
+      },
+      "device_type": "MOS",
+      "id": "XM5_CMFB_OUT",
+      "params": {
+        "l": "x_dut_xm5_cmfb_out_l",
+        "m": "x_dut_xm5_cmfb_out_m",
+        "w": "x_dut_xm5_cmfb_out_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "vb4_ctl",
+        "GATE": "vref_s1",
+        "SOURCE": "cmfb_s1__ptail"
+      },
+      "device_type": "MOS",
+      "id": "XM5_CMFB_S1",
+      "params": {
+        "l": "x_dut_xm5_cmfb_s1_l",
+        "m": "x_dut_xm5_cmfb_s1_m",
+        "w": "x_dut_xm5_cmfb_s1_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "core__fold_n",
+        "GATE": "core__vb1",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM5_CORE",
+      "params": {
+        "l": "x_dut_xm5_core_l",
+        "m": "x_dut_xm5_core_m",
+        "w": "x_dut_xm5_core_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "cmfb_out__mirr",
+        "GATE": "cmfb_out__mirr",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM6_CMFB_OUT",
+      "params": {
+        "l": "x_dut_xm6_cmfb_out_l",
+        "m": "x_dut_xm6_cmfb_out_m",
+        "w": "x_dut_xm6_cmfb_out_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "cmfb_s1__mirr",
+        "GATE": "cmfb_s1__mirr",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM6_CMFB_S1",
+      "params": {
+        "l": "x_dut_xm6_cmfb_s1_l",
+        "m": "x_dut_xm6_cmfb_s1_m",
+        "w": "x_dut_xm6_cmfb_s1_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "core__casc_src_n",
+        "GATE": "vb4_ctl",
+        "SOURCE": "vdd"
+      },
+      "device_type": "MOS",
+      "id": "XM6_CORE",
+      "params": {
+        "l": "x_dut_xm6_core_l",
+        "m": "x_dut_xm6_core_m",
+        "w": "x_dut_xm6_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "cmfb_out__bias",
+        "GATE": "cmfb_out__bias",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM7_CMFB_OUT",
+      "params": {
+        "l": "x_dut_xm7_cmfb_out_l",
+        "m": "x_dut_xm7_cmfb_out_m",
+        "w": "x_dut_xm7_cmfb_out_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vss",
+        "DRAIN": "cmfb_s1__bias",
+        "GATE": "cmfb_s1__bias",
+        "SOURCE": "vss"
+      },
+      "device_type": "MOS",
+      "id": "XM7_CMFB_S1",
+      "params": {
+        "l": "x_dut_xm7_cmfb_s1_l",
+        "m": "x_dut_xm7_cmfb_s1_m",
+        "w": "x_dut_xm7_cmfb_s1_w"
+      },
+      "polarity": "NMOS",
+      "ports": null,
+      "spice_model": "nmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "core__casc_src_p",
+        "GATE": "vb4_ctl",
+        "SOURCE": "vdd"
+      },
+      "device_type": "MOS",
+      "id": "XM7_CORE",
+      "params": {
+        "l": "x_dut_xm7_core_l",
+        "m": "x_dut_xm7_core_m",
+        "w": "x_dut_xm7_core_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "voutp",
+        "GATE": "vb4o",
+        "SOURCE": "vdd"
+      },
+      "device_type": "MOS",
+      "id": "XM8O",
+      "params": {
+        "l": "x_dut_xm8o_l",
+        "m": "x_dut_xm8o_m",
+        "w": "x_dut_xm8o_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "BULK": "vdd",
+        "DRAIN": "voutn",
+        "GATE": "vb4o",
+        "SOURCE": "vdd"
+      },
+      "device_type": "MOS",
+      "id": "XM9O",
+      "params": {
+        "l": "x_dut_xm9o_l",
+        "m": "x_dut_xm9o_m",
+        "w": "x_dut_xm9o_w"
+      },
+      "polarity": "PMOS",
+      "ports": null,
+      "spice_model": "pmos",
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    }
+  ],
+  "meta": {
+    "circuit_name": "amp_035_fan_chopper_cmfb_dual",
+    "component_count": 49,
+    "net_count": 30
+  },
+  "nets": [
+    {
+      "is_supply": false,
+      "name": "cmfb_out__bias",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "cmfb_out__cm_sense",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "cmfb_out__mirr",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "cmfb_out__ptail",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "cmfb_s1__bias",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "cmfb_s1__cm_sense",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "cmfb_s1__mirr",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "cmfb_s1__ptail",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__casc_src_n",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__casc_src_p",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__fold_n",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__fold_p",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__g2_n",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__g2_p",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__tail",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__vb1",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__vb2",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "core__vb3",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "stg1_n",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "stg1_p",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vb4_ctl",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vb4o",
+      "supply_type": ""
+    },
+    {
+      "is_supply": true,
+      "name": "vdd",
+      "supply_type": "VDD"
+    },
+    {
+      "is_supply": false,
+      "name": "vinn",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vinp",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "voutn",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "voutp",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vref_out",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vref_s1",
+      "supply_type": ""
+    },
+    {
+      "is_supply": true,
+      "name": "vss",
+      "supply_type": "VSS"
+    }
+  ]
+}

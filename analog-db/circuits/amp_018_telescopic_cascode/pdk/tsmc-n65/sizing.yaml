@@ -3,6 +3,10 @@
 # A starting point; re-tune defaults/bounds for tsmc-n65 device physics as needed.
 schema: spicexplorer/sizing@1
 pdk: tsmc-n65
+# The closed (Spectre) lane always injects the tsmc-n65 core rail (1.2 V) over the
+# cross-PDK authored VDD — record that operating point so raw decks and the entry's
+# power_w (i_supply x VDD) tell the truth about what was actually simulated.
+analysis_params: {VDD: 1.2}
 variables:
 - name: x_dut_xm1_w
   description: Input pair W

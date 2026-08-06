@@ -13,7 +13,7 @@
 .lib tsmc_n65_models.scs tt
 .temp 27
 
-.param VDD=1.8
+.param VDD=1.2
 .param VCM=0.9
 .param IBIAS=-34u
 
@@ -34,22 +34,22 @@ XDUT vinn vinp vout vdd ibias vss amp_004_folded_cascode
   write
   quit
 .endc
-.param x_dut_xm1_w=72u
-.param x_dut_xm1_l=2u
-.param x_dut_xm13_w=106.5u
-.param x_dut_xm13_l=2u
-.param x_dut_xm6_w=44u
-.param x_dut_xm6_l=2.5u
-.param x_dut_xm7_w=78u
-.param x_dut_xm7_l=2u
-.param x_dut_xm9_w=183u
-.param x_dut_xm9_l=4.5u
-.param x_dut_xm11_w=50u
-.param x_dut_xm11_l=3u
-.param x_dut_xm12_w=50u
-.param x_dut_xm12_l=3u
-.param x_dut_vb1=1.225
-.param x_dut_vb2=1.275
+.param x_dut_xm1_w=8.85905e-05
+.param x_dut_xm1_l=7.8876e-07
+.param x_dut_xm13_w=7.76614e-05
+.param x_dut_xm13_l=1.60507e-06
+.param x_dut_xm6_w=5.5868e-06
+.param x_dut_xm6_l=1.10363e-06
+.param x_dut_xm7_w=6.66713e-05
+.param x_dut_xm7_l=1.33747e-06
+.param x_dut_xm9_w=9.37594e-05
+.param x_dut_xm9_l=3.97093e-06
+.param x_dut_xm11_w=0.000117977
+.param x_dut_xm11_l=4.53903e-06
+.param x_dut_xm12_w=3.18634e-05
+.param x_dut_xm12_l=1.62313e-06
+.param x_dut_vb1=0.55
+.param x_dut_vb2=0.75
 .param x_dut_xm1_ng=8
 .param x_dut_xm13_ng=11
 .param x_dut_xm6_ng=5

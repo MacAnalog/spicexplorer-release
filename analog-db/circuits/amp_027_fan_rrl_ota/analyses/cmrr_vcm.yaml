@@ -1,0 +1,29 @@
+# Analysis binding: common-mode rejection (class cmrr_vcm_diff template — the FD counterpart
+# of cmrr_vcm; this cell is fully differential and self-biased with voutp/voutn, so the SE
+# unity-buffer bench does not fit). The differential loop is closed by the template's CM-pinned
+# VCVS network and the SAME 1 V AC rides both inputs; cmrr_db = -db(voutp-voutn) at FSTART,
+# exactly the SE math.
+# CAVEAT (template header, "SOLVER-RESOLUTION CEILING"): this netlist is perfectly symmetric
+# (xm3/xm7/xm8/xm10/xm12/xm14/xm16 are tie-lines of their left-half twins), so the differential
+# response to a pure CM ride is matrix round-off and cmrr_db saturates near the ~300 dB
+# floor-cap — "beyond solver resolution", not a physical rejection. The secondary cmrr_cm_db
+# (output-CM response to the same ride — here the DDA-CMFB servo's rejection) is the
+# always-physical, discriminating figure; both ride the datasheet spec-free (see datasheet.yaml).
+# FRESH (ihp-sg13g2 tt, 2026-08-01): cmrr_db 238.3 (cap regime) / cmrr_cm_db 6.15 — the weak
+# CM-loop figure is real: the DDA-CMFB regulates the OUTPUT CM against its reference, it does
+# not reject an INPUT-CM ride (the telescopic pair passes it), so ~6 dB is the honest reading.
+# Params mirror the circuit's other benches (VDD 1.2, VCM 0.6, CL 10p, FSTART 10 like its
+# ac_open_loop binding — the DC-band floor is flat there, the dominant pole sits ~17 kHz).
+schema: spicexplorer/analysis@1
+id: cmrr_vcm
+template: cmrr_vcm_diff
+description: "CMRR — 1 V AC common-mode ride on both inputs of the CM-pinned differential unity-feedback loop, DC-band floor (+ cmrr_cm_db CM-loop figure)."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 10p
+  FSTART: 10
+  FSTOP: 1G
+  PPD: 101
+flags: []
+produces: [cmrr_db, cmrr_cm_db]

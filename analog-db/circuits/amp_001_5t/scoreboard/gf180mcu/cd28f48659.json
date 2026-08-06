@@ -13,22 +13,22 @@
       "analyses": {
         "ac_closed_loop": {
           "measures": {
-            "bw_cl": 3322200.0,
-            "gain_cl": 0.995243
+            "bw_cl": 25060.02,
+            "gain_cl": 0.9944491
           },
           "status": "ok"
         },
         "ac_open_loop": {
           "measures": {
-            "dcgain": 54.1046,
-            "pm": 74.72519,
-            "ugf": 4118935.0
+            "dcgain": 27.93657,
+            "pm": 177.1555,
+            "ugf": 24966.44
           },
           "status": "ok"
         },
         "cmrr_vcm": {
           "measures": {
-            "cmrr_db": 50.94549
+            "cmrr_db": 50.95242
           },
           "status": "ok"
         },
@@ -39,8 +39,23 @@
           "status": "ok"
         },
         "iip3": {
-          "error": "amp_001_5t/iip3@gf180mcu/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_001_5t \u00d7 iip3 \u00d7 gf180mcu \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nvdd                                        1.5\nvss                                        ",
-          "status": "sim_error"
+          "measures": {
+            "a_drv": 0.006249378,
+            "a_f1": 0.005851004,
+            "a_f2": 0.005773711,
+            "a_floor": 2.065243e-11,
+            "a_im3h": 6.382666e-07,
+            "a_im3l": 5.632221e-07,
+            "a_im5h": 2.684714e-10,
+            "a_im5l": 2.354683e-10,
+            "gain_tone": 0.9238856,
+            "gain_tone_db": -0.687636,
+            "iip3_comp_db": 0.009131786,
+            "iip3_dbv": -4.51787,
+            "im3_dbc": -79.1291,
+            "im5_im3_db": -67.5221
+          },
+          "status": "ok"
         },
         "linearity": {
           "measures": {
@@ -52,30 +67,49 @@
         },
         "noise": {
           "measures": {
-            "inoise_total": 0.006895899,
-            "onoise_total": 0.01694101
+            "inoise_total": 0.0002061876,
+            "onoise_total": 0.0144739
           },
           "status": "ok"
         },
         "psrr_vdd": {
           "measures": {
-            "psrr_vdd_db": 53.46254
+            "psrr_vdd_db": 53.46947
           },
           "status": "ok"
         },
         "stb": {
-          "error": "amp_001_5t/stb@gf180mcu/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_001_5t \u00d7 stb \u00d7 gf180mcu \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nNo. of Data Rows : 607\nASCII raw file \"rawspice.raw\"\nngspice-45 done\n",
-          "status": "sim_error"
+          "measures": {
+            "gm_loop": -999.0,
+            "loopgain_db": 54.27559,
+            "phref_dev": -0.000118465,
+            "phref_ok": 1.0,
+            "pm_loop": 90.12575,
+            "pm_loop_first": 90.12575,
+            "ugf_loop": 24978.9
+          },
+          "status": "ok"
         },
         "thd": {
-          "error": "amp_001_5t/thd@gf180mcu/tt: no measures parsed:\n Direct Linear Solver\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nvdd                                        1.5\nvss                                          0\nibias                                  1.59425\nvout                                  0.799519\nvinp                                       0.8\nvinn                                  0.79951",
-          "status": "sim_error"
+          "measures": {
+            "a1": 0.08994227,
+            "a1_in": 0.09999841,
+            "a2": 0.007768893,
+            "a3": 0.001201274,
+            "a4": 0.0002039941,
+            "a5": 3.957084e-05,
+            "gain_tone": 0.8994371,
+            "thd_db": -21.1664,
+            "thd_pct": 8.743346,
+            "vout_op": 0.8019146
+          },
+          "status": "ok"
         },
         "tran_step": {
           "measures": {
-            "t_settle": 1.04719e-07,
-            "tcross": 1.104719e-06,
-            "vfinal": 0.9974162
+            "t_settle": 3.900715e-06,
+            "tcross": 4.900715e-06,
+            "vfinal": 0.9330145
           },
           "status": "ok"
         }
@@ -83,7 +117,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-21T02:09:58+00:00"
+        "run_at": "2026-08-04T04:21:46+00:00"
       }
     }
   },
@@ -92,19 +126,23 @@
     "tt": {
       "bw_cl_hz": {
         "spec": "fail",
-        "value": 3322200.0
+        "value": 25060.02
       },
       "cmrr_db": {
         "spec": "pass",
-        "value": 50.94549
+        "value": 50.95242
       },
       "dc_gain_db": {
-        "spec": "pass",
-        "value": 54.1046
+        "spec": "fail",
+        "value": 27.93657
       },
       "gain_cl": {
         "spec": "pass",
-        "value": 0.995243
+        "value": 0.9944491
+      },
+      "gm_loop_db": {
+        "spec": "none",
+        "value": -999.0
       },
       "i_supply": {
         "spec": "pass",
@@ -114,25 +152,45 @@
         "spec": "pass",
         "value": 0.685
       },
-      "pm_deg": {
+      "iip3_dbv": {
         "spec": "pass",
-        "value": 74.72519
+        "value": -4.51787
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 54.27559
+      },
+      "pm_deg": {
+        "spec": "fail",
+        "value": 177.1555
+      },
+      "pm_loop_deg": {
+        "spec": "pass",
+        "value": 90.12575
       },
       "psrr_vdd_db": {
         "spec": "pass",
-        "value": 53.46254
+        "value": 53.46947
       },
       "t_settle": {
-        "spec": "pass",
-        "value": 1.04719e-07
+        "spec": "fail",
+        "value": 3.900715e-06
+      },
+      "thd_pct": {
+        "spec": "fail",
+        "value": 8.743346
       },
       "ugf_hz": {
-        "spec": "pass",
-        "value": 4118935.0
-      },
-      "vn_in": {
         "spec": "fail",
-        "value": 0.006895899
+        "value": 24966.44
+      },
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 24978.9
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 0.0002061876
       }
     }
   },
@@ -159,9 +217,9 @@
       "tt"
     ],
     "performance": {
-      "dc_gain_db": 54.1046,
-      "pm_deg": 74.72519,
-      "ugf_hz": 4118935.0
+      "dc_gain_db": 27.93657,
+      "pm_deg": 177.1555,
+      "ugf_hz": 24966.44
     },
     "power_w": 3.046515e-05
   },

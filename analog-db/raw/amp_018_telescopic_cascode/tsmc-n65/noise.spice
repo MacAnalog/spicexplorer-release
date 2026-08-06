@@ -13,10 +13,10 @@
 .lib tsmc_n65_models.scs tt
 .temp 27
 
-.param VDD=1.5
+.param VDD=1.2
 .param VCM=0.8
 .param IBIAS=5u
-.param CL=50f
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD}
 Vss  vss 0 dc 0
@@ -30,7 +30,7 @@ XDUT vdd vout vinp vinn ibias vss amp_018_telescopic_cascode
 
 .control
   set filetype=ascii
-  noise v(vout) Vinp dec 101 1MEG 1G
+  noise v(vout) Vinp dec 101 1 1MEG
   print inoise_total onoise_total
   write
   quit

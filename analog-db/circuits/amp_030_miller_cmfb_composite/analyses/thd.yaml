@@ -1,0 +1,36 @@
+# Analysis binding: large-signal THD in the DIFFERENTIAL unity-feedback follower
+# (amplifier/thd_diff — tran_step_diff's network with the tone split +/- ASIG/2; the SE thd
+# template is structurally invalid on this FD member, see thd_diff.spice header). On this
+# COMPOSITE the DUT includes the cmfb_001_ideal_rsense_servo behavioral CM servo — the
+# follower bench exercises exactly the servo-held operating point tran_step certifies.
+# F0 = 100 kHz per the campaign F0 grid, keyed on the FRESH open-loop ugf: measured
+# ugf = 13.764 MHz (ac_open_loop @ ihp-sg13g2 tt, 2026-08-01, CL=10p) sits in the 3-30 MHz
+# band -> the whole grid divides by 10 from the >=30 MHz reference (F0 = 1 MHz). The tone
+# sits ~69x under the follower's closed-loop crossover (~ugf/2 = 6.9 MHz). NOTE the recorded
+# scoreboard entry (ugf 29.7M / pm 86.1) is STALE — fresh same-binding reads 13.76M / 33.3 deg.
+# ASIG = 0.1 is the applied DIFFERENTIAL stimulus peak — closed-loop gain of the one-wire
+# follower is 2, so EACH output node swings ~100 mV, matching the SE consumers' per-side
+# swing at the same binding. Headroom: vod_op ~ 2*(VCM - vocm) ~ -2.6 mV (vocm = 0.6013 at
+# this sizing, dc_op same run — the servo parks vocm essentially AT the 0.6 V command);
+# per-side excursion ~ |vod_op|/2 + ASIG ~ 0.101 V about vocm, well inside the 1.2 V rails.
+# COHERENT WINDOW (whole F0 periods, EVEN count so cm_drift_v's half-window means stay
+# tone-blind — template header): F0 = 100 kHz -> T = 10 us; TSTART = 20u = 2 whole periods
+# = 248x the measured 80.5 ns settling (tran_step t_settle, same run; rule: >= 20x t_settle
+# rounded UP to whole periods, 2-period minimum); TSTOP = 180u leaves 16 whole measured
+# periods (even). TSTEP = 20n = 1/(500*F0).
+# DRIVE-HALVING CHECK (ihp-sg13g2 tt, 2026-08-01): ASIG 0.1 -> 0.05 scaled HD2 (a2/a1)
+# x2.21 and HD3 (a3/a1) x4.36 — the weakly-nonlinear slopes (~10% above the ideal x2/x4:
+# a small 4th/5th-order admixture at the 0.1 drive), the DFT bins are real distortion.
+# MEASURED (same run): thd_pct 0.0566 %, gain_tone 1.957, cm_drift_v -2.8e-12.
+# REPORTING: `produces:` names DATASHEET METRIC IDS, not measure names. The template also
+# prints thd_db / a1..a5 / a1_in / gain_tone (~2 when live) / vod_op / vocm_op /
+# cm_drift_v; those ride the recorded measures block. TRUST CHECKS: gain_tone <= 2/3 means
+# the guard fired (thd_pct = 999 sentinel); cm_drift_v must be << ASIG or the output
+# common mode was still walking through the DFT window and thd_pct is not trustworthy.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd_diff
+description: "THD — FD unity-feedback follower, differential tone; tran + in-deck coherent DFT."
+params: {VDD: 1.2, VCM: 0.6, CL: 10p, ASIG: 0.1, F0: 0.1e6, TSTEP: 20n, TSTART: 20u, TSTOP: 180u}
+flags: []
+produces: [thd_pct]

@@ -6,28 +6,28 @@
 ** Source: pdk/gf180mcu/netlist.spice (run `analog-db generate` to refresh).
 *----------------------------------------------------------*
 ** params: 22 free + 0 frozen knobs (sizing.yaml) · 38 tied · 16 ratio-derived (abstract/params.yaml)
-.param CAPACITOR_0=5p
-.param CAPACITOR_1=3p
-.param CURRENT_0_BIAS=3u
-.param x_dut_xm11_l=1u
+.param CAPACITOR_0=22p
+.param CAPACITOR_1=5p
+.param CURRENT_0_BIAS=16u
+.param x_dut_xm11_l=1.64599e-06
 .param x_dut_xm7_m=4
-.param x_dut_xm11_w=1u
-.param x_dut_xm10_l=1u
+.param x_dut_xm11_w=5.21016e-05
+.param x_dut_xm10_l=7.88118e-06
 .param x_dut_xm10_m=4
-.param x_dut_xm10_w=1u
-.param x_dut_xm19_l=1u
+.param x_dut_xm10_w=7.46885e-06
+.param x_dut_xm19_l=2.54813e-06
 .param x_dut_xm14_m=4
-.param x_dut_xm19_w=1u
-.param x_dut_xm21_l=1u
+.param x_dut_xm19_w=3.65168e-05
+.param x_dut_xm21_l=1.21644e-06
 .param x_dut_xm21_m=4
-.param x_dut_xm21_w=1u
-.param x_dut_xm23_l=1u
+.param x_dut_xm21_w=1.47373e-05
+.param x_dut_xm23_l=4.72891e-06
 .param x_dut_xm23_m=4
-.param x_dut_xm23_w=1u
-.param x_dut_xm9_l=1u
+.param x_dut_xm23_w=8.48101e-05
+.param x_dut_xm9_l=6.22749e-07
 .param x_dut_xm9_m=4
-.param x_dut_xm9_w=1u
-.param RESISTOR_0=10k
+.param x_dut_xm9_w=2.97429e-05
+.param RESISTOR_0=3400
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

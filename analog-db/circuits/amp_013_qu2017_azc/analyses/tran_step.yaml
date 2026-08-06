@@ -1,9 +1,18 @@
 # AnalogGym analysis binding (tran_step).
+# KNOWN-FAILING AT THE LANDED ihp-sg13g2 SIZING (binding pass 2026-08-01, tt): the unity
+# buffer carries a REAL ~35-40 MHz / 0.17-0.28 Vpp limit cycle after the step — verified
+# sustained at constant amplitude under trap, damped-trap (xmu=0.49) and gear at forced
+# 0.5 ns steps (only coarse-step gear numerically damps it, which is how a misleading
+# t_settle ~ 206 ns can be produced — do not trust it). The tran collapses to ~2 ns steps
+# and aborts near ~113 us, so this analysis reports sim_error; that abort is the honest
+# symptom, not a binding bug. The stb bench reads pm_loop 88.7 deg on the probed MAIN loop
+# — the oscillator is a local loop inside the AZC network that the return ratio cannot see.
+# No valid t_settle exists until a re-sizing kills the limit cycle.
 schema: spicexplorer/analysis@1
 id: tran_step
 template: tran_step_biaswrap
 description: "Unity-gain step settling (self-bias follower)."
 enabled: true
-params: {VDD: 1.8, VCM: 300m, CL: 1500p, VSTEP: 0.2, VTOL: 2m, TSTART: 1u, TSTEP: 10n, TSTOP: 200u}
+params: {VDD: 1.8, VCM: 300m, CL: 10p, VSTEP: 0.2, VTOL: 2m, TSTART: 1u, TSTEP: 10n, TSTOP: 200u}
 flags: []
 produces: [t_settle]

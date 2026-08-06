@@ -1,0 +1,164 @@
+{
+  "area": {
+    "active_gate_area_um2": 332.5,
+    "c_count": 1,
+    "c_total_f": 2e-12,
+    "mos_count": 8,
+    "r_count": 1,
+    "r_total_ohm": 100000.0
+  },
+  "circuit": "amp_024_smcnr",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 26.25707,
+            "pm": 142.6206,
+            "ugf": 1.871338
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 41.82829
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 979217.0
+          },
+          "status": "ok"
+        },
+        "iip3": {
+          "error": "amp_024_smcnr/iip3@gf180mcu/tt: no measures parsed:\nvalid\nWarning from checkvalid: vector a_im3l is not available or has zero length.\nError: RHS \"0.5*(a_im3l+a_im3h + abs(a_im3l-a_im3h))\" invalid\nWarning from checkvalid: vector a_im5l is not available or has zero length.\nError: RHS \"0.5*(a_im5l+a_im5h + abs(a_im5l-a_im5h))\" invalid\nWarning from checkvalid: vector a_dr1 is not available or has zero length.\nError: RHS \"0.5*(a_dr1+a_dr2 - abs(a_dr1-a_dr2))\" invalid\nWarning from checkvalid: vector a",
+          "status": "sim_error"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 0.01254979,
+            "onoise_total": 0.0001219757
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 38.81672
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "measures": {
+            "gm_loop": -999.0,
+            "loopgain_db": 41.63504,
+            "phref_dev": -35.3072,
+            "phref_ok": 0.0,
+            "pm_loop": -999.0,
+            "pm_loop_first": -999.0,
+            "ugf_loop": 1.894868
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "error": "amp_024_smcnr/thd@gf180mcu/tt: no measures parsed:\n: vector re2 is not available or has zero length.\nError: RHS \"2*sqrt(re2^2+im2^2)\" invalid\nWarning from checkvalid: vector vac is not available or has zero length.\nError: RHS \"(mean(vac*c3)*np - vac[0]*c3[0])/nd\" invalid\nWarning from checkvalid: vector vac is not available or has zero length.\nError: RHS \"(mean(vac*s3)*np - vac[0]*s3[0])/nd\" invalid\nWarning from checkvalid: vector re3 is not available or has zero length.\nError: RHS \"2*sqrt(re3^2+",
+          "status": "sim_error"
+        },
+        "tran_step": {
+          "error": "amp_024_smcnr/tran_step@gf180mcu/tt: no measures parsed:\n\nNote: No compatibility mode selected!\n\n\nCircuit: ** assembled by analog-db \u2014 amp_024_smcnr \u00d7 tran_step \u00d7 gf180mcu \u00d7 tt\n\nDoing analysis at TEMP = 27.000000 and TNOM = 27.000000\n\nUsing SPARSE 1.3 as Direct Linear Solver\n\nInitial Transient Solution\n--------------------------\n\nNode                                   Voltage\n----                                   -------\nvdd                                        1.5\nvss                        ",
+          "status": "sim_error"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-08-03T16:35:37+00:00"
+      }
+    }
+  },
+  "design_id": "4eaed34c74",
+  "metrics": {
+    "tt": {
+      "cmrr_db": {
+        "spec": "pass",
+        "value": 41.82829
+      },
+      "dc_gain_db": {
+        "spec": "fail",
+        "value": 26.25707
+      },
+      "gm_loop_db": {
+        "spec": "none",
+        "value": -999.0
+      },
+      "i_supply": {
+        "spec": "fail",
+        "value": 979217.0
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 41.63504
+      },
+      "pm_deg": {
+        "spec": "fail",
+        "value": 142.6206
+      },
+      "pm_loop_deg": {
+        "spec": "fail",
+        "value": -999.0
+      },
+      "psrr_vdd_db": {
+        "spec": "fail",
+        "value": 38.81672
+      },
+      "ugf_hz": {
+        "spec": "fail",
+        "value": 1.871338
+      },
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 1.894868
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 0.01254979
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_c0": "2e-12",
+      "x_dut_xm0_l": "8u",
+      "x_dut_xm0_m": 1,
+      "x_dut_xm0_w": "7.5u",
+      "x_dut_xm1_l": "10u",
+      "x_dut_xm1_m": 1,
+      "x_dut_xm1_w": "1.5u",
+      "x_dut_xm2_m": 1,
+      "x_dut_xm3_m": 1,
+      "x_dut_xm4_m": 10,
+      "x_dut_xm4_w": "1.5u",
+      "x_dut_xm5_m": 10,
+      "x_dut_xm6_m": 2,
+      "x_dut_xm7_l": "10u",
+      "x_dut_xm7_m": 1,
+      "x_dut_xm7_w": "0.25u",
+      "x_ibias_val": 979217,
+      "x_rz": "1e5"
+    }
+  },
+  "pdk": "gf180mcu",
+  "ppa": {
+    "active_gate_area_um2": 332.5,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 26.25707,
+      "pm_deg": 142.6206,
+      "ugf_hz": 1.871338
+    },
+    "power_w": 1468825.5
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

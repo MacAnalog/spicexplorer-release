@@ -1,0 +1,31 @@
+# Analysis binding: large-signal THD in the unity buffer (class base template — DUT has an
+# ibias port; IBIAS is NEGATIVE for the same reason ac_open_loop.yaml documents: the bias
+# reference is a PMOS diode sourcing from vdd, so the template's `Ibias vdd ibias` pulls
+# current OUT of the node).
+# F0 GRID: fresh ac_open_loop @ihp-sg13g2 tt (2026-08-01) reads ugf = 2.029 MHz < 3 MHz, so
+# the campaign grid divides by 100: F0 = 10 kHz (T = 100 us).
+# COHERENT WINDOW (both edges whole F0 periods, see the template header):
+# TSTART = 200u = 2 whole periods >= 20 * t_settle (fresh tran_step t_settle = 600.8 ns ->
+# 12 us, rounded UP to the 2-period minimum); TSTOP = 1800u leaves 16 whole measured periods.
+# TSTEP = 200n = 1/(500*F0).
+# KNOWN-ISSUE HISTORY: an earlier campaign's thd bench hard-aborted ngspice on this cell with
+# "Timestep too small" — that binding drove F0 = 1 MEG into this ugf = 2 MHz sizing. At the
+# correct decade (F0 = 10k, TSTEP 200n) the tran converges cleanly: ihp-sg13g2 tt measures
+# thd_pct = 0.7693 % (gain_tone 0.9708, vout_op 0.9036), HD2-dominated (a2 7.46e-4 >> a3
+# 2.15e-5, and a4 3.11e-5 > a3 — strong even-order asymmetry at this op point).
+# DRIVE-HALVING TRUST CHECK (measured 2026-08-01): ASIG 0.1 -> 0.05 scales HD2 x1.76 /
+# HD3 x6.5 (expected ~x2/x4 — visible 4th/5th-order content at 100 mV), while 0.05 -> 0.025
+# scales HD2 x1.93 (clean). The window is coherent and drive-responsive; the deviation at
+# 0.1 is the CIRCUIT's higher-order nonlinearity, so the shipped ASIG stays the campaign
+# default 0.1 (1.8 V rails, vout_op mid-supply — not a low-swing core) and thd_pct here is
+# a genuine large-signal reading at the standard drive, not a small-signal extrapolation.
+# REPORTING: `produces:` names DATASHEET METRIC IDS — the scoreboard/conformance wiring is
+# datasheet.yaml `metrics.thd_pct.{analysis: thd, extract.meas: thd_pct}`. The template also
+# prints thd_db / a1..a5 / vout_op into `corners.<corner>.analyses.thd.measures`.
+schema: spicexplorer/analysis@1
+id: thd
+template: thd
+description: "THD — unity-buffer large-signal sine (100 mV @ 10 kHz); tran + in-deck coherent DFT (ngspice) / native PSS (Spectre)."
+params: {VDD: 1.8, VCM: 0.9, IBIAS: -34u, CL: 10p, ASIG: 0.1, F0: 10k, TSTEP: 200n, TSTART: 200u, TSTOP: 1800u, HARMS: 7}
+flags: []
+produces: [thd_pct]

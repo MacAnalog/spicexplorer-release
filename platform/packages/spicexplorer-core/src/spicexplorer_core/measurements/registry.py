@@ -112,6 +112,21 @@ _MEAS_TABLE: Dict[str, Tuple[str, Tuple[str, ...]]] = {
     "loopgain_db": ("stb", ("out",)),
     # operating point (scalar reads)
     "i_supply": ("op", ("probe",)),
+    # DC offset — the difference of two op-point NODE voltages, `out` - `ref`. The analog-db
+    # `dc_op` templates all define `vos` this way inside an ngspice `.control` block
+    # (`let vos = v(voutp)-v(voutn)` differential, `let vos = v(vout)-v(vinp)` for the
+    # unity-follower biaswrap variant). Spectre never executes `.control`, so the closed lane
+    # had no `vos` at all: `_MEAS_TABLE['vos']` raised `KeyError` and `evaluate()` degraded it
+    # to NaN on every tsmc-n65 amplifier that declares it. Reading the two op-point node
+    # scalars reproduces the deck's own definition engine-neutrally (both nodes are in the
+    # ngspice op plot AND the Spectre op PSF); the caller names the pair.
+    "vos": ("op", ("out", "ref")),
+    # output COMMON mode (voutp+voutn)/2 — the same two op-point node scalars as `vos`,
+    # averaged instead of differenced. The headline of any CMFB'd fully-differential cell
+    # (where the commanded CM landed, and the static CM error against it); the ngspice
+    # dc_op_diff deck computes it in-deck, but in-deck measures do not exist on the
+    # Spectre lane, so a CMFB'd cell was unreadable there without this.
+    "vocm": ("op", ("out", "ref")),
     # static supply power P = |I_supply|·VDD, read off the same op-point supply-current
     # probe as `i_supply` plus the rail `vdd` (V). Three spellings share one extractor —
     # watts / mW / µW — so an amplifier's ~sub-mW power lands on a human-readable scale
@@ -366,6 +381,10 @@ def measure(
         return float(ratio)
 
     if kind == "op":  # supply-current scalar (i_supply) or the power derived from it
+        if meas in ("vos", "vocm"):  # difference / mean of two op-point node voltages
+            out = float(result.scalar(str(recipe["out"]), analysis))
+            ref = float(result.scalar(str(recipe["ref"]), analysis))
+            return out - ref if meas == "vos" else (out + ref) / 2.0
         val = float(result.scalar(str(recipe["probe"]), analysis))
         if meas == "i_supply":  # signed current scalar, magnitude by default
             return val if bool(recipe.get("signed", False)) else abs(val)

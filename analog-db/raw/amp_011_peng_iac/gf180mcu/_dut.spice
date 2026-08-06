@@ -6,37 +6,37 @@
 ** Source: pdk/gf180mcu/netlist.spice (run `analog-db generate` to refresh).
 *----------------------------------------------------------*
 ** params: 31 free + 0 frozen knobs (sizing.yaml) · 52 tied · 23 ratio-derived (abstract/params.yaml)
-.param CAPACITOR_0=1.160420140711495e-12
-.param CAPACITOR_1=1.093818527037296e-12
-.param CURRENT_0_BIAS=1.125472785836628e-06
-.param x_dut_xm7_l=8.37994421953977e-07
+.param CAPACITOR_0=5.73109e-12
+.param CAPACITOR_1=5.13587e-12
+.param CURRENT_0_BIAS=3.82712e-06
+.param x_dut_xm7_l=4.41331e-06
 .param x_dut_xm65_m=4
-.param x_dut_xm7_w=1.4915218368047364e-06
-.param x_dut_xm10_l=4.3710813397714047e-07
+.param x_dut_xm7_w=2.24781e-05
+.param x_dut_xm10_l=9.26885e-07
 .param x_dut_xm10_m=24
-.param x_dut_xm10_w=2.7211049924537327e-06
-.param x_dut_xm11_l=4.012888385618305e-07
+.param x_dut_xm10_w=4.42331e-05
+.param x_dut_xm11_l=3.43592e-06
 .param x_dut_xm11_m=9
-.param x_dut_xm11_w=1.3437926903778327e-06
-.param x_dut_xm19_l=9.282470592759731e-07
+.param x_dut_xm11_w=5.48178e-05
+.param x_dut_xm19_l=6.58435e-06
 .param x_dut_xm14_m=2
-.param x_dut_xm19_w=5.343312154240443e-07
-.param x_dut_xm23_l=7.424210853823418e-07
+.param x_dut_xm19_w=8.81695e-05
+.param x_dut_xm23_l=1.37144e-06
 .param x_dut_xm23_m=3
-.param x_dut_xm23_w=4.374128463177887e-07
-.param x_dut_xm66_l=9.176355167870473e-07
+.param x_dut_xm23_w=5.64404e-05
+.param x_dut_xm66_l=7.41421e-07
 .param x_dut_xm66_m=16
-.param x_dut_xm66_w=8.154821119706528e-07
-.param x_dut_xm68_l=4.2862607849973626e-07
+.param x_dut_xm66_w=3.34759e-05
+.param x_dut_xm68_l=8.29454e-06
 .param x_dut_xm68_m=3
-.param x_dut_xm68_w=2.7988199917815416e-06
-.param x_dut_xm70_l=7.746965020821196e-07
+.param x_dut_xm68_w=5.91645e-05
+.param x_dut_xm70_l=5.05234e-07
 .param x_dut_xm70_m=3
-.param x_dut_xm70_w=7.760446513243565e-07
-.param x_dut_xm9_l=7.582966616597987e-07
+.param x_dut_xm70_w=5.26265e-05
+.param x_dut_xm9_l=1.41853e-06
 .param x_dut_xm9_m=3
-.param x_dut_xm9_w=2.214027776039953e-06
-.param RESISTOR_0=1101864.0178265367
+.param x_dut_xm9_w=7.9216e-05
+.param RESISTOR_0=3895640.0
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

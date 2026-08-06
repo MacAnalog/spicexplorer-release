@@ -1,0 +1,213 @@
+{
+  "area": {
+    "active_gate_area_um2": 277287.404,
+    "c_count": 2,
+    "c_total_f": 1.160269e-10,
+    "mos_count": 24,
+    "r_count": 0,
+    "r_total_ohm": 0.0
+  },
+  "circuit": "amp_014_ramos_pfc",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "ac_open_loop": {
+          "measures": {
+            "dcgain": 184.7321,
+            "pm": -19.56098,
+            "ugf": 3773938.0
+          },
+          "status": "ok"
+        },
+        "cmrr_vcm": {
+          "measures": {
+            "cmrr_db": 110.2657
+          },
+          "status": "ok"
+        },
+        "dc_op": {
+          "measures": {
+            "i_supply": 0.001274643,
+            "vos": -1.66511e-05
+          },
+          "status": "ok"
+        },
+        "iip3": {
+          "measures": {
+            "a_drv": 0.006249989,
+            "a_f1": 0.006262642,
+            "a_f2": 0.006230208,
+            "a_floor": 7.866262e-05,
+            "a_im3h": 0.00010347,
+            "a_im3l": 0.0001088255,
+            "a_im5h": 3.751046e-05,
+            "a_im5l": 9.916975e-05,
+            "gain_tone": 0.9968349,
+            "gain_tone_db": -0.027535,
+            "iip3_comp_db": 19.78375,
+            "iip3_dbv": -26.5047,
+            "im3_dbc": -35.1554,
+            "im5_im3_db": -0.807026
+          },
+          "status": "ok"
+        },
+        "noise": {
+          "measures": {
+            "inoise_total": 7.004707e-06,
+            "onoise_total": 1.987648
+          },
+          "status": "ok"
+        },
+        "psrr_vdd": {
+          "measures": {
+            "psrr_vdd_db": 71.2234
+          },
+          "status": "ok"
+        },
+        "stb": {
+          "measures": {
+            "gm_loop": -6.09715,
+            "loopgain_db": 184.7321,
+            "phref_dev": -1.09292,
+            "phref_ok": 1.0,
+            "pm_loop": -27.6653,
+            "pm_loop_first": -27.6653,
+            "ugf_loop": 3700877.0
+          },
+          "status": "ok"
+        },
+        "thd": {
+          "measures": {
+            "a1": 0.09951053,
+            "a1_in": 0.09999974,
+            "a2": 0.0004142987,
+            "a3": 3.814737e-05,
+            "a4": 0.0002970108,
+            "a5": 0.0001508779,
+            "gain_tone": 0.9951079,
+            "thd_db": -45.423,
+            "thd_pct": 0.5356116,
+            "vout_op": 0.3972599
+          },
+          "status": "ok"
+        },
+        "tran_step": {
+          "measures": {
+            "t_settle": 0.0001989975,
+            "tcross": 0.0001999975,
+            "vfinal": 0.5623149
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "analog-db run",
+        "ngspice": "45",
+        "run_at": "2026-08-04T04:24:56+00:00"
+      }
+    }
+  },
+  "design_id": "78da964d49",
+  "metrics": {
+    "tt": {
+      "cmrr_db": {
+        "spec": "pass",
+        "value": 110.2657
+      },
+      "dc_gain_db": {
+        "spec": "pass",
+        "value": 184.7321
+      },
+      "gm_loop_db": {
+        "spec": "none",
+        "value": -6.09715
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 0.001274643
+      },
+      "iip3_dbv": {
+        "spec": "fail",
+        "value": -26.5047
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 184.7321
+      },
+      "pm_deg": {
+        "spec": "fail",
+        "value": -19.56098
+      },
+      "pm_loop_deg": {
+        "spec": "fail",
+        "value": -27.6653
+      },
+      "psrr_vdd_db": {
+        "spec": "pass",
+        "value": 71.2234
+      },
+      "t_settle": {
+        "spec": "fail",
+        "value": 0.0001989975
+      },
+      "thd_pct": {
+        "spec": "pass",
+        "value": 0.5356116
+      },
+      "ugf_hz": {
+        "spec": "pass",
+        "value": 3773938.0
+      },
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 3700877.0
+      },
+      "vn_in_integrated": {
+        "spec": "none",
+        "value": 7.004707e-06
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "CAPACITOR_0": 4.38761e-11,
+      "CAPACITOR_1": 7.21508e-11,
+      "CURRENT_0_BIAS": 6.73528e-05,
+      "x_dut_xm10_l": 1.41604e-06,
+      "x_dut_xm10_m": 81,
+      "x_dut_xm10_w": 2.74166e-05,
+      "x_dut_xm11_l": 2.82802e-06,
+      "x_dut_xm11_m": 400,
+      "x_dut_xm11_w": 9.00451e-05,
+      "x_dut_xm14_m": 20,
+      "x_dut_xm19_l": 2.6847e-06,
+      "x_dut_xm19_w": 1.05785e-05,
+      "x_dut_xm21_l": 1.49846e-06,
+      "x_dut_xm21_m": 1,
+      "x_dut_xm21_w": 2.30392e-05,
+      "x_dut_xm23_l": 7.67418e-06,
+      "x_dut_xm23_m": 203,
+      "x_dut_xm23_w": 4.32679e-05,
+      "x_dut_xm7_l": 1.34508e-06,
+      "x_dut_xm7_m": 71,
+      "x_dut_xm7_w": 6.72425e-05,
+      "x_dut_xm9_l": 6.06814e-07,
+      "x_dut_xm9_m": 148,
+      "x_dut_xm9_w": 6.05837e-05
+    }
+  },
+  "pdk": "gf180mcu",
+  "ppa": {
+    "active_gate_area_um2": 277287.404,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "dc_gain_db": 184.7321,
+      "pm_deg": -19.56098,
+      "ugf_hz": 3773938.0
+    },
+    "power_w": 0.0022943574
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

@@ -21,7 +21,7 @@ the upstream material and are acknowledged here:
   records `provenance.source: AnalogGym` (currently amp_002, amp_003, amp_005–amp_017 and amp_021)
   — normalized from CODA-Team `AnalogGym` (https://github.com/CODA-Team/AnalogGym), BSD 3-Clause
   License. These 3-stage amplifiers are lowered to open PDKs and simulated by this DB. This is
-  **not** a contiguous id range — amp_004 is a CORA design and amp_018–amp_020 are original /
+  **not** a contiguous id range — amp_004 is a CORA design and amp_018/amp_019 are original /
   template designs (see below). Reference snapshots of two un-imported AnalogGym amplifiers are
   kept at `_shared/references/analoggym/`.
 
@@ -33,9 +33,9 @@ the upstream material and are acknowledged here:
   mapping and both license texts are in corpora/analoggym-ldo/PROVENANCE.md.
 
 * circuits/amp_004_folded_cascode (provenance.source: CORA), amp_018_telescopic_cascode,
-  amp_019_ti_ldo_error, amp_020_two_stage_miller_cmfb, and ldo_004_basic_pmos / ldo_005_buffered_ref
+  amp_019_ti_ldo_error, and ldo_004_basic_pmos / ldo_005_buffered_ref
   / ldo_006_stub / ldo_007_pmos — original first-party SpiceXplorer / CORA-benchmark designs
-  (amp_020 is generated from the `templates/OTA-Two-Stage` template; ldo_004/ldo_005 + amp_019 are
+  (ldo_004/ldo_005 + amp_019 are
   first-party MacAnalog material modeled on a TI application-note LDO architecture, GF180-native,
   kept verbatim under each circuit's reference/). The NEWCAS 2026 research traces under
   circuits/amp_018_telescopic_cascode/artifacts/newcas2026/ are preserved verbatim.

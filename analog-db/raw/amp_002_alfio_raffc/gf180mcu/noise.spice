@@ -34,7 +34,7 @@
 
 .param VDD=1.8
 .param VCM=300m
-.param CL=100p
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD}
 Vss  vss 0 dc 0
@@ -47,38 +47,38 @@ CLoad vout 0 {CL}
 XDUT vss vdd vinn vinp vout amp_002_alfio_raffc
 .control
   set filetype=ascii
-  noise v(vout) Vac dec 50 1k 1G
+  noise v(vout) Vac dec 50 1 1MEG
   print inoise_total onoise_total
   write
   quit
 .endc
-.param CAPACITOR_0=8e-12
-.param CAPACITOR_1=3.7492299223997623e-13
-.param CURRENT_0_BIAS=1.2e-05
-.param x_dut_xm6_l=6.07450679813729e-06
+.param CAPACITOR_0=1.56075e-11
+.param CAPACITOR_1=5.82069e-13
+.param CURRENT_0_BIAS=2.28805e-05
+.param x_dut_xm6_l=7.9883e-07
 .param x_dut_xm3_m=1
-.param x_dut_xm6_w=8.3908075334781e-05
-.param x_dut_xm10_l=1e-06
+.param x_dut_xm6_w=4.96958e-05
+.param x_dut_xm10_l=8.62308e-06
 .param x_dut_xm10_m=1
-.param x_dut_xm10_w=1e-05
-.param x_dut_xm11_l=1e-06
+.param x_dut_xm10_w=3.38283e-05
+.param x_dut_xm11_l=9.36349e-07
 .param x_dut_xm11_m=1
-.param x_dut_xm11_w=4.5e-05
-.param x_dut_xm15_l=1e-06
+.param x_dut_xm11_w=2.57825e-05
+.param x_dut_xm15_l=5.28286e-06
 .param x_dut_xm15_m=2
-.param x_dut_xm15_w=1.5e-05
-.param x_dut_xm59_l=9.940309974261346e-06
+.param x_dut_xm15_w=4.46785e-05
+.param x_dut_xm59_l=7.04226e-06
 .param x_dut_xm14_m=1
-.param x_dut_xm59_w=1.4523663979755712e-05
-.param x_dut_xm21_l=2e-06
+.param x_dut_xm59_w=1.79259e-05
+.param x_dut_xm21_l=1.5602e-06
 .param x_dut_xm21_m=3
-.param x_dut_xm21_w=1.55e-05
-.param x_dut_xm7_l=1e-06
+.param x_dut_xm21_w=7.44126e-05
+.param x_dut_xm7_l=9.66893e-06
 .param x_dut_xm7_m=1
-.param x_dut_xm7_w=1.5e-05
-.param x_dut_xm9_l=7.969773844013948e-07
+.param x_dut_xm7_w=1.76619e-05
+.param x_dut_xm9_l=1.27869e-06
 .param x_dut_xm9_m=1
-.param x_dut_xm9_w=3e-05
+.param x_dut_xm9_w=9.49329e-05
 * ---- GENERATED parameter ties (abstract/params.yaml groups/ratios) ----
 * Each tied symbol is defined exactly once, by its line below; rewrite that
 * .param to untie just that symbol (untying = shadowing, plan D-3).

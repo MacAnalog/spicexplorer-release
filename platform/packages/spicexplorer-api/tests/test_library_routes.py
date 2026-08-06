@@ -134,12 +134,13 @@ def test_circuit_detail_datasheet_and_results(client):
     sky = body["results"]["sky130"]
     assert sky["corner"] == "tt"
     assert sky["run_at"]  # ISO timestamp from the result's provenance
-    # flattened measures carry the headline datasheet numbers (committed result)
-    assert sky["measures"]["dcgain"] == pytest.approx(26.04454)
-    assert sky["measures"]["ugf"] == pytest.approx(49270140.0)
-    assert sky["measures"]["pm"] == pytest.approx(70.1067)
+    # flattened measures carry the headline datasheet numbers (committed result —
+    # scoreboard/sky130/e65488f64a.json, the vector re-baselined by adb #56)
+    assert sky["measures"]["dcgain"] == pytest.approx(26.02513)
+    assert sky["measures"]["ugf"] == pytest.approx(299264.1)
+    assert sky["measures"]["pm"] == pytest.approx(96.5195)
     # raw analysis blocks survive alongside the flattened view
-    assert sky["analyses"]["ac_open_loop"]["measures"]["dcgain"] == pytest.approx(26.04454)
+    assert sky["analyses"]["ac_open_loop"]["measures"]["dcgain"] == pytest.approx(26.02513)
     # the 5t has no symbolic cross-check
     assert sky["symbolic"] is None
 
@@ -150,7 +151,7 @@ def test_bulk_results_map(client):
     results = body["results"]
     # sparse: only circuits with a recorded run appear (the 5t OTA is one of them)
     assert "amp_001_5t" in results
-    assert results["amp_001_5t"]["sky130"]["measures"]["dcgain"] == pytest.approx(26.04454)
+    assert results["amp_001_5t"]["sky130"]["measures"]["dcgain"] == pytest.approx(26.02513)
     # an unmeasured circuit is omitted entirely (not present with empty results)
     by_circuit = set(results)
     assert all(results[cid] for cid in by_circuit)  # no empty per-circuit maps

@@ -44,7 +44,7 @@ ac ac start=1 stop=1e8 dec=101
 def test_native_scs_injects_params_swaps_corner_and_preserves_the_rest():
     out = render_native_scs(
         NATIVE_SCS,
-        parameters={"W0": 2e-6, "vcm": 0.7},  # design var (case-folded) + a supply
+        parameters={"W0": 2e-6, "vcm": 0.7},  # design var (matched to the deck's `w0`) + a supply
         corner_includes=['include "/pdk/m.scs" section=ss_lvt'],
         temp=85.0,
     )

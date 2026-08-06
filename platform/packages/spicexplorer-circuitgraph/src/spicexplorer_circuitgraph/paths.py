@@ -32,10 +32,11 @@ Two modeling choices worth stating up front:
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from enum import Enum
 from itertools import product
-from typing import Iterator
+from typing import Iterable, Iterator
 
 import networkx as nx
 from pydantic import BaseModel, Field, computed_field
@@ -55,12 +56,23 @@ __all__ = [
     "StepDiffKind",
     "PathStep",
     "GraphPath",
+    "PathList",
     "PathSegment",
     "PathDiff",
+    "DEFAULT_MAX_PATHS",
     "find_paths_between",
     "shortest_paths_between",
     "diff_paths",
 ]
+
+logger = logging.getLogger(__name__)
+
+#: Default cap on how many paths :func:`find_paths_between` collects. The number of simple paths
+#: between two nets grows factorially with circuit size — on a 16-device amplifier with
+#: ``through_supply=True`` the *complete* enumeration does not finish in minutes — so the search is
+#: bounded rather than filtered after the fact. Pass ``max_paths=None`` to opt back into the
+#: unbounded enumeration when you genuinely need every path of a small graph.
+DEFAULT_MAX_PATHS = 1000
 
 
 # ---------------------------------------------------------------------------
@@ -355,6 +367,72 @@ def _expand_node_path(
         )
 
 
+def _node_paths_shortest_first(
+    G: nx.MultiGraph, source: NetNode, target: NetNode, max_hops: int
+) -> Iterator[list]:
+    """Yield node-level simple paths ``source``→``target`` in **nondecreasing hop order**.
+
+    Iterative deepening over ``networkx.all_simple_paths``: round *d* enumerates with
+    ``cutoff=2d`` edges (the bipartite graph alternates net/component, so one device hop is two
+    edges) and keeps only the paths of exactly that length, which the previous rounds have not
+    already yielded. In exchange the caller can stop after *N* paths and know it holds the *N
+    shortest* ones.
+
+    The redundant work is **not** the ~2× an earlier version of this note claimed ("each round
+    costs at most what the next one does"): when the cap is never reached, every round runs a
+    near-full-cost DFS, so the overhead grows with the component count. Measured on
+    ``tests/fixtures/ota-improved.spice`` (24 components, the same 88 paths either way): one plain
+    ``all_simple_paths`` pass enumerates them in ~0.03 s, this generator in ~0.45 s. Bounded shapes
+    (``max_components<=6``, ``shortest_only``) stay near the cheap end. The trade is deliberate — a
+    truncated DFS stream is an arbitrary sample labeled "the paths" — but it is a real cost on the
+    unbounded call.
+
+    That ordering is the whole point: ``all_simple_paths`` alone is a DFS, so truncating its
+    stream keeps whichever paths the traversal stumbled on first (measured on the improved-OTA
+    fixture: the first 1000 were of lengths 4 and 9–17, with every path of length 5–8 missed).
+    """
+    for depth in range(1, max_hops + 1):
+        cutoff = 2 * depth
+        for node_path in nx.all_simple_paths(G, source, target, cutoff=cutoff):
+            if len(node_path) - 1 == cutoff:
+                yield node_path
+
+
+class PathList(list["GraphPath"]):
+    """The list of paths a search returned, carrying whether the search was **cut short**.
+
+    A plain ``list`` in every other respect (indexing, iteration, ``==`` against a plain list), so
+    existing callers are unaffected — but a caller can now *act* on truncation:
+
+    >>> paths = find_paths_between(graph, "vinp", "vout")   # doctest: +SKIP
+    >>> if paths.truncated:                                  # doctest: +SKIP
+    ...     ...  # this is the `paths.cap` shortest paths, not every path
+
+    The ``WARNING`` log line remains, but a log line is not something a program can branch on, and
+    the truncated answer is otherwise indistinguishable from a complete one.
+
+    :attr:`truncated` is ``True`` only when paths were actually left unenumerated: a search whose
+    complete answer happens to be exactly ``max_paths`` long reports ``False``. Within the last,
+    partially-enumerated length band the *choice* of paths follows the underlying DFS order, so
+    ties at the cap boundary are arbitrary (the band itself is not: the result is contiguous from
+    the shortest length up).
+    """
+
+    truncated: bool = False
+    cap: int | None = None
+
+    def __init__(
+        self,
+        paths: Iterable["GraphPath"] = (),
+        *,
+        truncated: bool = False,
+        cap: int | None = None,
+    ) -> None:
+        super().__init__(paths)
+        self.truncated = truncated
+        self.cap = cap
+
+
 # ---------------------------------------------------------------------------
 # Public API — path finding
 # ---------------------------------------------------------------------------
@@ -367,10 +445,10 @@ def find_paths_between(
     max_components: int | None = None,
     through_supply: bool = False,
     block_voltage_sources: bool = False,
-    max_paths: int | None = None,
+    max_paths: int | None = DEFAULT_MAX_PATHS,
     respect_mosfet_state: bool = False,
     gs_short_is_off: bool = True,
-) -> list[GraphPath]:
+) -> PathList:
     """All device-level paths connecting ``net_a`` to ``net_b`` (deterministically ordered).
 
     Each path is a chain of device traversals — ``M1.drain->M1.source->M2.gate->M2.source`` — built
@@ -389,8 +467,16 @@ def find_paths_between(
       default — a voltage source is walked like any other two-terminal device — so existing results
       are unchanged; turn it on to keep bias sources from bridging otherwise-separate signal nets. The
       source's terminal nets stay in the graph and remain reachable by any other route.
-    * ``max_paths`` (default ``None``): keep at most this many paths after sorting (no cap by
-      default).
+    * ``max_paths`` (default :data:`DEFAULT_MAX_PATHS`): **bound the search** at this many paths.
+      The enumeration runs shortest-first and stops as soon as the cap is reached, so the result is
+      the ``max_paths`` shortest paths — it is not a post-filter over a complete enumeration, which
+      is why the cap exists at all (the number of simple paths grows factorially: the complete
+      ``through_supply=True`` enumeration on a 16-device amplifier does not finish in minutes). A
+      truncated result is reported at ``WARNING`` level *and* on the result itself
+      (:attr:`PathList.truncated` / :attr:`PathList.cap`), because it is a *sample*, not the full
+      set — and a log line is not something a caller can branch on. Pass ``None`` for the unbounded
+      enumeration (only sane on a small graph, or with ``max_components``). The cap applies to
+      :func:`shortest_paths_between` too, which forwards every keyword here.
     * ``respect_mosfet_state`` (default ``False``): make the trace conduction-aware. A MOSFET's
       DRAIN↔SOURCE channel is dropped when the device is off — i.e. gate–source shorted (Vgs = 0) —
       so its source–drain channel is never reported as a conduction hop. This is *channel-only*: the
@@ -404,8 +490,9 @@ def find_paths_between(
       ``respect_mosfet_state``. ``True`` treats a gate–source short as off; set ``False`` for
       depletion / negative-Vth devices that can still conduct at Vgs = 0 (then no channel is dropped).
 
-    Returns a list of :class:`GraphPath` (possibly empty when no path exists), sorted by length then
-    label so the output is stable.
+    Returns a :class:`PathList` of :class:`GraphPath` (a ``list`` subclass, possibly empty when no
+    path exists), sorted by length then label so the output is stable, and carrying whether the
+    search was cut short by ``max_paths``.
     """
     na = _resolve_net(graph, net_a)
     nb = _resolve_net(graph, net_b)
@@ -413,12 +500,14 @@ def find_paths_between(
         raise ValueError(
             f"net_a and net_b are the same net ({na.name!r}); a path needs two distinct endpoints"
         )
+    if max_paths is not None and max_paths < 1:
+        raise ValueError(f"max_paths must be a positive count or None, got {max_paths!r}")
 
     H = graph._G if through_supply else _without_supply(graph._G, keep={na, nb})
     if block_voltage_sources:
         H = _without_voltage_sources(H)
-    if na not in H or nb not in H:
-        return []
+    if na not in H or nb not in H or not nx.has_path(H, na, nb):
+        return PathList(cap=max_paths)
 
     off_channel = _off_channel_mosfets(graph, respect_mosfet_state, gs_short_is_off)
     # max_components bounds the all-paths search; it does not apply in shortest mode (the shortest
@@ -426,39 +515,67 @@ def find_paths_between(
     eff_max = None if shortest_only else max_components
 
     # With channel filtering active, the topology-shortest path may route through an off transistor
-    # while a valid longer one exists — so enumerate simple paths and take the shortest *valid* ones
-    # rather than trusting the node-level shortest search.
-    try:
-        if shortest_only and not off_channel:
-            node_paths = list(nx.all_shortest_paths(H, na, nb))
-        else:
-            cutoff = 2 * eff_max if eff_max is not None else None
-            node_paths = list(nx.all_simple_paths(H, na, nb, cutoff=cutoff))
-    except nx.NetworkXNoPath:
-        return []
+    # while a valid longer one exists — so enumerate simple paths shortest-first and take the
+    # shortest *valid* ones rather than trusting the node-level shortest search.
+    if shortest_only and not off_channel:
+        node_paths: Iterator[list] = iter(nx.all_shortest_paths(H, na, nb))
+    else:
+        # A simple path visits each device at most once, so the component count is the hop ceiling.
+        hop_ceiling = sum(1 for n in H if isinstance(n, ComponentNode))
+        max_hops = min(eff_max, hop_ceiling) if eff_max is not None else hop_ceiling
+        node_paths = _node_paths_shortest_first(H, na, nb, max_hops)
 
+    # Stream the enumeration and stop at the cap: `max_paths` is a bound ON the search, not a slice
+    # of a finished list. The generator is shortest-first, so stopping early keeps the SHORTEST
+    # paths (and `shortest_only` can stop the moment the hop count grows).
     paths: list[GraphPath] = []
     seen: set[tuple] = set()
+    stopped_at_cap = False
     for node_path in node_paths:
+        if shortest_only and paths and (len(node_path) - 1) // 2 > paths[0].length:
+            break
         for path in _expand_node_path(graph, node_path, off_channel):
             key = (path.source, path.target, tuple(path.nets), path.label)
             if key not in seen:
                 seen.add(key)
                 paths.append(path)
+        if max_paths is not None and len(paths) >= max_paths:
+            stopped_at_cap = True
+            break
 
-    if eff_max is not None:
-        paths = [p for p in paths if p.length <= eff_max]
+    # Stopping AT the cap is not the same as leaving paths behind: a complete answer of exactly
+    # `max_paths` paths trips the same `>=`. Ask the generator for one more before claiming the
+    # result is a sample — otherwise the one signal a caller has that the answer is partial fires
+    # on answers that are whole.
+    truncated = stopped_at_cap and (
+        (max_paths is not None and len(paths) > max_paths) or next(node_paths, None) is not None
+    )
+
     if shortest_only and paths:
         shortest = min(p.length for p in paths)
         paths = [p for p in paths if p.length == shortest]
     paths.sort(key=lambda p: (p.length, p.label, tuple(p.nets)))
-    if max_paths is not None:
+    if max_paths is not None and len(paths) > max_paths:
         paths = paths[:max_paths]
-    return paths
+    if truncated:
+        logger.warning(
+            "find_paths_between(%r, %r): stopped at max_paths=%d inside the length-%d band — the "
+            "result is the %d shortest paths, NOT the complete set (ties within that last band are "
+            "arbitrary); raise max_paths, or bound the search with "
+            "max_components/through_supply=False",
+            na.name, nb.name, max_paths, paths[-1].length if paths else 0, len(paths),
+        )
+    return PathList(paths, truncated=truncated, cap=max_paths)
 
 
-def shortest_paths_between(graph: CircuitGraph, net_a: str, net_b: str, **kwargs) -> list[GraphPath]:
-    """Shorthand for :func:`find_paths_between` with ``shortest_only=True``."""
+def shortest_paths_between(graph: CircuitGraph, net_a: str, net_b: str, **kwargs) -> PathList:
+    """Shorthand for :func:`find_paths_between` with ``shortest_only=True``.
+
+    Every keyword of :func:`find_paths_between` applies, **including ``max_paths``** — this
+    entry point inherits its default of :data:`DEFAULT_MAX_PATHS`, so a query with more than that
+    many equally-shortest paths returns a truncated shortest-set. Check ``result.truncated`` (or
+    pass ``max_paths=None``) when the complete set matters.
+    """
     kwargs.pop("shortest_only", None)
     return find_paths_between(graph, net_a, net_b, shortest_only=True, **kwargs)
 

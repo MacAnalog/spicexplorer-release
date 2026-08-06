@@ -1,0 +1,26 @@
+# Analysis binding: CM-loop health in the time domain — a current kick on the output CM,
+# released, and the recovery measured. This is the bench amp_026 could not have: with no
+# CM loop the "recovery" is whatever the device ratios happen to settle to. cmfb_002 is
+# RAIL-CLAMPED by construction (unlike the behavioral cmfb_001 amp_030 composes), so a
+# kick must return with ~0 residual rather than escaping the basin.
+# VCM is the INPUT common mode (0.6, as in every other bench here); the OUTPUT common
+# mode is the CMFB-commanded {vcm_ref} = 0.5. Windows sized for the ~us CM-loop dynamics
+# (cmfb_002's committed t_cm_settle is 0.22 us standalone).
+schema: spicexplorer/analysis@1
+id: tran_cm_kick
+template: tran_cm_kick
+description: "Output-CM disturbance recovery under the real 5T CMFB: cm_kick_v (stiffness), cm_resid_v (latch flag), t_cm_settle."
+params:
+  VDD: 1.2
+  VCM: 0.6
+  CL: 10p
+  ICM: 20u
+  TKICK: 2u
+  TMID: 5u
+  TREL: 6u
+  TEND: 19u
+  VTOL: 0.1m
+  TSTEP: 2n
+  TSTOP: 20u
+flags: []
+produces: [cm_kick_v, cm_resid_v, t_cm_settle]

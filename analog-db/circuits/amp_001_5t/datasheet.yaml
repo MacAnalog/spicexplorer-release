@@ -6,7 +6,7 @@ default_conditions:
     typical: 1.5
   cload:
     unit: fF
-    typical: 50
+    typical: 10000
   corner:
     typical: tt
   temp:
@@ -137,31 +137,76 @@ metrics:
       min: 40
       unit: dB
   thd_pct:
-    display: Total harmonic distortion (100 mV @ 1 MHz, buffer)
+    display: Total harmonic distortion (100 mV @ 10 kHz, buffer)
     description: tran+FFT on ngspice; native PSS harmonics on Spectre (tb-validation
-      follow-on 2026-07-09).
+      follow-on 2026-07-09). F0 1 MHz -> 10 kHz 2026-08-01 (campaign grid rule) — the
+      fresh ac_open_loop ugf is 1.214 MHz at CL=10p, so the old tone sat AT loop
+      crossover; see analyses/thd.yaml.
     unit: '%'
     analysis: thd
     extract:
       meas: thd_pct
-      f0: 1.0e6
+      f0: 10.0e3
     spec:
       max: 2.0
       unit: '%'
   iip3_dbv:
-    display: Input IP3 (two-tone 0.9/1.0 MHz, 50 mV/tone, buffer)
-    description: Single-point IM3 extrapolation; tran+FFT on ngspice, native PSS on
-      Spectre (2026-07-09).
+    display: Input IP3 (two-tone 9/10 kHz, 6.25 mV/tone, buffer)
+    description: Single-point IM3 extrapolation; tran+coherent DFT on ngspice, native
+      PSS on Spectre (2026-07-09). Drive lowered 50 mV -> 6.25 mV 2026-07-31 — at 50 mV
+      the IM3 bin was already off its 3:1 slope, reading 1.40 dB optimistic on sky130;
+      tones 0.9/1.0 MHz -> 9/10 kHz 2026-08-01 (campaign grid rule, fresh ugf 1.214 MHz
+      at CL=10p put the old tones AT loop crossover); see analyses/iip3.yaml. ampl_in
+      below MUST track the analysis binding's ASIG (it is the intercept's input
+      reference).
     unit: dBV
     analysis: iip3
     extract:
       meas: iip3_dbv
-      f1: 0.9e6
-      f2: 1.0e6
-      ampl_in: 0.05
+      f1: 9.0e3
+      f2: 10.0e3
+      ampl_in: 0.00625
     spec:
       min: -10
       unit: dBV
+  pm_loop_deg:
+    display: Loop phase margin (stb, buffer)
+    description: Phase margin of the unity-buffer feedback loop — Middlebrook injection
+      at the VIPRB marker (ngspice) / native stb (Spectre). Probes the same loop as
+      pm_deg (spec min matched to it); -999 sentinel = the loop never crosses unity
+      (fails the min spec by design).
+    unit: deg
+    analysis: stb
+    extract:
+      meas: pm_loop
+    spec:
+      min: 60.0
+      unit: deg
+  loopgain_db:
+    display: Loop gain (stb, buffer)
+    description: Low-frequency loop-gain magnitude of the Middlebrook probe (read at
+      FSTART). No spec — reported for the record.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: loopgain_db
+  ugf_loop_hz:
+    display: Loop unity-gain frequency (stb, buffer)
+    description: Loop-gain unity crossover of the buffer loop. No spec — reported for
+      the record.
+    unit: Hz
+    analysis: stb
+    extract:
+      meas: ugf_loop
+  gm_loop_db:
+    display: Loop gain margin (stb, buffer)
+    description: Gain margin at the loop phase crossover; -999 sentinel = no phase
+      crossover in band (a single-pole-like loop, common on this 5T cell). No spec.
+      ngspice emits meas name gm_loop; Spectre's bench emits gm_loop_db.
+    unit: dB
+    analysis: stb
+    extract:
+      meas: gm_loop
   icmr_range:
     display: Input common-mode range
     description: Widest contiguous 20 mV tracking band of the buffer-connected DC
@@ -175,26 +220,18 @@ metrics:
     spec:
       min: 0.3
       unit: V
-  vn_in:
-    display: Input-referred noise
-    unit: V/sqrt(Hz)
+  vn_in_integrated:
+    display: Total integrated input-referred noise (1 Hz - 1 MHz)
+    description: Total rms input-referred noise integrated over the standard 1 Hz -
+      1 MHz paper band, unity-buffer bias config, CL=10p. ngspice inoise_total is
+      already volts rms integrated over the swept band (calibrated 2026-08-01 —
+      cross-checked against the platform registry on amp_022@ihp, 2.47e-4 V). Replaces
+      the old vn_in entry, which bound the same inoise_total under V/sqrt(Hz) — that
+      unit was dimensionally wrong. No spec.
+    unit: V
     analysis: noise
     extract:
       meas: inoise_total
-    spec:
-      max: 0.0012
-      unit: V/sqrt(Hz)
-    optimize:
-      spec_name: v(inoise_total)
-      testbench: tb_noise
-      sim_type: noise
-      goal: minimize
-      target: 0.0012
-      range: 0.001
-      tolerance: 1.0e-06
-      weight: 100.0
-      error_type: relative-sigmoid
-      enable: true
   t_settle:
     display: Settling time
     unit: s

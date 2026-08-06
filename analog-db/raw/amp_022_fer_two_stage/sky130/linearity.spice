@@ -17,10 +17,10 @@
 .lib sky130.lib.spice tt
 .temp 27
 
-.param VDD=1.5
+.param VDD=1.8
 .param VCM=0.6
 .param IBIAS=20u
-.param CL=500f
+.param CL=10p
 
 Vdd  vdd 0 dc {VDD}
 Vss  vss 0 dc 0
@@ -35,7 +35,7 @@ XDUT vdd vout vinp vinn ibias vss amp_022_fer_two_stage
 
 .control
   set filetype=ascii
-  dc Vinp 0 1.5 0.005
+  dc Vinp 0 1.8 0.005
   let verr = abs(v(vout) - v(vinp))
   * ICMR = widest CONTIGUOUS run of points that both track in absolute terms
   * (|verr| <= VTRACK) and are ACTIVE (dvout/dvin ~ 1). This mirrors the platform registry's

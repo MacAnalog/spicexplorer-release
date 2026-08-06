@@ -12,7 +12,7 @@ dependencies = [
     "plotly>=6.9.0",
     "psf_utils>=1.8",
     "PyYAML>=6.0.1",
-    "tqdm>=4.69.0",
+    "tqdm>=4.70.0",
 ]
 
 [project.optional-dependencies]

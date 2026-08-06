@@ -1,0 +1,77 @@
+** AUTHORED TEMPLATE — amplifier/psrr_vdd_diff: positive-supply rejection of a fully-
+** differential (self-biased, voutp/voutn) DUT, in the same CM-pinned differential
+** unity-feedback network stb_diff uses.
+**
+** CONFIGURATION (see stb_diff.spice for the full why). The differential loop is closed by two
+** ideal VCVSs, fbn/fbp = VCM +/- (voutp-voutn)/2, feeding the inputs through quiet 0 V sources;
+** the input CM is pinned at VCM and the DC operating point is the matched-inputs-at-VCM point
+** of dc_op_diff/ac_open_loop_diff. No CM loop is closed by the bench — the output CM is left to
+** the DUT's own CMFB; small-signal, so it works regardless of CMFB quality.
+**
+** STIMULUS + MATH (the exact FD analog of psrr_vdd.spice). The supply Vdd carries a 1 V AC
+** ripple and every input is AC-quiet, so all AC at the output is supply feed-through. With
+** A_vd = the supply -> differential-output gain and the loop holding vin_d = -vout_d:
+**     vout_d = A_vd*vac + Add*vin_d  =>  vout_d = A_vd/(1+Add) * vac,
+** the closed-loop (buffer-application) differential supply feed-through, so
+** psrr_vdd_db = -20*log10|vout_d| (vac = 1), read at FSTART (the DC-band floor) — the same
+** loop-suppressed figure the SE bench reports for the unity buffer.
+**
+** SOLVER-RESOLUTION CEILING (why the 1e-15 floor exists — same argument as cmrr_vcm_diff, in
+** full there). On a perfectly symmetric netlist the supply disturbs both half-circuits
+** identically, the TRUE A_vd of the deck is zero, and the solved vout_d is matrix round-off
+** (~1e-16 of the ~1 V node signals). The `+ 1e-15` magnitude floor caps the reportable figure
+** at 300 dB and keeps -db() finite; a psrr_vdd_db at or near 300 means "beyond what the solver
+** can resolve on a symmetric netlist", NOT a physical rejection (real PSRR- and PSRR+ of FD
+** silicon are mismatch-set). Treat anything above ~200 dB as unresolved-by-construction.
+**
+** psrr_cm_db — the SECONDARY, always-physical figure. The OUTPUT-CM response to the same
+** ripple, vocm = (voutp+voutn)/2, psrr_cm_db = -db|vocm|: the supply rejection of the cell's
+** CM path (CMFB loop included). It is finite even on a perfect netlist — supply ripple feeds
+** the CM of both branches with the same sign, nothing cancels — so it is the number that
+** actually discriminates between FD cells whose differential figure saturates the solver.
+** (Not a canonical datasheet metric; it rides the scoreboard entry's analyses block.)
+**
+** DIFFERENTIAL-GAIN CORRECTION (downstream, scoreboard.record). psrr_cm_db here is the RAW CM
+** supply residual -db|vocm|, NOT yet a rejection FIGURE. PSRR is (differential gain)/(supply
+** gain), so the physical FD PSRR+ adds the differential open-loop gain back:
+** psrr_cm_corr_db = dc_gain_db + psrr_cm_db (the SE unity-buffer psrr_vdd_db folds this in via
+** its closed loop; the FD CM path does not, so the term is added when the scoreboard entry is
+** assembled). psrr_cm_corr_db is the figure the paper prints.
+**
+** Bindings: DUT PORT_LINE VDD VCM CL FSTART FSTOP PPD PDK_INCLUDE.
+${PDK_INCLUDE}
+
+.param VDD=${VDD}
+.param VCM=${VCM}
+.param CL=${CL}
+
+Vdd  vdd 0 dc {VDD} ac 1     ; 1 V supply-ripple stimulus
+Vss  vss 0 dc 0
+CLoadp voutp 0 {CL}
+CLoadn voutn 0 {CL}
+
+* differential unity feedback, CM pinned at VCM (see stb_diff.spice); inputs AC-quiet —
+* isolate the supply path
+Vcm  vcm 0 dc {VCM}
+Efbn fbn vcm voutp voutn 0.5
+Efbp fbp vcm voutp voutn -0.5
+Vfbn vinn fbn dc 0
+Vfbp vinp fbp dc 0
+
+${PORT_LINE} ${DUT}
+
+.control
+  set filetype=ascii
+  ac dec ${PPD} ${FSTART} ${FSTOP}
+  let vodm = v(voutp) - v(voutn)
+  let vocm = (v(voutp) + v(voutn))/2
+  * 1e-15 magnitude floor: caps the figure at 300 dB = "beyond solver resolution" (see header);
+  * also keeps -db() finite on a bit-symmetric netlist whose true response is exactly 0.
+  let psrr   = -db(mag(vodm) + 1e-15)
+  let psrrcm = -db(mag(vocm) + 1e-15)
+  meas ac psrr_vdd_db FIND psrr   AT=${FSTART}
+  meas ac psrr_cm_db  FIND psrrcm AT=${FSTART}
+  write
+  quit
+.endc
+.end

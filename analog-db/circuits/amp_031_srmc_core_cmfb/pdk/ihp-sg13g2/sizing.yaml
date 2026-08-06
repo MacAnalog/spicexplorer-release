@@ -25,14 +25,14 @@ variables:
   - {name: x_dut_xm1_l, description: "Output NMOS driver length", default: 4.2775106088068857e-07, min: 0.13u, max: 2u, unit: m}
   - {name: x_dut_xm2_w, description: "Output PMOS source width (CMFB loop-2 actuator, XM2/XM10)", default: 1.5914426355899998e-06, min: 0.15u, max: 50u, unit: m}
   - {name: x_dut_xm2_l, description: "Output PMOS source length", default: 5.757246674262767e-07, min: 0.13u, max: 2u, unit: m}
-  - {name: x_dut_c1_value, description: "Per-side Miller compensation cap (drawn Cc)", default: 5.825188706426775e-13, min: 0.05p, max: 20p, unit: F}
-  - {name: x_dut_r1_value, description: "Per-side Miller nulling resistor (drawn Rz)", default: 2102.5223381221017, min: 100, max: 200k, unit: ohm}
+  - {name: x_dut_c1_value, description: "Per-side Miller compensation cap (drawn Cc)", default: 5.0e-12, min: 0.05p, max: 20p, unit: F}
+  - {name: x_dut_r1_value, description: "Per-side Miller nulling resistor (drawn Rz)", default: 7.0e3, min: 100, max: 200k, unit: ohm}
   - {name: x_dut_rm1p_value, description: "CM-detector resistor unit (all four halves tied)", default: 1Meg, min: 10k, max: 100Meg, unit: ohm}
   - {name: gm_val,   description: "CMFB servo macromodel transconductance (both loops)", default: 100u, min: 1u, max: 10m, unit: S}
   - {name: rout_val, description: "CMFB servo macromodel output resistance", default: 10Meg, min: 100k, max: 1.0e9, unit: ohm}
   - {name: rin_val,  description: "CMFB servo macromodel input resistance (near-ideal)", default: 1.0e12, min: 1.0e9, max: 1.0e14, unit: ohm}
-  - {name: cout_val, description: "CMFB servo macromodel output capacitance (100f validated for BOTH loops here)", default: 100f, min: 1f, max: 10p, unit: F}
-  - {name: cin_val,  description: "CMFB servo macromodel input capacitance", default: 10f, min: 1f, max: 1p, unit: F}
+  - {name: cout_val, description: "CMFB servo macromodel output capacitance (100f validated for BOTH loops here)", default: 300f, min: 1f, max: 10p, unit: F}
+  - {name: cin_val,  description: "CMFB servo macromodel input capacitance", default: 1f, min: 1f, max: 1p, unit: F}
   - {name: vb2, description: "Stage-1 NMOS tail gate bias (per-PDK: ihp-sized value; see header)", default: 0.7002027602191484, min: 0.0, max: 1.2, unit: V}
   - {name: vref_cm, description: "CM reference for BOTH servo loops (drawn 0.5 V = the SRMC filter's system CM)", default: 0.5, min: 0.0, max: 1.2, unit: V}
   # Frozen per-device literals: defaults reproduce the drawn m=1 exactly.

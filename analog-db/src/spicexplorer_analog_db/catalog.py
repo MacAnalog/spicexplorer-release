@@ -117,21 +117,32 @@ def build_catalog() -> dict[str, Any]:
             "display_name": m.get("display_name", ""),
             "compensation": m.get("compensation"),
             "stages": m.get("stages"),
+            # identity facets agents/papers select benches by — authored, never derived
+            # from port-name sniffing (which mis-classified before signal_path existed)
+            "signal_path": m.get("signal_path"),
+            "cm_control": m.get("cm_control"),
+            "realization": m.get("realization"),
             "pdks": c.pdks,
             "analyses": c.analyses,
             "status": c.status,
             "provenance": m.get("provenance", {}),
             "raw": raw_index.get(c.id, {}),
         }
+        if not c.is_published:
+            # De-published (see circuit.schema.json `published`): still a verifiable, resolvable
+            # circuit — it keeps its bindings/params here — but it is out of the scoreboard index
+            # and out of the paper tabulation, so no baseline summary is echoed either.
+            entry["published"] = False
         if c.references:
             entry["references"] = _reference_index(c)
         schematic = _schematic_refs(c)
         if schematic:
             entry["schematic"] = schematic
         if not c.is_reference_only:
-            summary = scoreboard.baseline_summary(c)
-            if summary:
-                entry["scoreboard"] = summary
+            if c.is_published:
+                summary = scoreboard.baseline_summary(c)
+                if summary:
+                    entry["scoreboard"] = summary
             params_block = _params_block(c)
             if params_block:
                 entry["params"] = params_block

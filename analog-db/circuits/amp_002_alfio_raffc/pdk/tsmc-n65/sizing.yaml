@@ -5,56 +5,56 @@ schema: spicexplorer/sizing@1
 pdk: tsmc-n65
 variables:
 - name: CAPACITOR_0
-  default: 11p
+  default: 2.98431e-11
 - name: CAPACITOR_1
-  default: 0.35p
+  default: 1.1409e-12
 - name: CURRENT_0_BIAS
-  default: 20u
+  default: 2.19324e-05
 - name: x_dut_xm6_l
-  default: 1u
+  default: 6.7836e-06
 - name: x_dut_xm3_m
   default: '1'
 - name: x_dut_xm6_w
-  default: 1u
+  default: 4.3296e-05
 - name: x_dut_xm10_l
-  default: 1u
+  default: 4.0698e-06
 - name: x_dut_xm10_m
   default: '1'
 - name: x_dut_xm10_w
-  default: 1u
+  default: 9.31015e-05
 - name: x_dut_xm11_l
-  default: 1u
+  default: 7.66885e-06
 - name: x_dut_xm11_m
   default: '1'
 - name: x_dut_xm11_w
-  default: 1u
+  default: 3.8716e-05
 - name: x_dut_xm15_l
-  default: 1u
+  default: 5.39552e-06
 - name: x_dut_xm15_m
   default: '2'
 - name: x_dut_xm15_w
-  default: 1u
+  default: 6.13582e-05
 - name: x_dut_xm59_l
-  default: 1u
+  default: 2.58183e-06
 - name: x_dut_xm14_m
   default: '1'
 - name: x_dut_xm59_w
-  default: 1u
+  default: 5.20852e-06
 - name: x_dut_xm21_l
-  default: 1u
+  default: 4.27273e-07
 - name: x_dut_xm21_m
   default: '3'
 - name: x_dut_xm21_w
-  default: 1u
+  default: 6.54466e-05
 - name: x_dut_xm7_l
-  default: 1u
+  default: 8.70539e-06
 - name: x_dut_xm7_m
   default: '1'
 - name: x_dut_xm7_w
-  default: 1u
+  default: 2.57133e-05
 - name: x_dut_xm9_l
-  default: 1u
+  default: 5.79094e-07
 - name: x_dut_xm9_m
   default: '1'
 - name: x_dut_xm9_w
-  default: 1u
+  default: 8.20641e-05

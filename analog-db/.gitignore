@@ -7,6 +7,11 @@ __pycache__/
 **/temp_spice_out/
 # ephemeral `analog-db run` / raw-project working output — not catalog decks
 raw/**/scratch/
+# Translated Spectre run decks under raw/: raw/ holds the ngspice catalog decks ONLY. A .scs here is
+# a machine-local by-product of driving a deck through the Spectre lane — it carries an ABSOLUTE
+# `include` of a PDK model file (a release leak-scan DENY) and is never a catalog artifact.
+# (Authored Spectre reference bindings live at circuits/*/spectre/** and stay tracked.)
+raw/**/*.scs
 .DS_Store
 
 

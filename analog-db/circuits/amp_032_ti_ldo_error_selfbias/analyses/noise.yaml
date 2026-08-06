@@ -1,9 +1,17 @@
 # Analysis binding for the SELF-BIASED error amp (no ibias port) — uses the class's
 # ibias-free template variant so no external current source is left driving a dangling node.
+# BAND STANDARDIZED 2026-08-01 (campaign): FSTART 10 -> 1, FSTOP 100MEG -> 1MEG (PPD
+# unchanged) — the paper's noise column is one uniform condition: total integrated
+# input-referred noise, 1 Hz - 1 MHz, unity/closed-loop bias config, CL=10p.
 schema: spicexplorer/analysis@1
 id: noise
 template: noise_biaswrap
-description: "Input-referred noise over the audio-to-GBW band (closed-loop bias)."
-params: {VDD: 3.3, VCM: 1.2, CL: 10p, FSTART: 10, FSTOP: 100MEG, PPD: 21}
+description: "Total integrated input-referred noise, 1 Hz - 1 MHz (closed-loop bias)."
+params: {VDD: 3.3, VCM: 1.2, CL: 10p, FSTART: 1, FSTOP: 1MEG, PPD: 21}
 flags: []
-produces: [inoise_total, onoise_total]
+# `produces:` names DATASHEET METRIC IDS (analysis.schema.json), not ngspice measure names:
+# datasheet.yaml binds metrics.vn_in_integrated.{analysis: noise, extract.meas:
+# inoise_total} (ngspice inoise_total is volts rms already integrated over the swept band),
+# which is what ppa.metric_values() maps onto the scoreboard; onoise_total has no
+# canonical metric. Replaces the old vn_in datasheet entry (same measure, narrower band).
+produces: [vn_in_integrated]

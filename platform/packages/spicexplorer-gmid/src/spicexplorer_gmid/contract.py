@@ -19,7 +19,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # ── LUT manifest models (the typed registry record beside each committed .pkl) ────────────────────
 
@@ -151,13 +151,44 @@ class OperatingPoint(BaseModel):
 
 
 class SanityGate(BaseModel):
-    """One pass/fail design-rule check attached to a sized device (the verification ledger)."""
+    """One design-rule check attached to a sized device (the verification ledger).
+
+    ``status`` is the three-state outcome and ``ok`` the boolean verdict of the *measurement*:
+
+    * ``"ok"`` — the check ran and the measurement is inside its window (``ok=True``);
+    * ``"fail"`` — the check ran and the measurement is outside it (``ok=False``); this **blocks**
+      :attr:`SizedDevice.passed`;
+    * ``"unchecked"`` — the measurement is outside the window, but the caller expressed no intent
+      that direction, so it is reported as an **advisory** and does *not* block ``passed``
+      (``ok=False``, because rendering an unchecked direction as green is exactly the failure mode
+      this state exists to remove).
+
+    ``status`` defaults to ``"ok"``/``"fail"`` from ``ok``, so every gate that has no advisory
+    direction keeps the plain two-state behaviour without naming it.
+    """
 
     model_config = ConfigDict(frozen=True)
 
     name: str
     ok: bool
     detail: str
+    status: Literal["ok", "unchecked", "fail"] = Field(
+        default="ok",
+        description="three-state outcome; 'unchecked' is advisory and never blocks `passed`",
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _default_status_from_ok(cls, data: object) -> object:
+        """An omitted ``status`` mirrors ``ok`` — every pre-existing two-state gate is unchanged."""
+        if isinstance(data, dict) and "status" not in data:
+            return {**data, "status": "ok" if data.get("ok", True) else "fail"}
+        return data
+
+    @property
+    def blocking(self) -> bool:
+        """True when this gate's outcome counts against :attr:`SizedDevice.passed`."""
+        return self.status != "unchecked"
 
 
 class GeometryBounds(BaseModel):
@@ -178,7 +209,9 @@ class SizedDevice(BaseModel):
     """A transistor sized to a transconductance / current target with its verification gates.
 
     ``gates`` is the assumptions/checks ledger (netlist2tf's "every assumption explicit" discipline
-    applied to sizing); ``passed`` is true only when every gate holds.
+    applied to sizing); ``passed`` is true only when every **blocking** gate holds — a gate whose
+    ``status`` is ``"unchecked"`` is an advisory the caller never asked to be gated on (see
+    :class:`SanityGate`) and is reported without vetoing the sizing.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -195,8 +228,8 @@ class SizedDevice(BaseModel):
 
     @property
     def passed(self) -> bool:
-        """True iff every sanity gate holds."""
-        return all(g.ok for g in self.gates)
+        """True iff every *blocking* sanity gate holds (``"unchecked"`` advisories don't veto)."""
+        return all(g.ok for g in self.gates if g.blocking)
 
     @property
     def wf(self) -> float:

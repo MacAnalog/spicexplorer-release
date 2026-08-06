@@ -87,7 +87,11 @@ def weighted_mse_loss(
 
         norm_params = {"min": min_val, "max": max_val}
 
-        loss = torch.mean(weights * (response - target_response) ** 2 / ((max_val-min_val)** 0.5))
+        # Avoid division by zero (a FLAT target response has max == min) — the same clamp
+        # the z-score branch applies to `std`; unclamped this returned inf/NaN and poisoned
+        # the ranking of every candidate scored against that target.
+        span = (max_val - min_val).clamp(min=epsilon)
+        loss = torch.mean(weights * (response - target_response) ** 2 / (span ** 0.5))
 
     else:
         raise ValueError("Invalid normalization method. Choose 'z-score' or 'min-max' or None.")
@@ -127,7 +131,10 @@ def weighted_mae_loss(
         max_val = torch.max(target_response)
 
         norm_params = {"min": min_val, "max": max_val}
-        loss = torch.mean(weights * torch.abs(response - target_response)/ ((max_val-min_val)** 0.5))
+        # Avoid division by zero (a FLAT target response has max == min) — see
+        # `weighted_mse_loss`; unclamped this returned inf/NaN.
+        span = (max_val - min_val).clamp(min=epsilon)
+        loss = torch.mean(weights * torch.abs(response - target_response) / (span ** 0.5))
 
     else:
         raise ValueError("Invalid normalization method. Choose 'z-score' or 'min-max' or None.")
@@ -198,7 +205,7 @@ def convert_log_to_linear(val: np.ndarray | float | np.float64) -> np.ndarray | 
 # Score-Shaping preview (`score_service`). Keeping them here — next to `compute_error` — means the
 # "what-if" preview and the real run transform GBW-type log-scale specs into decades identically,
 # instead of the API reimplementing (and diverging from) the scorer.
-_LOG_BAND_FLOOR = np.float64(1e-12)  # floor a (target - tol) that would go <= 0 before log10
+_LOG_BAND_FLOOR = np.float64(1e-12)  # floor any operand that would go <= 0 before log10
 
 
 def log_space_band(curr_val, target_val, tolerance):
@@ -207,13 +214,73 @@ def log_space_band(curr_val, target_val, tolerance):
     ``tolerance`` is a band HALF-WIDTH, not a point on the axis, so ``log10(tolerance)`` is wrong —
     it produced an absurd / negative band that inverted pass/fail (BUG-B19). Instead derive the
     half-width in DECADES from the transformed bounds ``log10(target ± tol)``. Returns
-    ``(log_curr, log_target, log_tol_halfwidth)``."""
-    lc = np.float64(convert_linear_to_log(curr_val))
+    ``(log_curr, log_target, log_tol_halfwidth)``.
+
+    A ``curr_val`` that is **not strictly positive** — ``0`` (``log10 -> -inf``), NEGATIVE
+    (``log10 -> nan``) or ``nan`` — is replaced by ``_LOG_BAND_FLOOR``: the SAME
+    ``value if value > 0 else floor`` guard the API Score-Shaping preview applies at its call
+    site (``score_service._resolve_penalty_space``), so preview and run agree. Without it a
+    bad sizing poisoned the transform: the ``nan`` made every band comparison ``False`` so the
+    scorer recorded the constraint SATISFIED, and the ``-inf`` clipped to ``+MAX_REWARD`` — a
+    degenerate candidate became a permanent global best.
+
+    Scope of the guarantee (it is narrower than "total and finite", which an earlier revision
+    of this docstring claimed and ``max()`` did not deliver — ``max(nan, floor)`` returns
+    ``nan``):
+
+    * the returned ``log_curr`` is **never nan** for any ``curr_val``, and is finite for every
+      finite ``curr_val``;
+    * a **strictly positive** ``curr_val`` is transformed AS READ, including below the floor —
+      ``1e-13`` and ``1e-18`` are 5 decades apart and must score 5 decades apart. Clamping the
+      current value UP to the floor (rather than only substituting for non-positives) flattened
+      them onto one score;
+    * ``+inf`` maps to ``+inf`` decades by design: admitting or rejecting a non-finite
+      reading is :func:`is_scoreable_metric`'s job (it rejects every one of them), not this
+      transform's. The scorer never reaches here with a non-finite ``curr_val``."""
+    curr = np.float64(curr_val)
+    lc = np.float64(convert_linear_to_log(curr if curr > 0 else _LOG_BAND_FLOOR))
     lt = np.float64(convert_linear_to_log(target_val))
     lo = np.float64(convert_linear_to_log(max(target_val - tolerance, _LOG_BAND_FLOOR)))
     hi = np.float64(convert_linear_to_log(target_val + tolerance))
     half = np.float64(max(abs(hi - lt), abs(lt - lo)))
     return lc, lt, half
+
+
+def is_scoreable_metric(curr_val, *, log_scale: bool = False) -> bool:
+    """Is ``curr_val`` a metric reading the scorer may actually score?
+
+    Scoreable iff it is **finite** and — under ``log_scale`` — strictly positive. Anything
+    else is a degenerate reading (a diverged/failed sim, a swept curve that collapsed) and
+    must be scored as the maximal penalty, exactly like a missing/NaN metric, rather than fed
+    to the error/reward kernels:
+
+    * ``±inf`` is finite-looking to a bare ``isnan`` gate, and on a spec WITH a reward it
+      produced an infinite reward that clipped to ``+MAX_REWARD`` — the best score the scorer
+      can emit — so a degenerate candidate became a permanent global best (finding O-1).
+    * ``<= 0`` under ``log_scale`` has no decade: the shipped ppa campaigns set ``log_scale: true``
+      on ``power``/``active_area``/``v(inoise_total)``/``cap_area``, all of which a bad sizing can
+      drive to ``0`` or negative. Floored to ``_LOG_BAND_FLOOR`` it would read as ``-12`` decades —
+      i.e. *infinitely good* for a MINIMIZE spec — so rejecting it is the fail-loud reading.
+
+    **The test is deliberately NOT goal-aware** (a goal-aware revision was written and
+    reverted). The Tier-1 measurement library does emit ``+inf`` as a *perfect* sentinel
+    (``sfdr_from_harmonics`` on a spur-free spectrum, ``iip3_from_harmonics`` on an
+    unmeasurable IM3), so admitting a goal-ALIGNED infinity looks like the kinder reading —
+    but the same ``+inf`` is also what a **diverged** solve produces, and the two are
+    indistinguishable at this layer. 54 shipped campaign specs are EXCEED + linear + a
+    relative-absolute reward, and every one of them is ``dcgain``
+    (``20·log10|H|`` at the lowest AC point), where ``+inf`` means the AC solve blew up. On
+    those, admitting the infinity re-opens exactly the ``+MAX_REWARD`` clip O-1 exists to
+    close. Mistaking a divergence for perfection is unrecoverable — it poisons the whole
+    run; mistaking perfection for a divergence costs one candidate. So every non-finite
+    reading is rejected, whatever the goal.
+
+    The underlying collision (the registry overloading ``inf`` for "perfect") is a
+    cross-package API decision, recorded in ``doc/TODO.md`` §22 — not worked around here."""
+    val = np.float64(curr_val)
+    if not np.isfinite(val):
+        return False
+    return not (log_scale and val <= 0.0)
 
 
 def log_space_range_coeff(target_val, range_val):
@@ -353,6 +420,7 @@ def compute_reward(curr_val: np.float64, target_val: np.float64, reward_type: Re
 CORNER_SCORE_AGGREGATORS: Dict[str, Any] = {
     "sum":  np.sum,   # add per-corner scores  — average-case bias, can mask one bad corner
     "mean": np.mean,  # average them           — magnitude comparable to a single-corner run
+                      #   (always over the TOTAL corner count — see AGG-2 below)
     "min":  np.min,   # worst case             — classic PVT sign-off; any failing corner dominates
 }
 
@@ -374,6 +442,13 @@ def aggregate_corner_scores(corner_scores: Dict[str, np.float64], strategy: str)
     masking-safe while keeping the all-pass reward landscape intact. ``mean`` stays the
     default: range specs (e.g. phase margin) are two-sided, so a blanket worst-corner
     scalarization is the right *sign-off* lens but a poor *optimization* objective.
+
+    **Monotonicity (AGG-2).** ``mean`` divides by the TOTAL corner count, never by the
+    size of the failing subset. Dividing by ``len(subset)`` made the reducer *non-monotone*
+    — fixing a marginal corner shrinks the denominator, so e.g. ``{-10, -2}`` (mean −6)
+    got WORSE, −10, when the −2 corner was improved to +1 — and gradient-free search reads
+    that as "the improvement hurt". With the fixed denominator every strategy here is
+    monotone non-decreasing in each corner's score.
     """
     if not corner_scores:
         raise ValueError("aggregate_corner_scores needs at least one corner score.")
@@ -386,6 +461,8 @@ def aggregate_corner_scores(corner_scores: Dict[str, np.float64], strategy: str)
     # Partition on sign: failing corners (penalty) take precedence over passing ones (reward).
     penalties = {c: s for c, s in corner_scores.items() if s < 0}
     subset = penalties if penalties else corner_scores
+    if strategy == "mean":  # see AGG-2: the denominator is the whole corner set
+        return np.float64(np.sum(list(subset.values())) / len(corner_scores))
     return np.float64(aggregator(list(subset.values())))
 
 

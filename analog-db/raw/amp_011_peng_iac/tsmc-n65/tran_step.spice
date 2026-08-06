@@ -30,7 +30,7 @@
 
 .param VDD=1.8
 .param VCM=240m
-.param CL=150p
+.param CL=10p
 .param VSTEP=0.2
 
 Vdd  vdd 0 dc {VDD}

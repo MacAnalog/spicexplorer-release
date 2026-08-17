@@ -1,0 +1,221 @@
+# syntax=docker/dockerfile:1.7
+# =============================================================================
+# Managed by the private release infra (scripts/release/repo/) — edit there,
+# not here; the next port overwrites this file.
+#
+# spicexplorer-spice-base — the EDA RUNTIME image: ngspice (with OSDI compact
+# models) + three open PDKs, vendored. Build this once and live SPICE works with
+# NOTHING installed on the host: no ngspice, no PDK, no PDK_ROOT to point at.
+#
+#   * ngspice COMPILED FROM SOURCE (headless; OSDI + XSPICE codemodels, OpenMP),
+#     native to the build architecture.
+#   * OSDI compact models per OSDI_MODE: `vendor` (default here — reuse the
+#     committed prebuilt x86-64 .osdi; fast) or `compile` (build openvaf from
+#     source and compile the Verilog-A for THIS arch — slow, but the only route
+#     that gives native arm64, e.g. Apple silicon).
+#   * PDKs vendored under platform/docker/pdk/, all Apache-2.0:
+#       IHP sg13g2 (primary; OSDI models)   — unpacked
+#       SkyWater sky130 (BSIM4, no OSDI)    — sky130_pdk.zip
+#       GlobalFoundries gf180mcu (BSIM4)    — gf180_pdk.zip
+#     A netlist selects one with its own `.lib`; all three are on the ngspice
+#     sourcepath, so bare-name resolution works for each.
+#   * xschem (headless, no X server) for batch SPICE netlisting from .sch.
+#
+# This is the image the `api` service FROMs when you run the live-SPICE lane.
+# The default lane uses python:3.11-slim instead and has no simulator — see
+# docs/docker.md.
+#
+# Build context = repo root (needs platform/ + analog-db/).
+#   docker compose --profile live build spice-base      # or:  make spice-base
+# =============================================================================
+ARG UBUNTU_TAG=24.04
+ARG OSDI_MODE=vendor
+
+# ---- Stage: compile ngspice (headless: OSDI + XSPICE codemodels, no X) -------
+FROM ubuntu:${UBUNTU_TAG} AS ngspice-build
+ARG NGSPICE_VERSION=45
+ENV DEBIAN_FRONTEND=noninteractive
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean \
+    && apt-get update && apt-get install -y --no-install-recommends \
+        build-essential bison flex \
+        libreadline-dev libncurses-dev \
+        ca-certificates wget
+WORKDIR /build
+# v45 matches the ABI the PDK models expect. SourceForge keeps the current
+# release at ng-spice-rework/<v>/ and archives older ones under old-releases/<v>/.
+RUN --mount=type=cache,target=/root/.cache/wget \
+    wget -q "https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/old-releases/${NGSPICE_VERSION}/ngspice-${NGSPICE_VERSION}.tar.gz" -O ngspice.tar.gz \
+    && tar -xzf ngspice.tar.gz && rm ngspice.tar.gz
+WORKDIR /build/ngspice-${NGSPICE_VERSION}/release
+RUN ../configure \
+        --prefix=/opt/ngspice \
+        --enable-osdi \
+        --enable-xspice \
+        --enable-openmp \
+        --with-readline=yes \
+        --without-x \
+        --disable-debug \
+    && make -j"$(nproc)" \
+    && make install \
+    && (strip /opt/ngspice/bin/ngspice || true)
+
+# ---- Stage: osdi-vendor — reuse the committed prebuilt OSDI (x86-64 only) ----
+FROM ubuntu:${UBUNTU_TAG} AS osdi-vendor
+COPY platform/docker/pdk/ihp-sg13g2/libs.tech/ngspice/osdi /osdi
+
+# ---- Stage: osdi-compile — compile OSDI from Verilog-A for the BUILD arch ----
+# Uses openvaf-reloaded (arpadbuermen's fork — the same source iic-osic-tools
+# uses), built with Rust + LLVM-18. Heavy, but build-only: nothing here lands in
+# the runtime image. Produces OSDI native to whatever arch the build runs on.
+FROM ubuntu:${UBUNTU_TAG} AS osdi-compile
+ARG OPENVAF_REPO=https://github.com/arpadbuermen/OpenVAF.git
+ARG OPENVAF_COMMIT=2e066436d985b05cf8e6563e936daf9ab875775a
+ENV DEBIAN_FRONTEND=noninteractive
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean \
+    && apt-get update && apt-get install -y --no-install-recommends \
+        git curl ca-certificates build-essential pkg-config \
+        llvm-18 llvm-18-dev clang-18 libclang-common-18-dev libpolly-18-dev lld-18 \
+        zlib1g-dev libzstd-dev
+ENV RUSTUP_HOME=/opt/rustup \
+    CARGO_HOME=/opt/cargo \
+    PATH=/opt/cargo/bin:/usr/lib/llvm-18/bin:$PATH \
+    LLVM_SYS_180_PREFIX=/usr/lib/llvm-18
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+RUN --mount=type=cache,target=/opt/cargo/registry \
+    --mount=type=cache,target=/opt/cargo/git \
+    rm -rf /src/openvaf && \
+    git clone --filter=blob:none "$OPENVAF_REPO" /src/openvaf \
+    && cd /src/openvaf && git checkout "$OPENVAF_COMMIT" \
+    && cargo build --release --features llvm18 --bin openvaf-r \
+    && install -m755 target/release/openvaf-r /usr/local/bin/openvaf
+# Compile the four compact models (per the PDK's openvaf-compile-va.sh).
+COPY platform/docker/pdk/ihp-sg13g2/libs.tech/verilog-a /va
+WORKDIR /va
+RUN mkdir -p /osdi \
+    && openvaf --target_cpu generic -D__NGSPICE__ -o /osdi/psp103.osdi     psp103/psp103.va \
+    && openvaf --target_cpu generic -D__NGSPICE__ -o /osdi/psp103_nqs.osdi psp103/psp103_nqs.va \
+    && openvaf --target_cpu generic -D__NGSPICE__ -o /osdi/r3_cmc.osdi     r3_cmc/r3_cmc.va \
+    && openvaf --target_cpu generic -D__NGSPICE__ -o /osdi/mosvar.osdi     mosvar/mosvar.va
+
+# ---- Stage: osdi — select compile|vendor via the OSDI_MODE build arg ---------
+FROM osdi-${OSDI_MODE} AS osdi
+
+# ---- Stage: sky130 — unzip the vendored SkyWater PDK subset (BSIM4; no OSDI) -----
+# Only the ngspice corner libs + the sky130_fd_pr device models are unpacked
+# (the rest of open_pdks — magic/klayout/… — is irrelevant to SPICE).
+FROM ubuntu:${UBUNTU_TAG} AS sky130
+RUN apt-get update && apt-get install -y --no-install-recommends unzip && rm -rf /var/lib/apt/lists/*
+COPY platform/docker/pdk/sky130_pdk.zip /tmp/sky130_pdk.zip
+RUN mkdir -p /sky130 && cd /tmp \
+    && unzip -q sky130_pdk.zip "sky130_pdk/libs.tech/ngspice/*" "sky130_pdk/libs.ref/sky130_fd_pr/spice/*" \
+    && mv sky130_pdk/* /sky130/ && rm -rf sky130_pdk sky130_pdk.zip
+
+# ---- Stage: gf180mcu — unzip the vendored GlobalFoundries 180nm PDK subset -------
+# Only the ngspice model libs are vendored (open_pdks c6d73a35, via volare); the device
+# subckts + per-device corner sections all live in sm141064.ngspice, and design.ngspice
+# carries the global stat switches.
+FROM ubuntu:${UBUNTU_TAG} AS gf180
+RUN apt-get update && apt-get install -y --no-install-recommends unzip && rm -rf /var/lib/apt/lists/*
+COPY platform/docker/pdk/gf180_pdk.zip /tmp/gf180_pdk.zip
+RUN mkdir -p /gf180 && cd /tmp \
+    && unzip -q gf180_pdk.zip "gf180mcu/libs.tech/ngspice/*" \
+    && mv gf180mcu/* /gf180/ && rm -rf gf180mcu gf180_pdk.zip
+
+# ---- Stage: runtime base — Ubuntu 24.04 + Python + uv + ngspice + PDKs -------
+FROM ubuntu:${UBUNTU_TAG} AS runtime
+ENV DEBIAN_FRONTEND=noninteractive
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean \
+    && apt-get update && apt-get install -y --no-install-recommends \
+        python3 python3-venv \
+        libreadline8t64 libncursesw6 libgomp1 \
+        gosu ca-certificates curl \
+        git build-essential pkg-config \
+        ipython3 \
+        xschem
+
+# uv (Astral) — used to build the project virtualenv from the locked deps.
+COPY --from=ghcr.io/astral-sh/uv:0.9.6 /uv /uvx /usr/local/bin/
+
+# ngspice (compiled above), kept at its build prefix so internal lookups
+# (codemodels under lib/, spinit under share/) resolve unchanged.
+COPY --from=ngspice-build /opt/ngspice /opt/ngspice
+
+# PDK: arch-neutral device models + .spiceinit (vendored), plus the arch-correct
+# OSDI from the selected osdi stage (compiled for this arch, or prebuilt x86-64).
+COPY platform/docker/pdk/ihp-sg13g2/libs.tech/ngspice/models /opt/pdk/ihp-sg13g2/libs.tech/ngspice/models
+COPY platform/docker/pdk/ihp-sg13g2/libs.tech/ngspice/.spiceinit /opt/pdk/ihp-sg13g2/libs.tech/ngspice/.spiceinit
+COPY --from=osdi /osdi /opt/pdk/ihp-sg13g2/libs.tech/ngspice/osdi
+
+# PDK xschem symbol libraries (sg13g2_pr/*.sym) — resolved by the in-browser
+# schematic viewer via _pdk_xschem_dir() → $PDK_ROOT/$PDK/libs.tech/xschem.
+COPY platform/docker/pdk/ihp-sg13g2/libs.tech/xschem /opt/pdk/ihp-sg13g2/libs.tech/xschem
+
+# SkyWater sky130 PDK (second PDK; ngspice corner libs + sky130_fd_pr device models).
+# No OSDI — sky130 uses BSIM4, built into ngspice. Added to the ngspice sourcepath below.
+COPY --from=sky130 /sky130 /opt/pdk/sky130
+
+# Bake the SLIM sky130 corner lib (parse-time speedup). `.lib sky130.lib.spice`
+# re-parses the full ~480k-line binned model set every run (~59 s, 99 % CPU); the
+# generator prunes it to just the device families the corpus uses → ~1 s parse,
+# byte-identical results. It writes sky130_slim.lib.spice into corners/ (on the
+# sourcepath), which NGSpice_Wrapper auto-swaps in
+# ($SPICEXPLORER_SKY130_SLIM_LIB=auto). Pure-stdlib script; run with the image's python3.
+# NOTE: in this monorepo analog-db is a top-level directory; in the private
+# platform repo it is a submodule at examples/analog-db.
+COPY analog-db/tools/make_sky130_slim_lib.py /tmp/make_sky130_slim_lib.py
+RUN python3 /tmp/make_sky130_slim_lib.py --ngspice-dir /opt/pdk/sky130/libs.tech/ngspice \
+    && rm /tmp/make_sky130_slim_lib.py
+
+# GlobalFoundries gf180mcu PDK (third PDK; ngspice model libs only — BSIM4, no OSDI).
+# Added to the ngspice sourcepath below so `.lib sm141064.ngspice <section>` resolves by bare name.
+COPY --from=gf180 /gf180 /opt/pdk/gf180mcu
+
+# xschem standard devices library (devices/*.sym). The env var XSCHEM_LIBRARY_PATH
+# is the hook used by _xschem_share_dirs() (Python, in-browser viewer). The xschem
+# BINARY ignores that env var and searches the Tcl var of the same name instead,
+# which the xschemrc added below seeds from this env (see $HOME/.xschem/xschemrc).
+COPY platform/docker/xschem_library /opt/xschem_library
+
+ENV PATH=/opt/ngspice/bin:/app/platform/.venv/bin:$PATH \
+    HOME=/app \
+    PDK_ROOT=/opt/pdk \
+    PDK=ihp-sg13g2 \
+    IHP_PDK_ROOT=/opt/pdk/ihp-sg13g2 \
+    SPICE_USERINIT_DIR=/opt/pdk/ihp-sg13g2/libs.tech/ngspice \
+    XSCHEM_LIBRARY_PATH=/opt/xschem_library:/opt/xschem_library/devices \
+    UV_CACHE_DIR=/root/.cache/uv \
+    UV_PYTHON=/usr/bin/python3 \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_COMPILE_BYTECODE=0 \
+    UV_LINK_MODE=copy \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=0
+
+WORKDIR /app
+
+# ngspice reads the PDK .spiceinit from $SPICE_USERINIT_DIR (the IHP dir) — the
+# /app copy is derived from it. It sets sourcepath and loads the OSDI models via
+# $PDK_ROOT/$PDK. Appending the sky130 + gf180mcu ngspice dirs to that sourcepath
+# lets a netlist resolve `.lib sky130.lib.spice <corner>` (or
+# `.lib sm141064.ngspice <section>`) by bare name, exactly like IHP — so all three
+# PDKs are reachable and a netlist picks one with its own `.lib`. (The IHP OSDI
+# loads regardless; it is simply unused by a sky130 or gf180 sim.)
+RUN printf '\n* SkyWater sky130 PDK — BSIM4, no OSDI\nsetcs sourcepath = ( $sourcepath /opt/pdk/sky130/libs.tech/ngspice )\n* GlobalFoundries gf180mcu PDK — BSIM4, no OSDI\nsetcs sourcepath = ( $sourcepath /opt/pdk/gf180mcu/libs.tech/ngspice )\n' \
+        >> /opt/pdk/ihp-sg13g2/libs.tech/ngspice/.spiceinit \
+    && cp /opt/pdk/ihp-sg13g2/libs.tech/ngspice/.spiceinit /app/.spiceinit
+
+# xschem auto-loads $HOME/.xschem/xschemrc (HOME=/app). The binary searches the
+# Tcl XSCHEM_LIBRARY_PATH, NOT the env var of the same name, so without this rc
+# it resolves no symbols. This wires its search to the vendored standard devices
+# + IHP PDK symbols so `xschem -x -q -n -s -o <dir> <file>.sch` netlists headlessly.
+COPY platform/docker/xschem/xschemrc /app/.xschem/xschemrc
+# xschem persists "recent files" state under its conf dir on every load. The
+# runtime user may be non-root with a dynamic UID, so make the dir sticky +
+# world-writable (like /tmp) — else each netlist prints a harmless Tcl warning.
+RUN chmod 1777 /app/.xschem

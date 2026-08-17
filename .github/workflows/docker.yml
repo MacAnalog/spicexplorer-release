@@ -1,0 +1,169 @@
+# Managed by the private release infra (scripts/release/repo/) — edit there,
+# not here; the next port overwrites this file.
+#
+# Proves the LIVE-SPICE lane actually works: builds the EDA base image
+# (Dockerfile.spice-base — ngspice compiled from source + the three vendored open
+# PDKs), builds the api FROM it, and asserts a real simulation runs. Without this
+# lane the other four workflows are all green while the headline claim of
+# `make up-live` — "live SPICE with nothing installed on the host" — is untested.
+#
+# OSDI_MODE=vendor: GitHub runners are x86-64, so the committed prebuilt OSDI
+# applies and we skip the openvaf (Rust + LLVM-18) build entirely. The arm64
+# `compile` path is not exercised here — see docs/docker.md.
+name: docker
+
+on:
+  # Manually runnable: path-filtered lanes do NOT fire on a history rewrite (GitHub has no
+  # meaningful `before` commit to diff against), and a release must be able to prove every
+  # lane green on the exact published SHA. `gh workflow run <name>.yml --ref main`.
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "Dockerfile.spice-base"
+      - "Dockerfile.api"
+      - "compose.yaml"
+      - "Makefile"
+      - "platform/docker/**"
+      - "analog-db/tools/make_sky130_slim_lib.py"
+      - ".github/workflows/docker.yml"
+  pull_request:
+    paths:
+      - "Dockerfile.spice-base"
+      - "Dockerfile.api"
+      - "compose.yaml"
+      - "Makefile"
+      - "platform/docker/**"
+      - "analog-db/tools/make_sky130_slim_lib.py"
+      - ".github/workflows/docker.yml"
+
+jobs:
+  live-spice:
+    runs-on: ubuntu-latest
+    # Compiling ngspice from source dominates; the uv resolve of the platform
+    # workspace (torch CPU wheels) is the other slow half.
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: docker lane ported yet?
+        id: ported
+        run: |
+          if [ -f Dockerfile.spice-base ] && [ -d platform/docker/pdk ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Dockerfile.spice-base / platform/docker/pdk not in the monorepo yet — this job activates once the docker lane ports."
+          fi
+
+      # The runner ships ~25 GB of preinstalled toolchains we do not use. The
+      # ngspice build tree + three Ubuntu stages + the PDK unpacks + a uv resolve
+      # is a tight fit on what is left, so reclaim first.
+      - name: free disk space
+        if: steps.ported.outputs.ok == 'true'
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /usr/local/share/boost "$AGENT_TOOLSDIRECTORY" || true
+          sudo docker image prune -af || true
+          df -h /
+
+      - name: build the EDA base (ngspice + IHP/sky130/gf180 PDKs)
+        if: steps.ported.outputs.ok == 'true'
+        env:
+          OSDI_MODE: vendor
+        run: docker compose --profile live build spice-base
+
+      - name: build the api FROM the base
+        if: steps.ported.outputs.ok == 'true'
+        env:
+          SPICE_BASE: spicexplorer-spice-base:release
+        run: docker compose build api
+
+      # Assert the toolchain is really there before involving the app: a bad
+      # OSDI/PDK wiring shows up here as a clean, readable failure rather than as
+      # an opaque pdk_ok:false further down.
+      - name: ngspice + PDK present in the image
+        if: steps.ported.outputs.ok == 'true'
+        run: |
+          docker run --rm --entrypoint sh spicexplorer-spice-base:release -c '
+            set -eux
+            ngspice --version | head -3
+            ls /opt/pdk/ihp-sg13g2/libs.tech/ngspice/osdi/*.osdi
+            ls /opt/pdk/ihp-sg13g2/libs.tech/ngspice/models | head
+            ls /opt/pdk/sky130/libs.tech/ngspice/corners/sky130_slim.lib.spice
+            ls /opt/pdk/gf180mcu/libs.tech/ngspice
+            test -f /app/.spiceinit
+          '
+
+      # THE claim under test: pdk_ok:true, with nothing installed on the runner.
+      - name: api reports a usable PDK (pdk_ok true)
+        if: steps.ported.outputs.ok == 'true'
+        env:
+          SPICE_BASE: spicexplorer-spice-base:release
+        run: |
+          docker compose up -d api
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8000/api/env >/dev/null; then break; fi
+            sleep 5
+          done
+          curl -sf http://localhost:8000/api/env | tee env.json
+          # jq -e exits non-zero when the filter yields false/null.
+          jq -e '.ngspice_ok and .pdk_ok and .live_runs_enabled' env.json >/dev/null \
+            || { echo "::error::live-SPICE lane is NOT live"; jq . env.json; exit 1; }
+          echo "ngspice_ok / pdk_ok / live_runs_enabled all true"
+
+      # Every other assertion in this lane passes whether or not the analog-db
+      # package is importable: /api/env reports on ngspice and the PDK only, and
+      # the protocol test reads its deck through a filesystem symlink. But
+      # /api/library imports `spicexplorer_analog_db` LAZILY and degrades to a
+      # "not installed in this environment" status instead of erroring -- so a
+      # venv missing it (or missing jsonschema, which the package's __init__
+      # pulls in transitively) ships green and broken. Import them for real.
+      - name: the analog-db corpus is importable in the venv
+        if: steps.ported.outputs.ok == 'true'
+        env:
+          SPICE_BASE: spicexplorer-spice-base:release
+        run: |
+          docker compose exec -T api /app/platform/.venv/bin/python -c '
+          import spicexplorer_analog_db, jsonschema
+          from spicexplorer_analog_db import model, paths, scoreboard
+          print("analog-db importable:", spicexplorer_analog_db.__file__)
+          '
+
+      # A green /api/env is a probe, not a simulation. Run two for real: the
+      # engine smoke tests (a real AC analysis end to end) and the protocol test
+      # that simulates an actual IHP sg13g2 device circuit from the analog-db
+      # corpus — file presence and `pdk_ok` are not the same claim as "a PDK
+      # device solved".
+      #
+      # Every one of these carries a *skipif* (@requires_ngspice / @requires_pdk /
+      # the analog-db deck), so on an image with no simulator they ALL skip and
+      # pytest still exits 0. A vacuous green is exactly what this lane exists to
+      # catch, so assert on the summary line: something passed, nothing skipped.
+      # (No `-m` filter: the shipped pyproject's addopts is just "-ra", so the
+      # @slow tests are selected by default.)
+      - name: run a real ngspice simulation in the container
+        if: steps.ported.outputs.ok == 'true'
+        env:
+          SPICE_BASE: spicexplorer-spice-base:release
+        run: |
+          docker compose exec -T api sh -lc '
+            cd /app/platform &&
+            uv run pytest -q -rs \
+              packages/spicexplorer/tests/test_smoke_spice_engine.py \
+              packages/spicexplorer/tests/test_protocol_pdk_live.py
+          ' | tee pytest.out
+          grep -qE '[0-9]+ passed' pytest.out \
+            || { echo "::error::no simulation test passed"; exit 1; }
+          grep -qE '[0-9]+ skipped' pytest.out \
+            && { echo "::error::a test SKIPPED — ngspice, the IHP PDK or the analog-db corpus is missing from the api image, so this lane proved nothing"; sed -n '/short test summary/,$p' pytest.out; exit 1; }
+          echo "real ngspice simulations ran in the container, on PDK devices"
+
+      - name: api logs (on failure)
+        if: failure() && steps.ported.outputs.ok == 'true'
+        run: docker compose logs api
+
+      - name: tear down
+        if: always()
+        run: docker compose down -v || true

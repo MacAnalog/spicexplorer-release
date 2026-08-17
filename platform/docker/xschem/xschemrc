@@ -1,0 +1,24 @@
+# =============================================================================
+# xschem rc for the spicexplorer base image — auto-loaded from $HOME/.xschem
+# (HOME=/app). Without this, the xschem binary cannot resolve symbols: the
+# XSCHEM_LIBRARY_PATH *env var* (set in Dockerfile.spice-base) is only the hook
+# for the Python _xschem_share_dirs(); the binary searches the Tcl variable of
+# the same name, which the stock system xschemrc leaves unset.
+#
+# This seeds that Tcl var from the env (vendored standard devices/*.sym) and
+# adds the IHP PDK sg13g2 symbol library, so a headless netlist resolves both:
+#   xschem -x -q -n -s -o <dir> <file>.sch
+# =============================================================================
+set XSCHEM_LIBRARY_PATH {}
+
+# Vendored standard devices library (and anything else on the env hook).
+if { [info exists env(XSCHEM_LIBRARY_PATH)] } {
+  foreach d [split $env(XSCHEM_LIBRARY_PATH) ":"] {
+    if { $d ne {} } { append XSCHEM_LIBRARY_PATH ":$d" }
+  }
+}
+
+# IHP PDK device symbols (sg13g2_pr/*.sym), vendored at $IHP_PDK_ROOT/libs.tech/xschem.
+if { [info exists env(IHP_PDK_ROOT)] } {
+  append XSCHEM_LIBRARY_PATH ":$env(IHP_PDK_ROOT)/libs.tech/xschem"
+}

@@ -43,18 +43,22 @@
 # | power (pam4) | <= 192 mW |
 
 # %%
-import sys, os, json, time, shutil, dataclasses
+import sys
+import os
+import json
+import time
+import shutil
+import dataclasses
 from pathlib import Path
 import numpy as np
-import yaml
-import matplotlib.pyplot as plt
 from IPython.display import Image, Markdown, display
 
 ROOT = Path.cwd().resolve().parent          # ported-netlists/
 LAY = ROOT / "layout"
 sys.path.insert(0, str(LAY))
 sys.path.insert(0, str(ROOT / "testbenches"))
-import gen_layout, pex_sim, render
+import gen_layout
+import pex_sim
 from gen_layout import LayoutParams
 from signoff import run_drc, run_lvs
 

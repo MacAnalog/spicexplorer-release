@@ -53,8 +53,22 @@ ignore = ["E501", "E701", "E702"]
 [tool.ruff.lint.per-file-ignores]
 # Demo notebooks: imports live in the cells that use them; keep the cell flow.
 # E741: `l` is the domain-standard channel-length symbol in sizing code.
-"*.ipynb" = ["E402", "I001", "E741"]
+# F811: a later cell re-importing a name it uses is the same cell-flow convention — it is
+# what lets a cell be re-run on its own, not an accidental shadow.
+"*.ipynb" = ["E402", "I001", "E741", "F811"]
 "campaigns/**" = ["E741"]
+# jupytext SCRIPT pairs of the notebooks above (`notebooks/NN_*.py` sits beside its
+# `.ipynb`): same cell-ordered import flow, so the same exemptions. Sorting these blocks
+# would also be WRONG, not merely noisy — several set `matplotlib.use("Agg")` between
+# `import matplotlib` and `import matplotlib.pyplot`, and hoisting pyplot above the
+# backend selection silently breaks headless rendering.
+"**/notebooks/*.py" = ["E402", "I001", "E741", "F811"]
+# Ported reference artifacts (`drawings/**`) and the per-PDK layout/signoff scripts under
+# `circuits/*/pdk/**`: generator code carrying the same `l` = channel-length convention,
+# and the same matplotlib-backend import ordering. These are preserved-as-authored
+# artifacts, not library code — `src/` and `tests/` remain fully linted.
+"drawings/**" = ["E741", "I001"]
+"circuits/*/pdk/**" = ["E741", "I001"]
 
 [tool.pyright]
 pythonVersion = "3.10"

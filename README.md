@@ -9,9 +9,14 @@
 [![docker](https://github.com/MacAnalog/spicexplorer-release/actions/workflows/docker.yml/badge.svg)](https://github.com/MacAnalog/spicexplorer-release/actions/workflows/docker.yml)
 
 Open-source releases from the SpiceXplorer analog design-automation project,
-developed by the MacAnalog research group at McMaster University. As of **v1.0**
-the whole platform is public — every package, the Studio front-end, and the
-circuit database — each published as a curated snapshot.
+developed by the MacAnalog research group at McMaster University. The whole
+platform is public — every package, the Studio front-end, and the circuit
+database — each published as a curated snapshot.
+
+**Current release: v1.1.** It adds the EDA base image, so `make up-live` gives
+you a working simulator and three open PDKs with nothing installed on the host
+(see [Live SPICE](#quickstart) below). v1.0 opened the platform: all ten
+packages, the UI, and the database.
 
 ## Components
 

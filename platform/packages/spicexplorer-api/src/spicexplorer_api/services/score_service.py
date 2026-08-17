@@ -71,7 +71,10 @@ def _resolve_penalty_space(value: float, spec: Any) -> tuple[float, float, float
     orders of magnitude (SC-4). Linear specs pass through unchanged. ``value`` may be a metric reading
     or a swept curve point (which can go ``<= 0`` — floored before ``log10``)."""
     target = float(spec.target)
-    tolerance = float(spec.tolerance) if spec.tolerance else abs(0.05 * target)
+    # `is not None`, NOT falsy: an explicit `tolerance: 0` is a real zero-width band, and a
+    # falsy test silently turned it into 5 % of target here while the scorer did the same — so
+    # preview and run agreed on the WRONG number. Both fixed together (SC-4 keeps them one).
+    tolerance = float(spec.tolerance) if spec.tolerance is not None else 0.0
     rang = float(spec.range) if spec.range and spec.range > 0 else max(abs(target), 1.0)
     if getattr(spec, "log_scale", False) and target > 0:
         coeff = float(log_space_range_coeff(target, rang))
@@ -128,7 +131,7 @@ def compute_score(
     for spec in specs:
         value = metric_values.get(spec.name)
         target = float(spec.target)
-        tolerance = float(spec.tolerance) if spec.tolerance else abs(0.05 * target)
+        tolerance = float(spec.tolerance) if spec.tolerance is not None else 0.0
         weight = float(spec.weight) if spec.weight is not None else 1.0
         # (the per-spec `range` normalizer is resolved inside `_spec_penalties`/`_resolve_penalty_space`)
 
@@ -166,7 +169,7 @@ def compute_score(
         spec_obj = next((s for s in specs if s.name == selected_spec), None)
         if spec_obj:
             target = float(spec_obj.target)
-            tolerance = float(spec_obj.tolerance) if spec_obj.tolerance else abs(0.05 * target)
+            tolerance = float(spec_obj.tolerance) if spec_obj.tolerance is not None else 0.0
             rang = float(spec_obj.range) if spec_obj.range and spec_obj.range > 0 else max(abs(target), 1.0)
             lo = target - 3 * rang
             hi = target + 3 * rang

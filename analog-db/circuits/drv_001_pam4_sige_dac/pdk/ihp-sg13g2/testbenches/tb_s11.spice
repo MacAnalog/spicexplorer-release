@@ -1,0 +1,37 @@
+* TB[drv_001] input return loss S11 (.op/.ac, ngspice-45)
+* Emits: s11_msb_32g_db. Zin = Vin/Iin with Iin = (Vsrc - Vin)/(2*Z0); S11 = (Zin-2Z0)/(Zin+2Z0),
+* 2*Z0 = 100 ohm differential. MSB port driven (the binding S11 path). 32 GHz is the spec point.
+.param x_dut_nx=3 x_dut_re=2.5 x_dut_cdeg_ff=20 x_dut_rc=50 x_dut_rb=50
+.param x_dut_vcasc=3.25 x_dut_vcm_in=1.9 x_dut_itail_ma=16 x_dut_vcc=4
+Vcc   vcc   0 DC {x_dut_vcc}
+Vcasc vcasc 0 DC {x_dut_vcasc}
+Vcmb  vcmb  0 DC {x_dut_vcm_in}
+Vblsb blsb  0 DC {x_dut_itail_ma}
+Vbmsb bmsb  0 DC {x_dut_itail_ma}
+XDUT lsbp lsbn msbp msbn outp outn vcc vcasc vcmb blsb bmsb drv_001_pam4_sige_dac
+Rlp outp vcc 50
+Rln outn vcc 50
+Vslsbp slsbp 0 DC {x_dut_vcm_in}
+Vslsbn slsbn 0 DC {x_dut_vcm_in}
+Rslsbp slsbp lsbp 50
+Rslsbn slsbn lsbn 50
+Vsmsbp smsbp 0 DC {x_dut_vcm_in} AC 0.5
+Vsmsbn smsbn 0 DC {x_dut_vcm_in} AC -0.5
+Rsmsbp smsbp msbp 50
+Rsmsbn smsbn msbn 50
+.include dut.spice
+.lib "cornerHBT.lib" hbt_typ
+.options gmin=1e-12 reltol=1e-3
+.control
+op
+ac dec 20 1e8 1e11
+let vidiff = v(msbp)-v(msbn)
+let vsrc  = v(smsbp)-v(smsbn)
+let iin   = (vsrc - vidiff)/100
+let zin   = vidiff/iin
+let s11db = db((zin-100)/(zin+100))
+meas ac s11_msb_32g_db find s11db at=32e9
+print s11_msb_32g_db
+.endc
+.GLOBAL GND
+.end

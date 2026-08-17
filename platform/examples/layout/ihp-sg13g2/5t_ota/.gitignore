@@ -1,0 +1,10 @@
+# regenerable artifacts
+ota_5t.gds
+ota_5t.png
+signoff_out/
+__pycache__/
+*.pyc
+signoff_mn_out/
+*.ext
+ext_ota/
+pex_out/

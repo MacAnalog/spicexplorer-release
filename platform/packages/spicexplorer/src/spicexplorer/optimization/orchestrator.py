@@ -6,7 +6,8 @@ from abc import ABC, abstractmethod
 # Third-party imports
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Dict, Type
+from time import perf_counter
+from typing import Callable, Dict, List, Type
 
 from spicexplorer.core.domains import OptimizerType, Project_Setup
 
@@ -14,6 +15,7 @@ from spicexplorer.core.domains import OptimizerType, Project_Setup
 from spicexplorer_core.spice_engine import Sim_Execution_Type, Simulator
 
 from .base import Base_Optimizer, Spice_Base_Optimizer
+from .sim_benchmark import SimTimeReport, TestbenchSimTiming, benchmark_simulators
 from .simulator_factory import build_simulator, resolve_engine
 from .stochastic.nevergrad import (
     Nevergrad_Spice_Bode_Optimizer,
@@ -231,6 +233,12 @@ class Circuit_Optimizer_Orchestrator_with_SPICE(Circuit_Optimizer_Orchestrator_B
         return circuit_optimizer
 
     def run_sanity_on_spicelib_wrapper(self, use_editor: bool = True)-> bool:
+        # Per-testbench sanity sim times land here (and in the log) so a project's
+        # sim-cost profile is visible from the health check — the follow-on
+        # sim-gating feature reads this to order cheap benches before long ones.
+        self.last_sanity_timings: List[TestbenchSimTiming] = []
+        report = SimTimeReport(timings=self.last_sanity_timings)
+        all_passed = True
         for tb_name, spicelib_wrapper in self.spicelib_wrappers.items():
             # `run_sanity_check` is an ngspice-wrapper extra, not part of the
             # `Simulator` protocol — a backend without one has nothing to sanity-run.
@@ -239,8 +247,52 @@ class Circuit_Optimizer_Orchestrator_with_SPICE(Circuit_Optimizer_Orchestrator_B
                 logger.info(f"backend for testbench {tb_name} has no run_sanity_check; skipping")
                 continue
             logger.info(f"running sanity check on spicelib_wrapper for testbench: {tb_name}")
-            if not checker(use_editor=use_editor, sim_execution_t=Sim_Execution_Type.RUN_NOW):
+            t0 = perf_counter()
+            ok = bool(checker(use_editor=use_editor, sim_execution_t=Sim_Execution_Type.RUN_NOW))
+            elapsed_s = perf_counter() - t0
+            self.last_sanity_timings.append(TestbenchSimTiming(
+                testbench=tb_name, elapsed_s=elapsed_s, ok=ok, mode="sanity"))
+            logger.info(f"⏱️  sanity sim time for testbench '{tb_name}': {elapsed_s:.3f} s")
+            if not ok:
                 logger.warning(f"sanity check failed for spicelib_wrapper for testbench: {tb_name}")
-                return False
+                all_passed = False
+                break
+        if self.last_sanity_timings:
+            logger.info("⏱️  per-testbench sanity sim times:\n" + report.format_table())
+        if not all_passed:
+            return False
         logger.info("HOORAY! sanity check passed for all spicelib_wrappers.")
         return True
+
+    def benchmark_testbenches(
+        self,
+        runs: int = 1,
+        parallel: bool | None = None,
+        timeout_s: float | None = None,
+        save_path: str | Path | None = None,
+    ) -> SimTimeReport:
+        """Benchmark how fast each (enabled) testbench simulates and return the report.
+
+        Runs every wrapper's simulation ``runs`` times at whatever design point /
+        corner its netlist currently carries, timing each testbench individually —
+        in parallel mode each sim is billed its own submit→done span, so the
+        numbers are honest regardless of dispatch mode. Engine-neutral (drives the
+        `Simulator` protocol), so it works on the ngspice and Spectre lanes alike.
+
+        :param runs: repeats per testbench; means are reported (smooths jitter).
+        :param parallel: dispatch mode; ``None`` follows the project's
+            ``parallel_sim`` setting.
+        :param timeout_s: parallel-mode wait bound (``None`` waits forever).
+        :param save_path: when given, the report is persisted there as JSON.
+        """
+        if parallel is None:
+            parallel = bool(getattr(self.project_setup, "parallel_sim", False))
+        logger.info(
+            f"⏱️  benchmarking {len(self.spicelib_wrappers)} testbench(es), "
+            f"runs={runs}, parallel={parallel}")
+        report = benchmark_simulators(
+            self.spicelib_wrappers, runs=runs, parallel=parallel, timeout_s=timeout_s)
+        logger.info("⏱️  per-testbench sim-time benchmark:\n" + report.format_table())
+        if save_path is not None:
+            report.save(save_path)
+        return report

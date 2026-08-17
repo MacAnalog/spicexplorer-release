@@ -57,4 +57,4 @@ variables:
   - {name: "x_dut_xm8o_w", description: "Class-A output PMOS current-source width, voutp side (CMFB-driven gate vb4o; was the core's XM8)", default: "20u", min: "0.15u", max: "100u", unit: "m"}
   - {name: "x_dut_xm8o_l", description: "Class-A output PMOS current-source length, voutp side (was tied to the core's sources_vb4_l)", default: "1u", min: "0.13u", max: "10u", unit: "m"}
   - {name: "x_dut_xm8o_m", description: "XM8O m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
-  - {name: "c_cm", description: "CM-loop compensation cap on the servo output vb4o. 1f = OFF (ihp-sg13g2, whose CMFB sizing is low-gain enough to be damped on its own); the FOUNDRY-n65 binding NEEDS it \u2014 see the COMPENSATION note", default: "1f", min: 0, max: "1n", unit: "F"}
+  - {name: "c_cm", description: "CM-loop compensation cap on the servo output vb4o. 1f = OFF (ihp-sg13g2, whose CMFB sizing is low-gain enough to be damped on its own); a higher-CM-loop-gain binding NEEDS it \u2014 see the COMPENSATION note", default: "1f", min: 0, max: "1n", unit: "F"}

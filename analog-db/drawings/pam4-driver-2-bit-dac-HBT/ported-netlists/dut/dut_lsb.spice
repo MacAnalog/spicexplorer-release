@@ -1,0 +1,17 @@
+* DUT: pam4drv_lsb — 1 LSB cell(s) + 0 MSB cell(s), npn13G2 Nx=3
+.subckt pam4drv_lsb inp inn outp outn vcc vcasc vcmb bias
+* --- cell L0 ---
+XQ1L0 c1L0 inp e1L0 0 npn13G2 Nx=3
+XQ2L0 c2L0 inn e2L0 0 npn13G2 Nx=3
+XQ3L0 outp vcasc c1L0 0 npn13G2 Nx=3
+XQ4L0 outn vcasc c2L0 0 npn13G2 Nx=3
+RE1L0 e1L0 tlsb0 2.5
+RE2L0 e2L0 tlsb0 2.5
+CdegL0 e1L0 e2L0 20f
+GtailL0 tlsb0 0 bias 0 1m
+
+Rcp outp vcc 50
+Rcn outn vcc 50
+Rbinp inp vcmb 50
+Rbinn inn vcmb 50
+.ends pam4drv_lsb

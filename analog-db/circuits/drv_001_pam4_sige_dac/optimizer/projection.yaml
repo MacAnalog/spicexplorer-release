@@ -1,0 +1,39 @@
+# THIN optimizer projection (plan D-3) — the §3 spec tier for the SpiceXplorer platform.
+# dut_params <- pdk/ihp-sg13g2/sizing.yaml (the 8 knobs + frozen VCC); target_specs <-
+# datasheet.yaml `optimize` blocks. `analog-db generate` merges these into the GENERATED
+# project_setup.yaml beside this file (the optimizer-ready artifact). The testbench decks below are
+# the static probe decks under pdk/ihp-sg13g2/testbenches/ (each .include's testbenches/dut.spice).
+extends: ../circuit.yaml
+pdk: ihp-sg13g2
+project:
+  name: PAM4-SIGE-DRIVER · analog-db drv_001
+  description: DB projection of drv_001_pam4_sige_dac — 2-bit PAM-4 SiGe HBT DAC driver sizing in ihp-sg13g2 (§3 spec tier)
+  simulator: ngspice
+  save_sim: false
+  ws_root: pdk/ihp-sg13g2
+  netlist: testbenches/tb_bias.spice
+  outdir: testbenches/temp_spice_out
+  tech_spec:
+    name: ihp-sg13g2
+    # Free-form constraint lookups (as tech_spec.constraints elsewhere). The HBT model-validity
+    # envelope is NOT enforced by the engine — the optimizer config must keep candidates on
+    # characterized territory (feasibility §3.0). is_integer on x_dut_nx + these bounds do that.
+    constraints:
+      min_nx: 1
+      max_nx: 10
+      ic_per_nx_ma: 3            # I_C < 3*Nx mA per device (model validity ceiling)
+      max_tail_ma_per_nx: 6      # tail <= 6*Nx mA per cell (two devices share a tail)
+      vce_max: 2.0               # VBIC valid V_CE 0.4..2.0 V
+      max_vcc: 4.0
+  testbenches:
+    - {name: tb_gain_lsb, netlist: testbenches/tb_gain_lsb.spice, enable: true}
+    - {name: tb_gain_msb, netlist: testbenches/tb_gain_msb.spice, enable: true}
+    - {name: tb_s11,      netlist: testbenches/tb_s11.spice,      enable: true}
+    - {name: tb_s22,      netlist: testbenches/tb_s22.spice,      enable: true}
+    - {name: tb_bias,     netlist: testbenches/tb_bias.spice,     enable: true}
+    - {name: tb_swing,    netlist: testbenches/tb_swing.spice,    enable: true}
+  optimizer_config:
+    type: nevergrad
+    random_seed: 48
+    budget: 1000
+    name: NGOpt

@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<report-database>
+ <description>Main DRC Run Report at</description>
+ <original-file />
+ <generator>drc</generator>
+ <top-cell>t</top-cell>
+ <tags></tags>
+ <categories>
+  <category><name>M1.a</name><description>M1.a : min width</description><categories></categories></category>
+  <category><name>V1.a</name><description>V1.a : via size</description><categories></categories></category>
+ </categories>
+ <cells><cell><name>t</name><variant>t</variant><references></references></cell></cells>
+ <items>
+  <item><category>'M1.a'</category><cell>t</cell><visited>false</visited><multiplicity>1</multiplicity><values><value>edge-pair: (1.5,2.25;1.5,2.75)/(1.7,2.75;1.7,2.25)</value></values></item>
+  <item><category>'M1.a'</category><cell>t</cell><visited>false</visited><multiplicity>1</multiplicity><values><value>edge-pair: (3.5,2.25;3.5,2.75)/(3.7,2.75;3.7,2.25)</value></values></item>
+  <item><category>'V1.a'</category><cell>t</cell><visited>false</visited><multiplicity>1</multiplicity><values><value>polygon: (0.1,0.2;0.3,0.2;0.3,0.4;0.1,0.4)</value></values></item>
+ </items>
+</report-database>

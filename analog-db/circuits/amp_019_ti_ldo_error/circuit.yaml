@@ -22,6 +22,6 @@ artifacts:
   abstract_netlist: abstract/netlist.spice
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
-pdks: [gf180mcu, ihp-sg13g2, sky130, FOUNDRY-n65]
+pdks: [gf180mcu, ihp-sg13g2, sky130]
 analyses: [dc_op, ac_open_loop, ac_closed_loop, noise, tran_step, psrr_vdd, cmrr_vcm, thd, iip3, stb]
 status: draft

@@ -1,0 +1,82 @@
+{
+  "params": {
+    "gap_x": 6.0,
+    "row_gap": 1.6,
+    "cell_gap": 5.0,
+    "nx": 3,
+    "re_ohm": 2.5,
+    "rc_ohm": 50.0,
+    "rb_ohm": 50.0,
+    "cdeg_ff": 20.0,
+    "re_w": 5.05,
+    "rc_w": 1.4,
+    "rb_w": 0.5,
+    "w_m1": 0.4,
+    "w_e": 2.0,
+    "w_out": 1.5,
+    "w_cap_arm": 1.0,
+    "re_gap": 1.2,
+    "tail_gap": 0.8,
+    "tail_h": 1.0,
+    "in_off": 2.2,
+    "in_bus_w": 0.6,
+    "in_bus_gap": 3.0,
+    "input_feed": "center",
+    "in_shield": false,
+    "in_bus_m4": false,
+    "in_bus_layer": "Metal4",
+    "drop_layer": "Metal2",
+    "rb_gap": 1.2,
+    "rb_pitch": 2.4,
+    "vcmb_gap": 1.2,
+    "vcmb_w": 0.8,
+    "sub_off": 1.4,
+    "sub_w": 0.8,
+    "out_off": 2.0,
+    "out_w": 1.64,
+    "out_gap": 8.0,
+    "out_layer": "TopMetal1",
+    "rc_sep": 4.0,
+    "rc_gap": 2.0,
+    "vcc_w": 5.0,
+    "ring_margin": 3.0,
+    "ring_w": 1.0,
+    "stack_w": 1.7
+  },
+  "biases": {
+    "vcc": 4.0,
+    "vcasc": 3.25,
+    "vcmb": 1.9,
+    "tail_ma": 16.0
+  },
+  "area_um2": 7542.0,
+  "drc": true,
+  "lvs": true,
+  "status": "ok",
+  "feasible": false,
+  "viol": {
+    "msb_gain_db": 0.0,
+    "lsb_gain_db": 0.0,
+    "bw_ghz": 0.0,
+    "s11_db": 0.34,
+    "power_mw": 0.0
+  },
+  "viol_total": 0.68,
+  "post": {
+    "lsb": {
+      "s21_lf_db": 2.947,
+      "f3db_ghz": 76.44,
+      "s11_worst_db": -15.34,
+      "power_mw": 190.96
+    },
+    "msb": {
+      "s21_lf_db": 8.917,
+      "f3db_ghz": 56.37,
+      "s11_worst_db": -9.66,
+      "power_mw": 190.96
+    }
+  },
+  "score": 0.98,
+  "trial": -1,
+  "tag": "baseline"
+}

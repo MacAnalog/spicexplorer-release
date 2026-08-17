@@ -1,0 +1,44 @@
+* 5T OTA open-loop AC bench for CO-OPTIMIZATION (amp_001_5t `ac_open_loop` conditions:
+* VDD 1.5, VCM 0.8, IBIAS 20u, CL 50f, sg13g2 mos_tt) — the same bench as ../opt/tb_ac.spice
+* plus the SIZING params the co-optimization searches.
+*
+* The `.param in_w/pld_w/tail_w/…` lines below are what the layout backend rewrites per
+* candidate (flow.yaml `sizing_params:`): they are GLOBAL, so the included DUT subckt's
+* `w={in_w*1e-6}` cards see them. Values are in MICRONS (the generator's sizing units).
+* Post-layout the DUT include is swapped for the extracted subckt and these become inert.
+*
+* Read with the measurement registry: {meas: dcgain|ugf|pm, out: v(vout)} on analysis `ac`.
+.lib cornerMOSlv.lib mos_tt
+.include ota_5t_gf_dut.spice
+
+* ---- sizing (um) — kept in sync with sizing.json; overwritten per candidate ----
+.param in_w   = 0.5
+.param in_l   = 5.0
+.param pld_w  = 1.5
+.param pld_l  = 5.0
+.param tail_w = 2.0
+.param tail_l = 5.0
+.param ref_w  = 2.0
+.param ref_l  = 5.0
+
+* ---- bench conditions ----
+.param VDD = 1.5
+.param VCM = 0.8
+.param IBIAS = 20u
+.param CL = 50f
+.param F_AC_START = 1k
+.param F_AC_STOP = 300MEG
+
+VDD vdd 0 {VDD}
+IB  vdd ibias {IBIAS}
+VIP vinp 0 DC {VCM} AC 0.5
+VIN vinn 0 DC {VCM} AC -0.5
+CL  vout 0 {CL}
+* pins: vdd vout vinp vinn ibias vss
+XDUT vdd vout vinp vinn ibias 0 ota_5t_gf
+* PEX netlists carry dense C-networks; a rough bias guess keeps the op convergence reliable
+.nodeset v(ibias)=0.55 v(vout)=0.8
+
+.op
+.ac dec 101 {F_AC_START} {F_AC_STOP}
+.end

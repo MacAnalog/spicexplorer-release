@@ -1,0 +1,227 @@
+schema: spicexplorer/layout@1
+# ============================================================================
+# FIRST layout entry in the analog-db corpus. It establishes the versioned,
+# per-circuit-per-PDK physical-design convention:
+#
+#     circuits/<circuit>/pdk/<pdk>/layout-<NNN>-<slug>/
+#
+# <NNN> is a monotonic layout revision; <slug> names the physical approach.
+# A circuit-PDK pair may carry several layout-* revisions side by side
+# (e.g. a future inductor-peaked variant would be layout-002-...).
+#
+# The analog-db harness stores this subtree verbatim: verify tiers T0-T2 do
+# not walk it (they validate only named YAML by path), so nothing here is
+# schema-checked or byte-drift-guarded. `analog-db layout <cmd>` drives it via
+# the entry points declared under `generator`/`signoff` below.
+# ============================================================================
+
+layout_id: layout-001-inductorless-cascode
+circuit: drv_001_pam4_sige_dac
+pdk: ihp-sg13g2
+revision: 1
+title: >-
+  Inductorless cascode current-steering PAM-4 DAC — parametric gdsfactory
+  floorplan on IHP SG13G2 SiGe-HBT PCells (center-fed H-tree input).
+status: signed-off        # generated | drc-clean | lvs-clean | signed-off
+
+provenance:
+  source_repo: github.com/JPPhotonics/agentic-design-pam4-driver-ihp130
+  source_path: layout/            # + testbenches/driver_lib.py (vendored here)
+  ported: 2026-08-10
+  note: >-
+    First physical design of this block; the EIC verified reference carried no
+    layout (its layout.gds was a 5-polygon stub). Ported into the versioned
+    circuit entry and re-validated live on ngspice-45 + KLayout + kpex.
+
+# --- toolchain -------------------------------------------------------------
+# The flow needs TWO KLayout builds: the pip `klayout` PYTHON module (gen /
+# DRC / our LVS, via gdsfactory + pdk_runner) AND a KLayout EXECUTABLE built
+# with Ruby >= 2.6 for kpex's internal LVS deck (`model[1..]` endless range).
+requires:
+  python: [gdsfactory>=9, "ihp-gdsfactory==0.2.7", "klayout>=0.30", nevergrad, numpy, pyyaml]
+  binaries:
+    ngspice: ">=45"                 # ngbehavior=hsa mandatory (driver_lib writes .spiceinit)
+    klayout_module: ">=0.30"        # pip klayout: DRC + our LVS + GDS/render
+    kpex: ">=0.3.12"                # klayout-pex 2.5D extraction
+    kpex_klayout_exe: "KLayout built with Ruby>=2.6 (kpex LVS deck)"
+  env:
+    PDK_ROOT: dir containing ihp-sg13g2
+    PDK: ihp-sg13g2
+    KPEX: path to the kpex binary (else resolved from PATH)
+    KPEX_KLAYOUT_EXE: path to the Ruby>=2.6 KLayout exe kpex drives for LVS
+
+# --- generator -------------------------------------------------------------
+generator:
+  module: gen_layout.py
+  entry: "generate(dut, LayoutParams, out_dir) -> {gds, area_um2, cell}"
+  params_class: LayoutParams        # frozen dataclass; every knob is a field
+  cli: "python gen_layout.py --dut {lsb|msb|pam4|all} [--params '<json>'] --out-dir out"
+  duts:
+    lsb:  {cell: pam4drv_lsb_lay,  cells: 1, catalogued: false, role: "LSB weight — 1 gain cell"}
+    msb:  {cell: pam4drv_msb_lay,  cells: 2, catalogued: false, role: "MSB weight — 2 parallel gain cells"}
+    pam4: {cell: pam4drv_pam4_lay, cells: 3, catalogued: true,  role: "combined 2-bit DAC (the catalogued topology)"}
+  emits_per_dut:                    # from the SAME in-memory device records — cannot drift
+    - "dut_<d>.gds"                 # flattened layout (regenerable; gitignored)
+    - "dut_<d>_lvs.spice"           # KLayout-LVS reference (primitive Q/R/C)
+    - "dut_<d>_kpex.spice"          # kpex schematic (3-node rsil, MIM handled separately)
+    - "dut_<d>_sim.spice"           # ngspice X-cards on PDK models (pre-layout)
+
+# --- signoff chain ---------------------------------------------------------
+signoff:
+  drc:
+    tool: klayout
+    runner: signoff.py              # -> pdk_runner/ota_signoff.run_drc
+    deck: "$PDK_ROOT/ihp-sg13g2/libs.tech/klayout/tech/drc/run_drc.py"
+    flags: [--no_density]
+  lvs:
+    tool: klayout
+    runner: signoff.py              # -> pdk_runner/ota_signoff.run_lvs
+    deck: "$PDK_ROOT/ihp-sg13g2/libs.tech/klayout/tech/lvs/run_lvs.py"
+    reference: "out/dut_<d>_lvs.spice"
+  pex:
+    tool: kpex
+    module: pex_sim.py              # run_kpex / characterize / wrap_layout_dut
+    mode: CC                        # 2.5D; RC cross-checked identical (README)
+    mim_workaround: >-
+      kpex's ihp tables have no MIM-cap entry, so the flow strips the MIM
+      device layers, extracts, then re-inserts the intentional Cdeg cap.
+  post_sim:
+    tool: ngspice
+    min_version: 45
+    bench: driver_lib.py            # same power-wave S21/S11/S22 convention as the schematic decks
+
+# --- the co-optimization contract -----------------------------------------
+# The electrical knobs are SHARED with pdk/ihp-sg13g2/sizing.yaml (that file is
+# the single source of truth for their bounds). The layout-aware sizing loop
+# (optimize_cosize.py) searches these AND the floorplan knobs jointly, hard-
+# gated on DRC/LVS, and scored on POST-PEX metrics — so the schematic sizing
+# and the physical floorplan are co-optimized against the extracted design.
+knob_map:
+  # sizing.yaml x_dut_*  ->  LayoutParams field (geometry re-derives from these)
+  electrical_geometry:
+    x_dut_nx:      nx
+    x_dut_re:      re_ohm
+    x_dut_rc:      rc_ohm
+    x_dut_rb:      rb_ohm
+    x_dut_cdeg_ff: cdeg_ff
+  # sizing.yaml x_dut_*  ->  bench operating point (biases=, NOT geometry)
+  electrical_bias:
+    x_dut_itail_ma: tail_ma
+    x_dut_vcasc:    vcasc
+    x_dut_vcm_in:   vcmb
+    x_dut_vcc:      vcc
+  # layout-only search knobs (LayoutParams fields, um); bounds = optimize_layout.BOUNDS
+  floorplan:
+    gap_x:    {min: 6.2, max: 10.0}   # differential-pair gap (Cdeg + clearances)
+    row_gap:  {min: 1.0, max: 4.0}    # input row <-> cascode row
+    cell_gap: {min: 4.0, max: 9.0}    # cell pitch (msb/pam4)
+    re_gap:   {min: 0.8, max: 3.0}
+    out_off:  {min: 1.2, max: 5.0}    # substrate bus -> output buses
+    out_gap:  {min: 1.8, max: 5.0}    # outp <-> outn bus gap
+    out_w:    {min: 2.0, max: 5.0}    # output bus width (TopMetal1)
+    w_out:    {min: 1.5, max: 4.0}    # output riser width (Metal2)
+    in_off:   {min: 1.0, max: 4.0}
+    rc_sep:   {min: 8.0, max: 20.0}
+    sub_off:  {min: 1.0, max: 3.0}
+    re_w:     {min: 4.5, max: 8.0}    # RE rsil width (length re-derives; l>=0.5um floor)
+    rc_w:     {min: 1.0, max: 3.0}
+    rb_w:     {min: 0.5, max: 1.5}
+
+# --- recorded signed-off design point --------------------------------------
+# The FINAL point committed in gen_layout.FINAL_LAYOUT / FINAL_BIASES.
+signed_off_point:
+  layout_params:            # = gen_layout.FINAL_LAYOUT
+    nx: 3
+    rc_ohm: 50.0
+    rb_ohm: 48.0
+    re_ohm: 3.2
+    cdeg_ff: 16.0
+    re_w: 4.5
+    out_gap: 8.0
+    out_w: 1.64
+    w_out: 1.5
+    rc_sep: 4.0
+    stack_w: 1.7
+    input_feed: center
+    in_bus_gap: 3.0
+    in_off: 2.2
+    in_bus_layer: Metal4
+    gap_x: 6.0
+    cell_gap: 5.0
+    drop_layer: Metal2
+  biases:                   # = gen_layout.FINAL_BIASES
+    vcc: 4.0
+    vcasc: 3.35
+    vcmb: 1.9
+    tail_ma: 15.0
+  # Full 8-spec post-layout table as REPORTED by the source-repo signoff
+  # (notebook 03, driver_lib benches on the kpex-CC post-layout netlist,
+  # 2026-08-09). ALL 8 specs pass. Re-validation here: see `verified_here`.
+  reported_2026_08_09:
+    pex_mode: CC
+    corner: tt
+    lsb_gain_db: 2.27
+    msb_gain_db: 8.25
+    dac_weight_db: 5.98
+    bw_ghz: 58.8
+    s11_db: -10.03
+    s22_db: -10.14
+    swing_vpp: 2.21
+    power_mw: 179
+    area_um2_pam4: 7552
+    drc: pass
+    lvs: pass
+  # Live re-run in THIS analog-db entry (2026-08-10, ngspice-45 + KLayout +
+  # kpex-CC). gen area, DRC/LVS, and the pex_sim.characterize metrics
+  # (S21/BW/S11/power on the msb+lsb drives) reproduce the reported point to
+  # the last digit; S22/swing/eye are the notebook-03 driver_lib benches (not
+  # in pex_sim.characterize) — their reported values stand.
+  verified_here:
+    date: 2026-08-10
+    pex_mode: CC
+    corner: tt
+    area_um2_pam4: 7552            # gen: 27 devices, bbox 99.6 x 75.8 um
+    drc: pass
+    lvs: pass
+    post_layout:
+      msb: {s21_lf_db: 8.249, bw_ghz: 58.76, s11_worst_db: -10.03, power_mw: 179.07}
+      lsb: {s21_lf_db: 2.273, bw_ghz: 78.89, s11_worst_db: -15.60, power_mw: 179.07}
+    dac_weight_db: 5.98
+    n_parasitics: 131
+    matches_reported: true
+
+# --- the layout-aware sizing loop: co-optimization study -------------------
+# optimize_cosize.py searches the SHARED sizing knobs (../sizing.yaml) against
+# the POST-EXTRACTION metrics, DRC/LVS-gated. Live sweeps on the pam4 DUT
+# (ngspice-45 + KLayout + kpex-CC); the recorded run is cosize_out/.
+co_opt_study:
+  driver: optimize_cosize.py
+  dut: pam4
+  recorded_run: {search: electrical, knobs: "x_dut_re,x_dut_cdeg_ff,x_dut_itail_ma,x_dut_vcasc", budget: 14}
+  finding: >-
+    Post-layout extraction reveals the golden SCHEMATIC sizing is INFEASIBLE on
+    input return loss — msb S11 = -9.66 dB vs the <=-10 dB spec (every other
+    spec passes). The violation is invisible at the schematic level; it only
+    appears after kpex. This is the case for a layout-AWARE sizing loop.
+  feasible_region: >-
+    Narrow, and straddling two competing specs. Raising R_E lowers S11 (it
+    shrinks the effective input C) but also drops the gain: a recorded trial at
+    high R_E reached S11 = -11.69 dB (pass) with gain collapsed to 4.9 dB
+    (fail). The feasible band (S11 <= -10 AND gain >= 8.2) sits at R_E ~= 3.2
+    ohm — exactly the manual RF-review point in `signed_off_point` (S11 -10.03,
+    gain 8.25, each within ~0.05 dB of spec), which THIS flow reproduces.
+  drc_constraint: >-
+    Many candidate sizings map to DRC-illegal layouts at a fixed floorplan (high
+    signoff_fail rate), further narrowing the reachable feasible set — the
+    optimizer only ever trades legal, extracted designs.
+  live_runs:                # budget = evaluations; none converged in this budget
+    - {search: joint,      searched_knobs: 14, budget: 12, converged: false}
+    - {search: electrical, searched_knobs: 7,  budget: 12, converged: false}
+    - {search: electrical, searched_knobs: 4,  budget: 14, converged: false, recorded: true}
+  takeaway: >-
+    A tight feasible region straddling S11 <-> gain, gated by DRC, is the regime
+    where the penalty->reward landscape SHAPE governs whether a black-box search
+    finds the needle — the score-shaping question this case study exists to
+    study. Naive weights at a modest live budget did not converge; the needle is
+    known (`signed_off_point`) and flow-reproducible. The infrastructure to close
+    the loop live — gen -> DRC/LVS -> kpex -> post-AC scoring — is in place.

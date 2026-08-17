@@ -30,7 +30,6 @@ artifacts:
 pdks:
 - sky130
 - gf180mcu
-- FOUNDRY-n65
 - ihp-sg13g2
 analyses:
 - ac_open_loop

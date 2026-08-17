@@ -15,7 +15,7 @@ provide Iload/COUT). The divider is 10× the upstream 900 Ω (67 µA instead of 
 - `gf180mcu` binding added via `analog-db add-binding --from ihp-sg13g2` (untuned transfer; T3/T4 sim-smoke passes).
 - **Analyses:** the full 9-bench ldo set (dc_op, load/line regulation, dropout, PSRR,
   loop_stability, tran load/line steps, output noise).
-- **Reference bindings:** original FOUNDRY 28 nm + 65 nm ferrosim decks under `spectre/`.
+- **Reference bindings:** original proprietary-PDK 28 nm + 65 nm ferrosim decks under `spectre/`.
 - **Structure:** `find_subcircuits` → `dp.nmos.simple` (XMDR/XMDF), `cm.nmos.simple`
   (XMNB→XMNT), `cm.pmos.simple` (XMLD→XMLM).
 

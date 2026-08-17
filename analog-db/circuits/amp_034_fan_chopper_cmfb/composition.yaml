@@ -58,7 +58,7 @@ notes: >-
   psrr_cm_corr_db must clear amp_026's +10.4 / -2.4 dB by the CM loop gain.
 
   COMPENSATION ({c_cm} on vb4o) — a REQUIREMENT that emerged from measurement, not a
-  trim. The 2026-08-05 role-based gm/ID re-size of cmfb_002's FOUNDRY-n65 binding raised the
+  trim. The 2026-08-05 role-based gm/ID re-size of cmfb_002 raised the
   CM loop gain ~8.7x (static CM error 33.6 -> 3.9 mV, servo current 54 -> 9 uA) and that
   gain made the loop OSCILLATE: 70 mV p-p on vocm, undecayed across every octant of the
   20 us tran window — including 0-2 us, BEFORE the disturbance is applied. dc_op
@@ -101,13 +101,4 @@ sizing:
     # in the generated _dut.spice (the tie line, emitted later, wins anyway). Size the pair
     # through x_dut_xm8o_*; dissolve the tie first if the two ever need to differ.
     - {name: x_dut_xm8o_m, description: "XM8O m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
-    - {name: c_cm, description: "CM-loop compensation cap on the servo output vb4o. 1f = OFF (ihp-sg13g2, whose CMFB sizing is low-gain enough to be damped on its own); the FOUNDRY-n65 binding NEEDS it — see the COMPENSATION note", default: 1f, min: 0, max: 1n, unit: F}
-  # PER-PDK refinements. A composite-owned device is REAL geometry, and the block it was
-  # lifted out of is sized per PDK — amp_026's output PMOS is 20u on ihp-sg13g2 (hand-seeded)
-  # but 11.257u on FOUNDRY-n65 (optimizer campaign), with vb4 0.55 vs 0.786. One shared default
-  # would silently carry the ihp numbers into the FOUNDRY kit.
-  by_pdk:
-    FOUNDRY-n65:
-      - {name: x_dut_xm8o_w, default: 11.257u}
-      - {name: c_cm, description: "REQUIRED on FOUNDRY-n65, not a trim: the 2026-08-05 role-based cmfb_002 re-size raised the CM loop gain ~8.7x (that is what cut the static CM error 33.6 -> 3.9 mV) and the loop went UNSTABLE — 70 mV p-p sustained, undecayed in every octant of the 20 us window INCLUDING before the kick. dc_op and ac_open_loop reported a clean point the circuit does not hold. 1p is the stability knee; 5p is ~5x past it and settles FASTER than the uncompensated carry-over (t_cm_settle 0.41 vs 0.91 us)", default: 5p}
-      - {name: vcm_ref, description: "Commanded output common-mode reference into the CMFB (composite-owned). 0.6 V = mid-rail: unlike ihp, the FOUNDRY-n65 binding runs pch_lvt, whose lower |Vth| leaves the CMFB's PMOS input pair enough tail headroom at a 0.6 V sensed CM", default: 0.6}
+    - {name: c_cm, description: "CM-loop compensation cap on the servo output vb4o. 1f = OFF (ihp-sg13g2, whose CMFB sizing is low-gain enough to be damped on its own); a higher-CM-loop-gain binding NEEDS it — see the COMPENSATION note", default: 1f, min: 0, max: 1n, unit: F}

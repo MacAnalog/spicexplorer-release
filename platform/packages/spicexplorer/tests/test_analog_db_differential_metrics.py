@@ -197,7 +197,7 @@ def test_differential_view_delegates_scalars_on_the_protocol_signature():
     open PDKs never noticed — but the SimResult PROTOCOL declares ``scalar(name, analysis)``
     and Spectre implements exactly that, so on the licensed lane every scalar read of a
     fully-differential cell raised TypeError and was recorded as NaN: i_supply (hence
-    power), vos and t_settle went missing on 8 FOUNDRY-n65 amplifiers while the AC metrics
+    power), vos and t_settle went missing on 8 Spectre-routed amplifiers while the AC metrics
     beside them looked healthy.
     """
 
@@ -240,7 +240,7 @@ def test_noise_iprobe_follows_the_testbench_template(template, expected):
     class bench hardcoded `IPROBE: VINP`, so on those cells Spectre referred the noise to an
     instance that did not exist: it produced no input-referred density and `inoise_total` came
     back NaN, while the analysis still reported status ok. That silent shape hid a missing
-    noise measurement on 16 FOUNDRY-n65 amplifiers until someone read the published table.
+    noise measurement on 16 Spectre-routed amplifiers until someone read the published table.
     """
     from spicexplorer.backends.analog_db import _spectre_context
 

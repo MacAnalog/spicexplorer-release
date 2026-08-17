@@ -21,7 +21,7 @@ Some decks are noted upstream as **"ported from `circuit-bench`"** (the `ferrosi
 - Each upstream family became a **`circuits/ferrosim_<name>/` reference circuit** (`kind: reference`, plan D-9) — **not** a verifiable open-PDK circuit. The harness runs a reference-only Tier-0 (schema + provenance + deck-exists) and **skips T1–T4** (no lowering, no simulation here).
 - The upstream directory layout for each family is **preserved verbatim** under the binding dir (`spectre/<node>/…`) so relative `include` paths stay intact (`netlist/dut|tb|runs/`, `netlists/`, `variants/`, monolithic ported decks).
 - **Proprietary foundry paths are stubbed** as `${PDK_ROOT}` / `${CADENCE_ROOT}` / `${PROJECT_VA_ROOT}` placeholders (as received from the netlist-crawler vendored copy). No PDK is vendored.
-- **Node labels:** the structured families and the SPICE-model decks originate from a **FOUNDRY 28 nm** project (`crn28ull` / `tcbn28…` includes, `*_mac` device cards) → `node: 28nm`; the `decks/ported/*_65.scs` variants → `node: 65nm`; the process-agnostic **Verilog-A primitive demos** (`va_demo`, `va_decl_init`) carry no node (`spectre/va`). Node is a best-effort label, not a foundry assertion.
+- **Node labels:** the structured families and the SPICE-model decks originate from a **proprietary-PDK 28 nm** project (`crn28ull` / `tcbn28…` includes, `*_mac` device cards) → `node: 28nm`; the `decks/ported/*_65.scs` variants → `node: 65nm`; the process-agnostic **Verilog-A primitive demos** (`va_demo`, `va_decl_init`) carry no node (`spectre/va`). Node is a best-effort label, not a foundry assertion.
 
 ## The 30 imported circuits (122 decks)
 
@@ -67,7 +67,7 @@ the flat `circuits/ferrosim_*` namespace (in addition to the 9 topologies promot
 `amp_*/buf_*/cmp_*/dp_*/gs_*/ldo_*` accessions on the 2026-07-05 triage). Current homes:
 
 **Folded into a topology-first accession**
-- `ferrosim_amp5t` → its FOUNDRY-28 nm decks now live under
+- `ferrosim_amp5t` → its proprietary-PDK 28 nm decks now live under
   [`circuits/amp_001_5t/spectre/28nm/`](../../circuits/amp_001_5t/spectre/28nm) as an extra
   `references` binding. `AMP_5T_D2S` is the **same topology** as `amp_001_5t`, so a separate
   accession would duplicate a topology (the registry is topology-first). The standalone

@@ -201,7 +201,7 @@ expressions:
   # emits them — `pm_loop` / `ugf_loop` / `gm_loop` / `loopgain_db`. This row was called
   # `gm_loop_db` (the datasheet METRIC id, not its meas) and no datasheet ever asked for
   # that name, so `gm_loop` fell through to the Tier-1 registry — which spells it
-  # `gain_margin_db` — and raised KeyError: 'gm_loop' -> NaN on all 32 FOUNDRY-n65 amps while
+  # `gain_margin_db` — and raised KeyError: 'gm_loop' -> NaN on all 32 Spectre-routed amps while
   # the bench still reported status ok. `ugf_loop` had no row at ALL (same KeyError). Keep
   # these keyed by the MEAS name, never the metric id.
   gm_loop:
@@ -211,7 +211,7 @@ expressions:
       loop gain margin (dB) at the -180 deg phase crossing — matches the registry
       gain_margin_db to 4 digits live. NaN when the loop phase never reaches -180 inside
       the swept band, which is a REAL property of a dominant-pole-compensated loop, NOT a
-      plumbing failure: once bound, the FOUNDRY-n65 tt corpus reads finite on 17 of the 24
+      plumbing failure: once bound, the Spectre tt corpus reads finite on 17 of the 24
       measurable cells (1.15 .. 62.12 dB) and NaN on 7 (amp_001/002/004/008/017/018/021).
       Those 7 are honest NaNs — do not backfill them with a sentinel.
   ugf_loop:
@@ -226,17 +226,17 @@ expressions:
       ~1e-4 relative.
       CROSSING CONVENTION — this is the FIRST 0 dB crossing (the one Spectre's own
       phaseMargin is evaluated at), whereas the ngspice stb template deliberately takes the
-      LAST (highest-frequency) one. They coincide on 23 of the 24 FOUNDRY-n65 cells this bench
+      LAST (highest-frequency) one. They coincide on 23 of the 24 Spectre-routed cells this bench
       can measure (single crossing; independently re-derived PM at that crossing matches
       pm_loop to <0.005 deg on all 23). The exception is amp_002_alfio_raffc AT ITS
-      FOUNDRY-n65 SIZING, which is CONDITIONALLY STABLE: |T| falls through 0 dB at 2.2597 MHz,
+      closed-lane SIZING, which is CONDITIONALLY STABLE: |T| falls through 0 dB at 2.2597 MHz,
       rises back to +10.29 dB, and finally crosses at 5.7358 MHz where the margin is
       -91.49 deg. So its recorded pm_loop/ugf_loop (65.51 deg @ 2.26 MHz) describe the
       FIRST crossing and do NOT flag that hazard — the ngspice convention would report the
       -91.5 deg. Keep pm_loop and ugf_loop on the SAME convention (both native): a UGF
       taken at a different crossing than the PM is a worse lie than either alone. The other
       three PDK lanes cross once on this cell (pm_loop 68.5/84.4/75.1 ~= their AC pm), so
-      the peaking is a property of the FOUNDRY-n65 sizing, not of the topology. Flagged for
+      the peaking is a property of that sizing, not of the topology. Flagged for
       review rather than silently re-conventioned.
   loopgain_db:
     result: stb

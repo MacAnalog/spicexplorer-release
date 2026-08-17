@@ -1,7 +1,7 @@
 # gm/ID LUT store — regenerable, out-of-repo
 
 The gm/ID lookup tables are **not committed** (they are large regenerable artifacts, and the
-FOUNDRY-n65 tables come from a licensed kit). The canonical store lives **out-of-repo** at
+Spectre-lane tables come from a licensed kit). The canonical store lives **out-of-repo** at
 `gmid.out_root` (default `~/.spicexplorer/gmid/<pdk>/`), laid out
 `<device>__<corner>[__<T>C].pkl` + `.manifest.json`.
 
@@ -10,12 +10,12 @@ FOUNDRY-n65 tables come from a licensed kit). The canonical store lives **out-of
 ```bash
 python tools/regen_gmid_luts.py                 # everything the environment can build
 python tools/regen_gmid_luts.py --pdk sky130    # one PDK (all devices × corners)
-python tools/regen_gmid_luts.py --open-only     # skip the licensed Spectre (FOUNDRY-n65) lane
+python tools/regen_gmid_luts.py --open-only     # skip the licensed Spectre lane
 ```
 
 - **Open PDKs** (sky130 / ihp-sg13g2 / gf180mcu) → native ngspice + `$PDK_ROOT` (per-L parallel).
-- **FOUNDRY-n65** → headless Spectre via the virtuoso-bridge (licensed kit; needs the operator wrapper
-  `$SPICEXPLORER_FOUNDRY_N65_MODEL_ROOT/<corners.lib_file>` and the bridge `local.env`).
+- **Spectre-routed kits** → headless Spectre via the virtuoso-bridge (licensed kit; needs the operator wrapper
+  `$SPICEXPLORER_SPECTRE_MODEL_ROOT/<corners.lib_file>` and the bridge `local.env`).
 
 ## Reading a LUT
 
@@ -37,6 +37,6 @@ Max-fidelity grid (25 mV VGS/VDS, ~11 VSB points to VDD/2, W = 5 µm), all 5 cor
 | sky130 | `…nfet_01v8`, `…pfet_01v8` | ngspice |
 | ihp-sg13g2 | `sg13_{lv,hv}_{nmos,pmos}` | ngspice |
 | gf180mcu | `nfet_03v3`, `pfet_03v3` | ngspice |
-| FOUNDRY-n65 | `nch_lvt`, `pch_lvt` (SVT `nch`/`pch` + HVT `nch_hvt`/`pch_hvt` once the wrapper exposes them) | Spectre |
+| *(licensed Spectre kit)* | the kit's LVT/SVT/HVT core devices, per its registry `gmid.devices` block | Spectre |
 
 Full details, grid rationale, and the pygmid LUT format: [`../GMID.md`](../GMID.md).

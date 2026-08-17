@@ -66,7 +66,7 @@ variables:
   default: 277416.87924876553
 
 # Per-PDK re-bias (platform convention: analyses params are the AUTHORED operating point;
-# per-PDK deltas live here — pattern: pdk/FOUNDRY-n65/sizing.yaml).
+# per-PDK deltas live here — pattern: pdk/<pdk>/sizing.yaml).
 # amp_017 is authored on a 1.8 V rail (sky130/gf180). ihp-sg13g2 is a 1.5 V lv kit, so the
 # authored 1.8 V would overstress the lv devices. Re-biased to the kit rail; VCM picked by a
 # coarse dc sweep at VDD=1.5 (see port session 2026-08-03).

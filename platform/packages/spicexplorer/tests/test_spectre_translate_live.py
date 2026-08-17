@@ -1,8 +1,8 @@
-"""LIVE translate→compose→Spectre round-trip (opt-in; needs Cadence + FOUNDRY models).
+"""LIVE translate→compose→Spectre round-trip (opt-in; needs Cadence + a licensed kit).
 
 The committed IHP ngspice 5T-OTA
-testbench is translated (`deck_spec_from_ngspice`: dialect emitters + FOUNDRY-65
-device-model mapping), parameters are injected at the FOUNDRY operating point
+testbench is translated (`deck_spec_from_ngspice`: dialect emitters + 65 nm
+device-model mapping), parameters are injected at the kit operating point
 (vdd 1.5→1.2, vcm 0.8→0.6), the corner is applied through `apply_corner`
 (the self-contained *corner* section, never the raw device section), and
 the composed per-run `.scs` runs through the bridge.
@@ -10,7 +10,7 @@ the composed per-run `.scs` runs through the bridge.
 Opt-in gating (all, or the test skips):
 
 * ``virtuoso_bridge`` importable in this venv;
-* ``SPICEXPLORER_FOUNDRY65_MODELS`` — absolute path to the FOUNDRY-65 Spectre model library
+* ``SPICEXPLORER_SPECTRE_MODELS`` — absolute path to the licensed Spectre model library
   `.scs` (NDA: lives only in the env / local config, never in the repo);
 * ``SPICEXPLORER_VB_ENV_FILE`` (optional) — bridge profile pin, e.g.
   ``~/.virtuoso-bridge/local.env`` on a Cadence host.
@@ -26,12 +26,12 @@ import pytest
 
 pytestmark = pytest.mark.slow
 
-_MODELS = os.environ.get("SPICEXPLORER_FOUNDRY65_MODELS", "")
+_MODELS = os.environ.get("SPICEXPLORER_SPECTRE_MODELS", "")
 
 
 @pytest.mark.skipif(
     not (_MODELS and Path(_MODELS).expanduser().is_file()),
-    reason="set SPICEXPLORER_FOUNDRY65_MODELS to the FOUNDRY-65 Spectre model library .scs",
+    reason="set SPICEXPLORER_SPECTRE_MODELS to the licensed Spectre model library .scs",
 )
 def test_live_translated_deck_runs_with_injected_params_and_corner(tmp_path: Path) -> None:
     pytest.importorskip("virtuoso_bridge", reason="virtuoso-bridge not installed in this venv")
@@ -49,7 +49,7 @@ def test_live_translated_deck_runs_with_injected_params_and_corner(tmp_path: Pat
 
     spec = deck_spec_from_ngspice(
         example,
-        pdk="FOUNDRY-n65",
+        pdk="generic-n65",
         source_pdk="ihp-sg13g2",
         analyses=(dc_oppoint_analysis(), ac_analysis(1e3, 1e8, 101)),
         parameters={"vcm": 0.6},  # construction-time injection
@@ -61,7 +61,7 @@ def test_live_translated_deck_runs_with_injected_params_and_corner(tmp_path: Pat
         deck_dir=tmp_path,
         vb_env_file=Path(env_file).expanduser() if env_file else None,
     )
-    # run-time injection through the protocol seam: the FOUNDRY-65 corner + supply
+    # run-time injection through the protocol seam: the closed-lane corner + supply
     sim.apply_corner(
         Corner(
             name="tt_27C_1V20",

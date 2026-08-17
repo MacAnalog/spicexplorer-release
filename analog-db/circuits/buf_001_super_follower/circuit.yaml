@@ -1,7 +1,7 @@
 # ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
 # PROMOTED from the ferrosim_source_follower reference entry: authored a device-generic abstract
 # netlist + open-PDK bindings so the feedback (super) source follower is lowerable, assembled and
-# simulated. The original FOUNDRY 28nm/65nm ferrosim decks are retained under `references`.
+# simulated. The original proprietary-PDK 28/65 nm ferrosim decks are retained under `references`.
 schema: spicexplorer/circuit@1
 id: buf_001_super_follower
 class: buffer

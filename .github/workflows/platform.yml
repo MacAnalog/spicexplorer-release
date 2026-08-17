@@ -26,6 +26,12 @@ jobs:
           - spicexplorer-waveview
           - spicexplorer-api
           - spicexplorer-gmid
+          - spicexplorer-netlist2tf
+          # layout/signoff run their OFFLINE tier here: the gdsfactory/klayout
+          # `gds` extra is opt-in and the DRC/LVS/PEX executables are discovered
+          # at run time, so both import and test on a bare runner.
+          - spicexplorer-layout
+          - spicexplorer-signoff
     steps:
       - uses: actions/checkout@v5
       - name: platform unit ported yet?

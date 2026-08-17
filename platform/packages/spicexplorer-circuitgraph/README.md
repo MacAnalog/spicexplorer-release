@@ -44,7 +44,7 @@ post-emit invariant: as many distinct nets out as in, or `ValueError` (case-only
 exempt — SPICE resolves node names case-insensitively, so `VOUT`/`vout` *are* one node).
 MOS multiplicity is emitted as `m=` VERBATIM
 (`multi` stays a read-side alias only — Spectre silently IGNORES `multi=` on model-card MOS,
-proven live on KIT65 2026-07-17: `m=4` quadruples id/gm, `multi=4` does nothing).
+proven live on a 65 nm kit 2026-07-17: `m=4` quadruples id/gm, `multi=4` does nothing).
 **Numeric values are resolved, not copied:** SPICE scale factors are case-INsensitive with `M`=milli,
 Spectre's are case-sensitive with `M`=mega and no `U`/`P` at all, so the Spectre lane renders every
 suffixed token as a plain literal (`w=1U` → `w=1e-06`; passing `1U` through meant *one metre*, `1P`
@@ -58,10 +58,10 @@ an isomorphic graph. A black-box graph (`recurse=False`) has no definition body 
 lines only, as before. Design: meta `doc/plan_spectre_hspice_integration.md`.
 
 **Whole-deck translation (2026-07-05, virtuoso-bridge P2 syntax half):**
-`translate_ngspice_to_spectre(netlist, pdk="FOUNDRY-n65", source_pdk="ihp-sg13g2")` turns an
+`translate_ngspice_to_spectre(netlist, pdk="generic-n65", source_pdk="ihp-sg13g2")` turns an
 ngspice testbench deck into composition-ready Spectre blocks (`TranslatedDesign`: DUT
 `subckt` blocks, top-level stimulus, numeric-normalized lowercase parameter defaults,
-explicit `GND`→0 tie sources; stimulus source values map `dc`/`ac`/`pulse(...)`/`sin(...)` → `vsource dc=`/`mag=`/`type=pulse`/`type=sine`, added with the analog-db bench validation 2026-07-09; the `ac <mag>` marker emits BOTH `mag=` and `pacmag=` so one deck stimulus serves static `ac` AND periodic `pac` analyses (P3-2c; `pacmag` must be ≥0, so a negative marker rides `pacmag=|v| pacphase=180` — CMI-2048, live 2026-07-17); a 0 V source named `VIPRB*` is the loop-probe MARKER and emits as the Spectre `iprobe` primitive — the `stb … probe=` target — with a non-zero/stimulated `VIPRB` rejected rather than silently lost, 2026-07-10) — handling device-model retargeting (the `FOUNDRY_N65` device
+explicit `GND`→0 tie sources; stimulus source values map `dc`/`ac`/`pulse(...)`/`sin(...)` → `vsource dc=`/`mag=`/`type=pulse`/`type=sine`, added with the analog-db bench validation 2026-07-09; the `ac <mag>` marker emits BOTH `mag=` and `pacmag=` so one deck stimulus serves static `ac` AND periodic `pac` analyses (P3-2c; `pacmag` must be ≥0, so a negative marker rides `pacmag=|v| pacphase=180` — CMI-2048, live 2026-07-17); a 0 V source named `VIPRB*` is the loop-probe MARKER and emits as the Spectre `iprobe` primitive — the `stb … probe=` target — with a non-zero/stimulated `VIPRB` rejected rather than silently lost, 2026-07-10) — handling device-model retargeting (the `GENERIC_N65` device
 table; names only, no foundry content), parameter-symbol case-folding (spicelib uppercases
 `.param` names; Spectre is case-sensitive), and symbolic passive values — both quoted
 (`'x_c'`, the ngspice quote-expression twin of `{…}`) and braced; symbolic `.param`
@@ -69,7 +69,7 @@ tie/ratio exprs (`{x_a*17/3}`) reach the Spectre parameter namespace as parenthe
 expressions (Spectre rejects braces; keeping them symbolic keeps the tie LIVE under
 per-candidate injection — SFE-874). Analyses/corners
 are deliberately NOT translated — the optimizer's `spicexplorer.backends.spectre_deck`
-composes them (P0 deck contract). Live-validated on FOUNDRY-65 Spectre 2026-07-05
+composes them (deck contract). Live-validated on 65 nm Spectre 2026-07-05
 (meta `doc/plan_virtuoso_bridge.md` P2).
 
 **Controlled sources (2026-07-16, `feat/circuitgraph-controlled-sources`):** the linear 4-terminal
@@ -406,8 +406,8 @@ Top-level: `CircuitGraph`, `CircuitGraphDoc` (+ `NetModel`/`ComponentModel`/`Por
 `SubcktInstanceNode`, `SubcktPort`, `SubcktPortRole`, `to_netlist` + the dialect emitter family
 (`NetlistDialect` re-export, `NetlistEmitter`/`BaseNetlistEmitter`/`SpiceEmitter`/`SpectreEmitter`/`HspiceEmitter`),
 the PDK map
-(`Pdk`/`PdkDevice`/`IHP_SG13G2`/`SKYWATER_SKY130`/`GF180MCU`/`ANALOGGYM_FOUNDRY`/`FOUNDRY_N65`/`get_pdk`/`mos_flavor` — `ANALOGGYM_FOUNDRY`
-and `FOUNDRY_N65` are device-**name** maps (the latter is the `translate_ngspice_to_spectre` retarget table for `FOUNDRY-n65`), no foundry content;
+(`Pdk`/`PdkDevice`/`IHP_SG13G2`/`SKYWATER_SKY130`/`GF180MCU`/`ANALOGGYM_REF`/`GENERIC_N65`/`get_pdk`/`mos_flavor` — `ANALOGGYM_REF`
+and `GENERIC_N65` are device-**name** maps (the latter is the `translate_ngspice_to_spectre` retarget table), no foundry content;
 `PdkDevice` carries a `flavor` (threshold/voltage class, e.g. `"hv"`) and `to_netlist(pdk=…)` retargets each MOS by
 `(polarity, flavor)` — the abstract token `nmos`/`nmos_hv` picks the flavor via `mos_flavor`, so ONE DUT can bind two
 NMOS/PMOS flavors; an unflavored token keeps the byte-identical core-device behavior), `get_port_spec`, serialization

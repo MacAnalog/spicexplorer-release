@@ -1,7 +1,7 @@
 # ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
 # PROMOTED from the ferrosim_ldo_sample reference entry: authored a device-generic abstract
 # netlist + open-PDK bindings so the 5T-OTA + PMOS-pass LDO is lowerable, assembled and
-# simulated. The original FOUNDRY 28nm deck (with its Verilog-A behavioral bandgap, va_vref) is
+# simulated. The original proprietary-PDK 28 nm deck (with its Verilog-A behavioral bandgap, va_vref) is
 # retained under `references`. The va_vref reference is REPLACED by an ideal internal source
 # with the same 10 kohm output resistance (x_vref_val + x_rref), and the external bias is
 # internalized — the entry follows the ldo class's self-contained 3-port convention.

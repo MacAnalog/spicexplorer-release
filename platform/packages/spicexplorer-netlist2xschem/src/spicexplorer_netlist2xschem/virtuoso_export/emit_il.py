@@ -171,7 +171,7 @@ def _si(value: float) -> str:
 
 def _apply_per_finger(rule: DeviceRule, attrs: dict[str, str], params: dict[str, str]) -> str | None:
     """Divide a TOTAL-width attribute by the finger count before it reaches a PER-FINGER CDF
-    parameter (``rule.per_finger`` — e.g. IHP xschem ``w`` is total, FOUNDRYN65 CDF ``w`` is
+    parameter (``rule.per_finger`` — e.g. IHP xschem ``w`` is total, a kit CDF ``w`` is often
     per-finger). Mutates ``params``; returns a warning when the division is needed but
     impossible (symbolic values), in which case the width parameter is dropped rather than
     silently netlisting at ``fingers ×`` its intended size."""

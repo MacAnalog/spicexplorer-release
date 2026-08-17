@@ -61,7 +61,7 @@ describe("shortPdk", () => {
     expect(shortPdk("sky130")).toBe("sky130");
   });
   it("drops unknown PDKs", () => {
-    expect(shortPdk("FOUNDRY65")).toBeNull();
+    expect(shortPdk("unknown-pdk")).toBeNull();
   });
 });
 
@@ -85,7 +85,7 @@ describe("adaptCircuit", () => {
       compensation: null,
       stages: null,
       provenance: {},
-      pdks: ["sky130", "FOUNDRY65"],
+      pdks: ["sky130", "unknown-pdk"],
     });
     expect(c.comp).toBe("none");
     expect(c.stages).toBe(0);

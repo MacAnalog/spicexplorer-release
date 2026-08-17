@@ -1,8 +1,8 @@
 # ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
 # PROMOTED from the sfe_ptat_65_classic reference entry: authored a device-generic abstract
 # netlist + open-PDK bindings so the resistorless 4T PTAT cell is lowerable, assembled and
-# simulated. The original FOUNDRY 65nm spectre deck is retained under `references` (it must PARSE
-# but is never simulated here — no FOUNDRY models in this repo).
+# simulated. The original proprietary-PDK 65 nm spectre deck is retained under `references` (it must PARSE
+# but is never simulated here — no foundry models in this repo).
 schema: spicexplorer/circuit@1
 id: tsn_003_ptat_4t_xcoupled
 class: temp_sensor

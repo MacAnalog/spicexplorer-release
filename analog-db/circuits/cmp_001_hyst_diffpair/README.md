@@ -15,7 +15,7 @@ resistors gave sub-mV (unmeasurable) hysteresis on the open PDKs; the default is
 - `gf180mcu` binding added via `analog-db add-binding --from ihp-sg13g2` (untuned transfer; T3/T4 sim-smoke passes).
 - **Analyses:** `dc_op` (decided-high v_out + static i_supply), `dc_hysteresis` (up/down
   sweeps → vth_rise/vth_fall/v_hyst).
-- **Reference bindings:** original FOUNDRY 28 nm + 65 nm ferrosim decks under `spectre/`.
+- **Reference bindings:** original proprietary-PDK 28 nm + 65 nm ferrosim decks under `spectre/`.
 - **Structure:** `find_subcircuits` → `cm.pmos.simple` (XMPLD→XMPLM) + 3× `inv.cmos.stack`.
 
 ## Measured (tt, native ngspice-45, 1.5 V, VCM 0.75)

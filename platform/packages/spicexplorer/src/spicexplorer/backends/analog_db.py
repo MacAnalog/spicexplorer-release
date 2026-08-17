@@ -15,7 +15,7 @@ Two layers:
 * **Router** (Layer B) — :func:`run_circuit` runs an analog-db circuit through its *native*
   engine, chosen by the committed ``sim_engine`` marker in ``_shared/pdk/<pdk>.yaml``: open
   PDKs (ihp-sg13g2/sky130/gf180mcu → ``ngspice``) run their self-contained raw deck; the
-  closed PDK (FOUNDRY-n65 → ``spectre``) runs native Spectre via the virtuoso-bridge. Both yield
+  closed PDK (``sim_engine: spectre``) runs native Spectre via the virtuoso-bridge. Both yield
   an engine-neutral SimResult, so :meth:`CircuitRun.evaluate` scores the datasheet metrics off
   either through the *same* measurement registry. :func:`probe_engine` reports which engine a
   (circuit, pdk) routes to and whether it can run here — degrading like ``/api/library``.
@@ -231,7 +231,7 @@ def resolve_corner(
     Reads the circuit's ``pdk/<pdk>/corners.yaml`` (a generic label → neutral
     ``[{lib_file, section}]`` list) + the PDK supply, and builds a core :class:`Corner`. The
     ``lib_file``/``section`` stay **generic + neutral** (e.g. ``tt`` on
-    ``FOUNDRY_n65_models.scs``); the operator's ``model_lib_root`` wrapper does the kit-section
+    ``models.scs``); the operator's ``model_lib_root`` wrapper does the kit-section
     indirection at run time, and ``apply_corner`` prepends ``model_lib_root``
     to the ``lib_file``. Raises :class:`AnalogDbUnavailable` for a missing binding and
     ``KeyError`` for an unknown corner label.
@@ -368,7 +368,7 @@ def effective_supply(
     temperature, never the operating point). The **closed (Spectre) lane always injects
     ``pdk_rail``** (``build_spectre_run``'s parameter override + the resolved Corner), because
     the closed PDK's devices are rated for *its* rail — e.g. amp_022's analyses bake 1.5 V
-    while FOUNDRY-n65 runs 1.2 V. When the two differ, that divergence is by design; surface it
+    while a 1.2 V-core kit runs 1.2 V. When the two differ, that divergence is by design; surface it
     (this helper exists so notebooks/UI can) rather than "fixing" either number.
     """
     params = load_analysis(circuit, testbench, root=root).get("params", {})
@@ -508,7 +508,7 @@ def probe_engine(
         if not bridge_env_ok:
             reasons.append("no Cadence/virtuoso-bridge env (set SPICEXPLORER_VB_ENV_FILE or a Cadence env var)")
         wrapper = (registry.get("corners") or {}).get("lib_file")
-        mlr = model_lib_root or os.environ.get("SPICEXPLORER_FOUNDRY65_MODEL_ROOT")
+        mlr = model_lib_root or os.environ.get("SPICEXPLORER_SPECTRE_MODEL_ROOT")
         mlr_path = Path(mlr).expanduser() if mlr else None
         if not (wrapper and mlr_path and (mlr_path / str(wrapper)).is_file()):
             reasons.append("no operator corner wrapper at model_lib_root")
@@ -563,7 +563,7 @@ class _DifferentialSimResult:
         ``SpectreSimResult.wave`` takes only ``(name, analysis)``, so on the licensed lane every
         DIFFERENTIAL WAVE read raised ``TypeError: wave() takes 3 positional arguments but 4 were
         given`` and ``evaluate`` recorded it as NaN — ``t_settle`` went missing on the 5
-        fully-differential FOUNDRY-n65 amplifiers whose datasheet does NOT spell out an explicit
+        fully-differential Spectre-routed amplifiers whose datasheet does NOT spell out an explicit
         ``ref`` (amp_020/023/025/029/030); the two that do (amp_026/027) bypass this wrapper
         entirely via ``_measure_source`` and were fine, which is why the failure looked circuit-
         specific rather than structural. No caller ever passed the third argument THROUGH this
@@ -583,7 +583,7 @@ class _DifferentialSimResult:
         happens to take one, so the open PDKs never noticed; ``SpectreSimResult.scalar``
         takes two, so on the licensed lane EVERY scalar read of a fully-differential cell
         raised ``TypeError`` and was recorded as NaN — i_supply (hence power), vos, and
-        t_settle went missing on 8 of the corpus's FOUNDRY-n65 amplifiers while the AC-path
+        t_settle went missing on 8 of the corpus's Spectre-routed amplifiers while the AC-path
         metrics beside them looked healthy. The wrapper only substitutes the differential
         WAVE; anything scalar must pass straight through, engine-neutrally.
         """
@@ -729,7 +729,7 @@ class CircuitRun:
             # closed-lane bench sweeps that same `DEV: VINP`, so `vinp` is the swept net on
             # both lanes. Defaulted 2026-08-04: amp_032/amp_033 ship the minimal
             # `extract: {meas: icmr_range}` and the registry's `recipe["vin"]` raised
-            # KeyError, so `icmr_range` recorded NaN on FOUNDRY-n65 even though their sweeps
+            # KeyError, so `icmr_range` recorded NaN on the closed lane even though their sweeps
             # track cleanly (amp_001/amp_022 only worked because they spell both keys out).
             recipe.setdefault("vin", "vinp")
             if "vtrack" not in recipe and self.params.get("VTRACK") is not None:
@@ -767,7 +767,7 @@ class CircuitRun:
             #       vos = v(vout)  - v(vinp)    — the input-referred systematic offset
             # `out` is already the right hot leg (`default_out()` → voutp / vout), so only
             # the reference is missing. Spectre drops `.control` entirely, so without this
-            # the closed lane had no vos at all (KeyError → NaN on 10 FOUNDRY-n65 amplifiers);
+            # the closed lane had no vos at all (KeyError → NaN on 10 Spectre-routed amplifiers);
             # a datasheet extract that names its own `ref` still wins.
             #
             # NOT every template that defines `vos` defines it as a node pair. The support
@@ -1000,7 +1000,7 @@ def _spectre_context(
     # the template VARIANT, and a class bench that hardcodes one name is wrong for the others:
     # the self-biased variants drive through `VAC` on `sigin` (there is no VINP in that deck
     # at all), so `iprobe=VINP` named a nonexistent instance and Spectre returned no
-    # input-referred density — `inoise_total` came back NaN on 16 FOUNDRY-n65 amplifiers while
+    # input-referred density — `inoise_total` came back NaN on 16 Spectre-routed amplifiers while
     # the analysis itself reported status ok.
     ctx["NOISE_IPROBE"] = "VAC" if (template or "").startswith("noise_biaswrap") else "VINP"
     f1, f2 = ctx.get("F1"), ctx.get("F2")
@@ -1051,7 +1051,7 @@ def _spectre_analyses(
     # one `iprobe`; the fully-differential `stb_diff` template breaks it with an ANTIPHASE
     # PAIR (`VIPRB`/`VIPRBM`), and both become iprobes. `stb … probe=VIPRB` then opens only
     # half the loop — the other half stays closed through VIPRBM — so Spectre measures a
-    # return ratio of ~1 (measured 2026-08-04, FOUNDRY-n65 tt: loopgain_db −0.13 … −2.26 dB on
+    # return ratio of ~1 (measured 2026-08-04, closed-lane tt: loopgain_db −0.13 … −2.26 dB on
     # amp_020/023/025/027/031, whose ngspice antiphase reading equals their dc_gain_db of
     # 16.6 … 39.6 dB), never crosses 0 dB, and reports "Gain(dB) is always less than zero…
     # No gain margin or phase margin" — pm_loop/gm_loop NaN and a garbage loopgain_db
@@ -1157,7 +1157,7 @@ def bench_ocean_measurements(
     calculator functions (``thd``/``harmonic``/``phaseMargin``/``getData`` …) evaluated
     headlessly on the run's persisted raw dir::
 
-        run = run_circuit(circuit, "FOUNDRY-n65", testbench="thd", …)
+        run = run_circuit(circuit, "generic-n65", testbench="thd", …)
         with OceanMetricsSession.from_vb_env() as s:
             skill = s.measure(run.result.raw_dir, bench_ocean_measurements(circuit, "thd"))
 
@@ -1187,7 +1187,7 @@ def bench_ocean_measurements(
         # gated to `m.result == "ac"`, which silently skipped the `pss_fd` rows — the thd/
         # iip3 benches. Those rows kept `v("vout")` on an FD deck, so OCEAN resolved a
         # nonexistent net and `iip3_dbv`/`im3_dbc`/`thd_pct`/`hd2_db`/`hd3_db` came back NaN
-        # on every fully-differential cell (amp_020/023/025/026/027/029/030 on FOUNDRY-n65)
+        # on every fully-differential cell (amp_020/023/025/026/027/029/030 on the closed lane)
         # while the pss itself converged and the bench still reported status ok.
         p, n = diff
         repl = f'(v("{p}")-v("{n}"))'
@@ -1286,7 +1286,7 @@ def run_circuit(
 
     Probes the committed ``sim_engine`` marker + the environment, then dispatches: open PDKs run
     their ngspice raw deck; the closed (Spectre-only) PDK runs native Spectre via the bridge
-    (needs ``deck_dir`` + ``work_dir`` + ``model_lib_root``/``$SPICEXPLORER_FOUNDRY65_MODEL_ROOT``).
+    (needs ``deck_dir`` + ``work_dir`` + ``model_lib_root``/``$SPICEXPLORER_SPECTRE_MODEL_ROOT``).
     Raises :class:`EngineUnavailable` (with the probe's reason) when the routed engine can't run
     here. Returns a :class:`CircuitRun` whose ``evaluate()`` scores the datasheet metrics off the
     result, engine-neutrally.
@@ -1305,10 +1305,10 @@ def run_circuit(
             raise ValueError(
                 "the Spectre lane needs deck_dir + work_dir (per-candidate decks + the persisted PSF raw dir)"
             )
-        mlr = model_lib_root or os.environ.get("SPICEXPLORER_FOUNDRY65_MODEL_ROOT")
+        mlr = model_lib_root or os.environ.get("SPICEXPLORER_SPECTRE_MODEL_ROOT")
         if mlr is None:
             raise ValueError(
-                "the Spectre lane needs model_lib_root (or $SPICEXPLORER_FOUNDRY65_MODEL_ROOT) — the operator's neutral corner wrapper dir"
+                "the Spectre lane needs model_lib_root (or $SPICEXPLORER_SPECTRE_MODEL_ROOT) — the operator's neutral corner wrapper dir"
             )
         result = build_spectre_run(
             circuit, pdk, testbench, corner=corner, model_lib_root=mlr, deck_dir=deck_dir,

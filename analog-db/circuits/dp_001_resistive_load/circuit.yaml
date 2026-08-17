@@ -2,7 +2,7 @@
 # PROMOTED from the ferrosim_differential_pair reference entry: authored a device-generic abstract
 # netlist + open-PDK bindings. The upstream deck uses a resistor tail; the promoted core swaps in an
 # NMOS current-mirror tail so the pair is mirror-anchored (both the diff pair AND its mirror are
-# detected by find_subcircuits). The original FOUNDRY-28/65nm decks are kept under `references`.
+# detected by find_subcircuits). The original proprietary-PDK 28/65 nm decks are kept under `references`.
 schema: spicexplorer/circuit@1
 id: dp_001_resistive_load
 class: diff_pair

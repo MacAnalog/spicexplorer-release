@@ -1,4 +1,4 @@
-"""LIVE gm/ID operating point on a real FOUNDRY-65 Spectre run (opt-in; needs Cadence).
+"""LIVE gm/ID operating point on a real licensed-kit Spectre run (opt-in; needs Cadence).
 
 Runs a composed 5T-OTA op-point on a Cadence host (the same live-proven translate path
 as the OCEAN live test), then extracts the per-device operating point in the gm/ID-consumer
@@ -10,7 +10,7 @@ shape via `backends.spectre.operating_point` and:
   `device_op_param` reader on the SAME raw dir — proving the adapter-side `.info` post-parse
   and the OCEAN calculator agree on gm / gds / id for the same device.
 
-Opt-in gating mirrors `test_ocean_metrics_live.py` (bridge importable + `SPICEXPLORER_FOUNDRY65_MODELS`
+Opt-in gating mirrors `test_ocean_metrics_live.py` (bridge importable + `SPICEXPLORER_SPECTRE_MODELS`
 + a resolvable Cadence cshrc); it skips everywhere else.
 """
 
@@ -24,12 +24,12 @@ import pytest
 
 pytestmark = pytest.mark.slow
 
-_MODELS = os.environ.get("SPICEXPLORER_FOUNDRY65_MODELS", "")
+_MODELS = os.environ.get("SPICEXPLORER_SPECTRE_MODELS", "")
 
 
 @pytest.mark.skipif(
     not (_MODELS and Path(_MODELS).expanduser().is_file()),
-    reason="set SPICEXPLORER_FOUNDRY65_MODELS to the FOUNDRY-65 Spectre model library .scs",
+    reason="set SPICEXPLORER_SPECTRE_MODELS to the licensed Spectre model library .scs",
 )
 def test_live_gmid_operating_point_and_ocean_parity(tmp_path: Path) -> None:
     pytest.importorskip("virtuoso_bridge", reason="virtuoso-bridge not installed in this venv")
@@ -54,7 +54,7 @@ def test_live_gmid_operating_point_and_ocean_parity(tmp_path: Path) -> None:
     example = project_root() / "examples/OTA/5t-ota/ihp-sg13g2/spice/ota-5t_tb-ac.spice"
     spec = deck_spec_from_ngspice(
         example,
-        pdk="FOUNDRY-n65",
+        pdk="generic-n65",
         source_pdk="ihp-sg13g2",
         analyses=(dc_oppoint_analysis(),),  # op-point only — this is the gm/ID slice
         parameters={"vcm": 0.6},

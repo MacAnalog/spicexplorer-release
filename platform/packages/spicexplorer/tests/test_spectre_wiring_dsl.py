@@ -25,7 +25,7 @@ project:
   netlist: dut.scs
   outdir: out
   sim_engine: spectre
-  tech_spec: {name: FOUNDRY-n65, constraints: {}}
+  tech_spec: {name: generic-n65, constraints: {}}
   dut_params:
     - {name: w0, min_val: 1e-7, max_val: 1e-5}
   testbenches:

@@ -1,4 +1,4 @@
-// Ported lfsr8 — real FOUNDRY28 std cells, VDD 0.9V. Function: 8-bit LFSR state sequences on CLK.
+// Ported lfsr8 — real foundry std cells, VDD 0.9V. Function: 8-bit LFSR state sequences on CLK.
 simulator lang=spectre
 global 0
 include "../common/stdcell_netlist/tcbn28hpcplusbwp12t30p140_170a.spi"

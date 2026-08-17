@@ -1,0 +1,45 @@
+# Driver class — canonical metric vocabulary + owned testbench templates (plan D-10).
+# Validated against _shared/schema/class.schema.json by the verify harness (Tier 0).
+#
+# The FIRST bipolar + first RF/broadband class in the corpus (see
+# doc/pam4_driver_case_study_feasibility.md §4). Line/optical-modulator drivers and
+# current-mode DACs: broadband differential gain, return loss (S11/S22), large-signal
+# output swing, and DC power — all expressed as single-frequency probes so no `.ac`
+# grid / interpolation is needed (a metric is one bare scalar the deck's own .control
+# block writes; base.py reads it by name, exactly like the OTA example's UGF/PM).
+schema: spicexplorer/class@1
+class: drv
+id_code: drv            # accession-id prefix for verifiable circuits (plan_scoreboard D-1)
+description: >-
+  Broadband differential drivers (optical-modulator / line drivers, current-mode DACs).
+  Small-signal gain and return loss from spot-frequency AC (or transient tone) probes,
+  DC operating point + supply power, and large-signal output swing. RF quantities are
+  computed in-deck as named scalars, so the class carries no `.ac`-grid dependency.
+ppa:                      # scoreboard PPA rollup declaration (plan_scoreboard D-7)
+  power: {metric: i_supply, times_vdd: true}   # power_w = i_supply(A) x typical supply (4 V)
+  performance:
+    - {metric: msb_gain_lf_db, better: max}     # headline gain (MSB path)
+    - {metric: s11_msb_32g_db, better: min}     # input match (more-negative = better)
+    - {metric: swing_vpp_diff, better: max}     # differential output swing
+canonical_metrics:
+  - lsb_gain_lf_db       # LSB-path low-frequency differential S21 (dB), tone/AC @ 1 GHz
+  - msb_gain_lf_db       # MSB-path low-frequency differential S21 (dB)
+  - dac_weight_db        # MSB - LSB LF gain (the 2-bit binary weight, ~6 dB)
+  - lsb_gain_50g_rel_db  # LSB S21 @ 50 GHz relative to LF (bandwidth proxy, >= -3 dB)
+  - msb_gain_50g_rel_db  # MSB S21 @ 50 GHz relative to LF
+  - s11_msb_32g_db       # input return loss at 32 GHz (binding S11 point), dB
+  - s22_50g_db           # output return loss at 50 GHz (band edge), dB
+  - power_mw             # total supply power from the 4 V rail, mW
+  - i_supply             # total supply current from the 4 V rail, A (class power metric)
+  - ic_msb_ma            # per-device MSB collector current, mA (bias canary; ~8 mA at Nx=3)
+  - swing_vpp_diff       # peak differential output swing, Vpp
+  - rlm                  # PAM-4 level-mismatch ratio (final-design eye validation only)
+  - eye_height_v         # min PAM-4 eye opening, V (final-design eye validation only)
+templates:
+  - dc_bias              # ramp-and-hold (or .op) operating point: power + per-device V_CE / I_C
+  - ac_gain_lsb          # LSB-path spot-frequency S21 probe (LF + 50 GHz), differential
+  - ac_gain_msb          # MSB-path spot-frequency S21 probe (LF + 50 GHz), differential
+  - ac_s11               # input-reflection spot-frequency probe (S11 @ 32 GHz)
+  - ac_s22               # output-reflection spot-frequency probe (S22 @ 50 GHz)
+  - tran_swing           # large-signal differential swing (in-phase drive, 1 GHz)
+  - tran_eye             # 48 GBaud PAM-4 eye (final-design validation)

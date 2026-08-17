@@ -13,8 +13,8 @@ tsn_002) plus long channels (3 µm) set a non-degenerate ~50 µA operating point
 - `gf180mcu` binding added via `analog-db add-binding --from ihp-sg13g2` (untuned transfer; T3/T4 sim-smoke passes).
 - **Analyses:** temp_sensor set — `dc_op`, `temp_sweep` (−20..120 °C), `line_sweep`
   (1.3–1.7 V), `psrr`.
-- **Reference binding:** the original FOUNDRY **65 nm** spectre deck under `spectre/65nm/`
-  (parse-only here — never simulated, no FOUNDRY models in-repo).
+- **Reference binding:** the original proprietary-PDK **65 nm** spectre deck under `spectre/65nm/`
+  (parse-only here — never simulated, no foundry models in-repo).
 - **Structure:** `find_subcircuits` → no mirror/pair templates match (both "mirrors" are
   gate-cross-coupled, not diode-anchored) — expected for this cell; the loop is validated by
   the temp/line sweeps instead.

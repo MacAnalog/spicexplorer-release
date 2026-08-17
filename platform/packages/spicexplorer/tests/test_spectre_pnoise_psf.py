@@ -3,7 +3,7 @@
 A Spectre `pnoise` analysis (riding a preceding `pss`) lands its output/input-referred
 densities in their own psfascii PSF (`pnoise.pnoise`) in the persisted `-raw` dir — the
 same shape as `noise.noise` (sweep `freq`, top-level `out`/`in` V/√Hz + `gain`), plus a
-`pnoise.pnoise.cache` sibling Spectre also writes (discovered live on FOUNDRY-65, 2026-07-11).
+`pnoise.pnoise.cache` sibling Spectre also writes (discovered live on the closed lane, 2026-07-11).
 These tests generate a minimal *analytic* white-noise `pnoise.pnoise` (no simulator, no
 PDK) and prove, on the same reader/registry path validated live:
 

@@ -1,0 +1,38 @@
+* TB[drv_001] bias operating point — power + liveness canary (.op, ngspice-45)
+* Emits named scalars: power_mw, i_supply, ic_msb_ma. The external Rl*/Rs* are the FIXED 50 ohm/side
+* references (load + source); the on-chip loads/terminations (x_dut_rc/x_dut_rb) live in the DUT.
+.param x_dut_nx=3 x_dut_re=2.5 x_dut_cdeg_ff=20 x_dut_rc=50 x_dut_rb=50
+.param x_dut_vcasc=3.25 x_dut_vcm_in=1.9 x_dut_itail_ma=16 x_dut_vcc=4
+.csparam vcc_val={x_dut_vcc}
+.csparam rc_val={x_dut_rc}
+Vcc   vcc   0 DC {x_dut_vcc}
+Vcasc vcasc 0 DC {x_dut_vcasc}
+Vcmb  vcmb  0 DC {x_dut_vcm_in}
+Vblsb blsb  0 DC {x_dut_itail_ma}
+Vbmsb bmsb  0 DC {x_dut_itail_ma}
+XDUT lsbp lsbn msbp msbn outp outn vcc vcasc vcmb blsb bmsb drv_001_pam4_sige_dac
+Rlp outp vcc 50
+Rln outn vcc 50
+Vslsbp slsbp 0 DC {x_dut_vcm_in}
+Vslsbn slsbn 0 DC {x_dut_vcm_in}
+Rslsbp slsbp lsbp 50
+Rslsbn slsbn lsbn 50
+Vsmsbp smsbp 0 DC {x_dut_vcm_in}
+Vsmsbn smsbn 0 DC {x_dut_vcm_in}
+Rsmsbp smsbp msbp 50
+Rsmsbn smsbn msbn 50
+.include dut.spice
+.lib "cornerHBT.lib" hbt_typ
+.options gmin=1e-12 reltol=1e-3
+.control
+op
+let i_supply = abs(i(Vcc))
+let power_mw = i_supply * vcc_val * 1000
+* per-MSB-device collector current from the output IR drop across the on-chip||external load
+* (rc_val || 50), shared by the 3 cells steering to outp — ~8 mA healthy, ~0 mA if the HBT is dead.
+let rpar = (rc_val * 50) / (rc_val + 50)
+let ic_msb_ma = ((vcc_val - v(outp)) / rpar) / 3 * 1000
+print power_mw i_supply ic_msb_ma v(outp)
+.endc
+.GLOBAL GND
+.end

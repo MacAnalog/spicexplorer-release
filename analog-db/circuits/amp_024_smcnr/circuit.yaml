@@ -24,7 +24,7 @@ artifacts:
   abstract_netlist: abstract/netlist.spice
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
-pdks: [ihp-sg13g2, sky130, gf180mcu, FOUNDRY-n65]
+pdks: [ihp-sg13g2, sky130, gf180mcu]
 analyses: [ac_open_loop, cmrr_vcm, psrr_vdd, dc_op, noise, tran_step, thd, iip3, stb]
 references:
   - {tool: spectre, dir: spectre/180nm, node: 180nm}

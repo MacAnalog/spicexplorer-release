@@ -75,7 +75,7 @@ def test_spectre_adapter_satisfies_the_protocols() -> None:
 # SimResult over the flat PSF dict
 # ---------------------------------------------------------------------------
 def test_simresult_scalar_lookup_prefix_bare_and_op_point() -> None:
-    # Key shapes mirror a real FOUNDRY-65 run (P0 live, 2026-07-05): ac_/dc_ prefixed
+    # Key shapes mirror a real 65 nm run (P0 live, 2026-07-05): ac_/dc_ prefixed
     # node signals from the bridge parser, bare `<inst>:<param>` op scalars from our
     # info-file post-parse, bare tran signals.
     res = SpectreSimResult(
@@ -118,7 +118,7 @@ def test_simresult_empty_data_degrades() -> None:
 # ---------------------------------------------------------------------------
 # psfascii info-file op-point post-parse (the bridge parser drops STRUCT values)
 # ---------------------------------------------------------------------------
-# Shape copied from a real FOUNDRY-65 `finalTimeOP.info` (P0 live run): per-model STRUCT
+# Shape copied from a a real `finalTimeOP.info` (P0 live run): per-model STRUCT
 # defs in TYPE (with nested PROP(...) blocks), then per-instance value blocks. Values
 # here are synthetic.
 _INFO_PSFASCII = """HEADER
@@ -242,8 +242,8 @@ def test_apply_corner_emits_spectre_include_section_and_rails() -> None:
     corner = Corner(
         name="ss_hot",
         model_includes=[
-            ModelInclude(lib_file="FOUNDRY65.scs", section="ss"),
-            ModelInclude(lib_file="FOUNDRY65_rc.scs", section="rc_worst"),
+            ModelInclude(lib_file="models.scs", section="ss"),
+            ModelInclude(lib_file="models_rc.scs", section="rc_worst"),
         ],
         temp=85.0,
         supplies=[SupplyOverride(node="VDD", value=1.1)],
@@ -253,16 +253,16 @@ def test_apply_corner_emits_spectre_include_section_and_rails() -> None:
     staged = sim.staged_params
     assert staged["corner"] == "ss_hot"
     assert staged["corner_includes"] == [
-        'include "FOUNDRY65.scs" section=ss',
-        'include "FOUNDRY65_rc.scs" section=rc_worst',
+        'include "models.scs" section=ss',
+        'include "models_rc.scs" section=rc_worst',
     ]
     assert staged["temp"] == 85.0
     assert staged["corner_params"] == {"VDD": 1.1, "vcm": 0.55}
 
     # idempotent: re-applying a different corner replaces, never accumulates
-    sim.apply_corner(Corner(name="tt", model_includes=[ModelInclude("FOUNDRY65.scs", "tt")]))
+    sim.apply_corner(Corner(name="tt", model_includes=[ModelInclude("models.scs", "tt")]))
     assert sim.staged_params["corner"] == "tt"
-    assert sim.staged_params["corner_includes"] == ['include "FOUNDRY65.scs" section=tt']
+    assert sim.staged_params["corner_includes"] == ['include "models.scs" section=tt']
 
 
 def test_update_params_stages_design_variables() -> None:
@@ -333,14 +333,14 @@ def test_composed_mode_materializes_staged_params_per_run(tmp_path: Path) -> Non
             temp=125.0,
             supplies=[SupplyOverride(node="VDD", value=1.35)],
         ),
-        model_lib_root="/opt/FOUNDRY",
+        model_lib_root="/opt/kit",
     )
     sim.run(label="tb__ss")
 
     netlist, params = bridge.calls[-1]
     assert netlist.parent == tmp_path  # materialized under deck_dir, not the spec
     text = netlist.read_text()
-    assert 'include "/opt/FOUNDRY/models.scs" section=ss_lvt' in text  # corner selection
+    assert 'include "/opt/kit/models.scs" section=ss_lvt' in text  # corner selection
     assert "w1=2e-06" in text                     # design param injected over the default
     assert "vdd=1.35" in text                     # corner supply wins (lowercase namespace)
     assert "tempOptions options temp=125" in text

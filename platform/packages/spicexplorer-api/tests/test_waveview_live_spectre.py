@@ -1,10 +1,10 @@
 """/api/waveview LIVE Spectre proof (opt-in, `-m slow`): closed lane → API → parity.
 
-Mirror of the ngspice live proof on the FOUNDRY-n65 closed lane: run the amp_022 AC bench
+Mirror of the ngspice live proof on the Spectre closed lane: run the amp_022 AC bench
 through the in-library router (native Spectre via the bridge), then open the persisted
 psfascii ``-raw`` dir through the REST viewer and check the measured AC figures match
 the run's own ``evaluate()``. Same opt-in gates as the config-driven closed-lane test:
-bridge importable + the neutral corner wrapper at ``SPICEXPLORER_FOUNDRY65_MODEL_ROOT``.
+bridge importable + the neutral corner wrapper at ``SPICEXPLORER_SPECTRE_MODEL_ROOT``.
 """
 
 from __future__ import annotations
@@ -17,13 +17,13 @@ from fastapi.testclient import TestClient
 
 pytestmark = pytest.mark.slow
 
-_MODEL_ROOT = os.environ.get("SPICEXPLORER_FOUNDRY65_MODEL_ROOT", "")
-_CIRCUIT, _PDK, _TB = "amp_022_fer_two_stage", "FOUNDRY-n65", "ac_open_loop"
+_MODEL_ROOT = os.environ.get("SPICEXPLORER_SPECTRE_MODEL_ROOT", "")
+_CIRCUIT, _PDK, _TB = "amp_022_fer_two_stage", "generic-n65", "ac_open_loop"
 
 
 @pytest.mark.skipif(
-    not (_MODEL_ROOT and (Path(_MODEL_ROOT).expanduser() / "FOUNDRY_n65_models.scs").is_file()),
-    reason="set SPICEXPLORER_FOUNDRY65_MODEL_ROOT to a dir holding the neutral corner wrapper",
+    not (_MODEL_ROOT and (Path(_MODEL_ROOT).expanduser() / "models.scs").is_file()),
+    reason="set SPICEXPLORER_SPECTRE_MODEL_ROOT to a dir holding the neutral corner wrapper",
 )
 def test_waveview_api_live_spectre_parity(tmp_path, monkeypatch) -> None:
     pytest.importorskip("virtuoso_bridge", reason="virtuoso-bridge not installed in this venv")

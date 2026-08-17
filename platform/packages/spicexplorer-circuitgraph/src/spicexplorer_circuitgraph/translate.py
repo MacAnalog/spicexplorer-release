@@ -176,7 +176,7 @@ def translate_ngspice_to_spectre(
     """Translate a SPICE/ngspice deck into Spectre structural blocks.
 
     ``pdk`` is the **target** device table (``model_for`` retargeting, e.g.
-    ``"FOUNDRY-n65"``); ``source_pdk`` aids device classification of the source deck
+    ``"generic-n65"``); ``source_pdk`` aids device classification of the source deck
     (X-prefixed MOS like IHP's ``XM1 … sg13_lv_nmos``). Returns
     :class:`TranslatedDesign`; analyses/corners are intentionally absent — compose
     them downstream.

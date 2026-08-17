@@ -1,0 +1,29 @@
+* 5T OTA open-loop AC bench (amp_001_5t `ac_open_loop` conditions: VDD 1.5, VCM 0.8,
+* IBIAS 20u, CL 50f, sg13g2 mos_tt) — the same bench ../../sim_pex_compare.py runs, as a
+* platform testbench. Pre-layout it includes the schematic DUT; the layout flow's
+* `postlayout` stage swaps that include for the extracted subckt of each trial.
+* Read with the measurement registry: {meas: dcgain|ugf|pm, out: v(vout)} on analysis `ac`,
+* i(vdd) etc. on `op`.
+.lib cornerMOSlv.lib mos_tt
+.include ota_5t_gf_dut.spice
+
+.param VDD = 1.5
+.param VCM = 0.8
+.param IBIAS = 20u
+.param CL = 50f
+.param F_AC_START = 1k
+.param F_AC_STOP = 100MEG
+
+VDD vdd 0 {VDD}
+IB  vdd ibias {IBIAS}
+VIP vinp 0 DC {VCM} AC 0.5
+VIN vinn 0 DC {VCM} AC -0.5
+CL  vout 0 {CL}
+* pins: vdd vout vinp vinn ibias vss
+XDUT vdd vout vinp vinn ibias 0 ota_5t_gf
+* PEX netlists carry dense C-networks; a rough bias guess keeps the op convergence reliable
+.nodeset v(ibias)=0.55 v(vout)=0.8
+
+.op
+.ac dec 101 {F_AC_START} {F_AC_STOP}
+.end

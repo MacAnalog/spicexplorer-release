@@ -41,7 +41,6 @@ artifacts:
 analyses: [dc_cmfb_transfer, ac_servo, tran_cmfb_step]
 pdks:
 - ihp-sg13g2
-- FOUNDRY-n65
 - sky130
 - gf180mcu
 status: draft

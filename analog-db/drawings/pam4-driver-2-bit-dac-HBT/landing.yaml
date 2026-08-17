@@ -1,0 +1,35 @@
+# Landing manifest (drawings/README.md lifecycle) — pam4-driver-2-bit-dac-HBT.
+# Inac, Peczek, Malignaggi, Gerfers et al., "Inductorless 96 Gb/s PAM-4 Optical Modulators
+# Driver in SiGe:C BiCMOS", EuMIC 2022. Ported from the EIC-designer lumped-broadband-driver
+# verified reference (16/16 requirements, dual sign-off); reproduces the golden with zero delta
+# on all 8 system metrics. Standalone copy: github.com/JPPhotonics/agentic-design-pam4-driver-ihp130.
+#
+# STATUS: LANDED 2026-08-09. The combined 2-bit DAC (`pam4`) is the catalogued topology; the
+# lsb (1 cell) and msb (2 cells) are its measurement sub-configurations, exercised on the SAME
+# pam4 DUT by driving only the respective input pair (so all 8 specs come off one entry).
+# The circuit is the corpus's FIRST bipolar + first RF entry — the harness generate/lower/assemble
+# lanes are CMOS-only (feasibility §4.4/4.5), so the entry is authored to `status: draft`: the
+# per-PDK netlist and project_setup are hand-authored and the runnable path is the optimizer
+# projection over the static testbenches/ decks (as amp_004 does via testbenches.legacy/).
+family: pam4-driver-2-bit-dac-HBT
+paper: "Inac et al., EuMIC 2022"
+blocks:
+  pam4:
+    role: top (combined 2-bit current-mode DAC — the catalogued topology)
+    circuit: drv_001_pam4_sige_dac
+    class: drv
+    subfamily: pam4_current_mode_dac
+    realization: transistor
+    notes: >-
+      The entry's authoritative editable drawing is the schematic copy at
+      circuits/drv_001_pam4_sige_dac/pdk/ihp-sg13g2/schematic/dut_pam4.sch. Tails are VCCS-driven
+      (1 mA/V) from the blsb/bmsb ports, so the per-cell tail current is a plain scalar knob
+      (x_dut_itail_ma) the testbench sets with a DC source — one DUT serves tran/.op/.ac.
+  lsb:
+    role: block (1 gain cell = LSB weight); measurement sub-config of `pam4`, not separately landed
+    circuit: null
+    class: drv
+  msb:
+    role: block (2 parallel gain cells = MSB weight); measurement sub-config of `pam4`, not separately landed
+    circuit: null
+    class: drv

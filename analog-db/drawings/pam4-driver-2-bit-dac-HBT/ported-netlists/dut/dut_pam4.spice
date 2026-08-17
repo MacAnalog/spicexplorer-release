@@ -1,0 +1,39 @@
+* DUT: pam4drv_pam4 — 1 LSB cell(s) + 2 MSB cell(s), npn13G2 Nx=3
+.subckt pam4drv_pam4 lsbp lsbn msbp msbn outp outn vcc vcasc vcmb blsb bmsb
+* --- cell L0 ---
+XQ1L0 c1L0 lsbp e1L0 0 npn13G2 Nx=3
+XQ2L0 c2L0 lsbn e2L0 0 npn13G2 Nx=3
+XQ3L0 outp vcasc c1L0 0 npn13G2 Nx=3
+XQ4L0 outn vcasc c2L0 0 npn13G2 Nx=3
+RE1L0 e1L0 tlsb0 2.5
+RE2L0 e2L0 tlsb0 2.5
+CdegL0 e1L0 e2L0 20f
+GtailL0 tlsb0 0 blsb 0 1m
+
+* --- cell M0 ---
+XQ1M0 c1M0 msbp e1M0 0 npn13G2 Nx=3
+XQ2M0 c2M0 msbn e2M0 0 npn13G2 Nx=3
+XQ3M0 outp vcasc c1M0 0 npn13G2 Nx=3
+XQ4M0 outn vcasc c2M0 0 npn13G2 Nx=3
+RE1M0 e1M0 tmsb0 2.5
+RE2M0 e2M0 tmsb0 2.5
+CdegM0 e1M0 e2M0 20f
+GtailM0 tmsb0 0 bmsb 0 1m
+
+* --- cell M1 ---
+XQ1M1 c1M1 msbp e1M1 0 npn13G2 Nx=3
+XQ2M1 c2M1 msbn e2M1 0 npn13G2 Nx=3
+XQ3M1 outp vcasc c1M1 0 npn13G2 Nx=3
+XQ4M1 outn vcasc c2M1 0 npn13G2 Nx=3
+RE1M1 e1M1 tmsb1 2.5
+RE2M1 e2M1 tmsb1 2.5
+CdegM1 e1M1 e2M1 20f
+GtailM1 tmsb1 0 bmsb 0 1m
+
+Rcp outp vcc 50
+Rcn outn vcc 50
+Rblsbp lsbp vcmb 50
+Rblsbn lsbn vcmb 50
+Rbmsbp msbp vcmb 50
+Rbmsbn msbn vcmb 50
+.ends pam4drv_pam4

@@ -1,0 +1,11 @@
+* kpex-style extracted netlist
+.subckt ota vdd vss vinp vinn vout ibias
+M1 outm vinp tail vss sg13_lv_nmos w=0.5u l=5u as=0.1p ad=0.1p
++ ps=1u pd=1u
+M2 vout vinn tail vss sg13_lv_nmos w=0.5u l=5u
+Cext_1 \$17 \$7 62.1879a
+Cext_2 \$17 ibias 215.301a
+Cext_3 vinp vinn 34.7822a
+Cext_4 vout 0 1.5f
+Rext_1 vout \$7 12.5
+.ends ota

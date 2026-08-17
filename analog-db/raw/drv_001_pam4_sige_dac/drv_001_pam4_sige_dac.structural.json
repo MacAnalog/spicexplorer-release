@@ -1,0 +1,12 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "drv_001_pam4_sige_dac",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 30,
+    "blocks_detected": 0,
+    "by_family": {},
+    "structural_roles": {}
+  },
+  "groups": []
+}

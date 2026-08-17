@@ -1,7 +1,7 @@
 # drawings/ — consolidated sizing + measured specs (2026-07-18/19 dual-engine campaign)
 # [REFERENCE] Machine-readable companion to SIZING_VALIDATION_REPORT.md (prose/method)
 # and DRAWING_REVIEW.md §8 (per-block sweep verdicts). Conventions:
-#   - engines: ngspice = native ihp-sg13g2 tt 27C; spectre = FOUNDRY-n65 tt via the
+#   - engines: ngspice = native ihp-sg13g2 tt 27C; spectre = the licensed 65 nm kit tt via the
 #     operator's NDA-neutral wrapper (no kit data in this file).
 #   - widths are xschem TOTAL widths (ng=1 everywhere, so per-finger == total).
 #   - full_precision values are AUTHORITATIVE where given (amp_025's DC solution is
@@ -96,9 +96,9 @@ shared:
 
 bio_afe_SRMC_core_amp:
   cmfb: {loop1: canonical, loop2: canonical, plant_parity: "both INVERTING
-    (ihp AND FOUNDRY-n65 confirmed)"}
+    (ihp AND 65 nm confirmed)"}
   refs: {V_REF_CMFB1: 0.5, V_REF_CMFB2: 0.5, input_cm: 0.5}
-  vb2_per_pdk: {ihp_seed_fix: 0.7, ihp_sized: 0.7, FOUNDRY_n65_drawn: 0.5, FOUNDRY_n65_sized: 0.35}
+  vb2_per_pdk: {ihp_seed_fix: 0.7, ihp_sized: 0.7, n65_drawn: 0.5, n65_sized: 0.35}
   sizing:
     drawn_seed: "all 0.15u/0.13u except XM8 0.5u/0.13u (B5 actuator fix, committed in .sch)"
     ihp_winner:       # optimizer (scripted Nevergrad 400 + 100-loop banded refine)
@@ -137,7 +137,7 @@ bio_afe_SRMC_core_amp:
                      basin (locally stable only; open follow-up)"}
     spectre_drawn:  {dcgain_db: 38.1, ugf: 25.9Meg, pm_deg: 37.1, i_supply: 56.7u, vb2: 0.5}
     spectre_sized:  {dcgain_db: 37.8, ugf: 100.6Meg, pm_deg: 102.1, i_supply: 319.3u,
-                     vb2: 0.35, gain_note: "pinned at FOUNDRY65 LVT gm/gds ceiling (~38 dB);
+                     vb2: 0.35, gain_note: "pinned at the 65 nm LVT gm/gds ceiling (~38 dB);
                      >=55 dB at 65nm needs cascoding",
                      loop2_marginal: "servo equilibrium -0.024 V below rail; rail-limited
                      achievable CM tops at 0.474 (26 mV short of ref) — stronger out-PMOS
@@ -177,10 +177,10 @@ bio_afe_ideal_chain:
 
 ccia_01_two_stage_ota_core:
   cmfb: {block: cmfb-output-ideal-amp-inv, plant_parity: "NON-inverting (ihp AND
-    FOUNDRY-n65 confirmed)", servo_cout_val: 100p}
+    65 nm confirmed)", servo_cout_val: 100p}
   biases:
     ihp_amp025_flavor: {vb1: 0.55, vb2: 0.45, vb3: 0.75, vcmfb_ref: 0.6}
-    FOUNDRY_n65: {vcmfb_ref: 0.8, note: "65nm achievable-CM window [0.61, 1.04] —
+    n65: {vcmfb_ref: 0.8, note: "65nm achievable-CM window [0.61, 1.04] —
       0.5/0.6 unreachable (class-AB follower level-shift floor)"}
   amp025_finetune_winner:   # NOT recommended for adoption: bistable DC knife-edge;
                             # gain is a topology limit (plateau ~38-39 dB, needs cascoding)

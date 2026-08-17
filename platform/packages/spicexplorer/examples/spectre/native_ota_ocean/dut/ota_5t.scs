@@ -1,7 +1,7 @@
-// Native Spectre DUT subckt — TEMPLATE (fill in for your FOUNDRY-65 PDK).
+// Native Spectre DUT subckt — TEMPLATE (fill in for your licensed PDK).
 //
 // A 5-transistor OTA: NMOS input pair, NMOS tail, PMOS mirror load. Device model names
-// (nch_lvt / pch_lvt) and the corner section come from the FOUNDRY-65 PDK, included at the
+// (nch_lvt / pch_lvt) and the corner section come from the licensed PDK, included at the
 // top level by the PVT corner in project_setup.yaml — NOT here. The subckt exposes the
 // design variables (w_in / l_in / w_tail) as subckt parameters so the composed deck can
 // inject a fresh value per optimizer candidate.

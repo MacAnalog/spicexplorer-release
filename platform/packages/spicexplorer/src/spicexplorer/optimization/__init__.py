@@ -5,6 +5,7 @@ from .orchestrator import (
     Circuit_Optimizer_Orchestrator_with_SPICE,
     Optimizer_Type_Enum,
 )
+from .sim_benchmark import SimTimeReport, TestbenchSimTiming, benchmark_simulators
 from .stochastic.nevergrad import (
     Nevergrad_Spice_Bode_Optimizer,
     Nevergrad_Spice_Constraint_Satisfaction,
@@ -19,6 +20,11 @@ __all__ = [
     'SPICE_OPTIMIZER_CLASSES',
     'Optimizer_Type_Enum',
     'Circuit_Optimizer_Orchestrator_with_SPICE',
+    # --------------------------------
+    # Per-testbench sim-time benchmarking
+    'SimTimeReport',
+    'TestbenchSimTiming',
+    'benchmark_simulators',
     # --------------------------------
 
     # ** For backward compatability **

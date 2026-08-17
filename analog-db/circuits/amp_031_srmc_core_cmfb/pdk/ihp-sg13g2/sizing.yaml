@@ -7,8 +7,8 @@
 # drawn seed (all 0.15u/0.13u) is UNSTABLE (PM -17.8 deg). Group representatives only
 # (see abstract/params.yaml ties): XM4<-XM3, XM7<-XM6, XM9<-XM1, XM10<-XM2, C2<-C1,
 # R2<-R1, RM1N/RM2P/RM2N<-RM1P. The CMFB servo macromodel knobs are behavioral.
-# Per-PDK note: VB2 is PDK-specific (ihp sized 0.70 / FOUNDRY-n65 drawn 0.50 /
-# FOUNDRY-n65 sized 0.35 — the 65nm binding, when added, must re-bias; see the report §6.1
+# Per-PDK note: VB2 is PDK-specific (ihp sized 0.70 / 65 nm drawn 0.50 /
+# 65 nm sized 0.35 — a 65nm binding, when added, must re-bias; see the report §6.1
 # incl. the 65nm loop-2 rail-marginality).
 schema: spicexplorer/sizing@1
 pdk: ihp-sg13g2

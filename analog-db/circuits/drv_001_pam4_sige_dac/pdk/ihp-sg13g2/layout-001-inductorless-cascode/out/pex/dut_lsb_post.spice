@@ -1,0 +1,76 @@
+*********************************************************
+*** NGSPICE file created by KLayout-PEX 0.3.12
+*** -----------------------------------------------------
+***     Extraction Engine: KPEX/2.5D
+***     Technology: ihp_sg13g2
+***     Date: 2026-08-10 12:30:03
+*********************************************************
+
+.SUBCKT pam4drv_lsb_lay sub inp vcmb inn tail vcasc outp outn vcc
+XQ_1 outn vcasc \$20 sub npn13G2 Nx=3
+XQ_2 \$20 inn \$7 sub npn13G2 Nx=3
+XQ_3 outp vcasc \$19 sub npn13G2 Nx=3
+XQ_4 \$19 inp \$6 sub npn13G2 Nx=3
+XR_5 vcmb inp sub rsil w=0.5u l=2.14u m=1
+XR_6 vcmb inn sub rsil w=0.5u l=2.14u m=1
+XR_7 tail \$6 sub rsil w=4.5u l=0.77u m=1
+XR_8 tail \$7 sub rsil w=4.5u l=0.77u m=1
+XR_9 outp vcc sub rsil w=1.4u l=8.71u m=1
+XR_10 outn vcc sub rsil w=1.4u l=8.71u m=1
+Cext_1 \$19 \$6 1.33716f
+Cext_2 \$19 \$7 3.26301a
+Cext_3 \$19 inp 50.9328a
+Cext_4 \$19 outp 1.4099f
+Cext_5 \$19 sub 20.969a
+Cext_6 \$19 vcasc 751.275a
+Cext_7 \$19 sub 2.09378f
+Cext_8 \$20 \$6 21.3202a
+Cext_9 \$20 \$7 1.32464f
+Cext_10 \$20 inn 50.9328a
+Cext_11 \$20 outn 1.38883f
+Cext_12 \$20 outp 14.4261a
+Cext_13 \$20 sub 15.2996a
+Cext_14 \$20 vcasc 744.688a
+Cext_15 \$20 sub 2.10207f
+Cext_16 \$6 \$7 1.03052f
+Cext_17 \$6 inn 2.91381a
+Cext_18 \$6 inp 768.452a
+Cext_19 \$6 sub 11.7772a
+Cext_20 \$6 tail 359.551a
+Cext_21 \$6 vcasc 15.4584a
+Cext_22 \$6 sub 2.95769f
+Cext_23 \$7 inn 757.613a
+Cext_24 \$7 inp 1.87013a
+Cext_25 \$7 sub 8.6267a
+Cext_26 \$7 tail 356.328a
+Cext_27 \$7 vcasc 9.61824a
+Cext_28 \$7 sub 2.89695f
+Cext_29 inn inp 46.738a
+Cext_30 inn sub 17.7516a
+Cext_31 inn tail 118.794a
+Cext_32 inn vcmb 55.0436a
+Cext_33 inp sub 20.4137a
+Cext_34 inp tail 186.196a
+Cext_35 inp vcmb 12.8044a
+Cext_36 outn outp 748.751a
+Cext_37 outn sub 10.5266a
+Cext_38 outn vcasc 50.7333a
+Cext_39 outn vcc 9.85394a
+Cext_40 outp sub 17.7805a
+Cext_41 outp vcasc 50.7333a
+Cext_42 outp vcc 9.85394a
+Cext_43 sub tail 18.5419a
+Cext_44 sub vcasc 3.09025a
+Cext_45 sub vcc 218.271a
+Cext_46 sub vcmb 284.117a
+Cext_47 sub inn 2.82394f
+Cext_48 sub inp 2.85011f
+Cext_49 sub outn 5.81343f
+Cext_50 sub outp 5.9393f
+Cext_51 sub sub 23.0904f
+Cext_52 sub tail 3.57895f
+Cext_53 sub vcasc 1.83794f
+Cext_54 sub vcc 4.61617f
+Cext_55 sub vcmb 3.10968f
+XCdeg_r0 \$6 \$7 cap_cmim w=3.21u l=3.21u
+.ENDS pam4drv_lsb_lay

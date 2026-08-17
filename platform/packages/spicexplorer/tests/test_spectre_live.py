@@ -1,4 +1,4 @@
-"""LIVE Spectre through the platform adapter (opt-in; needs Cadence + a FOUNDRY deck).
+"""LIVE Spectre through the platform adapter (opt-in; needs Cadence + a licensed-kit deck).
 
 Real `spectre` (local mode or
 over the bridge's SSH tunnel), a real foundry-PDK `.scs`, and the adapter's full result

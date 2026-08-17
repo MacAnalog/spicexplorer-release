@@ -17,7 +17,7 @@ attempt with 32-48 µm single fingers produced a dead bias point).
   `_shared/schema/sizing.schema.json`).
 - `gf180mcu` binding added via `analog-db add-binding --from ihp-sg13g2` (untuned transfer; T3/T4 sim-smoke passes).
 - **Analyses:** `dc_op` (v_out, v_offset, i_supply), `dc_transfer` (gain_dc ~1), `ac_gain`.
-- **Reference bindings:** original FOUNDRY 28 nm + 65 nm ferrosim decks under `spectre/`.
+- **Reference bindings:** original proprietary-PDK 28 nm + 65 nm ferrosim decks under `spectre/`.
 - **Structure:** `find_subcircuits` → `cm.nmos.simple` (XMRN→XMNS) + `cm.pmos.simple`
   (XMPD→XMPB).
 

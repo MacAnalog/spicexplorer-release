@@ -59,7 +59,7 @@ benches:
       # Summation width pinned to 5 to match this class's own ngspice templates
       # (thd/thd_diff both compute sqrt(a2^2+a3^2+a4^2+a5^2)/a1), so a THD number means
       # the same thing on either lane. $HARMS stays the PSS harmonic budget. Latent
-      # today — no FOUNDRY-n65 ia row carries a THD figure — but it would bite the moment
+      # today — no Spectre-routed ia row carries a THD figure — but it would bite the moment
       # one did, exactly as it did in the amplifier class.
       - {name: thd_pct, expr: thd_pct, args: {OUT: vout, NHARM: 5}}
       - {name: hd2_db, expr: hd2_db, args: {OUT: vout}}

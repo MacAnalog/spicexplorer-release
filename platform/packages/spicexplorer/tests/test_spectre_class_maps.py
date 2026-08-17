@@ -53,18 +53,17 @@ def _cases() -> list:
 @pytest.mark.parametrize(("cls", "tb", "member"), _cases())
 def test_class_bench_map_renders(cls: str, tb: str, member: str | None) -> None:
     from spicexplorer.backends import spectre_templates
-    from spicexplorer.backends.analog_db import _spectre_context, load_analysis, pdk_supply
+    from spicexplorer.backends.analog_db import _spectre_context, load_analysis
 
     assert member is not None, (
         f"class map {cls!r} lists bench {tb!r} but NO member circuit binds "
         f"analyses/{tb}.yaml — map/corpus drift"
     )
     params = load_analysis(member, tb).get("params", {})
-    try:
-        supply = pdk_supply("FOUNDRY-n65")
-    except Exception:
-        supply = None  # no closed-lane PDK registry entry in this checkout
-    context = _spectre_context(tb, params, supply=supply)
+    # No closed-lane (Spectre) PDK is bound in this database, so there is no registry supply
+    # to read — which is exactly the case the templates must still render for. A licensed kit
+    # binds its own rail through `pdk_supply` at this seam.
+    context = _spectre_context(tb, params, supply=None)
 
     statements = spectre_templates.bench_analyses(tb, context, circuit_class=cls)
     assert statements, f"{cls}:{tb} rendered no analysis statements"

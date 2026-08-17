@@ -236,7 +236,7 @@ def pnoise_analysis(
 
     Like ``noise``/``pss``, the result is a plain swept PSF in the run's ``-raw`` dir
     (``pnoise.pnoise``: sweep ``freq``, top-level ``out``/``in`` V/√Hz densities +
-    ``gain``, per-device ``INST:src`` V²/Hz contributions — discovered live on FOUNDRY-65,
+    ``gain``, per-device ``INST:src`` V²/Hz contributions — discovered live on the closed lane,
     2026-07-11) read by :func:`backends.spectre.read_swept_psf`, so the registry recipes
     ``{meas: onoise_pnoise_total | inoise_pnoise_total | pnoise_spot | phase_noise_dbc}``
     pull the densities exactly as the small-signal noise ones do. Spectre may clip the
@@ -717,7 +717,7 @@ def deck_spec_from_native(
 def deck_spec_from_ngspice(
     netlist: Path | str,
     *,
-    pdk: str | Any = "FOUNDRY-n65",
+    pdk: str | Any = "generic-n65",
     source_pdk: str | Any | None = None,
     analyses: Sequence[str] | None = None,
     parameters: Mapping[str, Any] | None = None,
@@ -728,7 +728,7 @@ def deck_spec_from_ngspice(
 
     The syntax half runs in ``spicexplorer-circuitgraph`` (dialect emitters); imported
     lazily so this module stays importable without it. ``pdk`` names the target device
-    table (device-model mapping, e.g. ``"FOUNDRY-n65"``); ``source_pdk`` aids device
+    table (device-model mapping, e.g. ``"generic-n65"``); ``source_pdk`` aids device
     classification of the source deck (e.g. ``"ihp-sg13g2"`` for X-prefixed MOS).
     """
     try:

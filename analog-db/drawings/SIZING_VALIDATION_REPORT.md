@@ -1,10 +1,9 @@
-# Drawings sizing & dual-engine validation report — ngspice/ihp + Spectre/FOUNDRY-n65
+# Drawings sizing & dual-engine validation report — ngspice/ihp + Spectre @ 65 nm
 
 > **[REVIEW]** — results record for the 2026-07-18 drawings campaign: (1) CMFB-polarity
 > closure (B5), (2) full-drawings IHP bench sweep, (3) optimizer sizing of the unsized
-> blocks, (4) xvport port of every drawing to Virtuoso/FOUNDRYN65, (5) Spectre validation
-> at 65 nm. Names PLAN: `plan_examples_db.md` §4.5–4.6 (bio-afe port) + the xvport plan
-> (`spicexplorer-workspace/doc/plan_xschem_virtuoso_port.md`). Forward checklist stays in
+> blocks, (4) xvport port of every drawing to Virtuoso, (5) Spectre validation
+> at 65 nm. Forward checklist stays in
 > [`TODO_bio_afe_port.md`](TODO_bio_afe_port.md); drawing-bug history in
 > [`DRAWING_REVIEW.md`](DRAWING_REVIEW.md) (§8 = the per-block IHP sweep table).
 > Created 2026-07-18. Sections marked *(pending)* fill in as the campaign lands.
@@ -28,8 +27,8 @@ Two engines, one truth per block:
   (dcgain ≥ 55 dB, UGF ≥ 2 MHz @ 50 fF, PM ≥ 60°, I ≤ 100 µA, CM errors ≤ 20 mV,
   servos in-rail); (c) fine-tune the weak landed amp_025 sizing (35.8 dB vs its 60 dB
   datasheet target) the same way.
-- **Closed lane (Spectre, FOUNDRY-n65, virtuoso-bridge)**: every drawing ported to real
-  Virtuoso cellviews with `xvport` (device map sg13_lv_* → FOUNDRYN65 nch_lvt/pch_lvt,
+- **Closed lane (Spectre @ 65 nm, virtuoso-bridge)**: every drawing ported to real
+  Virtuoso cellviews with `xvport` (device map sg13_lv_* → the kit's nch_lvt/pch_lvt,
   per-finger w, simM; R/C/V/VCCS → analogLib), proven per block by xvport's three
   oracles (verify = terminal bindings; netcheck = circuitgraph isomorphism vs
   Virtuoso's own netlist; simcheck = Spectre DC op with the operator's NDA-neutral
@@ -37,7 +36,7 @@ Two engines, one truth per block:
   same bench suite, biases retuned for the 65 nm LVT devices (lower V_th; LVT gm/gds
   caps a single stage near ~28 dB, so 65 nm gains are expected below IHP).
 - **NDA**: kit model bytes are never read or committed; decks reference only the
-  operator's local wrapper (`~/.spicexplorer/models/FOUNDRY_n65_models.scs`, section tt).
+  operator's local model wrapper (section tt).
 
 ## 2. CMFB polarity closure (B5) — done, sim-proven
 
@@ -117,7 +116,7 @@ corner-vs-duty cannot be resolved by any 5 kHz-clock tran; observing the paper's
 40–320 Hz axis needs Rf·Cf scaled ~10⁴× — **owner decision on the filter component
 values** (the drawn 1 k/1 p are placeholders).
 
-## 5. Virtuoso / FOUNDRY-n65 port — DONE, all oracles green (24 cells in `xvport_dev`)
+## 5. Virtuoso port — DONE, all oracles green (24 cells in `xvport_dev`)
 
 **Every drawing ported and proven**: verify (terminal bindings) + netcheck
 (circuitgraph isomorphism vs Virtuoso's own netlist) + simcheck (Spectre DC op with
@@ -144,11 +143,11 @@ already-ported deps cleanly.
 - Also: the daemon `load()`s the `.il` from Virtuoso's own cwd → pass `-o` with an
   ABSOLUTE path; the target library must already exist (`xvport_dev`).
 
-## 6. Spectre (FOUNDRY-n65) validation — DONE (drawn geometry, bias retune only)
+## 6. Spectre (65 nm) validation — DONE (drawn geometry, bias retune only)
 
 Biases retuned by sweep where the 65 nm LVT devices moved the operating windows;
 **no geometry touched** (that is §4/§7's job). All transistor gains land 25–38 dB —
-the FOUNDRY65 LVT single-stage gm/gds ceiling (journal-verified) — so 65 nm coming in
+the 65 nm LVT single-stage gm/gds ceiling (journal-verified) — so 65 nm coming in
 below IHP is physics, not port error.
 
 | Block | 65 nm result (tt, 1.2 V, 50 f) | Retuned biases | IHP baseline |
@@ -189,7 +188,7 @@ every point, canonical CMFB correct throughout).
 | IHP sized | **54.67 dB** | 76.2 MHz | 60.2° | 96.9 µA | 0.70 |
 
 Reading: the IHP sizing carried to 65 nm buys ~4× UGF and fixes the phase margin,
-but **DC gain stays pinned at ~38 dB — the FOUNDRY65 LVT gm/gds ceiling** (~17 dB below
+but **DC gain stays pinned at ~38 dB — the 65 nm LVT gm/gds ceiling** (~17 dB below
 the IHP-sized figure), and the same geometry burns 3.3× the current. A 65 nm gain
 target ≥55 dB needs cascoding / a gain topology change, not sizing (same conclusion
 as amp_025 §4.2, from the other direction). **Loop-2 marginality at 65 nm sized:**

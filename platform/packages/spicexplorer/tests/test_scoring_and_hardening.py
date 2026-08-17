@@ -104,10 +104,13 @@ def test_hd2_failed_sim_result_scores_as_nan():
 def test_hd2_wait_for_handles_times_out_returns_pending():
     handles = {"tb_done": _Done(), "tb_hung": _NeverDone()}
     # A tiny timeout forces the bounded wait to give up quickly instead of spinning forever.
-    pending = _wait_for_handles(None, handles, timeout_s=0.05)
+    pending, done_at = _wait_for_handles(None, handles, timeout_s=0.05)
     assert pending == ["tb_hung"]                   # only the never-finishing sim is flagged
+    assert set(done_at) == {"tb_done"}              # completed sims get a done stamp
 
 
 def test_hd2_wait_for_handles_returns_empty_when_all_done():
     handles = {"a": _Done(), "b": _Done()}
-    assert _wait_for_handles(None, handles, timeout_s=5.0) == []
+    pending, done_at = _wait_for_handles(None, handles, timeout_s=5.0)
+    assert pending == []
+    assert set(done_at) == {"a", "b"}

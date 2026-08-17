@@ -37,3 +37,29 @@ _shared/gmid/**/*.manifest.json
 !_shared/gmid/ihp-sg13g2/sg13_lv_nmos__tt.manifest.json
 !_shared/gmid/ihp-sg13g2/sg13_lv_pmos__tt.pkl
 !_shared/gmid/ihp-sg13g2/sg13_lv_pmos__tt.manifest.json
+
+# PAM-4 HBT layout flow (drawings/*/ported-netlists/layout): regenerable outputs of
+# gen_layout.py / signoff.py / kpex. Track only small text artifacts (converted
+# post-layout netlists directly under pex/, LVS/kpex/sim netlists, PNG renders,
+# pex_report.yaml); GDS and the DRC/LVS/PEX working dirs rebuild deterministically.
+drawings/*/ported-netlists/layout/out/*.gds
+drawings/*/ported-netlists/layout/out/pex/*/
+drawings/*/ported-netlists/layout/out/signoff/
+drawings/*/ported-netlists/notebooks/nb_opt/
+.kpex_cache/
+# stray LVS by-products dumped into cwd by KLayout LVS runs
+*_lay_extracted.cir
+
+# Same PAM-4 HBT layout flow, now landed under the VERSIONED circuit entries
+# (circuits/<id>/pdk/<pdk>/layout-<NNN>-<slug>/ — see that dir's layout.yaml).
+# Identical policy: track the generator/signoff/pex code + small text artifacts
+# (converted post-layout netlists directly under pex/, the LVS/kpex/sim
+# netlists, PNG renders, pex_report.yaml, layout.yaml, best_*.json); the GDS and
+# the DRC/LVS/PEX/optimizer WORKING dirs rebuild deterministically from source.
+circuits/*/pdk/*/layout-*/out/*.gds
+circuits/*/pdk/*/layout-*/out/pex/*/
+circuits/*/pdk/*/layout-*/out/signoff/
+# optimizer per-trial working dirs (GDS/pex) are ignored; the small run records
+# directly under the dir (best_<dut>.json, trials_<dut>.jsonl) stay tracked.
+circuits/*/pdk/*/layout-*/opt_out/*/
+circuits/*/pdk/*/layout-*/cosize_out/*/

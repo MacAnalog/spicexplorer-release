@@ -13,15 +13,9 @@ bias:tail:load, 2:24 mirror:CS) are preserved so the current split matches the s
 
 - **Open-PDK bindings:** `ihp-sg13g2`, `sky130` (1.5 V, IBIAS 20 µA, VCM 0.6 — PMOS input).
 - `gf180mcu` binding added via `analog-db add-binding --from ihp-sg13g2` (untuned transfer; T3/T4 sim-smoke passes).
-- **Licensed-PDK binding:** `FOUNDRY-n65` (KIT65 low-Vt core: `nch_lvt`/`pch_lvt`). **NDA-clean** —
-  the kit is *not* vendored; `pdk/FOUNDRY-n65/corners.yaml` names only generic corner labels
-  (`tt/ss/ff/sf/fs`) against a neutral wrapper `FOUNDRY_n65_models.scs` that the operator supplies at
-  simulation time (mapping `tt→tt_lvt`, …), resolved against `model_lib_root`. It runs through
-  **Spectre via the virtuoso-bridge**, not open-PDK ngspice, so `analog-db run`/`verify --sim`
-  skip it by design (no `_NATIVE_PDK` entry); Tier 0-2 offline verification still covers it.
 - **Analyses:** `ac_open_loop` (via **ac_open_loop_biaswrap_ibias** — a fixed-VCM open loop
   rails a two-stage's output), `dc_op`, `noise`, `tran_step` (universal templates).
-- **Reference bindings:** original FOUNDRY 28 nm + 65 nm ferrosim decks under `spectre/`.
+- **Reference bindings:** original proprietary-PDK 28 nm + 65 nm ferrosim decks under `spectre/`.
 - **Structure:** `find_subcircuits` → `dp.pmos.simple` (XM0/XM1), `cm.nmos.simple` (XM3→XM4 +
   XMBD→XMBS), `cm.pmos.simple` (XM7→XM5, XM7→XM6).
 
@@ -34,40 +28,9 @@ bias:tail:load, 2:24 mirror:CS) are preserved so the current split matches the s
 | i_supply | 246 µA | 85 µA |
 | t_settle (0.2 V, 2 mV band) | 38 ns | 2.6 µs |
 
-**Spectre (FOUNDRY-n65, tt_lvt, 27 °C, 1.2 V / 20 µA / 500 fF)** — the binding carries the
-**gm/ID re-sizing of 2026-07-22** (PPA-campaign `hand_design` tag `gmid_v7`: LUT-driven,
-leak-aware — the global sizing-space optimum computed over the m-welds): **dc_gain 55.3 dB ·
-UGF 11.5 MHz · PM 78° · ~224 µW** live through the config-driven binding path
-(`spicexplorer` `tests/test_amp022_FOUNDRY65_configdriven_live.py`). The pre-campaign sizing
-measured 47.4 dB · 18.0 MHz · 61° (`tests/test_amp022_FOUNDRY65_ac_live.py`, which pins its own
-deck). Still lower than the open-PDK bindings by design — KIT65 low-Vt cores have lower
-intrinsic gain — and the LUT analysis shows **60 dB is unreachable in this sizing space**
-(LVT V_A + stage-2 gate leakage + the frozen m=17/3 stage-2 current). (Not an ngspice column:
-FOUNDRY is Spectre-only, run at its 1.2 V core rail.)
-
-Same node (pre-campaign sizing), **Spectre noise** analysis (1 kHz–100 MHz) through the same engine-neutral Tier-1
-registry (`inoise_total`/`onoise_total`): **integrated output-referred ≈ 813 µV · input-referred
-≈ 210 µV rms** (`spicexplorer` `tests/test_amp022_FOUNDRY65_noise_live.py`). Wide-band figures — the
-input-referred integral is dominated by the high-frequency tail where the gain has rolled off.
-
-Same node (pre-campaign sizing), **Spectre transient THD** — wired as a unity-gain follower, driven by a 100 mV / 1 MHz
-sine, through the same engine-neutral Tier-1 registry (`thd`, the coherent-FFT `thd_from_waveform`,
-a SPICE `.four` analogue): **THD ≈ 0.077 % (−62 dB), HD2-dominated**, at a fundamental of 99.7 mV
-(loop gain ≈ 1) (`spicexplorer` `tests/test_amp022_FOUNDRY65_thd_live.py`). A closed-loop follower well
-below the ~18 MHz UGF, so loop gain suppresses distortion.
-
 **Bench-validation pass (2026-07-09, tt, in-library `run_circuit`; pre-campaign sizing)** — the full amplifier bench
-suite on both lanes. ihp-sg13g2 (ngspice): CMRR 64.3 dB, PSRR+ 76.4 dB, ICMR 1.37 V,
-THD 0.023 % (100 mV @ 1 MHz), IIP3 +23.6 dBV. FOUNDRY-n65 (native Spectre, 1.2 V): CMRR 58.4 dB,
-PSRR+ 96.6 dB, ICMR 1.07 V, THD 0.076 % (native PSS — matches the transient figure above),
-IIP3 +17.9 dBV (two-tone 0.9/1.0 MHz on a 100 kHz-fundamental pss). Within each lane the
-THD/IIP3 pair is internally coherent (lower distortion ↔ higher intercept).
-
-**stb bench (2026-07-10, FOUNDRY-n65 tt, native Spectre; pre-campaign sizing — the gmid_v7 sizing measures pm_loop 76–79°, loop gain 55.3 dB)** — the loop-gain probe (`stb` analysis
-off the template's `VIPRB` marker): pm_loop 61.6°/60.8° (platform registry / Spectre's native
-stb margin) vs the open-loop PM 60.9°, gain margin 8.06 dB on both routes, loop gain@DC
-47.41 dB == the open-loop dcgain (β = 1). The bench's SKILL calculator set (the class
-`spectre-benches.yaml` over `_shared/engines/spectre/calculator.yaml`) reproduced the THD/IIP3
-figures exactly (0.0763 % / +17.93 dBV) — PSS+SKILL and Python-registry routes agree.
+suite. ihp-sg13g2 (ngspice): CMRR 64.3 dB, PSRR+ 76.4 dB, ICMR 1.37 V,
+THD 0.023 % (100 mV @ 1 MHz), IIP3 +23.6 dBV. The THD/IIP3 pair is internally coherent
+(lower distortion ↔ higher intercept).
 
 Regenerate: `analog-db generate --circuit amp_022_fer_two_stage`.

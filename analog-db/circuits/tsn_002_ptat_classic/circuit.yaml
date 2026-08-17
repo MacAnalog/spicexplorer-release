@@ -1,7 +1,7 @@
 # ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
 # PROMOTED from the sfe_ptat_classic reference entry: authored a device-generic abstract netlist +
 # open-PDK bindings so the AnalogGym classic PTAT reference is lowerable, assembled and simulated.
-# The original FOUNDRY-180nm AnalogGym decks are retained verbatim under the `references` binding.
+# The original proprietary-PDK 180 nm AnalogGym decks are retained verbatim under the `references` binding.
 schema: spicexplorer/circuit@1
 id: tsn_002_ptat_classic
 class: temp_sensor

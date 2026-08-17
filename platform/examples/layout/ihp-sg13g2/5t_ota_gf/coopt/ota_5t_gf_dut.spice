@@ -1,0 +1,21 @@
+* amp_001_5t — the PARAMETERIZED schematic DUT for co-optimization.
+*
+* Same circuit/pins as ../ota_5t_gf_lvs.spice, but the device W/L read the global
+* `.param`s the testbench declares (tb_ac.spice), so the optimizer's SIZING dut_params
+* reach the pre-layout deck through the ordinary `NGSpice_Wrapper.update_params` path
+* (the layout backend injects `sizing_params` into every postlayout testbench's .param).
+*
+* UNITS: the generator's sizing dict is in MICRONS (gen_5t_ota_gf.SIZING), and the same
+* numbers are injected here — so every card converts explicitly with `*1e-6`. Never write
+* `w={in_w}u`: `u` after a brace expression is not a multiplier in ngspice.
+*
+* Post-layout the whole subckt is replaced by the kpex-extracted one (same .subckt header
+* and pin ORDER), so these .params are only what the PRE-layout reference run consumes.
+.subckt ota_5t_gf vdd vout vinp vinn ibias vss
+XM1 outm vinp tail vss sg13_lv_nmos w={in_w*1e-6}   l={in_l*1e-6}
+XM2 vout vinn tail vss sg13_lv_nmos w={in_w*1e-6}   l={in_l*1e-6}
+XM3 outm outm vdd  vdd sg13_lv_pmos w={pld_w*1e-6}  l={pld_l*1e-6}
+XM4 vout outm vdd  vdd sg13_lv_pmos w={pld_w*1e-6}  l={pld_l*1e-6}
+XM5 tail ibias vss vss sg13_lv_nmos w={tail_w*1e-6} l={tail_l*1e-6}
+XM6 ibias ibias vss vss sg13_lv_nmos w={ref_w*1e-6} l={ref_l*1e-6}
+.ends

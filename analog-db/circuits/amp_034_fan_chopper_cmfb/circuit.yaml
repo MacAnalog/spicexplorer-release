@@ -34,6 +34,6 @@ artifacts:
   abstract_netlist: abstract/netlist.spice
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
-pdks: [ihp-sg13g2, FOUNDRY-n65]
+pdks: [ihp-sg13g2]
 analyses: [ac_open_loop, dc_op, dc_cm_bias_sweep, tran_cm_kick, cmrr_vcm, psrr_vdd, stb, tran_step, noise]
 status: draft

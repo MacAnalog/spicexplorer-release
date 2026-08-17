@@ -1,0 +1,27 @@
+* DUT: pam4drv_msb — 0 LSB cell(s) + 2 MSB cell(s), npn13G2 Nx=3
+.subckt pam4drv_msb inp inn outp outn vcc vcasc vcmb bias
+* --- cell M0 ---
+XQ1M0 c1M0 inp e1M0 0 npn13G2 Nx=3
+XQ2M0 c2M0 inn e2M0 0 npn13G2 Nx=3
+XQ3M0 outp vcasc c1M0 0 npn13G2 Nx=3
+XQ4M0 outn vcasc c2M0 0 npn13G2 Nx=3
+RE1M0 e1M0 tmsb0 2.5
+RE2M0 e2M0 tmsb0 2.5
+CdegM0 e1M0 e2M0 20f
+GtailM0 tmsb0 0 bias 0 1m
+
+* --- cell M1 ---
+XQ1M1 c1M1 inp e1M1 0 npn13G2 Nx=3
+XQ2M1 c2M1 inn e2M1 0 npn13G2 Nx=3
+XQ3M1 outp vcasc c1M1 0 npn13G2 Nx=3
+XQ4M1 outn vcasc c2M1 0 npn13G2 Nx=3
+RE1M1 e1M1 tmsb1 2.5
+RE2M1 e2M1 tmsb1 2.5
+CdegM1 e1M1 e2M1 20f
+GtailM1 tmsb1 0 bias 0 1m
+
+Rcp outp vcc 50
+Rcn outn vcc 50
+Rbinp inp vcmb 50
+Rbinn inn vcmb 50
+.ends pam4drv_msb

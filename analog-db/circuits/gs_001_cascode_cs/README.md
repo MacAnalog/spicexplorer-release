@@ -15,7 +15,7 @@ the full range.
 - `gf180mcu` binding added via `analog-db add-binding --from ihp-sg13g2` (untuned transfer; T3/T4 sim-smoke passes).
 - **Analyses:** `dc_op` (v_trip + i_supply), `dc_transfer` (gain_dc + vin_pk), `ac_gain`
   (gain_ac_db + f3db into 200 fF).
-- **Reference bindings:** original FOUNDRY 28 nm + 65 nm ferrosim decks under `spectre/`.
+- **Reference bindings:** original proprietary-PDK 28 nm + 65 nm ferrosim decks under `spectre/`.
 - **Structure:** `find_subcircuits` → `cm.pmos.simple` (XMPB1→XMPLD) **and** `cm.pmos.cascode`
   (XMPB1/XMPB2 → XMPLD/XMPCA).
 

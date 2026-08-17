@@ -1,4 +1,4 @@
-// Fully differential two-stage opamp, FOUNDRY 28nm, VDD=0.9V.
+// Fully differential two-stage opamp, proprietary-PDK 28 nm, VDD=0.9V.
 // Stage 1: NMOS-input folded cascode.
 // Stage 2: NMOS common-source with PMOS current-source load.
 // Compensation: Miller cap + nulling resistor per side.

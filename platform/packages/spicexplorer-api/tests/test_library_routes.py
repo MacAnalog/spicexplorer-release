@@ -115,7 +115,7 @@ def test_catalog_shape_and_5t_ota(client):
     assert "klass" not in c
     assert c["compensation"] == "none"
     assert c["stages"] == 1
-    # superset: bindings grow (amp_001_5t gained FOUNDRY-n65 in the bench-validation pass)
+    # superset: bindings grow (a binding may be added by a later pass)
     assert set(c["pdks"]) >= {"ihp-sg13g2", "sky130", "gf180mcu"}
     assert c["provenance"]["designer"] == "Harald Pretl"
     assert c["provenance"]["license"] == "Apache-2.0"
@@ -282,7 +282,7 @@ def test_pdk_registry(client):
     assert pdks["sky130"] == "ngspice"
     assert pdks["ihp-sg13g2"] == "ngspice"
     assert pdks["gf180mcu"] == "ngspice"
-    assert pdks["FOUNDRY-n65"] == "spectre"
+    assert pdks["generic-n65"] == "spectre"
 
 
 def test_pdks_503_when_db_absent(client, monkeypatch):

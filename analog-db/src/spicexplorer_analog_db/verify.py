@@ -664,13 +664,11 @@ def _tier1_params_checks(c: model.Circuit) -> list[CheckResult]:
         )
 
     # --- symbol closure: netlist symbols ⊆ inventory ---
-    inventory_syms = {
-        v
-        for fields in devices.values()
-        if isinstance(fields, dict)
-        for v in fields.values()
-        if isinstance(v, str)
-    }
+    inventory_syms: set[str] = set()
+    for fields in devices.values():
+        if isinstance(fields, dict):
+            for v in fields.values():
+                inventory_syms |= par.value_symbols(v)
     missing_syms = sorted(par.netlist_symbols(graph) - inventory_syms)
     r.append(
         _ok(c.id, 1, "params:symbols")
@@ -691,10 +689,16 @@ def _tier1_params_checks(c: model.Circuit) -> list[CheckResult]:
         if not (c.dir / "pdk" / pdk / "sizing.yaml").is_file():
             continue  # Tier-0 already fails the missing binding
         try:
-            names = {v["name"] for v in c.sizing(pdk).get("variables", [])}
+            variables = c.sizing(pdk).get("variables", [])
         except Exception as exc:  # noqa: BLE001
             r.append(_fail(c.id, 1, f"params:sizing:{pdk}", f"sizing.yaml unreadable: {exc}"))
             continue
+        names = {v["name"] for v in variables}
+        # Knobs applied by the TESTBENCHES (bias-port DC sources / supply), not the
+        # DUT ``.param`` header — flagged ``testbench: true`` in sizing.yaml. They
+        # legitimately have no DUT inventory symbol, so they are exempt from the
+        # closure below (e.g. a bias-port VCCS driver's tail/vcasc/vcm/vcc).
+        testbench = {v["name"] for v in variables if v.get("testbench")}
         problems: list[str] = []
         undefined = sorted(free - names)
         if undefined:
@@ -704,9 +708,16 @@ def _tier1_params_checks(c: model.Circuit) -> list[CheckResult]:
         shadowing = sorted(names & tied)
         if shadowing:
             problems.append(f"sizing row(s) for TIED symbols (double definition): {shadowing[:6]}")
-        unknown = sorted(names - free - tied)
+        mislabelled = sorted(testbench & (free | tied))
+        if mislabelled:
+            problems.append(
+                f"sizing row(s) marked testbench: but defined in the DUT inventory: {mislabelled[:6]}"
+            )
+        unknown = sorted(names - free - tied - testbench)
         if unknown:
-            problems.append(f"sizing row(s) for symbols not in the inventory: {unknown[:6]}")
+            problems.append(
+                f"sizing row(s) for symbols neither in the inventory nor testbench-applied: {unknown[:6]}"
+            )
         r.append(
             _ok(c.id, 1, f"params:sizing:{pdk}")
             if not problems

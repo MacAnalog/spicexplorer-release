@@ -21,11 +21,11 @@ artifacts:
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
   schematic: abstract/schematic.svg
-pdks: [ihp-sg13g2, sky130, gf180mcu, FOUNDRY-n65]               # multi-PDK: one abstract topology, two bindings (D-1)
+pdks: [ihp-sg13g2, sky130, gf180mcu]               # multi-PDK: one abstract topology, two bindings (D-1)
 analyses: [ac_open_loop, ac_closed_loop, dc_op, noise, tran_step, psrr_vdd, cmrr_vcm, linearity, thd, iip3, stb]
 # Foreign proprietary-PDK reference decks folded in from the former `ferrosim_amp5t` accession
 # (2026-07-15): AMP_5T_D2S is the SAME topology as this entry (NMOS input pair, PMOS mirror load,
-# NMOS tail + diode reference), so its FOUNDRY-28nm Spectre decks land here as an extra reference
+# NMOS tail + diode reference), so its proprietary-PDK 28 nm Spectre decks land here as an extra reference
 # binding rather than a duplicate topology accession (the registry is topology-first). Provenance:
 # Arcadia-1/ferrosim (netlist-crawler), designer Token Zhang, MIT — see corpora/ferrosim/PROVENANCE.md.
 references:

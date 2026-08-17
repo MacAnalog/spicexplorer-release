@@ -1,0 +1,13 @@
+* amp_001_5t — flat LVS reference (ihp-sg13g2 primitive MOS).
+* Ports: vdd vout vinp vinn ibias vss. Devices/sizing from
+* examples/analog-db/circuits/amp_001_5t/pdk/ihp-sg13g2/{netlist,sizing}.
+* NOTE: use `M` cards (primitive MOS), NOT `XM` (a subckt call to an undefined model)
+* — KLayout LVS matches these against the extracted sg13_lv_{n,p}mos devices.
+.subckt ota_5t vdd vout vinp vinn ibias vss
+M1 outm vinp tail vss sg13_lv_nmos w=0.5u l=5u
+M2 vout vinn tail vss sg13_lv_nmos w=0.5u l=5u
+M3 outm outm vdd  vdd sg13_lv_pmos w=1.5u l=5u
+M4 vout outm vdd  vdd sg13_lv_pmos w=1.5u l=5u
+M5 tail ibias vss vss sg13_lv_nmos w=2u l=5u
+M6 ibias ibias vss vss sg13_lv_nmos w=2u l=5u
+.ends

@@ -1,6 +1,6 @@
 """In-library router — OPEN lane LIVE: amp_022 ihp-sg13g2 AC via `run_circuit` (opt-in).
 
-The mirror of the closed FOUNDRY-n65 proof, on the OPEN (ngspice) lane: the committed `sim_engine`
+The mirror of the closed-lane proof, on the OPEN (ngspice) lane: the committed `sim_engine`
 marker routes ihp-sg13g2 to ngspice, `run_circuit` runs the circuit's self-contained raw deck
 through `NGSpice_Wrapper`, and the SAME datasheet metrics are scored off the result through the
 engine-neutral registry (only the output signal name differs — `v(vout)` vs Spectre's `vout`).

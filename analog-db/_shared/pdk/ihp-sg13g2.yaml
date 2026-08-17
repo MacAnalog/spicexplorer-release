@@ -28,6 +28,29 @@ passives:
     rppd:     {kind: res, sheet_res: 265}
     rsil:     {kind: res, sheet_res: 7.8}
     cap_cmim: {kind: cap, area_cap: 1.52e-15}
+# SiGe:C HBT (bipolar) family — the corpus's FIRST bipolar + first RF device class
+# (drv_001_pam4_sige_dac; doc/pam4_driver_case_study_feasibility.md §3.0/§4.4). `npn13G2` is a
+# native VBIC card (no OSDI compile). Unlike a MOSFET the HBT has NO continuous W/L: base width,
+# doping and junction depths are baked into the fitted card. The single netlist-reachable sizing
+# knob is `Nx` (integer count of 0.07 x 0.90 um2 emitter stripes). `constraints` are free-form
+# lookup keys (mirroring `tech_spec.constraints`), NOT enforced by the engine — they bound the
+# characterized model envelope for the optimizer's sizing.yaml. Self-heating VBIC needs
+# ngspice >= 45 for .op/.ac/.dc (JPP-361: on 44 it fails; 45 unlocks the cheap AC lane).
+hbt:
+  models: {std: npn13G2, long_emitter: npn13G2l, high_voltage: npn13G2v}
+  default: npn13G2                      # peak-fT/fmax flavor used by the PAM-4 driver
+  unit_emitter_um2: 0.063               # 0.07 x 0.90 um2 per stripe (npn13G2 mask)
+  corners:
+    lib_file: cornerHBT.lib             # typ/wcs/bcs + mismatch/stat sections (PVT_plan.md)
+    per_corner: {tt: [hbt_typ], ss: [hbt_wcs], ff: [hbt_bcs]}
+  constraints:                          # characterized-envelope bounds (free-form; see above)
+    min_nx: 1                           # npn13G2 valid Nx = 1..10 parallel stripes
+    max_nx: 10
+    ic_per_nx_ma: 3                     # I_C < 3*Nx mA per device (design runs ~89% of this)
+    vce_min: 0.4                        # VBIC valid V_CE 0.4..2.0 V (vce_max card = 1.6)
+    vce_max: 2.0
+    supply: 4.0                         # 4 V driver rail (not the 1.5 V lv MOS rail above)
+  ngspice_min_version: 45               # self-heating VBIC .op/.ac (JPP-361)
 geometry: {min_l: 0.13u, min_w: 0.18u, max_l: 10u, max_w: 10u}
 # MOS devices are .subckt wrappers around an OSDI PSP instance named N<model>; after .op the
 # small-signal params are readable as @n.<inst-path>.n<model>[gm|gds] (the symbolic cross-check).

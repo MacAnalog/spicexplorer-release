@@ -1,4 +1,4 @@
-// 5-stage ring oscillator (FOUNDRY28 ULVT) + Verilog-A divide-by-2 monitor.
+// 5-stage ring oscillator (foundry ULVT) + Verilog-A divide-by-2 monitor.
 // A current kick on n1 breaks the metastable DC symmetry; the VA block
 // divides the ring frequency by 2 on node DIV.
 simulator lang=spectre

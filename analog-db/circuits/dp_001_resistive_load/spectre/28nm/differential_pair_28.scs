@@ -1,5 +1,5 @@
 // Ported from circuit-bench differential-pair (R-loaded NMOS diff pair).
-// Topology preserved; devices -> FOUNDRY28 nch_mac, VDD 1.0V, L 180n->150n.
+// Topology preserved; devices -> foundry nch_mac, VDD 1.0V, L 180n->150n.
 simulator lang=spectre
 global 0
 parameters vcm=0.6 vid=0

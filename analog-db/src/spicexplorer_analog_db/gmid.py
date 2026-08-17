@@ -349,7 +349,7 @@ def parse_lut(text: str, cfg: GmidConfig) -> dict[str, Any]:
 # ── store resolution (out-of-repo canonical + legacy in-repo fallback) ────────────────────────
 # The gm/ID LUTs are no longer committed (they regenerate from the registries via the regen
 # script — see scripts/regen_gmid_luts.py). The canonical store is `gmid.out_root` (default
-# `~/.spicexplorer/gmid`), the SAME out-of-repo layout the Spectre lane already writes FOUNDRY-n65
+# `~/.spicexplorer/gmid`), the SAME out-of-repo layout the Spectre lane already writes its
 # into, so open + licensed PDKs share one store. Readers still fall back to the legacy committed
 # `_shared/gmid/<pdk>/` location so an older checkout keeps working.
 

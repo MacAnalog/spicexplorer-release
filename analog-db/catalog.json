@@ -112,12 +112,6 @@
             "frozen": 4,
             "ratio": 0,
             "tied": 6
-          },
-          "FOUNDRY-n65": {
-            "free": 8,
-            "frozen": 4,
-            "ratio": 0,
-            "tied": 6
           }
         },
         "untied_symmetries": [
@@ -127,8 +121,7 @@
       "pdks": [
         "ihp-sg13g2",
         "sky130",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -183,20 +176,6 @@
           "stb": "raw/amp_001_5t/sky130/stb.spice",
           "thd": "raw/amp_001_5t/sky130/thd.spice",
           "tran_step": "raw/amp_001_5t/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_001_5t/FOUNDRY-n65/_dut.spice",
-          "ac_closed_loop": "raw/amp_001_5t/FOUNDRY-n65/ac_closed_loop.spice",
-          "ac_open_loop": "raw/amp_001_5t/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_001_5t/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_001_5t/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_001_5t/FOUNDRY-n65/iip3.spice",
-          "linearity": "raw/amp_001_5t/FOUNDRY-n65/linearity.spice",
-          "noise": "raw/amp_001_5t/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_001_5t/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_001_5t/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_001_5t/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_001_5t/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -282,26 +261,6 @@
             "none": 4,
             "pass": 4
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "48ae75df3f",
-          "ppa": {
-            "active_gate_area_um2": 40.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 26.046086161,
-              "pm_deg": 96.356175602,
-              "ugf_hz": 279067.22312
-            },
-            "power_w": 3.060410996884507e-05
-          },
-          "spec": {
-            "fail": 8,
-            "none": 3,
-            "pass": 5
-          }
         }
       },
       "signal_path": "single_ended",
@@ -354,20 +313,13 @@
             "frozen": 0,
             "ratio": 13,
             "tied": 35
-          },
-          "FOUNDRY-n65": {
-            "free": 27,
-            "frozen": 0,
-            "ratio": 13,
-            "tied": 35
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -414,18 +366,6 @@
           "stb": "raw/amp_002_alfio_raffc/sky130/stb.spice",
           "thd": "raw/amp_002_alfio_raffc/sky130/thd.spice",
           "tran_step": "raw/amp_002_alfio_raffc/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_002_alfio_raffc/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_002_alfio_raffc/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_002_alfio_raffc/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_002_alfio_raffc/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_002_alfio_raffc/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_002_alfio_raffc/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_002_alfio_raffc/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_002_alfio_raffc/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_002_alfio_raffc/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_002_alfio_raffc/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -489,26 +429,6 @@
             "none": 4,
             "pass": 8
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "59d5fd09bc",
-          "ppa": {
-            "active_gate_area_um2": 9499.529,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 69.565275555,
-              "pm_deg": 65.626641344,
-              "ugf_hz": 2256746.3508
-            },
-            "power_w": 0.0005111681722321742
-          },
-          "spec": {
-            "fail": 4,
-            "none": 3,
-            "pass": 6
-          }
         }
       },
       "signal_path": "single_ended",
@@ -560,20 +480,13 @@
             "frozen": 0,
             "ratio": 15,
             "tied": 36
-          },
-          "FOUNDRY-n65": {
-            "free": 23,
-            "frozen": 0,
-            "ratio": 15,
-            "tied": 36
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -620,18 +533,6 @@
           "stb": "raw/amp_003_fan_smc/sky130/stb.spice",
           "thd": "raw/amp_003_fan_smc/sky130/thd.spice",
           "tran_step": "raw/amp_003_fan_smc/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_003_fan_smc/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_003_fan_smc/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_003_fan_smc/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_003_fan_smc/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_003_fan_smc/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_003_fan_smc/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_003_fan_smc/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_003_fan_smc/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_003_fan_smc/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_003_fan_smc/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -698,26 +599,6 @@
             "none": 4,
             "pass": 7
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "d9dd55a1c8",
-          "ppa": {
-            "active_gate_area_um2": 852.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 81.493904595,
-              "pm_deg": 437.32547926,
-              "ugf_hz": 3758533.8497
-            },
-            "power_w": 0.0002576669507567059
-          },
-          "spec": {
-            "fail": 2,
-            "none": 4,
-            "pass": 8
-          }
         }
       },
       "signal_path": "single_ended",
@@ -771,12 +652,6 @@
             "frozen": 21,
             "ratio": 0,
             "tied": 21
-          },
-          "FOUNDRY-n65": {
-            "free": 16,
-            "frozen": 21,
-            "ratio": 0,
-            "tied": 21
           }
         },
         "untied_symmetries": [
@@ -787,8 +662,7 @@
       "pdks": [
         "ihp-sg13g2",
         "sky130",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -837,18 +711,6 @@
           "stb": "raw/amp_004_folded_cascode/sky130/stb.spice",
           "thd": "raw/amp_004_folded_cascode/sky130/thd.spice",
           "tran_step": "raw/amp_004_folded_cascode/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_004_folded_cascode/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_004_folded_cascode/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_004_folded_cascode/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_004_folded_cascode/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_004_folded_cascode/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_004_folded_cascode/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_004_folded_cascode/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_004_folded_cascode/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_004_folded_cascode/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_004_folded_cascode/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -912,26 +774,6 @@
             "none": 5,
             "pass": 8
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "f07199b09c",
-          "ppa": {
-            "active_gate_area_um2": 2571.727,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 51.18176520750369,
-              "pm_deg": 71.24274274631367,
-              "ugf_hz": 4170371.927549679
-            },
-            "power_w": 0.00011436726504103237
-          },
-          "spec": {
-            "fail": 2,
-            "none": 4,
-            "pass": 7
-          }
         }
       },
       "signal_path": "single_ended",
@@ -986,20 +828,13 @@
             "frozen": 0,
             "ratio": 16,
             "tied": 44
-          },
-          "FOUNDRY-n65": {
-            "free": 33,
-            "frozen": 0,
-            "ratio": 16,
-            "tied": 44
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -1046,18 +881,6 @@
           "stb": "raw/amp_005_hoilee_affc/sky130/stb.spice",
           "thd": "raw/amp_005_hoilee_affc/sky130/thd.spice",
           "tran_step": "raw/amp_005_hoilee_affc/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_005_hoilee_affc/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_005_hoilee_affc/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_005_hoilee_affc/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_005_hoilee_affc/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_005_hoilee_affc/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_005_hoilee_affc/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_005_hoilee_affc/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_005_hoilee_affc/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_005_hoilee_affc/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_005_hoilee_affc/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -1124,26 +947,6 @@
             "none": 4,
             "pass": 8
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "8d0fe5cbfa",
-          "ppa": {
-            "active_gate_area_um2": 276.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 55.96999065,
-              "pm_deg": 59.436768081,
-              "ugf_hz": 3486420.1213
-            },
-            "power_w": 0.0005061281049260647
-          },
-          "spec": {
-            "fail": 3,
-            "none": 4,
-            "pass": 7
-          }
         }
       },
       "signal_path": "single_ended",
@@ -1196,20 +999,13 @@
             "frozen": 0,
             "ratio": 15,
             "tied": 36
-          },
-          "FOUNDRY-n65": {
-            "free": 30,
-            "frozen": 0,
-            "ratio": 15,
-            "tied": 36
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -1256,18 +1052,6 @@
           "stb": "raw/amp_006_leung_dfcfc1/sky130/stb.spice",
           "thd": "raw/amp_006_leung_dfcfc1/sky130/thd.spice",
           "tran_step": "raw/amp_006_leung_dfcfc1/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_006_leung_dfcfc1/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_006_leung_dfcfc1/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_006_leung_dfcfc1/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_006_leung_dfcfc1/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_006_leung_dfcfc1/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_006_leung_dfcfc1/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_006_leung_dfcfc1/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_006_leung_dfcfc1/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_006_leung_dfcfc1/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_006_leung_dfcfc1/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -1334,26 +1118,6 @@
             "none": 4,
             "pass": 10
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "f5d00a978d",
-          "ppa": {
-            "active_gate_area_um2": 1414.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 44.909905657,
-              "pm_deg": 443.83920181,
-              "ugf_hz": 2278613.4125
-            },
-            "power_w": 0.000543232116488355
-          },
-          "spec": {
-            "fail": 3,
-            "none": 4,
-            "pass": 7
-          }
         }
       },
       "signal_path": "single_ended",
@@ -1405,20 +1169,13 @@
             "frozen": 0,
             "ratio": 16,
             "tied": 38
-          },
-          "FOUNDRY-n65": {
-            "free": 27,
-            "frozen": 0,
-            "ratio": 16,
-            "tied": 38
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -1465,18 +1222,6 @@
           "stb": "raw/amp_007_leung_dfcfc2/sky130/stb.spice",
           "thd": "raw/amp_007_leung_dfcfc2/sky130/thd.spice",
           "tran_step": "raw/amp_007_leung_dfcfc2/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_007_leung_dfcfc2/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_007_leung_dfcfc2/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_007_leung_dfcfc2/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_007_leung_dfcfc2/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_007_leung_dfcfc2/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_007_leung_dfcfc2/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_007_leung_dfcfc2/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_007_leung_dfcfc2/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_007_leung_dfcfc2/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_007_leung_dfcfc2/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -1543,26 +1288,6 @@
             "none": 4,
             "pass": 9
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "fa99d17974",
-          "ppa": {
-            "active_gate_area_um2": 440.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 70.679227331,
-              "pm_deg": 435.41760015,
-              "ugf_hz": 2617560.9054
-            },
-            "power_w": 0.0004933505698364269
-          },
-          "spec": {
-            "fail": 2,
-            "none": 4,
-            "pass": 8
-          }
         }
       },
       "signal_path": "single_ended",
@@ -1614,20 +1339,13 @@
             "frozen": 0,
             "ratio": 15,
             "tied": 36
-          },
-          "FOUNDRY-n65": {
-            "free": 24,
-            "frozen": 0,
-            "ratio": 15,
-            "tied": 36
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -1674,18 +1392,6 @@
           "stb": "raw/amp_008_leung_nmcf/sky130/stb.spice",
           "thd": "raw/amp_008_leung_nmcf/sky130/thd.spice",
           "tran_step": "raw/amp_008_leung_nmcf/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_008_leung_nmcf/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_008_leung_nmcf/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_008_leung_nmcf/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_008_leung_nmcf/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_008_leung_nmcf/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_008_leung_nmcf/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_008_leung_nmcf/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_008_leung_nmcf/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_008_leung_nmcf/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_008_leung_nmcf/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -1752,26 +1458,6 @@
             "none": 4,
             "pass": 10
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "3a2ab557dd",
-          "ppa": {
-            "active_gate_area_um2": 45413.376,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 88.508114046,
-              "pm_deg": 475.45391068,
-              "ugf_hz": 9699723.4857
-            },
-            "power_w": 0.0015399742800607675
-          },
-          "spec": {
-            "fail": 5,
-            "none": 3,
-            "pass": 5
-          }
         }
       },
       "signal_path": "single_ended",
@@ -1823,20 +1509,13 @@
             "frozen": 0,
             "ratio": 16,
             "tied": 38
-          },
-          "FOUNDRY-n65": {
-            "free": 22,
-            "frozen": 0,
-            "ratio": 16,
-            "tied": 38
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -1883,18 +1562,6 @@
           "stb": "raw/amp_009_leung_nmcnr/sky130/stb.spice",
           "thd": "raw/amp_009_leung_nmcnr/sky130/thd.spice",
           "tran_step": "raw/amp_009_leung_nmcnr/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_009_leung_nmcnr/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_009_leung_nmcnr/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_009_leung_nmcnr/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_009_leung_nmcnr/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_009_leung_nmcnr/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_009_leung_nmcnr/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_009_leung_nmcnr/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_009_leung_nmcnr/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_009_leung_nmcnr/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_009_leung_nmcnr/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -1961,26 +1628,6 @@
             "none": 4,
             "pass": 9
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "77e35d5c0a",
-          "ppa": {
-            "active_gate_area_um2": 272.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 77.206516961,
-              "pm_deg": 463.23713306,
-              "ugf_hz": 1906075.3703
-            },
-            "power_w": 0.00013908510784714837
-          },
-          "spec": {
-            "fail": 3,
-            "none": 4,
-            "pass": 7
-          }
         }
       },
       "signal_path": "single_ended",
@@ -2033,12 +1680,6 @@
             "frozen": 0,
             "ratio": 15,
             "tied": 36
-          },
-          "FOUNDRY-n65": {
-            "free": 33,
-            "frozen": 0,
-            "ratio": 15,
-            "tied": 36
           }
         },
         "untied_symmetries": [
@@ -2048,8 +1689,7 @@
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -2096,18 +1736,6 @@
           "stb": "raw/amp_010_peng_acbc/sky130/stb.spice",
           "thd": "raw/amp_010_peng_acbc/sky130/thd.spice",
           "tran_step": "raw/amp_010_peng_acbc/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_010_peng_acbc/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_010_peng_acbc/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_010_peng_acbc/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_010_peng_acbc/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_010_peng_acbc/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_010_peng_acbc/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_010_peng_acbc/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_010_peng_acbc/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_010_peng_acbc/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_010_peng_acbc/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -2174,26 +1802,6 @@
             "none": 4,
             "pass": 7
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "c7caa0e3c5",
-          "ppa": {
-            "active_gate_area_um2": 240.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 60.2442572473783,
-              "pm_deg": 80.61587971402975,
-              "ugf_hz": 1664266.066289314
-            },
-            "power_w": 0.0004998584274107609
-          },
-          "spec": {
-            "fail": 2,
-            "none": 4,
-            "pass": 8
-          }
         }
       },
       "signal_path": "single_ended",
@@ -2245,20 +1853,13 @@
             "frozen": 0,
             "ratio": 23,
             "tied": 52
-          },
-          "FOUNDRY-n65": {
-            "free": 31,
-            "frozen": 0,
-            "ratio": 23,
-            "tied": 52
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -2305,18 +1906,6 @@
           "stb": "raw/amp_011_peng_iac/sky130/stb.spice",
           "thd": "raw/amp_011_peng_iac/sky130/thd.spice",
           "tran_step": "raw/amp_011_peng_iac/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_011_peng_iac/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_011_peng_iac/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_011_peng_iac/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_011_peng_iac/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_011_peng_iac/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_011_peng_iac/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_011_peng_iac/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_011_peng_iac/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_011_peng_iac/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_011_peng_iac/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -2383,26 +1972,6 @@
             "none": 4,
             "pass": 9
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "383a1708c5",
-          "ppa": {
-            "active_gate_area_um2": 356.15,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 62.763988585,
-              "pm_deg": 386.50616245,
-              "ugf_hz": 7247625.9408
-            },
-            "power_w": 4.1467523423623435e-05
-          },
-          "spec": {
-            "fail": 3,
-            "none": 4,
-            "pass": 7
-          }
         }
       },
       "signal_path": "single_ended",
@@ -2454,20 +2023,13 @@
             "frozen": 0,
             "ratio": 23,
             "tied": 52
-          },
-          "FOUNDRY-n65": {
-            "free": 24,
-            "frozen": 0,
-            "ratio": 23,
-            "tied": 52
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -2514,18 +2076,6 @@
           "stb": "raw/amp_012_peng_tcfc/sky130/stb.spice",
           "thd": "raw/amp_012_peng_tcfc/sky130/thd.spice",
           "tran_step": "raw/amp_012_peng_tcfc/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_012_peng_tcfc/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_012_peng_tcfc/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_012_peng_tcfc/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_012_peng_tcfc/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_012_peng_tcfc/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_012_peng_tcfc/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_012_peng_tcfc/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_012_peng_tcfc/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_012_peng_tcfc/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_012_peng_tcfc/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -2592,26 +2142,6 @@
             "none": 4,
             "pass": 10
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "48cb83a939",
-          "ppa": {
-            "active_gate_area_um2": 836.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 67.881372422,
-              "pm_deg": 417.05213252,
-              "ugf_hz": 4014949.927
-            },
-            "power_w": 0.00010814100139044721
-          },
-          "spec": {
-            "fail": 3,
-            "none": 4,
-            "pass": 7
-          }
         }
       },
       "signal_path": "single_ended",
@@ -2665,20 +2195,13 @@
             "frozen": 0,
             "ratio": 11,
             "tied": 34
-          },
-          "FOUNDRY-n65": {
-            "free": 38,
-            "frozen": 0,
-            "ratio": 11,
-            "tied": 34
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -2725,18 +2248,6 @@
           "stb": "raw/amp_013_qu2017_azc/sky130/stb.spice",
           "thd": "raw/amp_013_qu2017_azc/sky130/thd.spice",
           "tran_step": "raw/amp_013_qu2017_azc/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_013_qu2017_azc/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_013_qu2017_azc/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_013_qu2017_azc/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_013_qu2017_azc/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_013_qu2017_azc/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_013_qu2017_azc/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_013_qu2017_azc/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_013_qu2017_azc/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_013_qu2017_azc/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_013_qu2017_azc/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -2803,26 +2314,6 @@
             "none": 4,
             "pass": 6
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "a9804f6e3c",
-          "ppa": {
-            "active_gate_area_um2": 204.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 62.323115814,
-              "pm_deg": 88.968291241,
-              "ugf_hz": 4834366.093
-            },
-            "power_w": 9.635815155251967e-05
-          },
-          "spec": {
-            "fail": 3,
-            "none": 4,
-            "pass": 7
-          }
         }
       },
       "signal_path": "single_ended",
@@ -2874,20 +2365,13 @@
             "frozen": 0,
             "ratio": 15,
             "tied": 36
-          },
-          "FOUNDRY-n65": {
-            "free": 24,
-            "frozen": 0,
-            "ratio": 15,
-            "tied": 36
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -2934,18 +2418,6 @@
           "stb": "raw/amp_014_ramos_pfc/sky130/stb.spice",
           "thd": "raw/amp_014_ramos_pfc/sky130/thd.spice",
           "tran_step": "raw/amp_014_ramos_pfc/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_014_ramos_pfc/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_014_ramos_pfc/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_014_ramos_pfc/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_014_ramos_pfc/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_014_ramos_pfc/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_014_ramos_pfc/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_014_ramos_pfc/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_014_ramos_pfc/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_014_ramos_pfc/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_014_ramos_pfc/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -3012,26 +2484,6 @@
             "none": 4,
             "pass": 9
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "3da2cc4208",
-          "ppa": {
-            "active_gate_area_um2": 2583.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 61.350540304,
-              "pm_deg": 442.08468882,
-              "ugf_hz": 2056075.8776
-            },
-            "power_w": 0.0010742998496577954
-          },
-          "spec": {
-            "fail": 2,
-            "none": 4,
-            "pass": 8
-          }
         }
       },
       "signal_path": "single_ended",
@@ -3084,12 +2536,6 @@
             "frozen": 0,
             "ratio": 13,
             "tied": 32
-          },
-          "FOUNDRY-n65": {
-            "free": 29,
-            "frozen": 0,
-            "ratio": 13,
-            "tied": 32
           }
         },
         "untied_symmetries": [
@@ -3099,8 +2545,7 @@
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -3147,18 +2592,6 @@
           "stb": "raw/amp_015_sau_cfcc/sky130/stb.spice",
           "thd": "raw/amp_015_sau_cfcc/sky130/thd.spice",
           "tran_step": "raw/amp_015_sau_cfcc/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_015_sau_cfcc/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_015_sau_cfcc/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_015_sau_cfcc/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_015_sau_cfcc/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_015_sau_cfcc/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_015_sau_cfcc/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_015_sau_cfcc/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_015_sau_cfcc/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_015_sau_cfcc/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_015_sau_cfcc/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -3221,26 +2654,6 @@
             "none": 4,
             "pass": 5
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "3c706b3e90",
-          "ppa": {
-            "active_gate_area_um2": 376.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 58.119371711,
-              "pm_deg": 418.63115528,
-              "ugf_hz": 18567176.66
-            },
-            "power_w": 0.00033876433641721106
-          },
-          "spec": {
-            "fail": 4,
-            "none": 4,
-            "pass": 6
-          }
         }
       },
       "signal_path": "single_ended",
@@ -3294,20 +2707,13 @@
             "frozen": 0,
             "ratio": 23,
             "tied": 58
-          },
-          "FOUNDRY-n65": {
-            "free": 33,
-            "frozen": 0,
-            "ratio": 23,
-            "tied": 58
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -3354,18 +2760,6 @@
           "stb": "raw/amp_016_song_dacfc/sky130/stb.spice",
           "thd": "raw/amp_016_song_dacfc/sky130/thd.spice",
           "tran_step": "raw/amp_016_song_dacfc/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_016_song_dacfc/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_016_song_dacfc/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_016_song_dacfc/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_016_song_dacfc/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_016_song_dacfc/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_016_song_dacfc/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_016_song_dacfc/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_016_song_dacfc/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_016_song_dacfc/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_016_song_dacfc/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -3432,26 +2826,6 @@
             "none": 4,
             "pass": 4
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "0feed40e88",
-          "ppa": {
-            "active_gate_area_um2": 472.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 54.605690107,
-              "pm_deg": 102.4646978,
-              "ugf_hz": 2205393.5577
-            },
-            "power_w": 0.0003247783432092011
-          },
-          "spec": {
-            "fail": 5,
-            "none": 4,
-            "pass": 5
-          }
         }
       },
       "signal_path": "single_ended",
@@ -3504,19 +2878,12 @@
             "frozen": 0,
             "ratio": 15,
             "tied": 36
-          },
-          "FOUNDRY-n65": {
-            "free": 28,
-            "frozen": 0,
-            "ratio": 15,
-            "tied": 36
           }
         }
       },
       "pdks": [
         "sky130",
         "gf180mcu",
-        "FOUNDRY-n65",
         "ihp-sg13g2"
       ],
       "provenance": {
@@ -3565,18 +2932,6 @@
           "stb": "raw/amp_017_tan_clia/sky130/stb.spice",
           "thd": "raw/amp_017_tan_clia/sky130/thd.spice",
           "tran_step": "raw/amp_017_tan_clia/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_017_tan_clia/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_017_tan_clia/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_017_tan_clia/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_017_tan_clia/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_017_tan_clia/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_017_tan_clia/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_017_tan_clia/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_017_tan_clia/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_017_tan_clia/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_017_tan_clia/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -3643,26 +2998,6 @@
             "none": 5,
             "pass": 9
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "1fdaec42ec",
-          "ppa": {
-            "active_gate_area_um2": 3401717.149,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 48.169164218,
-              "pm_deg": 294.92415706,
-              "ugf_hz": 11843567.465
-            },
-            "power_w": 0.004514187580357276
-          },
-          "spec": {
-            "fail": 7,
-            "none": 3,
-            "pass": 2
-          }
         }
       },
       "signal_path": "single_ended",
@@ -3715,12 +3050,6 @@
             "frozen": 10,
             "ratio": 0,
             "tied": 8
-          },
-          "FOUNDRY-n65": {
-            "free": 15,
-            "frozen": 10,
-            "ratio": 0,
-            "tied": 8
           }
         },
         "untied_symmetries": [
@@ -3731,8 +3060,7 @@
       "pdks": [
         "ihp-sg13g2",
         "sky130",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -3781,18 +3109,6 @@
           "stb": "raw/amp_018_telescopic_cascode/sky130/stb.spice",
           "thd": "raw/amp_018_telescopic_cascode/sky130/thd.spice",
           "tran_step": "raw/amp_018_telescopic_cascode/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_018_telescopic_cascode/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_018_telescopic_cascode/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_018_telescopic_cascode/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_018_telescopic_cascode/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_018_telescopic_cascode/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_018_telescopic_cascode/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_018_telescopic_cascode/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_018_telescopic_cascode/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_018_telescopic_cascode/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_018_telescopic_cascode/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -3860,26 +3176,6 @@
             "none": 4,
             "pass": 9
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "f891751a1c",
-          "ppa": {
-            "active_gate_area_um2": 2744.974,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 20.372650298,
-              "pm_deg": 77.77412689,
-              "ugf_hz": 3094950.181
-            },
-            "power_w": 5.203071694224799e-05
-          },
-          "spec": {
-            "fail": 5,
-            "none": 3,
-            "pass": 5
-          }
         }
       },
       "signal_path": "single_ended",
@@ -3932,12 +3228,6 @@
             "frozen": 0,
             "ratio": 0,
             "tied": 10
-          },
-          "FOUNDRY-n65": {
-            "free": 19,
-            "frozen": 0,
-            "ratio": 0,
-            "tied": 10
           }
         },
         "untied_symmetries": [
@@ -3947,8 +3237,7 @@
       "pdks": [
         "gf180mcu",
         "ihp-sg13g2",
-        "sky130",
-        "FOUNDRY-n65"
+        "sky130"
       ],
       "provenance": {
         "aliases": [
@@ -3997,19 +3286,6 @@
           "stb": "raw/amp_019_ti_ldo_error/sky130/stb.spice",
           "thd": "raw/amp_019_ti_ldo_error/sky130/thd.spice",
           "tran_step": "raw/amp_019_ti_ldo_error/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_019_ti_ldo_error/FOUNDRY-n65/_dut.spice",
-          "ac_closed_loop": "raw/amp_019_ti_ldo_error/FOUNDRY-n65/ac_closed_loop.spice",
-          "ac_open_loop": "raw/amp_019_ti_ldo_error/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_019_ti_ldo_error/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_019_ti_ldo_error/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_019_ti_ldo_error/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_019_ti_ldo_error/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_019_ti_ldo_error/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_019_ti_ldo_error/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_019_ti_ldo_error/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_019_ti_ldo_error/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -4073,26 +3349,6 @@
             "none": 4,
             "pass": 11
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "58739e5535",
-          "ppa": {
-            "active_gate_area_um2": 301.8,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 32.47730735,
-              "pm_deg": 95.828230865,
-              "ugf_hz": 9442084.4123
-            },
-            "power_w": 0.0028526772649586016
-          },
-          "spec": {
-            "fail": 1,
-            "none": 4,
-            "pass": 11
-          }
         }
       },
       "signal_path": "single_ended",
@@ -4145,20 +3401,13 @@
             "frozen": 0,
             "ratio": 6,
             "tied": 27
-          },
-          "FOUNDRY-n65": {
-            "free": 36,
-            "frozen": 0,
-            "ratio": 6,
-            "tied": 27
           }
         }
       },
       "pdks": [
         "sky130",
         "ihp-sg13g2",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -4205,18 +3454,6 @@
           "stb": "raw/amp_021_yan_az/sky130/stb.spice",
           "thd": "raw/amp_021_yan_az/sky130/thd.spice",
           "tran_step": "raw/amp_021_yan_az/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_021_yan_az/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_021_yan_az/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_021_yan_az/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_021_yan_az/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_021_yan_az/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_021_yan_az/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_021_yan_az/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_021_yan_az/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_021_yan_az/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_021_yan_az/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -4283,26 +3520,6 @@
             "none": 4,
             "pass": 6
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "ec0d8b6098",
-          "ppa": {
-            "active_gate_area_um2": 100.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 76.836597075,
-              "pm_deg": 447.9499259,
-              "ugf_hz": 9198156.598
-            },
-            "power_w": 7.921543012211937e-05
-          },
-          "spec": {
-            "fail": 5,
-            "none": 3,
-            "pass": 5
-          }
         }
       },
       "signal_path": "single_ended",
@@ -4356,19 +3573,12 @@
             "frozen": 5,
             "ratio": 4,
             "tied": 12
-          },
-          "FOUNDRY-n65": {
-            "free": 10,
-            "frozen": 5,
-            "ratio": 4,
-            "tied": 12
           }
         }
       },
       "pdks": [
         "ihp-sg13g2",
         "sky130",
-        "FOUNDRY-n65",
         "gf180mcu"
       ],
       "provenance": {
@@ -4420,19 +3630,6 @@
           "stb": "raw/amp_022_fer_two_stage/sky130/stb.spice",
           "thd": "raw/amp_022_fer_two_stage/sky130/thd.spice",
           "tran_step": "raw/amp_022_fer_two_stage/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_022_fer_two_stage/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_022_fer_two_stage/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_022_fer_two_stage/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_022_fer_two_stage/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_022_fer_two_stage/FOUNDRY-n65/iip3.spice",
-          "linearity": "raw/amp_022_fer_two_stage/FOUNDRY-n65/linearity.spice",
-          "noise": "raw/amp_022_fer_two_stage/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_022_fer_two_stage/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_022_fer_two_stage/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_022_fer_two_stage/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_022_fer_two_stage/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -4514,26 +3711,6 @@
             "none": 4,
             "pass": 11
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "d7a96be61d",
-          "ppa": {
-            "active_gate_area_um2": 782.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 55.334668266,
-              "pm_deg": 57.763073407,
-              "ugf_hz": 10341008.6
-            },
-            "power_w": 0.00022384088316207851
-          },
-          "spec": {
-            "fail": 2,
-            "none": 4,
-            "pass": 9
-          }
         }
       },
       "signal_path": "single_ended",
@@ -4598,12 +3775,6 @@
             "frozen": 30,
             "ratio": 0,
             "tied": 44
-          },
-          "FOUNDRY-n65": {
-            "free": 20,
-            "frozen": 30,
-            "ratio": 0,
-            "tied": 44
           }
         },
         "untied_symmetries": [
@@ -4614,8 +3785,7 @@
       "pdks": [
         "ihp-sg13g2",
         "sky130",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -4663,18 +3833,6 @@
           "stb": "raw/amp_023_fer_fd2s/sky130/stb.spice",
           "thd": "raw/amp_023_fer_fd2s/sky130/thd.spice",
           "tran_step": "raw/amp_023_fer_fd2s/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_023_fer_fd2s/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_023_fer_fd2s/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_023_fer_fd2s/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_023_fer_fd2s/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_023_fer_fd2s/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_023_fer_fd2s/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_023_fer_fd2s/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_023_fer_fd2s/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_023_fer_fd2s/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_023_fer_fd2s/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -4759,26 +3917,6 @@
             "none": 10,
             "pass": 9
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "f00a6c4009",
-          "ppa": {
-            "active_gate_area_um2": 5602.224,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 39.576425527,
-              "pm_deg": 65.935064122,
-              "ugf_hz": 3899537.347
-            },
-            "power_w": 0.0005236964340537077
-          },
-          "spec": {
-            "fail": 4,
-            "none": 7,
-            "pass": 4
-          }
         }
       },
       "signal_path": "fully_differential",
@@ -4830,12 +3968,6 @@
             "frozen": 9,
             "ratio": 0,
             "tied": 9
-          },
-          "FOUNDRY-n65": {
-            "free": 9,
-            "frozen": 9,
-            "ratio": 0,
-            "tied": 9
           }
         },
         "untied_symmetries": [
@@ -4845,8 +3977,7 @@
       "pdks": [
         "ihp-sg13g2",
         "sky130",
-        "gf180mcu",
-        "FOUNDRY-n65"
+        "gf180mcu"
       ],
       "provenance": {
         "aliases": [
@@ -4894,18 +4025,6 @@
           "stb": "raw/amp_024_smcnr/sky130/stb.spice",
           "thd": "raw/amp_024_smcnr/sky130/thd.spice",
           "tran_step": "raw/amp_024_smcnr/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_024_smcnr/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_024_smcnr/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_024_smcnr/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_024_smcnr/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_024_smcnr/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_024_smcnr/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_024_smcnr/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_024_smcnr/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_024_smcnr/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_024_smcnr/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -4979,26 +4098,6 @@
             "none": 4,
             "pass": 9
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "eeceb83022",
-          "ppa": {
-            "active_gate_area_um2": 332.5,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 40.995154179,
-              "pm_deg": 420.06533709,
-              "ugf_hz": 107281.76722
-            },
-            "power_w": 1.718993136424347e-06
-          },
-          "spec": {
-            "fail": 3,
-            "none": 4,
-            "pass": 7
-          }
         }
       },
       "signal_path": "single_ended",
@@ -5065,18 +4164,11 @@
             "frozen": 13,
             "ratio": 0,
             "tied": 40
-          },
-          "FOUNDRY-n65": {
-            "free": 37,
-            "frozen": 13,
-            "ratio": 0,
-            "tied": 40
           }
         }
       },
       "pdks": [
         "ihp-sg13g2",
-        "FOUNDRY-n65",
         "sky130",
         "gf180mcu"
       ],
@@ -5131,20 +4223,6 @@
           "thd": "raw/amp_025_hsu_classab_ota/sky130/thd.spice",
           "tran_cm_kick": "raw/amp_025_hsu_classab_ota/sky130/tran_cm_kick.spice",
           "tran_step": "raw/amp_025_hsu_classab_ota/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_025_hsu_classab_ota/FOUNDRY-n65/_dut.spice",
-          "ac_cm_reg": "raw/amp_025_hsu_classab_ota/FOUNDRY-n65/ac_cm_reg.spice",
-          "ac_open_loop": "raw/amp_025_hsu_classab_ota/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_025_hsu_classab_ota/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_025_hsu_classab_ota/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_025_hsu_classab_ota/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_025_hsu_classab_ota/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_025_hsu_classab_ota/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_025_hsu_classab_ota/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_025_hsu_classab_ota/FOUNDRY-n65/thd.spice",
-          "tran_cm_kick": "raw/amp_025_hsu_classab_ota/FOUNDRY-n65/tran_cm_kick.spice",
-          "tran_step": "raw/amp_025_hsu_classab_ota/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "mixed",
@@ -5211,26 +4289,6 @@
             "none": 10,
             "pass": 4
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "3e283e522c",
-          "ppa": {
-            "active_gate_area_um2": 123.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 34.948494637,
-              "pm_deg": 53.75630607,
-              "ugf_hz": 216990557.23
-            },
-            "power_w": 0.0009231526698893505
-          },
-          "spec": {
-            "fail": 7,
-            "none": 7,
-            "pass": 5
-          }
         }
       },
       "signal_path": "fully_differential",
@@ -5289,18 +4347,11 @@
             "frozen": 10,
             "ratio": 0,
             "tied": 42
-          },
-          "FOUNDRY-n65": {
-            "free": 23,
-            "frozen": 10,
-            "ratio": 0,
-            "tied": 42
           }
         }
       },
       "pdks": [
         "ihp-sg13g2",
-        "FOUNDRY-n65",
         "sky130",
         "gf180mcu"
       ],
@@ -5349,18 +4400,6 @@
           "stb": "raw/amp_026_fan_chopper_ota/sky130/stb.spice",
           "thd": "raw/amp_026_fan_chopper_ota/sky130/thd.spice",
           "tran_step": "raw/amp_026_fan_chopper_ota/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_026_fan_chopper_ota/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_026_fan_chopper_ota/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_026_fan_chopper_ota/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_026_fan_chopper_ota/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_026_fan_chopper_ota/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_026_fan_chopper_ota/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_026_fan_chopper_ota/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_026_fan_chopper_ota/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_026_fan_chopper_ota/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_026_fan_chopper_ota/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -5427,26 +4466,6 @@
             "none": 10,
             "pass": 8
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "d47c7c3ce7",
-          "ppa": {
-            "active_gate_area_um2": 48.239,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 57.447562,
-              "pm_deg": 35.85386682,
-              "ugf_hz": 6405333.3748
-            },
-            "power_w": 0.00015036739746160905
-          },
-          "spec": {
-            "fail": 3,
-            "none": 7,
-            "pass": 5
-          }
         }
       },
       "signal_path": "fully_differential",
@@ -5505,18 +4524,11 @@
             "frozen": 9,
             "ratio": 0,
             "tied": 23
-          },
-          "FOUNDRY-n65": {
-            "free": 20,
-            "frozen": 9,
-            "ratio": 0,
-            "tied": 23
           }
         }
       },
       "pdks": [
         "ihp-sg13g2",
-        "FOUNDRY-n65",
         "sky130",
         "gf180mcu"
       ],
@@ -5571,20 +4583,6 @@
           "thd": "raw/amp_027_fan_rrl_ota/sky130/thd.spice",
           "tran_cm_kick": "raw/amp_027_fan_rrl_ota/sky130/tran_cm_kick.spice",
           "tran_step": "raw/amp_027_fan_rrl_ota/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_027_fan_rrl_ota/FOUNDRY-n65/_dut.spice",
-          "ac_cm_reg": "raw/amp_027_fan_rrl_ota/FOUNDRY-n65/ac_cm_reg.spice",
-          "ac_open_loop": "raw/amp_027_fan_rrl_ota/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_027_fan_rrl_ota/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_027_fan_rrl_ota/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_027_fan_rrl_ota/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_027_fan_rrl_ota/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_027_fan_rrl_ota/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_027_fan_rrl_ota/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_027_fan_rrl_ota/FOUNDRY-n65/thd.spice",
-          "tran_cm_kick": "raw/amp_027_fan_rrl_ota/FOUNDRY-n65/tran_cm_kick.spice",
-          "tran_step": "raw/amp_027_fan_rrl_ota/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -5649,26 +4647,6 @@
           "spec": {
             "fail": 4,
             "none": 10,
-            "pass": 9
-          }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "f7f86a8d53",
-          "ppa": {
-            "active_gate_area_um2": 41.313,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 42.683875461,
-              "pm_deg": 90.270055864,
-              "ugf_hz": 4993837.7416
-            },
-            "power_w": 7.574726871041665e-05
-          },
-          "spec": {
-            "fail": 3,
-            "none": 7,
             "pass": 9
           }
         }
@@ -5797,18 +4775,11 @@
             "frozen": 6,
             "ratio": 0,
             "tied": 16
-          },
-          "FOUNDRY-n65": {
-            "free": 14,
-            "frozen": 6,
-            "ratio": 0,
-            "tied": 16
           }
         }
       },
       "pdks": [
         "ihp-sg13g2",
-        "FOUNDRY-n65",
         "sky130",
         "gf180mcu"
       ],
@@ -5861,19 +4832,6 @@
           "stb": "raw/amp_029_two_stage_miller_comp/sky130/stb.spice",
           "thd": "raw/amp_029_two_stage_miller_comp/sky130/thd.spice",
           "tran_step": "raw/amp_029_two_stage_miller_comp/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_029_two_stage_miller_comp/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_029_two_stage_miller_comp/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_029_two_stage_miller_comp/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_cm_bias_sweep": "raw/amp_029_two_stage_miller_comp/FOUNDRY-n65/dc_cm_bias_sweep.spice",
-          "dc_op": "raw/amp_029_two_stage_miller_comp/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_029_two_stage_miller_comp/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_029_two_stage_miller_comp/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_029_two_stage_miller_comp/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_029_two_stage_miller_comp/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_029_two_stage_miller_comp/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_029_two_stage_miller_comp/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -5924,18 +4882,11 @@
             "frozen": 6,
             "ratio": 0,
             "tied": 17
-          },
-          "FOUNDRY-n65": {
-            "free": 21,
-            "frozen": 6,
-            "ratio": 0,
-            "tied": 17
           }
         }
       },
       "pdks": [
-        "ihp-sg13g2",
-        "FOUNDRY-n65"
+        "ihp-sg13g2"
       ],
       "provenance": {
         "designer": "Composition by Noorizadeh; blocks: amp_029 (Schippers drawing) + cmfb_001_ideal_rsense_servo (Hsu CMFB, hand-drawn)",
@@ -5957,21 +4908,6 @@
           "thd": "raw/amp_030_miller_cmfb_composite/ihp-sg13g2/thd.spice",
           "tran_cm_kick": "raw/amp_030_miller_cmfb_composite/ihp-sg13g2/tran_cm_kick.spice",
           "tran_step": "raw/amp_030_miller_cmfb_composite/ihp-sg13g2/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_030_miller_cmfb_composite/FOUNDRY-n65/_dut.spice",
-          "ac_cm_reg": "raw/amp_030_miller_cmfb_composite/FOUNDRY-n65/ac_cm_reg.spice",
-          "ac_open_loop": "raw/amp_030_miller_cmfb_composite/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_030_miller_cmfb_composite/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_cm_bias_sweep": "raw/amp_030_miller_cmfb_composite/FOUNDRY-n65/dc_cm_bias_sweep.spice",
-          "dc_op": "raw/amp_030_miller_cmfb_composite/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_030_miller_cmfb_composite/FOUNDRY-n65/iip3.spice",
-          "noise": "raw/amp_030_miller_cmfb_composite/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_030_miller_cmfb_composite/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_030_miller_cmfb_composite/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_030_miller_cmfb_composite/FOUNDRY-n65/thd.spice",
-          "tran_cm_kick": "raw/amp_030_miller_cmfb_composite/FOUNDRY-n65/tran_cm_kick.spice",
-          "tran_step": "raw/amp_030_miller_cmfb_composite/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "mixed",
@@ -5994,26 +4930,6 @@
             "fail": 3,
             "none": 10,
             "pass": 11
-          }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "88a912c251",
-          "ppa": {
-            "active_gate_area_um2": 58.0,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 49.432719813,
-              "pm_deg": 36.638707768,
-              "ugf_hz": 16615524.512
-            },
-            "power_w": 0.0001967178662183826
-          },
-          "spec": {
-            "fail": 3,
-            "none": 7,
-            "pass": 9
           }
         }
       },
@@ -6067,18 +4983,11 @@
             "frozen": 6,
             "ratio": 0,
             "tied": 17
-          },
-          "FOUNDRY-n65": {
-            "free": 22,
-            "frozen": 6,
-            "ratio": 0,
-            "tied": 17
           }
         }
       },
       "pdks": [
         "ihp-sg13g2",
-        "FOUNDRY-n65",
         "sky130",
         "gf180mcu"
       ],
@@ -6122,16 +5031,6 @@
           "psrr_vdd": "raw/amp_031_srmc_core_cmfb/sky130/psrr_vdd.spice",
           "stb": "raw/amp_031_srmc_core_cmfb/sky130/stb.spice",
           "tran_cm_kick": "raw/amp_031_srmc_core_cmfb/sky130/tran_cm_kick.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_031_srmc_core_cmfb/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_031_srmc_core_cmfb/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_031_srmc_core_cmfb/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_031_srmc_core_cmfb/FOUNDRY-n65/dc_op.spice",
-          "noise": "raw/amp_031_srmc_core_cmfb/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_031_srmc_core_cmfb/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_031_srmc_core_cmfb/FOUNDRY-n65/stb.spice",
-          "tran_cm_kick": "raw/amp_031_srmc_core_cmfb/FOUNDRY-n65/tran_cm_kick.spice"
         }
       },
       "realization": "mixed",
@@ -6198,26 +5097,6 @@
             "none": 10,
             "pass": 7
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "920d0fefbc",
-          "ppa": {
-            "active_gate_area_um2": 0.072,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 27.652664914,
-              "pm_deg": 44.761122843,
-              "ugf_hz": 7465000.9086
-            },
-            "power_w": 7.286724489099834e-05
-          },
-          "spec": {
-            "fail": 4,
-            "none": 7,
-            "pass": 4
-          }
         }
       },
       "signal_path": "fully_differential",
@@ -6271,12 +5150,6 @@
             "frozen": 0,
             "ratio": 0,
             "tied": 9
-          },
-          "FOUNDRY-n65": {
-            "free": 18,
-            "frozen": 0,
-            "ratio": 0,
-            "tied": 9
           }
         },
         "untied_symmetries": [
@@ -6285,7 +5158,6 @@
       },
       "pdks": [
         "gf180mcu",
-        "FOUNDRY-n65",
         "ihp-sg13g2",
         "sky130"
       ],
@@ -6339,20 +5211,6 @@
           "stb": "raw/amp_032_ti_ldo_error_selfbias/sky130/stb.spice",
           "thd": "raw/amp_032_ti_ldo_error_selfbias/sky130/thd.spice",
           "tran_step": "raw/amp_032_ti_ldo_error_selfbias/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_032_ti_ldo_error_selfbias/FOUNDRY-n65/_dut.spice",
-          "ac_closed_loop": "raw/amp_032_ti_ldo_error_selfbias/FOUNDRY-n65/ac_closed_loop.spice",
-          "ac_open_loop": "raw/amp_032_ti_ldo_error_selfbias/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_032_ti_ldo_error_selfbias/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_032_ti_ldo_error_selfbias/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_032_ti_ldo_error_selfbias/FOUNDRY-n65/iip3.spice",
-          "linearity": "raw/amp_032_ti_ldo_error_selfbias/FOUNDRY-n65/linearity.spice",
-          "noise": "raw/amp_032_ti_ldo_error_selfbias/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_032_ti_ldo_error_selfbias/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_032_ti_ldo_error_selfbias/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_032_ti_ldo_error_selfbias/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_032_ti_ldo_error_selfbias/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -6419,26 +5277,6 @@
             "none": 4,
             "pass": 13
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "1b245a4ea1",
-          "ppa": {
-            "active_gate_area_um2": 460.324,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 53.079019311,
-              "pm_deg": 30.772298488,
-              "ugf_hz": 52729001.523
-            },
-            "power_w": 0.0003884347946844266
-          },
-          "spec": {
-            "fail": 3,
-            "none": 4,
-            "pass": 11
-          }
         }
       },
       "signal_path": "single_ended",
@@ -6491,12 +5329,6 @@
             "frozen": 0,
             "ratio": 0,
             "tied": 6
-          },
-          "FOUNDRY-n65": {
-            "free": 16,
-            "frozen": 0,
-            "ratio": 0,
-            "tied": 6
           }
         },
         "untied_symmetries": [
@@ -6505,7 +5337,6 @@
       },
       "pdks": [
         "gf180mcu",
-        "FOUNDRY-n65",
         "ihp-sg13g2",
         "sky130"
       ],
@@ -6561,20 +5392,6 @@
           "stb": "raw/amp_033_ti_ldo_ref_selfbias/sky130/stb.spice",
           "thd": "raw/amp_033_ti_ldo_ref_selfbias/sky130/thd.spice",
           "tran_step": "raw/amp_033_ti_ldo_ref_selfbias/sky130/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_033_ti_ldo_ref_selfbias/FOUNDRY-n65/_dut.spice",
-          "ac_closed_loop": "raw/amp_033_ti_ldo_ref_selfbias/FOUNDRY-n65/ac_closed_loop.spice",
-          "ac_open_loop": "raw/amp_033_ti_ldo_ref_selfbias/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_033_ti_ldo_ref_selfbias/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_op": "raw/amp_033_ti_ldo_ref_selfbias/FOUNDRY-n65/dc_op.spice",
-          "iip3": "raw/amp_033_ti_ldo_ref_selfbias/FOUNDRY-n65/iip3.spice",
-          "linearity": "raw/amp_033_ti_ldo_ref_selfbias/FOUNDRY-n65/linearity.spice",
-          "noise": "raw/amp_033_ti_ldo_ref_selfbias/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_033_ti_ldo_ref_selfbias/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_033_ti_ldo_ref_selfbias/FOUNDRY-n65/stb.spice",
-          "thd": "raw/amp_033_ti_ldo_ref_selfbias/FOUNDRY-n65/thd.spice",
-          "tran_step": "raw/amp_033_ti_ldo_ref_selfbias/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -6641,26 +5458,6 @@
             "none": 4,
             "pass": 13
           }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "2e60e78736",
-          "ppa": {
-            "active_gate_area_um2": 331.221,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 51.95804405,
-              "pm_deg": 15.596593799,
-              "ugf_hz": 24238144.9
-            },
-            "power_w": 0.0002899133674545245
-          },
-          "spec": {
-            "fail": 5,
-            "none": 4,
-            "pass": 9
-          }
         }
       },
       "signal_path": "single_ended",
@@ -6715,18 +5512,11 @@
             "frozen": 15,
             "ratio": 0,
             "tied": 49
-          },
-          "FOUNDRY-n65": {
-            "free": 36,
-            "frozen": 15,
-            "ratio": 0,
-            "tied": 49
           }
         }
       },
       "pdks": [
-        "ihp-sg13g2",
-        "FOUNDRY-n65"
+        "ihp-sg13g2"
       ],
       "provenance": {
         "designer": "Composition by Noorizadeh (MacAnalog group); blocks: amp_026 (Fan core, hand-drawn xschem) + cmfb_002_5t_pmos_input (owner 5T CMFB, 2026-07-20 campaign winner)",
@@ -6746,18 +5536,6 @@
           "stb": "raw/amp_034_fan_chopper_cmfb/ihp-sg13g2/stb.spice",
           "tran_cm_kick": "raw/amp_034_fan_chopper_cmfb/ihp-sg13g2/tran_cm_kick.spice",
           "tran_step": "raw/amp_034_fan_chopper_cmfb/ihp-sg13g2/tran_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/amp_034_fan_chopper_cmfb/FOUNDRY-n65/_dut.spice",
-          "ac_open_loop": "raw/amp_034_fan_chopper_cmfb/FOUNDRY-n65/ac_open_loop.spice",
-          "cmrr_vcm": "raw/amp_034_fan_chopper_cmfb/FOUNDRY-n65/cmrr_vcm.spice",
-          "dc_cm_bias_sweep": "raw/amp_034_fan_chopper_cmfb/FOUNDRY-n65/dc_cm_bias_sweep.spice",
-          "dc_op": "raw/amp_034_fan_chopper_cmfb/FOUNDRY-n65/dc_op.spice",
-          "noise": "raw/amp_034_fan_chopper_cmfb/FOUNDRY-n65/noise.spice",
-          "psrr_vdd": "raw/amp_034_fan_chopper_cmfb/FOUNDRY-n65/psrr_vdd.spice",
-          "stb": "raw/amp_034_fan_chopper_cmfb/FOUNDRY-n65/stb.spice",
-          "tran_cm_kick": "raw/amp_034_fan_chopper_cmfb/FOUNDRY-n65/tran_cm_kick.spice",
-          "tran_step": "raw/amp_034_fan_chopper_cmfb/FOUNDRY-n65/tran_step.spice"
         }
       },
       "realization": "transistor",
@@ -6780,26 +5558,6 @@
             "fail": 2,
             "none": 12,
             "pass": 7
-          }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "6d950a915c",
-          "ppa": {
-            "active_gate_area_um2": 71.085,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {
-              "dc_gain_db": 57.799448202,
-              "pm_deg": 36.736434608,
-              "ugf_hz": 6485887.5699
-            },
-            "power_w": 0.00016583735536958337
-          },
-          "spec": {
-            "fail": 1,
-            "none": 10,
-            "pass": 6
           }
         }
       },
@@ -7093,18 +5851,11 @@
             "frozen": 0,
             "ratio": 0,
             "tied": 1
-          },
-          "FOUNDRY-n65": {
-            "free": 6,
-            "frozen": 0,
-            "ratio": 0,
-            "tied": 1
           }
         }
       },
       "pdks": [
-        "ihp-sg13g2",
-        "FOUNDRY-n65"
+        "ihp-sg13g2"
       ],
       "provenance": {
         "aliases": [
@@ -7122,12 +5873,6 @@
           "ac_servo": "raw/cmfb_001_ideal_rsense_servo/ihp-sg13g2/ac_servo.spice",
           "dc_cmfb_transfer": "raw/cmfb_001_ideal_rsense_servo/ihp-sg13g2/dc_cmfb_transfer.spice",
           "tran_cmfb_step": "raw/cmfb_001_ideal_rsense_servo/ihp-sg13g2/tran_cmfb_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/cmfb_001_ideal_rsense_servo/FOUNDRY-n65/_dut.spice",
-          "ac_servo": "raw/cmfb_001_ideal_rsense_servo/FOUNDRY-n65/ac_servo.spice",
-          "dc_cmfb_transfer": "raw/cmfb_001_ideal_rsense_servo/FOUNDRY-n65/dc_cmfb_transfer.spice",
-          "tran_cmfb_step": "raw/cmfb_001_ideal_rsense_servo/FOUNDRY-n65/tran_cmfb_step.spice"
         }
       },
       "realization": "behavioral",
@@ -7198,12 +5943,6 @@
             "frozen": 5,
             "ratio": 0,
             "tied": 7
-          },
-          "FOUNDRY-n65": {
-            "free": 11,
-            "frozen": 5,
-            "ratio": 0,
-            "tied": 7
           }
         },
         "untied_symmetries": [
@@ -7212,7 +5951,6 @@
       },
       "pdks": [
         "ihp-sg13g2",
-        "FOUNDRY-n65",
         "sky130",
         "gf180mcu"
       ],
@@ -7243,12 +5981,6 @@
           "ac_servo": "raw/cmfb_002_5t_pmos_input/sky130/ac_servo.spice",
           "dc_cmfb_transfer": "raw/cmfb_002_5t_pmos_input/sky130/dc_cmfb_transfer.spice",
           "tran_cmfb_step": "raw/cmfb_002_5t_pmos_input/sky130/tran_cmfb_step.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/cmfb_002_5t_pmos_input/FOUNDRY-n65/_dut.spice",
-          "ac_servo": "raw/cmfb_002_5t_pmos_input/FOUNDRY-n65/ac_servo.spice",
-          "dc_cmfb_transfer": "raw/cmfb_002_5t_pmos_input/FOUNDRY-n65/dc_cmfb_transfer.spice",
-          "tran_cmfb_step": "raw/cmfb_002_5t_pmos_input/FOUNDRY-n65/tran_cmfb_step.spice"
         }
       },
       "realization": "transistor",
@@ -7934,6 +6666,78 @@
         }
       },
       "signal_path": null,
+      "stages": 1,
+      "status": "draft"
+    },
+    {
+      "analyses": [],
+      "class": "drv",
+      "cm_control": "unregulated",
+      "compensation": "capacitive_emitter_degeneration",
+      "display_name": "2-bit PAM-4 current-mode DAC driver (SiGe HBT, IHP SG13G2)",
+      "id": "drv_001_pam4_sige_dac",
+      "kind": "verifiable",
+      "params": {
+        "devices": 30,
+        "groups": {},
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 5,
+            "frozen": 0,
+            "ratio": 0,
+            "tied": 0
+          }
+        }
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "aliases": [
+          "pam4drv_pam4",
+          "pam4-driver-2-bit-dac-HBT",
+          "lumped-broadband-driver"
+        ],
+        "designer": "agentic port (Claude) \u2014 drawings/pam4-driver-2-bit-dac-HBT; github.com/JPPhotonics/agentic-design-pam4-driver-ihp130",
+        "license": "PolyForm-Noncommercial-1.0.0",
+        "notes": "Block-level replication on the open IHP SG13G2 PDK; reproduces the EIC golden with zero delta on all 8 system metrics (reference/eic_golden_pam4_results.yaml). BIPOLAR/RF: the HBTs are npn13G2 subckt black boxes to circuitgraph, so generate/lower and T0-T2 pass, but the CMOS-only assembler + gm-ID/area lanes don't apply (feasibility \u00a74.4/4.5) \u2014 analyses is [] and the runnable path is the optimizer projection over the static testbenches/ decks (as amp_004 does via testbenches.legacy/). See README.md for authored-vs-generated detail.",
+        "paper": "M. Inac, A. Peczek, A. Malignaggi, F. Gerfers et al., 'Inductorless 96 Gb/s PAM-4 Optical Modulators Driver in SiGe:C BiCMOS', EuMIC 2022",
+        "source": "EIC-designer lumped-broadband-driver (verified reference, 16/16 requirements, dual sign-off)"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/drv_001_pam4_sige_dac/ihp-sg13g2/_dut.spice"
+        }
+      },
+      "realization": "transistor",
+      "schematic": {
+        "abstract": "circuits/drv_001_pam4_sige_dac/pdk/ihp-sg13g2/schematic/dut_pam4.svg",
+        "ihp-sg13g2": "circuits/drv_001_pam4_sige_dac/pdk/ihp-sg13g2/schematic/dut_pam4.svg"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "2a531e0f02",
+          "ppa": {
+            "active_gate_area_um2": 0.0,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "msb_gain_lf_db": 9.060413,
+              "s11_msb_32g_db": -10.8789,
+              "swing_vpp_diff": 2.916014
+            },
+            "power_w": 0.19096252
+          },
+          "spec": {
+            "fail": 0,
+            "none": 0,
+            "pass": 11
+          }
+        }
+      },
+      "signal_path": "fully_differential",
       "stages": 1,
       "status": "draft"
     },
@@ -8682,18 +7486,11 @@
             "frozen": 14,
             "ratio": 0,
             "tied": 81
-          },
-          "FOUNDRY-n65": {
-            "free": 34,
-            "frozen": 14,
-            "ratio": 0,
-            "tied": 81
           }
         }
       },
       "pdks": [
-        "ihp-sg13g2",
-        "FOUNDRY-n65"
+        "ihp-sg13g2"
       ],
       "provenance": {
         "aliases": [
@@ -8714,16 +7511,6 @@
           "psrr_vdd_chop": "raw/ia_002_fan_chopper_simple/ihp-sg13g2/psrr_vdd_chop.spice",
           "tran_chopper_ripple": "raw/ia_002_fan_chopper_simple/ihp-sg13g2/tran_chopper_ripple.spice",
           "tran_zin_chopped": "raw/ia_002_fan_chopper_simple/ihp-sg13g2/tran_zin_chopped.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/ia_002_fan_chopper_simple/FOUNDRY-n65/_dut.spice",
-          "dc_op": "raw/ia_002_fan_chopper_simple/FOUNDRY-n65/dc_op.spice",
-          "pac_gain": "raw/ia_002_fan_chopper_simple/FOUNDRY-n65/pac_gain.spice",
-          "pac_zin": "raw/ia_002_fan_chopper_simple/FOUNDRY-n65/pac_zin.spice",
-          "pnoise_chopped": "raw/ia_002_fan_chopper_simple/FOUNDRY-n65/pnoise_chopped.spice",
-          "psrr_vdd_chop": "raw/ia_002_fan_chopper_simple/FOUNDRY-n65/psrr_vdd_chop.spice",
-          "tran_chopper_ripple": "raw/ia_002_fan_chopper_simple/FOUNDRY-n65/tran_chopper_ripple.spice",
-          "tran_zin_chopped": "raw/ia_002_fan_chopper_simple/FOUNDRY-n65/tran_zin_chopped.spice"
         }
       },
       "realization": "transistor",
@@ -8747,22 +7534,6 @@
             "fail": 1,
             "none": 0,
             "pass": 5
-          }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "55b5148c68",
-          "ppa": {
-            "active_gate_area_um2": 52.4,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {},
-            "power_w": 0.00014940326190744817
-          },
-          "spec": {
-            "fail": 0,
-            "none": 0,
-            "pass": 2
           }
         }
       },
@@ -9077,18 +7848,11 @@
             "frozen": 19,
             "ratio": 0,
             "tied": 88
-          },
-          "FOUNDRY-n65": {
-            "free": 47,
-            "frozen": 19,
-            "ratio": 0,
-            "tied": 88
           }
         }
       },
       "pdks": [
-        "ihp-sg13g2",
-        "FOUNDRY-n65"
+        "ihp-sg13g2"
       ],
       "provenance": {
         "designer": "Composition by Noorizadeh (MacAnalog group); blocks: ia_002 (Fan CCIA, hand-drawn xschem) + cmfb_002_5t_pmos_input (owner 5T CMFB)",
@@ -9101,11 +7865,6 @@
           "_dut": "raw/ia_006_fan_chopper_cmfb/ihp-sg13g2/_dut.spice",
           "dc_op": "raw/ia_006_fan_chopper_cmfb/ihp-sg13g2/dc_op.spice",
           "psrr_vdd_chop": "raw/ia_006_fan_chopper_cmfb/ihp-sg13g2/psrr_vdd_chop.spice"
-        },
-        "FOUNDRY-n65": {
-          "_dut": "raw/ia_006_fan_chopper_cmfb/FOUNDRY-n65/_dut.spice",
-          "dc_op": "raw/ia_006_fan_chopper_cmfb/FOUNDRY-n65/dc_op.spice",
-          "psrr_vdd_chop": "raw/ia_006_fan_chopper_cmfb/FOUNDRY-n65/psrr_vdd_chop.spice"
         }
       },
       "realization": "transistor",
@@ -9119,22 +7878,6 @@
             ],
             "performance": {},
             "power_w": 0.00018596856000000002
-          },
-          "spec": {
-            "fail": 0,
-            "none": 1,
-            "pass": 2
-          }
-        },
-        "FOUNDRY-n65": {
-          "design_id": "c03ab2d551",
-          "ppa": {
-            "active_gate_area_um2": 75.246,
-            "corners_run": [
-              "tt"
-            ],
-            "performance": {},
-            "power_w": 0.00016304420157543624
           },
           "spec": {
             "fail": 0,
@@ -11787,6 +10530,9 @@
     ],
     "diff_pair": [
       "dp_001_resistive_load"
+    ],
+    "drv": [
+      "drv_001_pam4_sige_dac"
     ],
     "filter": [
       "ferrosim_biquad",

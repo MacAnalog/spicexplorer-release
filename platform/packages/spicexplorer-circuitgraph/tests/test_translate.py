@@ -47,7 +47,7 @@ def deck(tmp_path: Path) -> Path:
 
 
 def test_translates_dut_stimulus_params_and_ground(deck: Path) -> None:
-    d = translate_ngspice_to_spectre(deck, pdk="FOUNDRY-n65", source_pdk="ihp-sg13g2")
+    d = translate_ngspice_to_spectre(deck, pdk="generic-n65", source_pdk="ihp-sg13g2")
 
     # DUT block: hyphen sanitized consistently at definition AND instance master
     assert len(d.subckt_blocks) == 1
@@ -56,7 +56,7 @@ def test_translates_dut_stimulus_params_and_ground(deck: Path) -> None:
     assert block.splitlines()[-1] == "ends ota_5t"
     assert "ota_5t" in d.stimulus  # the XOTA instance line uses the same sanitized master
 
-    # device-model mapping (IHP → FOUNDRY-65 names) + finger-convention retarget (ng → nf)
+    # device-model mapping (IHP → 65 nm core names) + finger-convention retarget (ng → nf)
     assert "nch_lvt" in block and "pch_lvt" in block
     assert "sg13_lv" not in block
     assert "nf=1" in block and "ng=" not in block
@@ -80,17 +80,17 @@ def test_translates_dut_stimulus_params_and_ground(deck: Path) -> None:
 
 
 def test_numeric_defaults_are_si_floats(deck: Path) -> None:
-    d = translate_ngspice_to_spectre(deck, pdk="FOUNDRY-n65", source_pdk="ihp-sg13g2")
+    d = translate_ngspice_to_spectre(deck, pdk="generic-n65", source_pdk="ihp-sg13g2")
     assert d.parameters["cl"] == pytest.approx(50e-15)
     assert d.parameters["vdd"] == pytest.approx(1.5)
     assert d.parameters["ibias"] == pytest.approx(20e-6)
 
 
 def test_pdk_accepts_table_or_name_and_rejects_unknown(deck: Path) -> None:
-    from spicexplorer_circuitgraph.pdk import FOUNDRY_N65
+    from spicexplorer_circuitgraph.pdk import GENERIC_N65
 
-    by_name = translate_ngspice_to_spectre(deck, pdk="FOUNDRY-n65", source_pdk="ihp-sg13g2")
-    by_table = translate_ngspice_to_spectre(deck, pdk=FOUNDRY_N65, source_pdk="ihp-sg13g2")
+    by_name = translate_ngspice_to_spectre(deck, pdk="generic-n65", source_pdk="ihp-sg13g2")
+    by_table = translate_ngspice_to_spectre(deck, pdk=GENERIC_N65, source_pdk="ihp-sg13g2")
     assert by_name.subckt_blocks == by_table.subckt_blocks
     with pytest.raises(ValueError, match="unknown PDK"):
         translate_ngspice_to_spectre(deck, pdk="not-a-pdk")
@@ -169,7 +169,7 @@ def test_translated_example_deck_if_present() -> None:
     example = project_root() / "examples/OTA/5t-ota/ihp-sg13g2/spice/ota-5t_tb-ac.spice"
     if not example.exists():
         pytest.skip("example deck not present in this checkout")
-    d = translate_ngspice_to_spectre(example, pdk="FOUNDRY-n65", source_pdk="ihp-sg13g2")
+    d = translate_ngspice_to_spectre(example, pdk="generic-n65", source_pdk="ihp-sg13g2")
     assert d.subckt_blocks and "subckt ota_5t" in d.subckt_blocks[0]
     assert "XOTA (v_dd v_out v_in v_out net1 v_ena v_ss) ota_5t" in d.stimulus
     assert d.parameters["x_dut_nfet_input_w"] == pytest.approx(0.5e-6)
@@ -186,7 +186,7 @@ def test_translates_pulse_source(tmp_path: Path) -> None:
         ".param VCM=0.8\n.param VSTEP=0.2\n"
         ".end\n"
     )
-    d = translate_ngspice_to_spectre(p, pdk="FOUNDRY-n65", source_pdk="ihp-sg13g2")
+    d = translate_ngspice_to_spectre(p, pdk="generic-n65", source_pdk="ihp-sg13g2")
     # The timing args carry SPICE scale factors, which Spectre reads by DIFFERENT (case-sensitive)
     # rules — they are resolved to plain seconds rather than copied through as `1u`/`1n`.
     assert (
@@ -199,7 +199,7 @@ def test_pulse_source_arg_count_guard(tmp_path: Path) -> None:
     p = tmp_path / "tb_pulse_bad.spice"
     p.write_text("* bad pulse\nVin a 0 pulse(1)\nR1 a 0 1k\n.end\n")
     with pytest.raises(ValueError, match="pulse"):
-        translate_ngspice_to_spectre(p, pdk="FOUNDRY-n65", source_pdk="ihp-sg13g2")
+        translate_ngspice_to_spectre(p, pdk="generic-n65", source_pdk="ihp-sg13g2")
 
 
 def test_translates_sin_source(tmp_path: Path) -> None:
@@ -214,7 +214,7 @@ def test_translates_sin_source(tmp_path: Path) -> None:
         ".param ASIG=0.05\n.param VCM=0.6\n"
         ".end\n"
     )
-    d = translate_ngspice_to_spectre(p, pdk="FOUNDRY-n65", source_pdk="ihp-sg13g2")
+    d = translate_ngspice_to_spectre(p, pdk="generic-n65", source_pdk="ihp-sg13g2")
     assert "vsource dc=0 type=sine sinedc=0 ampl=asig freq=900000.0" in d.stimulus
     assert "vsource dc=vcm type=sine sinedc=vcm ampl=asig freq=1000000.0" in d.stimulus
 
@@ -231,7 +231,7 @@ def test_translates_viprb_marker_to_iprobe(tmp_path: Path) -> None:
         "R1 v_inn 0 1k\nR2 v_out 0 1k\nR3 v_x 0 1k\n"
         ".end\n"
     )
-    d = translate_ngspice_to_spectre(p, pdk="FOUNDRY-n65", source_pdk="ihp-sg13g2")
+    d = translate_ngspice_to_spectre(p, pdk="generic-n65", source_pdk="ihp-sg13g2")
     assert "VIPRB (v_inn v_out) iprobe" in d.stimulus
     assert "VFB (v_x v_out) vsource dc=0" in d.stimulus
 
@@ -241,8 +241,8 @@ def test_viprb_marker_rejects_nonzero_or_stimulus(tmp_path: Path) -> None:
     p = tmp_path / "tb_stb_bad.spice"
     p.write_text("* bad probe\nVIPRB a b dc 0.3\nR1 a 0 1k\nR2 b 0 1k\n.end\n")
     with pytest.raises(ValueError, match="VIPRB"):
-        translate_ngspice_to_spectre(p, pdk="FOUNDRY-n65", source_pdk="ihp-sg13g2")
+        translate_ngspice_to_spectre(p, pdk="generic-n65", source_pdk="ihp-sg13g2")
     p2 = tmp_path / "tb_stb_bad2.spice"
     p2.write_text("* bad probe\nVIPRB a b dc 0 ac 1\nR1 a 0 1k\nR2 b 0 1k\n.end\n")
     with pytest.raises(ValueError, match="VIPRB"):
-        translate_ngspice_to_spectre(p2, pdk="FOUNDRY-n65", source_pdk="ihp-sg13g2")
+        translate_ngspice_to_spectre(p2, pdk="generic-n65", source_pdk="ihp-sg13g2")

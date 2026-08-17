@@ -513,7 +513,7 @@ def _tb_profile(
 def load_pdks() -> list[dict[str, Any]]:
     """The PDK registry (``_shared/pdk/<id>.yaml``): which PDKs the DB binds and which
     simulator the in-library router runs each on (the committed ``sim_engine`` marker) —
-    the honest pdk→engine matrix (open PDKs → ngspice; FOUNDRY-n65 → spectre)."""
+    the honest pdk→engine matrix (open PDKs → ngspice; a Spectre-routed PDK → spectre)."""
     mods = _require()
     out: list[dict[str, Any]] = []
     for p in sorted((mods.paths.db_root() / "_shared" / "pdk").glob("*.yaml")):

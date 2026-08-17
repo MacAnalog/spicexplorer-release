@@ -1,0 +1,24 @@
+[project]
+name = "spicexplorer-netlist2tf"
+version = "0.0.0"
+description = "SpiceXplorer netlist2tf tool — ingest a netlist, build a small-signal model, extract the exact symbolic transfer function between two ports, and reduce it to readable hand-form via explicit, numerically-validated assumptions."
+requires-python = ">=3.10"
+dependencies = [
+    "spicexplorer-core",   # NetlistView (the read-only netlist seam) + eng.parse_value; never a peer tool
+    "sympy>=1.13.3",       # the sole symbolic engine (pinned for canonical-form determinism)
+    "pydantic>=2",         # typed I/O contract (contract.py) — feeds OpenAPI/TS codegen + MCP schemas
+    "numpy",               # numpy-only lambdify-at-jω validation helper (torch-free)
+]
+
+# NOTE: an optional `[fast]` extra wiring `symengine` as a determinant/cancel fast path will be
+# added in P3 if the P0/P3 ceiling benchmark justifies it. It is round-tripped back through the
+# single sympy canonicalization point in tf.py, so it can never ship a different-but-equivalent form.
+# We deliberately do NOT depend on lcapy (LGPL + heavy) or SLiCAP (globals/IO) — their reusable
+# pieces are reimplemented / vendored MIT-clean (see NOTICE).
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spicexplorer_netlist2tf"]

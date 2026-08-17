@@ -6,13 +6,13 @@ same shape and the same silence:
 
 * ``inoise_total`` — the closed-lane ``noise`` bench hardcoded ``iprobe=VINP``, an instance
   the self-biased (``noise_biaswrap*``) testbench templates do not contain. Spectre referred
-  the noise to nothing; 19 FOUNDRY-n65 amplifiers recorded no input-referred density at all.
-* ``vos`` — declared by 10 FOUNDRY-n65 amplifiers, never registered in the core measurement
+  the noise to nothing; 19 Spectre-routed amplifiers recorded no input-referred density at all.
+* ``vos`` — declared by 10 Spectre-routed amplifiers, never registered in the core measurement
   table, and with no calculator row on the ``dc_op`` bench. ``KeyError``.
 * ``ugf_loop`` / ``gm_loop`` — every amplifier datasheet spells the loop measures the way the
   ngspice ``stb`` template emits them, but the class calculator row was keyed ``gm_loop_db``
   (the datasheet METRIC id, not its ``meas``) and ``ugf_loop`` had no row at all. ``KeyError``
-  on all 32 FOUNDRY-n65 baselines.
+  on all 32 Spectre-routed baselines.
 
 The failure is silent BY CONSTRUCTION. The read raises, ``CircuitRun.evaluate`` degrades that
 one metric to NaN, the recorder drops the key, the entry still says ``status: ok``, and the
@@ -297,69 +297,25 @@ _KNOWN_GAPS: dict[tuple[str, str], set[str]] = {
     # so amp_029/amp_030/amp_034 all route on the closed lane. The old entry is deleted, as
     # this registry's contract demands.)
     #
-    # The cmfb class has a FOUNDRY-n65 BINDING but no Spectre bench map, so not one of its eight
-    # measured metrics has a closed-lane route. Latent, not yet published: neither cell has a
-    # FOUNDRY-n65 scoreboard entry — the bindings have never been harvested. They would come back
-    # empty on the day someone runs them.
-    ("cmfb_001_ideal_rsense_servo", "FOUNDRY-n65"): {
-        f"{m}(meas={m}): class 'cmfb' ships no spectre-benches.yaml"
+    # drv_001 is the corpus's first BIPOLAR/RF circuit. It declares `analyses: []` and routes
+    # its metrics through the optimizer projection over the static pdk/*/testbenches/ decks, NOT
+    # the CMOS analysis engine (feasibility §4.4 — no bipolar assembler / RF-bench lane yet). So
+    # every `extract.meas` metric is an intentional engine-route gap until that lane lands. The
+    # single-frequency scalars themselves are live-validated (see the circuit's layout entry).
+    ("drv_001_pam4_sige_dac", "ihp-sg13g2"): {
+        f"{m}(meas={m}): extract.meas declared but no analysis to run it on"
         for m in (
-            "cmfb_slope", "gain_servo_db", "bw_servo_hz", "ugf_servo_hz",
-            "vcmfb_nat", "step_delta_v", "ring_v", "t_cm_settle", "i_supply",
+            "msb_gain_lf_db", "lsb_gain_lf_db", "msb_gain_50g_rel_db", "lsb_gain_50g_rel_db",
+            "s11_msb_32g_db", "s22_50g_db", "power_mw", "i_supply", "ic_msb_ma",
+            "swing_vpp_diff", "rlm", "eye_height_v",
         )
-    },
-    # cmfb_002 is the same class-level gap, on a cell whose datasheet declares five more
-    # measured metrics (the transistor-level 5T servo's sense range + actuator swing).
-    # cmfb_003_5t_nmos_input is deliberately NOT listed: it binds gf180mcu/ihp-sg13g2/sky130
-    # only (all ngspice), so it has no closed lane to be missing a bench map on — add it the
-    # day it gains a FOUNDRY-n65 binding.
-    ("cmfb_002_5t_pmos_input", "FOUNDRY-n65"): {
-        f"{m}(meas={m}): class 'cmfb' ships no spectre-benches.yaml"
-        for m in (
-            "cmfb_slope", "gain_servo_db", "bw_servo_hz", "ugf_servo_hz",
-            "vcmfb_nat", "vcmfb_min", "vcmfb_max", "sense_lo", "sense_hi", "r_sense_in",
-            "step_delta_v", "ring_v", "t_cm_settle", "i_supply",
-        )
-    },
-    # The clocked ia transient benches carry NO calculator rows (their figures are in-deck
-    # ngspice `.control` maths that Spectre never executes) and their names are not registry
-    # recipes either. All three are absent from ia_002's FOUNDRY-n65 entry.
-    ("ia_002_fan_chopper_simple", "FOUNDRY-n65"): {
-        "v_ripple_pp(meas=v_ripple_pp): no calculator row on the 'tran_chopper_ripple' bench "
-        "and no core registry entry (bench rows: none)",
-        "vos_residual(meas=vos_residual): no calculator row on the 'tran_chopper_ripple' bench "
-        "and no core registry entry (bench rows: none)",
-        "zin_chop_ohm(meas=zin_chop_ohm): no calculator row on the 'tran_zin_chopped' bench "
-        "and no core registry entry (bench rows: none)",
-        # resolves by NAME and then reads nothing: `gain_cl` is the AC closed-loop transfer,
-        # but this bench is the clocked transient whose in-deck window arithmetic Spectre
-        # never runs. Absent from ia_002's FOUNDRY-n65 entry, present on its ngspice rows.
-        "gain_cl(meas=gain_cl): the registry recipe reads a 'ac' result but the "
-        "'tran_chopper_ripple' bench composes ['op', 'tran']",
     },
 }
 
-#: The single-probe `stb` bench against the antiphase `stb_diff` deck (8 fully-differential
-#: amplifiers on FOUNDRY-n65). The adapter now REFUSES this composition rather than publish the
-#: ~0 dB return ratio it used to, so all four loop metrics on these cells are unreachable on
-#: the closed lane until a `diffstbprobe` is emitted across the marker pair.
-_STB_DIFF_GAP = (
-    "stb/PROBE: the 'stb_diff' deck breaks the loop with ['viprb', 'viprbm'] but the bench "
-    "probes only ['viprb'] — ['viprbm'] keeps its half of the loop closed"
-)
-_KNOWN_ARG_GAPS: dict[tuple[str, str], set[str]] = {
-    (cid, "FOUNDRY-n65"): {_STB_DIFF_GAP}
-    # amp_020 (deleted) is no longer iterated by _bindings(). amp_029 IS iterated again: it is
-    # `published: false` (de-published), not `kind: reference`, so it stays a verifiable FD
-    # binding that hits the same single-probe gap as its siblings.
-    for cid in (
-        "amp_023_fer_fd2s", "amp_025_hsu_classab_ota",
-        "amp_026_fan_chopper_ota", "amp_027_fan_rrl_ota",
-        "amp_029_two_stage_miller_comp",
-        "amp_030_miller_cmfb_composite", "amp_031_srmc_core_cmfb",
-        "amp_034_fan_chopper_cmfb",
-    )
-}
+#: Gaps in the bench-probe contract, frozen the same way as `_KNOWN_GAPS`. Empty today:
+#: the single-probe `stb`-vs-`stb_diff` gap this table used to carry belonged to a
+#: Spectre-routed binding that is not part of the open-source distribution.
+_KNOWN_ARG_GAPS: dict[tuple[str, str], set[str]] = {}
 
 
 def _bindings():

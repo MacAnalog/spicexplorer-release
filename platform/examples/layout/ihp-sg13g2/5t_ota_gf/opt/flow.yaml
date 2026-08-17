@@ -1,0 +1,40 @@
+# layout-flow/1 — the 5T OTA (gdsfactory lane) as an optimizer "testbench".
+#
+# One trial = build (gdsfactory, in `gds_python`) → KLayout DRC → KLayout LVS → kpex CC
+# → the platform's own open-loop AC testbench on the extracted netlist (postlayout).
+# Paths are relative to THIS file. Consumed by `spicexplorer.backends.layout` when the
+# project_setup.yaml says `sim_engine: layout` and a testbench's `netlist:` points here.
+schema: layout-flow/1
+
+generator: ../gen_5t_ota_gf.py      # LayoutParams = the knobs; BOUNDS = their legal ranges
+cell: ota_5t_gf
+# interpreter that has gdsfactory + ihp-gdsfactory (the research server's conda env);
+# the GDS_PYTHON env var overrides this, so the committed spec stays portable.
+gds_python: ~/miniconda3/envs/ai_env/bin/python
+param_grid: 0.01                    # float knobs snap to a 0.01 um grid (even DBU port widths)
+
+drc: { enabled: true, no_density: true }
+lvs: { reference: ../ota_5t_gf_lvs.spice }   # fixed reference (knobs don't change devices)
+pex:
+  mode: CC        # C-only: validated identical UGF loss to RC on this block, and it avoids
+                  # kpex's 2.5D R-mesh occasionally leaving a gate pin dangling (singular matrix)
+  ac_gnd_nets: [vdd, ibias]   # c_<net>_ff = C from <net> to {0/vss ∪ these}; ctot_<net>_ff = Σ to anything
+
+# Post-layout simulation through the PLATFORM's own testbench + measurement registry: after
+# PEX the extracted subckt is written as `dut_postlayout.spice` (same `.subckt ota_5t_gf`
+# header/pin order as the schematic DUT) and tb_ac.spice is run with its DUT include swapped
+# to it. Target specs then read the AC waves through the layout testbench:
+#   {name: ugf, testbench: layout, sim_type: ac, measurement: {meas: ugf, out: v(vout)}}
+# (The alternative is a block-specific `measure:` hook — see the H12 LPF example — for a
+# block whose benches live in its own harness.)
+postlayout:
+  dut: ota_5t_gf_dut.spice          # the pre-layout DUT the testbench `.include`s (XM cards; pins = ../ota_5t_gf_lvs.spice)
+  subckt: ota_5t_gf                 # default = cell
+  engine: ngspice
+  testbenches:
+    - { name: tb_ac, netlist: tb_ac.spice }   # open-loop AC (+ .op): dcgain / ugf / pm on v(vout)
+  params: {}                        # fixed DUT sizing the pre-layout run would inject (none: sizes are literal)
+  # ground_nets: [VSUBS]            # tie kpex's substrate node to 0 (default: left floating, like sim_pex_compare)
+
+gates: { drc: true, lvs: true, pex: true }   # a failed stage skips the rest (→ NaN → MAX_PENALTY)
+retain: all                                   # every run dir kept (GDS + reports + summary.json)

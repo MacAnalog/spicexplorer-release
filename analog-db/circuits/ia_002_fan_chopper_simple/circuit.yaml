@@ -55,7 +55,6 @@ artifacts:
   datasheet: datasheet.yaml
 pdks:
 - ihp-sg13g2
-- FOUNDRY-n65
 analyses: [dc_op, tran_chopper_ripple, tran_zin_chopped,
            pac_gain, pac_zin, pnoise_chopped, psrr_vdd_chop]
 status: draft

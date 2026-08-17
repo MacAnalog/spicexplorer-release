@@ -1,0 +1,11 @@
+# xschemrc — pam4-driver-2-bit-dac-HBT/ported-netlists/schematics
+# Sources the IHP PDK xschemrc (npn13G2 symbols) and adds this directory
+# (gain_cell_amp.sym) plus the platform shared symbol library to the path.
+if { ![info exists env(PDK_ROOT)] } { set ::env(PDK_ROOT) $env(HOME)/local/pdks }
+if { ![info exists env(PDK)] } { set ::env(PDK) ihp-sg13g2 }
+if {![info exists PDK]} {
+    source $env(PDK_ROOT)/$env(PDK)/libs.tech/xschem/xschemrc
+}
+append XSCHEM_LIBRARY_PATH :[file dirname [info script]]
+append XSCHEM_LIBRARY_PATH :[file normalize [file dirname [info script]]/../../../../../../docker/xschem_library]
+set netlist_dir [file dirname [info script]]/netlist

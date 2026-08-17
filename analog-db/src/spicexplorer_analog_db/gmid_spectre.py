@@ -1,7 +1,7 @@
 """Native-Spectre gm/ID LUT extraction — the licensed-kit lane of Phase 6.
 
 :mod:`spicexplorer_analog_db.gmid` characterizes the *open* PDKs through ngspice;
-Spectre-routed PDKs (``sim_engine: spectre`` in ``_shared/pdk/<pdk>.yaml``, e.g. FOUNDRY-n65)
+Spectre-routed PDKs (``sim_engine: spectre`` in ``_shared/pdk/<pdk>.yaml``)
 deliberately opt out of that flow. This module is the missing lane: it sweeps the PDK's two
 core MOS flavours over an ``(L × VGS × VDS × VSB)`` grid with **plain headless Spectre** — no
 Virtuoso/OCEAN session — and writes **pygmid-compatible** LUT ``.pkl``s + ``.manifest.json``
@@ -123,7 +123,7 @@ class SpectreGmidConfig:
         ``flavor`` selects the Vt class: it keys into ``devices.{nmos,pmos}`` (e.g. ``lvt``→
         ``nch_lvt``, ``svt``→``nch``, ``hvt``→``nch_hvt``). Defaults to the registry's
         ``gmid.flavor`` (else the first of ``gmid.flavors``, else ``core``) so a plain
-        ``--pdk FOUNDRY-n65`` keeps its historic LVT behaviour.
+        ``--pdk <name>`` keeps the registry's declared default flavour.
         """
         reg = pdks.load_registry(pdk)
         g = reg.get("gmid")

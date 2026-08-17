@@ -1,0 +1,40 @@
+* TB[drv_001] large-signal differential output swing (transient tone, ramp-from-zero + uic)
+* Emits: swing_vpp_diff = 2*|fundamental| of v(outp)-v(outn) at 1 GHz (the SAME fundamental-phasor
+* convention the S21/S11/S22 decks use, and what the EIC golden reports as max_vout_pp_v). NOT raw
+* max-min: the driver compresses at full steering, so raw pp under-reads the delivered tone by the
+* ~4/pi square-wave factor. LSB+MSB driven IN PHASE (max steering), source amp 0.8 (saturated).
+* Supplies/bias ramp 0->nominal over 8 ns; drive starts at 9 ns; the fundamental is projected over
+* the [16,21] ns window (exactly 5 periods -> clean cos/sin least-squares, = driver_lib._dft_bin).
+.param x_dut_nx=3 x_dut_re=2.5 x_dut_cdeg_ff=20 x_dut_rc=50 x_dut_rb=50
+.param x_dut_vcasc=3.25 x_dut_vcm_in=1.9 x_dut_itail_ma=16 x_dut_vcc=4
+Vcc   vcc   0 PWL(0 0 8n {x_dut_vcc})
+Vcasc vcasc 0 PWL(0 0 8n {x_dut_vcasc})
+Vcmb  vcmb  0 PWL(0 0 8n {x_dut_vcm_in})
+Vblsb blsb  0 PWL(0 0 8n {x_dut_itail_ma})
+Vbmsb bmsb  0 PWL(0 0 8n {x_dut_itail_ma})
+XDUT lsbp lsbn msbp msbn outp outn vcc vcasc vcmb blsb bmsb drv_001_pam4_sige_dac
+Rlp outp vcc 50
+Rln outn vcc 50
+Vslsbp slsbp 0 SIN({x_dut_vcm_in}  0.8 1e9 9n)
+Vslsbn slsbn 0 SIN({x_dut_vcm_in} -0.8 1e9 9n)
+Rslsbp slsbp lsbp 50
+Rslsbn slsbn lsbn 50
+Vsmsbp smsbp 0 SIN({x_dut_vcm_in}  0.8 1e9 9n)
+Vsmsbn smsbn 0 SIN({x_dut_vcm_in} -0.8 1e9 9n)
+Rsmsbp smsbp msbp 50
+Rsmsbn smsbn msbn 50
+.include dut.spice
+.lib "cornerHBT.lib" hbt_typ
+.options gmin=1e-12 reltol=1e-3
+.control
+tran 0.0166667n 21n 16n uic
+let vod = v(outp)-v(outn)
+let cc = cos(2*3.14159265358979*1e9*time)
+let ss = sin(2*3.14159265358979*1e9*time)
+let a = 2*mean(vod*cc)
+let b = 2*mean(vod*ss)
+let swing_vpp_diff = 2*sqrt(a*a + b*b)
+print swing_vpp_diff
+.endc
+.GLOBAL GND
+.end

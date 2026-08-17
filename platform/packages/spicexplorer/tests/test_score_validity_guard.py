@@ -86,7 +86,8 @@ def _cmrr_spec():
 
 def _dcgain_spec():
     """The shipped EXCEED-**with-a-reward** shape, verbatim from
-    ``examples/analog-db/campaigns/ppa_FOUNDRY65/configs_r4/amp_012_peng_tcfc.yaml:129``.
+    a production optimization campaign config
+    (``amp_012_peng_tcfc.yaml:129``).
 
     This is the shape that re-opened the ``+MAX_REWARD`` clip when the gate was made
     goal-aware: 54 of the corpus's 1249 specs are EXCEED + linear + relative-absolute, and
@@ -203,7 +204,7 @@ def test_an_infinite_metric_never_scores_as_a_reward():
 def test_a_goal_aligned_infinity_on_a_shipped_dcgain_spec_is_still_MAX_PENALTY():
     """Pins the O-1 pathology CLOSED on the shape that re-opened it.
 
-    `_dcgain_spec()` is verbatim the shipped ppa_FOUNDRY65/configs_r4 shape, and 54 of the 1249
+    `_dcgain_spec()` is verbatim the shipped campaign-config shape, and 54 of the 1249
     specs across `examples/analog-db/campaigns/**` are EXCEED + linear + relative-absolute —
     every one of them named `dcgain`. `dcgain` is `20·log10|H|` at the lowest AC point, so
     `+inf` there is a DIVERGED solve, not a perfect DUT.

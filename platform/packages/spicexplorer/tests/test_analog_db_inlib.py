@@ -3,8 +3,13 @@
 Proves the Layer-B surface of `backends.analog_db` WITHOUT any SPICE/bridge/kit: the committed
 `sim_engine` marker routes a (circuit, pdk) to an engine, discovery lists the tree, the probe
 degrades honestly, and the engine-neutral signal-name convention + corner guard are correct.
-Live open/closed runs live in the `*_live.py` opt-in tests. Gated on the analog-db submodule
-(with the `sim_engine` marker) being checked out — point `SPICEXPLORER_ANALOG_DB` at it.
+Live runs live in the `*_live.py` opt-in tests. Gated on the analog-db submodule (with the
+`sim_engine` marker) being checked out — point `SPICEXPLORER_ANALOG_DB` at it.
+
+Engine coverage is asymmetric on purpose: the marker/probe/router are exercised against the
+OPEN (ngspice) bindings, which are the ones this database ships. The closed (Spectre) lane's
+data-driven behaviour has no bound PDK to assert against here — the engine-neutral half of that
+contract is covered by the pure tests below, which construct their objects directly.
 """
 
 from __future__ import annotations
@@ -26,13 +31,18 @@ from spicexplorer.backends.analog_db import (
 )
 
 _CIRCUIT = "amp_022_fer_two_stage"
+_PDK = "ihp-sg13g2"  # the shipped open-lane binding the marker/probe/router are proven against
+
+# A PDK name that is deliberately NOT in the registry: the pure tests below construct their
+# objects directly, so the string only has to be a stand-in for "some closed (Spectre) lane".
+_CLOSED = "some-closed-pdk"
 
 
 def _have_marker() -> bool:
     try:
         return (
-            analog_db_root() / "circuits" / _CIRCUIT / "pdk" / "FOUNDRY-n65" / "sizing.yaml"
-        ).is_file() and pdk_sim_engine("FOUNDRY-n65") is not None
+            analog_db_root() / "circuits" / _CIRCUIT / "pdk" / _PDK / "sizing.yaml"
+        ).is_file() and pdk_sim_engine(_PDK) is not None
     except Exception:
         return False
 
@@ -45,14 +55,14 @@ _needs_marker = pytest.mark.skipif(
 
 # ------------------------------------------------------------------ pure (no analog-db)
 def test_engine_capability_is_truthy_by_availability():
-    assert bool(EngineCapability(_CIRCUIT, "FOUNDRY-n65", "spectre", True, "ok"))
-    assert not EngineCapability(_CIRCUIT, "FOUNDRY-n65", "spectre", False, "no kit")
+    assert bool(EngineCapability(_CIRCUIT, _CLOSED, "spectre", True, "ok"))
+    assert not EngineCapability(_CIRCUIT, _CLOSED, "spectre", False, "no kit")
 
 
 def test_circuitrun_out_signal_convention_per_engine():
     # engine-neutral registry, engine-specific signal name: ngspice wraps v(...), Spectre is bare
     ng = CircuitRun(_CIRCUIT, "ihp-sg13g2", "ngspice", "ac_open_loop", "tt", None, [])
-    sp = CircuitRun(_CIRCUIT, "FOUNDRY-n65", "spectre", "ac_open_loop", "tt", None, [])
+    sp = CircuitRun(_CIRCUIT, _CLOSED, "spectre", "ac_open_loop", "tt", None, [])
     assert ng._out("vout") == "v(vout)"
     assert sp._out("vout") == "vout"
     assert ng.analysis == "ac" and sp.analysis == "ac"
@@ -149,8 +159,7 @@ def test_build_ngspice_run_unknown_corner_raises_keyerror():
 
 # ------------------------------------------------------------ marker-driven routing (data only)
 @_needs_marker
-def test_sim_engine_marker_routes_open_vs_closed():
-    assert pdk_sim_engine("FOUNDRY-n65") == "spectre"
+def test_sim_engine_marker_routes_open_pdks_to_ngspice():
     for open_pdk in ("ihp-sg13g2", "sky130", "gf180mcu"):
         assert pdk_sim_engine(open_pdk) == "ngspice"
 
@@ -158,18 +167,14 @@ def test_sim_engine_marker_routes_open_vs_closed():
 @_needs_marker
 def test_discovery_lists_circuit_pdks_and_analyses():
     assert _CIRCUIT in list_circuits()
-    assert set(circuit_pdks(_CIRCUIT)) >= {"ihp-sg13g2", "sky130", "FOUNDRY-n65"}
+    assert set(circuit_pdks(_CIRCUIT)) >= {"ihp-sg13g2", "sky130"}
     assert "ac_open_loop" in circuit_analyses(_CIRCUIT)
 
 
 @_needs_marker
 def test_probe_engine_reports_engine_and_degrades_honestly():
-    # closed lane routes to spectre; without an operator wrapper it is unavailable with a reason
-    cap = probe_engine(_CIRCUIT, "FOUNDRY-n65", model_lib_root="/nonexistent/model/root")
-    assert cap.engine == "spectre"
-    assert not cap.available and "wrapper" in cap.reason
     # open lane routes to ngspice; availability tracks the ngspice binary (engine is deterministic)
-    assert probe_engine(_CIRCUIT, "ihp-sg13g2").engine == "ngspice"
+    assert probe_engine(_CIRCUIT, _PDK).engine == "ngspice"
     # an unknown PDK registry is unavailable, not a crash
     assert not probe_engine(_CIRCUIT, "no-such-pdk").available
 
@@ -183,26 +188,38 @@ def test_probe_engine_missing_circuit_binding():
 
 
 @_needs_marker
-def test_run_circuit_raises_engine_unavailable_when_closed_lane_absent():
-    # deterministic offline: no wrapper => the router refuses the closed lane with the probe reason
-    with pytest.raises(EngineUnavailable, match="wrapper"):
+def test_run_circuit_refuses_an_unregistered_pdk():
+    # deterministic offline: an unknown PDK is refused by the router, never crashed through
+    with pytest.raises((EngineUnavailable, AnalogDbUnavailable)):
         run_circuit(
-            _CIRCUIT, "FOUNDRY-n65", model_lib_root="/nonexistent/model/root",
+            _CIRCUIT, "no-such-pdk", model_lib_root="/nonexistent/model/root",
             deck_dir="/tmp/x", work_dir="/tmp/y",
         )
 
 
 @_needs_marker
-def test_effective_supply_pins_the_two_truths():
+def test_effective_supply_reports_the_open_lane_operating_point():
     from spicexplorer.backends.analog_db import effective_supply
 
-    sup = effective_supply(_CIRCUIT, "FOUNDRY-n65", "ac_open_loop")
-    # amp_022's analyses bake VDD=1.5 (authored operating point) while the FOUNDRY-n65
-    # registry rail is 1.2 — the closed lane runs the rail, the open lane runs the deck
+    sup = effective_supply(_CIRCUIT, _PDK, "ac_open_loop")
+    # amp_022's analyses bake VDD=1.5 (the authored operating point) — the open lane runs
+    # the deck's own rail, so `open_lane` tracks `deck_vdd`, not the PDK registry rail.
     assert sup["deck_vdd"] == pytest.approx(1.5)
-    assert sup["pdk_rail"] == pytest.approx(1.2)
-    assert sup["open_lane"] == pytest.approx(1.5)
-    assert sup["closed_lane"] == pytest.approx(1.2)
+    assert sup["open_lane"] == pytest.approx(sup["deck_vdd"])
+
+
+def test_metric_target_band_and_nan():
+    """Preserved from the (deleted) closed-lane binding module: band semantics are
+    engine-neutral, so they outlive the Spectre binding the module used to read."""
+    from spicexplorer.backends.analog_db import MetricTarget
+
+    t = MetricTarget("dc_gain_db", {"meas": "dcgain", "out": "vout"}, "ac", spec_min=40.0)
+    assert t.satisfied(47.4)
+    assert not t.satisfied(30.0)  # below min
+    assert not t.satisfied(float("nan"))  # NaN never satisfies
+    imax = MetricTarget("i_supply", {"meas": "i_supply", "probe": "i(vvdd)"}, "op", spec_max=5.0e-4)
+    assert imax.satisfied(2.5e-4)
+    assert not imax.satisfied(6.0e-4)  # above max
 
 
 def test_evaluate_matches_metrics_by_analysis_id():
@@ -274,7 +291,7 @@ def test_evaluate_swaps_fft_recipes_for_pss_twins_on_spectre():
         "iip3_dbv", {"meas": "iip3_dbv", "out": "vout", "f1": 0.9e6, "f2": 1.0e6, "ampl_in": a_in},
         "tran", -10.0, None, "iip3",
     )]
-    run = CircuitRun("c", "FOUNDRY-n65", "spectre", "iip3", "tt", _PssRes(), metrics)
+    run = CircuitRun("c", _CLOSED, "spectre", "iip3", "tt", _PssRes(), metrics)
     got = run.evaluate()["iip3_dbv"].value
     expect = 20 * np.log10(a_in * np.sqrt(1e3))
     assert got == pytest.approx(expect, abs=1e-6)

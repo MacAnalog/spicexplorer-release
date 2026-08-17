@@ -40,8 +40,20 @@ COPY platform/  ./platform/
 WORKDIR /app/platform
 # Resolve + install the workspace (api + its closure) into platform/.venv, then
 # borrow the analog-db corpus editable (no deps — it is not a workspace member).
+#
+# `--python` is NOT optional: bare `uv pip install` resolves to the system
+# interpreter, not the project venv. On python:3.11-slim that silently succeeds
+# and installs into /usr/local, leaving /api/library permanently degraded (see
+# library_db.py — the import is lazy and falls back to "not installed in this
+# environment"); on the Ubuntu-based spice-base the same call dies outright on
+# PEP 668. Pin the interpreter and both bases land it in the venv.
+#
+# jsonschema likewise: analog_db/__init__.py imports `schema`, which imports
+# jsonschema, so ANY `import spicexplorer_analog_db` needs it — but it is not a
+# declared dependency of the workspace, so `uv sync` never brings it in.
 RUN uv sync \
-    && uv pip install --no-deps -e ../analog-db
+    && uv pip install --python "$UV_PROJECT_ENVIRONMENT/bin/python" --no-deps -e ../analog-db \
+    && uv pip install --python "$UV_PROJECT_ENVIRONMENT/bin/python" jsonschema
 
 ENV SPICEXPLORER_ANALOG_DB=/app/analog-db \
     LOG_LEVEL=INFO
@@ -49,4 +61,11 @@ EXPOSE 8000
 
 # project_root() anchors on /app/platform/.spicexplorer-root; app_config.json is
 # read from there. Run from the platform root so both resolve.
-CMD ["uv", "run", "uvicorn", "spicexplorer_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+#
+# The venv's uvicorn by absolute path, NOT `uv run uvicorn`: `uv run` syncs the
+# environment to the lockfile at container start, and neither analog-db nor
+# jsonschema is a declared workspace dependency — so a re-sync prunes exactly the
+# two packages the RUN above installs. Nor a bare `uvicorn`: only the spice-base
+# puts the venv bin on PATH, so that would break the python:3.11-slim lane.
+# The absolute path works on both bases and starts without a resolve.
+CMD ["/app/platform/.venv/bin/uvicorn", "spicexplorer_api.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -113,6 +113,24 @@ jobs:
             || { echo "::error::live-SPICE lane is NOT live"; jq . env.json; exit 1; }
           echo "ngspice_ok / pdk_ok / live_runs_enabled all true"
 
+      # Every other assertion in this lane passes whether or not the analog-db
+      # package is importable: /api/env reports on ngspice and the PDK only, and
+      # the protocol test reads its deck through a filesystem symlink. But
+      # /api/library imports `spicexplorer_analog_db` LAZILY and degrades to a
+      # "not installed in this environment" status instead of erroring -- so a
+      # venv missing it (or missing jsonschema, which the package's __init__
+      # pulls in transitively) ships green and broken. Import them for real.
+      - name: the analog-db corpus is importable in the venv
+        if: steps.ported.outputs.ok == 'true'
+        env:
+          SPICE_BASE: spicexplorer-spice-base:release
+        run: |
+          docker compose exec -T api /app/platform/.venv/bin/python -c '
+          import spicexplorer_analog_db, jsonschema
+          from spicexplorer_analog_db import model, paths, scoreboard
+          print("analog-db importable:", spicexplorer_analog_db.__file__)
+          '
+
       # A green /api/env is a probe, not a simulation. Run two for real: the
       # engine smoke tests (a real AC analysis end to end) and the protocol test
       # that simulates an actual IHP sg13g2 device circuit from the analog-db

@@ -6,6 +6,10 @@
 name: platform
 
 on:
+  # Manually runnable: path-filtered lanes do NOT fire on a history rewrite (GitHub has no
+  # meaningful `before` commit to diff against), and a release must be able to prove every
+  # lane green on the exact published SHA. `gh workflow run <name>.yml --ref main`.
+  workflow_dispatch:
   push:
     branches: [main]
     paths: ["platform/**", ".github/workflows/platform.yml"]

@@ -44,7 +44,7 @@ import yaml
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from gen_layout import LayoutParams, FINAL_LAYOUT, FINAL_BIASES  # noqa: E402
+from gen_layout import LayoutParams, FINAL_LAYOUT  # noqa: E402
 import pex_sim  # noqa: E402
 from signoff import run_drc, run_lvs  # noqa: E402
 
@@ -299,7 +299,7 @@ def main() -> None:
         json.dump(best, f, indent=2)
     print(f"\nbest [{a.dut}]: score={best['score']} feasible={best.get('feasible')} "
           f"area={best.get('area_um2')} um2")
-    print(f"  electrical: " + ", ".join(
+    print("  electrical: " + ", ".join(
         f"{k}={best['params'].get(v)}" for k, v in ELECTRICAL_GEOMETRY.items()) +
         ", " + ", ".join(f"{k}={best['biases'].get(v)}" for k, v in ELECTRICAL_BIAS.items()))
     print(f"  -> {os.path.join(a.out_dir, f'best_{a.dut}.json')}")

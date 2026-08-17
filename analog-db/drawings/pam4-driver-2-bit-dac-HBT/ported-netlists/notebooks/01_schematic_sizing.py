@@ -37,7 +37,7 @@
 # `../results/`).
 
 # %%
-import sys, os
+import sys
 from pathlib import Path
 import numpy as np
 import yaml
@@ -65,7 +65,6 @@ print("models:", dl.models_dir())
 # sizing, which is what makes the 6 dB DAC step ratiometric):
 
 # %%
-import dataclasses
 cp = CellParams()
 md_table(["knob", "nominal", "meaning"], [
     ("nx", cp.nx, "npn13G2 emitter fingers (mask 0.07x0.9 um each; I_C < 3*Nx mA)"),

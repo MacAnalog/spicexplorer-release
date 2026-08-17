@@ -30,8 +30,10 @@ S              ?=
 SPICE_BASE     ?= spicexplorer-spice-base:release
 # OSDI compact models for the base image: `vendor` reuses the committed prebuilt
 # x86-64 binaries (fast); `compile` builds openvaf and compiles the Verilog-A for
-# this machine's arch — slower, and the route for native arm64 (Apple silicon).
-export OSDI_MODE ?= vendor
+# this machine's arch — slower, but the ONLY native route on arm64, where the
+# vendored x86-64 .osdi cannot load. Default follows the machine so `make up-live`
+# is correct out of the box on Apple silicon; override explicitly to force either.
+export OSDI_MODE ?= $(if $(filter arm64 aarch64,$(shell uname -m)),compile,vendor)
 # The api resolves the analog-db corpus (the /api/library routes) from this path.
 ANALOG_DB_ABS  := $(CURDIR)/$(ANALOG_DB)
 
@@ -69,6 +71,7 @@ up:  ## Build + run the stack (api :8000 + ui :4000). No live SPICE
 	docker compose up --build
 
 spice-base:  ## Build the EDA base image: ngspice + IHP/sky130/gf180 PDKs vendored
+	@echo "OSDI_MODE=$(OSDI_MODE) (arch $(shell uname -m)) — 'compile' also builds a Rust/LLVM toolchain and takes considerably longer."
 	docker compose --profile live build spice-base
 
 up-live: spice-base  ## Build + run the stack WITH live SPICE (pdk_ok:true)

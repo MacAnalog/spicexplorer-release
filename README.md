@@ -84,7 +84,9 @@ each `make` target is a one-line wrapper you can run by hand.
 > source with OSDI, plus the IHP sg13g2, SkyWater sky130 and GF gf180mcu PDKs
 > vendored** (all Apache-2.0) — and runs the stack on top of it. `pdk_ok:true`,
 > with **nothing installed on the host**: no ngspice, no PDK download, no
-> `PDK_ROOT`. Details, including `OSDI_MODE` for native arm64, in
+> `PDK_ROOT`. It builds on both x86-64 and arm64 (Apple silicon) — the compact
+> models are compiled from source there, which takes considerably longer the
+> first time. See
 > [docs/docker.md](docs/docker.md#live-spice-in-the-container).
 >
 > Prefer no containers? Install a local ngspice + an open PDK and run natively —

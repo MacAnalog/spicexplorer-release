@@ -92,7 +92,7 @@ jobs:
             ngspice --version | head -3
             ls /opt/pdk/ihp-sg13g2/libs.tech/ngspice/osdi/*.osdi
             ls /opt/pdk/ihp-sg13g2/libs.tech/ngspice/models | head
-            ls /opt/pdk/sky130/libs.tech/ngspice/sky130_slim.lib.spice
+            ls /opt/pdk/sky130/libs.tech/ngspice/corners/sky130_slim.lib.spice
             ls /opt/pdk/gf180mcu/libs.tech/ngspice
             test -f /app/.spiceinit
           '
@@ -115,6 +115,13 @@ jobs:
           echo "ngspice_ok / pdk_ok / live_runs_enabled all true"
 
       # A green /api/env is a probe, not a simulation. Run one for real.
+      #
+      # Every test in this file carries @requires_ngspice, a *skipif* — with no
+      # ngspice on PATH all five SKIP and pytest still exits 0. A vacuous green is
+      # exactly the failure this lane exists to catch, so assert on the summary
+      # line: some test passed, and nothing was skipped. (No `-m` filter: the
+      # shipped pyproject's addopts is just "-ra", so the @slow test that runs a
+      # real AC analysis end-to-end is selected by default.)
       - name: run a real ngspice simulation in the container
         if: steps.ported.outputs.ok == 'true'
         env:
@@ -122,8 +129,13 @@ jobs:
         run: |
           docker compose exec -T api sh -lc '
             cd /app/platform &&
-            uv run pytest packages/spicexplorer/tests/test_smoke_spice_engine.py -q
-          '
+            uv run pytest packages/spicexplorer/tests/test_smoke_spice_engine.py -q -rs
+          ' | tee pytest.out
+          grep -qE '[0-9]+ passed' pytest.out \
+            || { echo "::error::no smoke test passed"; exit 1; }
+          grep -qE '[0-9]+ skipped' pytest.out \
+            && { echo "::error::a smoke test SKIPPED — ngspice is not on PATH in the api image, so this lane proved nothing"; exit 1; }
+          echo "real ngspice simulation ran in the container"
 
       - name: api logs (on failure)
         if: failure() && steps.ported.outputs.ok == 'true'

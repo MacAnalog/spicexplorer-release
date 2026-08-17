@@ -79,19 +79,27 @@ bare-name resolution works for each.
 
 ### Architecture and `OSDI_MODE`
 
-The IHP models are Verilog-A compiled to OSDI, which is architecture-specific:
+The IHP models are Verilog-A compiled to OSDI, which is **architecture-specific**
+— the one part of the image that is. Everything else (ngspice itself, sky130,
+gf180mcu) is built natively for the build arch either way.
+
+`make up-live` picks the right mode from `uname -m`, so you normally set nothing:
+
+| `OSDI_MODE` | What it does | Default on |
+|---|---|---|
+| `vendor` | Reuse the committed **prebuilt x86-64** `.osdi`. Fast. | x86-64 |
+| `compile` | Build openvaf (Rust + LLVM-18) and compile the Verilog-A for **this** arch. Much slower — it builds a whole toolchain — but the only native route on arm64. | arm64 / aarch64 (Apple silicon) |
+
+Override explicitly if you need to:
 
 ```bash
-make up-live                      # OSDI_MODE=vendor (default) — reuse the
-                                  # committed prebuilt x86-64 .osdi. Fast.
-make up-live OSDI_MODE=compile    # build openvaf (Rust + LLVM-18) and compile
-                                  # the Verilog-A for THIS arch. Slow, but the
-                                  # native route on arm64 (Apple silicon).
+make up-live OSDI_MODE=compile    # force a from-source OSDI build
+make up-live OSDI_MODE=vendor     # force the prebuilt x86-64 binaries
 ```
 
-`vendor` on arm64 works only under emulation. Everything else in the image —
-ngspice itself, sky130, gf180mcu — is built natively for the build arch either
-way.
+On arm64, `vendor` loads only under x86-64 emulation (`docker build
+--platform linux/amd64`, slow at simulation time) — which is why `compile` is
+the default there. `make spice-base` prints the mode it resolved before building.
 
 > The first `make up-live` compiles ngspice from source and takes several
 > minutes (much longer with `OSDI_MODE=compile`, which also builds a Rust/LLVM
@@ -104,9 +112,12 @@ against an image tag — so the base must exist first. `make up-live` does the t
 steps in order; by hand it is:
 
 ```bash
-docker compose --profile live build spice-base
+OSDI_MODE=vendor docker compose --profile live build spice-base   # compile on arm64
 SPICE_BASE=spicexplorer-spice-base:release docker compose up --build api ui
 ```
+
+`OSDI_MODE` is spelled out here because compose cannot inspect the machine —
+its own default is `vendor` regardless of arch. Only `make` picks it for you.
 
 A bare `docker compose --profile live up --build` races the two and can pick up a
 stale (or missing) base.

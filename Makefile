@@ -72,7 +72,7 @@ up:  ## Build + run the stack (api :8000 + ui :4000). No live SPICE
 
 spice-base:  ## Build the EDA base image: ngspice + IHP/sky130/gf180 PDKs vendored
 	@echo "OSDI_MODE=$(OSDI_MODE) (arch $(shell uname -m)) — 'compile' also builds a Rust/LLVM toolchain and takes considerably longer."
-	docker compose --profile live build spice-base
+	OSDI_MODE=$(OSDI_MODE) docker compose --profile live build spice-base
 
 up-live: spice-base  ## Build + run the stack WITH live SPICE (pdk_ok:true)
 	SPICE_BASE=$(SPICE_BASE) docker compose up --build api ui

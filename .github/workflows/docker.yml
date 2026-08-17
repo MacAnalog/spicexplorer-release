@@ -23,6 +23,7 @@ on:
       - "Dockerfile.spice-base"
       - "Dockerfile.api"
       - "compose.yaml"
+      - "Makefile"
       - "platform/docker/**"
       - "analog-db/tools/make_sky130_slim_lib.py"
       - ".github/workflows/docker.yml"
@@ -31,6 +32,7 @@ on:
       - "Dockerfile.spice-base"
       - "Dockerfile.api"
       - "compose.yaml"
+      - "Makefile"
       - "platform/docker/**"
       - "analog-db/tools/make_sky130_slim_lib.py"
       - ".github/workflows/docker.yml"
@@ -114,14 +116,18 @@ jobs:
             || { echo "::error::live-SPICE lane is NOT live"; jq . env.json; exit 1; }
           echo "ngspice_ok / pdk_ok / live_runs_enabled all true"
 
-      # A green /api/env is a probe, not a simulation. Run one for real.
+      # A green /api/env is a probe, not a simulation. Run two for real: the
+      # engine smoke tests (a real AC analysis end to end) and the protocol test
+      # that simulates an actual IHP sg13g2 device circuit from the analog-db
+      # corpus — file presence and `pdk_ok` are not the same claim as "a PDK
+      # device solved".
       #
-      # Every test in this file carries @requires_ngspice, a *skipif* — with no
-      # ngspice on PATH all five SKIP and pytest still exits 0. A vacuous green is
-      # exactly the failure this lane exists to catch, so assert on the summary
-      # line: some test passed, and nothing was skipped. (No `-m` filter: the
-      # shipped pyproject's addopts is just "-ra", so the @slow test that runs a
-      # real AC analysis end-to-end is selected by default.)
+      # Every one of these carries a *skipif* (@requires_ngspice / @requires_pdk /
+      # the analog-db deck), so on an image with no simulator they ALL skip and
+      # pytest still exits 0. A vacuous green is exactly what this lane exists to
+      # catch, so assert on the summary line: something passed, nothing skipped.
+      # (No `-m` filter: the shipped pyproject's addopts is just "-ra", so the
+      # @slow tests are selected by default.)
       - name: run a real ngspice simulation in the container
         if: steps.ported.outputs.ok == 'true'
         env:
@@ -129,13 +135,15 @@ jobs:
         run: |
           docker compose exec -T api sh -lc '
             cd /app/platform &&
-            uv run pytest packages/spicexplorer/tests/test_smoke_spice_engine.py -q -rs
+            uv run pytest -q -rs \
+              packages/spicexplorer/tests/test_smoke_spice_engine.py \
+              packages/spicexplorer/tests/test_protocol_pdk_live.py
           ' | tee pytest.out
           grep -qE '[0-9]+ passed' pytest.out \
-            || { echo "::error::no smoke test passed"; exit 1; }
+            || { echo "::error::no simulation test passed"; exit 1; }
           grep -qE '[0-9]+ skipped' pytest.out \
-            && { echo "::error::a smoke test SKIPPED — ngspice is not on PATH in the api image, so this lane proved nothing"; exit 1; }
-          echo "real ngspice simulation ran in the container"
+            && { echo "::error::a test SKIPPED — ngspice, the IHP PDK or the analog-db corpus is missing from the api image, so this lane proved nothing"; sed -n '/short test summary/,$p' pytest.out; exit 1; }
+          echo "real ngspice simulations ran in the container, on PDK devices"
 
       - name: api logs (on failure)
         if: failure() && steps.ported.outputs.ok == 'true'

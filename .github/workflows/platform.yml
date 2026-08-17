@@ -56,11 +56,18 @@ jobs:
         # Siblings first so pip satisfies the cross-package deps from the
         # monorepo, never PyPI. pyyaml: the workspace-root conftest imports it
         # at collection and core does not declare it.
+        # layout + signoff: the optimizer's layout-flow backend imports them, so
+        # spicexplorer's own tests/test_layout_backend.py needs them present even
+        # though they are a lazy `[layout]` extra at runtime. Their heavy
+        # gdsfactory/klayout stack is the separate opt-in `gds` extra, so a bare
+        # install stays cheap and the offline tier runs on a plain runner.
         run: |
           pip install -e platform/packages/spicexplorer-core \
                       -e platform/packages/spicexplorer-circuitgraph \
                       -e platform/packages/spicexplorer-netlist2xschem \
                       -e platform/packages/spicexplorer-waveview \
+                      -e platform/packages/spicexplorer-layout \
+                      -e platform/packages/spicexplorer-signoff \
                       -e platform/packages/spicexplorer
           # httpx: FastAPI TestClient's HTTP backend — the api route tests import
           # starlette.testclient at collection, which hard-errors without it.

@@ -1,10 +1,18 @@
-# SpiceXplorer — lightweight local stack: api (:8000) + ui (:4000).
+# SpiceXplorer — local stack: api (:8000) + ui (:4000), built from the sources
+# in THIS repo. Two lanes, same app layer:
 #
-# This compose builds the two services from the sources in THIS repo. It is
-# deliberately LIGHTWEIGHT: the api image carries no ngspice / PDK, so live
-# SPICE simulation is disabled (the app reports pdk_ok:false and steers to
-# replay/cached mode — everything else works). Live simulation needs a local
-# ngspice + an open PDK; see docs/docker.md.
+#   make up        DEFAULT — lightweight. The api image carries no ngspice and
+#                  no PDK, so live SPICE is off (the app reports pdk_ok:false
+#                  and steers to replay/cached mode; everything else works).
+#
+#   make up-live   LIVE SPICE — builds `spice-base` (the `live` profile below:
+#                  ngspice compiled from source + IHP sg13g2 / sky130 / gf180mcu
+#                  vendored) and rebuilds the api FROM it. pdk_ok:true, with
+#                  nothing installed on the host.
+#
+# The base MUST be built before the api that FROMs it — compose does not order a
+# build against an image tag, so `make up-live` does the two steps in order. See
+# docs/docker.md.
 #
 #   docker compose up --build      # or:  make up
 #   docker compose down            # or:  make down
@@ -13,10 +21,30 @@
 name: spicexplorer
 
 services:
+  # The EDA runtime. `live` profile → never built by a plain `docker compose up`.
+  # OSDI_MODE=vendor reuses the committed prebuilt x86-64 compact models (fast,
+  # x86-64 or emulation only); OSDI_MODE=compile builds openvaf and compiles the
+  # Verilog-A for the build's own arch — slower, but the native arm64 route.
+  spice-base:
+    profiles: ["live"]
+    build:
+      context: .
+      dockerfile: Dockerfile.spice-base
+      args:
+        OSDI_MODE: ${OSDI_MODE:-vendor}
+    image: spicexplorer-spice-base:release
+    # Provisioning only — nothing to run. `make up-live` builds it, then the api
+    # FROMs it; the container itself is never started.
+    command: ["true"]
+
   api:
     build:
       context: .
       dockerfile: Dockerfile.api
+      args:
+        # Default lane = no simulator. `make up-live` sets this to
+        # spicexplorer-spice-base:release to get live SPICE.
+        BASE_IMAGE: ${SPICE_BASE:-python:3.11-slim}
     image: spicexplorer-api:release
     environment:
       SPICEXPLORER_ANALOG_DB: /app/analog-db

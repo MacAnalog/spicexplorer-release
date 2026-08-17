@@ -1,23 +1,35 @@
 # syntax=docker/dockerfile:1.7
 # =============================================================================
-# SpiceXplorer API — lightweight FastAPI image (no ngspice / no PDK).
+# SpiceXplorer API — the FastAPI image. ONE app layer, TWO bases:
 #
-# Serves the REST + SSE API over the optimizer/tools. Without ngspice + a PDK
-# the app runs in replay/degraded mode (GET /api/env reports pdk_ok:false and
-# live_runs_enabled:false) — the UI, score shaping, compare/explore on cached
-# checkpoints, and the reference library all work; live simulation does not.
-# For live SPICE, run the platform natively against a local ngspice + open PDK.
+#   BASE_IMAGE=python:3.11-slim              (default) — lightweight, no
+#       simulator. The app runs in replay/degraded mode (GET /api/env reports
+#       pdk_ok:false, live_runs_enabled:false): the UI, score shaping,
+#       compare/explore over cached checkpoints and the reference library all
+#       work; live simulation does not.
+#
+#   BASE_IMAGE=spicexplorer-spice-base:release — the EDA runtime built by
+#       Dockerfile.spice-base: ngspice (OSDI) + IHP sg13g2 / sky130 / gf180mcu
+#       vendored. LIVE SPICE works with nothing installed on the host
+#       (pdk_ok:true). Bring it up with `make up-live`.
+#
+# The app layer below is identical either way — only the FROM changes — so the
+# two lanes can never drift apart. See docs/docker.md.
 #
 # Build context = repo root (needs platform/ + analog-db/).
 #   docker compose build api      # or via `make up`
 # =============================================================================
-FROM python:3.11-slim
+ARG BASE_IMAGE=python:3.11-slim
+FROM ${BASE_IMAGE}
 
 # uv for fast, lockless workspace resolution (CPU torch pinned in the platform
 # pyproject's [tool.uv.index], so no CUDA wheels are pulled on linux).
 COPY --from=ghcr.io/astral-sh/uv:0.10 /uv /uvx /bin/
+# UV_PROJECT_ENVIRONMENT is pinned so the venv lands in the same place on both
+# bases (spice-base puts /app/platform/.venv/bin on PATH for exactly this).
 ENV UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/app/platform/.venv
 
 WORKDIR /app
 # The analog-db corpus backs the /api/library routes; the platform is the uv

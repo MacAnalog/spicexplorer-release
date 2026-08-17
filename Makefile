@@ -4,8 +4,10 @@
 # (analog-db/ + platform/ + ui/ as sibling directories; no submodules, no
 # scripts/). Two ways to run the app:
 #
-#   * Docker           — `make up`   (api :8000 + ui :4000; no live SPICE — see
-#                        docs/docker.md). Needs Docker.
+#   * Docker           — `make up`      (api :8000 + ui :4000; no simulator) or
+#                        `make up-live` (same, plus ngspice + three open PDKs
+#                        vendored, so live SPICE works with nothing installed on
+#                        the host). See docs/docker.md. Needs Docker.
 #   * Native/no-Docker — `make api` (backend) and `make ui` (frontend) in two
 #                        terminals. Needs uv (Python) + Node.
 #
@@ -24,12 +26,18 @@ ANALOG_DB      ?= analog-db
 BACKEND_PORT   ?= 8000
 FRONTEND_PORT  ?= 4000
 S              ?=
+# `make up-live` rebuilds the api FROM this image (built by `make spice-base`).
+SPICE_BASE     ?= spicexplorer-spice-base:release
+# OSDI compact models for the base image: `vendor` reuses the committed prebuilt
+# x86-64 binaries (fast); `compile` builds openvaf and compiles the Verilog-A for
+# this machine's arch — slower, and the route for native arm64 (Apple silicon).
+export OSDI_MODE ?= vendor
 # The api resolves the analog-db corpus (the /api/library routes) from this path.
 ANALOG_DB_ABS  := $(CURDIR)/$(ANALOG_DB)
 
 .DEFAULT_GOAL := help
-.PHONY: help sync ui-install api ui up down logs test lint typecheck check \
-        build-ui gen-types clean
+.PHONY: help sync ui-install api ui up spice-base up-live down logs test lint \
+        typecheck check build-ui gen-types clean
 
 ##@ General
 help:  ## List the available targets
@@ -59,6 +67,12 @@ ui:  ## Frontend only — Next dev server (:4000). Proxies /api → the backend
 ##@ Develop — Docker (see docs/docker.md)
 up:  ## Build + run the stack (api :8000 + ui :4000). No live SPICE
 	docker compose up --build
+
+spice-base:  ## Build the EDA base image: ngspice + IHP/sky130/gf180 PDKs vendored
+	docker compose --profile live build spice-base
+
+up-live: spice-base  ## Build + run the stack WITH live SPICE (pdk_ok:true)
+	SPICE_BASE=$(SPICE_BASE) docker compose up --build api ui
 
 down:  ## Stop the stack
 	docker compose down

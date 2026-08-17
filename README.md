@@ -6,6 +6,7 @@
 [![analog-db](https://github.com/MacAnalog/spicexplorer-release/actions/workflows/analog-db.yml/badge.svg)](https://github.com/MacAnalog/spicexplorer-release/actions/workflows/analog-db.yml)
 [![platform](https://github.com/MacAnalog/spicexplorer-release/actions/workflows/platform.yml/badge.svg)](https://github.com/MacAnalog/spicexplorer-release/actions/workflows/platform.yml)
 [![ui](https://github.com/MacAnalog/spicexplorer-release/actions/workflows/ui.yml/badge.svg)](https://github.com/MacAnalog/spicexplorer-release/actions/workflows/ui.yml)
+[![docker](https://github.com/MacAnalog/spicexplorer-release/actions/workflows/docker.yml/badge.svg)](https://github.com/MacAnalog/spicexplorer-release/actions/workflows/docker.yml)
 
 Open-source releases from the SpiceXplorer analog design-automation project,
 developed by the MacAnalog research group at McMaster University. As of **v1.0**
@@ -44,8 +45,8 @@ a `.release-provenance.json` in each records the snapshot it was cut from.
 
 > **PDKs.** The database ships **open** PDK bindings only — IHP sg13g2, SkyWater
 > sky130, and GlobalFoundries gf180mcu. The Spectre/commercial lane's machinery,
-> templates and tests are all here, but no proprietary kit is bound; an operator
-> binds their own through the documented seam.
+> templates and tests are all here, but no proprietary kit is bound; you bind
+> your own through the documented seam.
 
 ## Quickstart
 
@@ -58,6 +59,8 @@ Two ways to bring the app (API + Studio UI) up. **Full walkthroughs:**
 ```bash
 make up            # build + run: API on :8000, Studio UI on :4000
 # open http://localhost:4000        (make down to stop)
+
+make up-live       # ...the same, but with live SPICE (see below)
 ```
 
 **Native** — [uv](https://docs.astral.sh/uv/) (Python) + Node 22+, two terminals:
@@ -71,10 +74,22 @@ make ui            # terminal 2 — frontend → http://localhost:4000
 `make help` lists every target. Prefer raw commands? See the getting-started guide —
 each `make` target is a one-line wrapper you can run by hand.
 
-> **Live SPICE is optional and off by default.** The Docker image and a bare
-> `uv sync` carry no simulator, so the app runs in replay/cached mode
-> (`GET /api/env` → `pdk_ok:false`). To simulate, install a local **ngspice** and
-> an open **PDK** (sky130 / gf180 / IHP sg13g2) and run the platform natively —
+> **Live SPICE is opt-in, and Docker makes it a one-liner.** `make up` and a bare
+> `uv sync` carry no simulator, so the app starts in replay/cached mode
+> (`GET /api/env` → `pdk_ok:false`) — the UI, the reference library, score
+> shaping and compare/explore over cached checkpoints all work without one.
+>
+> **`make up-live`** builds the EDA base image
+> ([`Dockerfile.spice-base`](Dockerfile.spice-base)) — **ngspice 45 compiled from
+> source with OSDI, plus the IHP sg13g2, SkyWater sky130 and GF gf180mcu PDKs
+> vendored** (all Apache-2.0) — and runs the stack on top of it. `pdk_ok:true`,
+> with **nothing installed on the host**: no ngspice, no PDK download, no
+> `PDK_ROOT`. It builds on both x86-64 and arm64 (Apple silicon) — the compact
+> models are compiled from source there, which takes considerably longer the
+> first time. See
+> [docs/docker.md](docs/docker.md#live-spice-in-the-container).
+>
+> Prefer no containers? Install a local ngspice + an open PDK and run natively —
 > see [docs/getting-started.md](docs/getting-started.md#live-spice-optional).
 
 ## Documentation

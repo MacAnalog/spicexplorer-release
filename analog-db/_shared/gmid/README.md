@@ -14,7 +14,7 @@ python tools/regen_gmid_luts.py --open-only     # skip the licensed Spectre lane
 ```
 
 - **Open PDKs** (sky130 / ihp-sg13g2 / gf180mcu) → native ngspice + `$PDK_ROOT` (per-L parallel).
-- **Spectre-routed kits** → headless Spectre via the virtuoso-bridge (licensed kit; needs the operator wrapper
+- **Spectre-routed kits** → headless Spectre via the virtuoso-bridge (licensed kit; needs the user-supplied wrapper
   `$SPICEXPLORER_SPECTRE_MODEL_ROOT/<corners.lib_file>` and the bridge `local.env`).
 
 ## Reading a LUT

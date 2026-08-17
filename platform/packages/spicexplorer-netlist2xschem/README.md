@@ -303,12 +303,12 @@ Key pieces (all live-verified on IC23.1 against a licensed kit, 2026-07-16):
     sanctioned lazy cross-leaf import) + xschem on PATH; SKIPs with the reason otherwise.
   - **simcheck** (`--no-simcheck` to disable): wraps the top cellview's exported netlist in
     a smoke deck — `--sim-models`/`--sim-section` (or `XVPORT_SIM_MODELS`/
-    `XVPORT_SIM_SECTION`) supply the operator's model include; every interface net is tied
+    `XVPORT_SIM_SECTION`) supply the user's model include; every interface net is tied
     to ground through 1 GΩ — and solves a DC operating point through Spectre. `--sim-env`
     pins the bridge profile (its `.env` discovery can silently pick a remote-SSH one);
     `--sim-param name=val` (repeatable) gives values to a drawing's symbolic placeholders.
     The exported netlist's own kit-path include lines are STRIPPED (`extract_design_section`,
-    NDA posture) — the operator include is the single model source.
+    NDA posture) — the user-supplied include is the single model source.
 
 - **Reverse porting** (`reverse.py`, `cv2sch`/`cv2sym`): the two readback gaps (schematic
   wire geometry, symbol drawing shapes) are filled by SKILL dumps in this package via the

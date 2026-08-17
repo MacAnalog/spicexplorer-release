@@ -14,7 +14,7 @@ give identical results, the exact footgun of running a `.scs` verbatim); (2) the
 license session is auto-opened by the loop and closed at `optimize()` teardown.
 
 The deck is generated once from the committed ngspice 5T-OTA tb (deck origin is orthogonal
-to the native-file path under test). Opt-in gating: bridge + `SPICEXPLORER_FOUNDRY65_MODELS`
+to the native-file path under test). Opt-in gating: bridge + `SPICEXPLORER_SPECTRE_MODELS`
 (NDA — env only, never the repo) + `VB_CADENCE_CSHRC`. The models path is written into a
 tmp YAML at runtime, never committed.
 """
@@ -30,12 +30,12 @@ import pytest
 
 pytestmark = pytest.mark.slow
 
-_MODELS = os.environ.get("SPICEXPLORER_FOUNDRY65_MODELS", "")
+_MODELS = os.environ.get("SPICEXPLORER_SPECTRE_MODELS", "")
 
 
 @pytest.mark.skipif(
     not (_MODELS and Path(_MODELS).expanduser().is_file()),
-    reason="set SPICEXPLORER_FOUNDRY65_MODELS to the FOUNDRY-65 Spectre model library .scs",
+    reason="set SPICEXPLORER_SPECTRE_MODELS to the licensed Spectre model library .scs",
 )
 def test_live_full_loop_native_scs_injection_moves_the_metric(tmp_path: Path) -> None:
     pytest.importorskip("virtuoso_bridge", reason="virtuoso-bridge not installed in this venv")
@@ -61,7 +61,7 @@ def test_live_full_loop_native_scs_injection_moves_the_metric(tmp_path: Path) ->
     example = project_root() / "examples/OTA/5t-ota/ihp-sg13g2/spice/ota-5t_tb-ac.spice"
     deck = render_spectre_deck(
         deck_spec_from_ngspice(
-            example, pdk="FOUNDRY-n65", source_pdk="ihp-sg13g2",
+            example, pdk="generic-n65", source_pdk="ihp-sg13g2",
             analyses=(dc_oppoint_analysis(), ac_analysis(1e3, 1e8, 101)),
             parameters={"vcm": 0.6},
         )
@@ -81,7 +81,7 @@ project:
   ws_root: {tmp_path}
   netlist: spice/ota_5t_tb_ac.scs
   outdir: out
-  tech_spec: {{name: FOUNDRY-n65, constraints: {{}}}}
+  tech_spec: {{name: generic-n65, constraints: {{}}}}
   dut_params:
     - {{name: x_dut_nfet_input_w, min_val: 0.3u, max_val: 2u}}
   testbenches:

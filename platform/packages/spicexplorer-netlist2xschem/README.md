@@ -267,7 +267,7 @@ xvport cv2sch MYLIB mycell --port 65192 -o mycell.sch --verify
 xvport cv2sym MYLIB mycell --port 65192 -o mycell.sym --verify
 ```
 
-Key pieces (all live-verified on IC23.1 / FOUNDRYN65, 2026-07-16):
+Key pieces (all live-verified on IC23.1 against a licensed kit, 2026-07-16):
 
 - **Orient table** (`xform.py`): xschem `(rot, flip)` → OpenAccess orient, `R270^rot ∘ MY^flip`;
   the Cadence side pinned by a placed-instance spike, the xschem side by a corpus regression
@@ -281,14 +281,14 @@ Key pieces (all live-verified on IC23.1 / FOUNDRYN65, 2026-07-16):
   verbatim (pre-split at junctions), one label per connected island, and geometric pin
   patching (a no-op for ported local symbols, whose pin geometry is a scaled copy).
 - **CDF params fire their callbacks** (`xvSetParams` in the emitted `.il`) — never bare
-  `dbReplaceProp`; on FOUNDRYN65 setting `w` correctly derives `wf` (the classic width trap).
+  `dbReplaceProp`; on a per-finger-CDF kit, setting `w` correctly derives `wf` (the classic width trap).
   The multiplier maps to `simM` (the netlister's `m←simM`; CDF `m` is itself
   callback-derived, so writing it is a silent no-op).
 - **Device map** (`devmap.py`, YAML): xschem symref ⇄ Cadence master + terminal aliases +
-  param names; ships IHP-MOS→FOUNDRYN65 (topology port — sizing is not kit-translated) and
+  param names; ships IHP-MOS→a placeholder kit lib (topology port — sizing is not kit-translated) and
   generic→analogLib rules; `kit_libs` is the reverse-direction NDA denylist. A rule's
   `per_finger: {total: w, fingers: ng}` divides a TOTAL-width attribute for a per-finger
-  CDF `w` (IHP xschem `w` is total; FOUNDRYN65 `wf = w × fingers`) — symbolic values that
+  CDF `w` (IHP xschem `w` is total; a per-finger kit has `wf = w × fingers`) — symbolic values that
   can't divide drop the width with a warning instead of netlisting at `ng×` size.
 - `--verify` reads the built cellview back (`read_schematic`/`read_symbol_ports`) and diffs
   instances, terminal→net bindings, ports, and symbol terminals against the emitter's

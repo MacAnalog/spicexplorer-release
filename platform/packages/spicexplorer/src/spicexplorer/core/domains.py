@@ -36,11 +36,19 @@ class SimType(str, Enum):
     TRAN = "tran"
     NOISE = "noise"
     NOISE_SPECTRUM = "noise_spectrum"
+    # Not a SPICE analysis: the metrics of a layout-flow "testbench" (build → DRC → LVS → PEX
+    # → post-layout measure; `backends/layout.py`). It has NO ngspice plot equivalent, so it is
+    # deliberately absent from `SIMTYPE_TO_NGSPICE_PLOTTYPE` and survives `TargetSpec`'s
+    # coercion as `SimType.LAYOUT` (`get_analysis()` → "layout").
+    LAYOUT = "layout"
 
 class SpiceSimulatorType(Enum):
     SPECTRE = "spectre"
     HSPICE  = "hspice"
     NGSPICE = "ngspice"
+    # The layout-flow backend (`sim_engine: layout`): a testbench's `netlist:` is a
+    # `layout-flow/1` YAML spec, not a SPICE deck. See `spicexplorer.backends.layout`.
+    LAYOUT  = "layout"
 
 class OptimizationGoalType(str, Enum):
     EXACT    = "exact"
@@ -60,6 +68,18 @@ class Error_Types(str, Enum):
     RELATIVE_SQUARED  = "relative-squared"
     RELATIVE_EXPONENTIAL = "relative-exponential"
     RELATIVE_SIGMOID = "relative-sigmoid"
+    # Bounded [0,1] bell-shaped penalty. Same codomain as relative-sigmoid, but its slope
+    # vanishes at the target instead of being maximal there, so it is the controlled comparison
+    # for whether the *smoothing* or the *bounding* of relative-sigmoid drives its benefit.
+    # Width is set per-spec via `TargetSpec.error_params: {sigma: <float>}` (default 1.0).
+    RELATIVE_GAUSSIAN = "relative-gaussian"
+    # Same shape as relative-absolute, but the DENOMINATOR adapts: instead of the authored
+    # `range`, it divides by a running statistic of the errors this spec has actually produced.
+    # Lets specs in wildly different units (Hz vs A) self-calibrate without hand-tuned ranges.
+    # Configured per-spec via `TargetSpec.error_params: {strategy, ema_beta, warmup}`.
+    # UNLIKE every other member, its kernel is STATEFUL — see `core.utils.AdaptiveNormalizer` for
+    # what that costs (a non-stationary objective, order-dependent scores).
+    RELATIVE_ADAPTIVE = "relative-adaptive"
 
     def is_relative(self) -> bool:
         return "relative" in self.value
@@ -228,6 +248,12 @@ class TargetSpec:
     enable:     bool = True
     range:      Union[np.float64, float, str | None] = None
     error_type: Union[Error_Types, str] = Error_Types.RELATIVE_ABSOLUTE
+    # Shape parameters for error types that take one (relative-gaussian: {sigma};
+    # relative-adaptive: {strategy, ema_beta, warmup}).
+    # Empty/None for every other error type, so behaviour is unchanged where it is not set.
+    # Kept as a dict rather than a named field so a new shaped error type does not need another
+    # column on this dataclass; unknown keys are rejected at load by resolve_error_params.
+    error_params: Optional[Dict[str, Any]] = None
     reward_type: Union[Reward_Types, str] = Reward_Types.NO_REWARD
     weight:     Optional[float | np.float64] = 1.0
     tolerance:  Optional[float | np.float64] = None  # if not given use 5% of target
@@ -244,6 +270,13 @@ class TargetSpec:
     #    instance: XM1, param: gm). Spectre/OCEAN backend only; built by
     #    optimization/ocean_integration.py.
     measurement: Optional[Dict[str, Any]] = None
+
+    # Mutable running state for a STATEFUL error type (relative-adaptive's per-metric scale). Not a
+    # DSL key: `init=False` keeps it out of the dacite/`TargetSpec(**item)` construction path, and
+    # `compare=False` keeps two specs comparing equal regardless of how far into a run they are.
+    # Scoped per TargetSpec instance — hence per Project_Setup, hence per optimizer run — so
+    # parallel runs in one process cannot share (or race on) a scale. None for every stateless type.
+    error_state: Optional[Any] = field(default=None, init=False, repr=False, compare=False)
 
     def __post_init__(self):
         # Prepare human-friendly lists for error messages
@@ -268,7 +301,13 @@ class TargetSpec:
             raise ValueError(f"Invalid goal '{self.goal}'. Must be one of {valid_goals}.")
 
         # --- Validate / convert sim_type ---
-        if isinstance(self.sim_type, str):
+        # `layout` is the one SimType with no ngspice plot: keep it as the enum member so the
+        # engine-neutral `get_analysis()` reads "layout" (the layout backend ignores analysis).
+        if isinstance(self.sim_type, str) and self.sim_type.strip().lower() == SimType.LAYOUT.value:
+            self.sim_type = SimType.LAYOUT
+        elif self.sim_type is SimType.LAYOUT:
+            pass
+        elif isinstance(self.sim_type, str):
             try:
                 self.sim_type = SIMTYPE_TO_NGSPICE_PLOTTYPE[SimType(self.sim_type.lower())] # FIXME: hacked for NGspice simulators
             except ValueError:
@@ -302,6 +341,42 @@ class TargetSpec:
                     f"Must be one of {valid_errors}."
                 )
                 raise ValueError(f"Invalid error_type '{self.error_type}'. Must be one of {valid_errors}.")
+
+        # --- Validate error_params, and build any stateful normalizer, at LOAD ---
+        # Imported here rather than at module scope: core.utils imports this module, so a
+        # top-level import would be circular.
+        from spicexplorer.core.utils import (
+            STATEFUL_ERROR_TYPES,
+            AdaptiveNormalizer,
+            resolve_error_params,
+        )
+        _adaptive_params = None
+        # A stateful error type is resolved even with NO `error_params:` — it still needs its
+        # normalizer built from the defaults. Stateless types keep the old "only if authored" path.
+        if self.error_params is not None or self.error_type in STATEFUL_ERROR_TYPES:
+            try:
+                resolved = resolve_error_params(self.error_type, self.error_params)
+            except ValueError as exc:
+                logger.critical(f"Invalid error_params for target '{self.name}': {exc}")
+                raise
+            # A stateful normalizer is built at the END of __post_init__, not here: its `seed` is
+            # derived from `target`/`range`, and neither is coerced yet at this point.
+            _adaptive_params = resolved if self.error_type == Error_Types.RELATIVE_ADAPTIVE else None
+            # Fail at LOAD on a bad shape parameter rather than thousands of evaluations into a
+            # run. Both of these are strictly-positive widths/rates: gaussian's `sigma` and
+            # sigmoid's `alpha`. Coerced to float here too, so a YAML string ("0.5") works.
+            for key in ("sigma", "alpha"):
+                val = resolved.get(key)
+                if val is None:
+                    continue
+                try:
+                    val = float(val)
+                except (TypeError, ValueError):
+                    raise ValueError(f"error_params.{key} for target '{self.name}' must be a number. Got: {val!r}.")
+                if not np.isfinite(val) or val <= 0:
+                    logger.critical(f"error_params.{key} for target '{self.name}' must be finite and > 0. Got: {val}.")
+                    raise ValueError(f"error_params.{key} for target '{self.name}' must be finite and > 0. Got: {val}.")
+                self.error_params = {**(self.error_params or {}), key: val}
 
         # --- Coerce target (BUG-B7) ---
         # YAML 1.1 leaves dot-less / unsigned-exponent scientific literals like `200e6`,
@@ -339,18 +414,63 @@ class TargetSpec:
         if isinstance(self.tolerance, str):
             self.tolerance = parse_value(self.tolerance)
 
-        if self.tolerance is None or not(self.tolerance > 0):
-            self.tolerance = abs(0.05 * self.target)
-            if not (self.tolerance > 0):
-                # target == 0 (or ~0): the 5%-of-target rule degenerates to 0, which would violate
-                # the `tolerance > 0` invariant this block exists to enforce (and leave a zero-width
-                # band). Floor to a small, scale-aware positive derived from the (already-validated,
-                # >0) normalizing `range` (BUG-B17).
-                self.tolerance = np.float64(self.range) * 1e-6
-            logger.warning(
-                f"No valid tolerance specified for target '{self.name}'. "
-                f"Using default tolerance: {self.tolerance}"
+        # An OMITTED tolerance is inferred; an AUTHORED one is honoured exactly, INCLUDING zero.
+        # This used to be a falsy test (`not (tolerance > 0)`), which silently replaced an
+        # explicit `tolerance: 0` with 5 % of target — the precise OPPOSITE of what authoring 0
+        # asks for, and undetectable from the outside because the run still scores. A zero-width
+        # band is a legitimate and common intent: it makes the constraint exactly `m >= T` (rather
+        # than `m >= T - tau`) and makes the penalty measured from the bare target, i.e. the
+        # textbook form. Nothing divides by tolerance — it is only ever used in comparisons and in
+        # `target +/- tolerance` — so zero is numerically safe on every path.
+        if self.tolerance is None:
+            # DEFAULT ZERO: an omitted tolerance means the target IS the constraint.
+            #
+            # This used to infer `0.05 * |target|`, which invented a 5 % relaxation nobody
+            # authored: a spec reading `target: 200e6` silently enforced `>= 195e6`, so the
+            # headline number in a config was not the number the optimizer had to hit, and the
+            # penalty was measured from the band edge rather than the target. Both are surprising,
+            # neither was requested, and the discrepancy propagated into every reported result.
+            #
+            # A band is a real modelling choice — a phase-margin spec genuinely accepts 50-70
+            # degrees — so it stays available and explicit. It is just no longer the default. The
+            # BUG-B17 floor that used to guard `tolerance > 0` for a zero target is gone with it:
+            # zero is now a legal, ordinary value on every path.
+            self.tolerance = np.float64(0.0)
+            logger.debug(
+                f"No tolerance specified for target '{self.name}'; using an exact band "
+                f"(tolerance = 0), i.e. the target itself is the constraint."
             )
+        else:
+            self.tolerance = np.float64(self.tolerance)
+            # A negative half-width is meaningless and used to be swallowed by the same falsy
+            # test (silently becoming 5 %). Fail loudly instead — it is always a typo.
+            if not np.isfinite(self.tolerance) or self.tolerance < 0:
+                logger.critical(
+                    f"tolerance for target '{self.name}' must be finite and >= 0 "
+                    f"(0 = an exact band). Got: {self.tolerance}.")
+                raise ValueError(
+                    f"tolerance for target '{self.name}' must be finite and >= 0 "
+                    f"(0 = an exact band). Got: {self.tolerance}.")
+
+        # --- Build the stateful normalizer (relative-adaptive), now that target/range are final ---
+        # Deliberately last: the `seed` basis resolves against the COERCED target and range, and a
+        # `log_scale` spec's samples are in DECADES so the seed has to be expressed in decades too.
+        # Constructing it here is also the validation — AdaptiveNormalizer rejects an unknown
+        # strategy, an ema_beta outside (0,1), a negative warmup/window, and a seed_weight that
+        # would fill the whole window. Failing at LOAD keeps a typo out of hour-3 of a sweep.
+        if _adaptive_params is not None:
+            try:
+                self.error_state = AdaptiveNormalizer(
+                    strategy=_adaptive_params["strategy"],
+                    ema_beta=_adaptive_params["ema_beta"],
+                    warmup=_adaptive_params["warmup"],
+                    window=_adaptive_params["window"],
+                    seed=self._resolve_adaptive_seed(_adaptive_params["seed"]),
+                    seed_weight=_adaptive_params["seed_weight"],
+                )
+            except (TypeError, ValueError) as exc:
+                logger.critical(f"Invalid error_params for target '{self.name}': {exc}")
+                raise ValueError(f"target '{self.name}': {exc}") from exc
 
         # --- Validate the optional OCEAN measurement recipe (Spectre path) ---
         # `list_target_spec_hook` builds TargetSpec via `TargetSpec(**item)`, bypassing
@@ -366,6 +486,56 @@ class TargetSpec:
             f"Initialized TargetSpec: {self.name}, target={self.target}, "
             f"tolerance={self.tolerance}, goal={self.goal}, sim_type={self.sim_type}, enable={self.enable}"
         )
+
+    def _resolve_adaptive_seed(self, basis) -> Optional[float]:
+        """Turn the `seed` BASIS into the numeric synthetic "past sample" that primes the scale.
+
+        The normalizer's samples are raw error MAGNITUDES, so the seed must be one too — which is
+        why this lives on the spec rather than in the normalizer: only the spec knows its target,
+        its range, and whether its samples are decades.
+
+        * ``"target"`` — "assume a 100 % miss until proven otherwise". Linear: ``|T|``. Under
+          ``log_scale`` a 100 % miss is ``log10(2T) - log10(T) = log10 2`` DECADES, NOT ``|log10 T|``
+          (which is not an error magnitude at all and would be wildly off — 6 decades for a 1 MHz
+          target). Computed through the same `log_space_range_coeff` the scorer uses, so the two
+          cannot drift.
+        * ``"range"`` — the authored static normalizer, i.e. seed the adaptive scale at exactly
+          what the fixed-scale error types would have used. The conservative choice.
+        * ``"none"`` — no seed. The FIRST observed violation then defines the scale by itself, so
+          it always normalizes to exactly 1.0 regardless of its size; pair with a `warmup`.
+
+        A bare number is accepted too and is taken as the magnitude verbatim.
+        """
+        if basis is None:
+            return None
+        if isinstance(basis, (int, float)) and not isinstance(basis, bool):
+            return float(basis)
+        key = str(basis).strip().lower()
+        if key == "none":
+            return None
+        if key not in ("target", "range"):
+            from spicexplorer.core.utils import ADAPTIVE_SEED_BASES
+
+            raise ValueError(
+                f"error_params.seed for target {self.name!r} must be one of "
+                f"{list(ADAPTIVE_SEED_BASES)} or a positive number. Got: {basis!r}.")
+        from spicexplorer.core.utils import log_space_range_coeff
+
+        magnitude = np.float64(abs(float(self.target))) if key == "target" else np.float64(self.range)
+        if not np.isfinite(magnitude) or magnitude <= 0:
+            logger.warning(
+                f"Target {self.name!r}: cannot seed the adaptive scale from {key!r} "
+                f"(value {magnitude}); starting unseeded.")
+            return None
+        if self.log_scale:
+            target = np.float64(abs(float(self.target)))
+            if not np.isfinite(target) or target <= 0:
+                logger.warning(
+                    f"Target {self.name!r}: log_scale spec with non-positive target; "
+                    "cannot express an adaptive seed in decades, starting unseeded.")
+                return None
+            return float(log_space_range_coeff(target, magnitude))
+        return float(magnitude)
 
     @staticmethod
     def _measurement_tier(m: Dict[str, Any]) -> str:
@@ -502,6 +672,11 @@ class TargetSpec:
         return self.sim_type.value
 
     def get_equivalent_ngspice_plot_type(self) -> Ngspice_Plot_Type:
+        if self.sim_type is SimType.LAYOUT:
+            raise ValueError(
+                f"sim_type 'layout' (target '{self.name}') has no ngspice plot equivalent — it is a "
+                f"layout-flow metric (sim_engine: layout); use get_analysis()."
+            )
         if isinstance(self.sim_type, Ngspice_Plot_Type):
             return self.sim_type
         elif isinstance(self.sim_type, SimType) and self.sim_type in SIMTYPE_TO_NGSPICE_PLOTTYPE:
@@ -649,11 +824,52 @@ class OptimizerConfig:
     loss_function_config: Optional[LossFunctionConfig]
     random_seed: Optional[int]
 
+    # How the per-SPEC scores collapse into the one scalar the search engine sees. Distinct from
+    # `pvt.score_aggregation`, which reduces the CORNER axis — a multi-corner run applies this per
+    # corner first, then that across corners. The default reproduces the historical hardcoded
+    # behaviour byte-for-byte, so an existing project that names neither key is unchanged.
+    # Strategies + their math: `core.utils.aggregate_spec_scores`.
+    spec_aggregation: str = "feasibility_reward"
+    #: Shape parameters for the chosen strategy (currently only chebyshev's `rho`).
+    aggregation_params: Optional[Dict[str, Any]] = None
+    #: Seed the search with the dut_params' `init` values: when True the Nevergrad backend
+    #: `suggest()`s the `init` point so it is evaluated EARLY (a hint, not a queue — usually the
+    #: first candidate serially, but with parallel workers/TwoPointsDE it may land a few trials in) (a searched param without `init` keeps
+    #: the parametrization's own default, i.e. its mid-range). Off by default so existing
+    #: projects' first candidates are unchanged; a layout-flow project turns it on so the layout
+    #: of record is among the first trials (its known-good baseline / parity point).
+    seed_from_init: bool = False
+
     def __post_init__(self):
         # Mandatory checks
         if not self.name or not self.type or self.budget is None:
             logger.critical("OptimizerConfig is missing a mandatory field (name, type, or budget).")
             raise ValueError("OptimizerConfig requires name, type, and budget.")
+
+        # -------------------------
+        # Spec-axis aggregation — validate at LOAD, like every other closed vocabulary here.
+        # Imported locally: core.utils imports this module (circular at module scope).
+        # -------------------------
+        from spicexplorer.core.utils import SPEC_SCORE_AGGREGATORS, resolve_aggregation_params
+
+        self.spec_aggregation = str(self.spec_aggregation or "feasibility_reward").strip().lower()
+        if self.spec_aggregation not in SPEC_SCORE_AGGREGATORS:
+            logger.critical(
+                f"Unknown spec_aggregation '{self.spec_aggregation}'. "
+                f"Valid: {sorted(SPEC_SCORE_AGGREGATORS)}."
+            )
+            raise ValueError(
+                f"Unknown spec_aggregation '{self.spec_aggregation}'. "
+                f"Valid: {sorted(SPEC_SCORE_AGGREGATORS)}."
+            )
+        # Resolve once at load so an unknown key (e.g. `rho` on weighted_sum) is caught here, and
+        # the scorer never re-merges defaults on the hot path.
+        self.aggregation_params = resolve_aggregation_params(
+            self.spec_aggregation, self.aggregation_params
+        )
+        logger.info(
+            f"spec_aggregation='{self.spec_aggregation}' params={self.aggregation_params}"
+        )
 
         # -------------------------
         # General

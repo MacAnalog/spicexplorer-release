@@ -136,7 +136,7 @@ variables:
   is_integer: true
 
 # Per-PDK re-bias (platform convention: analyses params are the AUTHORED operating point;
-# per-PDK deltas live here — pattern: amp_017_tan_clia/pdk/FOUNDRY-n65). amp_029 is authored
+# per-PDK deltas live here — pattern: amp_017_tan_clia/pdk/<pdk>). amp_029 is authored
 # on the ihp-sg13g2 1.2 V rail; gf180mcu's 03v3 devices (VT ~0.7-0.8 V) cannot bias a
 # two-stage + tail stack at 1.2 V, so this binding runs the 3.3 V device-nominal rail,
 # VCM at mid-rail. vbl re-centered for this rail (see its entry).

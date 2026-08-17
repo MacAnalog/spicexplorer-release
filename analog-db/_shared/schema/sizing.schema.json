@@ -29,7 +29,8 @@
           "max": {"type": ["string", "number"]},
           "unit": {"type": "string"},
           "freeze": {"type": "boolean"},
-          "is_integer": {"type": "boolean", "description": "integer-valued knob (e.g. finger count)"}
+          "is_integer": {"type": "boolean", "description": "integer-valued knob (e.g. finger count)"},
+          "testbench": {"type": "boolean", "description": "knob applied by the TESTBENCHES (bias-port DC source / supply), not the DUT .param header — exempt from the Tier-1 params:sizing inventory closure"}
         }
       }
     }

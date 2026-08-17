@@ -1,0 +1,55 @@
+# layout-flow/1 — the 5T OTA as a CO-OPTIMIZATION testbench: one flow evaluates a candidate
+# that carries BOTH schematic sizing (device W) and layout knobs.
+#
+# One trial = build GDS with (sizing ⊕ knobs) → KLayout DRC → KLayout LVS against a reference
+# REGENERATED from the same sizing → kpex CC → the platform's own AC bench on the extracted
+# subckt. Paths are relative to THIS file. See ../opt/flow.yaml for the knobs-only variant.
+schema: layout-flow/1
+
+generator: ../gen_5t_ota_gf.py      # LayoutParams = the knobs; BOUNDS = their legal ranges
+cell: ota_5t_gf
+gds_python: ~/miniconda3/envs/ai_env/bin/python   # GDS_PYTHON overrides; keeps the spec portable
+param_grid: 0.01                    # float knobs snap to a 0.01 um grid (even DBU port widths)
+
+# ------------------------------------------------------------------------------
+# The co-optimization seam. `sizing:` is the FULL baseline sizing dict (um) the generator's
+# build(params, sizing) consumes; `sizing_params:` names the dut_params that are SIZING
+# rather than layout knobs. Per candidate the backend
+#   1. overlays them onto sizing.json → a per-run sizing.json → build(params, sizing),
+#   2. hands the merged dict to the LVS writer (so the reference follows the sizing),
+#   3. injects them as `.param <name>` into every postlayout testbench deck.
+# A name that is also a LayoutParams knob is rejected at load — a param is one or the other.
+# ------------------------------------------------------------------------------
+sizing: sizing.json
+sizing_params: [in_w, pld_w, tail_w]   # names == sizing.json keys (a {dut_param: key} map also works)
+# These widths DRAW GEOMETRY, so they need a manufacturing grid exactly like the knobs do —
+# without it the optimizer's raw float (0.5052731805394455 um) lands the devices off-grid and
+# KLayout rejects the candidate with a wall of `OffGrid.*` violations that say nothing about
+# the design. `sizing_grid` is opt-in and in the SIZING dict's own units (um here), separate
+# from `param_grid` because another generator's sizing dict may be in metres.
+sizing_grid: 0.01
+
+# the three wire/tab widths are NOT searched here (they are second-order for area and the
+# 9-knob space is too big for a guide-sized budget) — pinned to the layout of record.
+fixed_params: { w_m1: 0.25, w_m2: 0.29, tab_w: 0.39 }
+
+drc: { enabled: true, no_density: true }
+# a per-candidate LVS reference: the writer lives in the generator module and receives the
+# merged sizing, so an LVS "match" means the extracted layout really is THIS candidate's
+# schematic (fingers folded into W total). A fixed `reference:` would be a lie here.
+lvs: { writer: write_lvs_reference }
+pex:
+  mode: CC        # C-only: validated identical UGF loss to RC on this block, and it avoids
+                  # kpex's 2.5D R-mesh occasionally leaving a gate pin dangling (singular matrix)
+  ac_gnd_nets: [vdd, ibias]   # c_<net>_ff = C from <net> to {0/vss ∪ these}; ctot_<net>_ff = Σ to anything
+
+postlayout:
+  dut: ota_5t_gf_dut.spice    # the PARAMETERIZED pre-layout DUT (w={in_w*1e-6} …)
+  subckt: ota_5t_gf
+  engine: ngspice
+  testbenches:
+    - { name: tb_ac, netlist: tb_ac.spice }   # open-loop AC (+ .op): dcgain / ugf / pm on v(vout)
+  params: {}                  # sizing_params are injected automatically; nothing else is fixed
+
+gates: { drc: true, lvs: true, pex: true }   # a failed stage skips the rest (→ NaN → MAX_PENALTY)
+retain: all                                   # every run dir kept (GDS + reports + summary.json)

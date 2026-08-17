@@ -12,7 +12,7 @@ directory is the **corpus-level provenance home**, not a second copy of the deck
 - [`reference-only/`](reference-only/) — imports that are **not analog topologies** (digital blocks, device-characterization benches, Verilog-A language demos) and so map to no class library. They are parked here as pure browsable corpus and **de-registered from `catalog.json`** (2026-07-15). See its [`README.md`](reference-only/README.md).
 
 These circuits are **not lowered to an open PDK and not simulated** by this DB (they are proprietary
-FOUNDRY 28/65 nm Spectre decks). The harness runs a reference-only Tier-0 on them and skips T1–T4.
+proprietary-PDK 28/65 nm Spectre decks). The harness runs a reference-only Tier-0 on them and skips T1–T4.
 
 ## Use it
 

@@ -22,7 +22,7 @@ analog-db gmid-extract --pdk sky130            # → _shared/gmid/sky130/sky130_
 ## Storage & regeneration (the LUTs are NOT committed)
 
 The gm/ID LUTs are **regenerable artifacts, not source** — the max-fidelity open-PDK tables are
-large (tens of MB each) and the FOUNDRY-n65 tables come from a licensed kit (NDA). So the whole store
+large (tens of MB each) and any Spectre-lane tables come from a licensed kit (NDA). So the whole store
 lives **out-of-repo** and is rebuilt on demand:
 
 - **Canonical store:** `gmid.out_root` in `_shared/pdk/<pdk>.yaml` (default `~/.spicexplorer/gmid`),
@@ -31,7 +31,7 @@ lives **out-of-repo** and is rebuilt on demand:
 - **Reader resolution:** `gmid.find_lut_path()` / `gmid.lut()` / `LUTRegistry` search the
   out-of-repo store **first**, then fall back to the legacy in-repo `_shared/gmid/<pdk>/` (so an
   older checkout still reads). `gmid.store_root(pdk)` is the write location.
-- **Regenerate everything** (one command; open lane = native ngspice+`$PDK_ROOT`, FOUNDRY = Spectre):
+- **Regenerate everything** (one command; open lane = native ngspice+`$PDK_ROOT`, licensed lane = Spectre):
 
   ```bash
   python tools/regen_gmid_luts.py                 # the whole store the environment can build
@@ -44,7 +44,7 @@ lives **out-of-repo** and is rebuilt on demand:
   2 pts, off-grid above 0.4 V), W = **5 µm**. All 5 corners `tt/ss/ff/sf/fs` per PDK.
 - **Temperature:** recorded in the manifest (`conditions.temp_k`) and, off-nominal, in the filename
   (`__85C`); 27 °C tables carry no suffix. So multi-temp tables never collide.
-- **Vt flavours (FOUNDRY-n65):** `gmid.flavors` + `--flavor lvt|svt|hvt|all` keys into
+- **Vt flavours (Spectre-routed kits):** `gmid.flavors` + `--flavor lvt|svt|hvt|all` keys into
   `devices.{nmos,pmos}[flavor]` (`lvt`→`DEVICE`, `svt`→`nch`, `hvt`→`DEVICE`). **Note:** SVT/HVT
   require the operator's model wrapper to include those kit sections — the shipped wrapper maps only
   the `*_lvt` sections, so only LVT extracts until the wrapper is extended.
@@ -288,16 +288,16 @@ Checks JD / intrinsic-gain / fT to < 2% and VGS to < 1 mV across ~96 bias points
 
 ## The Spectre lane — licensed-kit PDKs (`gmid-extract-spectre`)
 
-A `sim_engine: spectre` PDK (FOUNDRY-n65) can't use the ngspice flow above — its models only exist
+A `sim_engine: spectre` PDK can't use the ngspice flow above — its models only exist
 behind the licensed kit. The **Spectre lane** (`spicexplorer_analog_db.gmid_spectre`,
 `analog-db gmid-extract-spectre`) characterizes it with **plain headless Spectre** — no
 Virtuoso/OCEAN session — using the same registry-`gmid:`-block config style:
 
 ```bash
-analog-db gmid-extract-spectre --pdk FOUNDRY-n65              # tt → ~/.spicexplorer/gmid/FOUNDRY-n65/
-analog-db gmid-extract-spectre --pdk FOUNDRY-n65 --corner all --workers 16
-analog-db gmid-extract-spectre --pdk FOUNDRY-n65 --smoke      # 2 L × 1 VSB validation pass
-analog-db gmid-extract-spectre --pdk FOUNDRY-n65 --dry-run    # print the deck, run nothing
+analog-db gmid-extract-spectre --pdk <spectre-pdk>        # tt → ~/.spicexplorer/gmid/<spectre-pdk>/
+analog-db gmid-extract-spectre --pdk <spectre-pdk> --corner all --workers 16
+analog-db gmid-extract-spectre --pdk <spectre-pdk> --smoke   # 2 L × 1 VSB validation pass
+analog-db gmid-extract-spectre --pdk <spectre-pdk> --dry-run # print the deck, run nothing
 ```
 
 Differences from the open lane, and why:

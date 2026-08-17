@@ -1,7 +1,7 @@
 # sfe_reference_core_library
 
 > **[REFERENCE]** `kind: reference` — imported AnalogGym "Sensing Front End" decks. NOT lowered to an
-> open PDK and NOT simulated by this DB (proprietary FOUNDRY 180 nm, `DEVICE`/`DEVICE`). See the corpus
+> open PDK and NOT simulated by this DB (proprietary 180 nm, `DEVICE`/`DEVICE`). See the corpus
 > [`PROVENANCE.md`](../../corpora/analoggym-sensing-fe/PROVENANCE.md).
 
 A library of **26 self-biased sub-threshold voltage-reference / PTAT temperature-sensor cores**,

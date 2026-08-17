@@ -91,7 +91,9 @@ def test_crashed_sim_no_longer_outscores_a_converged_violation():
     b_score, _ = h.compute_fitness({"gain": np.float64(50.0), "leak": np.float64(200.0)})
 
     assert a_score == -MAX_PENALTY
-    assert b_score == pytest.approx(-95.0)
+    # 100 over a target of 100 with the default (now zero) tolerance -> the full 100, where the
+    # old 5 % default made it 95.
+    assert b_score == pytest.approx(-100.0)
     # AFTER the fix the crashed design is far worse; the OLD -weight carve-out gave A = -1.0, which
     # would have BEATEN B = -95.0 and steered the optimizer toward the crash.
     assert a_score < b_score

@@ -44,7 +44,6 @@ artifacts:
   datasheet: datasheet.yaml
 pdks:
 - ihp-sg13g2
-- FOUNDRY-n65
 analyses:
 - dc_op
 - psrr_vdd_chop

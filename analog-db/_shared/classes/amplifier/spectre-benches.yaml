@@ -55,7 +55,7 @@ benches:
       # SKIPPED on a single-ended one (whose datasheet does not declare cmrr_cm_db either).
       # Without this row cmrr_cm_db had no Spectre route at all and fell through to the Tier-1
       # registry, which has no such recipe -> KeyError -> NaN -> dropped from the metrics
-      # rollup, blanking the rejection column for all 8 FD FOUNDRY-n65 cells.
+      # rollup, blanking the rejection column for all 8 FD Spectre-routed cells.
       - {name: cmrr_cm_db, expr: neg_cm_gain_db_at, requires: [CM_OUTP, CM_OUTN],
          args: {OUTP: $CM_OUTP, OUTN: $CM_OUTN, FREQ: $FSTART}}
   psrr_vdd:
@@ -94,7 +94,7 @@ benches:
     calculator:
       # `name:` is the datasheet `extract.meas` string — cm_interior_pts is the published
       # figure (amp_029/amp_030/amp_034 all declare it); without this bench it had no
-      # closed-lane route at all and blanked on every FOUNDRY-n65 CM-closure cell.
+      # closed-lane route at all and blanked on every Spectre-routed CM-closure cell.
       - {name: cm_interior_pts, expr: cm_interior_pts, args: {OUTP: voutp, OUTN: voutn}}
       # the five per-point reads the ngspice deck `print`s (the analyses' `produces:` list)
       - {name: vocm_1, expr: cm_vocm_at, args: {OUTP: voutp, OUTN: voutn, VB: $VB1}}
@@ -119,7 +119,7 @@ benches:
       # the ngspice template, so the instance name follows the VARIANT: the self-biased
       # (biaswrap) decks drive through VAC on `sigin` and have no VINP at all. Hardcoding
       # VINP made Spectre reference a nonexistent instance, so it returned no
-      # input-referred density and inoise_total was NaN on 16 FOUNDRY-n65 amplifiers while
+      # input-referred density and inoise_total was NaN on 16 Spectre-routed amplifiers while
       # the analysis still reported status ok. $NOISE_IPROBE resolves per template.
       - {template: noise, args: {OUT: $NOISE_OUT, IPROBE: $NOISE_IPROBE}}
     calculator:

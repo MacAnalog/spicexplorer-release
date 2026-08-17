@@ -201,16 +201,50 @@ class NevergradMixin(Base_Optimizer):
                 random_seed=self.optimizer_config.random_seed
             )
 
-            # FIXME: Handle Initial Points Manually
-            # if self.optimizer_config.initial_points:
-            #     for point in self.optimizer_config.initial_points:
-            #          self.optimizer.suggest(self.parametrization.spawn_child(new_value=point).value)
+            # Optional: seed the search with the dut_params' `init` point (opt-in via
+            # `optimizer_config.seed_from_init`), so the first ask() is the known baseline.
+            if getattr(self.optimizer_config, "seed_from_init", False):
+                self._suggest_init_point()
 
             return True
 
         except Exception as e:
             logger.critical(f"Failed to create optimizer: {e}")
             return False
+
+    def _suggest_init_point(self) -> None:
+        """`optimizer.suggest(...)` the dut_params' `init` values (in the search space's own
+        normalized coordinates) so that point is evaluated early in the run. `suggest()` is a HINT
+        to Nevergrad, not a queue: with `num_workers == 1` and most algorithms it is the first
+        `ask()`, but with parallel workers / TwoPointsDE it has been observed as trial 4 — read
+        the init trial back from the log by its params, do not assume index 0. A searched param
+        without `init` keeps the parametrization's default value; frozen params are not in the
+        space. Integer params live in physical units (see `parameterize`)."""
+        if self.parametrization is None or self.optimizer is None:
+            return
+        cfg = self.optimizer_config
+        lin, log = cfg.lin_variable_bounds, cfg.log_variable_bounds
+        assert lin is not None and log is not None  # defaulted in OptimizerConfig.__post_init__
+        point: Dict[str, Any] = dict(self.parametrization.value)
+        n_seeded = 0
+        for param in self.setup_obj.dut_params:
+            if param.name not in point or param.init is None:
+                continue
+            init = float(param.init)  # type: ignore[arg-type]  (resolved to a number by from_yaml)
+            lo = float(param.min_val)  # type: ignore[arg-type]
+            hi = float(param.max_val)  # type: ignore[arg-type]
+            if param.is_integer:
+                point[param.name] = int(round(init))
+            elif param.log_scale:
+                x = (np.log10(init) - np.log10(lo)) / (np.log10(hi) - np.log10(lo))
+                point[param.name] = float(log.min + x * (log.max - log.min))
+            else:
+                x = (init - lo) / (hi - lo)
+                point[param.name] = float(lin.min + x * (lin.max - lin.min))
+            n_seeded += 1
+        if n_seeded:
+            self.optimizer.suggest(point)
+            logger.info(f"seed_from_init: suggested the `init` point for {n_seeded} dut_param(s)")
 
     def optimization_step(self) -> Tuple[Dict[str, np.floating] , np.floating , Dict[str, Any]]:
         # Get a new candidate

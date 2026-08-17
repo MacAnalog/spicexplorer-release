@@ -1,0 +1,84 @@
+lsb:
+  dut: lsb
+  pex_mode: CC
+  pre:
+    in:
+      s21_lf_db: 2.27
+      f3db_ghz: 100.0
+      s11_worst_db: -16.7
+      power_mw: 59.68
+  post:
+    in:
+      s21_lf_db: 2.27
+      f3db_ghz: 100.0
+      s11_worst_db: -15.76
+      power_mw: 59.68
+  delta:
+    in:
+      s21_lf_db: 0.0
+      f3db_ghz: 0.0
+      s11_worst_db: 0.94
+      power_mw: 0.0
+  n_parasitics: 55
+  drc_lvs: pass
+msb:
+  dut: msb
+  pex_mode: CC
+  pre:
+    in:
+      s21_lf_db: 8.247
+      f3db_ghz: 73.24
+      s11_worst_db: -11.37
+      power_mw: 119.37
+  post:
+    in:
+      s21_lf_db: 8.247
+      f3db_ghz: 65.4
+      s11_worst_db: -10.42
+      power_mw: 119.37
+  delta:
+    in:
+      s21_lf_db: 0.0
+      f3db_ghz: -7.84
+      s11_worst_db: 0.95
+      power_mw: 0.0
+  n_parasitics: 87
+  drc_lvs: pass
+pam4:
+  dut: pam4
+  pex_mode: CC
+  pre:
+    lsb:
+      s21_lf_db: 2.273
+      f3db_ghz: 96.24
+      s11_worst_db: -16.7
+      power_mw: 179.07
+    msb:
+      s21_lf_db: 8.249
+      f3db_ghz: 70.22
+      s11_worst_db: -11.37
+      power_mw: 179.07
+  post:
+    lsb:
+      s21_lf_db: 2.273
+      f3db_ghz: 78.89
+      s11_worst_db: -15.6
+      power_mw: 179.07
+    msb:
+      s21_lf_db: 8.249
+      f3db_ghz: 58.76
+      s11_worst_db: -10.03
+      power_mw: 179.07
+  delta:
+    lsb:
+      s21_lf_db: 0.0
+      f3db_ghz: -17.35
+      s11_worst_db: 1.1
+      power_mw: 0.0
+    msb:
+      s21_lf_db: 0.0
+      f3db_ghz: -11.46
+      s11_worst_db: 1.34
+      power_mw: 0.0
+  n_parasitics: 131
+  drc_lvs: pass

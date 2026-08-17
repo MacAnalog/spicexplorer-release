@@ -1,0 +1,8 @@
+pdk: ihp-sg13g2
+# No generic-kind retargets: the HBTs are `X`-prefixed subckt instances of `npn13G2` (a SUBCKT
+# black box to circuitgraph — it has no BJT device type, gap 4.4), and the degeneration/load/
+# termination R and C are plain SPICE primitives with literal values, not PDK device subckts. So
+# there is nothing to lower model-wise; `load_pdk` falls back to the circuitgraph built-in and the
+# lowered ihp-sg13g2 netlist is the abstract topology verbatim. Flavor choice (npn13G2 vs
+# npn13G2l/v) is topology-level, not a netlist retarget (see _shared/pdk/ihp-sg13g2.yaml `hbt`).
+devices: {}

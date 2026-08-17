@@ -117,7 +117,7 @@ _MEAS_TABLE: Dict[str, Tuple[str, Tuple[str, ...]]] = {
     # (`let vos = v(voutp)-v(voutn)` differential, `let vos = v(vout)-v(vinp)` for the
     # unity-follower biaswrap variant). Spectre never executes `.control`, so the closed lane
     # had no `vos` at all: `_MEAS_TABLE['vos']` raised `KeyError` and `evaluate()` degraded it
-    # to NaN on every FOUNDRY-n65 amplifier that declares it. Reading the two op-point node
+    # to NaN on every Spectre-routed amplifier that declares it. Reading the two op-point node
     # scalars reproduces the deck's own definition engine-neutrally (both nodes are in the
     # ngspice op plot AND the Spectre op PSF); the caller names the pair.
     "vos": ("op", ("out", "ref")),

@@ -12,8 +12,8 @@ dependencies = [
     "spicexplorer-core",   # kernel: spice_engine, eng, env, pvt, paths
     "spicexplorer-netlist2xschem",  # netlist -> xschem .sch (+ optional render) leaf tool
     "spicexplorer-waveview",  # universal result viewer (dataset loaders + measurements) leaf tool
-    "fastapi>=0.140.13",
-    "uvicorn[standard]>=0.51.0",
+    "fastapi>=0.141.1",
+    "uvicorn[standard]>=0.52.1",
     "python-multipart>=0.0.12",
 ]
 

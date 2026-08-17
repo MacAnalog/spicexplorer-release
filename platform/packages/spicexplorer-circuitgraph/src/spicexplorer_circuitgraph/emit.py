@@ -505,7 +505,7 @@ class SpectreEmitter(BaseNetlistEmitter):
             master = self.sanitize_ref(self._value(comp, pdk))
             # `m=` is emitted VERBATIM: Spectre honors `m` as the device multiplier on
             # model-card MOS, while `multi` is silently IGNORED with a warning (proven
-            # live on KIT65 DEVICE 2026-07-17: m=4 quadruples id/gm, multi=4 does
+            # live on a 65 nm kit's DEVICE 2026-07-17: m=4 quadruples id/gm, multi=4 does
             # nothing — the old m→multi rename made every multi-finger device run at
             # m=1). `multi` remains a read-side alias in the dialect spec.
             body = " ".join(f"{k}={v}" for k, v in params)

@@ -1,5 +1,5 @@
 # ★ SUPER-DSL manifest — kind: reference (plan D-9). Validated against _shared/schema/circuit.schema.json.
-# IMPORTED reference circuit: authored proprietary-PDK (FOUNDRY 180 nm) Spectre decks, NOT lowered or simulated here.
+# IMPORTED reference circuit: authored proprietary-PDK (proprietary-PDK 180 nm) Spectre decks, NOT lowered or simulated here.
 # The harness runs the reference-only T0 subset (schema + provenance + deck-exists) and skips T1-T4.
 # Source credited under `provenance` (see repo NOTICE + corpora/analoggym-sensing-fe/PROVENANCE.md).
 schema: spicexplorer/circuit@1

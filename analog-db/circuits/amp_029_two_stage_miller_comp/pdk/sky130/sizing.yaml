@@ -136,7 +136,7 @@ variables:
   is_integer: true
 
 # Per-PDK re-bias (platform convention: analyses params are the AUTHORED operating point;
-# per-PDK deltas live here — pattern: amp_017_tan_clia/pdk/FOUNDRY-n65). amp_029 is authored
+# per-PDK deltas live here — pattern: amp_017_tan_clia/pdk/<pdk>). amp_029 is authored
 # on the ihp-sg13g2 1.2 V rail; sky130's 01v8 devices run the registry 1.8 V rail
 # (bare-um convention), VCM at mid-rail. vbl re-centered for this rail (see its entry).
 analysis_params:

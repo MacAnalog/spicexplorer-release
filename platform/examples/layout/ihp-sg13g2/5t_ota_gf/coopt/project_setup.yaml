@@ -1,0 +1,151 @@
+# 5T OTA — LAYOUT ↔ SCHEMATIC CO-OPTIMIZATION through the platform optimizer.
+#
+# ONE Project_Setup whose `dut_params` carry BOTH
+#   * the schematic SIZING (in_w / pld_w / tail_w, um) that `build(params, sizing)` consumes,
+#     that the per-candidate LVS reference is written from, and that the post-layout deck's
+#     `.param`s inject — declared as `sizing_params:` in flow.yaml, and
+#   * the LAYOUT KNOBS (gen_5t_ota_gf.LayoutParams: the clearance/offset constants),
+# evaluated together by the layout backend: build GDS → DRC → LVS → kpex CC → the platform's
+# own AC bench on the extracted subckt. Area and the post-layout metrics are scored side by
+# side, so the optimizer sees the ONE thing a schematic-only or a layout-only loop cannot:
+# the gm a wider device buys, minus the parasitic the wider device (and the tighter routing)
+# costs, priced in the same um2.
+#
+# The knobs-only sibling is ../opt/project_setup.yaml. Guide notebook:
+# packages/spicexplorer/notebooks/layout_schematic_cooptimization.ipynb
+#
+# Run:  uv run spicexplorer-optimize project_setup.yaml --budget 12   (from this directory)
+project:
+  name: OTA5T-GF-COOPT
+  description: minimize core area subject to post-layout UGF / DC-gain / PM, sizing + layout knobs searched together
+  simulator: ngspice         # the post-layout testbenches' engine (PATH lookup, like every project)
+  save_sim: false
+  parallel_sim: false        # one layout flow at a time (each trial already fans out klayout/kpex)
+  sim_engine: layout
+
+  ws_root: .                 # paths below are relative to this directory
+  netlist: flow.yaml         # the DUT "netlist" IS the layout-flow spec (no SPICE deck)
+  outdir: coopt_out          # <outdir>/layout/<tb>/run_<n>_<label>/{ota_5t_gf.gds, drc/, lvs/, pex/, sizing.json, summary.json}
+
+  tech_spec:
+    name: ihp-sg13g2
+    constraints: {}
+
+  # ------------------------------------------------------------------
+  # THE SEARCH SPACE — sizing and layout in one vector.
+  #
+  # SIZING (um, = flow.yaml `sizing_params`; sizing.json holds the frozen rest: all L = 5 um,
+  # ref_w = 2 um so the tail mirror ratio is tail_w/2). `init` = the calibrated feasible point.
+  # ------------------------------------------------------------------
+  dut_params:
+    - { name: in_w,    min_val: 0.45, max_val: 0.85, init: 0.62, description: "SIZING: input-pair M1/M2 width (um) — gm, hence UGF; also gds, hence gain" }
+    - { name: pld_w,   min_val: 1.40, max_val: 2.40, init: 2.00, description: "SIZING: p-load M3/M4 width (um) — ro of the load, hence DC gain; also C at vout" }
+    - { name: tail_w,  min_val: 1.60, max_val: 2.60, init: 2.00, description: "SIZING: tail M5 width (um) — mirror ratio tail_w/ref_w scales the tail current" }
+    # LAYOUT KNOBS (um, = gen_5t_ota_gf.LayoutParams ∩ BOUNDS). The three wire/tab widths are
+    # pinned in flow.yaml `fixed_params`; these six are the area levers.
+    # Narrower than the generator's own BOUNDS: the bottom of each range is DRC-illegal on
+    # this block (tight `edge_x`/`vdd_off` trip Act.b / pSD.e-g), and a guide-sized budget
+    # spent proving that learns nothing. A couple of failures still land inside these bounds,
+    # which is what shows the gate/penalty semantics working.
+    - { name: gap_x,   min_val: 1.00, max_val: 1.80, init: 1.46, description: "KNOB: input-pair channel gap (x)" }
+    - { name: ch_y,    min_val: 0.90, max_val: 1.60, init: 0.92, description: "KNOB: row channel height" }
+    - { name: edge_x,  min_val: 1.30, max_val: 2.00, init: 1.57, description: "KNOB: outermost device edge -> vss rail center" }
+    - { name: ib_off,  min_val: 0.80, max_val: 1.40, init: 1.10, description: "KNOB: ibias strap offset" }
+    - { name: vdd_off, min_val: 0.90, max_val: 1.60, init: 1.35, description: "KNOB: vdd bar offset" }
+    - { name: vss_off, min_val: 1.00, max_val: 1.80, init: 1.44, description: "KNOB: vss bar offset" }
+
+  testbenches:
+    - name: layout
+      description: build(sizing+knobs) → DRC → LVS(per-candidate reference) → PEX(CC) → tb_ac.spice on the extracted subckt
+      netlist: flow.yaml       # a layout-flow/1 spec, relative to ws_root
+      params: []
+      enable: true
+
+  optimizer_config:
+    type: nevergrad
+    # OnePlusOne, not the usual TwoPointsDE: one trial here costs ~40 s of real DRC/LVS/kpex/
+    # ngspice, so the budget is tiny for a 9-dim space. A population method spends most of a
+    # 16-trial budget filling its population; a (1+1) local search starting from a KNOWN-GOOD
+    # seed (seed_from_init below) spends all of it improving that point. Measured on this
+    # project at budget 16: TwoPointsDE never beat the seed (217.0 um2), NGOpt reached
+    # 206.2 um2 but 0.3 MHz short on UGF, OnePlusOne reached 208.3 um2 fully feasible.
+    name: OnePlusOne
+    budget: 16                 # guide-sized (≈40 s/trial here). A real campaign: 60–200.
+    random_seed: 0
+    seed_from_init: true       # trial 0 = the `init` point, so the run starts feasible
+    # NOTE: `num_workers` is Nevergrad's ASK-BATCHING hint, not process fan-out — the
+    # platform's trial loop is sequential today (the parallelism that exists is WITHIN a
+    # trial: testbenches × PVT corners, plus the flow spec's own `max_workers`). Left at 1
+    # so every ask sees the previous tell; raising it only makes a small budget explore blind.
+    optimizer_kwargs: { num_workers: 1 }
+    lin_variable_bounds: { min: 0, max: 1 }
+    log_variable_bounds: { min: 1, max: 100 }
+
+    # ------------------------------------------------------------------
+    # ONE objective (area, minimized) + three post-layout constraints. Spellings:
+    #   "m >= T"  → goal: exceed,   target: T
+    #   "m <= T"  → goal: minimize, target: T   (with reward_type: none = a pure bound)
+    # A MINIMIZE spec WITH a reward_type is the objective: it keeps pushing below target.
+    # A stage gated off by a DRC/LVS/PEX failure reads NaN → MAX_PENALTY for that spec,
+    # while area_um2 (from the build) still scores — so infeasible geometry is priced, not fatal.
+    #
+    # The baseline (layout of record, default sizing) is 205.9 um2 / 29.45 MHz / 29.78 dB /
+    # 61.9 deg: it VIOLATES both ugf and dcgain. Meeting them costs area; the layout knobs
+    # are how the optimizer buys some of it back. That tension is the point of this project.
+    # ------------------------------------------------------------------
+    target_specs:
+      - name: area_um2
+        description: core bbox area — the objective (layout of record at default sizing = 205.9)
+        testbench: layout
+        sim_type: layout
+        goal: minimize
+        target: 205.9
+        range: 100
+        tolerance: 0
+        weight: 10
+        error_type: relative-absolute
+        # `log` = |log10(area/target)|: grows MONOTONICALLY as area shrinks below the target,
+        # which is what a minimize OBJECTIVE needs. (`relative-log` = |log10(|area-target|/range)|
+        # peaks AT the target — it rewards proximity, so it would rank an area 2 um2 under the
+        # target above one 20 um2 under it. Same reasoning as ../opt/project_setup.yaml.)
+        reward_type: log
+      # ---- post-layout metrics: registry recipes on tb_ac's AC waves, read THROUGH the
+      #      layout testbench (LayoutSimResult delegates wave/scalar to the inner ngspice result)
+      - name: ugf
+        description: post-layout unity-gain frequency >= 32 MHz (baseline sizing gives 29.45)
+        testbench: layout
+        sim_type: ac
+        measurement: { meas: ugf, out: v(vout) }
+        goal: exceed
+        target: 32e6
+        range: 8e6
+        tolerance: 0
+        weight: 8
+        reward_type: none
+      - name: dcgain
+        description: post-layout DC gain >= 30 dB (baseline 29.78; widening M1/M2 for UGF costs gain)
+        testbench: layout
+        sim_type: ac
+        measurement: { meas: dcgain, out: v(vout) }
+        goal: exceed
+        target: 30
+        range: 5
+        tolerance: 0
+        weight: 8
+        reward_type: none
+      - name: pm
+        description: post-layout phase margin >= 55 deg (never binding on this block, kept honest)
+        testbench: layout
+        sim_type: ac
+        measurement: { meas: pm, out: v(vout) }
+        goal: exceed
+        target: 55
+        range: 20
+        tolerance: 0
+        weight: 5
+        reward_type: none
+      # ---- physical gates: a candidate that is not DRC/LVS/PEX clean is not a candidate ----
+      - { name: drc_pass,      testbench: layout, sim_type: layout, goal: exact, target: 1, tolerance: 0, range: 1, weight: 100, reward_type: none, description: "KLayout DRC clean (1/0)" }
+      - { name: lvs_match,     testbench: layout, sim_type: layout, goal: exact, target: 1, tolerance: 0, range: 1, weight: 100, reward_type: none, description: "KLayout LVS match vs the per-candidate reference (1/0)" }
+      - { name: pex_ok,        testbench: layout, sim_type: layout, goal: exact, target: 1, tolerance: 0, range: 1, weight: 100, reward_type: none, description: "kpex extraction ran (1/0)" }
+      - { name: postlayout_ok, testbench: layout, sim_type: layout, goal: exact, target: 1, tolerance: 0, range: 1, weight: 100, reward_type: none, description: "every post-layout testbench simulated (1/0)" }

@@ -146,7 +146,7 @@ def test_emit_tgate_structure_and_determinism():
     r2 = emit_schematic_il(sch, lib="LIBX", cell="tgate", devmap=devmap, symlib=symlib)
     assert r1.il == r2.il  # deterministic artifact
 
-    assert r1.instances == {"M1": ("FOUNDRYN65", "DEVICE"), "M2": ("FOUNDRYN65", "DEVICE")}
+    assert r1.instances == {"M1": ("FOUNDRY_KIT", "DEVICE"), "M2": ("FOUNDRY_KIT", "DEVICE")}
     assert r1.expected_bindings[("M1", "G")] == "vctl"
     assert r1.expected_bindings[("M2", "B")] == "VDD"
     assert set(r1.expected_ports) == {"port_A", "port_B", "vctl", "vctl_not", "VDD", "VSS"}
@@ -176,7 +176,7 @@ def test_emit_unmapped_symref_becomes_local_master_with_warning():
 
 
 def test_emit_per_finger_width_and_simM_multiplier():
-    # IHP xschem w is TOTAL width; FOUNDRYN65 CDF w is PER-FINGER (wf = w*fingers), and the
+    # IHP xschem w is TOTAL width; FOUNDRY_KIT CDF w is PER-FINGER (wf = w*fingers), and the
     # netlister's multiplier is simM. M1 (w=2u ng=2 m=3) must emit w=1u fingers=2 simM=3;
     # M2's symbolic total (w=wtot ng=4) is undividable -> drop w with a warning rather
     # than netlist at 4x the intended size.
@@ -211,7 +211,7 @@ def test_emit_warns_on_symbolic_param_values():
 def test_default_map_covers_fixture_devices_and_denylists_kit():
     m = load_device_map()
     rule = m.lookup("sg13g2_pr/sg13_lv_nmos.sym")
-    assert rule is not None and (rule.lib, rule.cell) == ("FOUNDRYN65", "DEVICE")
+    assert rule is not None and (rule.lib, rule.cell) == ("FOUNDRY_KIT", "DEVICE")
     pmos = m.lookup("devices/sg13_lv_pmos_np.sym")
     assert pmos is not None and pmos.cell == "DEVICE"
     vsrc = m.lookup("devices/vsource.sym")
@@ -220,7 +220,7 @@ def test_default_map_covers_fixture_devices_and_denylists_kit():
     bare = m.lookup("capa.sym")
     assert bare is not None and bare.cell == "cap"
     assert m.lookup("not/mapped.sym") is None
-    assert m.is_kit_lib("FOUNDRYN65") and not m.is_kit_lib("MYLIB")
+    assert m.is_kit_lib("FOUNDRY_KIT") and not m.is_kit_lib("MYLIB")
 
 
 def test_map_yaml_roundtrip(tmp_path):
@@ -443,7 +443,7 @@ def test_reverse_nda_denylist_enforced_before_any_client_call():
     m = load_device_map()
     # client=None: a denylist breach MUST raise before the client is ever touched
     with pytest.raises(XvportNDAError):
-        cv2sym(None, "FOUNDRYN65", "DEVICE", m)
+        cv2sym(None, "FOUNDRY_KIT", "DEVICE", m)
     with pytest.raises(XvportNDAError):
         cv2sch(None, "analogLib", "vccs", m)
 
@@ -485,9 +485,9 @@ def test_reverse_emit_sch_text_round_trips_through_the_forward_extractor():
               ("vctl", "input", *cad(520, -180)), ("vctl_not", "input", *cad(410, -620)),
               ("VDD", "input", *cad(590, -460)), ("VSS", "input", *cad(590, -340))],
         instances=[
-            DumpInstance("M1", "FOUNDRYN65", "DEVICE", *cad(590, -260), "R90",
+            DumpInstance("M1", "FOUNDRY_KIT", "DEVICE", *cad(590, -260), "R90",
                          {"w": "150n", "l": "130n", "simM": "1", "fingers": "1"}),
-            DumpInstance("M2", "FOUNDRYN65", "DEVICE", *cad(590, -560), "MYR90",
+            DumpInstance("M2", "FOUNDRY_KIT", "DEVICE", *cad(590, -560), "MYR90",
                          {"w": "150n", "l": "130n", "simM": "1", "fingers": "1"}),
         ],
     )
@@ -532,7 +532,7 @@ def test_reverse_dump_parsers_handle_canned_records():
             '"W 0.5 0.0 0.5 1.0\\n'
             "L 0.5 0.5 vctl\\n"
             "P vctl input 0.5 1.0\\n"
-            "I M1 FOUNDRYN65 DEVICE 7.375 3.25 R90\\n"
+            "I M1 FOUNDRY_KIT DEVICE 7.375 3.25 R90\\n"
             'M M1 simM 3\\n"'
         )
 

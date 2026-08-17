@@ -1,0 +1,42 @@
+* DUT subckt for the static optimizer testbenches — drv_001_pam4_sige_dac on ihp-sg13g2.
+* Parameter-free: each testbench sets the x_dut_* knobs via its own top-level .param block (the
+* SpiceXplorer optimizer rewrites those), and this subckt references them. Same topology as the
+* GENERATED flat ../netlist.spice (the harness lowering artifact) / raw _dut.spice, in the
+* .subckt form the decks `.include` and instantiate. HBTs are npn13G2 (native VBIC); tails are the
+* bias-port VCCS (1 mA/V).
+.subckt drv_001_pam4_sige_dac lsbp lsbn msbp msbn outp outn vcc vcasc vcmb blsb bmsb
+* --- LSB cell L0 (1x) ---
+XQ1L0 c1L0 lsbp e1L0 0 npn13G2 Nx=x_dut_nx
+XQ2L0 c2L0 lsbn e2L0 0 npn13G2 Nx=x_dut_nx
+XQ3L0 outp vcasc c1L0 0 npn13G2 Nx=x_dut_nx
+XQ4L0 outn vcasc c2L0 0 npn13G2 Nx=x_dut_nx
+RE1L0 e1L0 tlsb0 {x_dut_re}
+RE2L0 e2L0 tlsb0 {x_dut_re}
+CdegL0 e1L0 e2L0 {x_dut_cdeg_ff*1f}
+GtailL0 tlsb0 0 blsb 0 1m
+* --- MSB cell M0 (of 2x) ---
+XQ1M0 c1M0 msbp e1M0 0 npn13G2 Nx=x_dut_nx
+XQ2M0 c2M0 msbn e2M0 0 npn13G2 Nx=x_dut_nx
+XQ3M0 outp vcasc c1M0 0 npn13G2 Nx=x_dut_nx
+XQ4M0 outn vcasc c2M0 0 npn13G2 Nx=x_dut_nx
+RE1M0 e1M0 tmsb0 {x_dut_re}
+RE2M0 e2M0 tmsb0 {x_dut_re}
+CdegM0 e1M0 e2M0 {x_dut_cdeg_ff*1f}
+GtailM0 tmsb0 0 bmsb 0 1m
+* --- MSB cell M1 (of 2x) ---
+XQ1M1 c1M1 msbp e1M1 0 npn13G2 Nx=x_dut_nx
+XQ2M1 c2M1 msbn e2M1 0 npn13G2 Nx=x_dut_nx
+XQ3M1 outp vcasc c1M1 0 npn13G2 Nx=x_dut_nx
+XQ4M1 outn vcasc c2M1 0 npn13G2 Nx=x_dut_nx
+RE1M1 e1M1 tmsb1 {x_dut_re}
+RE2M1 e2M1 tmsb1 {x_dut_re}
+CdegM1 e1M1 e2M1 {x_dut_cdeg_ff*1f}
+GtailM1 tmsb1 0 bmsb 0 1m
+* --- shared collector loads + base terminations ---
+Rcp outp vcc {x_dut_rc}
+Rcn outn vcc {x_dut_rc}
+Rblsbp lsbp vcmb {x_dut_rb}
+Rblsbn lsbn vcmb {x_dut_rb}
+Rbmsbp msbp vcmb {x_dut_rb}
+Rbmsbn msbn vcmb {x_dut_rb}
+.ends drv_001_pam4_sige_dac

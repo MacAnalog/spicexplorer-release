@@ -1,0 +1,21 @@
+* TB[lsb] S-param tone probe f=1e+09 drive=in
+Vcc vcc 0 PWL(0 0 8n 4)
+Vcasc vcasc 0 PWL(0 0 8n 3.25)
+Vcmb vcmb 0 PWL(0 0 8n 1.9)
+Vbias bias 0 PWL(0 0 8n 16)
+XDUT inp inn outp outn vcc vcasc vcmb bias pam4drv_lsb
+Rlp outp vcc 50
+Rln outn vcc 50
+Vsinp sinp 0 SIN(1.9 0.001 1e+09 9n)
+Vsinn sinn 0 SIN(1.9 -0.001 1e+09 9n)
+Rsinp sinp inp 50
+Rsinn sinn inn 50
+.include ../dut/dut_lsb.spice
+.lib "cornerHBT.lib" hbt_typ
+.options gmin=1e-12 reltol=1e-3
+.control
+tran 0.0166667n 35n uic
+wrdata ss.csv v(outp)-v(outn) v(inp)-v(inn) v(sinp)-v(sinn)
+.endc
+.GLOBAL GND
+.end

@@ -52,6 +52,7 @@ import yaml
 __all__ = [
     "atomic_symbol",
     "knob_symbol",
+    "value_symbols",
     "atomic_inventory",
     "detect_mirrors",
     "detect_matched_pairs",
@@ -123,6 +124,37 @@ def knob_symbol(value: Any) -> str | None:
     return s if _SYMBOL_RE.match(s) else None
 
 
+# A SUBCKT instance's master/model name rides in its ``Value`` param (e.g.
+# ``XQ1 c b e s npn13G2 Nx=3`` -> params {Nx: x_dut_nx, Value: 'npn13G2'}). It
+# is a device reference, NOT a tunable knob — excluded from the inventory and
+# the symbol closure so it never looks like a free ``.param``.
+_SUBCKT_MASTER_FIELD = "Value"
+
+# Identifiers inside a braced engineering expression. A unit-suffixed literal
+# like ``1f`` / ``2e-12`` is not a leading-letter token, so it is not matched.
+_EXPR_SYMBOL_RE = re.compile(r"\b[A-Za-z_]\w*\b")
+
+
+def value_symbols(value: Any) -> set[str]:
+    """Every free-knob symbol a netlist parameter value binds.
+
+    The single symbol of the simple forms :func:`knob_symbol` handles (bare,
+    quoted, ``dc {..}``, ``{sym}``), PLUS symbols embedded in a braced
+    ENGINEERING EXPRESSION (``{x_dut_cdeg_ff*1f}`` -> ``{"x_dut_cdeg_ff"}``).
+    Numeric literals and plain non-symbol strings yield the empty set. This is
+    the expression-aware superset of :func:`knob_symbol` used by the symbol
+    closure + free-symbol machinery (a knob may hide inside a unit conversion)."""
+    one = knob_symbol(value)
+    if one is not None:
+        return {one}
+    if isinstance(value, (int, float)):
+        return set()
+    s = str(value).strip()
+    if len(s) >= 2 and s.startswith("{") and s.endswith("}"):
+        return set(_EXPR_SYMBOL_RE.findall(s[1:-1]))
+    return set()
+
+
 def atomic_inventory(graph: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """The exhaustive atomic inventory: instance id -> {field -> atomic symbol or literal}.
 
@@ -143,8 +175,11 @@ def atomic_inventory(graph: dict[str, Any]) -> dict[str, dict[str, Any]]:
         if comp.get("device_type") == "MOS":
             inv[cid] = {f: atomic_symbol(cid, f) for f in sorted(params)}
         else:
+            is_subckt = comp.get("device_type") == "SUBCKT"
             row: dict[str, Any] = {}
             for f in sorted(params):
+                if is_subckt and f == _SUBCKT_MASTER_FIELD:
+                    continue  # master/model name is a device ref, not a knob
                 v = params[f]
                 if isinstance(v, (int, float)):
                     row[f] = v
@@ -386,13 +421,11 @@ def tied_symbols(doc: dict[str, Any]) -> set[str]:
 def free_symbols(doc: dict[str, Any]) -> set[str]:
     """The FREE symbols after default tying — the knobs ``sizing.yaml`` keys on:
     every inventory symbol not defined by a tie line (first members + untied atomics)."""
-    inventory = {
-        v
-        for fields in (doc.get("devices") or {}).values()
-        if isinstance(fields, dict)
-        for v in fields.values()
-        if isinstance(v, str) and _SYMBOL_RE.match(v)
-    }
+    inventory: set[str] = set()
+    for fields in (doc.get("devices") or {}).values():
+        if isinstance(fields, dict):
+            for v in fields.values():
+                inventory |= value_symbols(v)
     return inventory - tied_symbols(doc)
 
 
@@ -459,9 +492,11 @@ def netlist_symbols(graph: dict[str, Any]) -> set[str]:
     engineering strings excluded) — must be covered by the inventory (Tier-1 symbol closure)."""
     out: set[str] = set()
     for comp in graph.get("components", []):
-        for val in (comp.get("params") or {}).values():
-            if isinstance(val, str) and _SYMBOL_RE.match(val):
-                out.add(val)
+        is_subckt = comp.get("device_type") == "SUBCKT"
+        for f, val in (comp.get("params") or {}).items():
+            if is_subckt and f == _SUBCKT_MASTER_FIELD:
+                continue  # subckt master/model name is a device ref, not a symbol
+            out |= value_symbols(val)
     return out
 
 

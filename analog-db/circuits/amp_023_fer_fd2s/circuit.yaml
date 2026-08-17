@@ -1,7 +1,7 @@
 # ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
 # PROMOTED from the ferrosim_opamp reference entry (ota_fd2s): authored a device-generic
 # abstract netlist + open-PDK bindings so the fully-differential two-stage is lowerable,
-# assembled and simulated. The original FOUNDRY 28nm decks + spectre run set are retained under
+# assembled and simulated. The original proprietary-PDK 28 nm decks + spectre run set are retained under
 # `references`. The upstream IBIAS port and VCMR (CM reference) port are INTERNALIZED as ideal
 # sources (sizing knobs x_ibias_val / x_vcmr_val) so the entry matches the amplifier class's
 # self-biased differential-output convention (dc_op_diff/ac_open_loop_diff templates).
@@ -24,7 +24,7 @@ artifacts:
   abstract_netlist: abstract/netlist.spice
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
-pdks: [ihp-sg13g2, sky130, gf180mcu, FOUNDRY-n65]
+pdks: [ihp-sg13g2, sky130, gf180mcu]
 analyses: [ac_open_loop, dc_op, noise, tran_step, thd, iip3, stb, cmrr_vcm, psrr_vdd]
 references:
   - {tool: spectre, dir: spectre/28nm, node: 28nm}

@@ -3,7 +3,7 @@
 A minimal project showing how to drive the **Spectre backend natively** and score a design
 with **canonical OCEAN measurements**, wired straight into the optimizer loop
 (`doc/plan_virtuoso_bridge.md`, the `Project_Setup`/YAML wiring). It is a **template**: it
-requires the research server (Cadence Spectre + FOUNDRY-65 PDK + `virtuoso-bridge`) to
+requires the research server (Cadence Spectre + a licensed 65 nm PDK + `virtuoso-bridge`) to
 simulate. On a PDK-less host it loads and validates but cannot run.
 
 ## What it demonstrates
@@ -30,7 +30,7 @@ simulate. On a PDK-less host it loads and validates but cannot run.
 ## Running it (research server)
 
 ```bash
-# point at your FOUNDRY-65 model library (NEVER commit the path) + the bridge/ocean profile
+# point at your licensed model library (NEVER commit the path) + the bridge/ocean profile
 export SPICEXPLORER_VB_ENV_FILE="$HOME/.virtuoso-bridge/local.env"   # sets VB_CADENCE_CSHRC
 # edit project_setup.yaml: pvt.corners[].model_includes[].lib_file → your models.scs
 ```

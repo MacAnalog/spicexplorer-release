@@ -1,0 +1,28 @@
+* TB[msb] .op/.ac S21+S11 sweep drive=in (ngspice-45)
+Vcc vcc 0 DC 4
+Vcasc vcasc 0 DC 3.25
+Vcmb vcmb 0 DC 1.9
+Vbias bias 0 DC 16
+XDUT inp inn outp outn vcc vcasc vcmb bias pam4drv_msb
+Rlp outp vcc 50
+Rln outn vcc 50
+Vsinp sinp 0 DC 1.9 AC 0.5
+Vsinn sinn 0 DC 1.9 AC -0.5
+Rsinp sinp inp 50
+Rsinn sinn inn 50
+.include ../dut/dut_msb.spice
+.lib "cornerHBT.lib" hbt_typ
+.options gmin=1e-12 reltol=1e-3
+.control
+op
+print v(outp) v(outn) i(Vcc)
+ac dec 20 1e+08 1e+11
+let vodiff = v(outp)-v(outn)
+let vidiff = v(inp)-v(inn)
+let s21db = db(2*vodiff)
+let zin = vidiff*100/(1-vidiff)
+let s11db = db((zin-100)/(zin+100))
+wrdata ac.csv s21db s11db
+.endc
+.GLOBAL GND
+.end

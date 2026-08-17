@@ -50,7 +50,7 @@ project:
   outdir: out
   sim_engine: spectre
   tech_spec:
-    name: FOUNDRY-n65
+    name: generic-n65
     constraints: {}
   dut_params:
     - name: w0

@@ -273,7 +273,7 @@ notes: "2026-08-01 large-signal binding campaign: the note-(1) servo fix is now 
   \ the 55-60 dB gain target is a TOPOLOGY limit of this two-stage class-AB core at\
   \ 1.2 V (needs cascoding), not a sizing miss; the winner is NOT adopted here \u2014\
   \ its DC solution is a bistable knife-edge (verifies only at full-precision knob\
-  \ values; preserved in sizing-and-specs.yaml). (3) FOUNDRY-n65 context: achievable\
+  \ values; preserved in sizing-and-specs.yaml). (3) Closed-lane context: achievable\
   \ output-CM window [0.61, 1.04] (vcmfb_ref must move to ~0.8 there), ~28.9 dB at\
   \ the LVT gm/gds ceiling. (4) The entry schematic copy was re-pointed to the -inv\
   \ shared CMFB block (B5 decision-A fanout) \u2014 polarity unchanged vs the frozen\

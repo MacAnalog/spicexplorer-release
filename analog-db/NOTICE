@@ -43,7 +43,7 @@ the upstream material and are acknowledged here:
 * circuits/ferrosim_* (kind: reference, plan D-9) — imported REFERENCE decks from
   `Arcadia-1/ferrosim` (https://github.com/Arcadia-1/ferrosim), authored by Token Zhang, under the
   MIT License. Vendored via `netlist-crawler`; some decks are noted upstream as "ported from
-  circuit-bench". These are proprietary-PDK (FOUNDRY 28/65 nm) Spectre netlists + testbenches, indexed
+  circuit-bench". These are proprietary-PDK (28/65 nm) Spectre netlists + testbenches, indexed
   for reference/eval ONLY — NOT lowered to an open PDK and NOT simulated by this database. Sensitive
   foundry include paths are stubbed as ${PDK_ROOT} / ${CADENCE_ROOT} / ${PROJECT_VA_ROOT}
   placeholders. The full circuit list, import metadata, and the MIT license text are reproduced in
@@ -53,7 +53,7 @@ the upstream material and are acknowledged here:
 * circuits/sfe_* (kind: reference, plan D-9) — imported REFERENCE decks from the "Sensing Front
   End" category of CODA-Team `AnalogGym` (https://github.com/CODA-Team/AnalogGym), BSD 3-Clause
   License, via the meta-repo snapshot external/AnalogGym-remainder. These are proprietary-PDK
-  (FOUNDRY 0.18 µm BCD-HV + 65 nm) Spectre topology decks + HSPICE characterization testbenches,
+  (0.18 µm BCD-HV + 65 nm) Spectre topology decks + HSPICE characterization testbenches,
   indexed for reference/eval ONLY — NOT lowered to an open PDK and NOT simulated by this database.
   Every upstream source file is preserved verbatim (redundant copies under each binding's other/);
   foundry model include paths in the testbenches are stubbed as ${PDK_ROOT} placeholders and no PDK

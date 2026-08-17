@@ -12,7 +12,7 @@
 ** GROUND-referenced and supply-independent. (The upstream `vsense` = the PMOS-mirror diode node
 ** sits at VDD-|Vsg| and merely tracks the supply, so it is kept internal as `vmir`.)
 ** A W ratio XM0:XM1 (default 4:1) makes the loop bias at a non-degenerate PTAT current on the open
-** PDKs (the upstream 1:1 FOUNDRY sizing sits at the trivial I=0 fixed point off-technology).
+** PDKs (the upstream 1:1 upstream-foundry sizing sits at the trivial I=0 fixed point off-technology).
 XM3 vmir vmir vdd vdd pmos w=x_dut_xm3_w l=x_dut_xm3_l m=x_dut_xm3_m
 XM4 net1 vmir vdd vdd pmos w=x_dut_xm4_w l=x_dut_xm4_l m=x_dut_xm4_m
 XM0 vmir net1 vout vout nmos w=x_dut_xm0_w  l=x_dut_xm0_l m=x_dut_xm0_m

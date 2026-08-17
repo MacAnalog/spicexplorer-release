@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 from spicexplorer_circuitgraph import (
-    ANALOGGYM_FOUNDRY,
+    ANALOGGYM_REF,
     CircuitGraph,
     annotate_subcircuits,
     graphs_equivalent,
@@ -60,7 +60,7 @@ def test_find_subcircuits_on_foreign_dialect_amp():
     name = v.get_subcircuit_names()[0]
     sub = v.get_subcircuit_named(name)
     assert sub is not None
-    g = CircuitGraph.from_netlist(sub, name=name, pdk=ANALOGGYM_FOUNDRY)
+    g = CircuitGraph.from_netlist(sub, name=name, pdk=ANALOGGYM_REF)
     try:
         groups = annotate_subcircuits(g)
     except FileNotFoundError:

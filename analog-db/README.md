@@ -18,7 +18,7 @@ renumbered or reused (meta-repo `doc/plan_scoreboard.md` D-1). Pre-accession nam
 `provenance.aliases`. Reference circuits keep corpus-scoped ids (`ferrosim_*`).
 
 Alongside them are **22 `kind: reference` circuits** (plan D-9) — imported third-party decks in a
-proprietary PDK/simulator (the not-yet-promotable remainder of the 30 `ferrosim_*` FOUNDRY 28/65 nm
+proprietary PDK/simulator (the not-yet-promotable remainder of the 30 `ferrosim_*` 28/65 nm
 Spectre + 6 `sfe_*` AnalogGym Sensing Front End imports; the promotable members carry accession
 ids now, with their original decks retained as in-entry `references` bindings and the exact
 blocker documented in each remaining entry's README). They live in the **same `circuits/`
@@ -172,8 +172,8 @@ picks it up), parallelized one ngspice job per L value via the registry
 `gmid.simulator: {runner, workers, timeout_s}` block. `add-binding` converts an existing PDK
 binding (`devices.map` + corners + unit-converted sizing) into a new one, then `generate` emits the
 lowered netlist. `gmid-extract` writes a pygmid LUT to `_shared/gmid/<pdk>/<device>__<corner>.pkl`.
-`gmid-extract-spectre` is the same characterization for a **Spectre-routed licensed kit**
-(FOUNDRY-n65): plain headless Spectre via the virtuoso-bridge env, config from the registry `gmid:`
+`gmid-extract-spectre` is the same characterization for a **Spectre-routed licensed kit**:
+plain headless Spectre via the virtuoso-bridge env, config from the registry `gmid:`
 block (incl. a `simulator: {workers, timeout_s}` parallelization block), LUTs out-of-repo by
 default. See [`_shared/PDK_SIM.md`](_shared/PDK_SIM.md) and [`_shared/GMID.md`](_shared/GMID.md).
 

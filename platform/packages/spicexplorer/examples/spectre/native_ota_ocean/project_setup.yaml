@@ -8,8 +8,8 @@
 # How injection works: the deck's `parameters` line carries the design variables; the
 # optimizer rewrites it per candidate (the bridge runs a fixed file per run and, in local
 # mode, ignores its params arg — so injection happens on our side). Requires the research
-# server (Cadence Spectre + FOUNDRY-65 PDK + virtuoso-bridge) to actually run; on a PDK-less
-# host it loads/validates but can't simulate. Point the corner's `lib_file` at your FOUNDRY-65
+# server (Cadence Spectre + a licensed 65 nm PDK + virtuoso-bridge) to actually run; on a PDK-less
+# host it loads/validates but can't simulate. Point the corner's `lib_file` at your licensed 65 nm
 # models (never commit the path) + set VB_CADENCE_CSHRC. See this folder's README.md.
 project:
   name: native-5t-ota-ocean
@@ -21,7 +21,7 @@ project:
   outdir: out
 
   tech_spec:
-    name: FOUNDRY-n65
+    name: generic-n65
     constraints: {min_w: 0.12u, max_w: 10u, min_l: 0.06u, max_l: 10u}
 
   dut_params:
@@ -36,14 +36,14 @@ project:
     - {name: tb_ac, netlist: spice/ota_5t_tb_ac.scs, params: []}
 
   # A single PVT corner supplies the model include + supply + temp (its section includes
-  # replace the deck's default include at render). Set lib_file to YOUR FOUNDRY-65 models.
+  # replace the deck's default include at render). Set lib_file to YOUR licensed models.
   pvt:
     mode: single
     active_corner: tt_27C_1V20
     corners:
       - name: tt_27C_1V20
         enabled: true
-        model_includes: [{lib_file: /path/to/FOUNDRY65/models.scs, section: tt_lvt}]
+        model_includes: [{lib_file: /path/to/your-kit/models.scs, section: tt_lvt}]
         supply: {node: vdd, value: 1.2}
         temp: 27
 

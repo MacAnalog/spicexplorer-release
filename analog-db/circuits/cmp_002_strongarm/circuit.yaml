@@ -1,7 +1,7 @@
 # ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
 # PROMOTED from the ferrosim_comparator reference entry (plain StrongARM core): authored a
 # device-generic abstract netlist + open-PDK bindings so the latched comparator is lowerable,
-# assembled and simulated. The original FOUNDRY 28nm decks (incl. the offset-trim variant and the
+# assembled and simulated. The original proprietary-PDK 28 nm decks (incl. the offset-trim variant and the
 # spectre MC/PSS characterization runs) are retained under `references`.
 schema: spicexplorer/circuit@1
 id: cmp_002_strongarm

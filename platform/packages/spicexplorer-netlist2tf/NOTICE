@@ -1,0 +1,43 @@
+spicexplorer-netlist2tf
+=======================
+
+This package is MIT-licensed, consistent with the rest of the SpiceXplorer platform.
+
+Third-party derivation
+----------------------
+
+Portions of this package are derived from **SLiCAP** (Symbolic Linear Circuit Analysis
+Program) by Anton J.M. Montagne, which is distributed under the MIT License. The MIT
+license permits this reuse with attribution.
+
+The SLiCAP-derived pieces (ported and re-expressed sympy-native, not vendored verbatim) are,
+or will be, the following — each carries a per-file provenance note where it lands:
+
+  * the hybrid-pi small-signal device-model TOPOLOGY (the `.subckt` expansion of a MOSFET
+    into VCCS + capacitor primitives), from `SLiCAP/files/lib/SLiCAPmodels.lib`
+    (MOSFET `M`@39, diff-pair `MD`@51, BJT `QV`@84) — see `models.py` (P2);
+  * the MNA stamp table and the Cramer-rule determinant solve / rational normalization,
+    from `SLiCAPmatrices.py` / `SLiCAPmath.py` — see `mna.py` (P3);
+  * the common-mode excitation (the `drive="cm"` two-node co-drive, the DM/CM half of
+    `_convertMatrices`) and the ratio metrics CMRR/PSRR built over it, with the PSRR net-role
+    (supply→input) override — see `mna.py` / `analyses.py` (P9);
+  * the asymptotic-gain / return-ratio feedback decomposition (`H = (A∞·T + ρ)/(1 + T)`,
+    `T = k·D1/D0` via the rank-one linearity of one controlled source), SLiCAP S4b — see
+    `mna.gain_decomposition`/`loop_gain_from_system` (P9).
+
+These are ideas/formulas re-implemented for this package's typed IR and pydantic contract; no
+SLiCAP source file is included or imported.
+
+Explicitly NOT used
+-------------------
+
+  * **lcapy** (LGPL-2.1): used only as a *reference* for the `approximate_dominant` kernel,
+    the ZPK/parameterize output forms, and MNA stamp formulas. Reimplemented sympy-native and
+    MIT-clean; lcapy is never vendored, copied, or listed as a dependency.
+  * **SymXplorer** (GPLv3): the owner's own prior work. Its ideas (the symbolic-T-then-substitute
+    pattern, the fidelity ladder re-expressed as assumption bundles, the port-pair→H(s) selection,
+    the `_applyLimitsToBase` limit mechanism) are clean-room ported only. No verbatim line is
+    copied into this MIT leaf absent a written, line-scoped relicense from the owner.
+
+See the meta-repo `doc/plan_netlist2tf.md` §3 (Prior-art study) and the License analysis table
+for the full reuse-vs-reimplement decisions.

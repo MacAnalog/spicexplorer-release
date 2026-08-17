@@ -61,7 +61,11 @@ def test_targetspec_string_target_is_parsed():
 
 
 def test_eY_target_without_tolerance_loads(tmp_path):
-    """Removing tolerance forces the `abs(0.05*target)` fallback — must not crash on an XeY target."""
+    """An omitted tolerance must not crash on an `XeY` target that YAML 1.1 leaves as a STRING.
+
+    The original bug was `abs(0.05 * target)` raising TypeError on that string. The default is
+    now 0 rather than 5 % of target, so the multiply is gone — but the coercion it depended on
+    still has to happen, because `target` itself is used in arithmetic everywhere downstream."""
     def mut(d):
         for s in _find(d, "target_specs"):
             s.pop("tolerance", None)
@@ -69,7 +73,7 @@ def test_eY_target_without_tolerance_loads(tmp_path):
     ugf = next(s for s in proj.optimizer_config.target_specs.targets if s.name == "ugf")
     assert not isinstance(ugf.target, str)
     assert float(ugf.target) == pytest.approx(200e6)
-    assert ugf.tolerance is not None and float(ugf.tolerance) > 0
+    assert ugf.tolerance is not None and float(ugf.tolerance) == 0.0  # the default is exact
 
 
 # ---------- BUG-B9: null / non-finite weight ----------

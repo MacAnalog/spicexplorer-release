@@ -143,12 +143,12 @@ def fetch_cellview_netlist(
 
 
 def _comparison_pdk() -> Any:
-    """A merged device table typing BOTH sides (IHP source models + FOUNDRYN65 kit cells)."""
+    """A merged device table typing BOTH sides (IHP source models + the target kit cells)."""
     from spicexplorer_circuitgraph import pdk as cg_pdk
 
     return cg_pdk.Pdk(
         name="xvport-compare",
-        devices=tuple(cg_pdk.IHP_SG13G2.devices) + tuple(cg_pdk.FOUNDRY_N65.devices),
+        devices=tuple(cg_pdk.IHP_SG13G2.devices) + tuple(cg_pdk.GENERIC_N65.devices),
     )
 
 

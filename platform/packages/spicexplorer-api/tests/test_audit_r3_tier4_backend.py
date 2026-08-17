@@ -25,10 +25,18 @@ def test_b18_parse_value_none_raises_valueerror():
         parse_value(None)  # was an opaque AttributeError on None.lower()
 
 
-def test_b17_zero_target_gets_positive_tolerance():
+def test_b17_zero_target_no_longer_needs_a_synthetic_tolerance_floor():
+    """B17 SUPERSEDED. It floored an inferred tolerance to `range * 1e-6` so the then-live
+    `tolerance > 0` invariant held for a zero target. Tolerance now DEFAULTS to 0 and 0 is a
+    legal, ordinary value on every path (nothing divides by it), so the floor is gone and a zero
+    target simply gets an exact band — which is what `target: 0` asks for. The property that
+    actually mattered, no nan/inf downstream, is what this now pins."""
+    import numpy as np
     from spicexplorer.core.domains import TargetSpec
     spec = TargetSpec(name="vos", testbench="tb", target=0.0, goal="exact", sim_type="dc", range=1.0)
-    assert spec.tolerance is not None and float(spec.tolerance) > 0  # not the degenerate 0
+    assert spec.tolerance is not None and float(spec.tolerance) == 0.0
+    assert np.isfinite(spec.get_simple_penalty(np.float64(0.5)))
+    assert spec.meets_spec(np.float64(0.0)) and not spec.meets_spec(np.float64(0.5))
 
 
 def test_b21_log_reward_finite_at_exact_match():

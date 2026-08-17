@@ -1,0 +1,139 @@
+{
+  "area": {
+    "active_gate_area_um2": 0.0,
+    "c_count": 3,
+    "c_total_f": 6.000000000000001e-14,
+    "mos_count": 0,
+    "r_count": 12,
+    "r_total_ohm": 315.0
+  },
+  "circuit": "drv_001_pam4_sige_dac",
+  "corners": {
+    "tt": {
+      "analyses": {
+        "tb_bias": {
+          "measures": {
+            "i_supply": 0.04774063,
+            "ic_msb_ma": 7.956772,
+            "power_mw": 190.9625
+          },
+          "status": "ok"
+        },
+        "tb_gain_lsb": {
+          "measures": {
+            "lsb_gain_50g_rel_db": -0.986568,
+            "lsb_gain_lf_db": 3.090314
+          },
+          "status": "ok"
+        },
+        "tb_gain_msb": {
+          "measures": {
+            "msb_gain_50g_rel_db": -1.87363,
+            "msb_gain_lf_db": 9.060413
+          },
+          "status": "ok"
+        },
+        "tb_s11": {
+          "measures": {
+            "s11_msb_32g_db": -10.8789
+          },
+          "status": "ok"
+        },
+        "tb_s22": {
+          "measures": {
+            "s22_50g_db": -14.7525
+          },
+          "status": "ok"
+        },
+        "tb_swing": {
+          "measures": {
+            "swing_vpp_diff": 2.916014
+          },
+          "status": "ok"
+        }
+      },
+      "provenance": {
+        "generator": "manual (live ngspice-45 golden validation, step #2)",
+        "ngspice": "45",
+        "note": "EIC-verified golden nominal; reproduces reference/eic_golden_pam4_results.yaml. Measured off pdk/ihp-sg13g2/testbenches/ decks (analyses keyed by testbench).",
+        "run_at": "2026-08-10"
+      }
+    }
+  },
+  "design_id": "2a531e0f02",
+  "metrics": {
+    "tt": {
+      "dac_weight_db": {
+        "spec": "pass",
+        "value": 5.970099
+      },
+      "i_supply": {
+        "spec": "pass",
+        "value": 0.04774063
+      },
+      "ic_msb_ma": {
+        "spec": "pass",
+        "value": 7.956772
+      },
+      "lsb_gain_50g_rel_db": {
+        "spec": "pass",
+        "value": -0.986568
+      },
+      "lsb_gain_lf_db": {
+        "spec": "pass",
+        "value": 3.090314
+      },
+      "msb_gain_50g_rel_db": {
+        "spec": "pass",
+        "value": -1.87363
+      },
+      "msb_gain_lf_db": {
+        "spec": "pass",
+        "value": 9.060413
+      },
+      "power_mw": {
+        "spec": "pass",
+        "value": 190.9625
+      },
+      "s11_msb_32g_db": {
+        "spec": "pass",
+        "value": -10.8789
+      },
+      "s22_50g_db": {
+        "spec": "pass",
+        "value": -14.7525
+      },
+      "swing_vpp_diff": {
+        "spec": "pass",
+        "value": 2.916014
+      }
+    }
+  },
+  "parameters": {
+    "sizing": {
+      "x_dut_cdeg_ff": 20,
+      "x_dut_itail_ma": 16,
+      "x_dut_nx": 3,
+      "x_dut_rb": 50,
+      "x_dut_rc": 50,
+      "x_dut_re": 2.5,
+      "x_dut_vcasc": 3.25,
+      "x_dut_vcc": 4.0,
+      "x_dut_vcm_in": 1.9
+    }
+  },
+  "pdk": "ihp-sg13g2",
+  "ppa": {
+    "active_gate_area_um2": 0.0,
+    "corners_run": [
+      "tt"
+    ],
+    "performance": {
+      "msb_gain_lf_db": 9.060413,
+      "s11_msb_32g_db": -10.8789,
+      "swing_vpp_diff": 2.916014
+    },
+    "power_w": 0.19096252
+  },
+  "schema": "spicexplorer/scoreboard-entry@1"
+}

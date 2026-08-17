@@ -58,7 +58,7 @@ if TYPE_CHECKING:  # keep this module import-cheap and Cadence-free
 
 
 # analysis (engine-neutral string) → ordered PSF-key prefix chain, live-validated
-# against real FOUNDRY-65 psfascii (2026-07-05). Per-MOS op scalars (`M0:gm`) are merged in
+# against real 65 nm psfascii (2026-07-05). Per-MOS op scalars (`M0:gm`) are merged in
 # bare by our own info-file post-parse below; op-point NODE voltages come from `dcOp.dc`
 # under `dc_`, hence op's two-step chain. `tran` merges bare in the bridge parser (no
 # prefix); `noise_` is a flat-dict fallback, but a noise sweep's `out`/`in` densities come
@@ -148,7 +148,7 @@ def _parse_info_structs(text: str) -> dict[str, float]:
             while i < len(lines):
                 inner = lines[i].strip()
                 # the numeric block ends at ")" — or ") PROP(" when the instance carries
-                # a trailing PROP annotation (real FOUNDRY output: `"model" "DEVICE.10"`)
+                # a trailing PROP annotation (real kit output: `"model" "DEVICE.10"`)
                 if inner.startswith(")"):
                     break
                 try:
@@ -211,7 +211,7 @@ _SWEEP_EXT: dict[str, str] = {
     # periodic noise riding a PSS solution (`pnoise ( out ref ) pnoise …`): a plain swept
     # PSF `pnoise.pnoise` — sweep `freq` (the noise offset band), top-level `out`/`in`
     # V/√Hz densities + `gain`, plus per-device `INST:src` V²/Hz contributions (discovered
-    # live on FOUNDRY-65, 2026-07-11). Spectre also leaves a `pnoise.pnoise.cache` sibling,
+    # live on the closed lane, 2026-07-11). Spectre also leaves a `pnoise.pnoise.cache` sibling,
     # which the `*{ext}` glob correctly ignores (it ends `.cache`). NOTE `*.noise` does
     # NOT match `pnoise.pnoise` (the char before `noise` is `p`, not `.`), so a deck with
     # both analyses keeps them cleanly separate.

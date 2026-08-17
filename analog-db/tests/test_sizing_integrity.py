@@ -90,7 +90,7 @@ def test_baseline_is_the_entry_measured_at_the_committed_sizing(cid, pdk, path):
 
     This is the invariant that makes a published number mean anything: the table quotes the
     baseline, and the repo ships the defaults, so if they disagree the paper reports a design
-    point nobody can reproduce. Measured 2026-08-04: amp_004_folded_cascode@FOUNDRY-n65 shipped a
+    point nobody can reproduce. Measured 2026-08-04: a folded-cascode binding shipped a
     repaired sizing (cascode gate biases moved back inside the 1.2 V rail) and a matching entry
     existed at +51.2 dB, but the pointer still named the pre-repair entry, so the table printed
     -6.5 dB. Nothing else in the pipeline compares those two things.

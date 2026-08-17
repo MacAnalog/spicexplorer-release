@@ -1,6 +1,6 @@
 # Analysis binding: large-signal THD in the unity buffer (class template). 100 mV @ 1 MHz —
-# the same drive the P5d live proofs used (native-PSS 0.076 % == tran+FFT 0.077 % on
-# FOUNDRY-n65). ngspice runs the tran + the template's in-deck coherent DFT; the Spectre lane
+# the same drive the live proofs used (native-PSS 0.076 % == tran+FFT 0.077 % on the
+# Spectre lane). ngspice runs the tran + the template's in-deck coherent DFT; the Spectre lane
 # composes a native pss at F0 (HARMS).
 # COHERENT WINDOW (the template requires both to be whole F0 periods, see its header):
 # F0 = 1 MHz -> T = 1 us; TSTART = 4u discards 4 periods of startup, TSTOP = 20u leaves

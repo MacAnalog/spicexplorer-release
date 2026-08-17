@@ -1,0 +1,37 @@
+# drv_001_pam4_sige_dac — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+# `devices:` is GENERATED from abstract/topology.cgraph.json — refresh with
+# `analog-db gen-params --circuit drv_001_pam4_sige_dac --write` (it preserves the authored sections).
+# `groups:`/`ratios:` are AUTHORED default tying, reviewed by a human (plan D-2):
+# recommendations tagged with WHY, which an upstream user may accept, edit, or dissolve.
+schema: spicexplorer/params@1
+devices:
+  CDEGL0: {Value: '{x_dut_cdeg_ff*1f}'}
+  CDEGM0: {Value: '{x_dut_cdeg_ff*1f}'}
+  CDEGM1: {Value: '{x_dut_cdeg_ff*1f}'}
+  GTAILL0: {Value: 1m}
+  GTAILM0: {Value: 1m}
+  GTAILM1: {Value: 1m}
+  RBLSBN: {Value: x_dut_rb}
+  RBLSBP: {Value: x_dut_rb}
+  RBMSBN: {Value: x_dut_rb}
+  RBMSBP: {Value: x_dut_rb}
+  RCN: {Value: x_dut_rc}
+  RCP: {Value: x_dut_rc}
+  RE1L0: {Value: x_dut_re}
+  RE1M0: {Value: x_dut_re}
+  RE1M1: {Value: x_dut_re}
+  RE2L0: {Value: x_dut_re}
+  RE2M0: {Value: x_dut_re}
+  RE2M1: {Value: x_dut_re}
+  XQ1L0: {Nx: x_dut_nx}
+  XQ1M0: {Nx: x_dut_nx}
+  XQ1M1: {Nx: x_dut_nx}
+  XQ2L0: {Nx: x_dut_nx}
+  XQ2M0: {Nx: x_dut_nx}
+  XQ2M1: {Nx: x_dut_nx}
+  XQ3L0: {Nx: x_dut_nx}
+  XQ3M0: {Nx: x_dut_nx}
+  XQ3M1: {Nx: x_dut_nx}
+  XQ4L0: {Nx: x_dut_nx}
+  XQ4M0: {Nx: x_dut_nx}
+  XQ4M1: {Nx: x_dut_nx}

@@ -9,7 +9,7 @@ cross-check them against the Tier-1 Python parse of the *same* run.
 Opt-in gating (all, or the test skips):
 
 * ``virtuoso_bridge`` importable in this venv;
-* ``SPICEXPLORER_FOUNDRY65_MODELS`` — FOUNDRY-65 Spectre model library path (NDA: env only);
+* ``SPICEXPLORER_SPECTRE_MODELS`` — licensed Spectre model library path (NDA: env only);
 * ``VB_CADENCE_CSHRC`` resolvable (process env or ``~/.virtuoso-bridge/local.env``) —
   the ocean session sources it;
 * ``SPICEXPLORER_VB_ENV_FILE`` (optional) — bridge profile pin.
@@ -26,12 +26,12 @@ import pytest
 
 pytestmark = pytest.mark.slow
 
-_MODELS = os.environ.get("SPICEXPLORER_FOUNDRY65_MODELS", "")
+_MODELS = os.environ.get("SPICEXPLORER_SPECTRE_MODELS", "")
 
 
 @pytest.mark.skipif(
     not (_MODELS and Path(_MODELS).expanduser().is_file()),
-    reason="set SPICEXPLORER_FOUNDRY65_MODELS to the FOUNDRY-65 Spectre model library .scs",
+    reason="set SPICEXPLORER_SPECTRE_MODELS to the licensed Spectre model library .scs",
 )
 def test_live_ocean_metrics_match_python_on_same_raw(tmp_path: Path) -> None:
     pytest.importorskip("virtuoso_bridge", reason="virtuoso-bridge not installed in this venv")
@@ -62,7 +62,7 @@ def test_live_ocean_metrics_match_python_on_same_raw(tmp_path: Path) -> None:
     example = project_root() / "examples/OTA/5t-ota/ihp-sg13g2/spice/ota-5t_tb-ac.spice"
     spec = deck_spec_from_ngspice(
         example,
-        pdk="FOUNDRY-n65",
+        pdk="generic-n65",
         source_pdk="ihp-sg13g2",
         analyses=(dc_oppoint_analysis(), ac_analysis(1e3, 1e8, 101)),
         parameters={"vcm": 0.6},

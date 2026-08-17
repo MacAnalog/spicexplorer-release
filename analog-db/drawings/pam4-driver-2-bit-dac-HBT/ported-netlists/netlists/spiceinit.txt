@@ -1,0 +1,6 @@
+# Copy of .spiceinit (ngspice reads the dotfile from the run directory).
+* IHP SG13G2 HBT decks — REQUIRED: without ngbehavior=hsa the HBT
+* conducts 0 current (silently). Export PDK_ROOT and PDK first, e.g.
+*   export PDK_ROOT=$HOME/local/pdks   PDK=ihp-sg13g2
+setcs sourcepath = ( $sourcepath $PDK_ROOT/$PDK/libs.tech/ngspice/models )
+set ngbehavior=hsa

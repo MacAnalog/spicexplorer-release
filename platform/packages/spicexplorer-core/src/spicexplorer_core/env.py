@@ -30,7 +30,7 @@ _PDK_TECH = "ihp-sg13g2"
 _PDK_ENV_VARS = ("PDK_ROOT", "PDK", "IHP_PDK_ROOT")
 
 # Env vars that, by convention, indicate a Cadence install / a configured virtuoso-bridge
-# remote. Live Spectre + FOUNDRY-65 runs happen only on a Cadence-equipped host, so
+# remote. Live Spectre + licensed-kit runs happen only on a Cadence-equipped host, so
 # these are near-always absent on the open-PDK lanes — which is exactly the
 # point: they drive the "Cadence absent" CI skip-gate.
 _CADENCE_ENV_VARS = ("VB_CADENCE_CSHRC", "CDS_INST_DIR", "CDSHOME", "CDS_ROOT")
@@ -149,7 +149,7 @@ def probe_env(extra_roots: list[tuple[str, Path]] | None = None) -> dict[str, An
 # ---------------------------------------------------------------------------
 # These mirror `probe_pdk`: a cheap, no-simulation detection so open-PDK
 # CI can skip the live Spectre tests cleanly and never reach for the SSH host. Live
-# Spectre + FOUNDRY-65 runs happen ONLY on a Cadence-equipped host; everywhere else these
+# Spectre + licensed-kit runs happen ONLY on a Cadence-equipped host; everywhere else these
 # report False. Kept separate from `probe_env` so the open-PDK `/api/env` contract is
 # untouched.
 
@@ -207,7 +207,7 @@ def probe_cadence() -> dict[str, Any]:
         "cadence_ok": False,
         "cadence_detail": (
             "No Cadence environment (CDS/cshrc install vars) or virtuoso-bridge remote "
-            "configured — live Spectre / FOUNDRY-65 unavailable; skip the live-Spectre gate."
+            "configured — live Spectre unavailable; skip the live-Spectre gate."
         ),
         "cadence_source": None,
     }

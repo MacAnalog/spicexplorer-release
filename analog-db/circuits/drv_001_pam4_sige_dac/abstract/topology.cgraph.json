@@ -1,0 +1,902 @@
+{
+  "components": [
+    {
+      "connections": {
+        "N": "e2L0",
+        "P": "e1L0"
+      },
+      "device_type": "CAP",
+      "id": "CDEGL0",
+      "params": {
+        "Value": "{x_dut_cdeg_ff*1f}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "e2M0",
+        "P": "e1M0"
+      },
+      "device_type": "CAP",
+      "id": "CDEGM0",
+      "params": {
+        "Value": "{x_dut_cdeg_ff*1f}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "e2M1",
+        "P": "e1M1"
+      },
+      "device_type": "CAP",
+      "id": "CDEGM1",
+      "params": {
+        "Value": "{x_dut_cdeg_ff*1f}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "CN": "0",
+        "CP": "blsb",
+        "N": "0",
+        "P": "tlsb0"
+      },
+      "device_type": "VCCS",
+      "id": "GTAILL0",
+      "params": {
+        "Value": "1m"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "CN": "0",
+        "CP": "bmsb",
+        "N": "0",
+        "P": "tmsb0"
+      },
+      "device_type": "VCCS",
+      "id": "GTAILM0",
+      "params": {
+        "Value": "1m"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "CN": "0",
+        "CP": "bmsb",
+        "N": "0",
+        "P": "tmsb1"
+      },
+      "device_type": "VCCS",
+      "id": "GTAILM1",
+      "params": {
+        "Value": "1m"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vcmb",
+        "P": "lsbn"
+      },
+      "device_type": "RES",
+      "id": "RBLSBN",
+      "params": {
+        "Value": "{x_dut_rb}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vcmb",
+        "P": "lsbp"
+      },
+      "device_type": "RES",
+      "id": "RBLSBP",
+      "params": {
+        "Value": "{x_dut_rb}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vcmb",
+        "P": "msbn"
+      },
+      "device_type": "RES",
+      "id": "RBMSBN",
+      "params": {
+        "Value": "{x_dut_rb}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vcmb",
+        "P": "msbp"
+      },
+      "device_type": "RES",
+      "id": "RBMSBP",
+      "params": {
+        "Value": "{x_dut_rb}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vcc",
+        "P": "outn"
+      },
+      "device_type": "RES",
+      "id": "RCN",
+      "params": {
+        "Value": "{x_dut_rc}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "vcc",
+        "P": "outp"
+      },
+      "device_type": "RES",
+      "id": "RCP",
+      "params": {
+        "Value": "{x_dut_rc}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "tlsb0",
+        "P": "e1L0"
+      },
+      "device_type": "RES",
+      "id": "RE1L0",
+      "params": {
+        "Value": "{x_dut_re}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "tmsb0",
+        "P": "e1M0"
+      },
+      "device_type": "RES",
+      "id": "RE1M0",
+      "params": {
+        "Value": "{x_dut_re}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "tmsb1",
+        "P": "e1M1"
+      },
+      "device_type": "RES",
+      "id": "RE1M1",
+      "params": {
+        "Value": "{x_dut_re}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "tlsb0",
+        "P": "e2L0"
+      },
+      "device_type": "RES",
+      "id": "RE2L0",
+      "params": {
+        "Value": "{x_dut_re}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "tmsb0",
+        "P": "e2M0"
+      },
+      "device_type": "RES",
+      "id": "RE2M0",
+      "params": {
+        "Value": "{x_dut_re}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "N": "tmsb1",
+        "P": "e2M1"
+      },
+      "device_type": "RES",
+      "id": "RE2M1",
+      "params": {
+        "Value": "{x_dut_re}"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
+        "1": "c1L0",
+        "2": "lsbp",
+        "3": "e1L0",
+        "4": "0"
+      },
+      "device_type": "SUBCKT",
+      "id": "XQ1L0",
+      "params": {
+        "Nx": "x_dut_nx",
+        "Value": "npn13G2"
+      },
+      "polarity": null,
+      "ports": [
+        {
+          "name": "1",
+          "role": "unknown"
+        },
+        {
+          "name": "2",
+          "role": "unknown"
+        },
+        {
+          "name": "3",
+          "role": "unknown"
+        },
+        {
+          "name": "4",
+          "role": "ground"
+        }
+      ],
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": "npn13G2"
+    },
+    {
+      "connections": {
+        "1": "c1M0",
+        "2": "msbp",
+        "3": "e1M0",
+        "4": "0"
+      },
+      "device_type": "SUBCKT",
+      "id": "XQ1M0",
+      "params": {
+        "Nx": "x_dut_nx",
+        "Value": "npn13G2"
+      },
+      "polarity": null,
+      "ports": [
+        {
+          "name": "1",
+          "role": "unknown"
+        },
+        {
+          "name": "2",
+          "role": "unknown"
+        },
+        {
+          "name": "3",
+          "role": "unknown"
+        },
+        {
+          "name": "4",
+          "role": "ground"
+        }
+      ],
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": "npn13G2"
+    },
+    {
+      "connections": {
+        "1": "c1M1",
+        "2": "msbp",
+        "3": "e1M1",
+        "4": "0"
+      },
+      "device_type": "SUBCKT",
+      "id": "XQ1M1",
+      "params": {
+        "Nx": "x_dut_nx",
+        "Value": "npn13G2"
+      },
+      "polarity": null,
+      "ports": [
+        {
+          "name": "1",
+          "role": "unknown"
+        },
+        {
+          "name": "2",
+          "role": "unknown"
+        },
+        {
+          "name": "3",
+          "role": "unknown"
+        },
+        {
+          "name": "4",
+          "role": "ground"
+        }
+      ],
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": "npn13G2"
+    },
+    {
+      "connections": {
+        "1": "c2L0",
+        "2": "lsbn",
+        "3": "e2L0",
+        "4": "0"
+      },
+      "device_type": "SUBCKT",
+      "id": "XQ2L0",
+      "params": {
+        "Nx": "x_dut_nx",
+        "Value": "npn13G2"
+      },
+      "polarity": null,
+      "ports": [
+        {
+          "name": "1",
+          "role": "unknown"
+        },
+        {
+          "name": "2",
+          "role": "unknown"
+        },
+        {
+          "name": "3",
+          "role": "unknown"
+        },
+        {
+          "name": "4",
+          "role": "ground"
+        }
+      ],
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": "npn13G2"
+    },
+    {
+      "connections": {
+        "1": "c2M0",
+        "2": "msbn",
+        "3": "e2M0",
+        "4": "0"
+      },
+      "device_type": "SUBCKT",
+      "id": "XQ2M0",
+      "params": {
+        "Nx": "x_dut_nx",
+        "Value": "npn13G2"
+      },
+      "polarity": null,
+      "ports": [
+        {
+          "name": "1",
+          "role": "unknown"
+        },
+        {
+          "name": "2",
+          "role": "unknown"
+        },
+        {
+          "name": "3",
+          "role": "unknown"
+        },
+        {
+          "name": "4",
+          "role": "ground"
+        }
+      ],
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": "npn13G2"
+    },
+    {
+      "connections": {
+        "1": "c2M1",
+        "2": "msbn",
+        "3": "e2M1",
+        "4": "0"
+      },
+      "device_type": "SUBCKT",
+      "id": "XQ2M1",
+      "params": {
+        "Nx": "x_dut_nx",
+        "Value": "npn13G2"
+      },
+      "polarity": null,
+      "ports": [
+        {
+          "name": "1",
+          "role": "unknown"
+        },
+        {
+          "name": "2",
+          "role": "unknown"
+        },
+        {
+          "name": "3",
+          "role": "unknown"
+        },
+        {
+          "name": "4",
+          "role": "ground"
+        }
+      ],
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": "npn13G2"
+    },
+    {
+      "connections": {
+        "1": "outp",
+        "2": "vcasc",
+        "3": "c1L0",
+        "4": "0"
+      },
+      "device_type": "SUBCKT",
+      "id": "XQ3L0",
+      "params": {
+        "Nx": "x_dut_nx",
+        "Value": "npn13G2"
+      },
+      "polarity": null,
+      "ports": [
+        {
+          "name": "1",
+          "role": "unknown"
+        },
+        {
+          "name": "2",
+          "role": "unknown"
+        },
+        {
+          "name": "3",
+          "role": "unknown"
+        },
+        {
+          "name": "4",
+          "role": "ground"
+        }
+      ],
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": "npn13G2"
+    },
+    {
+      "connections": {
+        "1": "outp",
+        "2": "vcasc",
+        "3": "c1M0",
+        "4": "0"
+      },
+      "device_type": "SUBCKT",
+      "id": "XQ3M0",
+      "params": {
+        "Nx": "x_dut_nx",
+        "Value": "npn13G2"
+      },
+      "polarity": null,
+      "ports": [
+        {
+          "name": "1",
+          "role": "unknown"
+        },
+        {
+          "name": "2",
+          "role": "unknown"
+        },
+        {
+          "name": "3",
+          "role": "unknown"
+        },
+        {
+          "name": "4",
+          "role": "ground"
+        }
+      ],
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": "npn13G2"
+    },
+    {
+      "connections": {
+        "1": "outp",
+        "2": "vcasc",
+        "3": "c1M1",
+        "4": "0"
+      },
+      "device_type": "SUBCKT",
+      "id": "XQ3M1",
+      "params": {
+        "Nx": "x_dut_nx",
+        "Value": "npn13G2"
+      },
+      "polarity": null,
+      "ports": [
+        {
+          "name": "1",
+          "role": "unknown"
+        },
+        {
+          "name": "2",
+          "role": "unknown"
+        },
+        {
+          "name": "3",
+          "role": "unknown"
+        },
+        {
+          "name": "4",
+          "role": "ground"
+        }
+      ],
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": "npn13G2"
+    },
+    {
+      "connections": {
+        "1": "outn",
+        "2": "vcasc",
+        "3": "c2L0",
+        "4": "0"
+      },
+      "device_type": "SUBCKT",
+      "id": "XQ4L0",
+      "params": {
+        "Nx": "x_dut_nx",
+        "Value": "npn13G2"
+      },
+      "polarity": null,
+      "ports": [
+        {
+          "name": "1",
+          "role": "unknown"
+        },
+        {
+          "name": "2",
+          "role": "unknown"
+        },
+        {
+          "name": "3",
+          "role": "unknown"
+        },
+        {
+          "name": "4",
+          "role": "ground"
+        }
+      ],
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": "npn13G2"
+    },
+    {
+      "connections": {
+        "1": "outn",
+        "2": "vcasc",
+        "3": "c2M0",
+        "4": "0"
+      },
+      "device_type": "SUBCKT",
+      "id": "XQ4M0",
+      "params": {
+        "Nx": "x_dut_nx",
+        "Value": "npn13G2"
+      },
+      "polarity": null,
+      "ports": [
+        {
+          "name": "1",
+          "role": "unknown"
+        },
+        {
+          "name": "2",
+          "role": "unknown"
+        },
+        {
+          "name": "3",
+          "role": "unknown"
+        },
+        {
+          "name": "4",
+          "role": "ground"
+        }
+      ],
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": "npn13G2"
+    },
+    {
+      "connections": {
+        "1": "outn",
+        "2": "vcasc",
+        "3": "c2M1",
+        "4": "0"
+      },
+      "device_type": "SUBCKT",
+      "id": "XQ4M1",
+      "params": {
+        "Nx": "x_dut_nx",
+        "Value": "npn13G2"
+      },
+      "polarity": null,
+      "ports": [
+        {
+          "name": "1",
+          "role": "unknown"
+        },
+        {
+          "name": "2",
+          "role": "unknown"
+        },
+        {
+          "name": "3",
+          "role": "unknown"
+        },
+        {
+          "name": "4",
+          "role": "ground"
+        }
+      ],
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": "npn13G2"
+    }
+  ],
+  "meta": {
+    "circuit_name": "drv_001_pam4_sige_dac",
+    "component_count": 30,
+    "net_count": 27
+  },
+  "nets": [
+    {
+      "is_supply": true,
+      "name": "0",
+      "supply_type": "GND"
+    },
+    {
+      "is_supply": false,
+      "name": "blsb",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "bmsb",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "c1L0",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "c1M0",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "c1M1",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "c2L0",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "c2M0",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "c2M1",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "e1L0",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "e1M0",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "e1M1",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "e2L0",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "e2M0",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "e2M1",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "lsbn",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "lsbp",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "msbn",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "msbp",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "outn",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "outp",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "tlsb0",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "tmsb0",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "tmsb1",
+      "supply_type": ""
+    },
+    {
+      "is_supply": false,
+      "name": "vcasc",
+      "supply_type": ""
+    },
+    {
+      "is_supply": true,
+      "name": "vcc",
+      "supply_type": "VDD"
+    },
+    {
+      "is_supply": false,
+      "name": "vcmb",
+      "supply_type": ""
+    }
+  ]
+}

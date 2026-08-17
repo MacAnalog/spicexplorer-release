@@ -1,6 +1,6 @@
 # Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
 # Temperature-sensor metric sheet for the classic self-biased PTAT reference. Specs are loose
-# open-PDK envelopes (AnalogGym reference values are FOUNDRY-180nm) — the promotion goal is a
+# open-PDK envelopes (AnalogGym reference values are proprietary-PDK 180 nm) — the promotion goal is a
 # converged, valid, non-NaN metric set on ihp-sg13g2 + sky130.
 schema: spicexplorer/datasheet@1
 cace_format: "5.2"

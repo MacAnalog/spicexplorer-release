@@ -1,0 +1,69 @@
+dut: lsb
+nominal_params:
+  nx: 3
+  tail_ma_per_cell: 16.0
+  re_ohm: 2.5
+  cdeg_ff: 20.0
+  rc_ohm: 50.0
+  rb_ohm: 50.0
+  vcasc: 3.25
+  vcm_in: 1.9
+  vcc: 4.0
+  n_lsb_cells: 1
+  n_msb_cells: 0
+bias:
+  outp_v: 3.801
+  i_supply_ma: 15.916
+  power_mw: 63.666
+  vce_q1_lsb: 1.354
+  vce_q3_lsb: 1.492
+  tail_lsb_v: 0.935
+small_signal:
+  freq_ghz:
+  - 1
+  - 5
+  - 10
+  - 20
+  - 30
+  - 40
+  - 50
+  - 60
+  - 70
+  s21_db_tran:
+  - 3.1
+  - 3.14
+  - 3.13
+  - 3.03
+  - 2.87
+  - 2.65
+  - 2.37
+  - 2.06
+  - 1.69
+  s21_db_ac:
+  - 3.09
+  - 3.08
+  - 3.05
+  - 2.94
+  - 2.76
+  - 2.53
+  - 2.25
+  - 1.92
+  - 1.55
+  lf_gain_db: 3.1
+  bw_3db_ghz: 70.0
+  tran_minus_ac_lf_db: 0.011
+group_delay:
+  mean_ps: 2.21
+  peak_variation_ps: 0.2
+match:
+  s11_db_tran:
+    2ghz: -38.98
+    10ghz: -26.21
+    20ghz: -20.32
+    32ghz: -16.44
+  s11_worst_to_32ghz_db: -16.44
+  s11_db_ac:
+    2ghz: -38.87
+    10ghz: -26.19
+    20ghz: -20.31
+    32ghz: -16.44

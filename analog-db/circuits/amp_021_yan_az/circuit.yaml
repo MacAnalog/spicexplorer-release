@@ -30,7 +30,6 @@ pdks:
 - sky130
 - ihp-sg13g2
 - gf180mcu
-- FOUNDRY-n65
 analyses:
 - ac_open_loop
 - dc_op

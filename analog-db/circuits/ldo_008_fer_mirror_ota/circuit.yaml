@@ -1,7 +1,7 @@
 # ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
 # PROMOTED from the ferrosim_ldo reference entry: authored a device-generic abstract netlist +
 # open-PDK bindings so the mirror-loaded-OTA LDO is lowerable, assembled and simulated. The
-# original FOUNDRY 28nm/65nm ferrosim decks are retained under `references`. The upstream
+# original proprietary-PDK 28/65 nm ferrosim decks are retained under `references`. The upstream
 # external VREF and bias sources are INTERNALIZED (ideal Vref + Ibias inside the DUT, sizing
 # knobs) so the entry follows the ldo class's self-contained 3-port convention (ldo_004/007).
 schema: spicexplorer/circuit@1

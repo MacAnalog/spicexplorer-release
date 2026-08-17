@@ -1,7 +1,7 @@
 # T3 ngspice sweep exclusions for CI (test_T3_every_raw_deck_runs_and_extracts_or_floors).
 #
 # Each rule matches on any combination of three optional keys:
-#   pdk       — the PDK directory component (e.g. FOUNDRY-n65)
+#   pdk       — the PDK directory component (e.g. ihp-sg13g2)
 #   circuit   — the circuit directory component (e.g. amp_022_fer_two_stage)
 #   testbench — the bare testbench name without .spice (e.g. tran_step)
 #
@@ -19,11 +19,9 @@
 # one.  Add a rule here only for exclusions that are always true in CI.
 
 exclude:
-  - pdk: FOUNDRY-n65
-    reason: >-
-      NDA-protected PDK; never in the open-source base image.  Simulation uses
-      Spectre via virtuoso-bridge (see _shared/pdk/FOUNDRY-n65.yaml), not the
-      open-PDK ngspice path.
+  # Exclude every deck for a PDK that the open-source base image cannot simulate:
+  # - pdk: <pdk-id>
+  #   reason: "licensed kit; not in the open-source base image"
 
   # Exclude every deck for a specific circuit across all PDKs:
   # - circuit: amp_022_fer_two_stage

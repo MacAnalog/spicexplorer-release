@@ -83,21 +83,24 @@ DEFAULT_MAP_YAML = """\
 # xvport device map: xschem symref <-> Cadence master (first matching rule wins).
 # `terms`: xschem pin name -> Cadence terminal.  `params`: xschem attr -> CDF param.
 devices:
-  # IHP sg13g2 MOS drawings -> FOUNDRYN65 (topology port; sizing is NOT kit-translated).
-  # FOUNDRYN65 CDF (live-verified 2026-07-16): names are w/l/fingers; wf derives as w*fingers
+  # IHP sg13g2 MOS drawings -> a licensed kit's core MOS (topology port; sizing is NOT
+  # kit-translated). `FOUNDRY_KIT` is a PLACEHOLDER: replace it (and the cell names) with
+  # your own kit's library in your map file — `xvport --dump-map` hands you this as a
+  # starting point. The CDF shape encoded here is the common one: parameter
+  # names are w/l/fingers; wf derives as w*fingers
   # (CDF w is PER-FINGER). The spectre netlister's propMapping is m<-simM, nf<-fingers,
   # w<-wf: the xschem multiplier must land on simM (CDF m is callback-derived — setting it
   # is a silent no-op), and IHP xschem w is TOTAL width (the sg13g2 wrapper passes nf=ng
   # and computes areas from w/ng), so per_finger divides it for the per-finger CDF w.
   - match: "*sg13_lv_nmos*.sym"
-    lib: FOUNDRYN65
+    lib: FOUNDRY_KIT
     cell: DEVICE
     symref: sg13g2_pr/sg13_lv_nmos.sym
     terms: {D: D, G: G, S: S, B: B}
     params: {w: w, l: l, m: simM, ng: fingers}
     per_finger: {total: w, fingers: ng}
   - match: "*sg13_lv_pmos*.sym"
-    lib: FOUNDRYN65
+    lib: FOUNDRY_KIT
     cell: DEVICE
     symref: sg13g2_pr/sg13_lv_pmos.sym
     terms: {D: D, G: G, S: S, B: B}
@@ -153,7 +156,7 @@ devices:
 
 # Reverse-direction NDA denylist: masters in these libs map back by table only —
 # never dump their symbol geometry out of Cadence.
-kit_libs: [FOUNDRYN65, KIT65gplus, KIT65gpgv2od3, KIT65v, analogLib, basic]
+kit_libs: [FOUNDRY_KIT, analogLib, basic]
 """
 
 

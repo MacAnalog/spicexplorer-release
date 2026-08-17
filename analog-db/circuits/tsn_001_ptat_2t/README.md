@@ -11,7 +11,7 @@ voltage. A low-amplitude core (~10 nA bias) — a valid but small-signal PTAT.
 - `gf180mcu` binding added via `analog-db add-binding --from ihp-sg13g2` (untuned transfer; T3/T4 sim-smoke passes).
 - **Analyses:** `dc_op` (power), `temp_sweep` (slope + box spread), `line_sweep` (line sensitivity),
   `psrr` (low-f supply rejection).
-- **Reference binding:** original FOUNDRY-180nm AnalogGym decks kept verbatim under `spectre/180nm/`.
+- **Reference binding:** original proprietary-PDK 180 nm AnalogGym decks kept verbatim under `spectre/180nm/`.
 - **Structure:** no current mirror / diff pair (two stacked diodes) — `find_subcircuits` correctly
   reports none.
 
@@ -35,4 +35,4 @@ an un-cascoded 2-device core. Regenerate: `analog-db generate --circuit tsn_001_
 `spectre_test` library, plus `spectre_ptat6.scs` (a byte-identical upstream duplicate of
 `ptat_2`, preserved per the "nothing left behind" rule). They are reference bindings of THIS
 entry: same `(GND VDD VOUT)` topology, different sizing — not separate topologies, so they get
-no accession id of their own. Spectre format, FOUNDRY 180 nm — parse-only here.
+no accession id of their own. Spectre format, proprietary-PDK 180 nm — parse-only here.

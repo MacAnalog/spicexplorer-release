@@ -203,8 +203,8 @@ notes: "Sized by the SpiceXplorer optimizer (scripted Nevergrad 400 + 100-loop b
   \ refine; drawings/SIZING_VALIDATION_REPORT.md \xA74 + sizing-and-specs.yaml): the\
   \ drawn seed is UNSTABLE (PM -17.8 deg). Sizing defaults are FULL-PRECISION. CMFB\
   \ polarity is the B5 closure: both plants inverting -> canonical A*(sensed-vref)\
-  \ servos on both loops (sim-proven on ihp AND FOUNDRY-n65). Per-PDK biases: VB2 0.70\
-  \ (ihp sized) / 0.50 (FOUNDRY-n65 drawn) / 0.35 (FOUNDRY-n65 sized); a FOUNDRY-n65 binding\
+  \ servos on both loops (sim-proven on ihp AND on the closed lane). Per-PDK biases:\
+  \ VB2 0.70 (ihp sized) / 0.50 (65 nm drawn) / 0.35 (65 nm sized); a 65 nm binding\
   \ must also address the 65nm loop-2 rail-marginality (servo equilibrium below rail;\
   \ achievable CM 0.474 vs ref 0.5 \u2014 report \xA76.1) and expects ~38 dB (LVT\
   \ gm/gds ceiling). Input CM MUST be 0.5 V (0.6 rails the servos through the SRMC\

@@ -51,7 +51,7 @@ nets:
   - "XM8O voutp vb4o vdd vdd pmos w=x_dut_xm8o_w l=x_dut_xm8o_l m=x_dut_xm8o_m"
   - "XM9O voutn vb4o vdd vdd pmos w=x_dut_xm9o_w l=x_dut_xm9o_l m=x_dut_xm9o_m"
   # CM-loop compensation on the servo output — same requirement as amp_034 (see its
-  # COMPENSATION note): the 2026-08-05 role-based cmfb_002 FOUNDRY-n65 re-size raises the CM
+  # COMPENSATION note): the 2026-08-05 role-based cmfb_002 re-size raises the CM
   # loop gain enough to make the uncompensated loop oscillate.
   - "Ccm vb4o vss 'c_cm'"
 sizing:
@@ -64,11 +64,4 @@ sizing:
     # in the generated _dut.spice (the tie line, emitted later, wins anyway). Size the pair
     # through x_dut_xm8o_*; dissolve the tie first if the two ever need to differ.
     - {name: x_dut_xm8o_m, description: "XM8O m (frozen literal)", default: 1, min: 1, max: 16, freeze: true, is_integer: true}
-    - {name: c_cm, description: "CM-loop compensation cap on the servo output vb4o. 1f = OFF (ihp-sg13g2); the FOUNDRY-n65 binding NEEDS it — see amp_034's COMPENSATION note", default: 1f, min: 0, max: 1n, unit: F}
-  # Same reason as amp_034: a composite-owned device is REAL geometry and the block it was
-  # lifted out of is sized per PDK (ia_002's output PMOS is 20u on ihp, 11.257u on FOUNDRY).
-  by_pdk:
-    FOUNDRY-n65:
-      - {name: x_dut_xm8o_w, default: 11.257u}
-      - {name: c_cm, default: 5p}
-      - {name: vcm_ref, description: "Commanded output common-mode reference (composite-owned). 0.6 V = mid-rail; the FOUNDRY-n65 binding's DEVICE leaves the CMFB's PMOS input pair enough tail headroom there", default: 0.6}
+    - {name: c_cm, description: "CM-loop compensation cap on the servo output vb4o. 1f = OFF (ihp-sg13g2); a higher-CM-loop-gain binding NEEDS it — see amp_034's COMPENSATION note", default: 1f, min: 0, max: 1n, unit: F}

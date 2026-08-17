@@ -145,7 +145,7 @@ def test_deck_spec_from_ngspice_translates_and_injects(tmp_path: Path) -> None:
     deck.write_text(_TB)
     spec = deck_spec_from_ngspice(
         deck,
-        pdk="FOUNDRY-n65",
+        pdk="generic-n65",
         analyses=(dc_oppoint_analysis(),),
         parameters={"VDD": 1.2},  # injection folds to the lowercase namespace
     )

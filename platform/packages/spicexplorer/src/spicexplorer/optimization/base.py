@@ -31,7 +31,7 @@ try:
     from sympy import Expr
 except ModuleNotFoundError:
     Expr = None  # annotation-only (lazy via __future__ annotations); Bode path needs sympy
-from time import monotonic, sleep
+from time import monotonic
 
 from spicexplorer.core.domains import (
     ListTargetSpec,
@@ -46,6 +46,7 @@ from spicexplorer.core.utils import (
     Frequency_Weight,
     Transfer_Func_Helper,
     aggregate_corner_scores,
+    aggregate_spec_scores,
     compute_error,
     compute_reward,
     get_bode_fitness_loss,
@@ -56,10 +57,11 @@ from spicexplorer.core.utils import (
 )
 
 # The decade-space transforms for `log_scale` specs live in core/utils so the API Score-Shaping
-# preview shares ONE implementation with this scorer. Aliased to the historical private names
+# preview shares ONE implementation with this scorer (SC-4). Aliased to the historical private names
 # so every call site (and any `from …base import _log_space_band` importer) is unchanged.
 from spicexplorer.core.utils import log_space_band as _log_space_band
 from spicexplorer.core.utils import log_space_range_coeff as _log_space_range_coeff
+from spicexplorer.optimization.sim_benchmark import wait_for_handles_timed
 from spicexplorer_core.atomic_io import atomic_write_json
 
 # Symxplorer Specific Imports
@@ -85,7 +87,9 @@ else:
 MAX_PENALTY = np.float64(1e6) # The maximum score used when a trial does not have a performance metric in it.
 MAX_REWARD  = np.float64(1e6) # The maximum reward score a spec can achieve.
 CHECKPOINT_SCHEMA_VERSION = "1.0.0"
-EPSILON = np.float64(1e-12)
+# EPSILON is re-exported from core.utils (imported above) rather than redefined here: the spec-axis
+# aggregators need the same feasibility threshold the scorer uses, and two literals would be free to
+# drift apart. The name stays module-level so existing `from ...base import EPSILON` still resolves.
 
 # Both parallel-sim wait loops used to poll ``is_done()`` forever with no timeout, so a
 # hung/stuck ngspice child (or a bare-container submit() that never completes — observed during the
@@ -127,14 +131,14 @@ class Base_Optimizer(ABC):
         self._TIMESTAMP = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.autosave_checkpoint_freqeucny : int = 2500
         # Default autosave dir is `WORK_ROOT/auto_save/<run-name>` (the storage
-        # kernel's resolver): a CLI/example/agent
+        # kernel's resolver — meta plan_project_filesystem §6): a CLI/example/agent
         # run that passes no `output_root` lands its checkpoints in ONE discoverable
         # place instead of spraying a CWD-relative ./auto_save wherever the process
         # happened to be launched. When a caller passes `output_root` it is used AS
         # the exact checkpoint dir (the UI backend passes a per-run
         # `runs/<id>/checkpoints` under WORK_ROOT) — so a Docker run's checkpoints
         # survive `docker rm` rather than dying in the ephemeral image layer, and
-        # each run's checkpoints are isolated (report.md P1/P2).
+        # each run's checkpoints are isolated.
         if output_root is not None:
             self.autosave_checkpoint_dir : Path = Path(output_root)
         else:
@@ -162,7 +166,7 @@ class Base_Optimizer(ABC):
         # Frozen dut_params (excluded from the search space) → their fixed physical value,
         # populated by `parameterize()` (via the shared `_register_frozen_param` seam) and
         # re-injected into every candidate before `evaluate()` (via `_reinject_frozen_params`).
-        # Shared by all backends so the freeze contract lives in ONE place, not copied
+        # Shared by all backends so the freeze contract lives in ONE place (D-3), not copied
         # per mixin. Empty until parameterize() runs; a no-op when no param sets `freeze: true`.
         self._frozen_params: Dict[str, float] = {}
 
@@ -211,7 +215,7 @@ class Base_Optimizer(ABC):
     # Most optimizers would share the following code and hence do not need to modify this code
     # ----------------------------
     # ----------------------------
-    # --- Frozen-param seam — shared by every backend's parameterize/step ---
+    # --- Frozen-param seam (D-3) — shared by every backend's parameterize/step ---
     # ----------------------------
     def _reset_frozen_params(self) -> None:
         """Start a fresh frozen-param map. Called at the top of `parameterize()`."""
@@ -535,7 +539,7 @@ class Base_Optimizer(ABC):
         A multi-corner log namespaces keys as ``"<corner>::<spec>"``, so a legacy
         bare spec name (``"ugf"``) no longer matches exactly. Fall back to the
         namespaced candidate for the **worst corner** on this spec — the one with the
-        lowest mean per-spec score across the log — rather than the
+        lowest mean per-spec score across the log (PLOT-1) — rather than the
         first-enumerated corner (usually ``tt``, the easy one), so a bare-name plot is
         sign-off-honest. Pass the full ``"corner::spec"`` key to choose a specific
         corner. Returns None when nothing matches."""
@@ -731,6 +735,12 @@ class Spice_Base_Optimizer(Base_Optimizer):
         # viewer (/api/waveview/open_run). Default False — disk use grows with
         # budget × testbenches when enabled.
         self.keep_raw_artifacts: bool = False
+        # Per-testbench wall time of the MOST RECENT simulate_circuit pass, keyed like
+        # its results (bare testbench name; the multi-corner parallel fan-out uses
+        # "<tb>__<corner>"). Parallel spans are each sim's own submit→done window, so a
+        # fast bench is not billed for a slow sibling — but they do include any wait in
+        # the runner's concurrency queue.
+        self.last_sim_timings_s: Dict[str, float] = {}
         self.__post_init__()
 
     def __post_init__(self):
@@ -753,13 +763,13 @@ class Spice_Base_Optimizer(Base_Optimizer):
             self.spicelib_wrappers[tb.name].update_params(tb_params)
             logger.info(f"parameter update is compeleted for testbench {tb.name}")
         # ----------------------------------------
-        # Apply the active PVT corner (single mode) — one-time netlist preparation.
+        # Apply the active PVT corner (Phase 1) — one-time netlist preparation.
         # When `pvt` is configured in SINGLE mode, the chosen corner's `.lib`/temp/
         # supply are applied to every (enabled) testbench wrapper ONCE here, before
         # the optimization loop; each subsequent trial inherits it because the
         # SpiceEditor state persists. When `pvt` is None this is a no-op and the
         # corner is whatever the netlist hardcodes (legacy behavior).
-        # In MULTI mode the one-time apply is skipped: every evaluation
+        # In MULTI mode (Phase 2) the one-time apply is skipped: every evaluation
         # re-applies each enabled corner right before its own sims (see
         # Spice_Constraint_Satisfaction.evaluate), so priming one corner here would
         # be immediately overwritten.
@@ -909,30 +919,31 @@ class Spice_Base_Optimizer(Base_Optimizer):
             return cast(SimResult, collect(handle))
         return handle.result()
 
-    def _wait_for_handles(self, handles: Dict[str, SimHandle], timeout_s: float | None = None) -> List[str]:
+    def _wait_for_handles(
+        self, handles: Dict[str, SimHandle], timeout_s: float | None = None
+    ) -> Tuple[List[str], Dict[str, float]]:
         """Poll ``handles`` until all are ``is_done()`` or ``timeout_s`` elapses.
 
-        Returns the keys whose sim did NOT finish in time; the caller degrades those to a
-        ``_FailedSimResult`` (NaN metrics → MAX_PENALTY) so a hung child fails the TRIAL, not the
-        whole run. ``timeout_s`` defaults to ``_SIM_WAIT_TIMEOUT_S``; ``<= 0`` waits forever
-        (the legacy behavior). The ``SimHandle`` protocol has no cancel, so a timed-out sim's OS
-        process is left to finish on its own (it may still hold a runner slot) — bounding the WAIT,
-        not the child, is the engine-neutral guarantee available here."""
+        Returns ``(pending, done_at)``: ``pending`` are the keys whose sim did NOT finish
+        in time — the caller degrades those to a ``_FailedSimResult`` (NaN metrics →
+        MAX_PENALTY) so a hung child fails the TRIAL, not the whole run — and ``done_at``
+        maps each completed key to the ``monotonic()`` stamp of its ``is_done()`` flip,
+        so the caller can attribute a per-testbench sim time even though the batch ran
+        concurrently. ``timeout_s`` defaults to ``_SIM_WAIT_TIMEOUT_S``; ``<= 0`` waits
+        forever (the legacy behavior). The ``SimHandle`` protocol has no cancel, so a
+        timed-out sim's OS process is left to finish on its own (it may still hold a
+        runner slot) — bounding the WAIT, not the child, is the engine-neutral guarantee
+        available here."""
         if timeout_s is None:
             timeout_s = _SIM_WAIT_TIMEOUT_S
-        deadline = (monotonic() + timeout_s) if timeout_s and timeout_s > 0 else None
-        while True:
-            pending = [k for k, h in handles.items() if not h.is_done()]
-            if not pending:
-                return []
-            if deadline is not None and monotonic() >= deadline:
-                logger.error(
-                    f"Timed out after {timeout_s:.0f}s waiting for {len(pending)} sim(s) "
-                    f"[{', '.join(pending)}]; scoring them as failures so this trial fails, not the "
-                    f"run. Raise SPICEXPLORER_SIM_WAIT_TIMEOUT_S for a legitimately slow batch."
-                )
-                return pending
-            sleep(0.01)
+        pending, done_at = wait_for_handles_timed(handles, timeout_s=timeout_s)
+        if pending:
+            logger.error(
+                f"Timed out after {timeout_s:.0f}s waiting for {len(pending)} sim(s) "
+                f"[{', '.join(pending)}]; scoring them as failures so this trial fails, not the "
+                f"run. Raise SPICEXPLORER_SIM_WAIT_TIMEOUT_S for a legitimately slow batch."
+            )
+        return pending, done_at
 
     def simulate_circuit(self, parameterization: Dict[str, float], run_label: str | None = None) -> Dict[str, SimResult]:
         """Run every enabled testbench once with the given params, returning each
@@ -951,6 +962,8 @@ class Spice_Base_Optimizer(Base_Optimizer):
         logger.debug("Simulating the circuit with the given parameterization")
         results :  Dict[str, SimResult] = {}
         handles : Dict[str, SimHandle] = {}
+        submitted_at : Dict[str, float] = {}
+        timings : Dict[str, float] = {}
         tb_idx = 0
 
         for tb, sim in self.spicelib_wrappers.items():
@@ -962,7 +975,9 @@ class Spice_Base_Optimizer(Base_Optimizer):
 
             if not self.setup_obj.parallel_sim:
                 logger.debug("parallel_sim: FALSE -> blocking run()")
+                t0 = monotonic()
                 result = sim.run(label=label)
+                timings[tb] = monotonic() - t0
                 # Non-convergence on an extreme candidate is routine in analog sizing —
                 # the None-backed result degrades to NaN metrics, never an abort. The
                 # `raw` probe is ngspice's; other engines simply don't warn here.
@@ -974,18 +989,27 @@ class Spice_Base_Optimizer(Base_Optimizer):
 
             else:
                 logger.debug("parallel_sim: TRUE -> non-blocking submit()")
+                submitted_at[tb] = monotonic()
                 handles[tb] = sim.submit(label=label)
 
         if self.setup_obj.parallel_sim:
             logger.debug("Waiting for tasks to finish.")
-            timed_out = set(self._wait_for_handles(handles))
+            pending, done_at = self._wait_for_handles(handles)
+            timed_out = set(pending)
+            t_end = monotonic()
             logger.debug("All tasks completed." if not timed_out
                          else f"{len(timed_out)} sim(s) timed out; scoring as failures.")
             for tb, handle in handles.items():
+                # Per-testbench span: this sim's own submit→done window (a timed-out sim
+                # is billed up to the wait bound), NOT the batch wall time.
+                timings[tb] = (done_at[tb] if tb not in timed_out else t_end) - submitted_at[tb]
                 # A timed-out handle is NOT collected — result()/collect() would block on the hung
                 # child. Substitute a NaN-scoring failure so only this trial's `tb` metrics fail.
                 results[tb] = (_FailedSimResult() if tb in timed_out
                                else self._collect_result(self.spicelib_wrappers[tb], handle))
+        self.last_sim_timings_s = timings
+        for tb, secs in timings.items():
+            logger.debug(f"\t⏱️  sim time for testbench '{tb}': {secs:.3f} s")
         return results
 
     def plot_score_value_by_spec(self, spec_name: str, save_path: Path | None = None, show: bool = False):
@@ -1022,7 +1046,7 @@ class Spice_Base_Optimizer(Base_Optimizer):
             return
 
         target_val = float(target_spec.target)
-        tolerance  = float(target_spec.tolerance if target_spec.tolerance is not None else 0.05*target_val)
+        tolerance  = float(target_spec.tolerance if target_spec.tolerance is not None else 0.0)
         error_type = target_spec.error_type
 
         fig = go.Figure()
@@ -1404,7 +1428,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
     def _evaluate_at_current_corner(self, parameterization: Dict[str, float], run_label: str | None = None) -> Tuple[np.float64, Dict[str, Any], Dict[str, SimResult]]:
         """One full pass at whatever corner the wrappers' netlists currently carry:
         simulate every enabled testbench, extract each enabled target spec's scalar,
-        and score it. This is the single-corner evaluation body, factored out so the
+        and score it. This is the Phase-1 evaluation body, factored out so the
         multi-corner loop can call it once per corner. Also returns the per-testbench
         `SimResult`s so the caller can harvest per-run log files."""
         results = self.simulate_circuit(parameterization=parameterization, run_label=run_label)
@@ -1437,11 +1461,13 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         # run_<n>_<tb>__<corner> folder, so re-applying the next corner to the same
         # editor cannot disturb an already-launched run.
         launched: Dict[str, Dict[str, SimHandle]] = {}
+        submitted_at: Dict[str, float] = {}
         for corner in corners:
             handles: Dict[str, SimHandle] = {}
             for tb, sim in self.spicelib_wrappers.items():
                 sim.apply_corner(corner, model_lib_root=pvt.model_lib_root)
                 sim.update_params(parameterization)
+                submitted_at[f"{corner.name}::{tb}"] = monotonic()
                 handles[tb] = sim.submit(label=f"{tb}__{corner.name}")
             launched[corner.name] = handles
 
@@ -1455,9 +1481,20 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
             f"Waiting for {len(flat_handles)} sim(s) across {len(corners)} corner(s) "
             f"(parallel corner axis)."
         )
-        timed_out = set(self._wait_for_handles(flat_handles))
+        pending, done_at = self._wait_for_handles(flat_handles)
+        timed_out = set(pending)
+        t_end = monotonic()
         logger.debug("All corner×testbench sims completed." if not timed_out
                      else f"{len(timed_out)} corner×testbench sim(s) timed out; scoring as failures.")
+        # Per-(corner, testbench) sim spans, keyed "<tb>__<corner>" like the log files.
+        timings: Dict[str, float] = {}
+        for key in flat_handles:
+            corner_name, tb = key.split("::", 1)
+            timings[f"{tb}__{corner_name}"] = (
+                (done_at[key] if key not in timed_out else t_end) - submitted_at[key])
+        self.last_sim_timings_s = timings
+        for run_key, secs in timings.items():
+            logger.debug(f"\t⏱️  sim time for '{run_key}': {secs:.3f} s")
 
         # PHASE 3 — collect each corner's results and extract + score that corner.
         # Every corner's results are self-contained `SimResult`s (no shared
@@ -1490,14 +1527,14 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         Evaluate the given parameterization by running a SPICE simulation,
         computing the fitness score, and returning it as np.float64 plus a metadata dictionary.
 
-        With ``pvt.mode: multi`` this runs the whole
+        With ``pvt.mode: multi`` (Phase 2) this runs the whole
         {enabled testbenches} × {enabled corners} cross-product: each enabled corner
         is applied to every wrapper, simulated, and scored on its own, then the
         per-corner scores are collapsed into ONE scalar via
         ``pvt.score_aggregation`` (sum / mean / min). The returned ``fit_summary``
         is keyed ``"<corner>::<spec>"`` and the per-corner totals ride along in the
         log entry's ``metadata`` (``corner_scores`` / ``score_aggregation``).
-        Single mode is byte-identical to the legacy behavior (bare spec keys, no metadata).
+        Single mode is byte-identical to Phase 1 (bare spec keys, no metadata).
         """
         pvt = getattr(self.setup_obj, "pvt", None)
 
@@ -1581,6 +1618,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         penalty     : np.float64 = np.float64(0.0)
         total_score : np.float64 = np.float64(0.0)
         fit_summary : Dict[str, Any] = {}
+        spec_scores : Dict[str, np.float64] = {}
 
         # Iterate over each target specification
         # ------------------------------------------------------------------------------
@@ -1603,7 +1641,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
                 # converged in-band violation (matching the documented run_and_wait failure contract
                 # above). The old RELATIVE_SIGMOID carve-out scored a failure as only -weight (≈ -1) —
                 # bounded like a sigmoid violation — which let a crashed sim OUTSCORE a bad-but-
-                # converged design and pulled the optimizer toward crashes.
+                # converged design and pulled the optimizer toward crashes (cross_repo_audit).
                 # "Degenerate" is `is_scoreable_metric`: NON-FINITE (`nan`/`±inf`), or
                 # non-positive under `log_scale`. The gate used to be a bare `isnan`, so `-inf`
                 # (and a `log_scale` metric at 0, which the decade transform turns into `-inf`)
@@ -1612,7 +1650,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
                 # goal-aware: the Tier-1 library does return ±inf as a PERFECT sentinel too, but
                 # it is the SAME value a diverged solve returns, and the shipped EXCEED+reward
                 # specs are all `dcgain`, where +inf means the AC blew up. See
-                # `is_scoreable_metric`.
+                # `is_scoreable_metric` and doc/TODO.md §22.
                 spec_fitness = -1 * np.float64(MAX_PENALTY)  # assign the maximal penalty if the spec is not found
             # b - Log the spec score
             fit_summary[spec.name] = {
@@ -1620,16 +1658,30 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
                 "score": spec_fitness
             }
             # c - Update the overall fitness
+            spec_scores[spec.name] = spec_fitness
             if spec_fitness > 0:    reward  += spec_fitness
             else:                   penalty += spec_fitness
         # ------------------------------------------------------------------------------
 
-        # Constraint-FIRST (lexicographic) aggregation BY DESIGN: while ANY spec is violated
-        # (penalty < 0) the score is the penalty sum alone — reward from satisfied specs is only
-        # surfaced once ALL constraints are met. Intended (drive feasibility first, then optimize),
-        # but it does flatten the landscape across the infeasible region (BUG-B23 — a design note,
-        # not a defect). A future blended objective (`penalty + α·reward`) would shape it smoother.
-        total_score = reward if penalty > -1*EPSILON else penalty
+        # SPEC-AXIS aggregation, selected by `optimizer_config.spec_aggregation` (validated at
+        # load). The default `feasibility_reward` is the historical hardcoded rule and is what the
+        # `reward if penalty > -EPSILON else penalty` line here used to compute inline:
+        # constraint-FIRST (lexicographic) — while ANY spec is violated the score is the penalty sum
+        # alone, and reward from satisfied specs is surfaced only once every constraint is met.
+        # Intended (drive feasibility first, then optimize), though it does flatten the landscape
+        # across the infeasible region (BUG-B23 — a design note, not a defect).
+        # `weighted_sum` and `chebyshev` are the alternative scalarizations; see
+        # `core.utils.aggregate_spec_scores` for the math and what each one flattens instead.
+        # Resolved defensively off `self`: `compute_fitness` is also invoked unbound against light
+        # scorer stand-ins (tests, the API's score preview) that carry only the spec list, and a
+        # hard `self.optimizer_config` read would turn those into AttributeErrors. A caller with no
+        # config gets the historical default.
+        _cfg = getattr(self, "optimizer_config", None)
+        total_score = aggregate_spec_scores(
+            spec_scores,
+            strategy=getattr(_cfg, "spec_aggregation", "feasibility_reward"),
+            params=getattr(_cfg, "aggregation_params", None),
+        )
 
         logger.debug(f"Computed fitness: {total_score} for performance array: {performance_array}")
         logger.debug(f"\tReward: {reward}")
@@ -1668,7 +1720,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         adjusted_target = target_val - tolerance if spec_curr_val < target_val else target_val + tolerance
         if target_spec.goal == OptimizationGoalType.EXACT:
             if abs(spec_curr_val - target_val) > tolerance:
-                spec_penalty = compute_error(curr_val=spec_curr_val, target_val=adjusted_target, error_type=target_spec.error_type, normalizing_coeff=normalizing_coeff)
+                spec_penalty = compute_error(curr_val=spec_curr_val, target_val=adjusted_target, error_type=target_spec.error_type, normalizing_coeff=normalizing_coeff, error_params=target_spec.error_params, error_state=target_spec.error_state)
             else:
                 spec_penalty = np.float64(0.0)
         # --------------------------
@@ -1676,7 +1728,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         # --------------------------
         elif target_spec.goal == OptimizationGoalType.EXCEED:
             if spec_curr_val < target_val - tolerance:
-                spec_penalty = compute_error(curr_val=spec_curr_val, target_val=adjusted_target, error_type=target_spec.error_type, normalizing_coeff=normalizing_coeff)
+                spec_penalty = compute_error(curr_val=spec_curr_val, target_val=adjusted_target, error_type=target_spec.error_type, normalizing_coeff=normalizing_coeff, error_params=target_spec.error_params, error_state=target_spec.error_state)
             elif spec_curr_val > target_val + tolerance:
                 spec_penalty = np.float64(0.0)
         # --------------------------
@@ -1684,7 +1736,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         # --------------------------
         elif target_spec.goal == OptimizationGoalType.MINIMIZE:
             if spec_curr_val > target_val + tolerance:
-                spec_penalty = compute_error(curr_val=spec_curr_val, target_val=adjusted_target, error_type=target_spec.error_type, normalizing_coeff=normalizing_coeff)
+                spec_penalty = compute_error(curr_val=spec_curr_val, target_val=adjusted_target, error_type=target_spec.error_type, normalizing_coeff=normalizing_coeff, error_params=target_spec.error_params, error_state=target_spec.error_state)
             else:
                 spec_penalty = np.float64(0.0)
 
@@ -1743,7 +1795,7 @@ class Spice_Single_Objective(Spice_Constraint_Satisfaction):
         if target_spec.goal == OptimizationGoalType.EXCEED:
             # Reward THROUGH the whole feasible band, measured from the tolerance-adjusted boundary
             # (target - tolerance) the penalty uses, NOT the bare target — symmetric with the MINIMIZE
-            # fix. The old gate `curr > target` left a flat dead-zone across the grace
+            # fix (§1.13 / SC-3). The old gate `curr > target` left a flat dead-zone across the grace
             # band [target - tolerance, target) where a satisfied design earned neither penalty nor
             # reward. Measuring from `reward_boundary` makes the reward continuous with the zero penalty
             # at the boundary (both 0 there) and monotonically increasing as curr rises, so a smooth
@@ -1762,7 +1814,7 @@ class Spice_Single_Objective(Spice_Constraint_Satisfaction):
             # dead-zone across (target, target + tolerance] where a design that already SATISFIES
             # the constraint (zero penalty) earned zero reward too — no gradient toward improvement,
             # and a kink at the bare target instead of a smooth downhill through feasibility
-            # Measuring the reward from `reward_boundary` makes it continuous with
+            # (§1.13 / SC-3). Measuring the reward from `reward_boundary` makes it continuous with
             # the zero penalty at that boundary (both are 0 there) and monotonically increasing as
             # `curr` drops, so a MINIMIZE spec (power, area, …) always feels downward pressure while
             # feasible. EXCEED (Case 1 above) is treated symmetrically — reward measured from

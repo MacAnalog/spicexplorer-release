@@ -21,8 +21,8 @@ from dataclasses import dataclass
 from .model.nodes import DeviceType, MosPolarityType
 
 __all__ = [
-    "PdkDevice", "Pdk", "IHP_SG13G2", "SKYWATER_SKY130", "GF180MCU", "ANALOGGYM_FOUNDRY",
-    "FOUNDRY_N65", "PDKS", "get_pdk", "mos_flavor", "model_flavor", "split_flavor",
+    "PdkDevice", "Pdk", "IHP_SG13G2", "SKYWATER_SKY130", "GF180MCU", "ANALOGGYM_REF",
+    "GENERIC_N65", "PDKS", "get_pdk", "mos_flavor", "model_flavor", "split_flavor",
     "THRESHOLD_FLAVORS",
 ]
 
@@ -191,7 +191,7 @@ class Pdk:
           class's device and a note naming the substitution. A threshold retarget is a bias-point
           change the designer re-checks anyway, and no reference table declares a threshold today
           — so raising on it makes ``nmos_lvt`` un-retargetable to *every* PDK, including
-          ``FOUNDRY-n65`` whose default NMOS is literally ``DEVICE``.
+          ``generic-n65`` whose default NMOS is literally ``DEVICE``.
 
         An exact hit always wins, so a table that *does* declare the threshold keeps it.
         """
@@ -271,13 +271,13 @@ GF180MCU = Pdk(
     ),
 )
 
-# Device-NAME map for the AnalogGym / ferrosim reference corpora in analog-db (FOUNDRY-style
+# Device-NAME map for the AnalogGym / ferrosim reference corpora in analog-db (the
 # `nch_*`/`pch_*` spellings). The names come from the public upstream repos (BSD-3 / MIT) —
 # this table carries **no foundry PDK content** and exists so polarity classification and
 # `find_subcircuits` work on the reference decks out of the box. First entry per polarity is
 # the reverse-lookup (`model_for`) default.
-ANALOGGYM_FOUNDRY = Pdk(
-    name="analoggym-FOUNDRY",
+ANALOGGYM_REF = Pdk(
+    name="analoggym-ref",
     finger_param="nf",
     width_per_finger=False,
     devices=(
@@ -292,13 +292,14 @@ ANALOGGYM_FOUNDRY = Pdk(
     ),
 )
 
-# --- FOUNDRY N65 (the virtuoso-bridge / Spectre target) ------------------------------------
+# --- Generic 65 nm core table (the virtuoso-bridge / Spectre retarget example) -----------
 # Device-NAME table only — model names as they appear in netlists, no foundry model content
-# (same posture as ANALOGGYM_FOUNDRY). LVT first: it is the `model_for` default per polarity and
-# the flavor validated live (self-contained corner sections).
-# The models are BSIM4 with the universal `nf` finger semantics: `w` stays TOTAL (see sky130).
-FOUNDRY_N65 = Pdk(
-    name="FOUNDRY-n65",
+# and no foundry identity (same posture as ANALOGGYM_REF). A licensed kit binds its own table
+# through this same seam; this entry is what the ngspice→Spectre retarget and the flavor guard
+# are exercised against. LVT first: it is the `model_for` default per polarity.
+# BSIM4 with the universal `nf` finger semantics: `w` stays TOTAL (see sky130).
+GENERIC_N65 = Pdk(
+    name="generic-n65",
     finger_param="nf",
     width_per_finger=False,
     devices=(
@@ -313,8 +314,8 @@ PDKS: dict[str, Pdk] = {
     IHP_SG13G2.name: IHP_SG13G2,
     SKYWATER_SKY130.name: SKYWATER_SKY130,
     GF180MCU.name: GF180MCU,
-    ANALOGGYM_FOUNDRY.name: ANALOGGYM_FOUNDRY,
-    FOUNDRY_N65.name: FOUNDRY_N65,
+    ANALOGGYM_REF.name: ANALOGGYM_REF,
+    GENERIC_N65.name: GENERIC_N65,
 }
 
 

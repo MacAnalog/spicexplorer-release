@@ -7,7 +7,7 @@ generate a minimal *analytic* single-pole `ac.ac` (no simulator, no PDK) and pro
 * :func:`read_swept_psf` parses it (sweep vector aliased to the canonical ``frequency``),
 * :meth:`SpectreSimResult.wave` serves the AC waves via the swept-PSF fallback, and
 * the engine-neutral measurement registry extracts dcgain / ugf / pm off the Spectre result —
-  the same math path validated live on FOUNDRY-65.
+  the same math path validated live on the closed lane.
 """
 
 from __future__ import annotations

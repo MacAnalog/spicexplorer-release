@@ -15,7 +15,7 @@ as ideal sources (frozen sizing knobs `x_ibias_val` = 20 µA, `x_vcmr_val` = 0.7
 - `gf180mcu` binding added via `analog-db add-binding --from ihp-sg13g2` (untuned transfer; T3/T4 sim-smoke passes).
 - **Analyses:** `ac_open_loop` (ac_open_loop_diff), `dc_op` (dc_op_diff: i_supply + vos),
   `noise` (noise_diff), `tran_step` (tran_step_diff).
-- **Reference bindings:** original FOUNDRY 28 nm deck + spectre run set under `spectre/`.
+- **Reference bindings:** original proprietary-PDK 28 nm deck + spectre run set under `spectre/`.
 - **Structure:** `find_subcircuits` → `dp.nmos.simple` (XMI1/XMI2) + the full mirror bank
   (XMBD→XMB1/XMB2/XMT nmos; XMPD1→XMSA/XMSB/XMLA/XMLB/XMPM1 pmos).
 

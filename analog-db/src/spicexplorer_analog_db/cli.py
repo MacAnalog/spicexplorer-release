@@ -9,6 +9,8 @@ analog-db run         --circuit ID --pdk PDK [--corner tt] [--docker [SERVICE]] 
 analog-db add-binding --circuit ID --pdk PDK [--from PDK]
 analog-db gmid-extract --pdk PDK [--device DEV] [--corner tt|tt,ss,ff|all] [--vgs a,s,b] [--length l1,l2,…]
 analog-db gmid-extract-spectre --pdk PDK [--corner tt|all] [--workers N] [--smoke|--dry-run]
+analog-db layout      list [--circuit ID] | show --circuit ID [--pdk PDK] [--layout SLUG]
+                      | run --circuit ID --step {generate|signoff|pex|cosize} [-- ARGS…]
 """
 
 from __future__ import annotations
@@ -506,6 +508,56 @@ def _cmd_catalog(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_layout(args: argparse.Namespace) -> int:
+    """Discover and drive versioned layout entries (``pdk/<pdk>/layout-<NNN>-<slug>/``).
+
+    These physical-design subtrees are stored verbatim (verify tiers skip them);
+    this command surfaces them and delegates to their own scripts. The ``run``
+    step inherits the environment — set ``PDK_ROOT`` and, for kpex/PEX, ``KPEX``
+    + ``KPEX_KLAYOUT_EXE`` first (see the entry's ``layout.yaml`` → ``requires``).
+    """
+    import subprocess
+
+    if args.layout_cmd == "list":
+        ids = [args.circuit] if args.circuit else model.list_circuit_ids()
+        found = False
+        for cid in ids:
+            c = model.load_circuit(cid)
+            for pdk in c.pdks:
+                for slug in c.layouts(pdk):
+                    found = True
+                    try:
+                        man = c.layout_manifest(pdk, slug)
+                        status = man.get("status", "?")
+                        title = " ".join((man.get("title") or "").split())
+                    except Exception:  # noqa: BLE001
+                        status, title = "(no layout.yaml)", ""
+                    print(f"  {cid}/{pdk}/{slug}  [{status}]  {title}")
+        if not found:
+            print("  (no layout-* entries found)")
+        return 0
+
+    c = model.load_circuit(args.circuit)
+    pdk = args.pdk or (c.pdks[0] if len(c.pdks) == 1 else None)
+    if not pdk:
+        print(f"analog-db layout: --pdk required ({args.circuit} binds {c.pdks})", file=sys.stderr)
+        return 2
+    d = c.layout_dir(pdk, args.layout)
+
+    if args.layout_cmd == "show":
+        print(f"# {d}/layout.yaml")
+        sys.stdout.write((d / "layout.yaml").read_text())
+        return 0
+
+    # run: delegate to the entry's script, passing extra args through
+    script = {"generate": "gen_layout.py", "signoff": "signoff.py",
+              "pex": "pex_sim.py", "cosize": "optimize_cosize.py"}[args.step]
+    extra = [a for a in (args.extra or []) if a != "--"]
+    cmd = [sys.executable, str(d / script), *extra]
+    print(f"  $ {' '.join(cmd)}   (cwd={d})")
+    return subprocess.run(cmd, cwd=str(d)).returncode
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(
         prog="analog-db", description="SpiceXplorer analog circuit database tools"
@@ -763,6 +815,36 @@ def main(argv: list[str] | None = None) -> int:
     sb.add_argument("--pdk", help="(set-baseline) PDK id")
     sb.add_argument("--design", help="(set-baseline) design_id of an existing entry")
     sb.set_defaults(func=_cmd_scoreboard)
+
+    lay = sub.add_parser(
+        "layout",
+        help="discover/drive versioned layout entries (pdk/<pdk>/layout-<NNN>-<slug>/)",
+    )
+    lay_sub = lay.add_subparsers(dest="layout_cmd", required=True)
+    ll = lay_sub.add_parser("list", help="list layout entries and their status")
+    ll.add_argument("--circuit", help="limit to one circuit id")
+    lsw = lay_sub.add_parser("show", help="print a layout entry's layout.yaml manifest")
+    lsw.add_argument("--circuit", required=True)
+    lsw.add_argument("--pdk", help="PDK id (default: the circuit's sole PDK)")
+    lsw.add_argument("--layout", help="layout id/slug (default: the sole entry)")
+    lrun = lay_sub.add_parser(
+        "run",
+        help="run a layout script (generate|signoff|pex|cosize); inherits env — "
+        "set PDK_ROOT and (for pex/cosize) KPEX + KPEX_KLAYOUT_EXE first",
+    )
+    lrun.add_argument("--circuit", required=True)
+    lrun.add_argument("--pdk", help="PDK id (default: the circuit's sole PDK)")
+    lrun.add_argument("--layout", help="layout id/slug (default: the sole entry)")
+    lrun.add_argument(
+        "--step", required=True,
+        choices=["generate", "signoff", "pex", "cosize"],
+        help="generate=gen_layout.py, signoff=signoff.py, pex=pex_sim.py, cosize=optimize_cosize.py",
+    )
+    lrun.add_argument(
+        "extra", nargs=argparse.REMAINDER,
+        help="args passed through to the script (e.g. --dut pam4 --budget 10)",
+    )
+    lay.set_defaults(func=_cmd_layout)
 
     args = p.parse_args(argv)
     return args.func(args)

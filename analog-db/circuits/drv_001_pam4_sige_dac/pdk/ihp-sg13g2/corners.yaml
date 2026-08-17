@@ -1,0 +1,9 @@
+# HBT process corners — cornerHBT.lib typ/wcs/bcs (PVT_plan.md hbt_typ/hbt_wcs/hbt_bcs).
+# The driver core is HBT + ideal (VCCS) tails + linear R/C, so only the HBT corner lib is needed;
+# the collector/base/degeneration resistors are plain SPICE R (not PDK rsil), so no cornerRES.lib.
+pdk: ihp-sg13g2
+corners:
+  tt: [{lib_file: cornerHBT.lib, section: hbt_typ}]
+  ss: [{lib_file: cornerHBT.lib, section: hbt_wcs}]
+  ff: [{lib_file: cornerHBT.lib, section: hbt_bcs}]
+default_corner: tt

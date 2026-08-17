@@ -1,0 +1,45 @@
+# SUPER-DSL manifest (plan D-3). Inductorless 96 Gb/s PAM-4 SiGe:C HBT modulator driver.
+# The corpus's FIRST bipolar + first RF/broadband entry (doc/pam4_driver_case_study_feasibility.md).
+# Landed from drawings/pam4-driver-2-bit-dac-HBT/ (landing.yaml); the pdk/ihp-sg13g2/schematic/
+# copy is the authoritative editable drawing.
+schema: spicexplorer/circuit@1
+id: drv_001_pam4_sige_dac
+class: drv
+display_name: "2-bit PAM-4 current-mode DAC driver (SiGe HBT, IHP SG13G2)"
+subfamily: pam4_current_mode_dac
+tier: driver
+compensation: capacitive_emitter_degeneration   # inductorless peaking (R_E bridged by C_deg)
+stages: 1
+realization: transistor
+signal_path: fully_differential
+cm_control: unregulated          # open-loop current-mode: output CM set by collector-load IR drop, no servo
+# port order = the pam4 DUT subckt header (2 LSB-in + 2 MSB-in, diff out, supply/cascode/CM, 2 tail-bias ports)
+ports: [lsbp, lsbn, msbp, msbn, outp, outn, vcc, vcasc, vcmb, blsb, bmsb]
+provenance:
+  source: EIC-designer lumped-broadband-driver (verified reference, 16/16 requirements, dual sign-off)
+  aliases: [pam4drv_pam4, pam4-driver-2-bit-dac-HBT, lumped-broadband-driver]
+  paper: "M. Inac, A. Peczek, A. Malignaggi, F. Gerfers et al., 'Inductorless 96 Gb/s PAM-4 Optical Modulators Driver in SiGe:C BiCMOS', EuMIC 2022"
+  license: PolyForm-Noncommercial-1.0.0
+  designer: "agentic port (Claude) — drawings/pam4-driver-2-bit-dac-HBT; github.com/JPPhotonics/agentic-design-pam4-driver-ihp130"
+  notes: >-
+    Block-level replication on the open IHP SG13G2 PDK; reproduces the EIC golden with zero delta
+    on all 8 system metrics (reference/eic_golden_pam4_results.yaml). BIPOLAR/RF: the HBTs are
+    npn13G2 subckt black boxes to circuitgraph, so generate/lower and T0-T2 pass, but the CMOS-only
+    assembler + gm-ID/area lanes don't apply (feasibility §4.4/4.5) — analyses is [] and the
+    runnable path is the optimizer projection over the static testbenches/ decks (as amp_004 does
+    via testbenches.legacy/). See README.md for authored-vs-generated detail.
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  datasheet: datasheet.yaml
+  schematic: pdk/ihp-sg13g2/schematic/dut_pam4.svg
+pdks: [ihp-sg13g2]
+# No class-templated `analyses/*.yaml` yet: the assembler renders MOS class benches, and this
+# circuit's benches are the self-contained RF/tran probe decks under pdk/ihp-sg13g2/testbenches/
+# driven by optimizer/projection.yaml (as amp_004 does via testbenches.legacy/). The `drv` class
+# `templates` declare the analysis vocabulary for when the bipolar assembler lands (gap 4.4).
+analyses: []
+optimize:
+  budget: 1000
+  knobs_from: pdk/{pdk}/sizing.yaml
+  targets_from: datasheet.yaml
+status: draft

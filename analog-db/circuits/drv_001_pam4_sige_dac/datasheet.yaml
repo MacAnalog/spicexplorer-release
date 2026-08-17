@@ -1,0 +1,203 @@
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+# Spec sheet for the 96 Gb/s PAM-4 SiGe HBT driver (Inac et al., EuMIC 2022), reformulated for
+# single-frequency probes (doc/pam4_driver_case_study_feasibility.md §3). Targets = the paper's
+# spec as verified by the EIC-designer reference; `typ` = the EIC golden nominal
+# (reference/eic_golden_pam4_results.yaml). Each `optimize` block mirrors a projection
+# target_spec; `spec_name` is the bare scalar the testbench's .control block writes, read by name.
+default_conditions:
+  supply:      {unit: V,    typical: 4.0}
+  corner:      {typical: tt}          # cornerHBT.lib hbt_typ
+  temp:        {unit: degC, typical: 27}
+  rload_diff:  {unit: ohm,  typical: 100}   # 50 ohm/side reference, differential
+  vcm_in:      {unit: V,    typical: 1.9}
+  itail_ma:    {unit: mA,   typical: 16}    # per cell, via bias-port VCCS
+metrics:
+  lsb_gain_lf_db:
+    display: LSB-path low-frequency gain
+    description: Differential power-wave S21 (2*Vout/Vsrc into 50 ohm/side) of the LSB cell, at 1 GHz.
+    unit: dB
+    extract: {meas: lsb_gain_lf_db}
+    spec: {min: 2.2, typ: 3.1, unit: dB}
+    optimize:
+      spec_name: lsb_gain_lf_db
+      testbench: tb_gain_lsb
+      sim_type: ac
+      goal: exceed
+      target: 2.2
+      range: 6
+      tolerance: 0.2
+      weight: 100.0
+      error_type: relative-sigmoid
+      enable: true
+  msb_gain_lf_db:
+    display: MSB-path low-frequency gain
+    description: Differential S21 of the MSB (2-cell) path, at 1 GHz. The headline gain.
+    unit: dB
+    extract: {meas: msb_gain_lf_db}
+    spec: {min: 8.2, typ: 9.07, unit: dB}
+    optimize:
+      spec_name: msb_gain_lf_db
+      testbench: tb_gain_msb
+      sim_type: ac
+      goal: exceed
+      target: 8.2
+      range: 6
+      tolerance: 0.2
+      weight: 100.0
+      error_type: relative-sigmoid
+      enable: true
+  dac_weight_db:
+    display: DAC binary weight (MSB - LSB)
+    description: >-
+      MSB minus LSB LF gain — the 2-bit binary weight (ideal 20*log10(2) = 6.02 dB). Derived
+      from the two gain probes; characterization only (not a searched target — pinning both
+      absolute gains already fixes it), so no `optimize` block.
+    unit: dB
+    formula: msb_gain_lf_db - lsb_gain_lf_db
+    spec: {typ: 6.0, min: 5.0, unit: dB}
+  lsb_gain_50g_rel_db:
+    display: LSB gain at 50 GHz relative to LF (bandwidth proxy)
+    description: LSB S21(50 GHz) - S21(1 GHz). The -3 dB bandwidth requirement as a two-point check.
+    unit: dB
+    extract: {meas: lsb_gain_50g_rel_db}
+    spec: {min: -3.0, typ: -0.99, unit: dB}
+    optimize:
+      spec_name: lsb_gain_50g_rel_db
+      testbench: tb_gain_lsb
+      sim_type: ac
+      goal: exceed
+      target: -3.0
+      range: 6
+      tolerance: 0.3
+      weight: 100.0
+      error_type: relative-sigmoid
+      enable: true
+  msb_gain_50g_rel_db:
+    display: MSB gain at 50 GHz relative to LF (bandwidth proxy)
+    description: MSB S21(50 GHz) - S21(1 GHz).
+    unit: dB
+    extract: {meas: msb_gain_50g_rel_db}
+    spec: {min: -3.0, typ: -1.87, unit: dB}
+    optimize:
+      spec_name: msb_gain_50g_rel_db
+      testbench: tb_gain_msb
+      sim_type: ac
+      goal: exceed
+      target: -3.0
+      range: 6
+      tolerance: 0.3
+      weight: 100.0
+      error_type: relative-sigmoid
+      enable: true
+  s11_msb_32g_db:
+    display: Input return loss at 32 GHz
+    description: >-
+      S11 of the input port (Zin from Vin/Iin, 50 ohm/side reference) at 32 GHz, the binding S11
+      point. Constraint <= -10 dB; `minimize` keeps rewarding lower — this is the knob that lets a
+      black-box search rediscover the 50 ohm termination from the return-loss spec alone (§6).
+    unit: dB
+    extract: {meas: s11_msb_32g_db}
+    spec: {max: -10.0, typ: -10.87, unit: dB}
+    optimize:
+      spec_name: s11_msb_32g_db
+      testbench: tb_s11
+      sim_type: ac
+      goal: minimize
+      target: -10.0
+      range: 20
+      tolerance: 0.5
+      weight: 100.0
+      error_type: relative-sigmoid
+      enable: true
+  s22_50g_db:
+    display: Output return loss at 50 GHz
+    description: S22 of the output port (Zout from the driven output, 50 ohm/side reference) at 50 GHz.
+    unit: dB
+    extract: {meas: s22_50g_db}
+    spec: {max: -10.0, typ: -14.76, unit: dB}
+    optimize:
+      spec_name: s22_50g_db
+      testbench: tb_s22
+      sim_type: ac
+      goal: minimize
+      target: -10.0
+      range: 20
+      tolerance: 0.5
+      weight: 100.0
+      error_type: relative-sigmoid
+      enable: true
+  power_mw:
+    display: Supply power
+    description: Total power drawn from the 4 V rail, i(Vcc)*4 in mW, at the bias operating point.
+    unit: mW
+    extract: {meas: power_mw}
+    spec: {max: 192.0, typ: 191.0, unit: mW}
+    optimize:
+      spec_name: power_mw
+      testbench: tb_bias
+      sim_type: op
+      goal: minimize
+      target: 192.0
+      range: 100
+      tolerance: 2.0
+      weight: 100.0
+      error_type: relative-sigmoid
+      enable: true
+  i_supply:
+    display: Supply current
+    description: Total current from the 4 V rail (class power metric; power_w = i_supply * 4 V).
+    unit: A
+    extract: {meas: i_supply}
+    spec: {max: 0.048, typ: 0.0478, unit: A}
+  ic_msb_ma:
+    display: MSB per-device collector current (bias canary)
+    description: >-
+      Per-device collector current in an MSB cell (~itail/2, so ~8 mA at the golden tail), mA.
+      A `.spiceinit`/ngbehavior liveness canary (feasibility gap 4.3): without `ngbehavior=hsa`
+      the HBT conducts 0 A silently, so a dead deck reads ~0 mA and FAILS this >= 1 mA conducting
+      floor rather than scoring 0 mW power as "best". Kept a FLOOR, not a band, so it never
+      constrains the tail-current knob (which legitimately sets I_C from ~2 to ~12 mA).
+    unit: mA
+    extract: {meas: ic_msb_ma}
+    spec: {min: 1.0, typ: 8.0, unit: mA}
+    optimize:
+      spec_name: ic_msb_ma
+      testbench: tb_bias
+      sim_type: op
+      goal: exceed
+      target: 1.0
+      range: 8
+      tolerance: 0.5
+      weight: 10.0
+      error_type: relative-sigmoid
+      enable: true
+  swing_vpp_diff:
+    display: Peak differential output swing
+    description: Large-signal differential output swing (Vpp) with LSB+MSB driven in phase at 1 GHz.
+    unit: V
+    extract: {meas: swing_vpp_diff}
+    spec: {min: 2.1, typ: 2.92, unit: V}
+    optimize:
+      spec_name: swing_vpp_diff
+      testbench: tb_swing
+      sim_type: tran
+      goal: exceed
+      target: 2.1
+      range: 2
+      tolerance: 0.1
+      weight: 100.0
+      error_type: relative-sigmoid
+      enable: true
+  rlm:
+    display: PAM-4 level-mismatch ratio
+    description: 48 GBaud PAM-4 eye RLM (final-design validation only; not in the sizing loop).
+    unit: ratio
+    extract: {meas: rlm}
+    spec: {min: 0.95, typ: 0.975}
+  eye_height_v:
+    display: Minimum PAM-4 eye opening
+    description: Smallest of the three 48 GBaud PAM-4 eye openings, V (final-design validation only).
+    unit: V
+    extract: {meas: eye_height_v}
+    spec: {min: 0.2, typ: 0.264, unit: V}

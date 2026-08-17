@@ -1,0 +1,29 @@
+# Design variables — the §3 optimizer spec tier (doc/pam4_driver_case_study_feasibility.md §3).
+# EIGHT searched knobs mirroring the EIC CellParams/DriverParams surface, plus frozen fixtures.
+# Defaults = the EIC-verified golden nominal (reference/eic_golden_pam4_results.yaml): the known
+# feasible, known-good starting point. Bounds = the §3 table.
+#
+# BIPOLAR sizing surface (feasibility §3.0): the HBT has no continuous W/L. `x_dut_nx` (integer,
+# 1..10 parallel emitter stripes) is the SOLE device-level knob; `le`/`we`/`Ny` on the subckt
+# header are drawn geometry the model does NOT scale with, so they are NOT search variables.
+# Nx couples to the bias knob through the model-validity ceiling I_C < 3*Nx mA (per device); the
+# design runs 8 mA/device at Nx=3 (~89%). The engine does NOT check this — the projection's
+# tech_spec.constraints carries `max_tail_ma_per_nx: 6` (two devices share a tail) as the note.
+#
+# The tail current is NOT a device parameter: the bias-port VCCS (1 mA/V) turns it into the plain
+# scalar `x_dut_itail_ma`, applied by each testbench as a DC source on blsb/bmsb. vcasc/vcm_in are
+# likewise testbench bias voltages. All eight are ordinary .param names the optimizer rewrites.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+  # -- the 8 searched knobs --
+  - {name: x_dut_nx,       description: "Emitter fingers per device (sole HBT device knob; I_C < 3*Nx mA)", default: 3,    min: 1,   max: 10,  is_integer: true}
+  - {name: x_dut_itail_ma, description: "Per-cell tail current via bias-port VCCS (mA)",  default: 16,   min: 4,    max: 24,   unit: mA, testbench: true}   # testbench DC source on the bias port, not a DUT device param; log-scale; tail <= 6*Nx
+  - {name: x_dut_re,       description: "Emitter degeneration R (ohm/side)",              default: 2.5,  min: 0.5,  max: 20,   unit: ohm}  # log-scale
+  - {name: x_dut_cdeg_ff,  description: "Bridging degeneration cap (fF), peaking",        default: 20,   min: 5,    max: 500,  unit: fF}   # log-scale
+  - {name: x_dut_rc,       description: "Collector load R (ohm/side)",                    default: 50,   min: 25,   max: 100,  unit: ohm}
+  - {name: x_dut_rb,       description: "Base-termination R (ohm/side)",                  default: 50,   min: 25,   max: 100,  unit: ohm}
+  - {name: x_dut_vcasc,    description: "Cascode bias (V) — SOA-critical vs BV_CEO",      default: 3.25, min: 2.8,  max: 3.6,  unit: V, testbench: true}    # testbench DC source on the vcasc port
+  - {name: x_dut_vcm_in,   description: "Input common-mode / base-termination CM (V)",    default: 1.9,  min: 1.6,  max: 2.2,  unit: V, testbench: true}    # testbench DC source on the vcmb port
+  # -- frozen fixtures (spec-fixed; kept out of the search space) --
+  - {name: x_dut_vcc,      description: "Supply rail (V) — fixed by spec",               default: 4.0,  min: 4.0,  max: 4.0,  unit: V, freeze: true, testbench: true}   # testbench supply source

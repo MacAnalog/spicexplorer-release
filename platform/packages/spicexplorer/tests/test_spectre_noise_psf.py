@@ -3,7 +3,7 @@
 A Spectre `noise` analysis lands its output/input-referred spectral densities in their own
 psfascii PSF (`noise.noise`) in the persisted `-raw` dir — NOT the bridge's flat op-point
 dict. These tests generate a minimal *analytic* white-noise `noise.noise` (no simulator, no
-PDK) and prove, on the same reader/registry path validated live on FOUNDRY-65:
+PDK) and prove, on the same reader/registry path validated live on the closed lane:
 
 * :func:`read_swept_psf` parses it (sweep vector aliased to the canonical ``frequency``),
 * :meth:`SpectreSimResult.wave` serves the ``out``/``in`` densities via the swept-PSF fallback,

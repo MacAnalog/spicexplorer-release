@@ -2,7 +2,7 @@
 # Miller-compensated two-stage is buffer-stable, so no biaswrap needed). Params mirror the
 # circuit's other benches (VCM 0.6, IBIAS 20u, CL 500f). Added with the tb-validation pass
 # (2026-07-09) alongside psrr_vdd/linearity so the reference two-stage carries the full
-# amplifier disturbance suite on every binding, FOUNDRY-n65 included.
+# amplifier disturbance suite on every binding.
 schema: spicexplorer/analysis@1
 id: cmrr_vcm
 template: cmrr_vcm

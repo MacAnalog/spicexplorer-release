@@ -1,0 +1,33 @@
+* TB[pam4] .op/.ac S21+S11 sweep drive=lsb (ngspice-45)
+Vcc vcc 0 DC 4
+Vcasc vcasc 0 DC 3.25
+Vcmb vcmb 0 DC 1.9
+Vblsb blsb 0 DC 16
+Vbmsb bmsb 0 DC 16
+XDUT lsbp lsbn msbp msbn outp outn vcc vcasc vcmb blsb bmsb pam4drv_pam4
+Rlp outp vcc 50
+Rln outn vcc 50
+Vslsbp slsbp 0 DC 1.9 AC 0.5
+Vslsbn slsbn 0 DC 1.9 AC -0.5
+Rslsbp slsbp lsbp 50
+Rslsbn slsbn lsbn 50
+Vsmsbp smsbp 0 DC 1.9
+Vsmsbn smsbn 0 DC 1.9
+Rsmsbp smsbp msbp 50
+Rsmsbn smsbn msbn 50
+.include ../dut/dut_pam4.spice
+.lib "cornerHBT.lib" hbt_typ
+.options gmin=1e-12 reltol=1e-3
+.control
+op
+print v(outp) v(outn) i(Vcc)
+ac dec 20 1e+08 1e+11
+let vodiff = v(outp)-v(outn)
+let vidiff = v(lsbp)-v(lsbn)
+let s21db = db(2*vodiff)
+let zin = vidiff*100/(1-vidiff)
+let s11db = db((zin-100)/(zin+100))
+wrdata ac.csv s21db s11db
+.endc
+.GLOBAL GND
+.end

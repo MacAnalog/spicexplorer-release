@@ -19,7 +19,7 @@ artifacts:
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
   schematic: abstract/schematic.svg
-pdks: [ihp-sg13g2, sky130, gf180mcu, FOUNDRY-n65]
+pdks: [ihp-sg13g2, sky130, gf180mcu]
 analyses: [ac_open_loop, dc_op, noise, tran_step, linearity, psrr_vdd, cmrr_vcm, thd, iip3, stb]
 optimize:
   budget: 2000

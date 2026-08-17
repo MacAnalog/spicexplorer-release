@@ -2,7 +2,7 @@
 """Regenerate the full gm/ID LUT store from the PDK registries (out-of-repo, not committed).
 
 The gm/ID LUTs are **not** tracked in git — the open-PDK tables are large at the max-fidelity
-25 mV grid, and the FOUNDRY-n65 tables come from a licensed kit (NDA). This script rebuilds the
+25 mV grid, and any Spectre-lane tables come from a licensed kit (NDA). This script rebuilds the
 whole device-characterization store into the out-of-repo location (`gmid.out_root`, default
 ``~/.spicexplorer/gmid/<pdk>/``) so a fresh checkout can reproduce every DUT with one command.
 
@@ -10,7 +10,7 @@ Lanes (auto-selected per PDK by the registry ``gmid.engine`` / ``sim_engine`` ma
   * **open PDKs** (sky130 / ihp-sg13g2 / gf180mcu) → native ngspice + ``$PDK_ROOT`` (per-L
     parallel, ``gmid.simulator.workers``); falls back to the docker base image when native
     isn't available.
-  * **FOUNDRY-n65** → headless Spectre via the virtuoso-bridge (both polarities per pass, one
+  * **Spectre-routed PDKs** → headless Spectre via the virtuoso-bridge (both polarities per pass, one
     process per (L,VSB); the wrapper + Spectre come from ``~/.virtuoso-bridge/local.env``).
 
 Grids, corners, flavours, W, temp all come from ``_shared/pdk/<pdk>.yaml`` → ``gmid:``.
@@ -60,7 +60,9 @@ OPEN_DEVICES: dict[str, list[tuple[str, list[str]]]] = {
         ("pfet_03v3", []),
     ],
 }
-SPECTRE_PDKS = ["FOUNDRY-n65"]
+# Spectre-routed (licensed-kit) PDKs. Empty in the open-source distribution — the
+# Spectre lane exists (see gmid_spectre.py) but ships with no PDK bound to it.
+SPECTRE_PDKS: list[str] = []
 
 # Which open devices get narrow finger-width companions (--fingers). CORE devices only — the HV
 # device is inherently large and its min finger width is well above the 0.5 µm narrow companion.

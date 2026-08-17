@@ -10,7 +10,7 @@ from spicexplorer_circuitgraph import (
     GF180MCU,
     IHP_SG13G2,
     SKYWATER_SKY130,
-    FOUNDRY_N65,
+    GENERIC_N65,
     CircuitGraph,
     PdkDevice,
     model_flavor,
@@ -99,10 +99,10 @@ def test_hv_device_retargets_to_the_targets_hv_part_not_its_core_part():
 
 
 def test_retarget_refuses_a_flavor_the_target_pdk_does_not_have():
-    # FOUNDRY-N65's table declares core devices only. Silently emitting `DEVICE` for a 3.3 V part
+    # GENERIC_N65's table declares core devices only. Silently emitting `DEVICE` for a 3.3 V part
     # produces a deck that simulates happily and answers a different circuit.
     with pytest.raises(ValueError, match="voltage class"):
-        to_netlist(_hv_nmos_graph(), pdk=FOUNDRY_N65)
+        to_netlist(_hv_nmos_graph(), pdk=GENERIC_N65)
 
 
 def test_core_devices_still_retarget_unchanged():
@@ -133,14 +133,14 @@ def test_a_threshold_flavor_substitutes_loudly_instead_of_raising(caplog):
     """`nmos_lvt` must not be un-retargetable to a PDK whose default NMOS IS an lvt device.
 
     No reference table declares a threshold flavor, so treating `lvt` like a voltage class made
-    every threshold-flavored token raise against every PDK — including FOUNDRY-n65, whose first NMOS
+    every threshold-flavored token raise against every PDK — including generic-n65, whose first NMOS
     is literally `DEVICE` (the right answer sits in the table and the guard refused it). A
     threshold retarget is a bias-point change, not a voltage-class violation: substitute, and say
     so.
     """
     g = _nmos_graph("nmos_lvt")
     with caplog.at_level(logging.WARNING, logger="spicexplorer_circuitgraph.emit"):
-        lowered = to_netlist(g, pdk=FOUNDRY_N65)
+        lowered = to_netlist(g, pdk=GENERIC_N65)
     assert "DEVICE" in lowered
     assert "lvt" in caplog.text and "NOT preserved" in caplog.text
     # …and against a PDK that really has no lvt part, the substitution is the core device
@@ -151,13 +151,13 @@ def test_a_threshold_flavor_substitutes_loudly_instead_of_raising(caplog):
 
 
 def test_a_voltage_class_mismatch_still_raises():
-    # The half of the guard that is correct: an hv part has no counterpart in FOUNDRY-n65's table and
+    # The half of the guard that is correct: an hv part has no counterpart in generic-n65's table and
     # substituting the core device would put a 3.3 V part on a 1.2 V model.
     with pytest.raises(ValueError, match="voltage class"):
-        to_netlist(_nmos_graph("sg13_hv_nmos"), pdk=FOUNDRY_N65)
+        to_netlist(_nmos_graph("sg13_hv_nmos"), pdk=GENERIC_N65)
     # the message names the CLASS, not the whole flavor string
     with pytest.raises(ValueError, match="'hv'-class"):
-        to_netlist(_nmos_graph("nfet_06v0_nvt"), pdk=FOUNDRY_N65)
+        to_netlist(_nmos_graph("nfet_06v0_nvt"), pdk=GENERIC_N65)
 
 
 def test_a_threshold_modifier_does_not_strand_a_declared_voltage_class():
@@ -169,7 +169,7 @@ def test_a_threshold_modifier_does_not_strand_a_declared_voltage_class():
 
 def test_model_for_stays_exact_so_a_declared_threshold_would_win():
     mos, nmos = DeviceType.MOS, MosPolarityType.NMOS
-    assert FOUNDRY_N65.model_for(mos, nmos, "lvt") is None  # exact lookup is unchanged
-    assert FOUNDRY_N65.resolve_model(mos, nmos, "lvt")[0] == "DEVICE"
-    assert FOUNDRY_N65.resolve_model(mos, nmos, "hv") == (None, "")
-    assert FOUNDRY_N65.resolve_model(mos, nmos, "") == ("DEVICE", "")  # unflavored: byte-identical
+    assert GENERIC_N65.model_for(mos, nmos, "lvt") is None  # exact lookup is unchanged
+    assert GENERIC_N65.resolve_model(mos, nmos, "lvt")[0] == "DEVICE"
+    assert GENERIC_N65.resolve_model(mos, nmos, "hv") == (None, "")
+    assert GENERIC_N65.resolve_model(mos, nmos, "") == ("DEVICE", "")  # unflavored: byte-identical

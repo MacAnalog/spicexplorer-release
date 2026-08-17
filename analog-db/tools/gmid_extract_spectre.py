@@ -6,7 +6,7 @@ The prototype that lived here was promoted to the package
 (`_shared/pdk/<pdk>.yaml` → ``gmid:`` block, incl. the ``simulator: {workers, timeout_s}``
 parallelization knobs). Use the CLI:
 
-    analog-db gmid-extract-spectre --pdk FOUNDRY-n65 [--corner all] [--workers N] [--smoke|--dry-run]
+    analog-db gmid-extract-spectre --pdk <spectre-pdk> [--corner all] [--workers N] [--smoke|--dry-run]
 
 This shim just forwards there so old invocations keep working. See `_shared/GMID.md`
 ("The Spectre lane") for the full flow doc.

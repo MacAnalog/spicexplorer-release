@@ -109,7 +109,7 @@ def test_deck_index_groups_by_pdk_and_testbench():
     idx = export.deck_index()
     sky = idx["amp_001_5t"]["sky130"]
     assert sky["ac_open_loop"] == "raw/amp_001_5t/sky130/ac_open_loop.spice"
-    assert "_dut" in sky and {"ihp-sg13g2", "sky130", "gf180mcu"} <= set(idx["amp_001_5t"])  # registered proprietary lanes (FOUNDRY-n65) may add groups
+    assert "_dut" in sky and {"ihp-sg13g2", "sky130", "gf180mcu"} <= set(idx["amp_001_5t"])  # any further registered lane may add groups
 
 
 # ───────────────────────────── xschem schematic (.sch) ─────────────────────────────
@@ -141,7 +141,7 @@ def test_schematic_is_not_a_testbench_in_the_index():
 def test_catalog_carries_raw_and_schematic_blocks():
     cat = json.loads(paths.catalog_path().read_text())
     e = next(c for c in cat["circuits"] if c["id"] == CIRCUIT)
-    assert {"ihp-sg13g2", "sky130", "gf180mcu"} <= set(e["raw"])  # registered proprietary lanes (FOUNDRY-n65) may add groups
+    assert {"ihp-sg13g2", "sky130", "gf180mcu"} <= set(e["raw"])  # any further registered lane may add groups
     assert e["raw"]["sky130"]["noise"] == "raw/amp_001_5t/sky130/noise.spice"
     # schematics are reference-only pointers to files that exist (amp_001_5t has authored xschem)
     assert e["schematic"]["abstract"] == "circuits/amp_001_5t/abstract/schematic.svg"

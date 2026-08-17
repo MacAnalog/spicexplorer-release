@@ -32,6 +32,17 @@ _PDK_MOS_SYMREF: dict[tuple[str, MosPolarity], str] = {
     ("ihp-sg13g2", MosPolarity.NMOS): "sg13g2_pr/sg13_lv_nmos.sym",
     ("ihp-sg13g2", MosPolarity.PMOS): "sg13g2_pr/sg13_lv_pmos.sym",
 }
+# PDK subckt-primitive symbols, keyed by (pdk, model name lowercased). Some PDK primitives are
+# shipped as subckts over a native model (the SG13G2 HBT is a .subckt wrapping a VBIC card), so
+# they arrive as DeviceKind.SUBCKT with the subckt name in ``model``. Pin alignment rides the
+# SUBCKT positional fallback in :func:`align_pins`: netlist order (c b e bn) == symbol pin order
+# (C B E S) for the entries below. No clean "no-params" twins are vendored for these, so the
+# mapping intentionally ignores ``show_params``.
+_PDK_SUBCKT_SYMREF: dict[tuple[str, str], str] = {
+    ("ihp-sg13g2", "npn13g2"): "sg13g2_pr/npn13G2.sym",
+    ("ihp-sg13g2", "npn13g2l"): "sg13g2_pr/npn13G2l.sym",
+    ("ihp-sg13g2", "npn13g2v"): "sg13g2_pr/npn13G2v.sym",
+}
 # Generic device symbols from the bundled xschem library.
 _GENERIC_SYMREF: dict[DeviceKind, str] = {
     DeviceKind.RES: "devices/res.sym",
@@ -67,10 +78,15 @@ def _clean_symref(symref: str) -> str:
 def symref_for(dev: Device, *, pdk: str | None, show_params: bool = True) -> str | None:
     """The ``.sym`` reference for ``dev``, or ``None`` if there's no mapping (caller skips + warns).
 
-    Subcircuit instances have no generic symbol (the definition's ``.sym`` is circuit-specific), so
-    they return ``None`` in v1. When ``show_params`` is ``False`` the device is mapped to its clean
-    "no-params" symbol twin (see :func:`_clean_symref`) so the schematic doesn't draw the sizing text.
+    Subcircuit instances resolve only through the ``_PDK_SUBCKT_SYMREF`` table (PDK primitives
+    shipped as subckts, e.g. the SG13G2 HBTs); other subckts return ``None`` (the definition's
+    ``.sym`` is circuit-specific). When ``show_params`` is ``False`` the device is mapped to its
+    clean "no-params" symbol twin (see :func:`_clean_symref`) so the schematic doesn't draw the
+    sizing text — except PDK subckt primitives, which have no vendored twin and keep their symbol.
     """
+    if dev.kind is DeviceKind.SUBCKT:
+        model = (dev.model or "").split()[0].lower() if dev.model else ""
+        return _PDK_SUBCKT_SYMREF.get((pdk or "", model))
     base = (
         _PDK_MOS_SYMREF.get((pdk or "", dev.polarity))
         if dev.kind is DeviceKind.MOS

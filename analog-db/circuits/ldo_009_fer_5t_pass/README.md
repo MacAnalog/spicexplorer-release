@@ -15,7 +15,7 @@ standard LDO practice.
 - **Open-PDK bindings:** `ihp-sg13g2`, `sky130` (VDD 1.8 V, vout = vref = 0.9 V).
 - `gf180mcu` binding added via `analog-db add-binding --from ihp-sg13g2` (untuned transfer; T3/T4 sim-smoke passes).
 - **Analyses:** the full 9-bench ldo set.
-- **Reference bindings:** original FOUNDRY 28 nm deck (incl. the va_vref module) under
+- **Reference bindings:** original proprietary-PDK 28 nm deck (incl. the va_vref module) under
   `spectre/28nm/`.
 - **Structure:** `find_subcircuits` → `dp.nmos.simple` (XMIP/XMIN), `cm.nmos.simple`
   (XMNB→XMNT), `cm.pmos.simple` (XMLD→XMLM).

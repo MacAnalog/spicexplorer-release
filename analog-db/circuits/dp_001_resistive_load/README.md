@@ -13,7 +13,7 @@ tail-anchored on a detected mirror).
   override is blocked by `sizing.schema.json`).
 - `gf180mcu` binding added via `analog-db add-binding --from ihp-sg13g2` (untuned transfer; T3/T4 sim-smoke passes).
 - **Analyses:** `dc_op` (tail current + output CM), `gain_dc` (differential DC gain).
-- **Reference bindings:** original FOUNDRY-28nm + 65nm ferrosim decks under `spectre/{28nm,65nm}/`.
+- **Reference bindings:** original proprietary-PDK 28 nm + 65 nm ferrosim decks under `spectre/{28nm,65nm}/`.
 - **Structure:** `find_subcircuits` → `dp.nmos.simple` (XMP/XMN, tail mirror-biased) +
   `cm.nmos.simple` (XMR → XMT).
 

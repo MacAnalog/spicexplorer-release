@@ -186,6 +186,48 @@ class Circuit:
             raise FileNotFoundError(f"{self.id}: no netlist.spice under pdk/{pdk}/")
         return p
 
+    def layouts(self, pdk: str) -> list[str]:
+        """Versioned physical-design entries ``pdk/<pdk>/layout-<NNN>-<slug>/``.
+
+        Returns the sorted layout ids (dir names); empty if the circuit has no
+        layout for this PDK. These subtrees are stored verbatim — the verify
+        tiers do NOT walk them (see the entry's ``layout.yaml``); drive them
+        with ``analog-db layout`` or their own scripts.
+        """
+        d = self.dir / "pdk" / pdk
+        if not d.is_dir():
+            return []
+        return sorted(
+            p.name for p in d.iterdir() if p.is_dir() and p.name.startswith("layout-")
+        )
+
+    def layout_dir(self, pdk: str, slug: str | None = None) -> Path:
+        """Directory of one layout entry. ``slug`` accepts the full id
+        (``layout-001-foo``) or a unique tail (``001-foo``/``foo``); when
+        omitted, picks the sole layout (raises if there are several)."""
+        avail = self.layouts(pdk)
+        if not avail:
+            raise FileNotFoundError(f"{self.id}: no layout-* under pdk/{pdk}/")
+        if slug is None:
+            if len(avail) != 1:
+                raise ValueError(f"{self.id}/{pdk}: {len(avail)} layouts {avail}; pass one")
+            name = avail[0]
+        else:
+            match = [
+                n for n in avail
+                if n == slug or n == f"layout-{slug}" or n.endswith(f"-{slug}")
+            ]
+            if len(match) != 1:
+                raise FileNotFoundError(
+                    f"{self.id}/{pdk}: layout {slug!r} not found in {avail}"
+                )
+            name = match[0]
+        return self.dir / "pdk" / pdk / name
+
+    def layout_manifest(self, pdk: str, slug: str | None = None) -> dict[str, Any]:
+        """Parsed ``layout.yaml`` of a layout entry (the self-describing manifest)."""
+        return _load_yaml(self.layout_dir(pdk, slug) / "layout.yaml")
+
     def abstract_netlist(self) -> Path:
         """Path to the PDK-neutral abstract netlist (``abstract/netlist.spice``)."""
         p = self.dir / "abstract" / "netlist.spice"

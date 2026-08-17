@@ -1,0 +1,10 @@
+* amp_001_5t — flat LVS reference for the gdsfactory lane (topcell ota_5t_gf).
+* Same circuit/sizing as ../5t_ota/ota_5t_lvs.spice; only the subckt name differs.
+.subckt ota_5t_gf vdd vout vinp vinn ibias vss
+M1 outm vinp tail vss sg13_lv_nmos w=0.5u l=5u
+M2 vout vinn tail vss sg13_lv_nmos w=0.5u l=5u
+M3 outm outm vdd  vdd sg13_lv_pmos w=1.5u l=5u
+M4 vout outm vdd  vdd sg13_lv_pmos w=1.5u l=5u
+M5 tail ibias vss vss sg13_lv_nmos w=2u l=5u
+M6 ibias ibias vss vss sg13_lv_nmos w=2u l=5u
+.ends

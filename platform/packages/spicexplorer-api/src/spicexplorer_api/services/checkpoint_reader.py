@@ -188,7 +188,10 @@ def compute_envelope(
 
         passes: bool | None = None
         if target is not None:
-            tol = spec.get("tolerance", abs(0.05 * target))
+            # Default 0, matching TargetSpec: an omitted tolerance means the target IS the
+            # constraint. A 5 % default here would redraw a checkpoint's pass/fail band
+            # differently from the run that produced it.
+            tol = spec.get("tolerance", 0.0)
             if goal == "exceed":
                 passes = best_ever >= target - tol
             elif goal == "minimize":
@@ -312,7 +315,10 @@ def compute_scatter(
 
     def _fails_spec(spec: dict, target: float, v: float) -> bool:
         goal = spec.get("goal", "exceed")
-        tol = spec.get("tolerance", abs(0.05 * target))
+        # Default 0, matching TargetSpec: an omitted tolerance means the target IS the
+        # constraint. A 5 % default here would redraw a checkpoint's pass/fail band
+        # differently from the run that produced it.
+        tol = spec.get("tolerance", 0.0)
         if goal == "exceed":
             return v < target - tol
         if goal == "minimize":

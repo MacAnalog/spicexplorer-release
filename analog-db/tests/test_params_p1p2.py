@@ -335,11 +335,6 @@ _OLD_GEOMETRY = {
         # (and every sibling PDK) carries x_dut_xm6_m=1.
         "XM6": (2 * _UM, 5 * _UM, 1),
     },
-    "FOUNDRY-n65": {
-        "XM1": (0.5 * _UM, 5 * _UM, 1), "XM2": (0.5 * _UM, 5 * _UM, 1),
-        "XM3": (1.5 * _UM, 5 * _UM, 1), "XM4": (1.5 * _UM, 5 * _UM, 1),
-        "XM5": (2 * _UM, 5 * _UM, 1), "XM6": (2 * _UM, 5 * _UM, 1),
-    },
 }
 
 _PARAM_LINE = re.compile(r"^\.param\s+(\w+)\s*=\s*(.+?)\s*$", re.MULTILINE)

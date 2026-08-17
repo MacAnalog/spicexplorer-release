@@ -8,20 +8,44 @@
 [![ui](https://github.com/MacAnalog/spicexplorer-release/actions/workflows/ui.yml/badge.svg)](https://github.com/MacAnalog/spicexplorer-release/actions/workflows/ui.yml)
 
 Open-source releases from the SpiceXplorer analog design-automation project,
-developed by the MacAnalog research group at McMaster University. The project
-is published incrementally; this monorepo grows one component at a time, each
-as a curated snapshot.
+developed by the MacAnalog research group at McMaster University. As of **v1.0**
+the whole platform is public — every package, the Studio front-end, and the
+circuit database — each published as a curated snapshot.
 
 ## Components
 
 | Directory | What it is | Status |
 |---|---|---|
 | [`analog-db/`](analog-db/) | Analog circuit database — the topology/circuit registry (netlists, datasheets, class libraries, testbench templates) and its tiered verification harness | released |
-| [`platform/`](platform/) | SpiceXplorer platform packages: `spicexplorer-core` (foundation), `spicexplorer-circuitgraph` + `spicexplorer-netlist2xschem` (netlist tools), `spicexplorer-waveview` (result viewer), `spicexplorer` (optimization), `spicexplorer-api` (FastAPI adapter) | released |
+| [`platform/`](platform/) | The Python workspace — kernel, leaf tools, optimizer and REST API (all ten packages below) | released |
 | [`ui/`](ui/) | SpiceXplorer "Studio" — the Next.js front-end (HTTP/SSE) over the platform api | released |
+
+### Platform packages
+
+Dependencies flow **down** this table: the adapter builds on the optimizer, which
+composes the leaf tools, which all rest on the kernel. Leaf tools never import each
+other, so any one of them can be used on its own.
+
+| Package | Layer | What it does |
+|---|---|---|
+| `spicexplorer-api` | adapter | FastAPI service over the optimizer and the library — thin, no business logic |
+| `spicexplorer` | optimizer | The YAML design DSL, the scoring/optimization loop, and the simulation backends |
+| `spicexplorer-circuitgraph` | leaf tool | Netlist → typed bipartite graph (nets ⟷ components), with round-trip and cross-PDK retargeting |
+| `spicexplorer-netlist2xschem` | leaf tool | Netlist → xschem schematic, with headless SVG/PNG rendering |
+| `spicexplorer-netlist2tf` | leaf tool | Netlist → exact symbolic transfer function, reduced to readable hand-form |
+| `spicexplorer-gmid` | leaf tool | Deterministic gm/ID sizing from pre-computed lookup tables |
+| `spicexplorer-waveview` | leaf tool | Universal result viewer — ngspice/Spectre artifacts → engine-neutral waveforms + plots |
+| `spicexplorer-layout` | leaf tool | Parameterized layout generation (the generator contract + GDS build) |
+| `spicexplorer-signoff` | leaf tool | Physical signoff — DRC / LVS / PEX runners with structured verdicts |
+| `spicexplorer-core` | kernel | SPICE-engine wrappers, PVT corners, measurements, units, path anchoring |
 
 Each component keeps its own `README.md`, `LICENSE`, and (for Python) `pyproject.toml`;
 a `.release-provenance.json` in each records the snapshot it was cut from.
+
+> **PDKs.** The database ships **open** PDK bindings only — IHP sg13g2, SkyWater
+> sky130, and GlobalFoundries gf180mcu. The Spectre/commercial lane's machinery,
+> templates and tests are all here, but no proprietary kit is bound; an operator
+> binds their own through the documented seam.
 
 ## Quickstart
 

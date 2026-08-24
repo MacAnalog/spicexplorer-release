@@ -27,9 +27,9 @@ def ldo() -> model.Circuit:
 # ---------------------------------------------------------------- resolver / Tier 2
 
 
-def test_tier2_is_fully_green():
-    results = verify.run_tier2()
-    failures = [r for r in results if r.status == "fail"]
+@pytest.mark.corpus
+def test_tier2_is_fully_green(tier2_results):
+    failures = [r for r in tier2_results if r.status == "fail"]
     assert not failures, "Tier 2 failures:\n" + "\n".join(
         f"{r.circuit} {r.check}: {r.reason}" for r in failures
     )

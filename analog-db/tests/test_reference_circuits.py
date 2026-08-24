@@ -30,9 +30,12 @@ def test_reference_circuits_present_and_wellformed():
         # mandatory provenance
         prov = c.manifest.get("provenance") or {}
         assert prov.get("source") and prov.get("license"), f"{cid}: missing provenance source/license"
-        # every declared binding exists on disk with at least one deck
+        # every declared binding is either an upstream pointer or an on-disk deck dir
         assert c.references, f"{cid}: no reference bindings"
         for entry in c.references:
+            if entry.get("upstream"):
+                assert entry["upstream"].startswith("http"), f"{cid}: binding {entry} has a malformed upstream URL"
+                continue
             bdir = c.reference_dir(entry)
             assert bdir.is_dir(), f"{cid}: binding {entry} missing"
             assert next(bdir.rglob("*.scs"), None) is not None, f"{cid}: binding {entry} has no decks"
@@ -68,8 +71,10 @@ def test_catalog_indexes_reference_bindings():
     assert entry["kind"] == "reference"
     assert entry["pdks"] == []
     assert entry.get("references"), "reference bindings must be indexed in the catalog"
-    decks = [p for b in entry["references"] for role in ("dut", "tb", "runs", "other") for p in b.get(role, [])]
-    assert decks, "at least one deck must be indexed"
+    for b in entry["references"]:
+        decks = [p for role in ("dut", "tb", "runs", "other") for p in b.get(role, [])]
+        assert b.get("upstream") or decks, f"binding {b} indexes neither an upstream pointer nor a deck"
+    assert any(b.get("upstream") for b in entry["references"]), "expected at least one upstream pointer binding"
 
 
 def _make_fake_ferrosim(root: Path) -> Path:

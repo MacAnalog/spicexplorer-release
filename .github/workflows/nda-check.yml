@@ -1,0 +1,64 @@
+# Fails the build if any licensed-node identifier appears in the tree.
+# Supervisor R1 item 1(d), 2026-08-24. The deny list mirrors
+# scripts/release/release_test.py in the private meta-repo — keep them in sync.
+#
+# The regex tokens below are written with single-character brackets (e.g.
+# `t[s]mc`) so this file never matches its own deny list in a plain grep.
+#
+# Deliberate NON-matches (reviewed): the bare three-letter Si2 "Compact Model
+# Coalition" acronym — its standard models (r3_*, mosvar, psp103) legitimately
+# ship inside the Apache-2.0 IHP PDK subtree; the Canadian-org long form IS
+# denied. Likewise bare threshold-class words (lvt and friends) — generic
+# vocabulary in the circuitgraph flavor guard; kit-native device spellings ARE
+# denied. Base64 runs (>=200 chars) are elided before matching — embedded
+# notebook images match 4-letter tokens by pure chance.
+name: nda-check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  token-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: scan for licensed-node identifiers
+        run: |
+          python3 - <<'PY'
+          import pathlib, re, sys
+
+          RX = re.compile(
+              r"t[s]mc|crn[26]\d|cln[26]\d|tpan6[5]|tpbn6[5]|"
+              r"[np]ch_ma[c]|[np]ch_u?lv[t]|[np]ch_e?hv[t]|pch_18_ma[c]|"
+              r"tcb[n]|toplevel\.sc[s]|top_t[t]|pre_sim[u]|globalm[c]|c018bc[d]|"
+              r"cm[c]\s+microsystems",
+              re.I,
+          )
+          B64 = re.compile(r"[A-Za-z0-9+/]{200,}={0,2}")
+          SKIP_SUFFIX = {".png", ".jpg", ".jpeg", ".gif", ".pdf", ".pkl",
+                         ".gds", ".raw", ".zip", ".woff", ".woff2", ".ico"}
+
+          bad = []
+          for p in sorted(pathlib.Path(".").rglob("*")):
+              if not p.is_file() or ".git" in p.parts:
+                  continue
+              if p.suffix.lower() in SKIP_SUFFIX:
+                  continue
+              try:
+                  text = p.read_text(errors="replace")
+              except OSError:
+                  continue
+              if "\x00" in text[:8192]:
+                  continue  # binary
+              for i, line in enumerate(text.splitlines(), 1):
+                  m = RX.search(B64.sub("", line))
+                  if m:
+                      bad.append(f"{p}:{i}: {m.group(0)!r}")
+                      break  # one finding per file
+          for b in bad:
+              print("DENY", b)
+          print(f"{len(bad)} file(s) with licensed-node identifiers")
+          sys.exit(1 if bad else 0)
+          PY

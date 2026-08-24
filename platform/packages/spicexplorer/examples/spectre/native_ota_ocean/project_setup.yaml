@@ -8,8 +8,8 @@
 # How injection works: the deck's `parameters` line carries the design variables; the
 # optimizer rewrites it per candidate (the bridge runs a fixed file per run and, in local
 # mode, ignores its params arg — so injection happens on our side). Requires the research
-# server (Cadence Spectre + a licensed 65 nm PDK + virtuoso-bridge) to actually run; on a PDK-less
-# host it loads/validates but can't simulate. Point the corner's `lib_file` at your licensed 65 nm
+# server (Cadence Spectre + a licensed PDK + virtuoso-bridge) to actually run; on a PDK-less
+# host it loads/validates but can't simulate. Point the corner's `lib_file` at your licensed
 # models (never commit the path) + set VB_CADENCE_CSHRC. See this folder's README.md.
 project:
   name: native-5t-ota-ocean

@@ -14,10 +14,10 @@ mix of sub-threshold voltage-reference / PTAT temperature-sensor cores and one r
 amplifier. A local snapshot lives in the meta-repo at
 `external/AnalogGym-remainder/Sensing Front End/`.
 
-> ⚠️ These designs target **proprietary foundry PDKs** (0.18 µm BCD-HV `models.l`
-> and 65 nm), using `DEVICE`/`DEVICE` devices. The PDK model libraries are **not** vendored;
-> foundry include paths in the testbenches are stubbed as `${PDK_ROOT}/…` placeholders (D-9
-> policy). No PDK model bytes are reproduced here.
+> ⚠️ These designs target **proprietary foundry PDKs** (a 0.18 µm BCD-HV kit and a 65 nm kit),
+> using foundry-native device models. No PDK model libraries, library file names, device names,
+> or corner data are vendored or reproduced here; the upstream decks themselves are not
+> redistributed (pointer entries only, D-9 policy).
 
 ## Imported circuits
 

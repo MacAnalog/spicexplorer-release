@@ -49,6 +49,8 @@ from typing import Any
 
 import yaml
 
+from . import yamlio
+
 __all__ = [
     "atomic_symbol",
     "knob_symbol",
@@ -87,8 +89,7 @@ def load_params_doc(circuit_dir: str | Path) -> dict[str, Any] | None:
     p = Path(circuit_dir) / "abstract" / "params.yaml"
     if not p.is_file():
         return None
-    with p.open() as fh:
-        doc = yaml.safe_load(fh)
+    doc = yamlio.read_yaml(p)
     if not isinstance(doc, dict):
         raise ValueError(f"{p}: expected a YAML mapping, got {type(doc).__name__}")
     return doc

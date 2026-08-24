@@ -340,19 +340,39 @@ def _generate_circuit(
     return decks, skipped
 
 
+# One full-corpus render is ~tens of seconds (assembly + subcircuit detection + xschem drawing
+# for every circuit) and several entry points need it — catalog_json/deck_index (via the Tier-0
+# xref), the drift guard, write_all. Within one process the committed sources don't change, so
+# the full-render result is memoized per db_root. Anything that edits circuit sources in-process
+# and re-renders under the SAME root must pass use_cache=False (the determinism test does, so it
+# keeps exercising a genuinely fresh render).
+_full_render_cache: dict[tuple, tuple[dict[str, str], list[tuple[str, str]]]] = {}
+
+
 def generate_all(
     circuit_ids: list[str] | None = None,
     corners: tuple[str, ...] = ("tt",),
     pdks: list[str] | None = None,
+    use_cache: bool = True,
 ) -> tuple[dict[str, str], list[tuple[str, str]]]:
     """Pure render of the whole (or a filtered) ``raw/`` tree — the single generator behind writing,
-    the catalog ``raw`` block, and the drift guard."""
+    the catalog ``raw`` block, and the drift guard. The unfiltered full render is memoized
+    in-process per db_root (see ``_full_render_cache`` above); pass ``use_cache=False`` to force a
+    fresh render."""
+    key = (str(paths.db_root()), corners, None if pdks is None else tuple(pdks))
+    if use_cache and circuit_ids is None:
+        hit = _full_render_cache.get(key)
+        if hit is not None:
+            return dict(hit[0]), list(hit[1])
     decks: dict[str, str] = {}
     skipped: list[tuple[str, str]] = []
     for cid in circuit_ids if circuit_ids is not None else model.list_circuit_ids():
         d, s = _generate_circuit(model.load_circuit(cid), corners, pdks)
         decks.update(d)
         skipped.extend(s)
+    if circuit_ids is None:
+        _full_render_cache[key] = (decks, skipped)
+        return dict(decks), list(skipped)
     return decks, skipped
 
 
@@ -430,15 +450,19 @@ def deck_index(
 
 
 def check_drift(
-    circuit_ids: list[str] | None = None, corners: tuple[str, ...] = ("tt",)
+    circuit_ids: list[str] | None = None,
+    corners: tuple[str, ...] = ("tt",),
+    decks: dict[str, str] | None = None,
 ) -> tuple[list[str], list[str], list[str]]:
     """Compare the committed ``raw/`` tree against a fresh render.
 
     Returns ``(stale, missing, orphan)`` repo-relative paths: *stale* = committed bytes differ,
     *missing* = expected but absent, *orphan* = committed but not expected (only meaningful for a
-    full-DB check, so it's skipped when ``circuit_ids`` is given).
+    full-DB check, so it's skipped when ``circuit_ids`` is given). Pass an already-rendered
+    ``decks`` mapping (from :func:`generate_all` with the same filters) to skip the re-render.
     """
-    decks, _ = generate_all(circuit_ids, corners)
+    if decks is None:
+        decks, _ = generate_all(circuit_ids, corners)
     root = paths.db_root()
     stale, missing = [], []
     for rel, text in decks.items():

@@ -1,9 +1,9 @@
-# Drawings sizing & dual-engine validation report — ngspice/ihp + Spectre @ 65 nm
+# Drawings sizing & validation report — ngspice/ihp lane
 
 > **[REVIEW]** — results record for the 2026-07-18 drawings campaign: (1) CMFB-polarity
 > closure (B5), (2) full-drawings IHP bench sweep, (3) optimizer sizing of the unsized
-> blocks, (4) xvport port of every drawing to Virtuoso, (5) Spectre validation
-> at 65 nm. Forward checklist stays in
+> blocks, (4) xvport port of every drawing to Virtuoso. (Closed-lane simulator
+> results are not published in this repository.) Forward checklist stays in
 > [`TODO_bio_afe_port.md`](TODO_bio_afe_port.md); drawing-bug history in
 > [`DRAWING_REVIEW.md`](DRAWING_REVIEW.md) (§8 = the per-block IHP sweep table).
 > Created 2026-07-18. Sections marked *(pending)* fill in as the campaign lands.
@@ -27,16 +27,14 @@ Two engines, one truth per block:
   (dcgain ≥ 55 dB, UGF ≥ 2 MHz @ 50 fF, PM ≥ 60°, I ≤ 100 µA, CM errors ≤ 20 mV,
   servos in-rail); (c) fine-tune the weak landed amp_025 sizing (35.8 dB vs its 60 dB
   datasheet target) the same way.
-- **Closed lane (Spectre @ 65 nm, virtuoso-bridge)**: every drawing ported to real
-  Virtuoso cellviews with `xvport` (device map sg13_lv_* → the kit's DEVICE/DEVICE,
-  per-finger w, simM; R/C/V/VCCS → analogLib), proven per block by xvport's three
-  oracles (verify = terminal bindings; netcheck = circuitgraph isomorphism vs
-  Virtuoso's own netlist; simcheck = Spectre DC op with the operator's NDA-neutral
-  model wrapper). Then real Spectre benches on the exported cellview netlists —
-  same bench suite, biases retuned for the 65 nm LVT devices (lower V_th; LVT gm/gds
-  caps a single stage near ~28 dB, so 65 nm gains are expected below IHP).
-- **NDA**: kit model bytes are never read or committed; decks reference only the
-  operator's local model wrapper (section tt).
+- **Closed lane (Spectre, virtuoso-bridge, kit-unbound)**: every drawing ported to
+  real Virtuoso cellviews with `xvport` (device map sg13_lv_* → the target kit's
+  low-Vt devices, per-finger w, simM; R/C/V/VCCS → analogLib), proven per block by
+  xvport's three oracles (verify = terminal bindings; netcheck = circuitgraph
+  isomorphism vs Virtuoso's own netlist; simcheck = Spectre DC op with the user's
+  own NDA-neutral model wrapper). Closed-lane bench numbers are not published here.
+- **NDA**: no kit model bytes, device names, corner names, or results keyed to a
+  licensed kit are committed; decks reference only the user's local model wrapper.
 
 ## 2. CMFB polarity closure (B5) — done, sim-proven
 
@@ -50,7 +48,7 @@ re-exported. Method landed as the amplifier-class template `dc_cmfb_plant_sign`.
 ## 3. IHP (ngspice) validation — every block benched
 
 The per-block table lives in `DRAWING_REVIEW.md` §8 (21 blocks, all OK / expected-fail
-with reasons). Headline numbers used as the 65 nm comparison baseline:
+with reasons). Headline numbers:
 
 | Block | IHP headline |
 |---|---|
@@ -143,74 +141,17 @@ already-ported deps cleanly.
 - Also: the daemon `load()`s the `.il` from Virtuoso's own cwd → pass `-o` with an
   ABSOLUTE path; the target library must already exist (`xvport_dev`).
 
-## 6. Spectre (65 nm) validation — DONE (drawn geometry, bias retune only)
-
-Biases retuned by sweep where the 65 nm LVT devices moved the operating windows;
-**no geometry touched** (that is §4/§7's job). All transistor gains land 25–38 dB —
-the 65 nm LVT single-stage gm/gds ceiling (journal-verified) — so 65 nm coming in
-below IHP is physics, not port error.
-
-| Block | 65 nm result (tt, 1.2 V, 50 f) | Retuned biases | IHP baseline |
-|---|---|---|---|
-| SRMC-core-amp-w-cmfb | CM 0.5005 both loops, servos mid-rail; **38.1 dB**, UGF 25.9 MHz, PM 37.1°, 56.7 µA | **VB2 0.7→0.5** (65 nm: at 0.7 stage-1 CM unreachable — the per-PDK opposite of the IHP fix; drawing carries the IHP value) | 41.0 dB, GBW 6.8 MHz |
-| two-stage-ota-core (amp_025 ctx) | vocm 0.799, servo mid-rail; **28.9 dB**, 2.2 MHz, 96.5°, 26.1 µA | **vcmfb_ref 0.5→0.8** (65 nm achievable-CM window [0.61, 1.04] — class-AB follower level-shift floor puts 0.5/0.6 out of reach) | 24.5 dB IA-dut context |
-| two-stage-opamp-core (amp_026) | vocm 0.567 (knife-edge, no CMFB); **29.1 dB**, 1.33 MHz, 83.8°, 67.5 µA | vb1 0.5→0.6 | 61.7 dB / 20.8 MHz / 64° |
-| integrator-switchcap-opamp (amp_027) | vocm 0.426 in-rail, internal CM loop works; **25.2 dB**, 58.4 MHz, 92.9°, 22.9 µA | none | 46.6 dB / 47.6° |
-| two-stage-miller-comp (amp_029) | with X pinned 0.70: vocm 0.668; **28.3 dB**, 13.1 MHz, 38.3°, 78.2 µA | **I0 1m→20µ** (drawn 1 mA needs a 2.1 V mirror VGS at 65 nm min geometry — above VDD) | no-stable-point finding matches |
-| two-stage-miller-comp-cmc (amp_020) | **NOT functional at 65 nm drawn geometry**: stage-1 self-CM equilibrium (X=B=C≈0.68) leaves output CM at 0.083; bias sweeps can't recover; diagnostic X=0.47 reaches vocm 0.55 but the 1 k averaging Rs then load the mirror (−10 dB) | I0 1m→20µ | 24.8 dB / 22 MHz / 90° |
-| ccia-dut (ia_001 shape, 16p/0.8p) | **22.9 dB midband** (ideal 26.0; gap = the core's 28.9 dB loop gain), vocm 0.799, 16.0 µA | core ref retune carried | — |
-| ccia-dut-chopper-simple (ia_002) | drawn 1p/1p caps: −0.69 dB (ideal 0); with bench caps 16p/0.8p: **21.2 dB** (ideal 26.0); summing nodes servo to 0.6 via Rb ✓ | vb1 0.5→0.6 | 25.7 dB |
-| ccia-ideal / PGA-ideal / SRMC-ideal | −0.02 dB (bandpass ✓) / **12.00 dB** code 111 (ideal 12.04) / LPF ✓ (dc −3.5 dB: TG Ron ~0.5 k against the 1 k placeholder branch) | — | ×1.0 / 12.0 dB / LPF |
-
-**Plant-sign confirmations at 65 nm** (dc_cmfb_plant_sign method, servo pinned):
-SRMC stage-1 **inverting** (−2.35…−9.7) ✓, SRMC stage-2 **inverting** (−13.9) ✓,
-ccia-01 core **non-inverting** ✓ — the IHP polarity conclusions hold at 65 nm, no flips.
-amp_020's plant is inverting with an in-rail balance (X≈0.46) but its self-bias settles
-X≈0.68 — the equilibrium/balance mismatch behind its 65 nm failure.
-
-Artifacts (session scratchpad `scratchpad/xv/`): 24 `.il` files, per-block check
-payloads, NDA-clean design sections, all Spectre decks + isolated raw dirs, bench
-scripts. Decks reference only the operator wrapper (section tt); no kit bytes read.
-
-### 6.1 SRMC-core-amp with the §4.1 SIZED geometry at 65 nm (three-way comparison)
-
-The IHP-optimized sizing substituted into the 65 nm cellview netlist (total width ==
-per-finger here, nf=1; stale layout-derived diffusion params dropped so the model
-recomputes them). The sized NMOS tail is much stronger at 65 nm, so the loop-1
-balance moved again — VB2 swept and re-chosen **0.35** (per-PDK bias arc for the same
-drawing: IHP sized 0.70 → 65 nm drawn 0.50 → 65 nm sized 0.35; plant inverting at
-every point, canonical CMFB correct throughout).
-
-| | dcgain | UGF | PM | i_supply | VB2 |
-|---|---|---|---|---|---|
-| 65 nm **sized** | 37.8 dB | **100.6 MHz** | **102.1°** | 319.3 µA | 0.35 |
-| 65 nm drawn | 38.1 dB | 25.9 MHz | 37.1° | 56.7 µA | 0.50 |
-| IHP sized | **54.67 dB** | 76.2 MHz | 60.2° | 96.9 µA | 0.70 |
-
-Reading: the IHP sizing carried to 65 nm buys ~4× UGF and fixes the phase margin,
-but **DC gain stays pinned at ~38 dB — the 65 nm LVT gm/gds ceiling** (~17 dB below
-the IHP-sized figure), and the same geometry burns 3.3× the current. A 65 nm gain
-target ≥55 dB needs cascoding / a gain topology change, not sizing (same conclusion
-as amp_025 §4.2, from the other direction). **Loop-2 marginality at 65 nm sized:**
-both loops lock in sim (vocm 0.5005/0.4994) but the loop-2 servo equilibrium sits at
-−0.024 V — below rail, reachable only because the behavioral servo is unclamped; the
-rail-limited achievable output CM tops out at 0.474 V, so a real CMFB would settle
-~26 mV short of the 0.5 ref. Fix candidates: slightly stronger output PMOS at 65 nm,
-or ref 0.47 — an explicit 65 nm-lane decision.
-
 ## 7. Open items after this campaign
 
 **Owner decisions:**
 - ~~capbank thermometer-vs-binary weighting~~ — **DECIDED binary, landed 2026-07-19**:
   value=Cu (TB-supplied unit) with structural m=1/2/4 weighting → C_eff=(1+code)·Cu;
   live-validated exact 1–8 pF + PGA gains (1+code) within 0.08 dB (DRAWING_REVIEW §8
-  finding 1). 65 nm follow-up: re-port capbank with an m-aware capa map rule when the
-  daemon returns (xvport currently drops cap m).
+  finding 1). Closed-lane follow-up: re-port capbank with an m-aware capa map rule
+  when the daemon returns (xvport currently drops cap m).
 - SRMC filter component values: the drawn Rf=1 k/Cf=1 p placeholders put the clocked
   corner 4 decades above FS/2 — scale Rf·Cf ~10⁴× to realize the paper's 40–320 Hz
   axis (§4.3).
-- 65 nm loop-2 CM: stronger output PMOS vs ref 0.47 (§6.1); and whether a ≥55 dB
-  65 nm gain target matters (if so: cascoding — sizing cannot reach it, §4.2/§6.1).
 
 **Engineering follow-ups:**
 - Rail-clamped ideal-CMFB macromodel variant (`shared/ideal/`): the unclamped servo
@@ -225,8 +166,6 @@ or ref 0.47 — an explicit 65 nm-lane decision.
   code-pin-aware bench template is the follow-up) and the `afe` class scaffold.
 - amp_025 sizing adoption is NOT recommended as-is: +3 dB gain for a bistable
   knife-edge DC solution (§4.2) — the cascode topology change is the real fix.
-- amp_020 at 65 nm drawn geometry is non-functional (§6) — needs its own re-size
-  or stays IHP-only.
 - Two xvport bugs to file upstream (§5 G3 labels-mode rotation binding, G4 stale
   wire-lab attrs; workarounds known).
 - Clocked benches beyond the SRMC corner (notch/aliasing FFT, chain e2e, TRNOISE /
@@ -290,7 +229,7 @@ consumers stay available side by side.
   TypeError) at ~eval 112 — use `TwoPointsDE` for scripted lanes.
 
 **Follow-ups:** ccia consumer with the `-inv` real wrapper (needs its own sizing —
-different plant, different balance gates); 65 nm port of the six new cells when the
+different plant, different balance gates); closed-lane port of the six new cells when the
 CIW daemon returns; the ideal-macromodel rail-clamp item stays open for
 ideal-servo consumers only. **Accessioned 2026-07-20 (same day):** the dedicated
 `cmfb` class now exists — `cmfb_001_ideal_rsense_servo` (re-classed sup_002),

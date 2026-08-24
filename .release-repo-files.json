@@ -2,6 +2,7 @@
   ".github/workflows/analog-db.yml",
   ".github/workflows/docker.yml",
   ".github/workflows/lint.yml",
+  ".github/workflows/nda-check.yml",
   ".github/workflows/platform.yml",
   ".github/workflows/ui.yml",
   ".gitignore",

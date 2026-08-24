@@ -34,7 +34,7 @@ def test_verbatim_spectre_deck_builds_typed_graph():
     g = _cell_graph(PTAT_SCS)
     mos = {c.name: c for c in g.get_components() if isinstance(c, MosfetNode)}
     assert len(mos) == 4
-    # DEVICE/DEVICE classified by the token-prefix fallback — no PDK map needed
+    # nmos_a/pmos_a classified by the token-prefix fallback — no PDK map needed
     assert mos["M1"].polarity is MosPolarityType.NMOS
     assert mos["M3"].polarity is MosPolarityType.PMOS
 

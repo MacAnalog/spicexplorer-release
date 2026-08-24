@@ -37,9 +37,14 @@ def load_schema(name: str) -> dict[str, Any]:
         return json.load(fh)
 
 
+@lru_cache(maxsize=None)
+def _validator(name: str) -> Draft202012Validator:
+    return Draft202012Validator(load_schema(name))
+
+
 def validation_errors(doc: dict[str, Any], schema_name: str) -> list[str]:
     """Return human-readable validation errors for ``doc`` against the named schema (empty = ok)."""
-    validator = Draft202012Validator(load_schema(schema_name))
+    validator = _validator(schema_name)
     out: list[str] = []
     for err in sorted(validator.iter_errors(doc), key=lambda e: list(e.path)):
         loc = "/".join(str(p) for p in err.path) or "<root>"

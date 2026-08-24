@@ -57,6 +57,8 @@ from spicexplorer_core.measurements import registry as _registry
 
 from spicexplorer_analog_db import model, paths
 
+pytestmark = pytest.mark.corpus  # one parametrized case per (circuit x pdk) binding
+
 # ---------------------------------------------------------------- corpus readers
 
 #: ngspice publishes a scalar as ``name = value`` on stdout, and ``runner.parse_measures``

@@ -3,7 +3,7 @@
 A minimal project showing how to drive the **Spectre backend natively** and score a design
 with **canonical OCEAN measurements**, wired straight into the optimizer loop
 (`doc/plan_virtuoso_bridge.md`, the `Project_Setup`/YAML wiring). It is a **template**: it
-requires the research server (Cadence Spectre + a licensed 65 nm PDK + `virtuoso-bridge`) to
+requires the research server (Cadence Spectre + a licensed PDK + `virtuoso-bridge`) to
 simulate. On a PDK-less host it loads and validates but cannot run.
 
 ## What it demonstrates

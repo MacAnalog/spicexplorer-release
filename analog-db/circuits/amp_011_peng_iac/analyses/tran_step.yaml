@@ -4,6 +4,17 @@ id: tran_step
 template: tran_step_biaswrap
 description: "Unity-gain step settling (self-bias follower)."
 enabled: true
-params: {VDD: 1.8, VCM: 240m, CL: 10p, VSTEP: 0.2, VTOL: 2m, TSTART: 1u, TSTEP: 10n, TSTOP: 200u}
+# TSTOP 200u -> 40u (2026-08-18, spicexplorer-tcas-2026 E-041). The 200 us window was sized to
+# MEASURE a slow doublet; on this DUT it was measuring oscillation instead: every sizing a
+# 15-seed x 4-kernel DE campaign returned as "feasible" on the AC specs (301/301 re-simulated)
+# rings rail-to-rail in this unity buffer, and the deck reported t_settle = 199 us (window end)
+# for all of them -- the correct verdict, at 60-80 s a run, so the study had unscored it. The
+# step settles or oscillates within tens of us at these bandwidths (2-14 MHz); 40 us covers the
+# study's every settling target (8/15/30 us) with margin and costs ~15 s an oscillating sizing
+# (measured 63-82 s at 200u, 15-18 s at 40u; the default sizing 14 s). TSTEP stays 10n: 50n let
+# ngspice run into "timestep too small" on an oscillating sizing, 100n on the default one.
+# Anything not settled by 39 us reads as the window end and FAILS every tier target, which is
+# the honest verdict. Not a change to what is measured, only to how far the bench looks.
+params: {VDD: 1.8, VCM: 240m, CL: 10p, VSTEP: 0.2, VTOL: 2m, TSTART: 1u, TSTEP: 10n, TSTOP: 40u}
 flags: []
 produces: [t_settle]

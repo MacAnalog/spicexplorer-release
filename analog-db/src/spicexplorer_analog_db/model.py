@@ -12,9 +12,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-import yaml
-
-from . import paths
+from . import paths, yamlio
 
 # Verifiable-circuit accession id: <class id_code>_<nnn>_<slug>, where the
 # number is append-only (allocated max+1, never renumbered or reused). Reference circuits instead
@@ -81,8 +79,7 @@ def next_accession(code: str, root: Path | None = None) -> int:
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
-    with path.open() as fh:
-        data = yaml.safe_load(fh)
+    data = yamlio.read_yaml(path)
     if not isinstance(data, dict):
         raise ValueError(f"{path}: expected a YAML mapping, got {type(data).__name__}")
     return data

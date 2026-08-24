@@ -75,7 +75,7 @@ def test_spectre_adapter_satisfies_the_protocols() -> None:
 # SimResult over the flat PSF dict
 # ---------------------------------------------------------------------------
 def test_simresult_scalar_lookup_prefix_bare_and_op_point() -> None:
-    # Key shapes mirror a real 65 nm run (P0 live, 2026-07-05): ac_/dc_ prefixed
+    # Key shapes mirror a real licensed-kit run (P0 live, 2026-07-05): ac_/dc_ prefixed
     # node signals from the bridge parser, bare `<inst>:<param>` op scalars from our
     # info-file post-parse, bare tran signals.
     res = SpectreSimResult(
@@ -161,7 +161,7 @@ VALUE
 3.843490744464556e-01
 2
 ) PROP(
-"model" "nch_x.1"
+"model" "nmos_x.1"
 )
 "Vdd" "vsource" (
 1.200000000000000e+00
@@ -315,7 +315,7 @@ def _deck_spec() -> SpectreDeckSpec:
         title="composed tb",
         stimulus="V1 (vdd 0) vsource dc=vdd\nX0 (vdd out) ota_5t",
         subckt_blocks=(
-            "subckt ota_5t vdd out\nM1 (out vdd 0 0) DEVICE w=w1 l=6e-08\nends ota_5t",
+            "subckt ota_5t vdd out\nM1 (out vdd 0 0) nmos_lvt w=w1 l=6e-08\nends ota_5t",
         ),
         analyses=("dcOp dc", "ac ac start=1000 stop=100000000 dec=101"),
         parameters={"vdd": 1.5, "w1": 1e-6},

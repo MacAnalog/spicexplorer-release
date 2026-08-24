@@ -29,7 +29,7 @@ analyses: [ac_open_loop, ac_closed_loop, dc_op, noise, tran_step, psrr_vdd, cmrr
 # binding rather than a duplicate topology accession (the registry is topology-first). Provenance:
 # Arcadia-1/ferrosim (netlist-crawler), designer Token Zhang, MIT — see corpora/ferrosim/PROVENANCE.md.
 references:
-  - {tool: spectre, dir: spectre/28nm, node: 28nm}
+  - {tool: spectre, node: 28nm, upstream: "https://github.com/Arcadia-1/ferrosim"}
 optimize:
   budget: 2000
   knobs_from: pdk/{pdk}/sizing.yaml

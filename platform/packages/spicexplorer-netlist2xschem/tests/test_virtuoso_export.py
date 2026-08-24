@@ -146,7 +146,7 @@ def test_emit_tgate_structure_and_determinism():
     r2 = emit_schematic_il(sch, lib="LIBX", cell="tgate", devmap=devmap, symlib=symlib)
     assert r1.il == r2.il  # deterministic artifact
 
-    assert r1.instances == {"M1": ("FOUNDRY_KIT", "DEVICE"), "M2": ("FOUNDRY_KIT", "DEVICE")}
+    assert r1.instances == {"M1": ("FOUNDRY_KIT", "nmos_lvt"), "M2": ("FOUNDRY_KIT", "pmos_lvt")}
     assert r1.expected_bindings[("M1", "G")] == "vctl"
     assert r1.expected_bindings[("M2", "B")] == "VDD"
     assert set(r1.expected_ports) == {"port_A", "port_B", "vctl", "vctl_not", "VDD", "VSS"}
@@ -211,9 +211,9 @@ def test_emit_warns_on_symbolic_param_values():
 def test_default_map_covers_fixture_devices_and_denylists_kit():
     m = load_device_map()
     rule = m.lookup("sg13g2_pr/sg13_lv_nmos.sym")
-    assert rule is not None and (rule.lib, rule.cell) == ("FOUNDRY_KIT", "DEVICE")
+    assert rule is not None and (rule.lib, rule.cell) == ("FOUNDRY_KIT", "nmos_lvt")
     pmos = m.lookup("devices/sg13_lv_pmos_np.sym")
-    assert pmos is not None and pmos.cell == "DEVICE"
+    assert pmos is not None and pmos.cell == "pmos_lvt"
     vsrc = m.lookup("devices/vsource.sym")
     assert vsrc is not None and vsrc.cell == "vdc"
     # bare basenames (no directory) must match too — corpus files reference both ways
@@ -443,7 +443,7 @@ def test_reverse_nda_denylist_enforced_before_any_client_call():
     m = load_device_map()
     # client=None: a denylist breach MUST raise before the client is ever touched
     with pytest.raises(XvportNDAError):
-        cv2sym(None, "FOUNDRY_KIT", "DEVICE", m)
+        cv2sym(None, "FOUNDRY_KIT", "nmos_lvt", m)
     with pytest.raises(XvportNDAError):
         cv2sch(None, "analogLib", "vccs", m)
 
@@ -485,9 +485,9 @@ def test_reverse_emit_sch_text_round_trips_through_the_forward_extractor():
               ("vctl", "input", *cad(520, -180)), ("vctl_not", "input", *cad(410, -620)),
               ("VDD", "input", *cad(590, -460)), ("VSS", "input", *cad(590, -340))],
         instances=[
-            DumpInstance("M1", "FOUNDRY_KIT", "DEVICE", *cad(590, -260), "R90",
+            DumpInstance("M1", "FOUNDRY_KIT", "nmos_lvt", *cad(590, -260), "R90",
                          {"w": "150n", "l": "130n", "simM": "1", "fingers": "1"}),
-            DumpInstance("M2", "FOUNDRY_KIT", "DEVICE", *cad(590, -560), "MYR90",
+            DumpInstance("M2", "FOUNDRY_KIT", "pmos_lvt", *cad(590, -560), "MYR90",
                          {"w": "150n", "l": "130n", "simM": "1", "fingers": "1"}),
         ],
     )
@@ -532,7 +532,7 @@ def test_reverse_dump_parsers_handle_canned_records():
             '"W 0.5 0.0 0.5 1.0\\n'
             "L 0.5 0.5 vctl\\n"
             "P vctl input 0.5 1.0\\n"
-            "I M1 FOUNDRY_KIT DEVICE 7.375 3.25 R90\\n"
+            "I M1 FOUNDRY_KIT nmos_lvt 7.375 3.25 R90\\n"
             'M M1 simM 3\\n"'
         )
 
@@ -684,7 +684,7 @@ def test_extract_design_section_drops_header_includes():
             'include "/fake/kit/path/models.txt" section=tt',
             "// Library name: LIBX",
             "// Cell name: tgate",
-            "M1 (a b c d) DEVICE l=130.0n w=150.0n",
+            "M1 (a b c d) nmos_lvt l=130.0n w=150.0n",
             "simulatorOptions options reltol=1e-3",
             "saveOptions options save=allpub",
         ]
@@ -692,7 +692,7 @@ def test_extract_design_section_drops_header_includes():
     section = extract_design_section(full)
     assert "include" not in section
     assert "simulatorOptions" not in section
-    assert "M1 (a b c d) DEVICE" in section
+    assert "M1 (a b c d) nmos_lvt" in section
 
 
 def test_compose_smoke_deck_ties_ports_and_uses_only_operator_models(tmp_path):
@@ -710,7 +710,7 @@ def test_compose_smoke_deck_ties_ports_and_uses_only_operator_models(tmp_path):
     assert 'include "/operator/models.txt" section=tt' in text
     assert text.count("include") == 1  # the operator include is the ONLY one (NDA guard)
     assert "xvportOp dc" in text
-    assert "M1 (port_A vctl port_B VSS) DEVICE" in text
+    assert "M1 (port_A vctl port_B VSS) nmos_lvt" in text
 
 
 def test_compose_smoke_deck_injects_sim_params(tmp_path):

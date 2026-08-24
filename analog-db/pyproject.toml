@@ -37,6 +37,7 @@ addopts = "-ra"
 testpaths = ["tests"]
 markers = [
     "slow: out-of-the-fast-gate tests (deselect with -m 'not slow') — a real ngspice simulation against the IHP PDK (needs the platform api container / base image), or the xschem-gated schematic round-trip",
+    "corpus: corpus-wide sweeps / per-binding parametrized checks that scale with the number of circuits — in the default and release-gate runs; deselect for the seconds-fast dev loop (-m 'not corpus and not slow')",
 ]
 
 [tool.ruff]

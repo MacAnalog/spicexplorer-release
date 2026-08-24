@@ -9,7 +9,7 @@ import json
 
 import pytest
 
-from spicexplorer_analog_db import catalog, export, model, paths, verify
+from spicexplorer_analog_db import catalog, export, model, paths
 from spicexplorer_analog_db.assemble import assemble
 
 CIRCUIT = "amp_001_5t"
@@ -39,7 +39,8 @@ def test_deck_body_is_exactly_the_assembler_output(ota):
     assert export.render_deck(ota, "ac_open_loop", "sky130", "tt").endswith(asm_tail)
 
 
-def test_every_deck_control_block_ends_with_quit():
+@pytest.mark.corpus
+def test_every_deck_control_block_ends_with_quit(generated_decks):
     """Every generated testbench deck must terminate its ``.control`` block with ``quit``.
 
     spicelib's ngspice runner (the optimizer's `NGSpice_Wrapper`) drives ngspice in an
@@ -49,9 +50,8 @@ def test_every_deck_control_block_ends_with_quit():
     Guards the invariant at the *deck* level, so a future testbench template that forgets
     ``quit`` fails here regardless of which template it came from. (The `_dut.spice` subckt
     and the `.sch` schematics carry no control block and are exempt.)"""
-    decks, _ = export.generate_all()
     offenders = []
-    for rel, text in decks.items():
+    for rel, text in generated_decks.items():
         if not rel.endswith(".spice") or rel.endswith("/_dut.spice"):
             continue
         lines = [ln.strip().lower() for ln in text.splitlines()]
@@ -81,14 +81,17 @@ def test_deck_filename_corner_suffix(ota):
 # ───────────────────────────── the pure generator ─────────────────────────────
 
 
-def test_generate_all_is_deterministic():
-    a, _ = export.generate_all()
-    b, _ = export.generate_all()
-    assert a == b and len(a) > 100
+@pytest.mark.corpus
+def test_generate_all_is_deterministic(generated_decks):
+    # use_cache=False so this is a genuinely fresh render, not the memoized session one
+    b, _ = export.generate_all(use_cache=False)
+    assert generated_decks == b and len(b) > 100
 
 
-def test_generate_skips_disabled_and_unbound(ota):
-    decks, skipped = export.generate_all()
+@pytest.mark.corpus
+def test_generate_skips_disabled_and_unbound(ota, generated_decks):
+    decks = generated_decks
+    _, skipped = export.generate_all(["amp_018_telescopic_cascode", "ldo_005_buffered_ref"])
     reasons = dict(skipped)
     # a scaffolded `enabled: false` analysis is skipped with a reason, not exported
     assert reasons.get("amp_018_telescopic_cascode/linearity") == "disabled"
@@ -164,14 +167,16 @@ def test_catalog_is_deterministic_with_raw_block():
 # ───────────────────────────── the verify guards ─────────────────────────────
 
 
-def test_committed_raw_tree_is_in_sync():
+@pytest.mark.corpus
+def test_committed_raw_tree_is_in_sync(generated_decks):
     """The drift guard: committed raw/ == a fresh render (no stale / missing / orphan)."""
-    stale, missing, orphan = export.check_drift()
+    stale, missing, orphan = export.check_drift(decks=generated_decks)
     assert not stale and not missing and not orphan, (stale[:3], missing[:3], orphan[:3])
 
 
-def test_verify_raw_tiers_are_green():
-    t0 = {r.check: r for r in verify.run_tier0()}
-    t1 = {r.check: r for r in verify.run_tier1()}
+@pytest.mark.corpus
+def test_verify_raw_tiers_are_green(tier0_results, tier1_results):
+    t0 = {r.check: r for r in tier0_results}
+    t1 = {r.check: r for r in tier1_results}
     assert t0["raw:catalog_xref"].status == "pass", t0["raw:catalog_xref"].reason
     assert t1["raw:drift"].status == "pass", t1["raw:drift"].reason

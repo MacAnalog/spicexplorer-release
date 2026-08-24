@@ -4,14 +4,14 @@
 // Single-ended 2-stage OTA, Single-Miller compensation with a nulling resistor (R0=100k, C0=2p).
 // PMOS input pair (M0/M2) tail-biased from the M5/M6/M7 PMOS mirror bank; NMOS active load M1/M3; M4 output.
 subckt smcnr_se_2st_amp vdda gnda vin vip vout
-    M1 (outp outp gnda gnda) DEVICE W=1.5u L=10.0u m=1.0 nf=1.0
-    M3 (outn outp gnda gnda) DEVICE W=1.5u L=10.0u m=1.0 nf=1.0
-    M7 (ibias ibias vdda vdda) DEVICE W=0.22u L=10.0u m=1.0 nf=1.0
-    M6 (net53 ibias vdda vdda) DEVICE W=0.22u L=10.0u m=2.0 nf=1.0
-    M5 (vout ibias vdda vdda) DEVICE W=0.22u L=10.0u m=10.0 nf=1.0
-    M2 (outn vip net53 vdda) DEVICE W=7.52u L=8.24u m=1.0 nf=1.0
-    M0 (outp vin net53 vdda) DEVICE W=7.52u L=8.24u m=1.0 nf=1.0
-    M4 (vout outn gnda gnda) DEVICE W=1.48u L=10.0u m=10.0 nf=1.0
+    M1 (outp outp gnda gnda) nmos_a W=1.5u L=10.0u m=1.0 nf=1.0
+    M3 (outn outp gnda gnda) nmos_a W=1.5u L=10.0u m=1.0 nf=1.0
+    M7 (ibias ibias vdda vdda) pmos_a W=0.22u L=10.0u m=1.0 nf=1.0
+    M6 (net53 ibias vdda vdda) pmos_a W=0.22u L=10.0u m=2.0 nf=1.0
+    M5 (vout ibias vdda vdda) pmos_a W=0.22u L=10.0u m=10.0 nf=1.0
+    M2 (outn vip net53 vdda) pmos_a W=7.52u L=8.24u m=1.0 nf=1.0
+    M0 (outp vin net53 vdda) pmos_a W=7.52u L=8.24u m=1.0 nf=1.0
+    M4 (vout outn gnda gnda) nmos_a W=1.48u L=10.0u m=10.0 nf=1.0
     ibias0 (ibias 0) isource dc=100n
     R0 (net027 vout) resistor r=100000
     C0 (outn net027) capacitor c=2p

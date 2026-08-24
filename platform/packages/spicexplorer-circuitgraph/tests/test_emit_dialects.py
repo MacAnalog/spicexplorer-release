@@ -59,8 +59,8 @@ def test_spice_graph_roundtrips_through_hspice():
 def test_spectre_source_roundtrips_back_to_spectre():
     scs_in = """\
 subckt amp (vdd vss in out)
-M1 (out in vss vss) DEVICE l=1u w=4u multi=2
-M2 (out out vdd vdd) DEVICE l=1u w=8u multi=1
+M1 (out in vss vss) nmos_a l=1u w=4u multi=2
+M2 (out out vdd vdd) pmos_a l=1u w=8u multi=1
 R1 (out vss) resistor r=100k
 ends amp
 """

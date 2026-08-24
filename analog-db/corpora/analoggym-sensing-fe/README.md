@@ -9,7 +9,7 @@ each with its own `circuit.yaml` + `README.md`, indexed in the top-level
 second copy of the decks.
 
 These circuits are **not lowered to an open PDK and not simulated** by this DB — they target
-proprietary 180 nm BCD-HV + 65 nm PDKs (`DEVICE`/`DEVICE`), in a mix of Spectre and HSPICE.
+proprietary 180 nm BCD-HV + 65 nm PDKs, in a mix of Spectre and HSPICE dialects.
 The harness runs a reference-only Tier-0 on them and skips T1–T4.
 
 ## The six circuits

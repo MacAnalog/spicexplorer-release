@@ -1,6 +1,6 @@
 # ferrosim_inbuf — Cascode input buffer (ferrosim)
 
-**kind: reference** (plan D-9) — imported proprietary-PDK Spectre circuit. Indexed for reference/eval; **not lowered to an open PDK and not simulated here** (reference-only Tier-0, skips T1–T4).
+**kind: reference** (plan D-9) — imported third-party reference circuit, indexed by **upstream pointer** — no decks are redistributed here; not lowered to an open PDK and not simulated (reference-only Tier-0, skips T1–T4).
 
 - **Source:** [`Arcadia-1/ferrosim`](https://github.com/Arcadia-1/ferrosim), imported via `netlist-crawler`. Author: **Token Zhang**. License: **MIT** (see repo `NOTICE` + [`../../corpora/ferrosim/PROVENANCE.md`](../../corpora/ferrosim/PROVENANCE.md)).
 - **Class:** `buffer` · **decks:** 7 `.scs` file(s), upstream layout preserved verbatim.
@@ -9,9 +9,9 @@
 
 | Binding | Tool | Node |
 |---|---|---|
-| `spectre/28nm` | spectre | 28nm |
+| upstream (pointer) | spectre | 28nm |
 
-Proprietary-PDK includes are stubbed as `${PDK_ROOT}`/`${CADENCE_ROOT}` placeholders; open in a Spectre environment with the real PDK bound.
+The decks themselves live upstream; this entry records provenance and classification only.
 
 ## Promotion status (2026-07-05 triage): stays reference — layout-extracted GHz buffer
 

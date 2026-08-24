@@ -58,7 +58,7 @@ if TYPE_CHECKING:  # keep this module import-cheap and Cadence-free
 
 
 # analysis (engine-neutral string) → ordered PSF-key prefix chain, live-validated
-# against real 65 nm psfascii (2026-07-05). Per-MOS op scalars (`M0:gm`) are merged in
+# against real licensed-kit psfascii (2026-07-05). Per-MOS op scalars (`M0:gm`) are merged in
 # bare by our own info-file post-parse below; op-point NODE voltages come from `dcOp.dc`
 # under `dc_`, hence op's two-step chain. `tran` merges bare in the bridge parser (no
 # prefix); `noise_` is a flat-dict fallback, but a noise sweep's `out`/`in` densities come
@@ -148,7 +148,7 @@ def _parse_info_structs(text: str) -> dict[str, float]:
             while i < len(lines):
                 inner = lines[i].strip()
                 # the numeric block ends at ")" — or ") PROP(" when the instance carries
-                # a trailing PROP annotation (real kit output: `"model" "DEVICE.10"`)
+                # a trailing PROP annotation (real kit output: `"model" "nmos_lvt.10"`)
                 if inner.startswith(")"):
                     break
                 try:

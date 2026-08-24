@@ -27,8 +27,12 @@ artifacts:
 pdks: [ihp-sg13g2, sky130, gf180mcu]
 analyses: [ac_open_loop, dc_op, noise, tran_step, psrr_vdd, cmrr_vcm, linearity, thd, iip3, stb]
 references:
-  - {tool: spectre, dir: spectre/28nm, node: 28nm}
-  - {tool: spectre, dir: spectre/65nm, node: 65nm}
+- tool: spectre
+  node: 28nm
+  upstream: https://github.com/Arcadia-1/ferrosim
+- tool: spectre
+  node: 65nm
+  upstream: https://github.com/Arcadia-1/ferrosim
 optimize:
   budget: 2000
   knobs_from: pdk/{pdk}/sizing.yaml

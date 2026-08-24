@@ -282,7 +282,9 @@ def test_pdk_registry(client):
     assert pdks["sky130"] == "ngspice"
     assert pdks["ihp-sg13g2"] == "ngspice"
     assert pdks["gf180mcu"] == "ngspice"
-    assert pdks["generic-n65"] == "spectre"
+    # a Spectre-routed registry is optional in the public DB (kit-unbound lane);
+    # whatever registries exist must route to a known engine
+    assert set(pdks.values()) <= {"ngspice", "spectre"}
 
 
 def test_pdks_503_when_db_absent(client, monkeypatch):

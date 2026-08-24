@@ -44,7 +44,7 @@ post-emit invariant: as many distinct nets out as in, or `ValueError` (case-only
 exempt — SPICE resolves node names case-insensitively, so `VOUT`/`vout` *are* one node).
 MOS multiplicity is emitted as `m=` VERBATIM
 (`multi` stays a read-side alias only — Spectre silently IGNORES `multi=` on model-card MOS,
-proven live on a 65 nm kit 2026-07-17: `m=4` quadruples id/gm, `multi=4` does nothing).
+proven live on a licensed kit 2026-07-17: `m=4` quadruples id/gm, `multi=4` does nothing).
 **Numeric values are resolved, not copied:** SPICE scale factors are case-INsensitive with `M`=milli,
 Spectre's are case-sensitive with `M`=mega and no `U`/`P` at all, so the Spectre lane renders every
 suffixed token as a plain literal (`w=1U` → `w=1e-06`; passing `1U` through meant *one metre*, `1P`
@@ -69,7 +69,7 @@ tie/ratio exprs (`{x_a*17/3}`) reach the Spectre parameter namespace as parenthe
 expressions (Spectre rejects braces; keeping them symbolic keeps the tie LIVE under
 per-candidate injection — SFE-874). Analyses/corners
 are deliberately NOT translated — the optimizer's `spicexplorer.backends.spectre_deck`
-composes them (deck contract). Live-validated on 65 nm Spectre 2026-07-05
+composes them (deck contract). Live-validated on licensed-kit Spectre 2026-07-05
 (meta `doc/plan_virtuoso_bridge.md` P2).
 
 **Controlled sources (2026-07-16, `feat/circuitgraph-controlled-sources`):** the linear 4-terminal

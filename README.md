@@ -50,8 +50,11 @@ a `.release-provenance.json` in each records the snapshot it was cut from.
 
 > **PDKs.** The database ships **open** PDK bindings only — IHP sg13g2, SkyWater
 > sky130, and GlobalFoundries gf180mcu. The Spectre/commercial lane's machinery,
-> templates and tests are all here, but no proprietary kit is bound; you bind
-> your own through the documented seam.
+> templates and tests are here **kit-unbound**: no proprietary kit is bound, and
+> no foundry-NDA-encumbered content — models, device or corner names, library
+> identifiers, or data derived from a licensed kit — ships anywhere in this
+> repository (CI enforces this: `nda-check`). You bind your own kit through the
+> documented seam.
 
 ## Quickstart
 

@@ -19,6 +19,8 @@ import yaml
 
 from spicexplorer_analog_db import model
 
+pytestmark = pytest.mark.corpus  # one parametrized case per (circuit x pdk) sizing binding
+
 _SUFFIX = {"a": 1e-18, "f": 1e-15, "p": 1e-12, "n": 1e-9, "u": 1e-6, "m": 1e-3, "k": 1e3, "meg": 1e6, "g": 1e9}
 
 

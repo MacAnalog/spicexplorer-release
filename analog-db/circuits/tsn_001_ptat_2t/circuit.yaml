@@ -20,11 +20,11 @@ artifacts:
   datasheet: datasheet.yaml
 pdks: [ihp-sg13g2, sky130, gf180mcu]              # open-PDK verifiable bindings (D-1)
 analyses: [dc_op, temp_sweep, line_sweep, psrr]
-references:                             # original proprietary-PDK decks, kept verbatim (D-9)
-  - {tool: spectre, dir: spectre/180nm, node: 180nm}
+references:                             # upstream POINTERS only — no foreign decks redistributed (D-9)
+  - {tool: spectre, node: 180nm, upstream: "https://github.com/CODA-Team/AnalogGym"}
   # ptat_1..4 sized instances of THIS 2T topology (parallel 2T legs, extracted geometry) from
   # AnalogGym's spectre_test library — absorbed from the former sfe_ptat_sized_variants entry.
-  - {tool: spectre, dir: spectre/180nm-sized-variants, node: 180nm}
+  - {tool: spectre, node: 180nm, upstream: "https://github.com/CODA-Team/AnalogGym"}
 optimize:
   budget: 500
   knobs_from: pdk/{pdk}/sizing.yaml

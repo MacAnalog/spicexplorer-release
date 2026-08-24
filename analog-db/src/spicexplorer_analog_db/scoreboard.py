@@ -21,7 +21,7 @@ from typing import Any
 
 import yaml
 
-from . import paths, ppa
+from . import paths, ppa, yamlio
 from .model import Circuit, load_all_circuits
 
 ENTRY_SCHEMA = "spicexplorer/scoreboard-entry@1"
@@ -83,7 +83,7 @@ def baselines(circuit: Circuit) -> dict[str, str]:
     f = scoreboard_dir(circuit) / "baselines.yaml"
     if not f.is_file():
         return {}
-    doc = yaml.safe_load(f.read_text()) or {}
+    doc = yamlio.read_yaml(f) or {}
     return {str(k): str(v) for k, v in (doc.get("baselines") or {}).items()}
 
 

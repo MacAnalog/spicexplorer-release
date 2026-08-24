@@ -48,6 +48,16 @@ def _reference_index(c: Circuit) -> list[dict[str, Any]]:
     root = paths.db_root()
     out: list[dict[str, Any]] = []
     for entry in c.references:
+        if entry.get("upstream") and not entry.get("dir"):
+            # pointer entry: upstream URL only — nothing on disk to index
+            out.append(
+                {
+                    "upstream": str(entry["upstream"]),
+                    "tool": entry.get("tool"),
+                    "node": entry.get("node"),
+                }
+            )
+            continue
         bdir = c.reference_dir(entry)
         binding: dict[str, Any] = {
             "dir": str(entry.get("dir", "")),

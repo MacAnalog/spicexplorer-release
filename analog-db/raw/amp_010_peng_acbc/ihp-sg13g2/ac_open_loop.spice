@@ -46,6 +46,32 @@ XDUT vss vdd vinn vinp vout amp_010_peng_acbc
   let phc = cph(vout)*180/3.14159265
   let ph  = 180 + phc - phc[0]
   meas ac pm     FIND ph WHEN vdb(vout)=0 FALL=1
+  * STABILITY GUARDS (2026-08-18, tcas-2026 E-041). `pm` above is a Bode margin and a Bode margin
+  * assumes the open loop has no right-half-plane poles. Multistage amps with internal
+  * compensation loops (Peng IAC / TCFC and kin) can lose that at a random sizing: the small-
+  * signal response then shows phase LEAD instead of lag, `pm` reads 140-585 deg, and the sizing
+  * oscillates rail-to-rail in the closed-loop step bench (301/301 such "feasible" sizings did).
+  * Finer PPD does not change it (checked at 50/200/1000): the unwrap is right, the premise is
+  * wrong. Two additive readings so a reader (or an optimizer spec) can see it without a tran:
+  *   pm_min  worst phase distance to -180 deg anywhere |A| > 0 dB (equals pm when the phase is
+  *           monotone; <= 0 when the phase touches -180 while the gain is still above unity)
+  *   gm      gain margin at the first -180 deg crossing, -999 when the phase never gets there
+  * `pm` itself is unchanged. Neither guard replaces the closed-loop step: a sizing with RHP
+  * poles can pass both (pm 178, pm_min 22, gm +72 measured on one) and still oscillate. The
+  * settling bench (tran_step) is the stability verdict; keep it scored.
+  * (masks use `<=` and `1 - mask` only -- see the `>` parser gotcha in stb.spice.)
+  let gdb    = vdb(vout)
+  let mb     = (gdb <= 0)
+  let ma     = 1 - mb
+  let pm_min = minimum(ph*ma + 999*mb)
+  * |A| never above 0 dB -> no band to take a minimum over -> the NEGATIVE sentinel, so a
+  * min-bound spec fails instead of sailing past (stb.spice, 'THE SEED MUST NOT BE A MEASUREMENT')
+  let mok    = (pm_min <= 998)
+  let pm_min = pm_min*mok + (-999)*(1 - mok)
+  let ngdb   = 0 - gdb
+  let gm     = -999
+  meas ac gm FIND ngdb WHEN ph=0 CROSS=1
+  print pm_min gm
   write
   quit
 .endc

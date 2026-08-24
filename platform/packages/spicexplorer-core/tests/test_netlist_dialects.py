@@ -64,9 +64,9 @@ def test_get_reader_refuses_native_dialect():
 _SPECTRE_CELL = """\
 // Library name: sensor
 subckt ptat GND VDD VOUT
-M1 (net3 net3 GND GND) DEVICE l=60n w=200n multi=2 \\
+M1 (net3 net3 GND GND) nmos_a l=60n w=200n multi=2 \\
         ad=3.5e-14 as=3.5e-14
-M3 (VOUT VOUT VDD VDD) DEVICE l=60n w=200n multi=1
+M3 (VOUT VOUT VDD VDD) pmos_a l=60n w=200n multi=1
 ends ptat
 """
 
@@ -82,7 +82,7 @@ def test_spectre_subckt_paren_nodes_and_continuation():
     assert sub is not None
     assert set(sub.get_components()) == {"M1", "M3"}
     assert sub.get_component_nodes("M1") == ["net3", "net3", "GND", "GND"]
-    assert sub.get_component_value("M3") == "DEVICE"
+    assert sub.get_component_value("M3") == "pmos_a"
     params = {k.lower(): val for k, val in sub.get_component_parameters("M1").items()}
     assert params["m"] == 2          # multi= → m=
     assert params["ad"] == 3.5e-14   # continuation joined
@@ -108,7 +108,7 @@ def test_spectre_primitive_masters_become_ref_prefixed():
 def test_spectre_include_and_analyses_become_directives_never_resolved():
     v = _spectre_view(
         'include "${PDK_ROOT}/models/x.scs" section=tt\n'
-        "M1 (d g s b) DEVICE l=1u w=1u\n"
+        "M1 (d g s b) nmos_a l=1u w=1u\n"
         "ac1 ac start=1 stop=1G\n"
         "simulatorOptions options temp=27\n"
         "save M1:all\n"
@@ -141,7 +141,7 @@ def test_spectre_unknown_master_typing_and_name_map():
 
 def test_spectre_bus_bits_and_plus_continuations_and_numeric_master():
     v = _spectre_view(
-        "M1 (out TRIM\\<1\\> 0 0) DEVICE l=30n\n"
+        "M1 (out TRIM\\<1\\> 0 0) nmos_a l=30n\n"
         "pss1 pss fund=1G\n+ saveinit=yes\n"        # SPICE-style continuation in a spectre deck
         "Vref net1 0 1.4 type=dc\n"                 # SPICE shorthand line (numeric master)
     )
@@ -214,10 +214,10 @@ def test_hspice_inline_comments_stripped_quote_aware():
 
 
 def test_hspice_bare_subckt_file_gets_end_supplied():
-    v = _hspice_view(".SUBCKT amp in out\nxm1 out in 0 0 DEVICE W=1u L=1u\n.ENDS amp\n")
+    v = _hspice_view(".SUBCKT amp in out\nxm1 out in 0 0 nmos_a W=1u L=1u\n.ENDS amp\n")
     assert v.get_subcircuit_names() == ["amp"]
     amp = v.get_subcircuit_named("amp")
-    assert amp is not None and amp.get_component_value("XM1") == "DEVICE"
+    assert amp is not None and amp.get_component_value("XM1") == "nmos_a"
 
 
 def test_hspice_eom_is_ends():

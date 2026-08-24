@@ -335,7 +335,7 @@ class PdksResponse(BaseModel):
 @router.get("/library/pdks", response_model=PdksResponse, summary="PDK registry (pdk → routed engine)")
 def library_pdks():
     """The honest pdk→simulator matrix: every PDK the DB binds, each with the engine its
-    committed registry routes to (open PDKs → ngspice; the licensed node → spectre)."""
+    committed registry routes to (open PDKs → ngspice; a Spectre-routed kit → spectre)."""
     return {"pdks": library_db.load_pdks()}
 
 

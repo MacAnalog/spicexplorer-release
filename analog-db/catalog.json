@@ -181,20 +181,9 @@
       "realization": "transistor",
       "references": [
         {
-          "dir": "spectre/28nm",
-          "dut": [
-            "circuits/amp_001_5t/spectre/28nm/netlist/dut/amp_5t_d2s.scs"
-          ],
           "node": "28nm",
-          "runs": [
-            "circuits/amp_001_5t/spectre/28nm/netlist/runs/common_setup.scs",
-            "circuits/amp_001_5t/spectre/28nm/netlist/runs/vdd_0p9.scs",
-            "circuits/amp_001_5t/spectre/28nm/netlist/runs/vdd_1p0.scs"
-          ],
-          "tb": [
-            "circuits/amp_001_5t/spectre/28nm/netlist/tb/tb_amp_5t_d2s_dc_ac.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "schematic": {
@@ -3635,20 +3624,14 @@
       "realization": "transistor",
       "references": [
         {
-          "dir": "spectre/28nm",
           "node": "28nm",
-          "other": [
-            "circuits/amp_022_fer_two_stage/spectre/28nm/two_stage_opamp_28.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         },
         {
-          "dir": "spectre/65nm",
           "node": "65nm",
-          "other": [
-            "circuits/amp_022_fer_two_stage/spectre/65nm/two_stage_opamp_65.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "scoreboard": {
@@ -3838,23 +3821,9 @@
       "realization": "transistor",
       "references": [
         {
-          "dir": "spectre/28nm",
-          "dut": [
-            "circuits/amp_023_fer_fd2s/spectre/28nm/dut/ota_fd2s.scs"
-          ],
           "node": "28nm",
-          "runs": [
-            "circuits/amp_023_fer_fd2s/spectre/28nm/runs/cl_tran.scs",
-            "circuits/amp_023_fer_fd2s/spectre/28nm/runs/mc_offset.scs",
-            "circuits/amp_023_fer_fd2s/spectre/28nm/runs/ol_cmrr.scs",
-            "circuits/amp_023_fer_fd2s/spectre/28nm/runs/ol_main.scs",
-            "circuits/amp_023_fer_fd2s/spectre/28nm/runs/ol_psrr.scs"
-          ],
-          "tb": [
-            "circuits/amp_023_fer_fd2s/spectre/28nm/tb/tb_closedloop.scs",
-            "circuits/amp_023_fer_fd2s/spectre/28nm/tb/tb_openloop.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "scoreboard": {
@@ -4030,12 +3999,9 @@
       "realization": "transistor",
       "references": [
         {
-          "dir": "spectre/180nm",
-          "dut": [
-            "circuits/amp_024_smcnr/spectre/180nm/netlist/dut/smcnr_se_2st_amp.scs"
-          ],
           "node": "180nm",
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/CODA-Team/AnalogGym"
         }
       ],
       "scoreboard": {
@@ -5748,20 +5714,14 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
           "node": "28nm",
-          "other": [
-            "circuits/buf_001_super_follower/spectre/28nm/source_follower_28.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         },
         {
-          "dir": "spectre/65nm",
           "node": "65nm",
-          "other": [
-            "circuits/buf_001_super_follower/spectre/65nm/source_follower_65.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "scoreboard": {
@@ -6278,20 +6238,14 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
           "node": "28nm",
-          "other": [
-            "circuits/cmp_001_hyst_diffpair/spectre/28nm/hyst_comparator_28.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         },
         {
-          "dir": "spectre/65nm",
           "node": "65nm",
-          "other": [
-            "circuits/cmp_001_hyst_diffpair/spectre/65nm/hyst_comparator_65.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "scoreboard": {
@@ -6431,29 +6385,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
-          "dut": [
-            "circuits/cmp_002_strongarm/spectre/28nm/netlist/dut/cmp_strongarm.scs",
-            "circuits/cmp_002_strongarm/spectre/28nm/netlist/dut/cmp_strongarm_offset_trim.scs",
-            "circuits/cmp_002_strongarm/spectre/28nm/netlist/dut/cmp_under_test_offset_trim.scs",
-            "circuits/cmp_002_strongarm/spectre/28nm/netlist/dut/cmp_under_test_plain.scs"
-          ],
           "node": "28nm",
-          "runs": [
-            "circuits/cmp_002_strongarm/spectre/28nm/netlist/runs/mc_offset_offset_trim.scs",
-            "circuits/cmp_002_strongarm/spectre/28nm/netlist/runs/mc_offset_plain.scs",
-            "circuits/cmp_002_strongarm/spectre/28nm/netlist/runs/offset_offset_trim.scs",
-            "circuits/cmp_002_strongarm/spectre/28nm/netlist/runs/offset_plain.scs",
-            "circuits/cmp_002_strongarm/spectre/28nm/netlist/runs/pss_pnoise_offset_trim.scs",
-            "circuits/cmp_002_strongarm/spectre/28nm/netlist/runs/pss_pnoise_plain.scs",
-            "circuits/cmp_002_strongarm/spectre/28nm/netlist/runs/pvt_pss_pnoise_offset_trim.scs",
-            "circuits/cmp_002_strongarm/spectre/28nm/netlist/runs/pvt_pss_pnoise_plain.scs"
-          ],
-          "tb": [
-            "circuits/cmp_002_strongarm/spectre/28nm/netlist/tb/tb_cmp_offset_search.scs",
-            "circuits/cmp_002_strongarm/spectre/28nm/netlist/tb/tb_cmp_pss_pnoise.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "scoreboard": {
@@ -6593,20 +6527,14 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
           "node": "28nm",
-          "other": [
-            "circuits/dp_001_resistive_load/spectre/28nm/differential_pair_28.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         },
         {
-          "dir": "spectre/65nm",
           "node": "65nm",
-          "other": [
-            "circuits/dp_001_resistive_load/spectre/65nm/differential_pair_65.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "scoreboard": {
@@ -6759,20 +6687,14 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
           "node": "28nm",
-          "other": [
-            "circuits/ferrosim_bandgap_core/spectre/28nm/bandgap_core_28.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         },
         {
-          "dir": "spectre/65nm",
           "node": "65nm",
-          "other": [
-            "circuits/ferrosim_bandgap_core/spectre/65nm/bandgap_core_65.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "signal_path": null,
@@ -6797,31 +6719,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
-          "dut": [
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/dut/hs_biquad_ota.scs",
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/dut/hs_biquad_ota_geometry.scs"
-          ],
           "node": "28nm",
-          "runs": [
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/runs/common_ac_noise.scs",
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/runs/common_ac_noise_geometry.scs",
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/runs/common_setup.scs",
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/runs/common_setup_geometry.scs",
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/runs/vdd_1p1.scs",
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/runs/vdd_1p1_geometry.scs",
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/runs/vdd_1p2.scs",
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/runs/vdd_1p2_ac_noise.scs",
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/runs/vdd_1p2_ac_noise_geometry.scs",
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/runs/vdd_1p2_geometry.scs",
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/runs/vdd_1p3.scs",
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/runs/vdd_1p3_geometry.scs"
-          ],
-          "tb": [
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/tb/tb_biquad_exp.scs",
-            "circuits/ferrosim_biquad/spectre/28nm/netlist/tb/tb_biquad_exp_geometry.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "signal_path": null,
@@ -6846,22 +6746,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
-          "dut": [
-            "circuits/ferrosim_inbuf/spectre/28nm/netlist/dut/l1_input_buffer_cascode.scs"
-          ],
           "node": "28nm",
-          "runs": [
-            "circuits/ferrosim_inbuf/spectre/28nm/netlist/runs/pss_100M.scs",
-            "circuits/ferrosim_inbuf/spectre/28nm/netlist/runs/pss_1G.scs",
-            "circuits/ferrosim_inbuf/spectre/28nm/netlist/runs/pss_2G.scs",
-            "circuits/ferrosim_inbuf/spectre/28nm/netlist/runs/pss_4G.scs",
-            "circuits/ferrosim_inbuf/spectre/28nm/netlist/runs/pss_8G.scs"
-          ],
-          "tb": [
-            "circuits/ferrosim_inbuf/spectre/28nm/netlist/tb/tb_input_buffer_cascode_pss.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "signal_path": null,
@@ -6886,12 +6773,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
           "node": "28nm",
-          "other": [
-            "circuits/ferrosim_pga_16step/spectre/28nm/pga_16step_28.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "signal_path": null,
@@ -6916,18 +6800,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
-          "dut": [
-            "circuits/ferrosim_refbuf/spectre/28nm/netlist/dut/ref_buffer_blocks.scs"
-          ],
           "node": "28nm",
-          "runs": [
-            "circuits/ferrosim_refbuf/spectre/28nm/netlist/runs/dc_ac_tran_noise.scs"
-          ],
-          "tb": [
-            "circuits/ferrosim_refbuf/spectre/28nm/netlist/tb/tb_ref_buffer_characterization.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "signal_path": null,
@@ -6952,18 +6827,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
-          "dut": [
-            "circuits/ferrosim_restrim/spectre/28nm/netlist/dut/res_trim_thermo_16.scs"
-          ],
           "node": "28nm",
-          "runs": [
-            "circuits/ferrosim_restrim/spectre/28nm/netlist/runs/dc_trim_resistance.scs"
-          ],
-          "tb": [
-            "circuits/ferrosim_restrim/spectre/28nm/netlist/tb/tb_resistance_dc.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "signal_path": null,
@@ -6988,12 +6854,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
           "node": "28nm",
-          "other": [
-            "circuits/ferrosim_ring5/spectre/28nm/ring5.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "signal_path": null,
@@ -7018,20 +6881,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
-          "dut": [
-            "circuits/ferrosim_sampling_bts/spectre/28nm/netlists/bottom_plate_dut.scs",
-            "circuits/ferrosim_sampling_bts/spectre/28nm/netlists/top_plate_dut.scs"
-          ],
           "node": "28nm",
-          "other": [
-            "circuits/ferrosim_sampling_bts/spectre/28nm/netlists/bootstrap.scs",
-            "circuits/ferrosim_sampling_bts/spectre/28nm/netlists/bottom_plate_ideal_bts.scs",
-            "circuits/ferrosim_sampling_bts/spectre/28nm/netlists/bottom_plate_real_bts.scs",
-            "circuits/ferrosim_sampling_bts/spectre/28nm/netlists/top_plate_ideal_bts.scs",
-            "circuits/ferrosim_sampling_bts/spectre/28nm/netlists/top_plate_real_bts.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "signal_path": null,
@@ -7056,31 +6908,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
           "node": "28nm",
-          "other": [
-            "circuits/ferrosim_sar/spectre/28nm/netlists/sampling_bootstrap_l4_bts_x2.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/sar_adc_11b_sampling_bts_with_mos.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/sar_adc_11b_with_mos.scs"
-          ],
-          "runs": [
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/00_corner_and_models.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/10_refgen_ideal.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/20_comparator_dynamic_l4.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/30_bottom_plate_switch_l5.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/40_sar_latch_cell_l5.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/41_sar_latch_lsb_l5.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/42_sar_logic_switch_l4.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/50_cap_unit_x1.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/51_cap_unit_x3.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/52_cap_array_l5.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/53_cdac_sampler_l4.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/60_bootstrap_core_lb.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/61_bootstrap_diff_l4.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/90_sar_adc_11b_l3.scs",
-            "circuits/ferrosim_sar/spectre/28nm/netlists/variants/with_mos/99_tb_sar_adc_11b_interactive13.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "signal_path": null,
@@ -7105,12 +6935,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
           "node": "28nm",
-          "other": [
-            "circuits/ferrosim_sc_integrator/spectre/28nm/sc_integrator.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "signal_path": null,
@@ -7135,13 +6962,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
           "node": "28nm",
-          "other": [
-            "circuits/ferrosim_sc_ring/spectre/28nm/netlists/ring_osc_lvt.scs",
-            "circuits/ferrosim_sc_ring/spectre/28nm/netlists/ring_osc_svt.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "signal_path": null,
@@ -7166,12 +6989,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
           "node": "28nm",
-          "other": [
-            "circuits/ferrosim_sc_sample/spectre/28nm/sc_sample.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "signal_path": null,
@@ -7262,20 +7082,14 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
           "node": "28nm",
-          "other": [
-            "circuits/gs_001_cascode_cs/spectre/28nm/common_source_28.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         },
         {
-          "dir": "spectre/65nm",
           "node": "65nm",
-          "other": [
-            "circuits/gs_001_cascode_cs/spectre/65nm/common_source_65.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "scoreboard": {
@@ -9123,20 +8937,14 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
           "node": "28nm",
-          "other": [
-            "circuits/ldo_008_fer_mirror_ota/spectre/28nm/ldo_28.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         },
         {
-          "dir": "spectre/65nm",
           "node": "65nm",
-          "other": [
-            "circuits/ldo_008_fer_mirror_ota/spectre/65nm/ldo_65.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "scoreboard": {
@@ -9313,12 +9121,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/28nm",
           "node": "28nm",
-          "other": [
-            "circuits/ldo_009_fer_5t_pass/spectre/28nm/ldo.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/Arcadia-1/ferrosim"
         }
       ],
       "scoreboard": {
@@ -9411,18 +9216,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/180nm",
-          "dut": [
-            "circuits/sfe_reference_core_library/spectre/180nm/netlist/dut/topology.scs"
-          ],
           "node": "180nm",
-          "other": [
-            "circuits/sfe_reference_core_library/spectre/180nm/netlist/other/front_end_11_6T_schematic.scs",
-            "circuits/sfe_reference_core_library/spectre/180nm/netlist/other/front_end_25_6T_schematic.scs",
-            "circuits/sfe_reference_core_library/spectre/180nm/netlist/other/front_end_31_3T_schematic.scs",
-            "circuits/sfe_reference_core_library/spectre/180nm/netlist/other/front_end_42_2_2015_REF_schematic.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/CODA-Team/AnalogGym"
         }
       ],
       "signal_path": null,
@@ -9996,26 +9792,14 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/180nm",
-          "dut": [
-            "circuits/tsn_001_ptat_2t/spectre/180nm/netlist/dut/ptat_sensor_2t.scs"
-          ],
           "node": "180nm",
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/CODA-Team/AnalogGym"
         },
         {
-          "dir": "spectre/180nm-sized-variants",
-          "dut": [
-            "circuits/tsn_001_ptat_2t/spectre/180nm-sized-variants/netlist/dut/ptat_1.scs",
-            "circuits/tsn_001_ptat_2t/spectre/180nm-sized-variants/netlist/dut/ptat_2.scs",
-            "circuits/tsn_001_ptat_2t/spectre/180nm-sized-variants/netlist/dut/ptat_3.scs",
-            "circuits/tsn_001_ptat_2t/spectre/180nm-sized-variants/netlist/dut/ptat_4.scs"
-          ],
           "node": "180nm",
-          "other": [
-            "circuits/tsn_001_ptat_2t/spectre/180nm-sized-variants/netlist/other/spectre_ptat6.scs"
-          ],
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/CODA-Team/AnalogGym"
         }
       ],
       "scoreboard": {
@@ -10166,12 +9950,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/180nm",
-          "dut": [
-            "circuits/tsn_002_ptat_classic/spectre/180nm/netlist/dut/ptat_classic.scs"
-          ],
           "node": "180nm",
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/CODA-Team/AnalogGym"
         }
       ],
       "scoreboard": {
@@ -10322,12 +10103,9 @@
       "realization": null,
       "references": [
         {
-          "dir": "spectre/65nm",
-          "dut": [
-            "circuits/tsn_003_ptat_4t_xcoupled/spectre/65nm/netlist/dut/ptat_65_classic.scs"
-          ],
           "node": "65nm",
-          "tool": "spectre"
+          "tool": "spectre",
+          "upstream": "https://github.com/CODA-Team/AnalogGym"
         }
       ],
       "scoreboard": {

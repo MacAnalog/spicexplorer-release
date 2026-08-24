@@ -35,7 +35,7 @@ from typing import Any
 
 import yaml
 
-from . import model, params
+from . import model, params, yamlio
 
 COMPOSITION_FILE = "composition.yaml"
 
@@ -182,8 +182,7 @@ def is_composite(circuit: model.Circuit) -> bool:
 
 
 def load_composition(circuit: model.Circuit) -> dict[str, Any]:
-    with composition_path(circuit).open() as fh:
-        doc = yaml.safe_load(fh)
+    doc = yamlio.read_yaml(composition_path(circuit))
     if not isinstance(doc, dict):
         raise ComposeError(f"{circuit.id}: composition.yaml is not a YAML mapping")
     return doc
@@ -418,8 +417,7 @@ def composite_tied_symbols(circuit: model.Circuit) -> set[str]:
     p = circuit.dir / "abstract" / "params.yaml"
     if not p.is_file():
         return set()
-    with p.open() as fh:
-        pdoc = yaml.safe_load(fh) or {}
+    pdoc = yamlio.read_yaml(p) or {}
     return params.tied_symbols(pdoc) if isinstance(pdoc, dict) else set()
 
 
@@ -483,8 +481,7 @@ def composed_block_groups(circuit: model.Circuit) -> list[dict[str, Any]]:
         pfile = inst.block.dir / "abstract" / "params.yaml"
         if not pfile.is_file():
             continue
-        with pfile.open() as fh:
-            pdoc = yaml.safe_load(fh) or {}
+        pdoc = yamlio.read_yaml(pfile) or {}
         for g in pdoc.get("groups", []):
             members = [f"{m}_{inst.name.upper()}" for m in g.get("members", []) if m not in inst.omit]
             if len(members) < 2:

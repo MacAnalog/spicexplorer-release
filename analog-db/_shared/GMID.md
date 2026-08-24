@@ -45,9 +45,10 @@ lives **out-of-repo** and is rebuilt on demand:
 - **Temperature:** recorded in the manifest (`conditions.temp_k`) and, off-nominal, in the filename
   (`__85C`); 27 °C tables carry no suffix. So multi-temp tables never collide.
 - **Vt flavours (Spectre-routed kits):** `gmid.flavors` + `--flavor lvt|svt|hvt|all` keys into
-  `devices.{nmos,pmos}[flavor]` (`lvt`→`DEVICE`, `svt`→`nch`, `hvt`→`DEVICE`). **Note:** SVT/HVT
-  require the operator's model wrapper to include those kit sections — the shipped wrapper maps only
-  the `*_lvt` sections, so only LVT extracts until the wrapper is extended.
+  `devices.{nmos,pmos}[flavor]` — the device names come from the user's own registry
+  (`<nmos_lvt>`, `<nmos_svt>`, …), never from this repo. **Note:** SVT/HVT require the user's
+  model wrapper to include those sections — a wrapper mapping only the LVT sections extracts
+  only LVT until extended.
 - **Finger width (OPT-IN, off by default):** gm/ID is invariant under scaling by *identical fingers*
   (add `m` fingers → same gm/ID, JD, fT; only ID scales — so **any W/L is reached from the one
   5 µm-finger LUT**, no W axis needed). It is NOT invariant under changing the *finger width*
@@ -324,18 +325,17 @@ Differences from the open lane, and why:
   are never echoed. LUTs land **out-of-repo** by default (`gmid.out_root`, mirroring the
   committed `_shared/gmid/<pdk>/` layout) — committing licensed-kit tables is an owner call.
 - **Gate current is stored honestly.** bsim4 splits gate tunneling: `igd`/`igs` are the
-  overlap/edge components only; the **channel** components `igcd`/`igcs` are ~100× larger at
-  65 nm. The stored `IGD`/`IGS` are the folded totals, so a node-loading leak budget
-  (`g_leak ≈ ∂(IGD+IGS)/∂VGS` by finite difference) reads true. A pygmid-convention LUT with
-  bare `igd`/`igs` under-reads 65 nm gate leak two orders of magnitude.
+  overlap/edge components only; the **channel** components `igcd`/`igcs` can dominate by orders
+  of magnitude at advanced nodes. The stored `IGD`/`IGS` are the folded totals, so a
+  node-loading leak budget (`g_leak ≈ ∂(IGD+IGS)/∂VGS` by finite difference) reads true. A
+  pygmid-convention LUT with bare `igd`/`igs` under-reads gate leak at such nodes.
 - **No noise columns.** `STH`/`SFL` are omitted (not zeroed) until a pnoise-based lane exists —
   an absent key fails loud in `pygmid.Lookup`; silent zeros would lie.
 
-**Accuracy, validated against live amplifier op dumps** (every MOS of two working designs,
-looked up at its exact measured bias): 25 mV VGS/VDS grids give ≤0.3 % gm/ID and ≤5 % JD
-interpolation error. The real accuracy axis is **finger width**, not the grid — the LUT is
-per-unit-width at `width_um` (5 µm) fingers, and narrow fingers deviate (0.5 µm pch measured
-2.2× off on gm/gds). Apply sizings with ~2–10 µm fingers and scale total W via `m`.
+**Accuracy:** 25 mV VGS/VDS grids give ≤0.3 % gm/ID and ≤5 % JD interpolation error against
+live op dumps. The real accuracy axis is **finger width**, not the grid — the LUT is
+per-unit-width at `width_um` (5 µm) fingers, and narrow fingers deviate (a 0.5 µm pMOS can
+read several× off on gm/gds). Apply sizings with ~2–10 µm fingers and scale total W via `m`.
 
 ## Runners & parallelism (open lane)
 

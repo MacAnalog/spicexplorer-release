@@ -30,17 +30,17 @@ def test_db_present_and_circuit_registered():
     assert CIRCUIT in model.list_circuit_ids()
 
 
-def test_tier0_is_fully_green():
-    results = verify.run_tier0()
-    failures = [r for r in results if r.status == "fail"]
+@pytest.mark.corpus
+def test_tier0_is_fully_green(tier0_results):
+    failures = [r for r in tier0_results if r.status == "fail"]
     assert not failures, "Tier 0 failures:\n" + "\n".join(f"{r.circuit} {r.check}: {r.reason}" for r in failures)
     # at least the amp_001_5t checks ran
-    assert any(r.circuit == CIRCUIT and r.status == "pass" for r in results)
+    assert any(r.circuit == CIRCUIT and r.status == "pass" for r in tier0_results)
 
 
-def test_derived_status_is_generated():
-    results = verify.run_tier0()
-    assert verify.derive_status(CIRCUIT, results) == "generated"
+@pytest.mark.corpus
+def test_derived_status_is_generated(tier0_results):
+    assert verify.derive_status(CIRCUIT, tier0_results) == "generated"
 
 
 def test_catalog_determinism_and_membership():

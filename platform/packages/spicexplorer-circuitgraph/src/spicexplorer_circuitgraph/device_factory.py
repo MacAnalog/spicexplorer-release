@@ -283,7 +283,7 @@ class DeviceFactory:
     def _mos_polarity(self, model: str | None) -> MosPolarityType:
         """PDK map first (authoritative), then a model-name fallback: the classic ``nmos``/
         ``pmos`` substrings, else a token-prefix test for the common foundry spellings
-        (``DEVICE``, ``nfet_03v3``, ``DEVICE``, …). Token-wise (split on ``_``/digits'
+        (``nmos_a``, ``nfet_03v3``, ``pmos_ulv_a``, …). Token-wise (split on ``_``/digits'
         neighbors) so ``pinch``-style names can't false-positive on ``nch``."""
         if self._pdk is not None:
             dev = self._pdk.classify(model)

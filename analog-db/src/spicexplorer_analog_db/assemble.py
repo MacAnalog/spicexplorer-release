@@ -18,8 +18,7 @@ import re
 from string import Template
 from typing import Any
 
-import yaml
-
+from . import yamlio
 from .model import Circuit, is_frozen_smallsignal_analysis, resolve_template
 
 _PLACEHOLDER = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
@@ -33,8 +32,7 @@ def _corner_includes(circuit: Circuit, pdk: str, corner: str) -> str:
     path = circuit.dir / "pdk" / pdk / "corners.yaml"
     if not path.is_file():
         raise AssembleError(f"{circuit.id}: pdk/{pdk}/corners.yaml missing")
-    with path.open() as fh:
-        doc = yaml.safe_load(fh) or {}
+    doc = yamlio.read_yaml(path) or {}
     bundles = (doc.get("corners") or {}).get(corner)
     if not bundles:
         raise AssembleError(f"{circuit.id}: corner {corner!r} not in pdk/{pdk}/corners.yaml")

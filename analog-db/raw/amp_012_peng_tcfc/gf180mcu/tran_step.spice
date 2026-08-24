@@ -46,10 +46,10 @@ Vfb  vinn vout dc 0          ; unity-gain feedback wire (vinn <- vout; 0 V sourc
 XDUT vss vdd vinn vinp vout amp_012_peng_tcfc
 .control
   set filetype=ascii
-  tran 10n 200u
+  tran 10n 40u
   * settle to the FINAL value, not the input step — a follower's systematic offset would
   * otherwise keep |vout - vfinal| outside a tight tolerance band forever.
-  meas tran vfinal FIND v(vout) AT=200u
+  meas tran vfinal FIND v(vout) AT=40u
   let verr = abs(v(vout) - vfinal)
   meas tran tcross WHEN verr=2m FALL=LAST
   let t_settle = tcross - 1u

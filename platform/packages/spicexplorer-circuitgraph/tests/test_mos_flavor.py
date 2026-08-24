@@ -99,7 +99,7 @@ def test_hv_device_retargets_to_the_targets_hv_part_not_its_core_part():
 
 
 def test_retarget_refuses_a_flavor_the_target_pdk_does_not_have():
-    # GENERIC_N65's table declares core devices only. Silently emitting `DEVICE` for a 3.3 V part
+    # GENERIC_N65's table declares core devices only. Silently emitting `nlvt` for a 3.3 V part
     # produces a deck that simulates happily and answers a different circuit.
     with pytest.raises(ValueError, match="voltage class"):
         to_netlist(_hv_nmos_graph(), pdk=GENERIC_N65)
@@ -134,14 +134,14 @@ def test_a_threshold_flavor_substitutes_loudly_instead_of_raising(caplog):
 
     No reference table declares a threshold flavor, so treating `lvt` like a voltage class made
     every threshold-flavored token raise against every PDK — including generic-n65, whose first NMOS
-    is literally `DEVICE` (the right answer sits in the table and the guard refused it). A
+    is literally `nlvt` (the right answer sits in the table and the guard refused it). A
     threshold retarget is a bias-point change, not a voltage-class violation: substitute, and say
     so.
     """
     g = _nmos_graph("nmos_lvt")
     with caplog.at_level(logging.WARNING, logger="spicexplorer_circuitgraph.emit"):
         lowered = to_netlist(g, pdk=GENERIC_N65)
-    assert "DEVICE" in lowered
+    assert "nlvt" in lowered
     assert "lvt" in caplog.text and "NOT preserved" in caplog.text
     # …and against a PDK that really has no lvt part, the substitution is the core device
     assert "sky130_fd_pr__nfet_01v8" in to_netlist(g, pdk=SKYWATER_SKY130)
@@ -170,6 +170,6 @@ def test_a_threshold_modifier_does_not_strand_a_declared_voltage_class():
 def test_model_for_stays_exact_so_a_declared_threshold_would_win():
     mos, nmos = DeviceType.MOS, MosPolarityType.NMOS
     assert GENERIC_N65.model_for(mos, nmos, "lvt") is None  # exact lookup is unchanged
-    assert GENERIC_N65.resolve_model(mos, nmos, "lvt")[0] == "DEVICE"
+    assert GENERIC_N65.resolve_model(mos, nmos, "lvt")[0] == "nlvt"
     assert GENERIC_N65.resolve_model(mos, nmos, "hv") == (None, "")
-    assert GENERIC_N65.resolve_model(mos, nmos, "") == ("DEVICE", "")  # unflavored: byte-identical
+    assert GENERIC_N65.resolve_model(mos, nmos, "") == ("nlvt", "")  # unflavored: byte-identical

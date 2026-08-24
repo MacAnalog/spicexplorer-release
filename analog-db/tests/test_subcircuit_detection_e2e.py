@@ -18,6 +18,8 @@ pytest.importorskip("spicexplorer_netlist2xschem")
 
 from spicexplorer_analog_db import export, model  # noqa: E402
 
+pytestmark = pytest.mark.corpus  # one detection re-run per committed structural analysis
+
 _REPO = Path(__file__).resolve().parents[1]
 _STRUCTURALS = sorted((_REPO / "raw").glob("*/*.structural.json"))
 

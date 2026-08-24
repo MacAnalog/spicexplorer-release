@@ -1029,7 +1029,7 @@ export interface paths {
         /**
          * PDK registry (pdk → routed engine)
          * @description The honest pdk→simulator matrix: every PDK the DB binds, each with the engine its
-         *     committed registry routes to (open PDKs → ngspice; the licensed node → spectre).
+         *     committed registry routes to (open PDKs → ngspice; a Spectre-routed kit → spectre).
          */
         get: operations["library_library_pdks"];
         put?: never;

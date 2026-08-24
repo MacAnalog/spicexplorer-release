@@ -21,7 +21,9 @@ artifacts:
 pdks: [ihp-sg13g2, sky130, gf180mcu]
 analyses: [dc_op, temp_sweep, line_sweep, psrr]
 references:
-  - {tool: spectre, dir: spectre/65nm, node: 65nm}
+- tool: spectre
+  node: 65nm
+  upstream: https://github.com/CODA-Team/AnalogGym
 optimize:
   budget: 500
   knobs_from: pdk/{pdk}/sizing.yaml

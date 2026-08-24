@@ -94,14 +94,14 @@ devices:
   # and computes areas from w/ng), so per_finger divides it for the per-finger CDF w.
   - match: "*sg13_lv_nmos*.sym"
     lib: FOUNDRY_KIT
-    cell: DEVICE
+    cell: nmos_lvt
     symref: sg13g2_pr/sg13_lv_nmos.sym
     terms: {D: D, G: G, S: S, B: B}
     params: {w: w, l: l, m: simM, ng: fingers}
     per_finger: {total: w, fingers: ng}
   - match: "*sg13_lv_pmos*.sym"
     lib: FOUNDRY_KIT
-    cell: DEVICE
+    cell: pmos_lvt
     symref: sg13g2_pr/sg13_lv_pmos.sym
     terms: {D: D, G: G, S: S, B: B}
     params: {w: w, l: l, m: simM, ng: fingers}

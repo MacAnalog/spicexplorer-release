@@ -24,7 +24,7 @@ from typing import Literal
 
 import yaml
 
-from . import catalog, export, generate, model, paths, pdks, schema
+from . import catalog, export, generate, model, paths, pdks, schema, yamlio
 from .extends import ExtendsError, resolve_extends
 
 Status = Literal["pass", "fail", "skip"]
@@ -208,9 +208,13 @@ def _tier0_reference_circuit(c: model.Circuit) -> list[CheckResult]:
         else _fail(c.id, 0, "ref:provenance", f"provenance missing {missing} (source + license required)")
     )
 
-    # every declared reference binding exists on disk with at least one deck (searched recursively,
-    # since upstream layouts vary: dut/tb/runs, netlists/, variants/ — preserved verbatim, D-9).
+    # every declared reference binding is either an upstream POINTER (URL — nothing on disk to
+    # check; no third-party or foundry-bound decks are redistributed here) or a legacy on-disk
+    # dir with at least one deck (searched recursively: dut/tb/runs, netlists/, variants/, D-9).
     for entry in c.references:
+        if entry.get("upstream") and not entry.get("dir"):
+            r.append(_ok(c.id, 0, f"ref:pointer:{entry['upstream']}"))
+            continue
         label = str(entry.get("dir") or entry)
         bdir = c.reference_dir(entry)
         if not bdir.is_dir():
@@ -258,6 +262,8 @@ def _tier0_reference_decks_parse(c: model.Circuit) -> list[CheckResult]:
     core_logger.setLevel(logging.ERROR)  # reader warnings (black-box masters, …) are not verify output
     try:
         for entry in c.references:
+            if not entry.get("dir"):
+                continue  # upstream pointer entry — nothing on disk to parse
             bdir = c.reference_dir(entry)
             label = str(entry.get("dir") or entry)
             if not bdir.is_dir():
@@ -293,7 +299,7 @@ def _tier0_params_yaml(c) -> list[CheckResult]:
     if not p.is_file():
         return []
     try:
-        doc = yaml.safe_load(p.read_text())
+        doc = yamlio.read_yaml(p)
     except yaml.YAMLError as exc:
         return [_fail(c.id, 0, "schema:params", f"unparseable YAML: {exc}")]
     errs = schema.validation_errors(doc if isinstance(doc, dict) else {}, "params")
@@ -545,7 +551,10 @@ def _tier0_circuit(c: model.Circuit) -> list[CheckResult]:
 
 
 def run_tier0(circuit_ids: list[str] | None = None) -> list[CheckResult]:
-    results = _tier0_db_level()
+    # DB-level checks (id uniqueness, class schemas, catalog xref — a full-corpus render) only
+    # run on an unfiltered sweep, same contract as run_tier1: a --circuit-filtered run is that
+    # circuit's checks, not the whole registry's.
+    results = _tier0_db_level() if circuit_ids is None else []
     ids = circuit_ids if circuit_ids is not None else model.list_circuit_ids()
     for cid in ids:
         results.extend(_tier0_circuit(model.load_circuit(cid)))
@@ -943,13 +952,10 @@ def run_tier1(circuit_ids: list[str] | None = None) -> list[CheckResult]:
 
 
 def _corner_names(c: model.Circuit, pdk: str) -> list[str]:
-    import yaml
-
     path = c.dir / "pdk" / pdk / "corners.yaml"
     if not path.is_file():
         return []
-    with path.open() as fh:
-        doc = yaml.safe_load(fh) or {}
+    doc = yamlio.read_yaml(path) or {}
     return sorted((doc.get("corners") or {}).keys())
 
 

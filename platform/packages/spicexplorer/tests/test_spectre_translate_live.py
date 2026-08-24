@@ -1,7 +1,7 @@
 """LIVE translate→compose→Spectre round-trip (opt-in; needs Cadence + a licensed kit).
 
 The committed IHP ngspice 5T-OTA
-testbench is translated (`deck_spec_from_ngspice`: dialect emitters + 65 nm
+testbench is translated (`deck_spec_from_ngspice`: dialect emitters + licensed-kit
 device-model mapping), parameters are injected at the kit operating point
 (vdd 1.5→1.2, vcm 0.8→0.6), the corner is applied through `apply_corner`
 (the self-contained *corner* section, never the raw device section), and

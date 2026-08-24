@@ -1,12 +1,12 @@
 .subckt SMCNR_SE_2st_AMP vdda gnda vin vip vout  
-xm1 outp outp gnda gnda DEVICE W=1.5u L=10.0u m=1.0 nf=1.0 
-xm3 outn outp gnda gnda DEVICE W=1.5u L=10.0u m=1.0 nf=1.0 
-xm7 ibias ibias vdda vdda DEVICE W=0.22u L=10.0u m=1.0 nf=1.0 
-xm6 net53 ibias vdda vdda DEVICE W=0.22u L=10.0u m=2.0 nf=1.0 
-xm5 vout ibias vdda vdda DEVICE W=0.22u L=10.0u m=10.0 nf=1.0 
-xm2 outn vip net53 vdda DEVICE W=7.52u L=8.24u m=1.0 nf=1.0 
-xm0 outp vin net53 vdda DEVICE W=7.52u L=8.24u m=1.0 nf=1.0  
-xm4 vout outn gnda gnda DEVICE W=1.48u L=10.0u m=10.0 nf=1.0   
+xm1 outp outp gnda gnda nmos_a W=1.5u L=10.0u m=1.0 nf=1.0 
+xm3 outn outp gnda gnda nmos_a W=1.5u L=10.0u m=1.0 nf=1.0 
+xm7 ibias ibias vdda vdda pmos_a W=0.22u L=10.0u m=1.0 nf=1.0 
+xm6 net53 ibias vdda vdda pmos_a W=0.22u L=10.0u m=2.0 nf=1.0 
+xm5 vout ibias vdda vdda pmos_a W=0.22u L=10.0u m=10.0 nf=1.0 
+xm2 outn vip net53 vdda pmos_a W=7.52u L=8.24u m=1.0 nf=1.0 
+xm0 outp vin net53 vdda pmos_a W=7.52u L=8.24u m=1.0 nf=1.0  
+xm4 vout outn gnda gnda nmos_a W=1.48u L=10.0u m=10.0 nf=1.0   
 ibias0 ibias 0 100n 
 r0 net027 vout 100000 
 c0 outn net027 2p 

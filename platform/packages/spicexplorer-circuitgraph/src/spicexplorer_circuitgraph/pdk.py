@@ -191,7 +191,7 @@ class Pdk:
           class's device and a note naming the substitution. A threshold retarget is a bias-point
           change the designer re-checks anyway, and no reference table declares a threshold today
           — so raising on it makes ``nmos_lvt`` un-retargetable to *every* PDK, including
-          ``generic-n65`` whose default NMOS is literally ``DEVICE``.
+          ``generic-n65`` whose default NMOS is literally ``nlvt`` (an lvt part).
 
         An exact hit always wins, so a table that *does* declare the threshold keeps it.
         """
@@ -271,42 +271,43 @@ GF180MCU = Pdk(
     ),
 )
 
-# Device-NAME map for the AnalogGym / ferrosim reference corpora in analog-db (the
-# `nch_*`/`pch_*` spellings). The names come from the public upstream repos (BSD-3 / MIT) —
-# this table carries **no foundry PDK content** and exists so polarity classification and
-# `find_subcircuits` work on the reference decks out of the box. First entry per polarity is
-# the reverse-lookup (`model_for`) default.
+# NEUTRAL device-NAME map standing in for foreign reference corpora (AnalogGym / ferrosim
+# in analog-db). Placeholder spellings only — no foundry PDK content and no kit-native
+# identifiers; it exists so polarity classification and `find_subcircuits` are exercised
+# against a foreign-style table. First entry per polarity is the reverse-lookup
+# (`model_for`) default.
 ANALOGGYM_REF = Pdk(
     name="analoggym-ref",
     finger_param="nf",
     width_per_finger=False,
     devices=(
-        PdkDevice("DEVICE", DeviceType.MOS, MosPolarityType.NMOS),
-        PdkDevice("DEVICE", DeviceType.MOS, MosPolarityType.PMOS),
-        PdkDevice("DEVICE", DeviceType.MOS, MosPolarityType.NMOS),
-        PdkDevice("DEVICE", DeviceType.MOS, MosPolarityType.PMOS),
-        PdkDevice("DEVICE", DeviceType.MOS, MosPolarityType.NMOS),
+        PdkDevice("nmos_a", DeviceType.MOS, MosPolarityType.NMOS),
+        PdkDevice("pmos_a", DeviceType.MOS, MosPolarityType.PMOS),
+        PdkDevice("nmos_ulv_a", DeviceType.MOS, MosPolarityType.NMOS),
+        PdkDevice("pmos_ulv_a", DeviceType.MOS, MosPolarityType.PMOS),
+        PdkDevice("nmos_ehv_a", DeviceType.MOS, MosPolarityType.NMOS),
         # The 1.8 V thick-oxide PMOS is the corpus' high-voltage class (there is no NMOS twin in
         # this reference table, so an `hv` NMOS request correctly finds nothing).
-        PdkDevice("DEVICE", DeviceType.MOS, MosPolarityType.PMOS, flavor="hv"),
+        PdkDevice("pmos_18_a", DeviceType.MOS, MosPolarityType.PMOS, flavor="hv"),
     ),
 )
 
-# --- Generic 65 nm core table (the virtuoso-bridge / Spectre retarget example) -----------
-# Device-NAME table only — model names as they appear in netlists, no foundry model content
-# and no foundry identity (same posture as ANALOGGYM_REF). A licensed kit binds its own table
-# through this same seam; this entry is what the ngspice→Spectre retarget and the flavor guard
-# are exercised against. LVT first: it is the `model_for` default per polarity.
+# --- Generic advanced-node core table (the virtuoso-bridge / Spectre retarget example) ----
+# NEUTRAL device-NAME table only — placeholder model names, no foundry model content and no
+# foundry identity (same posture as ANALOGGYM_REF). A licensed kit binds its own table
+# through this same seam (kit-unbound: the user supplies real names); this entry is what the
+# ngspice→Spectre retarget and the flavor guard are exercised against. LVT first: it is the
+# `model_for` default per polarity.
 # BSIM4 with the universal `nf` finger semantics: `w` stays TOTAL (see sky130).
 GENERIC_N65 = Pdk(
     name="generic-n65",
     finger_param="nf",
     width_per_finger=False,
     devices=(
-        PdkDevice("DEVICE", DeviceType.MOS, MosPolarityType.NMOS),
-        PdkDevice("DEVICE", DeviceType.MOS, MosPolarityType.PMOS),
-        PdkDevice("nch", DeviceType.MOS, MosPolarityType.NMOS),
-        PdkDevice("pch", DeviceType.MOS, MosPolarityType.PMOS),
+        PdkDevice("nlvt", DeviceType.MOS, MosPolarityType.NMOS),
+        PdkDevice("plvt", DeviceType.MOS, MosPolarityType.PMOS),
+        PdkDevice("nmos_std", DeviceType.MOS, MosPolarityType.NMOS),
+        PdkDevice("pmos_std", DeviceType.MOS, MosPolarityType.PMOS),
     ),
 )
 

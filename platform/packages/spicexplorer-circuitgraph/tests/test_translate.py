@@ -56,8 +56,8 @@ def test_translates_dut_stimulus_params_and_ground(deck: Path) -> None:
     assert block.splitlines()[-1] == "ends ota_5t"
     assert "ota_5t" in d.stimulus  # the XOTA instance line uses the same sanitized master
 
-    # device-model mapping (IHP → 65 nm core names) + finger-convention retarget (ng → nf)
-    assert "DEVICE" in block and "DEVICE" in block
+    # device-model mapping (IHP → generic advanced-node core names) + finger-convention retarget (ng → nf)
+    assert "nlvt" in block and "plvt" in block
     assert "sg13_lv" not in block
     assert "nf=1" in block and "ng=" not in block
 

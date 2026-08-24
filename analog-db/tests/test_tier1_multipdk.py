@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from spicexplorer_analog_db import generate, model, pdks, verify
+from spicexplorer_analog_db import generate, model, pdks
 
 CIRCUIT = "amp_001_5t"
 
@@ -22,11 +22,11 @@ def test_circuit_binds_all_pdks(circuit):
     assert {"ihp-sg13g2", "sky130", "gf180mcu"} <= set(circuit.pdks)
 
 
-def test_tier1_is_fully_green():
-    results = verify.run_tier1()
-    failures = [r for r in results if r.status == "fail"]
+@pytest.mark.corpus
+def test_tier1_is_fully_green(tier1_results):
+    failures = [r for r in tier1_results if r.status == "fail"]
     assert not failures, "Tier 1 failures:\n" + "\n".join(f"{r.circuit} {r.check}: {r.reason}" for r in failures)
-    assert any(r.circuit == CIRCUIT and r.status == "pass" for r in results)
+    assert any(r.circuit == CIRCUIT and r.status == "pass" for r in tier1_results)
 
 
 def test_devices_map_loader_overrides_builtin(circuit):

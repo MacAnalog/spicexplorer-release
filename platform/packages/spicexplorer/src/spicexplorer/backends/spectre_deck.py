@@ -287,7 +287,7 @@ def pac_analysis(
     ngspice has no PSS/PAC; the analog-db ``ia`` chopper benches
     (``tran_chopper_ripple`` gain, ``tran_zin_chopped``) are the transient-domain
     open-PDK approximation of this — the golden PSS+PAC form runs on the Spectre lane
-    (virtuoso-bridge-lite) against a 65 nm binding.
+    (virtuoso-bridge-lite) against a licensed-kit binding.
     """
     return " ".join(
         [

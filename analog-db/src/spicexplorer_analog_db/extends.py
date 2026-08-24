@@ -18,6 +18,8 @@ from typing import Any
 
 import yaml
 
+from . import yamlio
+
 
 class ExtendsError(ValueError):
     pass
@@ -30,16 +32,14 @@ def resolve_extends(project_setup_path: Path) -> dict[str, Any]:
     circuit manifest and the knobs/targets pointers. Raises ``ExtendsError`` if the projection
     has no ``extends`` or the target is missing/invalid.
     """
-    with project_setup_path.open() as fh:
-        proj = yaml.safe_load(fh) or {}
+    proj = yamlio.read_yaml(project_setup_path) or {}
     ext = proj.get("extends")
     if not ext:
         raise ExtendsError(f"{project_setup_path}: no `extends:` key")
     target = (project_setup_path.parent / ext).resolve()
     if not target.is_file():
         raise ExtendsError(f"{project_setup_path}: extends target {ext!r} not found at {target}")
-    with target.open() as fh:
-        circuit = yaml.safe_load(fh) or {}
+    circuit = yamlio.read_yaml(target) or {}
     opt = circuit.get("optimize", {})
     knobs = opt.get("knobs_from")
     targets = opt.get("targets_from")
@@ -104,10 +104,8 @@ def generate_project_setup(circuit_dir: Path, pdk: str | None = None) -> str:
     if not pdk:
         raise ExtendsError(f"{circuit_dir.name}: no pdk for the projection (set projection.pdk)")
 
-    with (circuit_dir / "pdk" / str(pdk) / "sizing.yaml").open() as fh:
-        sizing = yaml.safe_load(fh)
-    with (circuit_dir / "datasheet.yaml").open() as fh:
-        datasheet = yaml.safe_load(fh)
+    sizing = yamlio.read_yaml(circuit_dir / "pdk" / str(pdk) / "sizing.yaml")
+    datasheet = yamlio.read_yaml(circuit_dir / "datasheet.yaml")
 
     project = dict(resolved.get("project", {}))
     project["dut_params"] = _dut_params(sizing)

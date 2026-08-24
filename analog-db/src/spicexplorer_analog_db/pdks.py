@@ -14,11 +14,10 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Any
 
-import yaml
 from spicexplorer_circuitgraph import Pdk, PdkDevice, get_pdk
 from spicexplorer_circuitgraph.model.nodes import DeviceType, MosPolarityType
 
-from . import paths
+from . import paths, yamlio
 from .model import Circuit
 
 # generic kind token -> (circuitgraph DeviceType, MOS polarity)
@@ -51,8 +50,7 @@ def load_pdk(circuit: Circuit, pdk_name: str) -> Pdk:
     """
     mp = circuit.dir / "pdk" / pdk_name / "devices.map.yaml"
     if mp.is_file():
-        with mp.open() as fh:
-            data = yaml.safe_load(fh) or {}
+        data = yamlio.read_yaml(mp) or {}
         devices: list[PdkDevice] = []
         for kind, spec in (data.get("devices") or {}).items():
             base, flavor = _split_kind(kind)
@@ -92,5 +90,4 @@ def registry_ids() -> tuple[str, ...]:
 def load_registry(pdk_name: str) -> dict[str, Any]:
     """The ``_shared/pdk/<pdk>.yaml`` PDK-level metadata."""
     path = paths.shared_root() / "pdk" / f"{pdk_name}.yaml"
-    with path.open() as fh:
-        return yaml.safe_load(fh) or {}
+    return yamlio.read_yaml(path) or {}

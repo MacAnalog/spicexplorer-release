@@ -78,15 +78,16 @@
     "references": {
       "type": "array",
       "minItems": 1,
-      "description": "Foreign/proprietary reference bindings (D-9) — authored decks in a non-open PDK/simulator, NOT lowered or run by the harness. Each entry points at a binding directory under the circuit holding dut/ (+ optional tb/, runs/).",
+      "description": "Foreign reference bindings (D-9) — pointers to upstream material NOT lowered or run by the harness. An entry is either an `upstream` POINTER (URL; nothing on disk — the public form: no third-party or foundry-bound decks are redistributed) or a legacy on-disk `dir` binding.",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["dir"],
+        "oneOf": [{"required": ["dir"]}, {"required": ["upstream"]}],
         "properties": {
-          "dir": {"type": "string", "description": "Binding directory relative to the circuit (e.g. spectre/28nm); contains dut/ and optionally tb/, runs/."},
-          "tool": {"type": "string", "description": "Simulator/dialect the decks target (e.g. spectre)."},
-          "node": {"type": "string", "description": "Process node label (e.g. 28nm, 65nm)."}
+          "dir": {"type": "string", "description": "Legacy on-disk binding directory relative to the circuit; contains dut/ and optionally tb/, runs/."},
+          "upstream": {"type": "string", "description": "Upstream repository/resource URL the reference material lives at (pointer-only entry; nothing on disk)."},
+          "tool": {"type": "string", "description": "Simulator/dialect the upstream decks target (e.g. spectre)."},
+          "node": {"type": "string", "description": "Process node label (e.g. 28nm, 180nm)."}
         }
       }
     },

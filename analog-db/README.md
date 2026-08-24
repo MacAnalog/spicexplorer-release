@@ -17,15 +17,15 @@ Verifiable circuits carry **accession ids** — `<class-code>_<nnn>_<slug>` (`am
 renumbered or reused (meta-repo `doc/plan_scoreboard.md` D-1). Pre-accession names live on as
 `provenance.aliases`. Reference circuits keep corpus-scoped ids (`ferrosim_*`).
 
-Alongside them are **22 `kind: reference` circuits** (plan D-9) — imported third-party decks in a
-proprietary PDK/simulator (the not-yet-promotable remainder of the 30 `ferrosim_*` 28/65 nm
-Spectre + 6 `sfe_*` AnalogGym Sensing Front End imports; the promotable members carry accession
-ids now, with their original decks retained as in-entry `references` bindings and the exact
-blocker documented in each remaining entry's README). They live in the **same `circuits/`
-registry** and appear in
-`catalog.json`, but are **not lowered or simulated here**: the harness runs a reference-only
-Tier-0 (schema + provenance + deck-exists) and skips T1–T4. See [`corpora/ferrosim/`](corpora/ferrosim/)
-and [`corpora/analoggym-sensing-fe/`](corpora/analoggym-sensing-fe/) for corpus provenance.
+Alongside them are **22 `kind: reference` circuits** (plan D-9) — **upstream-pointer entries**
+for third-party circuits this DB indexes but does not redistribute (the not-yet-promotable
+remainder of the `ferrosim_*` and `sfe_*` AnalogGym Sensing Front End imports; the promotable
+members carry accession ids now, with their upstream recorded as in-entry `references`
+pointers and the exact blocker documented in each remaining entry's README). They live in the
+**same `circuits/` registry** and appear in `catalog.json`, but **no upstream or foundry-bound
+decks ship here**: the harness runs a reference-only Tier-0 (schema + provenance + pointer)
+and skips T1–T4. See [`corpora/ferrosim/`](corpora/ferrosim/) and
+[`corpora/analoggym-sensing-fe/`](corpora/analoggym-sensing-fe/) for corpus provenance.
 
 `kind` is **not** how a cell is retired. A verifiable circuit that should stop appearing in the
 published benchmark sets **`published: false`** in its `circuit.yaml` — the de-publish marker,
@@ -66,12 +66,10 @@ spicexplorer-analog-db/
 │     └─ <pdk>/<design_id>.json     #     one entry per design point: sizing + per-corner
 │                                   #     metrics/spec verdicts + PPA rollup
 ├─ circuits/<id>/                   # a kind: reference circuit (D-9)  (×22: ferrosim_* + sfe_*)
-│  ├─ circuit.yaml                  #   kind: reference; class; provenance; references[] bindings
-│  ├─ README.md                     #   what it is + upstream source + bindings
-│  └─ spectre/<node>/…              #   authored proprietary-PDK decks (dut/tb/runs), layout verbatim
+│  ├─ circuit.yaml                  #   kind: reference; class; provenance; references[] upstream pointers
+│  └─ README.md                     #   what it is + upstream source (no decks are redistributed)
 ├─ corpora/<name>/                  # corpus-level provenance for reference imports (NOT a deck copy)
-│  ├─ PROVENANCE.md                 #   source + license text + import metadata + circuit list
-│  └─ upstream-README.md            #   vendored upstream index (byte/SHA manifest)
+│  └─ README.md / PROVENANCE.md     #   upstream URL + license acknowledgment
 ├─ raw/<circuit>/                   # (gen) ready-to-run decks + schematics
 │  ├─ <circuit>.sch                 #   xschem schematic of the DUT topology (one per circuit)
 │  ├─ <circuit>_annotated.sch       #   …with detected functional blocks as coloured boxes
@@ -160,7 +158,7 @@ analog-db new-circuit      --class CLS --slug SLUG --ports p1,p2,… [--pdks …
 analog-db run              --circuit ID --pdk PDK [--corner tt] [--docker [SERVICE]] [--docker-image [IMAGE]] [--crosscheck] [--write]
 analog-db add-binding      --circuit ID --pdk PDK [--from PDK]                  # synthesize another PDK binding (cross-PDK transfer)
 analog-db gmid-extract     --pdk PDK [--device DEV] [--corner tt|tt,ss,ff|all] [--vgs/--vds/--vsb a,s,b] [--length L1,L2,…] [--width UM] [--temp K]
-analog-db gmid-extract-spectre --pdk PDK [--corner tt|all] [--workers N] [--out-root DIR] [--smoke|--dry-run]  # licensed-kit lane (native Spectre, both core flavours in one pass)
+analog-db gmid-extract-spectre --pdk PDK [--corner tt|all] [--workers N] [--out-root DIR] [--smoke|--dry-run]  # Spectre-routed lane (kit-unbound; the user supplies their own model wrapper)
 analog-db import-analoggym --src <AnalogGym/Amplifier> [--circuit FOLDER]       # (re-)import the AnalogGym corpus
 analog-db import-ferrosim  --src <ferrosim/tests> [--no-catalog]                # import the ferrosim corpus as kind: reference circuits (D-9)
 ```
@@ -172,8 +170,9 @@ picks it up), parallelized one ngspice job per L value via the registry
 `gmid.simulator: {runner, workers, timeout_s}` block. `add-binding` converts an existing PDK
 binding (`devices.map` + corners + unit-converted sizing) into a new one, then `generate` emits the
 lowered netlist. `gmid-extract` writes a pygmid LUT to `_shared/gmid/<pdk>/<device>__<corner>.pkl`.
-`gmid-extract-spectre` is the same characterization for a **Spectre-routed licensed kit**:
-plain headless Spectre via the virtuoso-bridge env, config from the registry `gmid:`
+`gmid-extract-spectre` is the same characterization for a **Spectre-routed kit** (kit-unbound —
+the user's own registry + model wrapper supply every kit-specific name; nothing kit-native
+ships here): plain headless Spectre via the virtuoso-bridge env, config from the registry `gmid:`
 block (incl. a `simulator: {workers, timeout_s}` parallelization block), LUTs out-of-repo by
 default. See [`_shared/PDK_SIM.md`](_shared/PDK_SIM.md) and [`_shared/GMID.md`](_shared/GMID.md).
 

@@ -19,12 +19,27 @@ uv pip install --no-deps -e examples/analog-db   # install this package editable
 
 ## 1. Fast tests (PDK-free, no Docker) — every change
 
+Three markers split the suite by what a test's cost scales with:
+
+- **(no marker) — unit**: the package code (loaders, assembler, CLI, params/gmid plumbing) on a
+  couple of representative circuits. Seconds; the everyday dev loop.
+- **`corpus`**: corpus-wide sweeps and per-binding parametrized checks that scale with the number
+  of circuits (verify tiers, raw drift, structural detection, metric-route/sizing integrity). Each
+  expensive sweep (full render, tier runs) is computed ONCE per session in `tests/conftest.py`
+  and shared — never call `verify.run_tier*()`/`export.generate_all()` directly from a new
+  corpus-asserting test; consume the session fixtures.
+- **`slow`**: live ngspice/PDK simulation or the xschem round-trip — opt-in, unchanged (§3).
+
 ```bash
-.venv/bin/python -m pytest examples/analog-db/tests -m "not slow" -q     # a couple hundred tests, seconds (scales with the corpus)
+.venv/bin/python -m pytest examples/analog-db/tests -m "not slow" -q                # unit + corpus — the CI / release gate
+.venv/bin/python -m pytest examples/analog-db/tests -m "not slow and not corpus" -q # unit only — seconds, every edit
 ```
+
 Covers: schema + cross-ref (Tier 0), generation drift (Tier 1), assembly (Tier 2), the optimizer
 projection / NEWCAS gate, the AnalogGym import, the netlist2tf symbolic plumbing, reference-circuit
 Tier-0, authoring (`scaffold_circuit`), and gm/ID LUT plumbing — all without ngspice or a PDK.
+(YAML reads are memoized per file mtime via `spicexplorer_analog_db.yamlio` — the corpus is read
+far more often than it changes; that cache is what keeps the corpus sweeps in seconds.)
 
 ## 2. The verify harness (the same tiers, as a CLI)
 

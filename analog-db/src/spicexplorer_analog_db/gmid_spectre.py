@@ -39,11 +39,11 @@ out-of-repo ``out_root`` default (mirroring the committed ``_shared/gmid/<pdk>/`
 Correctness notes proven against live op dumps (see the analog-learning-journal spectre.md):
 
 * **bsim4 splits gate current** — ``igd``/``igs`` are overlap/edge tunneling only; the channel
-  component ``igcd``/``igcs`` is ~100× larger at 65 nm. The stored ``IGD``/``IGS`` are the
+  component ``igcd``/``igcs`` can dominate by ~100× at advanced nodes. The stored ``IGD``/``IGS`` are the
   folded TOTALS (igd+igcd / igs+igcs), so leak budgets (``∂(IGD+IGS)/∂VGS``) are honest.
 * **Noise (STH/SFL) is intentionally omitted** — an absent key fails loud; zeros lie.
 * The LUT is per-unit-width at ``width_um`` fingers; apply sizings with ~2–10 µm fingers and
-  scale total W via ``m`` (narrow fingers deviate: 0.5 µm pch measured 2.2× off on gm/gds).
+  scale total W via ``m`` (narrow fingers deviate: a 0.5 µm pMOS can read several× off on gm/gds).
 """
 
 from __future__ import annotations
@@ -120,8 +120,8 @@ class SpectreGmidConfig:
                       **overrides: Any) -> SpectreGmidConfig:
         """Build a config from the PDK registry's ``gmid`` block (+ optional overrides).
 
-        ``flavor`` selects the Vt class: it keys into ``devices.{nmos,pmos}`` (e.g. ``lvt``→
-        ``DEVICE``, ``svt``→``nch``, ``hvt``→``DEVICE``). Defaults to the registry's
+        ``flavor`` selects the Vt class: it keys into ``devices.{nmos,pmos}`` — the device
+        names come from the user's own registry, never from this repo. Defaults to the registry's
         ``gmid.flavor`` (else the first of ``gmid.flavors``, else ``core``) so a plain
         ``--pdk <name>`` keeps the registry's declared default flavour.
         """
@@ -404,7 +404,7 @@ def build_manifest(cfg: SpectreGmidConfig, lut: dict[str, Any], pol: str,
         },
         "params": [k for k in lut if k not in scalars and k not in axes_keys],
         "notes": "IGD/IGS are TOTAL gate currents (bsim4 igd+igcd / igs+igcs — the channel "
-                 "component dominates ~100× at 65nm); noise (STH/SFL) not characterized — "
+                 "component can dominate ~100× at advanced nodes); noise (STH/SFL) not characterized — "
                  "keys omitted so lookups fail loud",
         "lut_file": lut_path(cfg, pol).name,
         "provenance": {"tool": "analog-db gmid-extract-spectre", "engine": "spectre",

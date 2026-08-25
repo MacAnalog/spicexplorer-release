@@ -13,7 +13,9 @@ developed by the MacAnalog research group at McMaster University. The whole
 platform is public — every package, the Studio front-end, and the circuit
 database — each published as a curated snapshot.
 
-**Current release: v1.1.** It adds the EDA base image, so `make up-live` gives
+**Current release: v1.1.1.** It moves the reference circuits to upstream
+pointers and refreshes the database (faster test tiers, publication-quality
+schematics). v1.1 added the EDA base image, so `make up-live` gives
 you a working simulator and three open PDKs with nothing installed on the host
 (see [Live SPICE](#quickstart) below). v1.0 opened the platform: all ten
 packages, the UI, and the database.

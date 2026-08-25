@@ -66,9 +66,10 @@ COUT vout vss x_cout
 IBI vdd nbias dc {x_ibias_val}
 RBLD vout vss x_rbleed
 RREF ref0 vref x_rref
+VLP lp_brk vout dc 0
 VREF ref0 vss dc {x_vref_val}
 XMIN otao vref tail vss sky130_fd_pr__nfet_01v8 l=x_dut_xmin_l m=x_dut_xmin_m w=x_dut_xmin_w
-XMIP otax vout tail vss sky130_fd_pr__nfet_01v8 l=x_dut_xmip_l m=x_dut_xmip_m w=x_dut_xmip_w
+XMIP otax lp_brk tail vss sky130_fd_pr__nfet_01v8 l=x_dut_xmip_l m=x_dut_xmip_m w=x_dut_xmip_w
 XMLD otax otax vdd vdd sky130_fd_pr__pfet_01v8 l=x_dut_xmld_l m=x_dut_xmld_m w=x_dut_xmld_w
 XMLM otao otax vdd vdd sky130_fd_pr__pfet_01v8 l=x_dut_xmlm_l m=x_dut_xmlm_m w=x_dut_xmlm_w
 XMNB nbias nbias vss vss sky130_fd_pr__nfet_01v8 l=x_dut_xmnb_l m=x_dut_xmnb_m w=x_dut_xmnb_w

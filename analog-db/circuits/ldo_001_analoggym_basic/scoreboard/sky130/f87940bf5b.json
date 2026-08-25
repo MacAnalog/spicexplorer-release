@@ -11,6 +11,18 @@
   "corners": {
     "tt": {
       "analyses": {
+        "ac_loopgain": {
+          "measures": {
+            "gm_at_180": -20.93428,
+            "gm_loop_db": 20.93428,
+            "loopgain_db": 26.04333,
+            "ms_peak": 0.8177575,
+            "pm_loop": 91.78135,
+            "tloop_ph_dc": 179.9917,
+            "ugf_loop": 138899.9
+          },
+          "status": "ok"
+        },
         "dc_op": {
           "measures": {
             "i_supply": 1.90161e-05,
@@ -20,8 +32,9 @@
         },
         "dropout": {
           "measures": {
-            "vin_at": 0.0,
-            "vout_at": 0.0
+            "v_dropout": 0.2580689,
+            "vin_at": 1.84,
+            "vout_at": 1.581931
           },
           "status": "ok"
         },
@@ -51,8 +64,8 @@
         },
         "noise": {
           "measures": {
-            "onoise_total": 0.0002833751,
-            "vn_out_rms": 0.01683375
+            "onoise_total": 0.0002833746,
+            "vn_out_rms": 0.01683373
           },
           "status": "ok"
         },
@@ -85,7 +98,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-25T14:53:28+00:00"
+        "run_at": "2026-08-25T17:18:02+00:00"
       }
     }
   },
@@ -104,6 +117,18 @@
         "spec": "pass",
         "value": 0.69248
       },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 26.04333
+      },
+      "ms_peak_db": {
+        "spec": "none",
+        "value": 0.8177575
+      },
+      "pm_loop_deg": {
+        "spec": "none",
+        "value": 91.78135
+      },
       "psrr_vdd_db": {
         "spec": "pass",
         "value": 8.853088
@@ -112,9 +137,17 @@
         "spec": "pass",
         "value": 2.459831e-05
       },
+      "tloop_ph_dc_deg": {
+        "spec": "none",
+        "value": 179.9917
+      },
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 138899.9
+      },
       "v_dropout": {
-        "spec": "fail",
-        "value": null
+        "spec": "pass",
+        "value": 0.2580689
       },
       "v_line_pp": {
         "spec": "pass",
@@ -130,7 +163,7 @@
       },
       "vn_out_rms": {
         "spec": "pass",
-        "value": 0.01683375
+        "value": 0.01683373
       },
       "zout_peak_db": {
         "spec": "pass",
@@ -174,6 +207,7 @@
     "performance": {
       "load_reg": 0.69248,
       "psrr_vdd_db": 8.853088,
+      "v_dropout": 0.2580689,
       "v_undershoot": 1.242756
     },
     "power_w": 3.422898e-05

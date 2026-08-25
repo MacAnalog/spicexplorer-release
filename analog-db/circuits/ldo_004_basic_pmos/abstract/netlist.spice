@@ -21,7 +21,12 @@
 XMP vout egate vdd vdd pmos w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m
 **
 ** --- feedback divider: vout -> fb -> vss  (vout = vref*(r_top+r_bot)/r_bot) ---
-R1 vout fb  'r_top'
+** LOOP-BREAK MARKER (contract for the ldo/ac_loopgain bench). A 0 V source is an ideal
+** short, so it is INVISIBLE to dc_op / regulation / dropout / psrr / the transients; only
+** ac_loopgain turns it into a generator. the r_top/r_bot divider, the only path that senses vout senses vout on behalf of the loop and
+** therefore moves behind the marker; nothing else does: this is the one entry with a single clean cut.
+Vlp lp_brk vout dc 0
+R1 lp_brk fb  'r_top'
 R2 fb   vss 'r_bot'
 **
 ** --- internal ideal reference (sim reference, not a silicon bandgap) ---

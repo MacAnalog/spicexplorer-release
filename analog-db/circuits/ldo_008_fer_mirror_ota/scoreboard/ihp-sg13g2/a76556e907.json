@@ -11,6 +11,18 @@
   "corners": {
     "tt": {
       "analyses": {
+        "ac_loopgain": {
+          "measures": {
+            "gm_at_180": -107.0075,
+            "gm_loop_db": 107.0075,
+            "loopgain_db": 55.5877,
+            "ms_peak": 3.064012,
+            "pm_loop": 53.69395,
+            "tloop_ph_dc": 178.9305,
+            "ugf_loop": 24678.59
+          },
+          "status": "ok"
+        },
         "dc_op": {
           "measures": {
             "i_supply": 0.0001639862,
@@ -28,16 +40,16 @@
         },
         "line_regulation": {
           "measures": {
-            "line_reg": 0.002049,
+            "line_reg": 0.002048,
             "vout_max": 1.199842,
-            "vout_min": 1.197793
+            "vout_min": 1.197794
           },
           "status": "ok"
         },
         "load_regulation": {
           "measures": {
-            "load_reg": 0.027977,
-            "vout_max": 1.208795,
+            "load_reg": 0.027976,
+            "vout_max": 1.208794,
             "vout_min": 1.180818
           },
           "status": "ok"
@@ -86,7 +98,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-25T00:14:37+00:00"
+        "run_at": "2026-08-25T15:12:40+00:00"
       }
     }
   },
@@ -99,11 +111,23 @@
       },
       "line_reg": {
         "spec": "pass",
-        "value": 0.002049
+        "value": 0.002048
       },
       "load_reg": {
         "spec": "pass",
-        "value": 0.027977
+        "value": 0.027976
+      },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 55.5877
+      },
+      "ms_peak_db": {
+        "spec": "none",
+        "value": 3.064012
+      },
+      "pm_loop_deg": {
+        "spec": "none",
+        "value": 53.69395
       },
       "psrr_vdd_db": {
         "spec": "pass",
@@ -112,6 +136,14 @@
       "t_transient": {
         "spec": "pass",
         "value": 2.45042e-05
+      },
+      "tloop_ph_dc_deg": {
+        "spec": "none",
+        "value": 178.9305
+      },
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 24678.59
       },
       "v_dropout": {
         "spec": "pass",
@@ -170,7 +202,7 @@
       "tt"
     ],
     "performance": {
-      "load_reg": 0.027977,
+      "load_reg": 0.027976,
       "psrr_vdd_db": 49.54039,
       "v_dropout": 0.07564856,
       "v_undershoot": 0.040847

@@ -76,7 +76,26 @@ XDUT vdd vout vss ldo_005_buffered_ref
   * rather than a fabricated number.
   meas ac gm_at_180 FIND tdb WHEN tph=0 FALL=1
   let gm_loop_db = 0 - gm_at_180
-  print loopgain_db ugf_loop pm_loop gm_loop_db
+  * SENSITIVITY-FUNCTION PEAK. For a regulator, Zout_cl = Zout_ol/(1+T_rr), so
+  * |Zout_cl|/|Zout_ol| = |1/(1+T_rr)| = |S| exactly, and its peak Ms is the damping
+  * figure the zout_peak_db proxy was standing in for. Ms comes free from THIS sweep:
+  * no open-loop Zout run is needed.
+  * SIGN: tloop is the raw around-the-loop transfer measured at the marker, and it is
+  * NEGATIVE at DC for a negative-feedback loop (vout up -> pass current down -> vout
+  * down), i.e. tphc[0] ~ +/-180 deg. The return ratio is therefore T_rr = -tloop, and
+  * S = 1/(1 - tloop). This was ADJUDICATED by measurement, not assumed: on
+  * ldo_005/ihp-sg13g2 the two candidate conventions give 4.3447 dB and 4.2e-06 dB,
+  * and only the first is admissible, because Ms >= 1/(2 sin(PM/2)) forces Ms >= 1.270
+  * (2.07 dB) at that run's 46.39 deg phase margin. The 1/(1+tloop) form collapses to
+  * 0 dB exactly as expected for the wrong sign: |1+T| is huge in band, so its peak is
+  * just the high-frequency limit where the loop gain dies and |S| -> 1.
+  * tloop_ph_dc is recorded on every run as the standing guard: a circuit whose DC loop
+  * phase is NOT near +/-180 does not satisfy this convention and its ms_peak must not
+  * be trusted.
+  let s_db = db(1/(1-tloop))
+  meas ac ms_peak     MAX s_db
+  meas ac tloop_ph_dc FIND tphc AT=1
+  print loopgain_db ugf_loop pm_loop gm_loop_db ms_peak tloop_ph_dc
   write
   quit
 .endc

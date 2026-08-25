@@ -9,6 +9,7 @@ devices:
   RZ: {Value: r_z}
   R_BLEED: {Value: r_bleed}
   VB: {Value: vb_val}
+  VLP: {Value: dc 0}
   VREF: {Value: vref_val}
   XM1: {l: x_dut_xm1_l, w: x_dut_xm1_w}
   XM2: {l: x_dut_xm2_l, w: x_dut_xm2_w}

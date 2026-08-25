@@ -137,3 +137,20 @@ metrics:
     analysis: ac_loopgain
     extract: {meas: ugf_loop}
     spec: {min: 1e5, unit: Hz}
+  ms_peak_db:
+    display: "Sensitivity peak"
+    description: "Peak of the sensitivity function |S| = |Zout_cl|/|Zout_ol|, in dB. This is the
+      damping figure zout_peak_db stands in for, and unlike the proxy it is referenced to the
+      OPEN-loop impedance rather than to its own low-frequency value, so it does not confound the
+      output capacitor with the loop. Cross-check on every run: Ms >= 1/(2 sin(PM/2))."
+    unit: dB
+    analysis: ac_loopgain
+    extract: {meas: ms_peak}
+  tloop_ph_dc_deg:
+    display: "DC loop phase"
+    description: "Measured DC phase of the raw around-the-loop transfer. Guard, not a design
+      figure: ms_peak assumes the negative-feedback sign convention, which holds only when this
+      reads near +/-180 deg."
+    unit: deg
+    analysis: ac_loopgain
+    extract: {meas: tloop_ph_dc}

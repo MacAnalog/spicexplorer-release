@@ -41,7 +41,12 @@ xm20 net106 vb4 vss    vss nmos l=x_dut_xm20_l w=x_dut_xm20_w m=x_dut_xm20_m
 xm21 net12 net7 vss vss nmos l=x_dut_xm21_l w=x_dut_xm21_w m=x_dut_xm21_m
 xm22 net7  net7 vss vss nmos l=x_dut_xm22_l w=x_dut_xm22_w m=x_dut_xm22_m
 ** feedback divider + Miller compensation (upstream r1/r0 + mim XC0)
-R1 vout vfb 'r_top'
+** LOOP-BREAK MARKER (contract for the ldo/ac_loopgain bench). A 0 V source is an ideal
+** short, so it is INVISIBLE to dc_op / regulation / dropout / psrr / the transients; only
+** ac_loopgain turns it into a generator. the r_top/r_bot divider senses vout on behalf of the loop and
+** therefore moves behind the marker; the C0 Miller cap stays on vout as part of the compensated plant.
+Vlp lp_brk vout dc 0
+R1 lp_brk vfb 'r_top'
 R2 vfb  vss 'r_bot'
 C0 net106 vout 'c_comp'
 ** internal ideal reference + bias (3-port fold of upstream vinn / Ib pins)

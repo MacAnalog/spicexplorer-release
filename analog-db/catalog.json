@@ -7713,6 +7713,7 @@
         "dropout",
         "tran_load_step",
         "loop_stability",
+        "ac_loopgain",
         "noise",
         "tran_line_step"
       ],
@@ -7723,7 +7724,7 @@
       "id": "ldo_001_analoggym_basic",
       "kind": "verifiable",
       "params": {
-        "devices": 29,
+        "devices": 30,
         "groups": {
           "mirror_xm22_w_l_m": "mirror_length",
           "pair_xm8_xm9": "matched_pair",
@@ -7770,6 +7771,7 @@
       "raw": {
         "gf180mcu": {
           "_dut": "raw/ldo_001_analoggym_basic/gf180mcu/_dut.spice",
+          "ac_loopgain": "raw/ldo_001_analoggym_basic/gf180mcu/ac_loopgain.spice",
           "dc_op": "raw/ldo_001_analoggym_basic/gf180mcu/dc_op.spice",
           "dropout": "raw/ldo_001_analoggym_basic/gf180mcu/dropout.spice",
           "line_regulation": "raw/ldo_001_analoggym_basic/gf180mcu/line_regulation.spice",
@@ -7782,6 +7784,7 @@
         },
         "ihp-sg13g2": {
           "_dut": "raw/ldo_001_analoggym_basic/ihp-sg13g2/_dut.spice",
+          "ac_loopgain": "raw/ldo_001_analoggym_basic/ihp-sg13g2/ac_loopgain.spice",
           "dc_op": "raw/ldo_001_analoggym_basic/ihp-sg13g2/dc_op.spice",
           "dropout": "raw/ldo_001_analoggym_basic/ihp-sg13g2/dropout.spice",
           "line_regulation": "raw/ldo_001_analoggym_basic/ihp-sg13g2/line_regulation.spice",
@@ -7794,6 +7797,7 @@
         },
         "sky130": {
           "_dut": "raw/ldo_001_analoggym_basic/sky130/_dut.spice",
+          "ac_loopgain": "raw/ldo_001_analoggym_basic/sky130/ac_loopgain.spice",
           "dc_op": "raw/ldo_001_analoggym_basic/sky130/dc_op.spice",
           "dropout": "raw/ldo_001_analoggym_basic/sky130/dropout.spice",
           "line_regulation": "raw/ldo_001_analoggym_basic/sky130/line_regulation.spice",
@@ -7824,7 +7828,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         },
@@ -7845,12 +7849,12 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         },
         "sky130": {
-          "design_id": "fe79e486ff",
+          "design_id": "f87940bf5b",
           "ppa": {
             "active_gate_area_um2": 4462.8,
             "corners_run": [
@@ -7859,14 +7863,14 @@
             "performance": {
               "load_reg": 0.69248,
               "psrr_vdd_db": 8.853088,
-              "v_dropout": 0.21842,
+              "v_dropout": 0.2580689,
               "v_undershoot": 1.242756
             },
             "power_w": 3.422898e-05
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         }
@@ -7884,6 +7888,7 @@
         "dropout",
         "tran_load_step",
         "loop_stability",
+        "ac_loopgain",
         "noise",
         "tran_line_step"
       ],
@@ -7894,7 +7899,7 @@
       "id": "ldo_002_analoggym_folded_cascode",
       "kind": "verifiable",
       "params": {
-        "devices": 16,
+        "devices": 17,
         "groups": {
           "pair_xm1_xm2": "matched_pair",
           "shared_xm3_w_l": "shared_geometry",
@@ -7943,6 +7948,7 @@
       "raw": {
         "gf180mcu": {
           "_dut": "raw/ldo_002_analoggym_folded_cascode/gf180mcu/_dut.spice",
+          "ac_loopgain": "raw/ldo_002_analoggym_folded_cascode/gf180mcu/ac_loopgain.spice",
           "dc_op": "raw/ldo_002_analoggym_folded_cascode/gf180mcu/dc_op.spice",
           "dropout": "raw/ldo_002_analoggym_folded_cascode/gf180mcu/dropout.spice",
           "line_regulation": "raw/ldo_002_analoggym_folded_cascode/gf180mcu/line_regulation.spice",
@@ -7955,6 +7961,7 @@
         },
         "ihp-sg13g2": {
           "_dut": "raw/ldo_002_analoggym_folded_cascode/ihp-sg13g2/_dut.spice",
+          "ac_loopgain": "raw/ldo_002_analoggym_folded_cascode/ihp-sg13g2/ac_loopgain.spice",
           "dc_op": "raw/ldo_002_analoggym_folded_cascode/ihp-sg13g2/dc_op.spice",
           "dropout": "raw/ldo_002_analoggym_folded_cascode/ihp-sg13g2/dropout.spice",
           "line_regulation": "raw/ldo_002_analoggym_folded_cascode/ihp-sg13g2/line_regulation.spice",
@@ -7967,6 +7974,7 @@
         },
         "sky130": {
           "_dut": "raw/ldo_002_analoggym_folded_cascode/sky130/_dut.spice",
+          "ac_loopgain": "raw/ldo_002_analoggym_folded_cascode/sky130/ac_loopgain.spice",
           "dc_op": "raw/ldo_002_analoggym_folded_cascode/sky130/dc_op.spice",
           "dropout": "raw/ldo_002_analoggym_folded_cascode/sky130/dropout.spice",
           "line_regulation": "raw/ldo_002_analoggym_folded_cascode/sky130/line_regulation.spice",
@@ -7997,7 +8005,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         },
@@ -8018,12 +8026,12 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         },
         "sky130": {
-          "design_id": "bf2bdaa5c5",
+          "design_id": "1a25097f08",
           "ppa": {
             "active_gate_area_um2": 1425.0,
             "corners_run": [
@@ -8032,14 +8040,14 @@
             "performance": {
               "load_reg": 0.003576,
               "psrr_vdd_db": 53.19401,
-              "v_dropout": 0.057894,
+              "v_dropout": 0.08173078,
               "v_undershoot": 0.731556
             },
             "power_w": 0.0005377964
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         }
@@ -8057,6 +8065,7 @@
         "dropout",
         "tran_load_step",
         "loop_stability",
+        "ac_loopgain",
         "noise",
         "tran_line_step"
       ],
@@ -8067,7 +8076,7 @@
       "id": "ldo_003_analoggym_simple",
       "kind": "verifiable",
       "params": {
-        "devices": 11,
+        "devices": 12,
         "groups": {
           "mirror_xm4_w_l": "mirror_length",
           "pair_xm1_xm2": "matched_pair"
@@ -8115,6 +8124,7 @@
       "raw": {
         "gf180mcu": {
           "_dut": "raw/ldo_003_analoggym_simple/gf180mcu/_dut.spice",
+          "ac_loopgain": "raw/ldo_003_analoggym_simple/gf180mcu/ac_loopgain.spice",
           "dc_op": "raw/ldo_003_analoggym_simple/gf180mcu/dc_op.spice",
           "dropout": "raw/ldo_003_analoggym_simple/gf180mcu/dropout.spice",
           "line_regulation": "raw/ldo_003_analoggym_simple/gf180mcu/line_regulation.spice",
@@ -8127,6 +8137,7 @@
         },
         "ihp-sg13g2": {
           "_dut": "raw/ldo_003_analoggym_simple/ihp-sg13g2/_dut.spice",
+          "ac_loopgain": "raw/ldo_003_analoggym_simple/ihp-sg13g2/ac_loopgain.spice",
           "dc_op": "raw/ldo_003_analoggym_simple/ihp-sg13g2/dc_op.spice",
           "dropout": "raw/ldo_003_analoggym_simple/ihp-sg13g2/dropout.spice",
           "line_regulation": "raw/ldo_003_analoggym_simple/ihp-sg13g2/line_regulation.spice",
@@ -8139,6 +8150,7 @@
         },
         "sky130": {
           "_dut": "raw/ldo_003_analoggym_simple/sky130/_dut.spice",
+          "ac_loopgain": "raw/ldo_003_analoggym_simple/sky130/ac_loopgain.spice",
           "dc_op": "raw/ldo_003_analoggym_simple/sky130/dc_op.spice",
           "dropout": "raw/ldo_003_analoggym_simple/sky130/dropout.spice",
           "line_regulation": "raw/ldo_003_analoggym_simple/sky130/line_regulation.spice",
@@ -8169,7 +8181,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         },
@@ -8190,12 +8202,12 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         },
         "sky130": {
-          "design_id": "599f20d954",
+          "design_id": "b91c15769c",
           "ppa": {
             "active_gate_area_um2": 3738.0,
             "corners_run": [
@@ -8204,14 +8216,14 @@
             "performance": {
               "load_reg": 0.100795,
               "psrr_vdd_db": 25.40556,
-              "v_dropout": 0.159477,
+              "v_dropout": 0.1742206,
               "v_undershoot": 0.9196776
             },
             "power_w": 0.0002168658
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         }
@@ -8229,6 +8241,7 @@
         "dropout",
         "tran_load_step",
         "loop_stability",
+        "ac_loopgain",
         "noise",
         "tran_line_step"
       ],
@@ -8239,7 +8252,7 @@
       "id": "ldo_004_basic_pmos",
       "kind": "verifiable",
       "params": {
-        "devices": 9,
+        "devices": 10,
         "groups": {
           "mirror_xm3_w_l": "mirror_length",
           "pair_xm1_xm2": "matched_pair"
@@ -8285,6 +8298,7 @@
       "raw": {
         "gf180mcu": {
           "_dut": "raw/ldo_004_basic_pmos/gf180mcu/_dut.spice",
+          "ac_loopgain": "raw/ldo_004_basic_pmos/gf180mcu/ac_loopgain.spice",
           "dc_op": "raw/ldo_004_basic_pmos/gf180mcu/dc_op.spice",
           "dropout": "raw/ldo_004_basic_pmos/gf180mcu/dropout.spice",
           "line_regulation": "raw/ldo_004_basic_pmos/gf180mcu/line_regulation.spice",
@@ -8297,6 +8311,7 @@
         },
         "ihp-sg13g2": {
           "_dut": "raw/ldo_004_basic_pmos/ihp-sg13g2/_dut.spice",
+          "ac_loopgain": "raw/ldo_004_basic_pmos/ihp-sg13g2/ac_loopgain.spice",
           "dc_op": "raw/ldo_004_basic_pmos/ihp-sg13g2/dc_op.spice",
           "dropout": "raw/ldo_004_basic_pmos/ihp-sg13g2/dropout.spice",
           "line_regulation": "raw/ldo_004_basic_pmos/ihp-sg13g2/line_regulation.spice",
@@ -8309,6 +8324,7 @@
         },
         "sky130": {
           "_dut": "raw/ldo_004_basic_pmos/sky130/_dut.spice",
+          "ac_loopgain": "raw/ldo_004_basic_pmos/sky130/ac_loopgain.spice",
           "dc_op": "raw/ldo_004_basic_pmos/sky130/dc_op.spice",
           "dropout": "raw/ldo_004_basic_pmos/sky130/dropout.spice",
           "line_regulation": "raw/ldo_004_basic_pmos/sky130/line_regulation.spice",
@@ -8339,7 +8355,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         },
@@ -8360,7 +8376,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         },
@@ -8381,7 +8397,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         }
@@ -8503,7 +8519,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 2,
             "pass": 14
           }
         },
@@ -8524,7 +8540,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 2,
             "pass": 14
           }
         }
@@ -8668,6 +8684,7 @@
         "dropout",
         "tran_load_step",
         "loop_stability",
+        "ac_loopgain",
         "noise",
         "tran_line_step"
       ],
@@ -8678,7 +8695,7 @@
       "id": "ldo_007_pmos",
       "kind": "verifiable",
       "params": {
-        "devices": 14,
+        "devices": 15,
         "groups": {
           "mirror_xm3_w_l": "mirror_length",
           "mirror_xm6_w_l": "mirror_length",
@@ -8725,6 +8742,7 @@
       "raw": {
         "gf180mcu": {
           "_dut": "raw/ldo_007_pmos/gf180mcu/_dut.spice",
+          "ac_loopgain": "raw/ldo_007_pmos/gf180mcu/ac_loopgain.spice",
           "dc_op": "raw/ldo_007_pmos/gf180mcu/dc_op.spice",
           "dropout": "raw/ldo_007_pmos/gf180mcu/dropout.spice",
           "line_regulation": "raw/ldo_007_pmos/gf180mcu/line_regulation.spice",
@@ -8737,6 +8755,7 @@
         },
         "ihp-sg13g2": {
           "_dut": "raw/ldo_007_pmos/ihp-sg13g2/_dut.spice",
+          "ac_loopgain": "raw/ldo_007_pmos/ihp-sg13g2/ac_loopgain.spice",
           "dc_op": "raw/ldo_007_pmos/ihp-sg13g2/dc_op.spice",
           "dropout": "raw/ldo_007_pmos/ihp-sg13g2/dropout.spice",
           "line_regulation": "raw/ldo_007_pmos/ihp-sg13g2/line_regulation.spice",
@@ -8749,6 +8768,7 @@
         },
         "sky130": {
           "_dut": "raw/ldo_007_pmos/sky130/_dut.spice",
+          "ac_loopgain": "raw/ldo_007_pmos/sky130/ac_loopgain.spice",
           "dc_op": "raw/ldo_007_pmos/sky130/dc_op.spice",
           "dropout": "raw/ldo_007_pmos/sky130/dropout.spice",
           "line_regulation": "raw/ldo_007_pmos/sky130/line_regulation.spice",
@@ -8779,7 +8799,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         },
@@ -8800,7 +8820,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         },
@@ -8821,7 +8841,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         }
@@ -8839,6 +8859,7 @@
         "dropout",
         "tran_load_step",
         "loop_stability",
+        "ac_loopgain",
         "noise",
         "tran_line_step"
       ],
@@ -8849,7 +8870,7 @@
       "id": "ldo_008_fer_mirror_ota",
       "kind": "verifiable",
       "params": {
-        "devices": 13,
+        "devices": 14,
         "groups": {
           "mirror_xmld_w_l": "mirror_length",
           "mirror_xmnb_w_l": "mirror_length",
@@ -8899,6 +8920,7 @@
       "raw": {
         "gf180mcu": {
           "_dut": "raw/ldo_008_fer_mirror_ota/gf180mcu/_dut.spice",
+          "ac_loopgain": "raw/ldo_008_fer_mirror_ota/gf180mcu/ac_loopgain.spice",
           "dc_op": "raw/ldo_008_fer_mirror_ota/gf180mcu/dc_op.spice",
           "dropout": "raw/ldo_008_fer_mirror_ota/gf180mcu/dropout.spice",
           "line_regulation": "raw/ldo_008_fer_mirror_ota/gf180mcu/line_regulation.spice",
@@ -8911,6 +8933,7 @@
         },
         "ihp-sg13g2": {
           "_dut": "raw/ldo_008_fer_mirror_ota/ihp-sg13g2/_dut.spice",
+          "ac_loopgain": "raw/ldo_008_fer_mirror_ota/ihp-sg13g2/ac_loopgain.spice",
           "dc_op": "raw/ldo_008_fer_mirror_ota/ihp-sg13g2/dc_op.spice",
           "dropout": "raw/ldo_008_fer_mirror_ota/ihp-sg13g2/dropout.spice",
           "line_regulation": "raw/ldo_008_fer_mirror_ota/ihp-sg13g2/line_regulation.spice",
@@ -8923,6 +8946,7 @@
         },
         "sky130": {
           "_dut": "raw/ldo_008_fer_mirror_ota/sky130/_dut.spice",
+          "ac_loopgain": "raw/ldo_008_fer_mirror_ota/sky130/ac_loopgain.spice",
           "dc_op": "raw/ldo_008_fer_mirror_ota/sky130/dc_op.spice",
           "dropout": "raw/ldo_008_fer_mirror_ota/sky130/dropout.spice",
           "line_regulation": "raw/ldo_008_fer_mirror_ota/sky130/line_regulation.spice",
@@ -8965,7 +8989,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         },
@@ -8977,7 +9001,7 @@
               "tt"
             ],
             "performance": {
-              "load_reg": 0.027977,
+              "load_reg": 0.027976,
               "psrr_vdd_db": 49.54039,
               "v_dropout": 0.07564856,
               "v_undershoot": 0.040847
@@ -8986,7 +9010,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         },
@@ -9007,7 +9031,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         }
@@ -9025,6 +9049,7 @@
         "dropout",
         "tran_load_step",
         "loop_stability",
+        "ac_loopgain",
         "noise",
         "tran_line_step"
       ],
@@ -9035,7 +9060,7 @@
       "id": "ldo_009_fer_5t_pass",
       "kind": "verifiable",
       "params": {
-        "devices": 13,
+        "devices": 14,
         "groups": {
           "mirror_xmld_w_l": "mirror_length",
           "mirror_xmnb_w_l": "mirror_length",
@@ -9083,6 +9108,7 @@
       "raw": {
         "gf180mcu": {
           "_dut": "raw/ldo_009_fer_5t_pass/gf180mcu/_dut.spice",
+          "ac_loopgain": "raw/ldo_009_fer_5t_pass/gf180mcu/ac_loopgain.spice",
           "dc_op": "raw/ldo_009_fer_5t_pass/gf180mcu/dc_op.spice",
           "dropout": "raw/ldo_009_fer_5t_pass/gf180mcu/dropout.spice",
           "line_regulation": "raw/ldo_009_fer_5t_pass/gf180mcu/line_regulation.spice",
@@ -9095,6 +9121,7 @@
         },
         "ihp-sg13g2": {
           "_dut": "raw/ldo_009_fer_5t_pass/ihp-sg13g2/_dut.spice",
+          "ac_loopgain": "raw/ldo_009_fer_5t_pass/ihp-sg13g2/ac_loopgain.spice",
           "dc_op": "raw/ldo_009_fer_5t_pass/ihp-sg13g2/dc_op.spice",
           "dropout": "raw/ldo_009_fer_5t_pass/ihp-sg13g2/dropout.spice",
           "line_regulation": "raw/ldo_009_fer_5t_pass/ihp-sg13g2/line_regulation.spice",
@@ -9107,6 +9134,7 @@
         },
         "sky130": {
           "_dut": "raw/ldo_009_fer_5t_pass/sky130/_dut.spice",
+          "ac_loopgain": "raw/ldo_009_fer_5t_pass/sky130/ac_loopgain.spice",
           "dc_op": "raw/ldo_009_fer_5t_pass/sky130/dc_op.spice",
           "dropout": "raw/ldo_009_fer_5t_pass/sky130/dropout.spice",
           "line_regulation": "raw/ldo_009_fer_5t_pass/sky130/line_regulation.spice",
@@ -9144,7 +9172,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         },
@@ -9165,7 +9193,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         },
@@ -9186,7 +9214,7 @@
           },
           "spec": {
             "fail": 0,
-            "none": 0,
+            "none": 5,
             "pass": 11
           }
         }

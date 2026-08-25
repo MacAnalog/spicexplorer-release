@@ -1,0 +1,15 @@
+# TRUE regulation-loop gain / phase margin / gain margin / sensitivity-function peak by
+# Middlebrook voltage injection at the DUT's 0 V `Vlp` loop-break marker. See the class
+# template header for the method, its 2026-07-20 validation against an independent bench,
+# and the measured adjudication of the sensitivity-function sign convention.
+#
+# VDD/ILOAD/COUT are copied from this circuit's loop_stability.yaml so that ms_peak and the
+# zout_peak_db proxy describe the same bias and load and can be compared directly. The sweep
+# is wider and finer than the proxy's because it has to resolve the unity crossing.
+schema: spicexplorer/analysis@1
+id: ac_loopgain
+template: ac_loopgain
+description: "Loop gain, UGF, phase margin, gain margin and sensitivity peak of the regulation loop (voltage injection at Vlp)."
+params: {VDD: 1.8, ILOAD: 5m, COUT: 50p, FSTART: 1, FSTOP: 1G, PPD: 51}
+flags: []
+produces: [loopgain_db, ugf_loop, pm_loop, gm_loop_db, ms_peak, tloop_ph_dc]

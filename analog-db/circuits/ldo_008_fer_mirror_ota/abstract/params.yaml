@@ -10,6 +10,7 @@ devices:
   RB: {Value: x_dut_rb_value}
   RC: {Value: x_rcomp}
   RT: {Value: x_dut_rt_value}
+  VLP: {Value: dc 0}
   VREF: {Value: x_vref_val}
   XMDF: {l: x_dut_xmdf_l, m: x_dut_xmdf_m, w: x_dut_xmdf_w}
   XMDR: {l: x_dut_xmdr_l, m: x_dut_xmdr_m, w: x_dut_xmdr_w}

@@ -11,6 +11,18 @@
   "corners": {
     "tt": {
       "analyses": {
+        "ac_loopgain": {
+          "measures": {
+            "gm_at_180": -40.64239,
+            "gm_loop_db": 40.64239,
+            "loopgain_db": 31.36241,
+            "ms_peak": 0.2567294,
+            "pm_loop": 90.5196,
+            "tloop_ph_dc": 179.9994,
+            "ugf_loop": 3393047.0
+          },
+          "status": "ok"
+        },
         "dc_op": {
           "measures": {
             "i_supply": 0.0001084329,
@@ -66,16 +78,16 @@
         },
         "tran_line_step": {
           "measures": {
-            "v_line_pp": 0.156655,
-            "vout_max": 1.850081,
+            "v_line_pp": 0.156651,
+            "vout_max": 1.850077,
             "vout_min": 1.693426
           },
           "status": "ok"
         },
         "tran_load_step": {
           "measures": {
-            "t_transient": 2.106358e-05,
-            "tcross": 2.606358e-05,
+            "t_transient": 2.106357e-05,
+            "tcross": 2.606357e-05,
             "v_undershoot": 0.9196776,
             "vout_min": 0.9452024,
             "vout_post": 1.86488
@@ -86,7 +98,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-25T14:53:48+00:00"
+        "run_at": "2026-08-25T15:12:00+00:00"
       }
     }
   },
@@ -105,13 +117,33 @@
         "spec": "pass",
         "value": 0.100795
       },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 31.36241
+      },
+      "ms_peak_db": {
+        "spec": "none",
+        "value": 0.2567294
+      },
+      "pm_loop_deg": {
+        "spec": "none",
+        "value": 90.5196
+      },
       "psrr_vdd_db": {
         "spec": "pass",
         "value": 25.40556
       },
       "t_transient": {
         "spec": "pass",
-        "value": 2.106358e-05
+        "value": 2.106357e-05
+      },
+      "tloop_ph_dc_deg": {
+        "spec": "none",
+        "value": 179.9994
+      },
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 3393047.0
       },
       "v_dropout": {
         "spec": "pass",
@@ -119,7 +151,7 @@
       },
       "v_line_pp": {
         "spec": "pass",
-        "value": 0.156655
+        "value": 0.156651
       },
       "v_out": {
         "spec": "pass",

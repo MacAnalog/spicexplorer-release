@@ -16,7 +16,9 @@
             "gm_at_180": -41.56334,
             "gm_loop_db": 41.56334,
             "loopgain_db": 91.94185,
+            "ms_peak": 4.344667,
             "pm_loop": 46.38975,
+            "tloop_ph_dc": 177.2245,
             "ugf_loop": 569119.7
           },
           "status": "ok"
@@ -96,7 +98,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-25T14:39:45+00:00"
+        "run_at": "2026-08-25T15:12:24+00:00"
       }
     }
   },
@@ -119,6 +121,10 @@
         "spec": "pass",
         "value": 91.94185
       },
+      "ms_peak_db": {
+        "spec": "none",
+        "value": 4.344667
+      },
       "pm_loop_deg": {
         "spec": "pass",
         "value": 46.38975
@@ -130,6 +136,10 @@
       "t_transient": {
         "spec": "pass",
         "value": 8.7499e-07
+      },
+      "tloop_ph_dc_deg": {
+        "spec": "none",
+        "value": 177.2245
       },
       "ugf_loop_hz": {
         "spec": "pass",

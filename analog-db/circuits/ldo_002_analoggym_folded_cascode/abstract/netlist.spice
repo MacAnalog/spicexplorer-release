@@ -11,7 +11,12 @@
 ** straight to vout; Vref/Vb1/Vb2 fold in as internal ideal sources.
 **.subckt ldo_002_analoggym_folded_cascode vdd vout vss
 ** folded-cascode error amp (upstream diff_pair_folded_cascode)
-XM1 n2   vout n4  vss nmos w=x_dut_xm1_w   l=x_dut_xm1_l
+** LOOP-BREAK MARKER (contract for the ldo/ac_loopgain bench). A 0 V source is an ideal
+** short, so it is INVISIBLE to dc_op / regulation / dropout / psrr / the transients; only
+** ac_loopgain turns it into a generator. the XM1 input gate, which senses vout directly (there is no divider) senses vout on behalf of the loop and
+** therefore moves behind the marker; the Cc compensation cap and the R_bleed load stay on vout.
+Vlp lp_brk vout dc 0
+XM1 n2   lp_brk n4  vss nmos w=x_dut_xm1_w   l=x_dut_xm1_l
 XM2 n3   vref n4  vss nmos w=x_dut_xm2_w   l=x_dut_xm2_l
 XM3 n2   nmir vdd vdd pmos w=x_dut_xm3_w  l=x_dut_xm3_l
 XM4 n3   nmir vdd vdd pmos w=x_dut_xm4_w  l=x_dut_xm4_l

@@ -11,7 +11,12 @@
 ** sources. vout regulates to vref_val directly (no divider).
 **.subckt ldo_003_analoggym_simple vdd vout vss
 ** 5T error amp (upstream diff_pair: XM1 g=Vfb mirrored/non-inverting, XM2 g=Vref direct/inverting)
-XM1 ndiode vout  ntail vss nmos w=x_dut_xm1_w   l=x_dut_xm1_l
+** LOOP-BREAK MARKER (contract for the ldo/ac_loopgain bench). A 0 V source is an ideal
+** short, so it is INVISIBLE to dc_op / regulation / dropout / psrr / the transients; only
+** ac_loopgain turns it into a generator. the XM1 input gate, which senses vout directly (there is no divider) senses vout on behalf of the loop and
+** therefore moves behind the marker; the Cc compensation cap and the R_bleed load stay on vout.
+Vlp lp_brk vout dc 0
+XM1 ndiode lp_brk  ntail vss nmos w=x_dut_xm1_w   l=x_dut_xm1_l
 XM2 ngate  vref  ntail vss nmos w=x_dut_xm2_w   l=x_dut_xm2_l
 XM4 ndiode ndiode vdd  vdd pmos w=x_dut_xm4_w l=x_dut_xm4_l
 XM3 ngate  ndiode vdd  vdd pmos w=x_dut_xm3_w l=x_dut_xm3_l

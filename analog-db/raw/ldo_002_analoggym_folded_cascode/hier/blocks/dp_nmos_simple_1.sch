@@ -18,15 +18,15 @@ N -150 0 -90 0 {}
 N 90 0 150 0 {}
 N 190 0 250 0 {}
 N -190 60 190 60 {}
-C {devices/lab_wire.sym} 190 -90 0 1 {name=l0 lab=n2}
-C {devices/lab_wire.sym} -190 -90 0 1 {name=l1 lab=n3}
-C {devices/lab_wire.sym} -190 90 2 0 {name=l2 lab=n4}
-C {devices/lab_wire.sym} 90 0 0 0 {name=l3 lab=vout}
+C {devices/lab_wire.sym} 90 0 0 0 {name=l0 lab=lp_brk}
+C {devices/lab_wire.sym} 190 -90 0 1 {name=l1 lab=n2}
+C {devices/lab_wire.sym} -190 -90 0 1 {name=l2 lab=n3}
+C {devices/lab_wire.sym} -190 90 2 0 {name=l3 lab=n4}
 C {devices/lab_wire.sym} -90 0 0 1 {name=l4 lab=vref}
 C {devices/lab_wire.sym} 250 94 2 0 {name=l5 lab=vss}
 C {devices/lab_wire.sym} -250 94 2 0 {name=l6 lab=vss}
 C {devices/ipin.sym} -520 0 0 0 {name=p0 lab=vref}
-C {devices/ipin.sym} -520 120 0 0 {name=p1 lab=vout}
+C {devices/ipin.sym} -520 120 0 0 {name=p1 lab=lp_brk}
 C {devices/iopin.sym} -190 280 0 0 {name=p2 lab=n4}
 C {devices/opin.sym} 520 -30 0 0 {name=p3 lab=n3}
 C {devices/opin.sym} 520 90 0 0 {name=p4 lab=n2}

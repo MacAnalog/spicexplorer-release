@@ -3,7 +3,7 @@
   "circuit": "ldo_009_fer_5t_pass",
   "source_netlist": "abstract/netlist.spice",
   "summary": {
-    "device_count": 13,
+    "device_count": 14,
     "blocks_detected": 3,
     "by_family": {
       "current_mirror": 2,
@@ -74,7 +74,7 @@
       "ports": {
         "supply": "vss",
         "in_p": "vref",
-        "in_n": "vout",
+        "in_n": "lp_brk",
         "CM_tail": "tail",
         "out_n": "otax",
         "out_p": "otao"

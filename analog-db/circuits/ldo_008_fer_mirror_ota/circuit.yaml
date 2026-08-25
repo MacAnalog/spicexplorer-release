@@ -21,7 +21,7 @@ artifacts:
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
 pdks: [ihp-sg13g2, sky130, gf180mcu]
-analyses: [dc_op, load_regulation, line_regulation, psrr, dropout, tran_load_step, loop_stability, noise, tran_line_step]
+analyses: [dc_op, load_regulation, line_regulation, psrr, dropout, tran_load_step, loop_stability, ac_loopgain, noise, tran_line_step]
 references:
 - tool: spectre
   node: 28nm

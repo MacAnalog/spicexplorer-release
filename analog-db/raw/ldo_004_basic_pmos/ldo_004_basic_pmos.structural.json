@@ -3,7 +3,7 @@
   "circuit": "ldo_004_basic_pmos",
   "source_netlist": "abstract/netlist.spice",
   "summary": {
-    "device_count": 9,
+    "device_count": 10,
     "blocks_detected": 1,
     "by_family": {
       "current_mirror": 1

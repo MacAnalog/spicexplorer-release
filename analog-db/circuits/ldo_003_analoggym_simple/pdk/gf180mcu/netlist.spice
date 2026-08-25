@@ -4,8 +4,9 @@ CC ncz vout 'c_comp'
 RZ ncz ngate 'r_z'
 R_BLEED vout vss 'r_bleed'
 VB vb vss dc {vb_val}
+VLP lp_brk vout dc 0
 VREF vref vss dc {vref_val}
-XM1 ndiode vout ntail vss nfet_06v0 l=x_dut_xm1_l w=x_dut_xm1_w
+XM1 ndiode lp_brk ntail vss nfet_06v0 l=x_dut_xm1_l w=x_dut_xm1_w
 XM2 ngate vref ntail vss nfet_06v0 l=x_dut_xm2_l w=x_dut_xm2_w
 XM3 ngate ndiode vdd vdd pfet_06v0 l=x_dut_xm3_l w=x_dut_xm3_w
 XM4 ndiode ndiode vdd vdd pfet_06v0 l=x_dut_xm4_l w=x_dut_xm4_w

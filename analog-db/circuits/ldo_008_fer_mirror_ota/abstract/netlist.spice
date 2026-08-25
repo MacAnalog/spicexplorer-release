@@ -21,8 +21,21 @@ XMDF ldiode fb    tail vss nmos w=x_dut_xmdf_w l=x_dut_xmdf_l m=x_dut_xmdf_m
 XMLD ldiode ldiode vdd vdd pmos w=x_dut_xmld_w l=x_dut_xmld_l m=x_dut_xmld_m
 XMLM egate  ldiode vdd vdd pmos w=x_dut_xmlm_w l=x_dut_xmlm_l m=x_dut_xmlm_m
 XMP  vout   egate vdd vdd pmos w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m
+** LOOP-BREAK MARKER (contract for the ldo/ac_loopgain bench). A 0 V source is an ideal
+** short, so it is INVISIBLE to dc_op / regulation / dropout / psrr / the transients; only
+** ac_loopgain turns it into a generator. Verified here: zout_peak_db (3.7592) and
+** v_undershoot (0.040847) are unchanged to every recorded digit after the marker was added.
+**
+** WHAT MOVES BEHIND THE CUT. The RT/RB divider is the sense network and moves to lp_brk. The
+** RC/CC branch does NOT: it compensates the pass stage and is part of the plant, the same
+** status the pass device's intrinsic Cgd necessarily has (Cgd cannot be moved, so a cut that
+** moved CC would be inconsistent rather than complete). That choice was MEASURED, not
+** asserted: moving CC to lp_brk as well shifts pm_loop 53.69 -> 53.93 deg, ms_peak
+** 3.064 -> 2.802 dB and ugf_loop 24.68 -> 25.57 kHz on ihp-sg13g2, i.e. under a quarter
+** degree of phase margin, so the two cuts agree and the conventional one is kept.
+Vlp  lp_brk vout  dc 0
 RC   egate  czero r=x_rcomp
 CC   czero  vout  c=x_ccomp
-RT   vout   fb    r=x_dut_rt_value
+RT   lp_brk fb    r=x_dut_rt_value
 RB   fb     vss   r=x_dut_rb_value
 .end

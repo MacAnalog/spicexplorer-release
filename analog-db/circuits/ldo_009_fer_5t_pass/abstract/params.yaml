@@ -10,6 +10,7 @@ devices:
   IBI: {Value: x_ibias_val}
   RBLD: {Value: x_rbleed}
   RREF: {Value: x_rref}
+  VLP: {Value: dc 0}
   VREF: {Value: x_vref_val}
   XMIN: {l: x_dut_xmin_l, m: x_dut_xmin_m, w: x_dut_xmin_w}
   XMIP: {l: x_dut_xmip_l, m: x_dut_xmip_m, w: x_dut_xmip_w}

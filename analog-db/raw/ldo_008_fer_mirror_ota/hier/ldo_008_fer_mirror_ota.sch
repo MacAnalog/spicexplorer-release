@@ -13,7 +13,8 @@ C {devices/isource_np.sym} -660 340 0 0 {name=IBI value="dc {x_ibias_val}"}
 C {devices/res_np.sym} -110 340 0 0 {name=RB value=x_dut_rb_value}
 C {devices/res_np.sym} 110 340 0 0 {name=RC value=x_rcomp}
 C {devices/res_np.sym} 330 340 0 0 {name=RT value=x_dut_rt_value}
-C {devices/vsource_np.sym} -660 120 0 0 {name=VREF value="dc {x_vref_val}"}
+C {devices/vsource_np.sym} -660 120 0 0 {name=VLP value="dc 0"}
+C {devices/vsource_np.sym} -660 -100 0 0 {name=VREF value="dc {x_vref_val}"}
 C {devices/sg13_lv_pmos_np.sym} 0 -340 0 0 {name=MP model=sg13_lv_pmos spiceprefix=X w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m}
 N -330 -20 -290 -20 {}
 C {devices/lab_wire.sym} -290 -20 0 1 {name=l0 lab=egate}
@@ -56,18 +57,22 @@ C {devices/lab_wire.sym} 110 270 0 1 {name=l18 lab=egate}
 N 110 370 110 410 {}
 C {devices/lab_wire.sym} 110 410 2 0 {name=l19 lab=czero}
 N 330 310 330 270 {}
-C {devices/lab_wire.sym} 330 270 0 1 {name=l20 lab=vout}
+C {devices/lab_wire.sym} 330 270 0 1 {name=l20 lab=lp_brk}
 N 330 370 330 410 {}
 C {devices/lab_wire.sym} 330 410 2 0 {name=l21 lab=fb}
 N -660 90 -660 50 {}
-C {devices/lab_wire.sym} -660 50 0 1 {name=l22 lab=vref}
+C {devices/lab_wire.sym} -660 50 0 1 {name=l22 lab=lp_brk}
 N -660 150 -660 190 {}
-C {devices/lab_wire.sym} -660 190 2 0 {name=l23 lab=vss}
+C {devices/lab_wire.sym} -660 190 2 0 {name=l23 lab=vout}
+N -660 -130 -660 -170 {}
+C {devices/lab_wire.sym} -660 -170 0 1 {name=l24 lab=vref}
+N -660 -70 -660 -30 {}
+C {devices/lab_wire.sym} -660 -30 2 0 {name=l25 lab=vss}
 N 20 -310 20 -270 {}
-C {devices/lab_wire.sym} 20 -270 2 0 {name=l24 lab=vout}
+C {devices/lab_wire.sym} 20 -270 2 0 {name=l26 lab=vout}
 N -20 -340 -60 -340 {}
-C {devices/lab_wire.sym} -60 -340 0 0 {name=l25 lab=egate}
+C {devices/lab_wire.sym} -60 -340 0 0 {name=l27 lab=egate}
 N 20 -370 20 -410 {}
-C {devices/lab_wire.sym} 20 -410 0 1 {name=l26 lab=vdd}
+C {devices/lab_wire.sym} 20 -410 0 1 {name=l28 lab=vdd}
 N 20 -340 60 -340 {}
-C {devices/lab_wire.sym} 60 -340 0 1 {name=l27 lab=vdd}
+C {devices/lab_wire.sym} 60 -340 0 1 {name=l29 lab=vdd}

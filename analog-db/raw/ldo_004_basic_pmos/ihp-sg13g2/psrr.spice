@@ -53,8 +53,9 @@ XDUT vdd vout vss ldo_004_basic_pmos
 .param x_dut_xm4_l = {x_dut_xm3_l}
 .subckt ldo_004_basic_pmos vdd vout vss
 ITAIL etail vss dc {i_tail}
-R1 vout fb 'r_top'
+R1 lp_brk fb 'r_top'
 R2 fb vss 'r_bot'
+VLP lp_brk vout dc 0
 VREF vref vss dc {vref_val}
 XM1 noutm fb etail vss sg13_lv_nmos l=x_dut_xm1_l w=x_dut_xm1_w
 XM2 egate vref etail vss sg13_lv_nmos l=x_dut_xm2_l w=x_dut_xm2_w

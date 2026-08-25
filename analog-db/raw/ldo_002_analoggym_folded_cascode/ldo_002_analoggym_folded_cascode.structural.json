@@ -3,7 +3,7 @@
   "circuit": "ldo_002_analoggym_folded_cascode",
   "source_netlist": "abstract/netlist.spice",
   "summary": {
-    "device_count": 16,
+    "device_count": 17,
     "blocks_detected": 1,
     "by_family": {
       "differential_pair": 1
@@ -30,7 +30,7 @@
       "ports": {
         "supply": "vss",
         "in_p": "vref",
-        "in_n": "vout",
+        "in_n": "lp_brk",
         "CM_tail": "n4",
         "out_n": "n2",
         "out_p": "n3"

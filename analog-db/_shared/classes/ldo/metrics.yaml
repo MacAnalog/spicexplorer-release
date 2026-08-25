@@ -28,6 +28,11 @@ canonical_metrics:
   - ugf_loop_hz      # ac_loopgain: loop unity-gain frequency (regulation bandwidth)
   - pm_loop_deg      # ac_loopgain: TRUE loop phase margin (zout_peak_db is only a proxy for this)
   - gm_loop_db       # ac_loopgain: loop gain margin; NaN = phase never reaches 0 (unconditionally stable)
+  - ms_peak_db       # ac_loopgain: sensitivity-function peak max|S| = max|Zout_cl|/|Zout_ol| in dB;
+                    # the DAMPING figure zout_peak_db only proxies. Ms >= 1/(2 sin(PM/2)) always,
+                    # which is the per-run cross-check that the loop measurement is self-consistent.
+  - tloop_ph_dc_deg  # ac_loopgain: measured DC loop phase; the standing guard on the sign
+                    # convention behind ms_peak (must be near +/-180 for negative feedback)
   - v_undershoot     # load-step droop
   - t_transient      # load-step recovery
   - vn_out_rms       # integrated closed-loop output noise over the analysis band (V rms)

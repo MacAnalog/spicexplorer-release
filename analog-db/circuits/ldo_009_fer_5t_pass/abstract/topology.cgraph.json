@@ -87,6 +87,23 @@
     },
     {
       "connections": {
+        "N": "vout",
+        "P": "lp_brk"
+      },
+      "device_type": "VSOURCE",
+      "id": "VLP",
+      "params": {
+        "Value": "dc 0"
+      },
+      "polarity": null,
+      "ports": null,
+      "spice_model": null,
+      "structural_role": null,
+      "subcircuit_electrical_role": null,
+      "subckt_name": null
+    },
+    {
+      "connections": {
         "N": "vss",
         "P": "ref0"
       },
@@ -127,7 +144,7 @@
       "connections": {
         "BULK": "vss",
         "DRAIN": "otax",
-        "GATE": "vout",
+        "GATE": "lp_brk",
         "SOURCE": "tail"
       },
       "device_type": "MOS",
@@ -252,10 +269,15 @@
   ],
   "meta": {
     "circuit_name": "ldo_009_fer_5t_pass",
-    "component_count": 13,
-    "net_count": 9
+    "component_count": 14,
+    "net_count": 10
   },
   "nets": [
+    {
+      "is_supply": false,
+      "name": "lp_brk",
+      "supply_type": ""
+    },
     {
       "is_supply": false,
       "name": "nbias",

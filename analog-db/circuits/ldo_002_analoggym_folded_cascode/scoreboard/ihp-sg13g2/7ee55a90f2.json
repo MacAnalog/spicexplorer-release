@@ -11,6 +11,18 @@
   "corners": {
     "tt": {
       "analyses": {
+        "ac_loopgain": {
+          "measures": {
+            "gm_at_180": -19.79195,
+            "gm_loop_db": 19.79195,
+            "loopgain_db": 49.68358,
+            "ms_peak": 2.320101,
+            "pm_loop": 97.71804,
+            "tloop_ph_dc": 179.9991,
+            "ugf_loop": 28936650.0
+          },
+          "status": "ok"
+        },
         "dc_op": {
           "measures": {
             "i_supply": 0.0004081307,
@@ -74,8 +86,8 @@
         },
         "tran_load_step": {
           "measures": {
-            "t_transient": 2.054097e-05,
-            "tcross": 2.554097e-05,
+            "t_transient": 2.054101e-05,
+            "tcross": 2.554101e-05,
             "v_undershoot": 0.632214,
             "vout_min": 1.179185,
             "vout_post": 1.811399
@@ -86,7 +98,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-07-25T01:01:13+00:00"
+        "run_at": "2026-08-25T15:11:49+00:00"
       }
     }
   },
@@ -105,13 +117,33 @@
         "spec": "pass",
         "value": 0.011607
       },
+      "loopgain_db": {
+        "spec": "none",
+        "value": 49.68358
+      },
+      "ms_peak_db": {
+        "spec": "none",
+        "value": 2.320101
+      },
+      "pm_loop_deg": {
+        "spec": "none",
+        "value": 97.71804
+      },
       "psrr_vdd_db": {
         "spec": "pass",
         "value": 48.38148
       },
       "t_transient": {
         "spec": "pass",
-        "value": 2.054097e-05
+        "value": 2.054101e-05
+      },
+      "tloop_ph_dc_deg": {
+        "spec": "none",
+        "value": 179.9991
+      },
+      "ugf_loop_hz": {
+        "spec": "none",
+        "value": 28936650.0
       },
       "v_dropout": {
         "spec": "pass",

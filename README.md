@@ -13,8 +13,12 @@ developed by the MacAnalog research group at McMaster University. The whole
 platform is public — every package, the Studio front-end, and the circuit
 database — each published as a curated snapshot.
 
-**Current release: v1.1.1.** It moves the reference circuits to upstream
-pointers and refreshes the database (faster test tiers, publication-quality
+**Current release: v1.1.2.** It measures the LDO class's control loop
+directly — phase margin, unity-gain frequency, and the peak of the sensitivity
+function — rather than inferring stability from output-impedance peaking, and
+fixes a dropout sweep that ended below the voltage at which one regulator
+reaches regulation. v1.1.1 moved the reference circuits to upstream pointers
+and refreshed the database (faster test tiers, publication-quality
 schematics). v1.1 added the EDA base image, so `make up-live` gives
 you a working simulator and three open PDKs with nothing installed on the host
 (see [Live SPICE](#quickstart) below). v1.0 opened the platform: all ten

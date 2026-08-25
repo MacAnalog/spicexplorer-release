@@ -3,7 +3,7 @@
   "circuit": "ldo_008_fer_mirror_ota",
   "source_netlist": "abstract/netlist.spice",
   "summary": {
-    "device_count": 13,
+    "device_count": 14,
     "blocks_detected": 3,
     "by_family": {
       "current_mirror": 2,

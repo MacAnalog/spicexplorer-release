@@ -19,10 +19,17 @@
 XMP vout egate vdd vdd pmos w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m
 **
 ** --- feedback divider: vout -> fb -> vss  (vout = vref*(r_top+r_bot)/r_bot) ---
-R1 vout fb  'r_top'
+** LOOP-BREAK MARKER (contract for the ldo/ac_loopgain bench). A 0 V source is an ideal
+** short, so it is INVISIBLE to dc_op / regulation / dropout / psrr / the transients; only
+** ac_loopgain turns it into a generator. the r_top/r_bot divider TOGETHER WITH the Cff feedforward cap across it (Cff sits in
+** parallel with R1 and is part of the sense network, so leaving it on vout would let the
+** loop bypass the cut in band) senses vout on behalf of the loop and
+** therefore moves behind the marker; the Cc pass-stage compensation cap stays on vout.
+Vlp lp_brk vout dc 0
+R1 lp_brk fb  'r_top'
 R2 fb   vss 'r_bot'
 ** feedforward cap across R1: phase-lead zero ~1/(2*pi*r_top*c_ff) for loop stability
-Cff vout fb 'c_ff'
+Cff lp_brk fb 'c_ff'
 **
 ** --- internal ideal reference + error-amp tail bias (sim reference) ---
 ** NOTE: passive value fields are single-quoted and source values are braced so ngspice

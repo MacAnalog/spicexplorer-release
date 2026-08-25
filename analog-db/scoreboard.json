@@ -13809,8 +13809,13 @@
                   "i_q": 8.415467e-05,
                   "line_reg": 0.001353,
                   "load_reg": 0.015784,
+                  "loopgain_db": 63.34673,
+                  "ms_peak_db": 3.587869,
+                  "pm_loop_deg": 91.35901,
                   "psrr_vdd_db": 46.60617,
                   "t_transient": 2.124066e-05,
+                  "tloop_ph_dc_deg": 179.8788,
+                  "ugf_loop_hz": 691675.1,
                   "v_dropout": 0.05062656,
                   "v_line_pp": 0.045813,
                   "v_out": 1.597996,
@@ -13835,7 +13840,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             },
@@ -13966,10 +13971,15 @@
                   "i_q": 0.0003854028,
                   "line_reg": 0.000588,
                   "load_reg": 0.004829,
+                  "loopgain_db": 47.48064,
+                  "ms_peak_db": 1.413217,
+                  "pm_loop_deg": 94.08083,
                   "psrr_vdd_db": 47.91053,
                   "t_transient": 2.071219e-05,
+                  "tloop_ph_dc_deg": 179.9993,
+                  "ugf_loop_hz": 23553160.0,
                   "v_dropout": 0.1014815,
-                  "v_line_pp": 0.039645,
+                  "v_line_pp": 0.039647,
                   "v_out": 1.804899,
                   "v_undershoot": 0.724472,
                   "vn_out_rms": 0.005491267,
@@ -13992,7 +14002,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             },
@@ -14085,10 +14095,15 @@
                   "i_q": 0.0001141558,
                   "line_reg": 0.006271,
                   "load_reg": 0.05906,
+                  "loopgain_db": 34.11856,
+                  "ms_peak_db": 0.2773317,
+                  "pm_loop_deg": 89.65127,
                   "psrr_vdd_db": 29.22701,
                   "t_transient": 2.131796e-05,
+                  "tloop_ph_dc_deg": 179.9991,
+                  "ugf_loop_hz": 3168205.0,
                   "v_dropout": 0.1694435,
-                  "v_line_pp": 0.156488,
+                  "v_line_pp": 0.15648,
                   "v_out": 1.842333,
                   "v_undershoot": 0.9942183,
                   "vn_out_rms": 0.01277814,
@@ -14111,7 +14126,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             }
@@ -14128,8 +14143,13 @@
                   "i_q": 0.0002065452,
                   "line_reg": 0.000213,
                   "load_reg": 0.011866,
+                  "loopgain_db": 67.71137,
+                  "ms_peak_db": 0.4128793,
+                  "pm_loop_deg": 87.74486,
                   "psrr_vdd_db": 71.66065,
                   "t_transient": 2.148452e-05,
+                  "tloop_ph_dc_deg": 178.6206,
+                  "ugf_loop_hz": 100762.3,
                   "v_dropout": 0.04813479,
                   "v_line_pp": 0.000154,
                   "v_out": 1.309037,
@@ -14154,7 +14174,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             },
@@ -14287,9 +14307,11 @@
                   "line_reg": 0.017197,
                   "load_reg": 0.006042,
                   "loopgain_db": 83.25117,
+                  "ms_peak_db": 3.504561,
                   "pm_loop_deg": 52.63839,
                   "psrr_vdd_db": 35.55717,
                   "t_transient": 2.11929e-05,
+                  "tloop_ph_dc_deg": 177.8095,
                   "ugf_loop_hz": 294798.2,
                   "v_dropout": 0.3403637,
                   "v_line_pp": 0.009192,
@@ -14315,7 +14337,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 2,
                 "pass": 14
               }
             },
@@ -14543,8 +14565,13 @@
                   "i_q": 0.0001456382,
                   "line_reg": 0.000647,
                   "load_reg": 0.005387,
+                  "loopgain_db": 83.61626,
+                  "ms_peak_db": 4.004776,
+                  "pm_loop_deg": 49.7195,
                   "psrr_vdd_db": 69.13171,
                   "t_transient": 2.368626e-05,
+                  "tloop_ph_dc_deg": 175.5216,
+                  "ugf_loop_hz": 134750.1,
                   "v_dropout": 0.2656085,
                   "v_line_pp": 0.000769,
                   "v_out": 1.203382,
@@ -14569,7 +14596,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             }
@@ -14586,8 +14613,13 @@
                   "i_q": 0.0001039236,
                   "line_reg": 0.00249,
                   "load_reg": 0.03898,
+                  "loopgain_db": 56.08886,
+                  "ms_peak_db": 5.889982,
+                  "pm_loop_deg": 35.25455,
                   "psrr_vdd_db": 37.38731,
                   "t_transient": 2.490471e-05,
+                  "tloop_ph_dc_deg": 178.189,
+                  "ugf_loop_hz": 10759.89,
                   "v_dropout": 0.09909901,
                   "v_line_pp": 0.050738,
                   "v_out": 1.207876,
@@ -14612,7 +14644,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             }
@@ -14629,10 +14661,15 @@
                   "i_q": 6.489592e-05,
                   "line_reg": 0.0004823,
                   "load_reg": 0.0242768,
+                  "loopgain_db": 61.04518,
+                  "ms_peak_db": 0.43527,
+                  "pm_loop_deg": 87.46456,
                   "psrr_vdd_db": 61.99213,
                   "t_transient": 2.340061e-05,
+                  "tloop_ph_dc_deg": 178.6495,
+                  "ugf_loop_hz": 47756.21,
                   "v_dropout": 0.1787708,
-                  "v_line_pp": 0.0013613,
+                  "v_line_pp": 0.0013614,
                   "v_out": 0.9115441,
                   "v_undershoot": 0.0125397,
                   "vn_out_rms": 0.005996476,
@@ -14655,7 +14692,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             },
@@ -14750,8 +14787,13 @@
                   "i_q": 8.910878e-05,
                   "line_reg": 0.004006,
                   "load_reg": 0.026343,
+                  "loopgain_db": 50.24491,
+                  "ms_peak_db": 0.9335794,
+                  "pm_loop_deg": 89.47866,
                   "psrr_vdd_db": 36.95043,
                   "t_transient": 2.073399e-05,
+                  "tloop_ph_dc_deg": 179.9744,
+                  "ugf_loop_hz": 727548.8,
                   "v_dropout": 0.04781053,
                   "v_line_pp": 0.021716,
                   "v_out": 1.600981,
@@ -14776,7 +14818,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             },
@@ -14907,8 +14949,13 @@
                   "i_q": 0.0004081307,
                   "line_reg": 0.000836,
                   "load_reg": 0.011607,
+                  "loopgain_db": 49.68358,
+                  "ms_peak_db": 2.320101,
+                  "pm_loop_deg": 97.71804,
                   "psrr_vdd_db": 48.38148,
-                  "t_transient": 2.054097e-05,
+                  "t_transient": 2.054101e-05,
+                  "tloop_ph_dc_deg": 179.9991,
+                  "ugf_loop_hz": 28936650.0,
                   "v_dropout": 0.05205117,
                   "v_line_pp": 0.036453,
                   "v_out": 1.811749,
@@ -14933,7 +14980,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             },
@@ -15062,10 +15109,15 @@
               "metrics": {
                 "tt": {
                   "i_q": 0.000286068,
-                  "line_reg": 0.002865,
+                  "line_reg": 0.002863,
                   "load_reg": 0.012466,
+                  "loopgain_db": 41.8128,
+                  "ms_peak_db": 2.40614,
+                  "pm_loop_deg": 135.9743,
                   "psrr_vdd_db": 35.21503,
                   "t_transient": 2.084643e-05,
+                  "tloop_ph_dc_deg": 179.9983,
+                  "ugf_loop_hz": 6680111.0,
                   "v_dropout": 0.1475883,
                   "v_line_pp": 0.115193,
                   "v_out": 1.806988,
@@ -15090,7 +15142,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             },
@@ -15183,8 +15235,13 @@
                   "i_q": 0.0002065368,
                   "line_reg": 0.009524,
                   "load_reg": 0.025094,
+                  "loopgain_db": 63.4547,
+                  "ms_peak_db": 0.2803214,
+                  "pm_loop_deg": 89.28043,
                   "psrr_vdd_db": 37.38389,
                   "t_transient": 2.274499e-05,
+                  "tloop_ph_dc_deg": 178.4531,
+                  "ugf_loop_hz": 55113.04,
                   "v_dropout": 0.04119105,
                   "v_line_pp": 0.005492,
                   "v_out": 1.307297,
@@ -15209,7 +15266,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             },
@@ -15301,9 +15358,11 @@
                   "line_reg": 0.00432,
                   "load_reg": 0.001274,
                   "loopgain_db": 91.94185,
+                  "ms_peak_db": 4.344667,
                   "pm_loop_deg": 46.38975,
                   "psrr_vdd_db": 44.52535,
                   "t_transient": 8.7499e-07,
+                  "tloop_ph_dc_deg": 177.2245,
                   "ugf_loop_hz": 569119.7,
                   "v_dropout": 0.169675,
                   "v_line_pp": 0.003449,
@@ -15329,7 +15388,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 2,
                 "pass": 14
               }
             },
@@ -15528,8 +15587,13 @@
                   "i_q": 0.0002323818,
                   "line_reg": 0.004686,
                   "load_reg": 0.015716,
+                  "loopgain_db": 60.45707,
+                  "ms_peak_db": 0.5898528,
+                  "pm_loop_deg": 87.02473,
                   "psrr_vdd_db": 43.86137,
                   "t_transient": 2.073784e-05,
+                  "tloop_ph_dc_deg": 179.0843,
+                  "ugf_loop_hz": 130083.7,
                   "v_dropout": 0.09891209,
                   "v_line_pp": 0.002062,
                   "v_out": 1.220334,
@@ -15554,7 +15618,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             }
@@ -15607,10 +15671,15 @@
               "metrics": {
                 "tt": {
                   "i_q": 0.0001639862,
-                  "line_reg": 0.002049,
-                  "load_reg": 0.027977,
+                  "line_reg": 0.002048,
+                  "load_reg": 0.027976,
+                  "loopgain_db": 55.5877,
+                  "ms_peak_db": 3.064012,
+                  "pm_loop_deg": 53.69395,
                   "psrr_vdd_db": 49.54039,
                   "t_transient": 2.45042e-05,
+                  "tloop_ph_dc_deg": 178.9305,
+                  "ugf_loop_hz": 24678.59,
                   "v_dropout": 0.07564856,
                   "v_line_pp": 0.031599,
                   "v_out": 1.208795,
@@ -15619,14 +15688,14 @@
                   "zout_peak_db": 3.7592
                 }
               },
-              "pareto": false,
+              "pareto": true,
               "ppa": {
                 "active_gate_area_um2": 162.4,
                 "corners_run": [
                   "tt"
                 ],
                 "performance": {
-                  "load_reg": 0.027977,
+                  "load_reg": 0.027976,
                   "psrr_vdd_db": 49.54039,
                   "v_dropout": 0.07564856,
                   "v_undershoot": 0.040847
@@ -15635,7 +15704,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             }
@@ -15652,8 +15721,13 @@
                   "i_q": 7.390585e-05,
                   "line_reg": 0.0003873,
                   "load_reg": 0.0355528,
+                  "loopgain_db": 58.77027,
+                  "ms_peak_db": 0.1658019,
+                  "pm_loop_deg": 90.26434,
                   "psrr_vdd_db": 60.85411,
                   "t_transient": 2.430677e-05,
+                  "tloop_ph_dc_deg": 178.4724,
+                  "ugf_loop_hz": 32555.02,
                   "v_dropout": 0.1894805,
                   "v_line_pp": 0.0010922,
                   "v_out": 0.9139354,
@@ -15678,7 +15752,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             },
@@ -15763,23 +15837,28 @@
       },
       "sky130": {
         "ldo_001_analoggym_basic": {
-          "baseline": "fe79e486ff",
+          "baseline": "f87940bf5b",
           "entries": [
             {
-              "baseline": false,
+              "baseline": true,
               "design_id": "f87940bf5b",
               "metrics": {
                 "tt": {
                   "i_q": 1.90161e-05,
                   "line_reg": 0.241041,
                   "load_reg": 0.69248,
+                  "loopgain_db": 26.04333,
+                  "ms_peak_db": 0.8177575,
+                  "pm_loop_deg": 91.78135,
                   "psrr_vdd_db": 8.853088,
                   "t_transient": 2.459831e-05,
-                  "v_dropout": null,
+                  "tloop_ph_dc_deg": 179.9917,
+                  "ugf_loop_hz": 138899.9,
+                  "v_dropout": 0.2580689,
                   "v_line_pp": 0.25653,
                   "v_out": 1.59511,
                   "v_undershoot": 1.242756,
-                  "vn_out_rms": 0.01683375,
+                  "vn_out_rms": 0.01683373,
                   "zout_peak_db": 31.11222
                 }
               },
@@ -15792,18 +15871,19 @@
                 "performance": {
                   "load_reg": 0.69248,
                   "psrr_vdd_db": 8.853088,
+                  "v_dropout": 0.2580689,
                   "v_undershoot": 1.242756
                 },
                 "power_w": 3.422898e-05
               },
               "spec": {
-                "fail": 1,
-                "none": 0,
-                "pass": 10
+                "fail": 0,
+                "none": 5,
+                "pass": 11
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "fe79e486ff",
               "metrics": {
                 "tt": {
@@ -15843,20 +15923,25 @@
           ]
         },
         "ldo_002_analoggym_folded_cascode": {
-          "baseline": "bf2bdaa5c5",
+          "baseline": "1a25097f08",
           "entries": [
             {
-              "baseline": false,
+              "baseline": true,
               "design_id": "1a25097f08",
               "metrics": {
                 "tt": {
                   "i_q": 0.0002688982,
                   "line_reg": 0.000319,
                   "load_reg": 0.003576,
+                  "loopgain_db": 52.80952,
+                  "ms_peak_db": 1.132607,
+                  "pm_loop_deg": 98.1047,
                   "psrr_vdd_db": 53.19401,
-                  "t_transient": 2.114053e-05,
+                  "t_transient": 2.114052e-05,
+                  "tloop_ph_dc_deg": 179.9983,
+                  "ugf_loop_hz": 17075520.0,
                   "v_dropout": 0.08173078,
-                  "v_line_pp": 0.047229,
+                  "v_line_pp": 0.047233,
                   "v_out": 1.803378,
                   "v_undershoot": 0.731556,
                   "vn_out_rms": 0.008407348,
@@ -15879,12 +15964,12 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             },
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "bf2bdaa5c5",
               "metrics": {
                 "tt": {
@@ -15924,10 +16009,10 @@
           ]
         },
         "ldo_003_analoggym_simple": {
-          "baseline": "599f20d954",
+          "baseline": "b91c15769c",
           "entries": [
             {
-              "baseline": true,
+              "baseline": false,
               "design_id": "599f20d954",
               "metrics": {
                 "tt": {
@@ -15965,17 +16050,22 @@
               }
             },
             {
-              "baseline": false,
+              "baseline": true,
               "design_id": "b91c15769c",
               "metrics": {
                 "tt": {
                   "i_q": 0.0001084329,
                   "line_reg": 0.010821,
                   "load_reg": 0.100795,
+                  "loopgain_db": 31.36241,
+                  "ms_peak_db": 0.2567294,
+                  "pm_loop_deg": 90.5196,
                   "psrr_vdd_db": 25.40556,
-                  "t_transient": 2.106358e-05,
+                  "t_transient": 2.106357e-05,
+                  "tloop_ph_dc_deg": 179.9994,
+                  "ugf_loop_hz": 3393047.0,
                   "v_dropout": 0.1742206,
-                  "v_line_pp": 0.156655,
+                  "v_line_pp": 0.156651,
                   "v_out": 1.870814,
                   "v_undershoot": 0.9196776,
                   "vn_out_rms": 0.01272005,
@@ -15998,7 +16088,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             }
@@ -16053,8 +16143,13 @@
                   "i_q": 0.0002064935,
                   "line_reg": 0.000812,
                   "load_reg": 0.012801,
+                  "loopgain_db": 70.37045,
+                  "ms_peak_db": 0.5847687,
+                  "pm_loop_deg": 86.55081,
                   "psrr_vdd_db": 64.24408,
                   "t_transient": 2.129699e-05,
+                  "tloop_ph_dc_deg": 178.0672,
+                  "ugf_loop_hz": 97484.12,
                   "v_dropout": 0.05814472,
                   "v_line_pp": 0.000298,
                   "v_out": 1.298692,
@@ -16079,7 +16174,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             },
@@ -16227,8 +16322,13 @@
                   "i_q": 8.632218e-05,
                   "line_reg": 0.000533,
                   "load_reg": 0.010701,
+                  "loopgain_db": 74.49935,
+                  "ms_peak_db": 2.36265,
+                  "pm_loop_deg": 65.14695,
                   "psrr_vdd_db": 70.11699,
                   "t_transient": 2.313387e-05,
+                  "tloop_ph_dc_deg": 177.2071,
+                  "ugf_loop_hz": 96852.04,
                   "v_dropout": 0.2382648,
                   "v_line_pp": 0.000414,
                   "v_out": 1.207252,
@@ -16253,7 +16353,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             },
@@ -16308,8 +16408,13 @@
                   "i_q": 0.0001013569,
                   "line_reg": 0.00108,
                   "load_reg": 0.01738,
+                  "loopgain_db": 58.68293,
+                  "ms_peak_db": 2.613826,
+                  "pm_loop_deg": 47.82736,
                   "psrr_vdd_db": 37.06447,
                   "t_transient": 2.480687e-05,
+                  "tloop_ph_dc_deg": 178.466,
+                  "ugf_loop_hz": 12291.12,
                   "v_dropout": 0.06318425,
                   "v_line_pp": 0.044569,
                   "v_out": 1.207588,
@@ -16334,7 +16439,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             },
@@ -16503,8 +16608,13 @@
                   "i_q": 6.449068e-05,
                   "line_reg": 0.0002824,
                   "load_reg": 0.0260819,
+                  "loopgain_db": 58.3804,
+                  "ms_peak_db": 0.3181695,
+                  "pm_loop_deg": 88.33523,
                   "psrr_vdd_db": 63.35126,
                   "t_transient": 2.337415e-05,
+                  "tloop_ph_dc_deg": 178.9833,
+                  "ugf_loop_hz": 46724.21,
                   "v_dropout": 0.355485,
                   "v_line_pp": 0.0011569,
                   "v_out": 0.9150984,
@@ -16529,7 +16639,7 @@
               },
               "spec": {
                 "fail": 0,
-                "none": 0,
+                "none": 5,
                 "pass": 11
               }
             }

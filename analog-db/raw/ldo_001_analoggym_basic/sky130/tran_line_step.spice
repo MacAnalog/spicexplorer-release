@@ -118,8 +118,9 @@ XDUT vdd vout vss ldo_001_analoggym_basic
 .subckt ldo_001_analoggym_basic vdd vout vss
 C0 net106 vout 'c_comp'
 IBIAS ib vss dc {i_bias}
-R1 vout vfb 'r_top'
+R1 lp_brk vfb 'r_top'
 R2 vfb vss 'r_bot'
+VLP lp_brk vout dc 0
 VREF vref vss dc {vref_val}
 XM0 ib ib vdd vdd sky130_fd_pr__pfet_01v8 l=x_dut_xm0_l m=x_dut_xm0_m w=x_dut_xm0_w
 XM1 vb4 ib vdd vdd sky130_fd_pr__pfet_01v8 l=x_dut_xm1_l m=x_dut_xm1_m w=x_dut_xm1_w

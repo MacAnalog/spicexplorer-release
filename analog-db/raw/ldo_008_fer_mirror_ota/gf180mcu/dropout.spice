@@ -126,7 +126,8 @@ CC czero vout x_ccomp
 IBI vdd nbias dc {x_ibias_val}
 RB fb vss x_dut_rb_value
 RC egate czero x_rcomp
-RT vout fb x_dut_rt_value
+RT lp_brk fb x_dut_rt_value
+VLP lp_brk vout dc 0
 VREF vref vss dc {x_vref_val}
 XMDF ldiode fb tail vss nfet_03v3 l=x_dut_xmdf_l m=x_dut_xmdf_m w=x_dut_xmdf_w
 XMDR egate vref tail vss nfet_03v3 l=x_dut_xmdr_l m=x_dut_xmdr_m w=x_dut_xmdr_w

@@ -9,6 +9,7 @@ devices:
   IBIAS: {Value: i_bias}
   R1: {Value: r_top}
   R2: {Value: r_bot}
+  VLP: {Value: dc 0}
   VREF: {Value: vref_val}
   XM0: {l: x_dut_xm0_l, m: x_dut_xm0_m, w: x_dut_xm0_w}
   XM1: {l: x_dut_xm1_l, m: x_dut_xm1_m, w: x_dut_xm1_w}

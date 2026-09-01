@@ -12,7 +12,9 @@
 # claims against full-wave results — never in the optimizer loop.
 #
 # Debian bookworm ships CGAL 5.5 — CGAL 6 breaks CSXCAD, so apt is the pin.
-# QCSXCAD (Qt GUI viewer) is skipped: the lane runs headless.
+# QCSXCAD (Qt GUI viewer) is skipped via --disable-GUI: the lane runs headless,
+# and upstream defaults to GUI=YES, which needs the qtbase5-dev +
+# libvtk9-qt-dev stack this image deliberately does not carry.
 # =============================================================================
 FROM debian:bookworm-slim
 
@@ -25,16 +27,36 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # python deps in a venv (PEP 668: bookworm's system python is externally managed)
 RUN python3 -m venv /opt/emenv \
     && /opt/emenv/bin/pip install --no-cache-dir \
+        setuptools wheel setuptools-scm \
         cython numpy h5py matplotlib gdspy pyyaml scikit-rf "klayout>=0.30"
 ENV PATH=/opt/emenv/bin:$PATH
 
 # openEMS from source (no usable package). -fpermissive: CSXCAD vs CGAL headers.
+#
+# --disable-GUI: upstream defaults to GUI=YES and fails the C++ build against a
+#   Qt stack this image does not install.
+# --skip-dep-check: the checker looks for apt python3-* packages, but our python
+#   deps live in the venv above, which is first on PATH. Its warning is noise
+#   here; the build itself uses the venv interpreter.
+# NO `|| true`: it swallowed the real make failure and let the run die later on a
+#   confusing pip error instead. On failure, print the build log the script
+#   otherwise keeps to itself inside the image — a red CI run has to be
+#   diagnosable from the CI output alone.
+#
+# `--python` already builds and installs the extensions via
+# scripts/build_python.sh; the pip step below is a fallback for the case where
+# that does not land them in the venv.
 RUN git clone --recursive --depth 1 \
         https://github.com/thliebig/openEMS-Project.git /opt/src/openEMS-Project \
     && cd /opt/src/openEMS-Project \
-    && CXXFLAGS="-fpermissive" ./update_openEMS.sh /opt/openems --python || true \
-    && CSXCAD_INSTALL_PATH=/opt/openems /opt/emenv/bin/pip install \
-        --no-build-isolation ./CSXCAD/python ./openEMS/python \
+    && { CXXFLAGS="-fpermissive" ./update_openEMS.sh /opt/openems \
+             --python --disable-GUI --skip-dep-check \
+         || { echo "=== openEMS build log (tail) ==="; \
+              tail -n 200 build_*.log 2>/dev/null || echo "(no build log written)"; \
+              exit 1; }; } \
+    && { /opt/emenv/bin/python -c "import CSXCAD, openEMS" 2>/dev/null \
+         || CSXCAD_INSTALL_PATH=/opt/openems /opt/emenv/bin/pip install \
+                --no-build-isolation ./CSXCAD/python ./openEMS/python; } \
     && /opt/emenv/bin/python -c "import CSXCAD, openEMS" \
     && rm -rf /opt/src/openEMS-Project
 ENV LD_LIBRARY_PATH=/opt/openems/lib

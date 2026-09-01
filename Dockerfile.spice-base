@@ -46,7 +46,14 @@ WORKDIR /build
 # v45 matches the ABI the PDK models expect. SourceForge keeps the current
 # release at ng-spice-rework/<v>/ and archives older ones under old-releases/<v>/.
 RUN --mount=type=cache,target=/root/.cache/wget \
-    wget -q "https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/old-releases/${NGSPICE_VERSION}/ngspice-${NGSPICE_VERSION}.tar.gz" -O ngspice.tar.gz \
+    # SourceForge redirects to a mirror, and a mirror that is rate-limiting or
+    # briefly down answers with an HTTP error rather than a connection failure —
+    # wget's default single attempt then aborts the whole image build (exit 8).
+    # This is the only network fetch in the live-SPICE lane that has no fallback,
+    # so retry the error codes a mirror actually returns.
+    wget -q --tries=5 --waitretry=15 --retry-connrefused \
+         --retry-on-http-error=429,500,502,503,504 \
+         "https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/old-releases/${NGSPICE_VERSION}/ngspice-${NGSPICE_VERSION}.tar.gz" -O ngspice.tar.gz \
     && tar -xzf ngspice.tar.gz && rm ngspice.tar.gz
 WORKDIR /build/ngspice-${NGSPICE_VERSION}/release
 RUN ../configure \

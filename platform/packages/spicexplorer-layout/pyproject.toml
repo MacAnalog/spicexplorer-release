@@ -19,6 +19,14 @@ gds = [
     "klayout>=0.30",
 ]
 
+# EM verification lane (spicexplorer_layout.em): net cutting needs `gds`; the
+# touchstone -> SPICE-subckt exporter needs scikit-rf. The openEMS solver itself
+# is a from-source install (no wheel) and is NOT a dependency — em_sparams()
+# raises with the build-recipe pointer when it is absent.
+em = [
+    "scikit-rf>=1.0",
+]
+
 # NOTE: a leaf tool — depends on spicexplorer-core only. It MUST NOT import a peer tool
 # (`spicexplorer_signoff`, the optimizer `spicexplorer`). Composition (build → drc → lvs →
 # pex → measure) is done by handing `spicexplorer_signoff.run_flow` a `GdsBuilder` from here.

@@ -22,6 +22,7 @@ on:
     paths:
       - "Dockerfile.spice-base"
       - "Dockerfile.api"
+      - "Dockerfile.em"
       - "compose.yaml"
       - "Makefile"
       - "platform/docker/**"
@@ -31,6 +32,7 @@ on:
     paths:
       - "Dockerfile.spice-base"
       - "Dockerfile.api"
+      - "Dockerfile.em"
       - "compose.yaml"
       - "Makefile"
       - "platform/docker/**"
@@ -167,3 +169,65 @@ jobs:
       - name: tear down
         if: always()
         run: docker compose down -v || true
+
+  # The EM verification toolchain (Dockerfile.em). Separate job, not a step of
+  # live-spice: the two images share nothing, and a slow openEMS build must not
+  # hold the live-SPICE signal hostage.
+  #
+  # This job is the ONLY thing that builds this image — the release infra that
+  # authors Dockerfile.em runs on a host without docker-group access, so an
+  # unbuilt Dockerfile would otherwise ship on assertion alone.
+  em-build:
+    runs-on: ubuntu-latest
+    # openEMS from source (CSXCAD + fparser + the bindings, against boost/vtk/
+    # CGAL) is comparable to the ngspice build; the extra headroom over
+    # live-spice's 60 keeps a slow runner from failing as a timeout, which reads
+    # as a broken Dockerfile when it is not.
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: em lane ported yet?
+        id: ported
+        run: |
+          if [ -f Dockerfile.em ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Dockerfile.em not in the monorepo yet — this job activates once the em lane ports."
+          fi
+
+      # Same reclaim as live-spice: boost/vtk/CGAL via apt plus the openEMS
+      # build tree is several GB on top of the runner's preinstalled toolchains.
+      - name: free disk space
+        if: steps.ported.outputs.ok == 'true'
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /usr/local/share/boost "$AGENT_TOOLSDIRECTORY" || true
+          sudo docker image prune -af || true
+          df -h /
+
+      - name: build the EM toolchain image
+        if: steps.ported.outputs.ok == 'true'
+        run: docker compose --profile em build em
+
+      # The Dockerfile already imports the bindings during its own build, so a
+      # broken compile fails above. This asserts the RUNTIME wiring that a
+      # build-time RUN cannot: ENV LD_LIBRARY_PATH / PATH surviving into a fresh
+      # container, and the sparse-checked-out PDK workflow landing where
+      # EmTech.workflow expects it.
+      #
+      # Deliberately NOT driving spicexplorer_layout.em here — this is a
+      # toolchain image and carries none of this repo's Python packages, so
+      # importing it would be a false red.
+      - name: openEMS bindings + PDK workflow usable in a fresh container
+        if: steps.ported.outputs.ok == 'true'
+        run: |
+          docker run --rm spicexplorer-em:release sh -c '
+            set -eux
+            python -c "import CSXCAD, openEMS; print(openEMS.__file__)"
+            python -c "import skrf, klayout.db; print(skrf.__version__)"
+            test -d "$PDK_ROOT/$PDK/libs.tech/openems"
+            ls "$PDK_ROOT/$PDK/libs.tech/openems" | head
+          '

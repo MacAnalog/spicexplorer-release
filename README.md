@@ -49,8 +49,8 @@ other, so any one of them can be used on its own.
 | `spicexplorer-netlist2tf` | leaf tool | Netlist → exact symbolic transfer function, reduced to readable hand-form |
 | `spicexplorer-gmid` | leaf tool | Deterministic gm/ID sizing from pre-computed lookup tables |
 | `spicexplorer-waveview` | leaf tool | Universal result viewer — ngspice/Spectre artifacts → engine-neutral waveforms + plots |
-| `spicexplorer-layout` | leaf tool | Parameterized layout generation (the generator contract + GDS build) |
-| `spicexplorer-signoff` | leaf tool | Physical signoff — DRC / LVS / PEX runners with structured verdicts |
+| `spicexplorer-layout` | leaf tool | Layout as code — the parameterized generator contract + deterministic GDS build, annotated review renders, the post-layout measure protocol, and full-wave EM verification (openEMS) |
+| `spicexplorer-signoff` | leaf tool | Physical signoff — DRC / LVS / PEX runners with structured verdicts, chained build → DRC → LVS → PEX by one call, plus post-layout splicing and parasitic/mismatch injection |
 | `spicexplorer-core` | kernel | SPICE-engine wrappers, PVT corners, measurements, units, path anchoring |
 
 Each component keeps its own `README.md`, `LICENSE`, and (for Python) `pyproject.toml`;
@@ -117,6 +117,14 @@ each `make` target is a one-line wrapper you can run by hand.
 >
 > Prefer no containers? Install a local ngspice + an open PDK and run natively —
 > see [docs/getting-started.md](docs/getting-started.md#live-spice-optional).
+>
+> **`docker compose --profile em build em`** builds a third, separate image
+> ([`Dockerfile.em`](Dockerfile.em)) — **openEMS compiled from source plus the
+> IHP PDK's own openEMS workflow** — for the full-wave verification lane in
+> `spicexplorer-layout`. It has its own profile because the stack is heavy and
+> the lane is for confirming a reflection or balance claim after the fact, never
+> for the optimizer loop: a plain `make up` never builds it. See
+> [docs/docker.md](docs/docker.md#what-runs).
 
 ## Documentation
 

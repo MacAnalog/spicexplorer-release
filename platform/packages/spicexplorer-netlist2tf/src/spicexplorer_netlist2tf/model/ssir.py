@@ -31,6 +31,10 @@ class SmallSignalIR:
     fidelity: Fidelity = Fidelity.SOME_PARASITIC
     #: per-device-ref → {role: sympy Symbol} for the small-signal symbols the model introduced.
     symbols: dict[str, dict[str, sp.Symbol]] = field(default_factory=dict)
+    #: refs of devices no registered model could expand — they contribute NOTHING to the MNA,
+    #: so every downstream H(s) is missing their branches. Stage 2 also logs a warning, but a
+    #: log line is easy to lose in a busy run: assert on this instead.
+    unmodelled: tuple[str, ...] = ()
 
     @property
     def introduced_symbols(self) -> frozenset[str]:

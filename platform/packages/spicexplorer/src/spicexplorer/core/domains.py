@@ -832,6 +832,53 @@ class OptimizerConfig:
     spec_aggregation: str = "feasibility_reward"
     #: Shape parameters for the chosen strategy (currently only chebyshev's `rho`).
     aggregation_params: Optional[Dict[str, Any]] = None
+    #: OPT-IN tie-breaker for the spec axis. `None` (default) is today's behaviour to the bit.
+    #: The reward-less strategies (`weighted_sum`, `chebyshev`) score every FEASIBLE design
+    #: identically 0, so the "best" design such a run reports is search-order noise; `objective`
+    #: adds the satisfied specs' own reward mass back as a lexicographically-lower term, so the
+    #: design that is better on the DECLARED objectives wins the tie. A no-op under
+    #: `feasibility_reward`, whose feasible branch already IS that term. See
+    #: `core.utils.aggregate_spec_scores`.
+    tie_breaker: Optional[str] = None
+    #: Weight on that term. Cosmetic, not semantic — the base score is 0 wherever the term
+    #: applies, so every positive weight gives the SAME ordering; it only sets the log's scale.
+    #: `None` resolves at load to `core.utils.DEFAULT_TIE_BREAKER_WEIGHT` (that module cannot be
+    #: imported at module scope here — it imports this one).
+    tie_breaker_weight: Optional[float] = None
+    #: OPT-IN margin-aware reward. `0.0`/`None` (default) is today's behaviour to the bit; a
+    #: positive weight adds `w · clip(worst normalized spec margin, 0, margin_reward_clip)` to a
+    #: FEASIBLE trial's score. WORST, not mean, because that is the quantity measured to predict
+    #: corner survival (TCAS-2026 E-057/E-058: 246 tt-feasible designs, 98 passed all 5 MOS
+    #: corners, pass rate 23 %->67 % monotone in the worst tt margin, p = 0.001). Unlike
+    #: `tie_breaker` it is NOT a no-op under `feasibility_reward`. See
+    #: `core.utils.aggregate_spec_scores` / `normalized_spec_margin`.
+    margin_reward_weight: Optional[float] = None
+    #: Ceiling on the rewarded margin, in units of the spec's own `range` (default 1.0 = one full
+    #: range of headroom). Bounds the term so a single roomy spec cannot approach `MAX_REWARD`.
+    margin_reward_clip: Optional[float] = None
+    #: What a spec the run could not MEASURE (missing / NaN / non-finite / non-positive under
+    #: `log_scale`) does to the trial. `penalty` (default) is today's behaviour exactly: the spec
+    #: scores `-MAX_PENALTY`, which already makes the trial infeasible, but nothing downstream can
+    #: tell that apart from a converged-but-terrible design whose score clipped to the same floor.
+    #: `fail` additionally RECORDS it — the affected spec keys land in the trial's
+    #: `metadata['unmeasured_specs']` with an explicit `metadata['feasible']` — so a partly-crashed
+    #: simulation is machine-identifiable rather than re-derived. See `core.utils`.
+    unmeasured_policy: Optional[str] = None
+    #: Per-trial wall-time guard rails (ledger E-049: an Ax/BoTorch run's per-trial cost grew
+    #: 27 s -> 117 s -> 200-292 s as the GP refit wall arrived, with no signal in the log; the runs
+    #: had to be killed by hand). All `None` = OFF, which is exactly today's behaviour. Semantics
+    #: and the rolling-median definitions: `optimization.trial_timing`.
+    #: Absolute: WARN once the rolling median per-trial wall time exceeds this many seconds.
+    trial_time_warn_s: Optional[float] = None
+    #: Relative: WARN once the rolling median exceeds this multiple of the run's OWN early-trial
+    #: baseline. The honest one for E-049, whose signature is growth rather than an absolute cost.
+    trial_time_warn_factor: Optional[float] = None
+    #: Hard stop: end the run GRACEFULLY (final checkpoint taken, reason recorded) once the
+    #: rolling median exceeds this. Not a single trial's time — one slow trial is a hiccup.
+    trial_time_stop_s: Optional[float] = None
+    #: How often the rolling per-trial cost is reported at INFO. `None` -> the module default;
+    #: 0 silences it.
+    trial_time_report_every: Optional[int] = None
     #: Seed the search with the dut_params' `init` values: when True the Nevergrad backend
     #: `suggest()`s the `init` point so it is evaluated EARLY (a hint, not a queue — usually the
     #: first candidate serially, but with parallel workers/TwoPointsDE it may land a few trials in) (a searched param without `init` keeps
@@ -850,7 +897,14 @@ class OptimizerConfig:
         # Spec-axis aggregation — validate at LOAD, like every other closed vocabulary here.
         # Imported locally: core.utils imports this module (circular at module scope).
         # -------------------------
-        from spicexplorer.core.utils import SPEC_SCORE_AGGREGATORS, resolve_aggregation_params
+        from spicexplorer.core.utils import (
+            DEFAULT_TIE_BREAKER_WEIGHT,
+            SPEC_SCORE_AGGREGATORS,
+            resolve_aggregation_params,
+            resolve_margin_reward,
+            resolve_tie_breaker,
+            resolve_unmeasured_policy,
+        )
 
         self.spec_aggregation = str(self.spec_aggregation or "feasibility_reward").strip().lower()
         if self.spec_aggregation not in SPEC_SCORE_AGGREGATORS:
@@ -867,9 +921,73 @@ class OptimizerConfig:
         self.aggregation_params = resolve_aggregation_params(
             self.spec_aggregation, self.aggregation_params
         )
-        logger.info(
-            f"spec_aggregation='{self.spec_aggregation}' params={self.aggregation_params}"
+        # Same treatment for the opt-in tie-breaker: a typo (`tie_breaker: objectve`) must fail at
+        # load, not silently degrade to the flat objective it was turned on to fix.
+        self.tie_breaker = resolve_tie_breaker(self.tie_breaker)
+        if self.tie_breaker_weight is None:
+            self.tie_breaker_weight = DEFAULT_TIE_BREAKER_WEIGHT
+        if self.tie_breaker is not None:
+            weight = float(self.tie_breaker_weight)
+            if not np.isfinite(weight) or weight <= 0:
+                raise ValueError(
+                    f"tie_breaker_weight must be a finite positive number, "
+                    f"got {self.tie_breaker_weight!r}."
+                )
+            if self.spec_aggregation == "feasibility_reward":
+                logger.warning(
+                    f"tie_breaker='{self.tie_breaker}' has NO effect under "
+                    f"spec_aggregation='feasibility_reward' — its feasible branch already is the "
+                    f"reward term. Set spec_aggregation to 'weighted_sum' or 'chebyshev' to use it."
+                )
+        # Opt-in margin-aware reward — same treatment: a negative weight would PENALIZE headroom
+        # (the exact inversion of the intent) and a non-positive clip would silently delete the
+        # term, so both fail at load rather than quietly mis-scoring a whole campaign.
+        self.margin_reward_weight, self.margin_reward_clip = resolve_margin_reward(
+            self.margin_reward_weight, self.margin_reward_clip
         )
+        # Opt-in unmeasured-metric policy (closed vocabulary; a typo must not degrade to default).
+        self.unmeasured_policy = resolve_unmeasured_policy(self.unmeasured_policy)
+        logger.info(
+            f"spec_aggregation='{self.spec_aggregation}' params={self.aggregation_params} "
+            f"tie_breaker={self.tie_breaker!r} (weight={self.tie_breaker_weight}) "
+            f"margin_reward_weight={self.margin_reward_weight} "
+            f"(clip={self.margin_reward_clip}) unmeasured_policy='{self.unmeasured_policy}'"
+        )
+        if self.margin_reward_weight > 0:
+            logger.info(
+                f"margin-aware reward ACTIVE: a feasible trial earns "
+                f"{self.margin_reward_weight} x clip(worst normalized spec margin, 0, "
+                f"{self.margin_reward_clip}) on top of '{self.spec_aggregation}'."
+            )
+
+        # -------------------------
+        # Per-trial wall-time guard rails (E-049) — same discipline: validated at LOAD, `None` off.
+        # -------------------------
+        from spicexplorer.optimization.trial_timing import DEFAULT_TRIAL_TIME_REPORT_EVERY
+
+        for key in ("trial_time_warn_s", "trial_time_warn_factor", "trial_time_stop_s"):
+            raw = getattr(self, key)
+            if raw is None:
+                continue
+            value = float(raw)
+            if not np.isfinite(value) or value <= 0:
+                raise ValueError(f"{key} must be a finite positive number, got {raw!r}.")
+            setattr(self, key, value)
+        if self.trial_time_report_every is None:
+            self.trial_time_report_every = DEFAULT_TRIAL_TIME_REPORT_EVERY
+        elif int(self.trial_time_report_every) < 0:
+            raise ValueError(
+                f"trial_time_report_every must be >= 0 (0 silences the cadence line), "
+                f"got {self.trial_time_report_every!r}."
+            )
+        else:
+            self.trial_time_report_every = int(self.trial_time_report_every)
+        if any(getattr(self, k) is not None
+               for k in ("trial_time_warn_s", "trial_time_warn_factor", "trial_time_stop_s")):
+            logger.info(
+                f"per-trial time guards: warn_s={self.trial_time_warn_s} "
+                f"warn_factor={self.trial_time_warn_factor} stop_s={self.trial_time_stop_s}"
+            )
 
         # -------------------------
         # General

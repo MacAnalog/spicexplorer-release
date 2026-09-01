@@ -43,13 +43,14 @@ from .assumptions import (
 from .contract import (
     AssumptionApplied,
     ComplexRoot,
+    PoleZeroResult,
     SymbolicValue,
     TransferFunctionResult,
     ValidationReport,
 )
 from .describe import describe_tf
 from .ingest import from_file, from_string, ingest_netlist
-from .mna import build_system, detect_ac_input, extract_tf
+from .mna import build_system, detect_ac_input, extract_tf, transimpedance
 from .model import (
     Circuit2TF,
     Device,
@@ -72,6 +73,7 @@ from .models import (
     register_model,
     small_signal_model,
 )
+from .pencil import poles_zeros
 from .pipeline import transfer_function
 from .simplify import simplify_tf, validate_simplification
 from .tf import S
@@ -102,6 +104,8 @@ __all__ = [
     "build_system",
     "detect_ac_input",
     "extract_tf",
+    "transimpedance",
+    "poles_zeros",
     "MnaSystem",
     "RawTransferFunction",
     "S",
@@ -110,6 +114,7 @@ __all__ = [
     "TransferFunctionResult",
     "SymbolicValue",
     "ComplexRoot",
+    "PoleZeroResult",
     "AssumptionApplied",
     "ValidationReport",
     # Stage 4 — the simplification differentiator

@@ -41,6 +41,7 @@ __all__ = [
     "detect_ac_input",
     "extract_tf",
     "driving_point_impedance",
+    "transimpedance",
     "gain_decomposition",
     "loop_gain_from_system",
     "split_linear_in",
@@ -458,6 +459,57 @@ def gain_decomposition(
         "asymptotic_gain": raw(cast("sp.Expr", n1 / d1), "asymptotic_gain"),
         "direct_transmission": raw(cast("sp.Expr", n0 / d0), "direct_transmission"),
     }
+
+
+def transimpedance(
+    system: MnaSystem,
+    output,  # noqa: ANN001 — PortLike
+    injection,  # noqa: ANN001 — PortLike
+    *,
+    analysis: str = "transimpedance",
+    numeric_subs: dict[str, float] | None = None,
+) -> RawTransferFunction:
+    """Transimpedance ``Z_T(s) = (V[out+] − V[out−]) / I_inj`` for a unit current forced into ``injection``.
+
+    Same test-current injection as :func:`driving_point_impedance` — a nodal RHS, all independent
+    sources off — but read at a *different* port. That one degree of freedom is what makes the
+    primitive usable for **noise**: a device's channel-noise generator is a current source across
+    two nodes, so ``|Z_T(jω)|² · S_i(f)`` is that generator's contribution to the output PSD, and
+    the ratio to the signal ``H(s)`` refers it to the input. It is also the plain answer for any
+    current-input block (a TIA's gain, a photodiode front-end).
+
+    ``injection`` is the ``(from, to)`` node pair the current is pushed *into* at ``from`` and
+    pulled *out of* at ``to``; an AC-ground member is simply dropped (a single-ended injection).
+    """
+    out = _as_pair(output, system)
+    inj = _as_pair(injection, system)
+    r_p, r_n = system.row_of(inj.pos), system.row_of(inj.neg)
+    if r_p is None and r_n is None:
+        raise ValueError(
+            f"injection port {(inj.pos, inj.neg)} is entirely at AC ground — nothing to drive"
+        )
+
+    rhs = sp.zeros(system.n, 1)
+    if r_p is not None:
+        rhs[r_p] += 1
+    if r_n is not None:
+        rhs[r_n] -= 1
+
+    detA = determinant(system.Y)
+    if detA == 0:
+        raise ValueError("MNA system is singular (no unique solution) — check the netlist topology")
+
+    def node_voltage(net: str) -> sp.Expr:
+        col = system.row_of(net)
+        return sp.Integer(0) if col is None else cramer_numerator(system.Y, rhs, col) / detA
+
+    z = canonical_tf(node_voltage(out.pos) - node_voltage(out.neg))
+    subs = numeric_subs or {}
+    return RawTransferFunction(
+        expr=z, s=S, output=out, input=inj, name=system.name, analysis=analysis,
+        solve_path="selectively_numericized" if subs else "fully_symbolic",
+        numeric_subs=dict(subs),
+    )
 
 
 def driving_point_impedance(

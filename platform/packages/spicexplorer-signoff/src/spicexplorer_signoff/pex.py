@@ -24,6 +24,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
+from typing import Sequence
 
 from .pdk import kpex_exe, kpex_klayout_exe, pdk_root
 from .results import PexResult, tail
@@ -90,24 +91,35 @@ def strip_mim_for_pex(
     mim: tuple[int, int] = (36, 0),
     vmim: tuple[int, int] = (129, 0),
     topmetal1: tuple[int, int] = (126, 0),
-    margin_um: float = 0.2,
+    margin_um: float | None = 0.2,
+    layers: Sequence[tuple[int, int]] | None = None,
+    topmetal_margin_um: float | None = None,
 ) -> Path:
     """Write a PEX-only copy of ``gds_in`` with the IHP MIM device layers removed (see the
-    module docstring). Flattens the top cell. Needs the ``klayout`` python module."""
+    module docstring). Flattens the top cell. Needs the ``klayout`` python module.
+
+    ``layers`` (default ``(mim, vmim)``) are the (layer, datatype) pairs cleared — an HBT/BiCMOS
+    block also drops ``MemCap`` (69, 0). ``topmetal_margin_um`` (alias of ``margin_um``, wins when
+    given) is how far TopMetal1 is cut back over the MIM plates; ``None`` keeps TopMetal1 intact so
+    the plates stay as plain metal and their coupling to the neighbourhood is still extracted."""
     import klayout.db as db
 
+    if topmetal_margin_um is not None:
+        margin_um = topmetal_margin_um
+    strip = tuple(layers) if layers is not None else (mim, vmim)
     ly = db.Layout()
     ly.read(str(gds_in))
     top = ly.top_cell()
     lmim = ly.layer(*mim)
     region = db.Region(top.begin_shapes_rec(lmim)).merged()
     top.flatten(True)
-    top.shapes(lmim).clear()
-    top.shapes(ly.layer(*vmim)).clear()
-    ltm = ly.layer(*topmetal1)
-    tm = db.Region(top.begin_shapes_rec(ltm)).merged()
-    top.shapes(ltm).clear()
-    top.shapes(ltm).insert(tm - region.sized(int(round(margin_um / ly.dbu))))
+    for lay in strip:
+        top.shapes(ly.layer(*lay)).clear()
+    if margin_um is not None:
+        ltm = ly.layer(*topmetal1)
+        tm = db.Region(top.begin_shapes_rec(ltm)).merged()
+        top.shapes(ltm).clear()
+        top.shapes(ltm).insert(tm - region.sized(int(round(margin_um / ly.dbu))))
     ly.write(str(gds_out))
     return Path(gds_out)
 
@@ -131,7 +143,14 @@ def run_pex(
     pdk: str = "ihp-sg13g2",
     engine: str = "--2.5D",
     timeout_s: int = 3600,
+    halo_um: float | None = None,
 ) -> PexResult:
+    """Run kpex on ``cell`` of ``gds`` against ``schematic``.
+
+    ``halo_um`` overrides the tech file's sidewall halo (kpex ``--halo``): couplings between
+    shapes farther apart than the halo are DROPPED, so a knob that sweeps a spacing across
+    the tech default (IHP: 8 um) sees a fake step in C — raise the halo (e.g. 20) when an
+    optimizer explores spacings around it."""
     gds, schematic, out_dir = (
         Path(gds).resolve(),
         Path(schematic).resolve(),
@@ -169,6 +188,8 @@ def run_pex(
         "--out_dir",
         str(out_dir),
     ]
+    if halo_um is not None:
+        cmd += ["--halo", str(halo_um)]
     try:
         r = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=timeout_s)
     except subprocess.TimeoutExpired:

@@ -1150,7 +1150,14 @@ def test_family_roles_are_deterministic_ground_truth():
     assert DETERMINISTIC_ROLES.isdisjoint(RESIDUE_ROLES)
 
 
-def test_detection_over_an_incomplete_host_says_the_host_was_incomplete(caplog):
+# The census warning is emitted by `_as_graph(host, ...)`, BEFORE `find_subcircuits` iterates the
+# library — so these two tests pass an explicit `library=` (the authored-on-disk `_simple_lib`)
+# rather than falling through to `default_subcircuit_library()`. That default reads the shipped
+# catalogue out of the OPTIONAL `examples/analog-db` submodule, which CI deliberately does not
+# check out (`submodules: false`); relying on it made these assertions about host typing fail with
+# a FileNotFoundError that had nothing to do with what they measure. An explicit library keeps them
+# running in every environment.
+def test_detection_over_an_incomplete_host_says_the_host_was_incomplete(caplog, tmp_path):
     """`find_subcircuits` builds the host graph internally and throws it away.
 
     With the default `on_unknown="skip"` a device it cannot model is dropped, so detection runs
@@ -1165,11 +1172,11 @@ def test_detection_over_an_incomplete_host_says_the_host_was_incomplete(caplog):
         ".end\n"
     )
     with caplog.at_level(logging.WARNING, logger="spicexplorer_circuitgraph.match"):
-        find_subcircuits(host)
+        find_subcircuits(host, library=_simple_lib(tmp_path))
     assert "invisible to subcircuit detection" in caplog.text and "Q1" in caplog.text
 
 
-def test_a_fully_typed_host_is_not_flagged(caplog):
+def test_a_fully_typed_host_is_not_flagged(caplog, tmp_path):
     host = (
         "* mirror\n"
         "M1 ref ref vss vss sg13_lv_nmos\n"
@@ -1177,5 +1184,5 @@ def test_a_fully_typed_host_is_not_flagged(caplog):
         ".end\n"
     )
     with caplog.at_level(logging.WARNING, logger="spicexplorer_circuitgraph.match"):
-        find_subcircuits(host)
+        find_subcircuits(host, library=_simple_lib(tmp_path))
     assert "invisible to subcircuit detection" not in caplog.text

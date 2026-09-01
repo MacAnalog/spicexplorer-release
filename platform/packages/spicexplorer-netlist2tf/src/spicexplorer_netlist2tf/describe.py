@@ -69,6 +69,11 @@ def _roots(poly_expr: sp.Expr, defs: dict[str, float] | None) -> list[ComplexRoo
 
     Numeric coefficients (after optionally substituting ``defs``) → ``numpy.roots``; symbolic ones →
     ``sympy.roots`` closed forms (uncapped order) with numeric coordinates when ``defs`` resolve them.
+
+    NOTE: rooting *expanded* coefficients loses roots to floating-point cancellation once they
+    span many decades — a 4th-order filter's degree-15 denominator is already enough. When the
+    numbers matter more than the closed form, use :func:`spicexplorer_netlist2tf.poles_zeros`,
+    which solves the MNA pencil directly and never forms a polynomial.
     """
     expr = sp.expand(_bind(poly_expr, defs))
     if expr == 0 or not expr.has(S):

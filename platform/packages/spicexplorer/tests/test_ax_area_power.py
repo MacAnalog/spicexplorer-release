@@ -6,12 +6,37 @@ an EMPTY ``spicelib_wrappers`` dict, so ``parameterize()`` / ``denormalize_param
 cases are gated on the optional ``ax`` extra (Python 3.11+); they skip cleanly where it is
 absent. Live end-to-end scoring is covered by the container-only demo (`examples/ax_area_power`).
 """
+from pathlib import Path
+
 import pytest
 from _spicexplorer_fixtures import REPO_ROOT
 from spicexplorer.core.domains import Project_Setup
 
 BASELINE_YAML = REPO_ROOT / "examples/ax_area_power/amp_029_baseline.yaml"
 AREA_POWER_YAML = REPO_ROOT / "examples/ax_area_power/amp_029_area_power.yaml"
+
+
+def _area_power_deck() -> Path | None:
+    """The amp_029 DUT deck the `active_area` spec is scored against, or None if absent.
+
+    `active_area` is measured by the recursive netlist WALK (see
+    `spicexplorer_core.measurements.area`), which reads the real deck — that is deliberate: the
+    walk resolves the deck's own tie map, where the retired hand-written `devices:` list silently
+    undercounted. The deck lives in the OPTIONAL `examples/analog-db` submodule, which CI checks
+    out with `submodules: false`, so the walk cannot run there. Resolve the path the same way the
+    tests do (from the YAML, not hardcoded) so this tracks the example instead of drifting from it.
+    """
+    setup = Project_Setup.from_yaml(AREA_POWER_YAML)
+    deck = Path(setup.ws_root) / setup.netlist
+    return deck if deck.is_file() else None
+
+
+_AREA_POWER_DECK = _area_power_deck()
+_NO_DECK_REASON = (
+    "amp_029 DUT deck not available: the nested examples/analog-db checkout is not initialized "
+    "(run `git submodule update --init examples/analog-db`) — the active_area netlist walk needs "
+    "the real deck"
+)
 
 
 def _searched_frozen(setup):
@@ -56,6 +81,7 @@ def test_optimizer_type_from_config_fails_loud(bad):
 
 # ── area/power specs load + derived-metric context (no ax, no SPICE) ──────────
 
+@pytest.mark.skipif(_AREA_POWER_DECK is None, reason=_NO_DECK_REASON)
 def test_area_power_yaml_specs_and_derived_context():
     from spicexplorer.optimization.derived_integration import DerivedMetricContext
 
@@ -70,8 +96,6 @@ def test_area_power_yaml_specs_and_derived_context():
 
     # active_area is now scored by the recursive NETLIST WALK (no `devices:` list) — build with
     # the resolved DUT deck so the walk can discover every transistor.
-    from pathlib import Path
-
     deck = Path(setup.ws_root) / setup.netlist
     ctx = DerivedMetricContext.build(setup.optimizer_config.target_specs, netlist_path=deck)
     assert ctx is not None and ctx.spec_names == frozenset({"active_area"})
@@ -170,14 +194,13 @@ def test_backend_equivalence_search_space_and_frozen():
 
 # ── review fixes: derived-metric robustness + OCEAN tier filter ───────────────
 
+@pytest.mark.skipif(_AREA_POWER_DECK is None, reason=_NO_DECK_REASON)
 def test_derived_metric_netlist_mode_resolves_partial_vector_and_overrides():
     """A bare `evaluate()` (manual sim / sensitivity) may pass only the SEARCHED knobs. In
     netlist-walk mode the un-passed symbols (frozen multipliers, tied twins) resolve from the
     DECK's own `.param` block, so a partial vector still scores a FINITE area — strictly more
     robust than the old hand-list path, which NaN'd on any absent symbol. Overrides that ARE
     passed still win and flow through the deck's ties. No SPICE needed."""
-    from pathlib import Path
-
     from spicexplorer.optimization.derived_integration import DerivedMetricContext
     from spicexplorer.optimization.stochastic.nevergrad import Nevergrad_Spice_Single_Objective
 

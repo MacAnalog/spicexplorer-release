@@ -12,12 +12,21 @@ from spicexplorer.optimization.base import (
     Spice_Constraint_Satisfaction,
     Spice_Single_Objective,
 )
+from spicexplorer.optimization.stochastic.nevergrad_compat import apply_numpy2_metamodel_patch
 
 # Symxplorer Specific Imports
 from spicexplorer_core.spice_engine import Simulator
 
 logger = logging.getLogger("spicexplorer.optimization.stochastic.nevergrad")
 logger.debug(f'imported {__name__}')
+
+# nevergrad <= 1.0.12 (the newest release) crashes with a numpy-2 `TypeError` the first time its
+# metamodel engages -- for NGOpt a few hundred trials into a run, i.e. hours of SPICE thrown away
+# (ledger E-052). Upstream fixed it on `main` but has cut no release, so there is no version floor
+# to raise; the backport is applied here, at import of the Nevergrad backend, so EVERY path that
+# constructs a Nevergrad optimizer (orchestrator, API runner, notebooks) gets it. A no-op on a
+# nevergrad that does not carry the bug. See `nevergrad_compat`.
+apply_numpy2_metamodel_patch()
 
 
 # ----------------------------

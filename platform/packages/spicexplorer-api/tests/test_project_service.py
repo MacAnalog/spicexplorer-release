@@ -215,6 +215,31 @@ def test_delete_run_trash_id_uses_full_run_id(ps):
 
 # ---------- demos.yaml manifest (curated demo registry) ----------
 
+def _unresolvable_demos() -> list[str]:
+    """demos.yaml entries whose project_setup.yaml is not on disk.
+
+    The manifest lists three `analog-db/circuits/...` raw-deck demos that live in the OPTIONAL
+    nested `examples/analog-db` submodule. `list_examples()` deliberately SKIPS a listed-but-
+    missing entry with a warning rather than failing the picker, so where the submodule is not
+    checked out — CI uses `submodules: false` — the returned keys are a strict subset of the
+    manifest and the exact-equality assertion below cannot hold. Detect that precisely instead of
+    guessing at a sentinel, so the test still RUNS wherever the checkout exists."""
+    examples = REPO_ROOT / "examples"
+    entries = yaml.safe_load((examples / "demos.yaml").read_text())["demos"]
+    return [e for e in entries if not (examples / str(e)).is_file()]
+
+
+_MISSING_DEMOS = _unresolvable_demos()
+
+
+@pytest.mark.skipif(
+    bool(_MISSING_DEMOS),
+    reason=(
+        "demos.yaml entries not on disk "
+        f"({', '.join(_MISSING_DEMOS)}) — the nested examples/analog-db checkout is not "
+        "initialized; run `git submodule update --init examples/analog-db`"
+    ),
+)
 def test_list_examples_follows_committed_manifest(ps):
     """The committed examples/demos.yaml is the single source of what shows up
     (order included); the analog-db mirror projections of the classics are

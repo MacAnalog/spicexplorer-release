@@ -13,7 +13,7 @@ dependencies = [
     "spicexplorer-netlist2xschem",  # netlist -> xschem .sch (+ optional render) leaf tool
     "spicexplorer-waveview",  # universal result viewer (dataset loaders + measurements) leaf tool
     "fastapi>=0.141.1",
-    "uvicorn[standard]>=0.52.1",
+    "uvicorn[standard]>=0.52.4",
     "python-multipart>=0.0.12",
 ]
 

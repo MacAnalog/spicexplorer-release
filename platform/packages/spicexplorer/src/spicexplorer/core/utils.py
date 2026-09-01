@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, Tuple
 
 import numpy as np
 
@@ -10,18 +10,32 @@ import numpy as np
 # single-objective optimizers never touches them. Keeping the import lazy lets the
 # api's score path import this module without the heavy torch wheel. Install the
 # Bode/RL features with:  pip install 'spicexplorer[torch]'.
-try:
-    import torch
-except ModuleNotFoundError:
-    torch = None
-try:
+#
+# The TYPE_CHECKING branch is what a static checker sees: the real modules, so
+# `torch.Tensor` stays a usable ANNOTATION and `torch.mean(...)` stays a call on a
+# module. The `... = None` fallbacks below are a RUNTIME sentinel for "extra not
+# installed" — typing them as `Module | None` made every annotation in this file a
+# `reportInvalidTypeForm` and every call a `reportOptionalMemberAccess`, which is
+# noise about an import guard, not about the code. The guard itself is unchanged:
+# the runtime behaviour, including the `if torch is not None:` checks below, is
+# byte-for-byte what it was.
+if TYPE_CHECKING:
     import control as ctrl
-except ModuleNotFoundError:
-    ctrl = None
-try:
     import sympy as sp
-except ModuleNotFoundError:
-    sp = None
+    import torch
+else:
+    try:
+        import torch
+    except ModuleNotFoundError:
+        torch = None
+    try:
+        import control as ctrl
+    except ModuleNotFoundError:
+        ctrl = None
+    try:
+        import sympy as sp
+    except ModuleNotFoundError:
+        sp = None
 
 import logging
 import warnings
@@ -808,6 +822,17 @@ def aggregate_corner_scores(corner_scores: Dict[str, np.float64], strategy: str)
     """
     if not corner_scores:
         raise ValueError("aggregate_corner_scores needs at least one corner score.")
+    if strategy == PER_SPEC_CORNER_AGGREGATION:
+        # `worst_spec` does NOT reduce per-corner TOTALS — it reduces the per-corner per-SPEC
+        # scores first (see `aggregate_corner_spec_scores`), so it cannot be expressed as a numpy
+        # reducer in `CORNER_SCORE_AGGREGATORS` and must never reach here. Raise with the pointer
+        # rather than let the registry lookup fail as an anonymous "unknown strategy".
+        raise ValueError(
+            f"pvt.score_aggregation '{PER_SPEC_CORNER_AGGREGATION}' does not collapse per-corner "
+            f"TOTALS — it takes each SPEC's worst corner and aggregates the spec axis once. Use "
+            f"`aggregate_corner_spec_scores` + `aggregate_spec_scores` (the optimizer's "
+            f"`evaluate` does)."
+        )
     aggregator = CORNER_SCORE_AGGREGATORS.get(strategy)
     if aggregator is None:
         raise ValueError(
@@ -820,6 +845,95 @@ def aggregate_corner_scores(corner_scores: Dict[str, np.float64], strategy: str)
     if strategy == "mean":  # see AGG-2: the denominator is the whole corner set
         return np.float64(np.sum(list(subset.values())) / len(corner_scores))
     return np.float64(aggregator(list(subset.values())))
+
+
+#: The canonical name of the corner strategy that reduces the SPEC axis across corners instead of
+#: the per-corner totals. Mirrors `spicexplorer_core.pvt`'s vocabulary (which validates it at load);
+#: duplicated as a constant here only so this module never spells the string inline.
+PER_SPEC_CORNER_AGGREGATION = "worst_spec"
+
+
+def aggregate_corner_spec_scores(
+    per_corner_spec_scores: Dict[str, Dict[str, np.float64]],
+) -> Tuple[Dict[str, np.float64], Dict[str, str]]:
+    """Collapse ``{corner: {spec: score}}`` onto the SPEC axis by keeping each spec's WORST corner.
+
+    Returns ``({spec: worst_score}, {spec: binding_corner_name})``.
+
+    **Why the minimum of the per-spec SCORE and not of the raw metric value.** The signed spec score
+    is already monotone in that spec's margin under every goal — more headroom is a larger score,
+    a bigger violation a more negative one — so ``min`` *is* "the corner giving the largest
+    violation / the smallest margin" with no goal branching, and it is the only formulation that
+    has an answer for a two-sided ``goal: exact`` spec (the largest deviation on either side wins).
+    A raw-value worst case would need a per-goal rule and would have none for EXACT.
+
+    **How this differs from `aggregate_corner_scores`.** That one collapses each corner's already-
+    aggregated TOTAL, so a spec's failure at `ss` is first averaged into `ss`'s total and only then
+    compared with `tt`'s. This one composes the other way round — worst corner PER SPEC first, then
+    ONE spec-axis aggregation — which is what makes the reported best design and its feasibility
+    mean *"feasible at every listed corner"*: the aggregated vector is the corner-wise worst case,
+    so a design scores feasible only if every spec clears at every corner simultaneously.
+
+    A spec missing from a corner's map is skipped for that corner (a corner that was not simulated
+    for it), so a spec present in at least one corner still resolves; a spec present in NO corner
+    does not appear in the result.
+    """
+    if not per_corner_spec_scores:
+        raise ValueError("aggregate_corner_spec_scores needs at least one corner.")
+    worst: Dict[str, np.float64] = {}
+    binding: Dict[str, str] = {}
+    for corner_name, spec_scores in per_corner_spec_scores.items():
+        for spec_name, score in (spec_scores or {}).items():
+            value = np.float64(score)
+            if spec_name not in worst or value < worst[spec_name]:
+                worst[spec_name] = value
+                binding[spec_name] = corner_name
+    return worst, binding
+
+
+def aggregate_corner_spec_margins(
+    per_corner_spec_margins: Dict[str, Dict[str, Any]],
+) -> Dict[str, np.float64]:
+    """The margin twin of :func:`aggregate_corner_spec_scores`: each spec's SMALLEST margin over
+    the corners it was measured at, so the opt-in margin reward pays for worst-CORNER headroom
+    rather than nominal headroom. ``None``/non-finite entries are dropped (see
+    :func:`normalized_spec_margin`); a spec with no finite margin anywhere is omitted."""
+    worst: Dict[str, np.float64] = {}
+    for spec_margins in per_corner_spec_margins.values():
+        for spec_name, margin in (spec_margins or {}).items():
+            if margin is None:
+                continue
+            value = np.float64(margin)
+            if not np.isfinite(value):
+                continue
+            if spec_name not in worst or value < worst[spec_name]:
+                worst[spec_name] = value
+    return worst
+
+
+#: Closed vocabulary for `optimizer_config.unmeasured_policy` (see `resolve_unmeasured_policy`).
+UNMEASURED_POLICIES: Tuple[str, ...] = ("penalty", "fail")
+
+#: Default policy — EXACTLY today's behaviour, and the historical one.
+DEFAULT_UNMEASURED_POLICY: str = "penalty"
+
+
+def resolve_unmeasured_policy(policy: str | None) -> str:
+    """Normalize + validate `unmeasured_policy`; `None`/`''`/`'none'` mean the historical default.
+
+    Same shape as :func:`resolve_tie_breaker` — a typo must fail at LOAD rather than silently
+    degrade to the permissive behaviour the key was set to leave."""
+    if policy is None:
+        return DEFAULT_UNMEASURED_POLICY
+    name = str(policy).strip().lower()
+    if name in ("", "none", "null", "default"):
+        return DEFAULT_UNMEASURED_POLICY
+    if name not in UNMEASURED_POLICIES:
+        raise ValueError(
+            f"Unknown unmeasured_policy '{policy}'. Valid: {sorted(UNMEASURED_POLICIES)} "
+            f"(or null / 'none' for the default '{DEFAULT_UNMEASURED_POLICY}')."
+        )
+    return name
 
 
 # [Endpint] - Aggregate per-SPEC scores into one scalar objective
@@ -845,6 +959,151 @@ AGGREGATION_SHAPE_PARAMS: Dict[str, Dict[str, Any]] = {
 #: historical hardcoded behaviour exactly, so an existing project that names none is unchanged.
 SPEC_SCORE_AGGREGATORS: Tuple[str, ...] = ("feasibility_reward", "weighted_sum", "chebyshev")
 
+#: OPT-IN tie-breakers for the spec axis, selected by `optimizer_config.tie_breaker`. `None` (the
+#: default) is today's behaviour to the bit. The only member, `objective`, exists because the
+#: reward-less strategies (`weighted_sum`, `chebyshev`) are *exactly flat at 0* across the whole
+#: feasible region: every feasible design scores the same, so the "best" one a run reports is
+#: search-order noise rather than a design decision. See `aggregate_spec_scores`.
+SPEC_TIE_BREAKERS: Tuple[str, ...] = ("objective",)
+
+#: Weight on the tie-breaking objective term. Cosmetic, NOT semantic: see `aggregate_spec_scores`
+#: — the base score is identically 0 wherever the term applies, so every positive weight induces
+#: the SAME ordering. It only sets how big the numbers in the log look.
+DEFAULT_TIE_BREAKER_WEIGHT: float = 1.0e-6
+
+#: OPT-IN margin-aware reward for the spec axis, selected by `optimizer_config.margin_reward_weight`.
+#: `0.0` (the default) is today's behaviour to the bit. Motivation is measured, not aesthetic
+#: (TCAS-2026 ledger E-057 / cross-mining E-058): of 246 designs feasible at the `tt` corner alone,
+#: only 98 still passed at all five MOS corners, and the pass rate rose MONOTONICALLY with the
+#: design's WORST `tt` spec margin (23 % -> 67 % across margin bins, p = 0.001). The only campaign
+#: arm that was 100 % corner-robust AND transient-stable was the highest-margin one. So margin —
+#: specifically the WORST spec's margin, the quantity that predicts corner survival — is the
+#: property to reward, and rewarding it is strictly cheaper than simulating every corner (which is
+#: what `pvt.score_aggregation: worst_spec` costs).
+DEFAULT_MARGIN_REWARD_WEIGHT: float = 0.0
+
+#: Ceiling on the (already worst-over-specs) margin that can be rewarded, in units of the spec's own
+#: `range` — i.e. one full `range` of headroom is the most a design can be paid for. Two reasons it
+#: is clipped at all: (a) an unbounded term would let ONE spec with an enormous headroom (a MINIMIZE
+#: power spec whose target is loose) out-vote the declared objectives, re-creating the domination
+#: the worst-over-specs `min` exists to prevent; (b) the term must stay bounded so it can never
+#: approach `MAX_REWARD` and turn a merely-roomy design into a permanent global best. Clipped BELOW
+#: at 0 as well, so tolerance-band float dust on a just-satisfied spec cannot make the term negative
+#: and quietly penalize a feasible design.
+DEFAULT_MARGIN_REWARD_CLIP: float = 1.0
+
+
+def normalized_spec_margin(curr_val, target_spec) -> np.float64 | None:
+    """Signed, `range`-normalized margin of ``curr_val`` against ``target_spec``'s constraint band.
+
+    This is the SAME geometry the reward path already uses (`compute_reward_for_spec`): the margin
+    is measured from the **tolerance-adjusted boundary** the penalty is measured from —
+    ``target - tolerance`` for EXCEED, ``target + tolerance`` for MINIMIZE — and normalized by the
+    SAME ``normalizing_coeff``: ``target_spec.range`` normally, or the decade-space
+    :func:`log_space_range_coeff` under ``log_scale``. Sharing that denominator is not a detail:
+    dividing a decades-sized log-scale miss by the raw LINEAR range collapses it to ~0 (the bug the
+    penalty path's comments call out), and a bare ``/|target|`` additionally divides by zero on a
+    legitimate ``target: 0`` spec.
+
+    ``> 0`` means the spec is satisfied with that much normalized headroom; ``< 0`` is a violation
+    of that size; ``0`` is exactly on the band edge.
+
+    Returns ``None`` — "this spec has no one-sided margin" — for:
+
+    * ``goal: exact``, which is two-sided: a deviation of ±x is neither headroom nor a shortfall in
+      the sense the worst-margin statistic means, and an EXACT spec earns no reward today either;
+    * an unscoreable reading (:func:`is_scoreable_metric`), i.e. exactly the readings the scorer
+      already refuses to hand to a kernel.
+
+    A ``None`` is DROPPED by the aggregator rather than treated as a worst margin: an unmeasured
+    spec is already `-MAX_PENALTY` on the score axis, which makes the trial infeasible, and the
+    margin term only ever applies to feasible trials.
+    """
+    goal = getattr(target_spec, "goal", None)
+    if goal == OptimizationGoalType.EXACT:
+        return None
+    if not is_scoreable_metric(curr_val, log_scale=bool(getattr(target_spec, "log_scale", False))):
+        return None
+
+    target_val = np.float64(target_spec.target)
+    tolerance = np.float64(target_spec.tolerance)
+    if getattr(target_spec, "log_scale", False):
+        coeff = log_space_range_coeff(target_val, np.float64(target_spec.range))
+        spec_curr_val, target_val, tolerance = log_space_band(curr_val, target_val, tolerance)
+    else:
+        coeff = np.float64(target_spec.range)
+        spec_curr_val = np.float64(curr_val)
+
+    if coeff <= 0 or not np.isfinite(coeff):
+        return None
+    if goal == OptimizationGoalType.EXCEED:
+        return np.float64((spec_curr_val - (target_val - tolerance)) / coeff)
+    if goal == OptimizationGoalType.MINIMIZE:
+        return np.float64(((target_val + tolerance) - spec_curr_val) / coeff)
+    return None
+
+
+def resolve_margin_reward(weight: float | None, clip: float | None) -> Tuple[float, float]:
+    """Normalize + validate the opt-in margin-reward knobs; `None`/`0` weight means OFF.
+
+    Kept next to :func:`resolve_tie_breaker` so every spec-axis knob validates the same way, at
+    load: a negative weight would *penalize* headroom (the exact inversion of the intent) and a
+    non-positive clip would silently delete the term, so both are refused rather than tolerated."""
+    w = DEFAULT_MARGIN_REWARD_WEIGHT if weight is None else float(weight)
+    c = DEFAULT_MARGIN_REWARD_CLIP if clip is None else float(clip)
+    if not np.isfinite(w) or w < 0:
+        raise ValueError(
+            f"margin_reward_weight must be a finite number >= 0 (0 disables it), got {weight!r}."
+        )
+    if not np.isfinite(c) or c <= 0:
+        raise ValueError(
+            f"margin_reward_clip must be a finite positive number, got {clip!r}."
+        )
+    return w, c
+
+
+def margin_reward_term(
+    spec_margins: Dict[str, Any] | None,
+    weight: float = DEFAULT_MARGIN_REWARD_WEIGHT,
+    clip: float = DEFAULT_MARGIN_REWARD_CLIP,
+) -> np.float64 | None:
+    """``w · clip(min_i margin_i, 0, cap)`` — the bounded worst-margin bonus, or ``None`` when off.
+
+    **WORST, not mean, and deliberately so.** E-058 measured the corner-survival rate against the
+    design's worst `tt` margin; a mean would let one enormous headroom paper over the one spec that
+    is about to fail at `ss`. The clip is applied to the MIN (not per spec): taking the min already
+    stops any single spec from dominating, so what is left to bound is how large the surviving
+    worst margin itself may be.
+
+    ``None`` (rather than 0.0) when the term is off or no spec has a margin, so the caller can
+    return its base score object untouched and keep the default path bit-identical."""
+    if weight <= 0 or not spec_margins:
+        return None
+    margins = [np.float64(m) for m in spec_margins.values()
+               if m is not None and np.isfinite(np.float64(m))]
+    if not margins:
+        return None
+    worst = np.float64(min(margins))
+    return np.float64(weight) * np.float64(np.clip(worst, 0.0, np.float64(clip)))
+
+
+def resolve_tie_breaker(tie_breaker: str | None) -> str | None:
+    """Normalize + validate the opt-in spec-axis tie-breaker; `None`/`''`/`'none'` mean OFF.
+
+    Kept next to `resolve_aggregation_params` so both spec-axis knobs validate the same way, at
+    load, against a closed vocabulary — a typo must not silently degrade to the default."""
+    if tie_breaker is None:
+        return None
+    name = str(tie_breaker).strip().lower()
+    if name in ("", "none", "null", "off"):
+        return None
+    if name not in SPEC_TIE_BREAKERS:
+        raise ValueError(
+            f"Unknown tie_breaker '{tie_breaker}'. Valid: {sorted(SPEC_TIE_BREAKERS)} "
+            f"(or null / 'none' to disable)."
+        )
+    return name
+
 
 def resolve_aggregation_params(strategy: str, params: Dict[str, Any] | None) -> Dict[str, Any]:
     """Merge `params` over a strategy's defaults; reject unknown keys. `{}` for strategies with none."""
@@ -867,6 +1126,11 @@ def aggregate_spec_scores(
     spec_scores: Dict[str, np.float64],
     strategy: str = "feasibility_reward",
     params: Dict[str, Any] | None = None,
+    tie_breaker: str | None = None,
+    tie_breaker_weight: float = DEFAULT_TIE_BREAKER_WEIGHT,
+    spec_margins: Dict[str, Any] | None = None,
+    margin_reward_weight: float = DEFAULT_MARGIN_REWARD_WEIGHT,
+    margin_reward_clip: float = DEFAULT_MARGIN_REWARD_CLIP,
 ) -> np.float64:
     """Collapse per-spec signed scores ``{spec_name: score}`` into one scalar objective.
 
@@ -895,30 +1159,103 @@ def aggregate_spec_scores(
 
     An EMPTY input returns 0.0 rather than raising — a project whose specs are all `enable: false`
     is degenerate but not a crash, and `max()` over an empty penalty set would raise.
+
+    **`tie_breaker` (opt-in, default OFF — `None` reproduces every number above to the bit).**
+    `weighted_sum` and `chebyshev` carry no reward term, so they are *identically 0* everywhere in
+    the feasible region: every feasible design ties, and the "best" one a run reports is whichever
+    the sampler happened to visit — search-order noise, not a design decision. `tie_breaker=
+    "objective"` adds the satisfied specs' own reward mass back as a lexicographically-lower
+    term::
+
+        F = F_base + w · R      where the design is feasible (Σ P > -EPSILON)
+        F = F_base              otherwise — the infeasible landscape is untouched
+
+    so among equally-scoring feasible points the one that is better on the DECLARED objectives
+    (the `reward_type` kernels of its EXCEED/MINIMIZE specs) wins, while feasibility still
+    strictly dominates: `R >= 0` and `w > 0`, so a feasible point never scores below 0 and an
+    infeasible one never scores above it.
+
+    `w` (`tie_breaker_weight`) is **cosmetic, not semantic**. Wherever the term applies, `F_base`
+    is exactly 0 (`weighted_sum`) or within float dust of it, so *every* positive `w` induces the
+    same ordering over feasible points — it only decides how large the numbers in the log look.
+    It is a knob so a study can keep the tie-break visually separated from a `feasibility_reward`
+    arm's scores, not because the ordering depends on it.
+
+    The tie-breaker is a deliberate **no-op for `feasibility_reward`**, whose feasible branch
+    already IS `R`: re-adding it would rescale the historical objective for no gain.
+
+    Like every strategy, the tie-broken score stays monotone non-decreasing in each spec's score:
+    the term is a non-negative sum of per-spec rewards, and it switches on at the same
+    feasibility threshold that already gates `feasibility_reward`, in the improving direction.
+
+    **`margin_reward_weight` (opt-in, default `0.0` — reproduces every number above to the bit).**
+    A design that merely *clears* its specs at the nominal corner is not a design that survives
+    silicon: TCAS-2026 E-057/E-058 re-simulated 246 `tt`-feasible designs at all five MOS corners
+    and only 98 passed everywhere, with the pass rate rising monotonically with the design's WORST
+    `tt` spec margin (23 % -> 67 %, p = 0.001). `margin_reward_weight > 0` pays a feasible design
+    for that quantity::
+
+        F = F_tie_broken + w_m · clip(min_i margin_i, 0, cap)   where the design is feasible
+        F = F_tie_broken                                        otherwise — infeasible untouched
+
+    with `margin_i` the `range`-normalized headroom from :func:`normalized_spec_margin` (EXACT-goal
+    specs excluded — they have no one-sided margin) and `cap` = `margin_reward_clip` (default 1.0 =
+    one full `range`). Unlike `tie_breaker` this is **NOT** a no-op under `feasibility_reward` —
+    that is the entire point: `feasibility_reward`'s feasible branch pays for the DECLARED
+    objectives, and this pays, additionally, for robustness geometry the objectives do not express.
+
+    **Both terms together are defined and ordered**: they are independent non-negative addenda
+    gated on the SAME feasibility test, applied in the order `base -> tie-break -> margin`, so
+    `F = F_base + w_tb·R + w_m·clip(margin)`. Addition is commutative, so the order is a
+    documentation convenience, not a semantic one; neither term can turn a feasible score
+    negative, so feasibility still strictly dominates with both on. Monotonicity survives too:
+    improving a spec can only raise its margin, hence only raise (never lower) the clipped min.
     """
     if strategy not in SPEC_SCORE_AGGREGATORS:
         raise ValueError(
             f"Unknown spec_aggregation '{strategy}'. Valid: {sorted(SPEC_SCORE_AGGREGATORS)}."
         )
     shape = resolve_aggregation_params(strategy, params)
+    tie_breaker = resolve_tie_breaker(tie_breaker)
     if not spec_scores:
         return np.float64(0.0)
 
     penalties = [-np.float64(s) for s in spec_scores.values() if s < 0]
     rewards = np.float64(sum(np.float64(s) for s in spec_scores.values() if s > 0))
+    # `> -EPSILON` (not `>= 0`) mirrors the historical test: a penalty sum within one epsilon
+    # of zero counts as feasible, so float dust in a satisfied spec cannot hide the rewards.
+    total_penalty = -np.float64(sum(penalties))
+    feasible = bool(total_penalty > -1 * EPSILON)
+
+    # The bounded worst-margin bonus, or None when the knob is off / no spec carries a margin.
+    # Computed ONCE here and applied only on the feasible branches below; `None` lets every
+    # historical return statement hand back its exact original object (bit-identity).
+    margin_term = margin_reward_term(spec_margins, margin_reward_weight, margin_reward_clip)
 
     if strategy == "feasibility_reward":
-        # `> -EPSILON` (not `>= 0`) mirrors the historical test: a penalty sum within one epsilon
-        # of zero counts as feasible, so float dust in a satisfied spec cannot hide the rewards.
-        total_penalty = -np.float64(sum(penalties))
-        return rewards if total_penalty > -1 * EPSILON else total_penalty
+        # The reward term is already the feasible branch here, so the tie-breaker is a no-op —
+        # returned directly, which also keeps this (the default) path byte-identical. The MARGIN
+        # term is not a no-op here (see the docstring): it pays for headroom the declared
+        # objectives do not express, so it applies to this strategy's feasible branch too.
+        base = rewards if feasible else total_penalty
+        if margin_term is None or not feasible:
+            return base
+        return np.float64(base + margin_term)
     if strategy == "weighted_sum":
-        return np.float64(-1 * sum(penalties))
-    # chebyshev
-    if not penalties:
-        return np.float64(0.0)
-    rho = np.float64(shape["rho"])
-    return np.float64(-1 * (max(penalties) + rho * sum(penalties)))
+        base = np.float64(-1 * sum(penalties))
+    else:  # chebyshev
+        if not penalties:
+            base = np.float64(0.0)
+        else:
+            rho = np.float64(shape["rho"])
+            base = np.float64(-1 * (max(penalties) + rho * sum(penalties)))
+
+    if tie_breaker is not None and feasible:
+        # tie_breaker == "objective": the only member of SPEC_TIE_BREAKERS.
+        base = np.float64(base + np.float64(tie_breaker_weight) * rewards)
+    if margin_term is None or not feasible:
+        return base
+    return np.float64(base + margin_term)
 
 
 # ----------------------------

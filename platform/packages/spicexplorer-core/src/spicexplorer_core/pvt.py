@@ -31,16 +31,34 @@ logger = logging.getLogger("spicexplorer.designer_tools.domains")
 
 PVT_MODES = ("single", "multi")
 
-#: canonical strategy -> what it does to the per-corner total scores
-#:   sum  — add them ("add"):        favors average-case, can mask one failing corner
-#:   mean — average them ("average"): like sum but budget-of-corners invariant
-#:   min  — worst case ("worst_case"): classic PVT sign-off; robust but pessimistic
-SCORE_AGGREGATION_STRATEGIES = ("sum", "mean", "min")
+#: canonical strategy -> what it does to the per-corner scores
+#:   sum  — add the per-corner TOTALS ("add"):        favors average-case, can mask one failing corner
+#:   mean — average the TOTALS ("average"):           like sum but budget-of-corners invariant
+#:   min  — worst TOTAL ("worst_case"):               classic PVT sign-off; robust but pessimistic
+#:   worst_spec — worst corner PER SPEC ("per_spec_min"), THEN one spec-axis aggregation.
+#:                The other three reduce each corner's already-aggregated total, so one spec's
+#:                failure at `ss` is averaged into `ss`'s total before it is ever compared with
+#:                `tt`'s. `worst_spec` composes the other way round, which is what makes the
+#:                reported best design and its feasibility mean "feasible at EVERY enabled corner":
+#:                the scored vector is the corner-wise worst case per spec, so the design scores
+#:                feasible only if every spec clears at every corner simultaneously.
+#:                COST: per-trial simulation cost multiplies by the number of enabled corners —
+#:                the same multiplier `mode: multi` already carries, but worth restating because
+#:                this strategy is the reason to turn `mode: multi` on.
+#:                Evidence it is worth paying for: TCAS-2026 ledger E-057 / cross-mining E-058 —
+#:                of 246 designs feasible at `tt` alone, only 98 passed at all five MOS corners.
+#:                The numeric collapse lives in the optimizer layer
+#:                (`spicexplorer.core.utils.aggregate_corner_spec_scores`), not in
+#:                `CORNER_SCORE_AGGREGATORS`, because it is not a reducer over totals.
+SCORE_AGGREGATION_STRATEGIES = ("sum", "mean", "min", "worst_spec")
 
 _SCORE_AGGREGATION_ALIASES = {
     "sum": "sum", "add": "sum", "total": "sum",
     "mean": "mean", "avg": "mean", "average": "mean",
     "min": "min", "worst": "min", "worst_case": "min", "worst-case": "min", "worstcase": "min",
+    "worst_spec": "worst_spec", "worst-spec": "worst_spec", "worstspec": "worst_spec",
+    "per_spec_min": "worst_spec", "per-spec-min": "worst_spec",
+    "worst_case_per_spec": "worst_spec", "worst-case-per-spec": "worst_spec",
 }
 
 
@@ -188,7 +206,12 @@ class PVTConfig:
       • ``mode: multi`` — every trial runs the full
         {enabled testbenches} × {enabled corners} cross-product; the per-corner
         scores are collapsed into one scalar by ``score_aggregation``
-        (``sum``/"add", ``mean``/"average", or ``min``/"worst_case").
+        (``sum``/"add", ``mean``/"average", ``min``/"worst_case", or
+        ``worst_spec``/"per_spec_min" — worst corner PER SPEC, then one spec-axis
+        aggregation, i.e. feasibility means "feasible at every enabled corner").
+
+    **Cost.** In ``multi`` mode a trial simulates every enabled corner, so the
+    per-trial simulation cost is multiplied by ``len(corners_to_run())``.
     """
     active_corner: str
     corners: List[Corner] = field(default_factory=list)
@@ -217,6 +240,19 @@ class PVTConfig:
         # Normalize the aggregation alias eagerly so every consumer (optimizer,
         # API summary, wizard round-trip) only ever sees a canonical name.
         self.score_aggregation = normalize_score_aggregation(self.score_aggregation)
+
+        # A corner-axis strategy is only reachable when corners actually run. Say so
+        # rather than silently scoring a single corner: `worst_spec` CHANGES what
+        # "feasible" means (every corner, per spec), so a run that quietly skipped it
+        # would report robustness it never measured. Mirrors the no-op warning
+        # OptimizerConfig emits for tie_breaker under feasibility_reward.
+        if self.mode != "multi" and self.score_aggregation == "worst_spec":
+            logger.warning(
+                "pvt.score_aggregation='worst_spec' has NO effect under pvt.mode="
+                f"'{self.mode}' — only one corner is simulated per trial, so there is "
+                "nothing to take a per-spec worst case over. Set pvt.mode: multi (and "
+                "enable the corners you want scored) to use it."
+            )
 
         if self.mode == "multi":
             self._validate_multi_corner_config()

@@ -45,12 +45,29 @@ family: CMRR / PSRR / loop-gain). Phase-by-phase (`doc/todo_netlist2tf.md`):
 - **P7 — derived analyses** ✅ — `open_loop_gain` / `input_impedance` / `output_impedance` are recipes
   over the same MNA solve (test-current injection + source-zeroing), each returning the standard
   contract with an `analysis` tag, so the simplification differentiator carries over for free.
-  (PSRR / CMRR / loop-gain ride the post-R1 DM/CM engine.)
+  (PSRR / CMRR / loop-gain ride the post-R1 DM/CM engine.) `transimpedance(system, out, inject)`
+  is the same solve driven by a **current** forced across a node pair — the `Z_T` a per-device
+  noise or distortion budget needs, which a voltage-ratio `extract_tf` cannot express.
 - **P8 — testbench ingestion** ✅ — *actual* netlists end to end: ingestion **flattens** resolvable
   `X…` subckt instances (internal nets/refs get a `_<inst>` postfix; `keep_opaque=`/`flatten=False`
   opt out), and the input port is **auto-detected from the testbench's AC source** when `input` is
   omitted (`detect_ac_input`). The committed `ota-improved_tb-ac.spice` (unity-gain buffer around
   the 20-T cascode OTA) solves with no manual `extra_grounds` and no explicit ports.
+- **The numeric pencil path** ✅ — `poles_zeros(system, out, in)` reads the poles and zeros
+  straight off the MNA pencil instead of rooting an expanded polynomial. `describe_tf` remains
+  the default (it is exact, and it works symbolically), but its `numpy.roots` path degrades
+  quietly on circuits that are merely medium-sized: the symbolic determinant may not finish,
+  and a denominator whose coefficients span tens of decades loses its low-frequency roots to
+  floating-point cancellation. Since every primitive stamps a conductance, a VCCS or `s·C`,
+  `Y(s) = G + s·C` **exactly**, so the poles are the finite generalized eigenvalues of
+  `(G, C)` — no polynomial, nothing to cancel. numpy-only (shift-and-invert, no scipy);
+  checked against a QZ reference on a 13-node differential filter to 3.2e-14. Returns the
+  Pydantic `PoleZeroResult`; refuses inductors (`1/(sL)` is not affine in `s`) with a message
+  that says so.
+- **Dropped devices are inspectable** ✅ — `SmallSignalIR.unmodelled` lists the refs no
+  registered model could expand. Those branches are absent from the MNA, so an `H(s)` built
+  over them is silently missing part of the circuit; assert on the field rather than scraping
+  the (long-standing) Stage-2 log warning.
 
 ### One-liner
 
@@ -113,6 +130,11 @@ ir.to_dict()                     # round-trippable JSON front-end (Circuit2TF.fr
 executed, end-to-end walkthrough: ingest a netlist → small-signal model → exact `H(s)` → the
 describe stage (DC gain / poles / zeros), including the differential/common-mode family
 (CMRR / PSRR / loop-gain).
+
+[`notebooks/pencil_poles_zeros.ipynb`](notebooks/pencil_poles_zeros.ipynb) — when the
+symbolic path stops being the right tool: the two ways `describe_tf`'s expanded-coefficient
+rooting degrades, the same circuits solved with `poles_zeros`, a residual test proving the
+pencil's roots really are roots, and the `unmodelled` guard.
 
 ## Tests
 

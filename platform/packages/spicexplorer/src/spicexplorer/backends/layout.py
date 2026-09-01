@@ -136,6 +136,20 @@ class PexSpec:
     ports: Optional[str] = None
     #: an explicit schematic for kpex when there is no LVS stage (else the LVS reference)
     schematic: Optional[Path] = None
+    #: …OR a callable in the generator module, ``writer(LayoutParams, out=path) -> path``, run in
+    #: `gds_python` per trial: the kpex-flavour schematic when it differs from the LVS reference
+    #: (e.g. 3-terminal poly resistors in the IHP kpex deck vs 2-terminal in the KLayout LVS deck)
+    schematic_writer: Optional[str] = None
+    #: GDS (layer, datatype) pairs removed for the PEX copy when `strip_mim` is set (default: the
+    #: IHP MIM + Vmim layers); the PAM4/HBT recipe also drops MemCap (69, 0)
+    strip_mim_layers: tuple[tuple[int, int], ...] = ((36, 0), (129, 0))
+    #: margin (µm) by which TopMetal1 is cut back over the MIM plates; ``None`` keeps TopMetal1
+    #: intact (the plates stay as plain metal, so their coupling is still extracted)
+    strip_mim_topmetal_margin_um: Optional[float] = 0.2
+    #: kpex sidewall halo override (µm; ``--halo``). Couplings between shapes farther apart
+    #: than the halo are dropped by the extractor, so a spacing knob that crosses the tech
+    #: default (IHP 8 µm) sees a fake C step — set e.g. 20 when the search spans it
+    halo_um: Optional[float] = None
     #: nets that are AC ground for the block's benches; when given, ``c_<net>_ff`` is the
     #: C from <net> to {ground ∪ ac_gnd_nets} (the number a bench sees), and the plain
     #: Σ-to-anything sum is ``ctot_<net>_ff``. Without it, ``c_<net>_ff`` = Σ-to-anything.
@@ -265,6 +279,10 @@ class LayoutFlowSpec:
         # committed spec is portable across hosts), else the spec's `gds_python`, else this one.
         gds_python = str(os.environ.get("GDS_PYTHON") or raw.get("gds_python") or sys.executable)
         gds_python = os.path.expandvars(os.path.expanduser(gds_python))
+        # a RELATIVE path (e.g. the block's own `../../.venv/bin/python`) is relative to the
+        # spec file, like every other path in it — not to the optimizer's cwd
+        if "/" in gds_python and not os.path.isabs(gds_python):
+            gds_python = str(_expand(gds_python, base))
 
         drc_raw = raw.get("drc")
         drc = DrcSpec()
@@ -298,8 +316,20 @@ class LayoutFlowSpec:
             if cards is not None and not cards.is_file():
                 raise FileNotFoundError(f"{path}: pex.schematic_cards_from not found: {cards}")
             sch = _expand(pex_raw["schematic"], base) if pex_raw.get("schematic") else None
-            if sch is None and lvs is None:
-                raise ValueError(f"{path}: `pex` needs an `lvs` stage (its reference is kpex's schematic) or `pex.schematic`")
+            sch_writer = pex_raw.get("schematic_writer")
+            if sch is not None and sch_writer:
+                raise ValueError(f"{path}: `pex` takes `schematic` OR `schematic_writer`, not both")
+            if sch is None and sch_writer is None and lvs is None:
+                raise ValueError(f"{path}: `pex` needs an `lvs` stage (its reference is kpex's schematic), `pex.schematic` or `pex.schematic_writer`")
+            sm_layers_raw = pex_raw.get("strip_mim_layers")
+            sm_layers: tuple[tuple[int, int], ...] = ((36, 0), (129, 0))
+            if sm_layers_raw is not None:
+                try:
+                    sm_layers = tuple((int(ly), int(d)) for ly, d in sm_layers_raw)
+                except (TypeError, ValueError):
+                    raise ValueError(f"{path}: pex.strip_mim_layers must be a list of [layer, datatype] pairs")
+            sm_margin_raw = pex_raw.get("strip_mim_topmetal_margin_um", 0.2)
+            sm_margin = None if sm_margin_raw is None else float(sm_margin_raw)
             prefixes = pex_raw.get("schematic_card_prefixes", ["xc"])
             ports = pex_raw.get("ports")
             pex = PexSpec(
@@ -309,6 +339,10 @@ class LayoutFlowSpec:
                 schematic_card_prefixes=tuple(str(p).lower() for p in (prefixes if isinstance(prefixes, list) else [prefixes])),
                 ports=" ".join(ports) if isinstance(ports, list) else (str(ports) if ports else None),
                 schematic=sch,
+                schematic_writer=str(sch_writer) if sch_writer else None,
+                strip_mim_layers=sm_layers,
+                strip_mim_topmetal_margin_um=sm_margin,
+                halo_um=(float(pex_raw["halo_um"]) if pex_raw.get("halo_um") is not None else None),
                 ac_gnd_nets=tuple(str(n) for n in (pex_raw.get("ac_gnd_nets") or [])),
                 timeout_s=int(pex_raw.get("timeout_s", 3600)),
             )
@@ -702,17 +736,19 @@ class LayoutSimulator:
         rest = {k: v for k, v in params.items() if k not in sizing}
         knobs = {k: v for k, v in rest.items() if not known or k in known}
         extra = {k: v for k, v in rest.items() if known and k not in known}
-        if extra and self.spec.postlayout is None:
+        if extra and self.spec.postlayout is None and self.spec.measure is None:
             raise KeyError(
                 f"{sorted(extra)} are not knobs of {self.spec.generator.name}'s LayoutParams "
-                f"(known: {sorted(known)}) and this flow has no `postlayout` testbenches to forward "
-                f"them to. Fix the dut_param / testbench params name."
+                f"(known: {sorted(known)}) and this flow has no `postlayout` testbenches or "
+                f"`measure` hook to forward them to. Fix the dut_param / testbench params name."
             )
         cast = self.spec.cast_params(knobs)
         with self._lock:
             self._params.update(cast)
             self._params.update(self.spec.fixed_params)  # pinned modes always win
-            self._deck_params.update(extra)  # → NGSpice_Wrapper.update_params of the post-layout decks
+            # → NGSpice_Wrapper.update_params of the post-layout decks, and/or the measure
+            # hook's request (`deck_params`: bench-only knobs such as bias currents/voltages)
+            self._deck_params.update(extra)
             for name, val in sizing.items():
                 # snapped onto the flow's `sizing_grid` (opt-in) — an un-snapped device
                 # width draws off-grid geometry and every candidate dies on `OffGrid.*`
@@ -765,6 +801,9 @@ class LayoutSimulator:
             corner = dict(self._corner) if self._corner else None
             if self._sizing:
                 params["__sizing__"] = dict(self._sizing)  # popped by _execute (not a knob)
+            if self._deck_params and self.spec.measure is not None:
+                # popped by _execute: the bench-only knobs (sizing keys travel as `sizing`)
+                params["__deck__"] = {k: v for k, v in self._deck_params.items() if k not in self.spec.sizing_params}
         tag = label or self.testbench_name
         run_dir = self.output_folder / f"run_{n}_{tag}"
         return run_dir, params, corner
@@ -775,11 +814,13 @@ class LayoutSimulator:
         run_dir.mkdir(parents=True, exist_ok=True)
         t_start = time.time()
         sizing_over: dict[str, Any] = params.pop("__sizing__", {}) if isinstance(params.get("__sizing__"), dict) else {}
+        deck_params: dict[str, Any] = params.pop("__deck__", {}) if isinstance(params.get("__deck__"), dict) else {}
         sizing_json: Path | None = spec.sizing
+        sizing_merged: dict[str, Any] = json.loads(spec.sizing.read_text()) if spec.sizing is not None else {}
         if sizing_over:
-            base_sizing = json.loads(spec.sizing.read_text()) if spec.sizing is not None else {}
             sizing_json = run_dir / "sizing.json"
-            sizing_json.write_text(json.dumps({**base_sizing, **sizing_over}, indent=1))
+            sizing_merged = {**sizing_merged, **sizing_over}
+            sizing_json.write_text(json.dumps(sizing_merged, indent=1))
         scalars: dict[str, Any] = {}
         stages: dict[str, Any] = {}
         summary: dict[str, Any] = {
@@ -788,6 +829,7 @@ class LayoutSimulator:
             "run_dir": str(run_dir),
             "params": params,
             "sizing": sizing_over or None,
+            "deck_params": deck_params or None,
             "corner": corner,
             "status": "ok",
             "error": None,
@@ -874,16 +916,19 @@ class LayoutSimulator:
             t0 = time.time()
             try:
                 px_spec = spec.pex
-                schematic = px_spec.schematic or lvs_ref
+                if px_spec.schematic_writer is not None:
+                    schematic = self._run_generator_writer(px_spec.schematic_writer, params, run_dir / f"{spec.cell}_pex_schematic.sp", sizing_json, timeout_s=px_spec.timeout_s)
+                else:
+                    schematic = px_spec.schematic or lvs_ref
                 if schematic is None:  # the lvs writer failed but its gate is off
                     raise RuntimeError("no schematic for kpex (LVS reference missing)")
                 pex_gds: Path = gds  # type: ignore[assignment]  (build_ok ⇒ gds is a Path)
                 if px_spec.strip_mim:
-                    pex_gds = strip_mim_for_pex(pex_gds, run_dir / f"{spec.cell}_nomim.gds")
+                    pex_gds = strip_mim_for_pex(pex_gds, run_dir / f"{spec.cell}_nomim.gds", layers=px_spec.strip_mim_layers, topmetal_margin_um=px_spec.strip_mim_topmetal_margin_um)
                     nomim_sch = run_dir / f"{Path(schematic).stem}_nomim.sp"
                     nomim_sch.write_text(strip_cards(Path(schematic).read_text()))
                     schematic = nomim_sch
-                px = run_pex(pex_gds, spec.cell, schematic, run_dir / "pex", mode=px_spec.mode, pdk=spec.pdk, timeout_s=px_spec.timeout_s)
+                px = run_pex(pex_gds, spec.cell, schematic, run_dir / "pex", mode=px_spec.mode, pdk=spec.pdk, timeout_s=px_spec.timeout_s, halo_um=px_spec.halo_um)
                 stages["pex"] = {
                     **{k: v for k, v in px.to_dict().items() if k not in ("log", "per_net_c_ff", "coupling_ff")},
                     "secs": time.time() - t0,
@@ -932,7 +977,7 @@ class LayoutSimulator:
         if spec.measure is not None and pex_subckt is not None and (pex_ok is True or not spec.gates.pex):
             t0 = time.time()
             try:
-                reply = self._measure(pex_subckt, run_dir, params, corner, stages)
+                reply = self._measure(pex_subckt, run_dir, params, corner, stages, sizing=sizing_merged, sizing_json=sizing_json, deck_params=deck_params)
                 stages["measure"] = {**{k: v for k, v in reply.items() if k != "scalars"}, "secs": time.time() - t0}
                 if reply.get("status", "ok") != "ok":
                     _fail("measure", str(reply.get("error") or "measure reported an error"))
@@ -1038,7 +1083,13 @@ class LayoutSimulator:
         assert self.spec.lvs is not None
         if self.spec.lvs.reference is not None:
             return self.spec.lvs.reference
-        out = run_dir / f"{self.spec.cell}_lvs.sp"
+        assert self.spec.lvs.writer is not None
+        return self._run_generator_writer(self.spec.lvs.writer, params, run_dir / f"{self.spec.cell}_lvs.sp", sizing_json, timeout_s=self.spec.lvs.timeout_s)
+
+    def _run_generator_writer(self, writer: str, params: dict[str, Any], out: Path, sizing_json: Path | None = None, *, timeout_s: int = 1800) -> Path:
+        """Run a netlist-writer callable of the generator module in `gds_python`:
+        ``writer(LayoutParams(**params), out=<out>[, sizing=<dict>])`` (the `lvs.writer` and
+        `pex.schematic_writer` contract). Raises when the callable fails or writes nothing."""
         env = dict(os.environ)
         env["PYTHONPATH"] = os.pathsep.join(_leaf_src_paths() + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else []))
         code = (
@@ -1046,17 +1097,17 @@ class LayoutSimulator:
             f"spec = importlib.util.spec_from_file_location('gen_mod', {str(self.spec.generator)!r})\n"
             "m = importlib.util.module_from_spec(spec); sys.modules['gen_mod'] = m; spec.loader.exec_module(m)\n"
             f"p = m.LayoutParams(**json.loads({json.dumps(params)!r}))\n"
-            f"fn = getattr(m, {self.spec.lvs.writer!r})\n"
+            f"fn = getattr(m, {writer!r})\n"
             f"sizing = json.loads(open({str(sizing_json)!r}).read()) if {sizing_json is not None!r} else None\n"
             "kw = {'sizing': sizing} if (sizing is not None and 'sizing' in inspect.signature(fn).parameters) else {}\n"
             f"print(fn(p, out={str(out)!r}, **kw))\n"
         )
-        r = subprocess.run([self.spec.gds_python, "-c", code], env=env, capture_output=True, text=True, timeout=self.spec.lvs.timeout_s, cwd=str(self.spec.generator.parent))
+        r = subprocess.run([self.spec.gds_python, "-c", code], env=env, capture_output=True, text=True, timeout=timeout_s, cwd=str(out.parent))  # per-run cwd: PyCell scratch files (ihp `temp.gds`) must not collide across islands
         if r.returncode != 0 or not out.is_file():
-            raise RuntimeError(f"lvs writer {self.spec.lvs.writer!r} failed ({r.returncode}): {(r.stderr or r.stdout)[-1500:]}")
+            raise RuntimeError(f"generator writer {writer!r} failed ({r.returncode}): {(r.stderr or r.stdout)[-1500:]}")
         return out
 
-    def _measure(self, pex_subckt: Path, run_dir: Path, params: dict[str, Any], corner: dict[str, Any] | None, stages: dict[str, Any]) -> dict[str, Any]:
+    def _measure(self, pex_subckt: Path, run_dir: Path, params: dict[str, Any], corner: dict[str, Any] | None, stages: dict[str, Any], *, sizing: dict[str, Any] | None = None, sizing_json: Path | None = None, deck_params: dict[str, Any] | None = None) -> dict[str, Any]:
         from spicexplorer_layout.measure_protocol import parse_result
 
         m = self.spec.measure
@@ -1072,6 +1123,12 @@ class LayoutSimulator:
             "work_dir": str(run_dir),
             "cell": self.spec.cell,
             "params": params,
+            # co-optimization: the candidate's electrical sizing (merged `sizing:` file + the
+            # `sizing_params` overlay) and the bench-only `deck_params` (dut_params that are
+            # neither knobs nor sizing keys — bias currents/voltages the hook's benches take)
+            "sizing": dict(sizing or {}),
+            "sizing_json": str(sizing_json) if sizing_json is not None else None,
+            "deck_params": dict(deck_params or {}),
             "corner": corner,
             "extra": m.extra,
         }

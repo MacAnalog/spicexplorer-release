@@ -67,6 +67,11 @@ FAKE_GEN = textwrap.dedent(
     def write_lvs_reference(p, out=None):
         open(out, "w").write(".subckt cell a b\\nM1 a b 0 0 nmos w=1u l=1u\\nC1 a 0 1f\\n.ends\\n")
         return out
+
+    def write_pex_schematic(p, out=None, sizing=None):
+        # kpex flavour (3-terminal R) — differs from the LVS reference on purpose
+        open(out, "w").write(".subckt cell a b\\nM1 a b 0 0 nmos w=1u l=1u\\nR1 a b 0 rsil w=1u l=1u\\nC1 a 0 1f\\n.ends\\n")
+        return out
     '''
 )
 
@@ -75,6 +80,9 @@ FAKE_MEASURE = textwrap.dedent(
     def measure(req):
         p = req["params"]
         out = {"ugf_mhz": 10.0 * p["gap_x"], "pm_deg": 60.0, "corner_temp": (req.get("corner") or {}).get("temp", -1)}
+        # co-optimization: the hook sees the candidate's sizing + bench-only deck params
+        out["sizing_in_w"] = float((req.get("sizing") or {}).get("in_w", -1))
+        out["deck_tail_ma"] = float((req.get("deck_params") or {}).get("tail_ma", -1))
         if req.get("extra", {}).get("fail"):
             raise RuntimeError("bench blew up")
         return out
@@ -371,9 +379,87 @@ def test_submit_collect_and_corner_forwarding(tmp_path: Path, monkeypatch):
 
 
 def test_unknown_knob_raises_at_update_params(tmp_path: Path, monkeypatch):
-    sim = _sim(tmp_path, monkeypatch, _State())
+    # no `postlayout`/`measure` stage to forward a bench-only param to → a typo is an error
+    sim = _sim(tmp_path, monkeypatch, _State(), measure=False)
     with pytest.raises(KeyError, match="not knobs"):
         sim.update_params({"typo_knob": 1.0})
+
+
+def test_measure_flow_accepts_bench_only_params_and_forwards_sizing(tmp_path: Path, monkeypatch):
+    """A `measure:` flow (no `postlayout:`) may carry dut_params that are neither knobs nor
+    sizing keys (bias currents/voltages the block's benches take): they reach the hook as
+    `deck_params`; the merged sizing reaches it as `sizing`."""
+    state = _State()
+    _install_fakes(monkeypatch, state)
+    flow = _write_flow(tmp_path)
+    (tmp_path / "sizing.json").write_text(json.dumps({"in_w": 1e-6, "tail_w": 2e-6}))
+    d = yaml.safe_load(flow.read_text())
+    d["sizing"] = "sizing.json"
+    d["sizing_params"] = ["in_w"]
+    flow.write_text(yaml.safe_dump(d))
+    sim = create_layout_simulator(flow, output_folder=tmp_path / "out")
+    sim.update_params({"gap_x": 1.5, "in_w": 3e-6, "tail_ma": 15.0})  # knob + sizing + bench-only
+    res = sim.run()
+    assert res.status == "ok", res.summary["error"]
+    assert res.scalar("sizing_in_w", "layout") == 3e-6
+    assert res.scalar("deck_tail_ma", "layout") == 15.0
+    assert res.summary["deck_params"] == {"tail_ma": 15.0}
+    assert res.summary["sizing"] == {"in_w": 3e-6} and "tail_ma" not in res.summary["params"]
+    # …but a flow with neither postlayout nor measure still rejects them
+    d.pop("measure")
+    flow.write_text(yaml.safe_dump(d))
+    sim2 = create_layout_simulator(flow, output_folder=tmp_path / "out2")
+    with pytest.raises(KeyError, match="not knobs"):
+        sim2.update_params({"tail_ma": 15.0})
+
+
+def test_pex_schematic_writer_and_strip_mim_options(tmp_path: Path, monkeypatch):
+    """`pex.schematic_writer` hands kpex a per-trial schematic written by the generator (the
+    3-terminal-R flavour) instead of the LVS reference; `strip_mim_layers` /
+    `strip_mim_topmetal_margin_um` reach `strip_mim_for_pex`."""
+    import spicexplorer_signoff
+
+    state = _State()
+    _install_fakes(monkeypatch, state)
+    seen: dict = {}
+
+    def fake_strip(gds_in, gds_out, **kw):
+        seen.update(kw)
+        Path(gds_out).write_bytes(b"GDS-nomim")
+        return Path(gds_out)
+
+    monkeypatch.setattr(spicexplorer_signoff.pex, "strip_mim_for_pex", fake_strip)
+    real_pex = spicexplorer_signoff.run_pex
+
+    def spy_pex(gds, cell, schematic, out_dir, **kw):
+        seen["schematic"] = Path(schematic).read_text()
+        seen["gds"] = Path(gds).name
+        seen["halo_um"] = kw.get("halo_um")
+        return real_pex(gds, cell, schematic, out_dir, **kw)
+
+    monkeypatch.setattr(spicexplorer_signoff, "run_pex", spy_pex)
+    flow = _write_flow(tmp_path)
+    d = yaml.safe_load(flow.read_text())
+    d["pex"].update({"schematic_writer": "write_pex_schematic", "strip_mim": True,
+                     "strip_mim_layers": [[36, 0], [129, 0], [69, 0]], "strip_mim_topmetal_margin_um": None,
+                     "halo_um": 20})
+    flow.write_text(yaml.safe_dump(d))
+    spec = LayoutFlowSpec.from_yaml(flow)
+    assert spec.pex is not None and spec.pex.schematic_writer == "write_pex_schematic"
+    assert spec.pex.strip_mim_layers == ((36, 0), (129, 0), (69, 0)) and spec.pex.strip_mim_topmetal_margin_um is None
+    sim = create_layout_simulator(flow, output_folder=tmp_path / "out")
+    sim.update_params({"gap_x": 1.0})
+    res = sim.run()
+    assert res.status == "ok", res.summary["error"]
+    assert "rsil" in seen["schematic"] and "C1" not in seen["schematic"]  # writer's flavour, C cards stripped
+    assert seen["gds"].endswith("_nomim.gds")
+    assert seen["layers"] == ((36, 0), (129, 0), (69, 0)) and seen["topmetal_margin_um"] is None
+    assert spec.pex.halo_um == 20.0 and seen["halo_um"] == 20.0  # kpex --halo forwarded
+    # schematic + schematic_writer together is a load error
+    d["pex"]["schematic"] = "ref.sp"
+    flow.write_text(yaml.safe_dump(d))
+    with pytest.raises(ValueError, match="OR"):
+        LayoutFlowSpec.from_yaml(flow)
 
 
 # ---------------------------------------------------------------------------

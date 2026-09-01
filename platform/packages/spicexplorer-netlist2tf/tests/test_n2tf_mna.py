@@ -166,3 +166,66 @@ def test_diff_pair_symbolic_gm_only():
     raw = _tf(_DIFF_PAIR, ("outp", "0"), ("vinp", "vinn"), subs=subs)
     assert set(raw.kept_symbolic) == {"gm_m1", "gm_m2"}
     assert raw.expr.diff(sp.Symbol("gm_m1", positive=True)) != 0  # gain depends on gm1
+
+
+# ------------------------------------------------------------------------
+# Transimpedance — the test-current primitive read at a *different* port
+# ------------------------------------------------------------------------
+def _sys(netlist: str, *, level=Fidelity.SOME_PARASITIC, name="c"):
+    return build_system(small_signal_model(from_string(netlist, name=name), level=level))
+
+
+def test_transimpedance_rc_is_the_shunt_impedance():
+    # I forced into `out` sees R ∥ (1/sC) — the closed form, read at the injected node's own port
+    # via the two-port entry (so this also pins Z_T == Z_in when the ports coincide).
+    from spicexplorer_netlist2tf import transimpedance
+
+    system = _sys("* rc\nR1 out 0 R\nC1 out 0 C\n.end")
+    zt = transimpedance(system, ("out", "0"), ("out", "0"))
+    r, c = sp.Symbol("r"), sp.Symbol("c")
+    assert _equal(zt.expr, r / (1 + r * c * S))
+    assert zt.analysis == "transimpedance"
+
+
+def test_transimpedance_common_source_drain_injection():
+    # A current forced into the CS drain (drain→source, i.e. the channel-noise generator's own
+    # port) develops i·(ro ∥ RL) at the output: the gate is quiet, so no gm term appears.
+    from spicexplorer_netlist2tf import transimpedance
+
+    system = _sys("* cs\nM1 out in 0 0 nmos\nRload out 0 RL\nRg in 0 RG\n.end")
+    zt = transimpedance(system, ("out", "0"), ("out", "0"))
+    ro, rl = sp.Symbol("ro_m1", positive=True), sp.Symbol("rl")
+    assert _equal(zt.expr, ro * rl / (ro + rl))
+
+
+def test_transimpedance_is_forward_transfer_not_self_port():
+    # Injecting at node `a` of an R-divider and reading at node `b` must give the *transfer*
+    # impedance, which is strictly smaller than the driving-point impedance at `a`.
+    from spicexplorer_netlist2tf import transimpedance
+    from spicexplorer_netlist2tf.mna import driving_point_impedance
+
+    system = _sys("* divider\nR1 a 0 1k\nR2 a b 2k\nR3 b 0 3k\n.end")
+    z_self = driving_point_impedance(system, ("a", "0"))
+    z_t = transimpedance(system, ("b", "0"), ("a", "0"))
+    # a: 1k ∥ (2k + 3k) = 833.33 Ω ; transfer: that, divided down by 3k/(2k+3k)
+    assert abs(float(z_self.expr) - 1e3 * 5e3 / 6e3) < 1e-6
+    assert abs(float(z_t.expr) - float(z_self.expr) * 3.0 / 5.0) < 1e-6
+
+
+def test_transimpedance_reciprocity_on_a_passive_network():
+    # A network of R and C only is reciprocal: Z_T(out←in) == Z_T(in←out). The MNA stamp must
+    # preserve that, and it is the cheapest correctness check on the injection RHS.
+    from spicexplorer_netlist2tf import transimpedance
+
+    system = _sys("* ladder\nR1 a b 1k\nC1 b 0 1p\nR2 b c 2k\nC2 c 0 3p\n.end")
+    fwd = transimpedance(system, ("c", "0"), ("a", "0"))
+    rev = transimpedance(system, ("a", "0"), ("c", "0"))
+    assert _equal(fwd.expr, rev.expr)
+
+
+def test_transimpedance_rejects_ac_ground_injection():
+    from spicexplorer_netlist2tf import transimpedance
+
+    system = _sys("* rc\nR1 out 0 R\nC1 out 0 C\n.end")
+    with pytest.raises(ValueError, match="entirely at AC ground"):
+        transimpedance(system, ("out", "0"), ("0", "0"))

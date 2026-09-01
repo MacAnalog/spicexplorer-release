@@ -285,6 +285,46 @@ def test_registry_validate_recipe_rejects_unknown_and_missing():
     registry.validate_recipe("g", {"meas": "thd", "out": "vout", "f0": 1e3})
 
 
+def test_band_edge_reads_are_grid_independent():
+    """The PAM-4 instrument bug: a `dec 20` grid from 100 MHz never samples 32/50 GHz."""
+    fp = 20e9
+    coarse = 1e8 * 10 ** (np.arange(0, 61) / 20.0)          # ac dec 20 100MHz..100GHz
+    fine = np.logspace(8, 11, 20001)
+    h_c, h_f = _single_pole(coarse, a0=1.0, fp=fp), _single_pole(fine, a0=1.0, fp=fp)
+    # |H| falls with f, so a "≥ level in band" spec's worst is at the edge — read on the
+    # coarse grid the naive `min(mag[f<=32G])` sits at 31.62 GHz, not 32.
+    assert coarse[coarse <= 32e9][-1] == pytest.approx(31.62e9, rel=1e-3)
+    exact = float(wf.magnitude_db(_single_pole(np.array([32e9]), a0=1.0, fp=fp))[0])
+    assert wf.magnitude_at_db(coarse, h_c, 32e9) == pytest.approx(exact, abs=0.01)
+    assert wf.band_worst_db(coarse, h_c, 32e9, worst="min") == pytest.approx(exact, abs=0.01)
+    assert wf.band_worst_db(fine, h_f, 32e9, worst="min") == pytest.approx(exact, abs=1e-3)
+    naive = float(wf.magnitude_db(h_c)[coarse <= 32e9].min())
+    assert naive > exact + 0.03                          # the grid flatters the spec
+    # max over a band on a rising curve (a reflection-like |1 - H|):
+    r_c = 1.0 - h_c
+    lo_edge = float(wf.magnitude_db(1.0 - _single_pole(np.array([1e9]), a0=1.0, fp=fp))[0])
+    assert wf.band_worst_db(coarse, r_c, 32e9, f_start=1e9) == pytest.approx(
+        float(wf.magnitude_db(1.0 - _single_pole(np.array([32e9]), a0=1.0, fp=fp))[0]), abs=0.01)
+    assert wf.band_worst_db(coarse, r_c, 1.05e9, f_start=1e9) >= lo_edge - 1e-9
+    # the exact half-power level (−3.0103 dB) crosses at the pole
+    half = float(-20.0 * np.log10(np.sqrt(2.0)))
+    assert wf.level_crossing_freq(fine, h_f, half) == pytest.approx(fp, rel=1e-3)
+    # out-of-band / degenerate → NaN, never extrapolated
+    assert np.isnan(wf.magnitude_at_db(coarse, h_c, 1e12))
+    assert np.isnan(wf.band_worst_db(coarse, h_c, 1e12))
+    assert np.isnan(wf.band_worst_db(coarse, h_c, 5e7))
+    assert np.isnan(wf.level_crossing_freq(fine, h_f, +3.0))
+    # registry recipes
+    res = _FakeResult({"frequency": coarse, "vout": h_c}, {})
+    assert registry.measure(res, {"meas": "mag_at_db", "out": "vout", "f": 32e9}, default_analysis="ac") == pytest.approx(exact, abs=0.01)
+    assert registry.measure(res, {"meas": "band_min_db", "out": "vout", "f_edge": 32e9}, default_analysis="ac") == pytest.approx(exact, abs=0.01)
+    assert registry.measure(res, {"meas": "band_max_db", "out": "vout", "f_edge": 32e9, "f_start": 1e9}, default_analysis="ac") == pytest.approx(
+        float(wf.magnitude_db(_single_pole(np.array([1e9]), a0=1.0, fp=fp))[0]), abs=0.01)
+    assert registry.measure(res, {"meas": "level_cross_hz", "out": "vout", "level": half}, default_analysis="ac") == pytest.approx(fp, rel=0.02)
+    with pytest.raises(ValueError):
+        registry.validate_recipe("s11", {"meas": "band_max_db", "out": "vout"})   # f_edge missing
+
+
 def test_known_measurements_stable():
     names = registry.known_measurements()
     assert {"dcgain", "ugf", "pm", "f3db", "gbw", "t_settle", "slew",

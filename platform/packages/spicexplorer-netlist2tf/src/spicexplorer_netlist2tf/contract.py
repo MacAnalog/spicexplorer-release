@@ -46,6 +46,25 @@ class ComplexRoot(BaseModel):
     multiplicity: int = 1
 
 
+class PoleZeroResult(BaseModel):
+    """Poles and zeros of one port-to-port transfer, solved from the MNA pencil.
+
+    The numeric counterpart of :class:`TransferFunctionResult` for systems too large for a
+    symbolic determinant — see :mod:`spicexplorer_netlist2tf.pencil`. Roots are sorted by
+    ``|s|``; ``poles`` and ``zeros`` are *not* cross-cancelled, so a root in both lists is a
+    real pole–zero cancellation of the topology.
+    """
+
+    analysis: str = "poles_zeros"
+    output: str
+    input: str
+    drive: str = "dm"
+    poles: list[ComplexRoot] = Field(default_factory=list)
+    zeros: list[ComplexRoot] = Field(default_factory=list)
+    dc_gain: float | None = None
+    n_states: int = 0
+
+
 class AssumptionApplied(BaseModel):
     """One ordered step in the simplification ledger (Stage 4 / P5)."""
 

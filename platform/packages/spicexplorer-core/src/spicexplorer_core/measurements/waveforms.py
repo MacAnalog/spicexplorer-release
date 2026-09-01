@@ -39,6 +39,9 @@ __all__ = [
     "phase_margin",
     "bandwidth_3db",
     "gain_bandwidth_product",
+    "magnitude_at_db",
+    "band_worst_db",
+    "level_crossing_freq",
     "settling_time",
     "slew_rate",
     "integrated_noise",
@@ -237,6 +240,69 @@ def bandwidth_3db(freq: ArrayLike, h: ArrayLike) -> float:
     if mag.size == 0:
         return float("nan")
     return _log_interp_crossing(freq, mag, float(mag[0]) - 3.0)
+
+
+def magnitude_at_db(freq: ArrayLike, h: ArrayLike, f0: float) -> float:
+    """|H| in dB at exactly ``f0``, interpolated linearly in ``log10(freq)``.
+
+    A spec written "S11 at 32 GHz" or "gain at 1 kHz" is a *spot* value; a swept
+    ``ac dec N`` grid rarely lands on the spot (``dec 20`` from 100 MHz never samples
+    32 or 50 GHz — its last in-band points are 31.62 and 44.67 GHz), so reading the
+    nearest bin silently reports a neighbouring frequency. Returns NaN when the sweep
+    has fewer than two points or ``f0`` is outside the swept band (no extrapolation).
+    """
+    freq, h = _sorted_by_x(freq, h)
+    if freq.size < 2 or f0 <= 0.0 or freq[0] <= 0.0 or not (freq[0] <= f0 <= freq[-1]):
+        return float("nan")
+    return _log_interp_y(freq, magnitude_db(h), float(f0))
+
+
+def band_worst_db(
+    freq: ArrayLike,
+    h: ArrayLike,
+    f_edge: float,
+    *,
+    f_start: float | None = None,
+    worst: str = "max",
+) -> float:
+    """Worst |H| (dB) over the band ``[f_start, f_edge]`` — **including the band edges**.
+
+    The value every "≤ −10 dB up to f_edge" / "≥ x dB across the band" spec means: the
+    max (``worst="max"``, reflection / rejection specs) or min (``worst="min"``, gain
+    flatness specs) of the magnitude over the band, where the two edges are evaluated
+    by log-f interpolation whether or not the sweep grid samples them. Reading
+    ``max(mag[freq <= f_edge])`` off a ``dec 20`` grid stops at the last grid point
+    *below* the edge and flatters a rising reflection curve by whatever it gains
+    between that point and the edge (0.04–0.5 dB on the PAM-4 driver — the difference
+    between passing and failing). ``f_start`` defaults to the sweep's lowest frequency.
+    Returns NaN if the band lies outside the sweep.
+    """
+    freq, h = _sorted_by_x(freq, h)
+    if freq.size < 2 or freq[0] <= 0.0 or f_edge <= 0.0:
+        return float("nan")
+    lo = float(freq[0]) if f_start is None else float(f_start)
+    hi = float(f_edge)
+    if not (freq[0] <= lo < hi <= freq[-1]):
+        return float("nan")
+    mag = magnitude_db(h)
+    inside = (freq >= lo) & (freq <= hi)
+    vals = [_log_interp_y(freq, mag, lo), _log_interp_y(freq, mag, hi)]
+    if inside.any():
+        vals.append(float(mag[inside].max() if worst == "max" else mag[inside].min()))
+    return float(max(vals) if worst == "max" else min(vals))
+
+
+def level_crossing_freq(freq: ArrayLike, h: ArrayLike, level_db: float) -> float:
+    """First frequency where |H| (dB) crosses ``level_db``, log-f interpolated.
+
+    The grid-independent twin of a band-edge spec: "S11 holds −10 dB up to X GHz"
+    reported as X (the −10 dB edge) rather than as a value at a frequency. NaN if the
+    magnitude never reaches ``level_db``.
+    """
+    freq, h = _sorted_by_x(freq, h)
+    if freq.size < 2 or freq[0] <= 0.0:
+        return float("nan")
+    return _log_interp_crossing(freq, magnitude_db(h), float(level_db))
 
 
 def gain_bandwidth_product(freq: ArrayLike, h: ArrayLike) -> float:

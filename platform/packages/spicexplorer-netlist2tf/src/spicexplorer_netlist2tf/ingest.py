@@ -47,7 +47,8 @@ _NEG_RAIL_NAMES = {"vss", "vee", "vssa", "vssio"}
 _POS_RAIL_NAMES = {"vdd", "vcc", "vpwr", "vdda", "vddio", "vcca"}
 
 # Reference-designator prefixes (refs come back upper-cased from spicelib). X-wrapped primitives
-# (XM/XR/XC/XL) are treated as the primitive they wrap; a bare X… is an opaque subckt instance.
+# (XM/XR/XC/XL) are treated as the primitive they wrap; a bare X… is an opaque subckt instance —
+# unless its MODEL name names a MOS, which wins over the prefix (see `_x_wrapped_mos`).
 _MOS_PREFIXES = ("M", "XM")
 _RES_PREFIXES = ("R", "XR")
 _CAP_PREFIXES = ("C", "XC")
@@ -156,6 +157,23 @@ def _mos_kind(model: str | None) -> DeviceKind:
     return DeviceKind.MOS
 
 
+def _x_wrapped_mos(view: NetlistView, ref: str, nets: list[str]) -> str | None:
+    """The MOS model an ``X…`` instance wraps, or ``None`` if it does not wrap one.
+
+    PDK primitives ship as subckt wrappers, so a MOSFET's reference designator is only *by
+    convention* ``XM…``: a replica device called ``xr1`` or a dummy called ``xd3`` is still a
+    transistor. Type those by the **model name** — the letter after the ``X`` carries no
+    information — so ``xr1 … sg13_hv_pmos`` lands as a PMOS exactly like ``xm1 … sg13_hv_pmos``
+    already does. Deliberately strict: 3–4 terminals, and the model must actually match
+    :func:`_mos_kind`'s ``nmos``/``pmos``/``nfet``/``pfet`` patterns.
+    """
+    if not ref.upper().startswith("X") or len(nets) not in (3, 4):
+        return None
+    model = view.get_component_value(ref)
+    # _mos_kind falls back to the untyped DeviceKind.MOS; anything else is a positive match.
+    return model if model and _mos_kind(model) is not DeviceKind.MOS else None
+
+
 def _geometry_params(view: NetlistView, ref: str) -> dict[str, sp.Expr]:
     """Sympify a device's ``k=v`` parameters, dropping spicelib's duplicate ``'Value'`` key."""
     out: dict[str, sp.Expr] = {}
@@ -211,7 +229,7 @@ def build_device(view: NetlistView, ref: str) -> Device:
     ref_u = ref.upper()
     nets = view.get_component_nodes(ref)
 
-    if ref_u.startswith(_MOS_PREFIXES):
+    if ref_u.startswith(_MOS_PREFIXES) or _x_wrapped_mos(view, ref, nets):
         model = view.get_component_value(ref)
         if len(nets) == 4:
             roles = _MOS_PINS

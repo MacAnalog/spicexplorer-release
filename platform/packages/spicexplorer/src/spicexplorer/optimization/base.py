@@ -5,32 +5,44 @@ import ast
 import json
 import logging
 import os
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Tuple, cast
 
 import numpy as np
 
-# torch is OPTIONAL — only the Bode optimizer (Spice_Bode_Optimizer) and plotting
-# helpers below use it at runtime. The common constraint/single-objective path is pure
+# torch / sympy are OPTIONAL — only the Bode optimizer (Spice_Bode_Optimizer) and plotting
+# helpers below use them at runtime. The common constraint/single-objective path is pure
 # numpy, so this module must import without torch. `from __future__ import annotations`
 # above keeps the `torch.Tensor` / `Expr` annotations lazy (never evaluated at import).
 # Install the Bode/RL features with:  pip install 'spicexplorer[torch]'.
-try:
+#
+# TYPE_CHECKING branch = what a static checker sees (the real module, so `torch.Tensor`
+# is a usable annotation and `torch.*` is a call on a module); the `= None` fallback is
+# the RUNTIME "extra not installed" sentinel. Typing it as `Module | None` reported every
+# annotation and call in this file as reportInvalidTypeForm / reportOptionalMemberAccess —
+# noise about the import guard, not about the code. Runtime behaviour is unchanged.
+if TYPE_CHECKING:
     import torch
-except ModuleNotFoundError:
-    torch = None
+else:
+    try:
+        import torch
+    except ModuleNotFoundError:
+        torch = None
 from abc import ABC, abstractmethod
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, cast
 
 import plotly.graph_objects as go
 from dacite import Config, from_dict
 from tqdm import tqdm
 
-try:
+if TYPE_CHECKING:
     from sympy import Expr
-except ModuleNotFoundError:
-    Expr = None  # annotation-only (lazy via __future__ annotations); Bode path needs sympy
+else:
+    try:
+        from sympy import Expr
+    except ModuleNotFoundError:
+        Expr = None  # annotation-only (lazy via __future__ annotations); Bode path needs sympy
 from time import monotonic
 
 from spicexplorer.core.domains import (
@@ -43,9 +55,17 @@ from spicexplorer.core.domains import (
     TargetSpec,
 )
 from spicexplorer.core.utils import (
+    DEFAULT_MARGIN_REWARD_CLIP,
+    DEFAULT_MARGIN_REWARD_WEIGHT,
+    DEFAULT_TIE_BREAKER_WEIGHT,
+    DEFAULT_UNMEASURED_POLICY,
+    EPSILON,
+    PER_SPEC_CORNER_AGGREGATION,
     Frequency_Weight,
     Transfer_Func_Helper,
     aggregate_corner_scores,
+    aggregate_corner_spec_margins,
+    aggregate_corner_spec_scores,
     aggregate_spec_scores,
     compute_error,
     compute_reward,
@@ -53,6 +73,7 @@ from spicexplorer.core.utils import (
     is_scoreable_metric,
     linear_denormalize,
     log_denormalize,
+    normalized_spec_margin,
     plot_complex_response,
 )
 
@@ -62,6 +83,10 @@ from spicexplorer.core.utils import (
 from spicexplorer.core.utils import log_space_band as _log_space_band
 from spicexplorer.core.utils import log_space_range_coeff as _log_space_range_coeff
 from spicexplorer.optimization.sim_benchmark import wait_for_handles_timed
+from spicexplorer.optimization.trial_timing import (
+    DEFAULT_TRIAL_TIME_REPORT_EVERY,
+    TrialTimeMonitor,
+)
 from spicexplorer_core.atomic_io import atomic_write_json
 
 # Symxplorer Specific Imports
@@ -169,6 +194,12 @@ class Base_Optimizer(ABC):
         # Shared by all backends so the freeze contract lives in ONE place (D-3), not copied
         # per mixin. Empty until parameterize() runs; a no-op when no param sets `freeze: true`.
         self._frozen_params: Dict[str, float] = {}
+        # Per-trial wall-time telemetry (E-049), (re)built by `optimize()`; exposed on the
+        # instance so a caller can read the run's cost profile after the fact. `stop_reason` is
+        # None for a run that finished its budget, and a sentence for one a guard ended early —
+        # the difference between "stopped" and "crashed", which a killed run cannot express.
+        self.trial_time_monitor: Optional[TrialTimeMonitor] = None
+        self.stop_reason: Optional[str] = None
 
         self._validate_constructor()
 
@@ -196,7 +227,7 @@ class Base_Optimizer(ABC):
         pass
 
     @abstractmethod
-    def compute_fitness(self, performance_array: Dict[str, np.float64 | torch.Tensor]) -> Tuple[np.float64, Dict[str, Any]]:
+    def compute_fitness(self, performance_array: Mapping[str, np.float64 | torch.Tensor]) -> Tuple[np.float64, Dict[str, Any]]:
         """Compute the fittness of a set of performance metrics provided as an input dictionary"""
         pass
 
@@ -304,6 +335,21 @@ class Base_Optimizer(ABC):
             logger.critical("Oops... The optimizer object was not created!")
             return None
 
+        # Per-trial wall-time telemetry (ledger E-049). Every threshold defaults to None (off),
+        # so a project that configures nothing gets the periodic INFO cadence line and no change
+        # in behaviour. Read defensively: `optimize()` also runs against light config stand-ins.
+        _cfg = self.optimizer_config
+        _report_every = getattr(_cfg, "trial_time_report_every", None)
+        trial_timer = TrialTimeMonitor(
+            warn_s=getattr(_cfg, "trial_time_warn_s", None),
+            warn_factor=getattr(_cfg, "trial_time_warn_factor", None),
+            stop_s=getattr(_cfg, "trial_time_stop_s", None),
+            report_every=(DEFAULT_TRIAL_TIME_REPORT_EVERY if _report_every is None
+                          else int(_report_every)),
+        )
+        self.trial_time_monitor = trial_timer
+        self.stop_reason = None
+
         # Track the score for plotting
         self.optimization_log = OptimizationLog() if not keep_history else self.optimization_log
 
@@ -325,8 +371,20 @@ class Base_Optimizer(ABC):
                     logger.debug(f"STARTING trial {trial+1}/{self.optimizer_config.budget}...")
 
                     # (a) Perform the optimization logic for one step/trial
+                    _t_trial = monotonic()
                     candidate, curr_score, metadata = self.optimization_step()
+                    verdict = trial_timer.record(monotonic() - _t_trial)
                     logger.debug(f"Trial {trial+1}/{self.optimizer_config.budget} COMPLETED with score: {curr_score:.4f}")
+
+                    # (a.1) Per-trial cost telemetry. A run's per-trial wall time is NOT constant:
+                    #       a Bayesian backend's refit cost climbs with the observation count
+                    #       (27 s -> 117 s -> 200-292 s in ledger E-049) while the simulation cost
+                    #       is unchanged. Without this the loop gave no signal and such runs had to
+                    #       be killed by hand.
+                    if verdict.report is not None:
+                        logger.info(verdict.report)
+                    if verdict.warning is not None:
+                        logger.warning(verdict.warning)
 
                     # (b) Update the running best. Compare against the GLOBAL best entry's score
                     #     (instance-tracked), NOT an index into the log: the log is emptied on each
@@ -357,6 +415,20 @@ class Base_Optimizer(ABC):
                     )
                     pbar.set_postfix(score=f"{curr_score:.4f}", best=f"{current_best:.4f}")
                     logger.debug("---------------------------------------------------------------------------")
+
+                    # (d) Optional hard stop. Placed LAST in the body so the trial is fully
+                    #     recorded and autosaved first; breaking here falls through to the same
+                    #     `finally` teardown and final checkpoint a completed budget takes, so the
+                    #     run ends STOPPED (with a reason on the instance), not crashed.
+                    if verdict.stop:
+                        self.stop_reason = (
+                            f"stopped by the per-trial time guard at trial {trial+1}/"
+                            f"{self.optimizer_config.budget}: rolling median "
+                            f"{verdict.rolling_median_s:.1f} s/trial exceeded "
+                            f"trial_time_stop_s={trial_timer.stop_s}."
+                        )
+                        logger.warning(self.stop_reason)
+                        break
 
         except KeyboardInterrupt:
             logger.critical("User requested interrupt")
@@ -1263,7 +1335,7 @@ class Spice_Bode_Optimizer(Spice_Base_Optimizer):
         self.target_complex_response = self.helper_functions.eval_tf(tf=self.target_tf, f_val=f_array)
         # mag, _ = self.helper_functions.get_mag_phase_from_complex_response(self.target_complex_response)
 
-    def compute_fitness(self, performance_array: Dict[str, np.float64 | torch.Tensor]) -> Tuple[np.float64, Dict[str, Any]]:
+    def compute_fitness(self, performance_array: Mapping[str, np.float64 | torch.Tensor]) -> Tuple[np.float64, Dict[str, Any]]:
 
         current_complex_response: torch.Tensor = performance_array["current_complex_response"]
 
@@ -1425,6 +1497,30 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
             )
         return self.compute_fitness(performance_array=performance_array)
 
+    # ---- per-TRIAL accumulators (reset by `evaluate`, folded in after every scoring pass) ----
+    def _reset_trial_records(self) -> None:
+        """Start a fresh trial's by-product accumulators.
+
+        `compute_fitness` publishes each scoring pass's unmeasured-spec names and per-spec margins
+        on the instance (it cannot widen its return tuple — light scorer stand-ins unpack exactly
+        two values). A multi-corner trial scores once PER CORNER, so those single-pass slots are
+        overwritten; these accumulators keep the whole trial's, namespaced by corner."""
+        self._trial_unmeasured: List[str] = []
+        self._trial_spec_margins: Dict[str, Dict[str, Any]] = {}
+
+    def _record_trial_pass(self, corner_name: str | None = None) -> None:
+        """Fold the pass `compute_fitness` just finished into this trial's accumulators.
+
+        `corner_name` is the corner that pass ran at (multi-corner) or `None` (single corner),
+        and namespaces the recorded spec keys exactly as `fit_summary` namespaces its own."""
+        if not hasattr(self, "_trial_unmeasured"):
+            self._reset_trial_records()
+        prefix = f"{corner_name}::" if corner_name else ""
+        for name in getattr(self, "_last_unmeasured_specs", ()) or ():
+            self._trial_unmeasured.append(f"{prefix}{name}")
+        self._trial_spec_margins[corner_name or ""] = dict(
+            getattr(self, "_last_spec_margins", {}) or {})
+
     def _evaluate_at_current_corner(self, parameterization: Dict[str, float], run_label: str | None = None) -> Tuple[np.float64, Dict[str, Any], Dict[str, SimResult]]:
         """One full pass at whatever corner the wrappers' netlists currently carry:
         simulate every enabled testbench, extract each enabled target spec's scalar,
@@ -1433,6 +1529,9 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         `SimResult`s so the caller can harvest per-run log files."""
         results = self.simulate_circuit(parameterization=parameterization, run_label=run_label)
         score, fit_summary = self._extract_and_score_current(results, parameterization)
+        # `run_label` IS the corner name on the sequential multi-corner path and None in single
+        # mode, which is exactly the namespace this pass's by-products belong under.
+        self._record_trial_pass(run_label)
         return score, fit_summary, results
 
     def _evaluate_corners_parallel(
@@ -1511,6 +1610,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
                 for tb in self.spicelib_wrappers
             }
             corner_score, corner_fit = self._extract_and_score_current(corner_results, parameterization)
+            self._record_trial_pass(corner.name)
             corner_scores[corner.name] = np.float64(corner_score)
             for spec_name, spec_info in corner_fit.items():
                 fit_summary[f"{corner.name}::{spec_name}"] = spec_info
@@ -1521,6 +1621,72 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
             logger.debug(f"\tcorner '{corner.name}' score = {corner_score}")
 
         return corner_scores, fit_summary, log_files
+
+    def _spec_axis_kwargs(self) -> Dict[str, Any]:
+        """The spec-axis aggregation knobs, resolved off `optimizer_config` with the SAME
+        defensive defaults `compute_fitness` uses (it is also invoked unbound against light
+        stand-ins that carry no config). One resolver, so the per-corner scorer and the
+        `worst_spec` re-aggregation can never disagree about the project's strategy."""
+        cfg = getattr(self, "optimizer_config", None)
+        tb_weight = getattr(cfg, "tie_breaker_weight", None)
+        margin_w = getattr(cfg, "margin_reward_weight", None)
+        margin_clip = getattr(cfg, "margin_reward_clip", None)
+        return dict(
+            strategy=getattr(cfg, "spec_aggregation", "feasibility_reward"),
+            params=getattr(cfg, "aggregation_params", None),
+            tie_breaker=getattr(cfg, "tie_breaker", None),
+            tie_breaker_weight=(DEFAULT_TIE_BREAKER_WEIGHT if tb_weight is None
+                                else float(tb_weight)),
+            margin_reward_weight=(DEFAULT_MARGIN_REWARD_WEIGHT if margin_w is None
+                                  else float(margin_w)),
+            margin_reward_clip=(DEFAULT_MARGIN_REWARD_CLIP if margin_clip is None
+                                else float(margin_clip)),
+        )
+
+    def _aggregate_worst_spec_over_corners(
+        self, fit_summary: Dict[str, Any]
+    ) -> Tuple[np.float64, Dict[str, Any]]:
+        """`pvt.score_aggregation: worst_spec` — worst corner PER SPEC, then ONE spec aggregation.
+
+        Reads the per-corner per-spec scores back out of the `"<corner>::<spec>"`-keyed
+        `fit_summary` the multi-corner paths already build, so neither corner loop needs a wider
+        return type and `fit_summary`'s shape is untouched (`_worst_corner_key`, `_metric_series`
+        and the Ax backend's corner-aware tracking metrics all read that shape). The margins the
+        opt-in margin reward consumes come from this trial's own accumulator, reduced the same way
+        — worst corner per spec — so a margin-rewarded multi-corner run pays for worst-CORNER
+        headroom rather than nominal headroom.
+
+        Returns `(score, metadata_extras)`; the extras name the corner that BOUND each spec, which
+        is the diagnostic a user actually wants ("which corner is costing me?") and is not
+        recoverable from the aggregated scalar.
+        """
+        per_corner_spec_scores: Dict[str, Dict[str, np.float64]] = {}
+        for key, info in fit_summary.items():
+            corner_name, sep, spec_name = str(key).partition("::")
+            if not sep:  # a bare (non-namespaced) key cannot be attributed to a corner
+                continue
+            per_corner_spec_scores.setdefault(corner_name, {})[spec_name] = np.float64(
+                info["score"])
+        worst_scores, binding = aggregate_corner_spec_scores(per_corner_spec_scores)
+        worst_margins = aggregate_corner_spec_margins(
+            getattr(self, "_trial_spec_margins", {}) or {})
+        score = aggregate_spec_scores(
+            worst_scores, spec_margins=worst_margins, **self._spec_axis_kwargs()
+        )
+        for spec_name in sorted(worst_scores):
+            logger.debug(
+                f"\tspec '{spec_name}': worst corner '{binding[spec_name]}' "
+                f"score = {worst_scores[spec_name]}"
+            )
+        logger.debug(
+            f"\t'{PER_SPEC_CORNER_AGGREGATION}': {len(worst_scores)} spec(s) reduced over "
+            f"{len(per_corner_spec_scores)} corner(s) -> {score} "
+            f"(binding corners: {binding})"
+        )
+        return np.float64(score), {
+            "worst_spec_scores": {k: float(v) for k, v in worst_scores.items()},
+            "binding_corners": dict(binding),
+        }
 
     def evaluate(self, parameterization: Dict[str, float], append_to_log: bool = True) ->  Tuple[np.floating, Dict[str, Any]]:
         """
@@ -1538,6 +1704,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         """
         pvt = getattr(self.setup_obj, "pvt", None)
 
+        self._reset_trial_records()
         metadata: Dict[str, Any] = {}
         log_files: Dict[str, Any] = {}
         if pvt is None or not getattr(pvt, "is_multi", lambda: False)():
@@ -1576,15 +1743,51 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
                             log_files[f"{tb}__{corner.name}"] = log_path
                     logger.debug(f"\tcorner '{corner.name}' score = {corner_score}")
 
-            fitness_score = aggregate_corner_scores(corner_scores, pvt.score_aggregation)
             metadata = {
                 "corner_scores": {k: float(v) for k, v in corner_scores.items()},
                 "score_aggregation": pvt.score_aggregation,
             }
-            logger.debug(
-                f"\taggregated {len(corner_scores)} corner scores via "
-                f"'{pvt.score_aggregation}' -> {fitness_score}"
-            )
+            if pvt.score_aggregation == PER_SPEC_CORNER_AGGREGATION:
+                # `worst_spec`: reduce the SPEC axis across corners FIRST — each spec keeps its
+                # worst corner — then aggregate the spec axis ONCE with the project's own
+                # `spec_aggregation`. The resulting score (and therefore the reported best design
+                # and its feasibility) means "feasible at EVERY enabled corner", which the totals
+                # reducers cannot express: they average a spec's `ss` failure into `ss`'s total
+                # before it is ever compared with `tt`'s.
+                fitness_score, extra = self._aggregate_worst_spec_over_corners(fit_summary)
+                metadata.update(extra)
+            else:
+                fitness_score = aggregate_corner_scores(corner_scores, pvt.score_aggregation)
+                logger.debug(
+                    f"\taggregated {len(corner_scores)} corner scores via "
+                    f"'{pvt.score_aggregation}' -> {fitness_score}"
+                )
+
+        # OPT-IN unmeasured-metric record (`unmeasured_policy: fail`). The SCORE already fails
+        # closed under every policy — an unmeasured spec takes `compute_fitness`'s else-branch and
+        # is assigned `-MAX_PENALTY` *instead of* running any error kernel, so even a bounded
+        # kernel (relative-sigmoid) inherits that same defined, bounded worst case and the trial
+        # cannot come out feasible. What did NOT exist is any way to tell that apart afterwards
+        # from a design that converged to a terrible value and clipped to the same floor: the API
+        # checkpoint reader RE-DERIVES feasibility from values and targets, and `fit_summary` only
+        # carries `curr_val: nan`. `fail` records it explicitly on the trial.
+        _policy = getattr(self.optimizer_config, "unmeasured_policy", None) or DEFAULT_UNMEASURED_POLICY
+        if _policy == "fail":
+            unmeasured = list(getattr(self, "_trial_unmeasured", []))
+            metadata = dict(metadata)
+            metadata["unmeasured_policy"] = _policy
+            metadata["unmeasured_specs"] = unmeasured
+            # An explicit, recorded feasibility verdict: no spec went unmeasured AND the aggregate
+            # is not a net violation. `> -EPSILON` is the SAME threshold `aggregate_spec_scores`
+            # uses, so "feasible" means one thing across the scorer and the log.
+            metadata["feasible"] = bool(
+                not unmeasured and float(fitness_score) > -float(EPSILON))
+            if unmeasured:
+                logger.warning(
+                    f"unmeasured_policy='fail': {len(unmeasured)} enabled spec(s) had no "
+                    f"measurable value this trial {unmeasured} — the trial is recorded INFEASIBLE "
+                    f"(each such spec already scores -MAX_PENALTY)."
+                )
 
         # Expose this evaluation's per-run log files (multi mode: keyed
         # "<tb>__<corner>") to one-shot callers like the manual-sim route —
@@ -1611,7 +1814,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
 
         return fitness_score, fit_summary
 
-    def compute_fitness(self, performance_array: Dict[str, float | np.float64 | torch.Tensor]) -> Tuple[np.float64, Dict[str, Any]]:
+    def compute_fitness(self, performance_array: Mapping[str, float | np.float64 | torch.Tensor]) -> Tuple[np.float64, Dict[str, Any]]:
         """ Compute the fitness based on the performance metrics extracted from SPICE simulations and the target specs. """
         # Initialize variables
         reward      : np.float64 = np.float64(0.0)
@@ -1619,6 +1822,18 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         total_score : np.float64 = np.float64(0.0)
         fit_summary : Dict[str, Any] = {}
         spec_scores : Dict[str, np.float64] = {}
+        # Enabled specs this pass could NOT measure (missing key / non-finite / non-positive under
+        # log_scale). Recorded ALWAYS (it costs one list append on a path that is already taking
+        # the failure branch) and consumed only by `unmeasured_policy: fail` — see `evaluate`.
+        unmeasured_specs : List[str] = []
+        # Per-spec normalized margins, populated only when the opt-in margin reward is ON, so the
+        # default path never enters `normalized_spec_margin` at all (bit-identity by construction).
+        spec_margins : Dict[str, Any] = {}
+        _cfg = getattr(self, "optimizer_config", None)
+        _margin_w = getattr(_cfg, "margin_reward_weight", None)
+        _margin_w = (DEFAULT_MARGIN_REWARD_WEIGHT if _margin_w is None else float(_margin_w))
+        _margin_clip = getattr(_cfg, "margin_reward_clip", None)
+        _margin_clip = (DEFAULT_MARGIN_REWARD_CLIP if _margin_clip is None else float(_margin_clip))
 
         # Iterate over each target specification
         # ------------------------------------------------------------------------------
@@ -1632,6 +1847,11 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
             ):
                 spec_fitness = self.compute_fitness_for_spec(curr_val=performance_array[spec.name], target_spec=spec)
                 spec_fitness = np.clip(spec_fitness, -1 * MAX_PENALTY, MAX_REWARD) # cap the score to avoid overflow
+                if _margin_w > 0:
+                    # Same geometry the reward kernels use (boundary + normalizing_coeff), shared
+                    # rather than re-derived — see `core.utils.normalized_spec_margin`.
+                    spec_margins[spec.name] = normalized_spec_margin(
+                        performance_array[spec.name], spec)
             else:
                 if self.verbose:
                     logger.debug(f"Target spec name '{spec.name}' not found in performance array keys: {list(performance_array.keys())}")
@@ -1652,6 +1872,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
                 # specs are all `dcgain`, where +inf means the AC blew up. See
                 # `is_scoreable_metric` and doc/TODO.md §22.
                 spec_fitness = -1 * np.float64(MAX_PENALTY)  # assign the maximal penalty if the spec is not found
+                unmeasured_specs.append(spec.name)
             # b - Log the spec score
             fit_summary[spec.name] = {
                 "curr_val": performance_array.get(spec.name, np.nan) ,
@@ -1676,12 +1897,34 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         # scorer stand-ins (tests, the API's score preview) that carry only the spec list, and a
         # hard `self.optimizer_config` read would turn those into AttributeErrors. A caller with no
         # config gets the historical default.
-        _cfg = getattr(self, "optimizer_config", None)
+        # `tie_breaker` is the OPT-IN escape from the reward-less strategies' flat feasible
+        # region (every feasible design scores 0, so the reported "best" is search-order noise).
+        # Default `None` -> the aggregation is bit-identical to before this key existed.
+        # `margin_reward_weight` is the OTHER opt-in escape, and a different one: it pays a
+        # FEASIBLE design for its worst normalized spec margin, the quantity E-057/E-058 measured
+        # as the predictor of corner survival. Default 0 -> `margin_reward_term` returns None and
+        # every historical return statement hands back its exact original object.
+        _tb_weight = getattr(_cfg, "tie_breaker_weight", None)
         total_score = aggregate_spec_scores(
             spec_scores,
             strategy=getattr(_cfg, "spec_aggregation", "feasibility_reward"),
             params=getattr(_cfg, "aggregation_params", None),
+            tie_breaker=getattr(_cfg, "tie_breaker", None),
+            tie_breaker_weight=(DEFAULT_TIE_BREAKER_WEIGHT if _tb_weight is None
+                                else float(_tb_weight)),
+            spec_margins=spec_margins,
+            margin_reward_weight=_margin_w,
+            margin_reward_clip=_margin_clip,
         )
+        # Publish this pass's by-products on the instance so the (corner-aware) `evaluate` can
+        # namespace and record them WITHOUT changing this method's return shape — `compute_fitness`
+        # is also invoked unbound against light scorer stand-ins whose callers unpack exactly two
+        # values. `setattr` is guarded: a stand-in may be a slotted/frozen object.
+        try:
+            self._last_unmeasured_specs = tuple(unmeasured_specs)
+            self._last_spec_margins = dict(spec_margins)
+        except AttributeError:  # pragma: no cover - exotic slotted stand-in
+            pass
 
         logger.debug(f"Computed fitness: {total_score} for performance array: {performance_array}")
         logger.debug(f"\tReward: {reward}")

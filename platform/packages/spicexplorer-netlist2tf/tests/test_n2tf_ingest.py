@@ -211,3 +211,57 @@ C1 out 0 1u
     assert ir.device("V1").params["ac"] == sp.Integer(1)
     assert ir.net("0").role is NetRole.GROUND
     assert ir.ports["out"].is_single_ended()
+
+
+# ------------------------------------------------------------------------
+# X-wrapped MOS typing: the model name wins over the reference-designator letter
+# ------------------------------------------------------------------------
+_PDK_WRAPPED = """* PDK-style wrappers with non-XM instance names
+.subckt cell inp out vdd
+XM1  out inp 0   0   sg13_hv_nmos w=1u l=1u
+XR1  vdd vdd bias vdd sg13_hv_pmos w=2u l=2u
+XR3  bias inp 0   0   sg13_hv_nmos w=3u l=3u
+XDUM out out 0   0   sg13_lv_nmos w=1u l=1u
+XSUB a b c d some_opaque_block
+.ends cell
+.end
+"""
+
+
+def _wrapped_ir():
+    import tempfile
+    from pathlib import Path as _P
+
+    from spicexplorer_core.spice_engine import NetlistView
+    from spicexplorer_netlist2tf import ingest_netlist
+
+    f = _P(tempfile.mkdtemp()) / "w.spice"
+    f.write_text(_PDK_WRAPPED)
+    view = NetlistView.from_file(f).get_subcircuit_named("cell")
+    return ingest_netlist(view, name="cell")
+
+
+def test_x_wrapped_mos_typed_by_model_not_prefix():
+    # XR1/XR3/XDUM are transistors that simply are not called XM… — a PDK replica branch, a dummy.
+    ir = _wrapped_ir()
+    kinds = {d.ref: d.kind for d in ir.devices}
+    assert kinds["XM1"] is DeviceKind.NMOS
+    assert kinds["XR1"] is DeviceKind.PMOS
+    assert kinds["XR3"] is DeviceKind.NMOS
+    assert kinds["XDUM"] is DeviceKind.NMOS  # a dummy, named neither XM… nor by role
+
+
+def test_x_wrapped_mos_gets_mos_pin_roles():
+    ir = _wrapped_ir()
+    xr1 = ir.device("XR1")
+    assert [t.role for t in xr1.terminals] == [
+        PinRole.DRAIN, PinRole.GATE, PinRole.SOURCE, PinRole.BULK
+    ]
+    assert [t.net for t in xr1.terminals] == ["vdd", "vdd", "bias", "vdd"]
+    assert xr1.params["w"] == 2e-6
+
+
+def test_non_mos_x_instance_stays_opaque():
+    # The rule is strict: an X… instance whose model does not name a MOS is still a subckt.
+    ir = _wrapped_ir()
+    assert ir.device("XSUB").kind is DeviceKind.SUBCKT

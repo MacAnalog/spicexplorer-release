@@ -223,7 +223,10 @@ class GdsBuilder:
             cmd += ["--cell", self.cell]
         if self.sizing_json:
             cmd += ["--sizing", self.sizing_json]
-        r = subprocess.run(cmd, capture_output=True, text=True, env=env)
+        # cwd = the (per-build) out_dir: PDK PyCells may drop scratch files in cwd
+        # (ihp-gdsfactory's npn13G2 writes+removes `temp.gds`), which collides when several
+        # optimizer islands / builds share the launcher's cwd.
+        r = subprocess.run(cmd, capture_output=True, text=True, env=env, cwd=str(self.out_dir))
         if r.returncode != 0:
             raise RuntimeError(f"generator failed ({r.returncode}):\n{r.stderr[-3000:]}")
         # the JSON record is the LAST line the CLI prints, but the generator side (gdsfactory /

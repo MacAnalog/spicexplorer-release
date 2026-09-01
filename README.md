@@ -31,6 +31,8 @@ packages, the UI, and the database.
 | [`analog-db/`](analog-db/) | Analog circuit database — the topology/circuit registry (netlists, datasheets, class libraries, testbench templates) and its tiered verification harness | released |
 | [`platform/`](platform/) | The Python workspace — kernel, leaf tools, optimizer and REST API (all ten packages below) | released |
 | [`ui/`](ui/) | SpiceXplorer "Studio" — the Next.js front-end (HTTP/SSE) over the platform api | released |
+| [`agentic-design-example/`](agentic-design-example/) | A worked agent-driven design, as a submodule — the PAM-4 2-bit current-steering DAC driver taken from spec to layout in IHP SG13G2, with every schematic/layout co-design round on the record | released |
+| [`.claude/`](.claude/) | The agent kit: the four layout-lane agent definitions (brief → design → review → co-design) and the two gm/ID sizing skills, block- and PDK-agnostic | released |
 
 ### Platform packages
 
@@ -63,6 +65,16 @@ a `.release-provenance.json` in each records the snapshot it was cut from.
 > documented seam.
 
 ## Quickstart
+
+`agentic-design-example/` is a git submodule, so clone with it:
+
+```bash
+git clone --recurse-submodules https://github.com/MacAnalog/spicexplorer-release.git
+# already cloned? git submodule update --init --recursive
+```
+
+Nothing in `platform/`, `ui/` or `analog-db/` needs it — skip the submodule and
+everything below still works.
 
 Two ways to bring the app (API + Studio UI) up. **Full walkthroughs:**
 [docs/getting-started.md](docs/getting-started.md) (native) and
@@ -111,6 +123,7 @@ each `make` target is a one-line wrapper you can run by hand.
 - [docs/getting-started.md](docs/getting-started.md) — install, run natively, run tests, enable live SPICE.
 - [docs/docker.md](docs/docker.md) — the Docker stack, ports, environment, and its limits.
 - Per-component detail: [`platform/README.md`](platform/README.md), [`ui/README.md`](ui/README.md), [`analog-db/README.md`](analog-db/README.md).
+- [`.claude/README.md`](.claude/README.md) — the agent kit: what each layout-lane agent and gm/ID skill does, and how to use them outside Claude Code.
 
 ## Recommended tooling
 

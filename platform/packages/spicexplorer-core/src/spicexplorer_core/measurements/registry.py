@@ -72,6 +72,16 @@ _MEAS_TABLE: Dict[str, Tuple[str, Tuple[str, ...]]] = {
     # default. With `{analysis: pac}` this is the chopper/SC Z_in — the periodic-OP
     # input impedance a static ac cannot see.
     "zin_mag": ("ac", ("out",)),
+    # band-edge / spot magnitudes — the grid-independent reads of a "≤ x dB up to
+    # f_edge" spec (reflection, rejection, gain flatness): `mag_at_db` = |H| dB at exactly
+    # `f` (log-f interpolated), `band_max_db`/`band_min_db` = worst |H| dB over
+    # [`f_start`?, `f_edge`] INCLUDING the interpolated edges (a `dec N` grid seldom
+    # samples the edge itself), `level_cross_hz` = first frequency where |H| dB crosses
+    # `level` (the "−10 dB edge" figure). Optional `ref` normalizes as for every AC read.
+    "mag_at_db": ("ac", ("out", "f")),
+    "band_max_db": ("ac", ("out", "f_edge")),
+    "band_min_db": ("ac", ("out", "f_edge")),
+    "level_cross_hz": ("ac", ("out", "level")),
     # DC sweep — the buffer-connected linearity template (input common-mode range)
     "icmr_min": ("dc", ("out", "vin", "vtrack")),
     "icmr_max": ("dc", ("out", "vin", "vtrack")),
@@ -282,6 +292,17 @@ def measure(
             mag = np.abs(h) * float(recipe.get("scale", 1.0))
             at = float(recipe["f"]) if "f" in recipe else float(np.min(freq))
             return float(mag[int(np.argmin(np.abs(freq - at)))])
+        if meas == "mag_at_db":
+            return _wf.magnitude_at_db(freq, h, float(recipe["f"]))
+        if meas in ("band_max_db", "band_min_db"):
+            fs = recipe.get("f_start")
+            return _wf.band_worst_db(
+                freq, h, float(recipe["f_edge"]),
+                f_start=None if fs is None else float(fs),
+                worst="max" if meas == "band_max_db" else "min",
+            )
+        if meas == "level_cross_hz":
+            return _wf.level_crossing_freq(freq, h, float(recipe["level"]))
         return float(_AC_FN[meas](freq, h))
 
     if kind == "stb":  # loop-gain wave (Spectre stb) — AC math on the loopGain trace

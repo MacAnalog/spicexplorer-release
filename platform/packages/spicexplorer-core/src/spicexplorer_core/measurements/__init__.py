@@ -22,6 +22,7 @@ from spicexplorer_core.measurements.registry import (
     validate_recipe,
 )
 from spicexplorer_core.measurements.waveforms import (
+    band_worst_db,
     bandwidth_3db,
     dc_gain_db,
     dc_gain_linear,
@@ -33,6 +34,8 @@ from spicexplorer_core.measurements.waveforms import (
     iip3_from_harmonics,
     iip3_from_two_tone,
     integrated_noise,
+    level_crossing_freq,
+    magnitude_at_db,
     magnitude_db,
     phase_margin,
     phase_noise_dbc,
@@ -66,6 +69,9 @@ __all__ = [
     "gain_margin_db",
     "bandwidth_3db",
     "gain_bandwidth_product",
+    "magnitude_at_db",
+    "band_worst_db",
+    "level_crossing_freq",
     "settling_time",
     "slew_rate",
     "integrated_noise",

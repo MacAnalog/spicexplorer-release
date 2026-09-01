@@ -17,14 +17,21 @@ Every step below has a `make` shortcut (left) and the raw command it runs
 
 ```
 .
-├── platform/     # Python uv workspace: the 6 released packages (see platform/README.md)
-│   ├── packages/spicexplorer-core, -circuitgraph, -netlist2xschem, -waveview,
+├── platform/     # Python uv workspace: the released packages (see platform/README.md)
+│   ├── packages/spicexplorer-core, -circuitgraph, -netlist2xschem, -netlist2tf,
+│   │            -waveview, -gmid, -layout, -signoff,
 │   │            spicexplorer (optimizer), spicexplorer-api (FastAPI)
 │   ├── pyproject.toml          # the (virtual) workspace root
 │   └── .spicexplorer-root      # workspace-root marker (do not remove)
 ├── ui/           # Next.js "Studio" front-end (see ui/README.md)
-└── analog-db/    # circuit corpus the API's /api/library routes read
+├── analog-db/    # circuit corpus the API's /api/library routes read
+├── agentic-design-example/     # worked agent-driven design (git submodule)
+└── .claude/      # agent definitions + skills (see .claude/README.md)
 ```
+
+`agentic-design-example/` is a submodule: clone with `--recurse-submodules`, or
+run `git submodule update --init --recursive` afterwards. Nothing below needs
+it.
 
 `platform/` is a **virtual uv workspace** (no root package): the packages under
 `packages/*` are its members, wired together via `[tool.uv.sources]`. One

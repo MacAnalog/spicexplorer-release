@@ -264,7 +264,9 @@ def small_signal_model(
 
     if skipped:
         logger.warning(
-            "small_signal_model: %d device(s) have no registered model and were skipped: %s",
+            "small_signal_model: %d device(s) have no registered model and were skipped: %s. "
+            "Their branches are ABSENT from the MNA, so any H(s) built from this model is "
+            "missing them — check SmallSignalIR.unmodelled if this was not intended.",
             len(skipped), ", ".join(skipped),
         )
 
@@ -277,4 +279,5 @@ def small_signal_model(
         ground=ir.ground,
         fidelity=level,
         symbols=symbols,
+        unmodelled=tuple(skipped),
     )

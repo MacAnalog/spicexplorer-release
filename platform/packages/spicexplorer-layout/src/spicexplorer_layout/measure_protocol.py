@@ -5,11 +5,19 @@ bench step: after build → DRC → LVS → PEX it launches ``measure.python`` (
 typically the block's own venv, which has *its* benches and their SPICE wrappers) and hands
 it ONE JSON request on stdin::
 
-    {"pex_subckt": "<path to the prepared .subckt file>",
-     "work_dir":   "<this trial's run dir>",
-     "params":     {<the candidate layout knobs>},
-     "corner":     {<the active PVT corner as a dict, or null>},
-     "extra":      {<measure.extra from the flow spec, or {}>}}
+    {"pex_subckt":  "<path to the prepared .subckt file>",
+     "pex_netlist": "<path to the raw extractor netlist, or null>",
+     "gds":         "<path to the trial's GDS, or null>",
+     "work_dir":    "<this trial's run dir>",
+     "cell":        "<the flow's cell name>",
+     "params":      {<the candidate layout knobs>},
+     "sizing":      {<the candidate's electrical sizing: the flow's `sizing:` file merged
+                      with the `sizing_params` overlay; {} when the flow has no sizing>},
+     "sizing_json": "<path to that merged sizing file, or null>",
+     "deck_params": {<bench-only dut_params — neither knobs nor sizing keys, e.g. bias
+                      currents/voltages the hook's benches take; {} if none>},
+     "corner":      {<the active PVT corner as a dict, or null>},
+     "extra":       {<measure.extra from the flow spec, or {}>}}
 
 and expects exactly ONE JSON line back on stdout (anything else on stdout is ignored,
 stderr is captured for the log)::

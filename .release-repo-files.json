@@ -26,6 +26,7 @@
   ".github/workflows/ui.yml",
   ".gitignore",
   "Dockerfile.api",
+  "Dockerfile.em",
   "Dockerfile.spice-base",
   "Makefile",
   "README.md",

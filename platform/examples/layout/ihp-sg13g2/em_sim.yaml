@@ -1,0 +1,22 @@
+# Example EM solver setup for spicexplorer_layout.em.EmSim.from_yaml().
+# Commit a file like this next to the touchstone it produced — the run is
+# then reproducible without CLI archaeology:
+#
+#     from spicexplorer_layout import em
+#     tech = em.EmTech.builtin("ihp-sg13g2")        # process description
+#     sim  = em.EmSim.from_yaml("em_sim.yaml")      # this file
+#     em.em_sparams("em_cut.gds", ports, "em_out", tech=tech, sim=sim)
+#
+# A single combined file also works: put the process under a `tech:` key and
+# these knobs under a `sim:` key — EmTech.from_yaml/EmSim.from_yaml each read
+# their own section. Every key is optional (defaults shown).
+sim:
+  fstart: 0.0            # Hz — band start (Gauss excitation spans the band)
+  fstop: 60.0e9          # Hz — band stop; also sets the coarse-mesh bound
+  numfreq: 241           # frequency points in the touchstone
+  cellsize_um: 0.5       # refined mesh cell in conductor regions — never
+                         # coarser than the thinnest trace in the cut
+  margin_um: 50.0        # simulation-box margin around the geometry
+  energy_limit_db: -40.0 # FDTD end criterion (energy decay)
+  boundary: [PEC, PEC, PEC, PEC, PEC, PEC]  # xmin,xmax,ymin,ymax,zmin,zmax
+  # excite_ports: [1, 2] # restrict the excitation loop (default: every port)

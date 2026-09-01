@@ -1,0 +1,30 @@
+# EM-lane tech config for IHP SG13G2 — packaged reference (EmTech.builtin("ihp-sg13g2")).
+# GDS layer numbers = the PDK openEMS stackup XML "Layer" numbers.
+metals:
+  Metal1: 8
+  Metal2: 10
+  Metal3: 30
+  Metal4: 50
+  Metal5: 67
+  TopMetal1: 126
+  TopMetal2: 134
+vias:
+  Via1: 19
+  Via2: 29
+  Via3: 49
+  Via4: 66
+  TopVia1: 125
+  TopVia2: 133
+via_stack:            # via -> [metal below, metal above]
+  Via1: [Metal1, Metal2]
+  Via2: [Metal2, Metal3]
+  Via3: [Metal3, Metal4]
+  Via4: [Metal4, Metal5]
+  TopVia1: [Metal5, TopMetal1]
+  TopVia2: [TopMetal1, TopMetal2]
+subgnd_layer: 210     # stackup's idealized substrate-contact layer (SUBGND)
+gnd_contact_layers: [1, 6]  # Activ + Cont — tie gnd nets' Metal1 to the plane
+port_layer_base: 300  # port rects on 300+num — keep clear of every stackup layer
+text_datatype: 25     # net-label datatype on the metal layer number
+workflow: ihp-sg13g2/libs.tech/openems/openems_ihp_sg13g2/workflow  # rel. $PDK_ROOT
+stackup_xml: SG13G2.xml                                             # rel. workflow

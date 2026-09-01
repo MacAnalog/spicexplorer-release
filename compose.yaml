@@ -37,6 +37,26 @@ services:
     # FROMs it; the container itself is never started.
     command: ["true"]
 
+  # EM verification toolchain (openEMS built from source + the IHP PDK's own
+  # openEMS workflow) for `spicexplorer_layout.em`. Its own opt-in profile: the
+  # stack is heavy (boost/vtk/CGAL + a C++ build) and it is a VERIFICATION lane —
+  # never inside an optimizer loop, so a plain `docker compose up` must not build
+  # it.
+  #
+  #   docker compose --profile em build em
+  #   docker compose run --rm em bash
+  #
+  # The image carries the toolchain only, not this repo's Python packages: mount
+  # your work dir and run the lane against an installed spicexplorer-layout.
+  em:
+    profiles: ["em"]
+    build:
+      context: .
+      dockerfile: Dockerfile.em
+    image: spicexplorer-em:release
+    volumes:
+      - ${WORKDIR:-./work}:/work
+
   api:
     build:
       context: .

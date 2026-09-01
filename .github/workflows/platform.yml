@@ -72,6 +72,27 @@ jobs:
           # httpx: FastAPI TestClient's HTTP backend — the api route tests import
           # starlette.testclient at collection, which hard-errors without it.
           pip install -e "platform/packages/${{ matrix.package }}" pytest pyyaml httpx
+
+      # spicexplorer-layout's EM tests importorskip klayout.db at MODULE level and
+      # scikit-rf inside the vector-fit test, so WITHOUT these the whole EM suite
+      # vanishes and the job goes green having verified none of it. Both are
+      # wheels, and only this one matrix entry pays for them.
+      - name: layout EM extras (so the EM tests actually run, not skip)
+        if: steps.ported.outputs.ok == 'true' && matrix.package == 'spicexplorer-layout'
+        run: pip install "klayout>=0.30" "scikit-rf>=1.0"
+
+      # Guard the guard: a silent skip here is the exact failure the step above
+      # exists to prevent, so fail loudly if the extras did not take.
+      - name: EM suite is collectable (not silently skipped)
+        if: steps.ported.outputs.ok == 'true' && matrix.package == 'spicexplorer-layout'
+        working-directory: platform/packages/spicexplorer-layout
+        run: |
+          if [ -f tests/test_em_offline.py ]; then
+            python -m pytest tests/test_em_offline.py --collect-only -q \
+              || { echo "::error::EM tests are not collectable — the gds/em extras did not install"; exit 1; }
+          else
+            echo "::notice::tests/test_em_offline.py not in this tree yet — nothing to guard."
+          fi
       - name: wire the analog-db corpus (templates + examples)
         if: steps.ported.outputs.ok == 'true'
         # circuitgraph's template library and some example YAMLs resolve the

@@ -250,6 +250,14 @@ class GdsBuilder:
         return Path(self.last.gds)
 
 
+def pdk_lyp(pdk: str) -> Path | None:
+    """Layer-properties file of an installed PDK: the single ``*.lyp`` under
+    ``$PDK_ROOT/<pdk>/libs.tech/klayout/tech/`` (no per-PDK name table)."""
+    root = Path(os.environ.get("PDK_ROOT", os.path.expanduser("~/local/pdks")))
+    hits = sorted((root / pdk / "libs.tech" / "klayout" / "tech").glob("*.lyp"))
+    return hits[0] if hits else None
+
+
 def render_png(
     gds: str | Path,
     png: str | Path,
@@ -262,8 +270,7 @@ def render_png(
     import klayout.lay as klay  # optional dep
 
     if lyp is None:
-        root = Path(os.environ.get("PDK_ROOT", os.path.expanduser("~/local/pdks")))
-        lyp = root / pdk / "libs.tech" / "klayout" / "tech" / {"ihp-sg13g2": "sg13g2.lyp"}[pdk]
+        lyp = pdk_lyp(pdk) or Path("")
     lv = klay.LayoutView()
     lv.load_layout(str(gds), 0)  # type: ignore[call-overload]  (path, add_cellview)
     if Path(lyp).is_file():

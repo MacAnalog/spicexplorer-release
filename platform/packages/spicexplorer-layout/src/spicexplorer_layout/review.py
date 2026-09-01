@@ -183,13 +183,9 @@ def dump_review(r: Review, path: str | Path) -> Path:
 
 
 def _pdk_lyp(pdk: str) -> Path | None:
-    import os
+    from .gen import pdk_lyp
 
-    root = Path(os.environ.get("PDK_ROOT", os.path.expanduser("~/local/pdks")))
-    cand = {
-        "ihp-sg13g2": root / "ihp-sg13g2" / "libs.tech" / "klayout" / "tech" / "sg13g2.lyp"
-    }.get(pdk)
-    return cand if cand and cand.is_file() else None
+    return pdk_lyp(pdk)
 
 
 def annotate(

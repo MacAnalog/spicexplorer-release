@@ -29,6 +29,7 @@ make down               # stop (== docker compose down)
 | `api` | `spicexplorer-api:release` | `8000` | [`Dockerfile.api`](../Dockerfile.api) (context = repo root) |
 | `ui`  | `spicexplorer-ui:release`  | `4000` | [`ui/Dockerfile.prod`](../ui/Dockerfile.prod) (Next.js standalone) |
 | `spice-base` | `spicexplorer-spice-base:release` | — | [`Dockerfile.spice-base`](../Dockerfile.spice-base). `live` profile: built only by `make up-live`, never started — the `api` `FROM`s it |
+| `em` | `spicexplorer-em:release` | — | [`Dockerfile.em`](../Dockerfile.em). `em` profile: the full-wave verification toolchain (openEMS from source + the IHP PDK's openEMS workflow) for `spicexplorer_layout.em`. Build with `docker compose --profile em build em`, then `docker compose run --rm em bash`; it carries the toolchain only, so mount your work dir (`WORKDIR=...`) and run against an installed `spicexplorer-layout` |
 
 Wiring: the UI is built with `BACKEND_URL=http://api:8000`, so the browser talks
 only to `:4000` and the UI proxies `/api/*` to the `api` service over the compose

@@ -18,7 +18,7 @@ directly — phase margin, unity-gain frequency, and the peak of the sensitivity
 function — rather than inferring stability from output-impedance peaking, and
 fixes a dropout sweep that ended below the voltage at which one regulator
 reaches regulation. v1.1.1 moved the reference circuits to upstream pointers
-and refreshed the database (faster test tiers, publication-quality
+and refreshed the database (reorganized test tiers, regenerated
 schematics). v1.1 added the EDA base image, so `make up-live` gives
 you a working simulator and three open PDKs with nothing installed on the host
 (see [Live SPICE](#quickstart) below). v1.0 opened the platform: all ten
@@ -31,7 +31,7 @@ packages, the UI, and the database.
 | [`analog-db/`](analog-db/) | Analog circuit database — the topology/circuit registry (netlists, datasheets, class libraries, testbench templates) and its tiered verification harness | released |
 | [`platform/`](platform/) | The Python workspace — kernel, leaf tools, optimizer and REST API (all ten packages below) | released |
 | [`ui/`](ui/) | SpiceXplorer "Studio" — the Next.js front-end (HTTP/SSE) over the platform api | released |
-| [`agentic-design-example/`](agentic-design-example/) | A worked agent-driven design, as a submodule — the PAM-4 2-bit current-steering DAC driver taken from spec to layout in IHP SG13G2, with every schematic/layout co-design round on the record | released |
+| [`agentic-design-example/`](agentic-design-example/) | A worked agent-driven design, as a submodule — the PAM-4 2-bit current-steering DAC driver taken from spec to layout in IHP SG13G2, with every schematic/layout co-design round recorded | released |
 | [`.claude/`](.claude/) | The agent kit: the four layout-lane agent definitions (brief → design → review → co-design) and the two gm/ID sizing skills, block- and PDK-agnostic | released |
 
 ### Platform packages
@@ -42,27 +42,27 @@ other, so any one of them can be used on its own.
 
 | Package | Layer | What it does |
 |---|---|---|
-| `spicexplorer-api` | adapter | FastAPI service over the optimizer and the library — thin, no business logic |
+| `spicexplorer-api` | adapter | FastAPI service over the optimizer and the library — no business logic |
 | `spicexplorer` | optimizer | The YAML design DSL, the scoring/optimization loop, and the simulation backends |
 | `spicexplorer-circuitgraph` | leaf tool | Netlist → typed bipartite graph (nets ⟷ components), with round-trip and cross-PDK retargeting |
 | `spicexplorer-netlist2xschem` | leaf tool | Netlist → xschem schematic, with headless SVG/PNG rendering |
-| `spicexplorer-netlist2tf` | leaf tool | Netlist → exact symbolic transfer function, reduced to readable hand-form |
+| `spicexplorer-netlist2tf` | leaf tool | Netlist → exact symbolic transfer function, reduced to the form used in hand analysis |
 | `spicexplorer-gmid` | leaf tool | Deterministic gm/ID sizing from pre-computed lookup tables |
-| `spicexplorer-waveview` | leaf tool | Universal result viewer — ngspice/Spectre artifacts → engine-neutral waveforms + plots |
-| `spicexplorer-layout` | leaf tool | Parameterized layout generation (the generator contract + GDS build) |
-| `spicexplorer-signoff` | leaf tool | Physical signoff — DRC / LVS / PEX runners with structured verdicts |
+| `spicexplorer-waveview` | leaf tool | Result viewer — ngspice/Spectre artifacts → engine-neutral waveforms + plots |
+| `spicexplorer-layout` | leaf tool | Parameterized layout generation: the generator contract, deterministic GDS build, annotated review renders, the post-layout measure protocol, and full-wave EM verification (openEMS) |
+| `spicexplorer-signoff` | leaf tool | Physical signoff — DRC / LVS / PEX runners with structured verdicts, chained build → DRC → LVS → PEX by one call, plus post-layout splicing and parasitic/mismatch injection |
 | `spicexplorer-core` | kernel | SPICE-engine wrappers, PVT corners, measurements, units, path anchoring |
 
 Each component keeps its own `README.md`, `LICENSE`, and (for Python) `pyproject.toml`;
 a `.release-provenance.json` in each records the snapshot it was cut from.
 
 > **PDKs.** The database ships **open** PDK bindings only — IHP sg13g2, SkyWater
-> sky130, and GlobalFoundries gf180mcu. The Spectre/commercial lane's machinery,
+> sky130, and GlobalFoundries gf180mcu. The Spectre/commercial lane's code,
 > templates and tests are here **kit-unbound**: no proprietary kit is bound, and
 > no foundry-NDA-encumbered content — models, device or corner names, library
 > identifiers, or data derived from a licensed kit — ships anywhere in this
 > repository (CI enforces this: `nda-check`). You bind your own kit through the
-> documented seam.
+> documented binding interface.
 
 ## Quickstart
 
@@ -110,13 +110,22 @@ each `make` target is a one-line wrapper you can run by hand.
 > source with OSDI, plus the IHP sg13g2, SkyWater sky130 and GF gf180mcu PDKs
 > vendored** (all Apache-2.0) — and runs the stack on top of it. `pdk_ok:true`,
 > with **nothing installed on the host**: no ngspice, no PDK download, no
-> `PDK_ROOT`. It builds on both x86-64 and arm64 (Apple silicon) — the compact
-> models are compiled from source there, which takes considerably longer the
-> first time. See
+> `PDK_ROOT`. It builds on both x86-64 and arm64 (Apple silicon). The arm64
+> path compiles the compact models from source rather than reusing the prebuilt
+> x86-64 ones, so its first build is the slower of the two. See
 > [docs/docker.md](docs/docker.md#live-spice-in-the-container).
 >
 > Prefer no containers? Install a local ngspice + an open PDK and run natively —
 > see [docs/getting-started.md](docs/getting-started.md#live-spice-optional).
+>
+> **`docker compose --profile em build em`** builds a third, separate image
+> ([`Dockerfile.em`](Dockerfile.em)) — **openEMS compiled from source plus the
+> IHP PDK's own openEMS workflow** — for the full-wave verification lane in
+> `spicexplorer-layout`. It has its own profile because the image adds a
+> from-source C++ build (boost, VTK, CGAL), and because the lane runs outside the
+> per-trial optimization loop, on the accepted layout only: a plain `make up`
+> never builds it. See
+> [docs/docker.md](docs/docker.md#what-runs).
 
 ## Documentation
 

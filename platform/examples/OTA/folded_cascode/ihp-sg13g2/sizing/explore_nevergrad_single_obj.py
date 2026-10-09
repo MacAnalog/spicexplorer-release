@@ -14,7 +14,7 @@ def _():
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    **Runs today, but does not reproduce its saved outputs.** `project_setup.yaml` in this folder has changed since the saved run: it now names SamplingSearch with a budget of 5 trials, each simulated at two PVT corners, and a run takes about 4 s with ngspice and the IHP SG13G2 PDK. The saved outputs are a one-off LHSSearch run of 5,000 trials (random seed 48, 1 h 09 min of optimization) and are kept in `explore_nevergrad_single_obj.recorded-outputs.html` beside this file.
+    **Runs today, but does not reproduce its saved outputs.** `project_setup.yaml` in this folder has changed since the saved run: it now names SamplingSearch with a budget of 5 trials, each simulated at two PVT corners, and a run takes about 4 s with ngspice and the IHP SG13G2 PDK. The saved outputs are a one-off LHSSearch run of 5,000 trials (random seed 48, 1 h 09 min of optimization) and are in `explore_nevergrad_single_obj_recorded_outputs.py` beside this file (data in `explore_nevergrad_single_obj.recorded-outputs.csv`); run it to print the recorded outputs and rebuild the three figures.
     """)
     return
 

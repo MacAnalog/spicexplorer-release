@@ -228,9 +228,10 @@ Package-level (self-contained, runs anywhere — offline, deterministic):
   cell. Needs the full physical stack (the `live_layout` requirement tag: `$GDS_PYTHON`
   gdsfactory env + KLayout + kpex + ngspice/PDK) and degrades to committed replay numbers
   without it. Example project: [`examples/layout/ihp-sg13g2/5t_ota_gf/coopt/`](../../examples/layout/ihp-sg13g2/5t_ota_gf/coopt/).
-  The outputs of its last Jupyter run on a host with that stack (the `live_layout` tag), the two
-  layout renders included, are kept in
-  [`notebooks/layout_schematic_cooptimization.recorded-outputs.html`](notebooks/layout_schematic_cooptimization.recorded-outputs.html);
+  The outputs of its last Jupyter run on a host with that stack (the `live_layout` tag) are in
+  [`notebooks/layout_schematic_cooptimization_recorded_outputs.py`](notebooks/layout_schematic_cooptimization_recorded_outputs.py)
+  (data in `layout_schematic_cooptimization.recorded-outputs.json`; run it to print the tables and
+  rebuild the trial scatter; the two layout renders are not kept);
   the marimo file has not been re-run on a host with that stack since the conversion.
 
 Worked, end-to-end optimizer references live under

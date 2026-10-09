@@ -14,7 +14,7 @@ def _():
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    **Does not run today.** It reads `checkpoints/LHSSearch_2000.json`, a 2,000-trial LHSSearch checkpoint that is in no repository, and `project_setup.yaml` in this folder now names SamplingSearch with a budget of 5, so `python` on this file stops at the checkpoint-load cell (FileNotFoundError). The saved outputs of the last Jupyter run are in `explore_load_optimization_trace.recorded-outputs.html` beside this file.
+    **Does not run today.** It reads `checkpoints/LHSSearch_2000.json`, a 2,000-trial LHSSearch checkpoint that is in no repository, and `project_setup.yaml` in this folder now names SamplingSearch with a budget of 5, so `python` on this file stops at the checkpoint-load cell (FileNotFoundError). The saved outputs of the last Jupyter run are in `explore_load_optimization_trace_recorded_outputs.py` beside this file (data in `explore_load_optimization_trace.recorded-outputs.csv`); run it to print the recorded outputs and rebuild the figures.
     """)
     return
 

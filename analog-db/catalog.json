@@ -8,6 +8,16 @@
       "class": "adc",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "CMOS-inverter 1-bit quantizer (degenerate flash slice)",
       "id": "adc_001_inv1b",
       "kind": "verifiable",
@@ -84,6 +94,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "none",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "5-transistor OTA (single-stage)",
       "id": "amp_001_5t",
       "kind": "verifiable",
@@ -271,6 +291,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "RAFFC",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 RAFFC compensation (Alfio)",
       "id": "amp_002_alfio_raffc",
       "kind": "verifiable",
@@ -439,6 +469,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "SMC",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 SMC compensation (Fan)",
       "id": "amp_003_fan_smc",
       "kind": "verifiable",
@@ -609,6 +649,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "none",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Folded-cascode OTA (CORA benchmark design)",
       "id": "amp_004_folded_cascode",
       "kind": "verifiable",
@@ -644,7 +694,6 @@
           }
         },
         "untied_symmetries": [
-          "matched_pair XM1+XM2 (tie l,m,w)",
           "mirror XM11\u2192XM0,XM12 (tie l)"
         ]
       },
@@ -784,6 +833,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "AFFC",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 AFFC compensation (HoiLee)",
       "id": "amp_005_hoilee_affc",
       "kind": "verifiable",
@@ -957,6 +1016,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "DFCFC1",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 DFCFC1 compensation (Leung)",
       "id": "amp_006_leung_dfcfc1",
       "kind": "verifiable",
@@ -1128,6 +1197,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "DFCFC2",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 DFCFC2 compensation (Leung)",
       "id": "amp_007_leung_dfcfc2",
       "kind": "verifiable",
@@ -1298,6 +1377,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "NMCF",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 NMCF compensation (Leung)",
       "id": "amp_008_leung_nmcf",
       "kind": "verifiable",
@@ -1468,6 +1557,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "NMCNR",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 NMCNR compensation (Leung)",
       "id": "amp_009_leung_nmcnr",
       "kind": "verifiable",
@@ -1638,6 +1737,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "ACBC",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 ACBC compensation (Peng)",
       "id": "amp_010_peng_acbc",
       "kind": "verifiable",
@@ -1812,6 +1921,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "IAC",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 IAC compensation (Peng)",
       "id": "amp_011_peng_iac",
       "kind": "verifiable",
@@ -1982,6 +2101,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "TCFC",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 TCFC compensation (Peng)",
       "id": "amp_012_peng_tcfc",
       "kind": "verifiable",
@@ -2152,6 +2281,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "AZC",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 AZC compensation (Qu2017)",
       "id": "amp_013_qu2017_azc",
       "kind": "verifiable",
@@ -2324,6 +2463,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "PFC",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 PFC compensation (Ramos)",
       "id": "amp_014_ramos_pfc",
       "kind": "verifiable",
@@ -2494,6 +2643,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "CFCC",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 CFCC compensation (Sau)",
       "id": "amp_015_sau_cfcc",
       "kind": "verifiable",
@@ -2664,6 +2823,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "DACFC",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 DACFC compensation (Song)",
       "id": "amp_016_song_dacfc",
       "kind": "verifiable",
@@ -2836,6 +3005,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "CLIA",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 CLIA compensation (Tan)",
       "id": "amp_017_tan_clia",
       "kind": "verifiable",
@@ -2881,7 +3060,7 @@
           "tan_clia_pin_3"
         ],
         "license": "BSD-3-Clause",
-        "note": "ngspice load error (model resolution) \u2014 under investigation",
+        "note": "imported as incomplete (an ngspice load error, model resolution); since #55 every bound PDK has a recorded baseline whose analyses all run (scoreboard/baselines.yaml)",
         "paper": "M. Tan & W.-H. Ki, IEEE JSSC 50(2):440-449, 2015",
         "source": "AnalogGym"
       },
@@ -2991,7 +3170,7 @@
       },
       "signal_path": "single_ended",
       "stages": 3,
-      "status": "incomplete"
+      "status": "draft"
     },
     {
       "analyses": [
@@ -3009,6 +3188,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "none",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Telescopic (cascode) OTA \u2014 NEWCAS 2026 design",
       "id": "amp_018_telescopic_cascode",
       "kind": "verifiable",
@@ -3042,7 +3231,7 @@
           }
         },
         "untied_symmetries": [
-          "matched_pair XM1+XM2 (tie l,m,w)",
+          "matched_pair XM1+XM2 (tie m)",
           "mirror XM6\u2192XM5 (tie l)"
         ]
       },
@@ -3187,6 +3376,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "Rz + Cc from the first-stage node to the output",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "TI-LDO error amplifier (12T two-stage, level-shifted mirror load)",
       "id": "amp_019_ti_ldo_error",
       "kind": "verifiable",
@@ -3218,10 +3417,7 @@
             "ratio": 0,
             "tied": 10
           }
-        },
-        "untied_symmetries": [
-          "matched_pair XM1+XM2 (tie l,m,w)"
-        ]
+        }
       },
       "pdks": [
         "gf180mcu",
@@ -3359,6 +3555,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "AZ",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "3-stage OTA \u2014 AZ compensation (Yan)",
       "id": "amp_021_yan_az",
       "kind": "verifiable",
@@ -3531,6 +3737,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "miller",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Two-stage Miller opamp (PMOS input pair, NMOS-CS second stage)",
       "id": "amp_022_fer_two_stage",
       "kind": "verifiable",
@@ -3715,6 +3931,16 @@
       "class": "amplifier",
       "cm_control": "regulated",
       "compensation": "miller_nulling",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Fully-differential 2-stage: NMOS folded-cascode + CS, Miller + RC-CMFB",
       "id": "amp_023_fer_fd2s",
       "kind": "verifiable",
@@ -3761,8 +3987,8 @@
           }
         },
         "untied_symmetries": [
-          "matched_pair XMEA1+XMEA2 (tie l,m,w)",
-          "matched_pair XMI1+XMI2 (tie l,m,w)"
+          "matched_pair XMEA1+XMEA2 (tie m)",
+          "matched_pair XMI1+XMI2 (tie m)"
         ]
       },
       "pdks": [
@@ -3907,6 +4133,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "miller_nulling",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "SMCNR two-stage: PMOS-input, single-Miller + nulling R (100 nA, sensing FE)",
       "id": "amp_024_smcnr",
       "kind": "verifiable",
@@ -3940,7 +4176,7 @@
           }
         },
         "untied_symmetries": [
-          "matched_pair XM0+XM2 (tie l,m,w)"
+          "matched_pair XM0+XM2 (tie m)"
         ]
       },
       "pdks": [
@@ -4087,6 +4323,16 @@
       "class": "amplifier",
       "cm_control": "regulated",
       "compensation": "miller-rz",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Hsu bandpass-IA two-stage OTA core with class-AB output (behavioral CMFB)",
       "id": "amp_025_hsu_classab_ota",
       "kind": "verifiable",
@@ -4276,6 +4522,16 @@
       "class": "amplifier",
       "cm_control": "partial",
       "compensation": "miller",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Fan CCIA two-stage opamp core with embedded output chopper (statically transparent)",
       "id": "amp_026_fan_chopper_ota",
       "kind": "verifiable",
@@ -4455,6 +4711,16 @@
       "class": "amplifier",
       "cm_control": "regulated",
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Fan ripple-reduction-loop SC-integrator opamp core (telescopic + DDA-CMFB)",
       "id": "amp_027_fan_rrl_ota",
       "kind": "verifiable",
@@ -4629,6 +4895,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Behavioral fully-differential amplifier macromodel (Gm/Rout/Cout VCCS)",
       "id": "amp_028_ideal_fully_diff",
       "kind": "verifiable",
@@ -4708,6 +4984,16 @@
       "class": "amplifier",
       "cm_control": "partial",
       "compensation": "miller",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Two-stage Miller OTA, fully differential (no CM control)",
       "id": "amp_029_two_stage_miller_comp",
       "kind": "verifiable",
@@ -4826,6 +5112,16 @@
       "class": "amplifier",
       "cm_control": "regulated",
       "compensation": "miller",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Two-stage Miller OTA + behavioral CMFB servo (COMPOSITE: amp_029 + cmfb_001_ideal_rsense_servo)",
       "id": "amp_030_miller_cmfb_composite",
       "kind": "verifiable",
@@ -4916,6 +5212,16 @@
       "class": "amplifier",
       "cm_control": "unregulated",
       "compensation": "miller-rz",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Hsu SRMC filter core amp with dual-loop CMFB (sized)",
       "id": "amp_031_srmc_core_cmfb",
       "kind": "verifiable",
@@ -5086,6 +5392,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "Rz + Cc from the first-stage node to the output",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "TI-LDO error amplifier, self-biased (11T two-stage, level-shifted mirror load, direct-CS output)",
       "id": "amp_032_ti_ldo_error_selfbias",
       "kind": "verifiable",
@@ -5117,10 +5433,7 @@
             "ratio": 0,
             "tied": 9
           }
-        },
-        "untied_symmetries": [
-          "matched_pair XM1+XM2 (tie l,m,w)"
-        ]
+        }
       },
       "pdks": [
         "gf180mcu",
@@ -5266,6 +5579,16 @@
       "class": "amplifier",
       "cm_control": "not_applicable",
       "compensation": "Rz + Cc from the first-stage node to the output",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "TI-LDO reference amplifier, self-biased (9T two-stage Miller, matched mirror load)",
       "id": "amp_033_ti_ldo_ref_selfbias",
       "kind": "verifiable",
@@ -5296,10 +5619,7 @@
             "ratio": 0,
             "tied": 6
           }
-        },
-        "untied_symmetries": [
-          "matched_pair XM1+XM2 (tie l,m,w)"
-        ]
+        }
       },
       "pdks": [
         "gf180mcu",
@@ -5445,6 +5765,16 @@
       "class": "amplifier",
       "cm_control": "regulated",
       "compensation": "miller",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Fan CCIA chopper OTA core + real 5T CMFB (COMPOSITE: amp_026 + cmfb_002_5t_pmos_input)",
       "id": "amp_034_fan_chopper_cmfb",
       "kind": "verifiable",
@@ -5546,6 +5876,16 @@
       "class": "amplifier",
       "cm_control": "regulated",
       "compensation": "miller",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Fan CCIA chopper OTA + DUAL 5T CMFB (COMPOSITE: amp_026 + 2x cmfb_002_5t_pmos_input)",
       "id": "amp_035_fan_chopper_cmfb_dual",
       "kind": "verifiable",
@@ -5645,6 +5985,16 @@
       "class": "buffer",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Feedback (super) source follower, current-mirror biased",
       "id": "buf_001_super_follower",
       "kind": "verifiable",
@@ -5796,6 +6146,16 @@
       "class": "cmfb",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Output CMFB servo (behavioral fully-diff amp + resistive CM detector)",
       "id": "cmfb_001_ideal_rsense_servo",
       "kind": "verifiable",
@@ -5874,6 +6234,16 @@
       "class": "cmfb",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Real 5T CMFB (PMOS-input error amp + resistive CM detector, canonical)",
       "id": "cmfb_002_5t_pmos_input",
       "kind": "verifiable",
@@ -5982,6 +6352,16 @@
       "class": "cmfb",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Real 5T CMFB (NMOS-input error amp + resistive CM detector, canonical)",
       "id": "cmfb_003_5t_nmos_input",
       "kind": "verifiable",
@@ -6088,6 +6468,16 @@
       "class": "cmfb",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Switched-capacitor CMFB (two-phase charge-redistribution CM detector, canonical)",
       "id": "cmfb_004_output_switched_cap",
       "kind": "verifiable",
@@ -6163,6 +6553,16 @@
       "class": "comparator",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Continuous-time hysteretic comparator (R-tail pair + feedback trip-shifters)",
       "id": "cmp_001_hyst_diffpair",
       "kind": "verifiable",
@@ -6200,7 +6600,7 @@
           }
         },
         "untied_symmetries": [
-          "matched_pair XMIN+XMIP (tie l,m,w)"
+          "matched_pair XMIN+XMIP (tie m)"
         ]
       },
       "pdks": [
@@ -6315,6 +6715,16 @@
       "class": "comparator",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "StrongARM latched comparator (clocked, differential out)",
       "id": "cmp_002_strongarm",
       "kind": "verifiable",
@@ -6350,7 +6760,7 @@
           }
         },
         "untied_symmetries": [
-          "matched_pair XMINN+XMINP (tie l,m,w)"
+          "matched_pair XMINN+XMINP (tie m)"
         ]
       },
       "pdks": [
@@ -6458,6 +6868,16 @@
       "class": "diff_pair",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Resistively-loaded NMOS differential pair (current-mirror tail)",
       "id": "dp_001_resistive_load",
       "kind": "verifiable",
@@ -6490,7 +6910,7 @@
           }
         },
         "untied_symmetries": [
-          "matched_pair XMN+XMP (tie l,m,w)"
+          "matched_pair XMN+XMP (tie m)"
         ]
       },
       "pdks": [
@@ -6602,6 +7022,15 @@
       "class": "drv",
       "cm_control": "unregulated",
       "compensation": "capacitive_emitter_degeneration",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1
+        ]
+      },
+      "derived_status": "draft",
       "display_name": "2-bit PAM-4 current-mode DAC driver (SiGe HBT, IHP SG13G2)",
       "id": "drv_001_pam4_sige_dac",
       "kind": "verifiable",
@@ -6674,6 +7103,14 @@
       "class": "voltage_reference",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0
+        ]
+      },
+      "derived_status": "reference",
       "display_name": "Bandgap core (ferrosim, ported from circuit-bench)",
       "id": "ferrosim_bandgap_core",
       "kind": "reference",
@@ -6706,6 +7143,14 @@
       "class": "filter",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0
+        ]
+      },
+      "derived_status": "reference",
       "display_name": "High-speed OTA biquad filter (ferrosim)",
       "id": "ferrosim_biquad",
       "kind": "reference",
@@ -6733,6 +7178,14 @@
       "class": "buffer",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0
+        ]
+      },
+      "derived_status": "reference",
       "display_name": "Cascode input buffer (ferrosim)",
       "id": "ferrosim_inbuf",
       "kind": "reference",
@@ -6760,6 +7213,14 @@
       "class": "amplifier",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0
+        ]
+      },
+      "derived_status": "reference",
       "display_name": "16-step programmable-gain amp (ferrosim, ported)",
       "id": "ferrosim_pga_16step",
       "kind": "reference",
@@ -6787,6 +7248,14 @@
       "class": "voltage_reference",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0
+        ]
+      },
+      "derived_status": "reference",
       "display_name": "Push-pull reference buffer (ferrosim)",
       "id": "ferrosim_refbuf",
       "kind": "reference",
@@ -6814,6 +7283,14 @@
       "class": "trim",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0
+        ]
+      },
+      "derived_status": "reference",
       "display_name": "16-step thermometer resistor trim (ferrosim)",
       "id": "ferrosim_restrim",
       "kind": "reference",
@@ -6841,6 +7318,14 @@
       "class": "oscillator",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0
+        ]
+      },
+      "derived_status": "reference",
       "display_name": "5-stage ring oscillator (ferrosim)",
       "id": "ferrosim_ring5",
       "kind": "reference",
@@ -6868,6 +7353,14 @@
       "class": "sampler",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0
+        ]
+      },
+      "derived_status": "reference",
       "display_name": "Bottom-plate bootstrapped sampler (ferrosim)",
       "id": "ferrosim_sampling_bts",
       "kind": "reference",
@@ -6895,6 +7388,14 @@
       "class": "adc",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0
+        ]
+      },
+      "derived_status": "reference",
       "display_name": "11-bit SAR ADC, with-MOS variant (ferrosim)",
       "id": "ferrosim_sar",
       "kind": "reference",
@@ -6922,6 +7423,14 @@
       "class": "filter",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0
+        ]
+      },
+      "derived_status": "reference",
       "display_name": "Switched-cap integrator (ferrosim)",
       "id": "ferrosim_sc_integrator",
       "kind": "reference",
@@ -6949,6 +7458,14 @@
       "class": "oscillator",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0
+        ]
+      },
+      "derived_status": "reference",
       "display_name": "LVT ring oscillator (ferrosim)",
       "id": "ferrosim_sc_ring",
       "kind": "reference",
@@ -6976,6 +7493,14 @@
       "class": "sampler",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0
+        ]
+      },
+      "derived_status": "reference",
       "display_name": "Switched-cap sample deck (ferrosim)",
       "id": "ferrosim_sc_sample",
       "kind": "reference",
@@ -7007,6 +7532,16 @@
       "class": "gain_stage",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Cascode common-source stage (self-contained PMOS/NMOS bias ladder)",
       "id": "gs_001_cascode_cs",
       "kind": "verifiable",
@@ -7166,6 +7701,16 @@
       "class": "ia",
       "cm_control": null,
       "compensation": "Miller RC (Cc + nulling Rz) per side inside the class-AB OTA",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Hsu bandpass CCIA with class-AB output (capacitive feedback + pseudo-resistor bias)",
       "id": "ia_001_hsu_bandpass_classab",
       "kind": "verifiable",
@@ -7268,6 +7813,16 @@
       "class": "ia",
       "cm_control": null,
       "compensation": "miller",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Fan capacitively-coupled chopper CCIA (simple, no input-impedance boost)",
       "id": "ia_002_fan_chopper_simple",
       "kind": "verifiable",
@@ -7364,6 +7919,16 @@
       "class": "ia",
       "cm_control": null,
       "compensation": "miller",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Fan capacitively-coupled chopper CCIA with positive-feedback input-impedance boost",
       "id": "ia_003_fan_chopper_pf",
       "kind": "verifiable",
@@ -7457,6 +8022,16 @@
       "class": "ia",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Fan CCIA + composed ripple-reduction loop (COMPOSITE: ia_002 + sup_003)",
       "id": "ia_004_fan_chopper_rrl",
       "kind": "verifiable",
@@ -7556,6 +8131,15 @@
       "class": "ia",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1
+        ]
+      },
+      "derived_status": "draft",
       "display_name": "Hsu 3-bit binary cap-feedback PGA (ideal-amp core)",
       "id": "ia_005_hsu_pga_ideal",
       "kind": "verifiable",
@@ -7614,6 +8198,16 @@
       "class": "ia",
       "cm_control": "regulated",
       "compensation": "miller",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Fan CCIA + real 5T CMFB (COMPOSITE: ia_002 + cmfb_002_5t_pmos_input)",
       "id": "ia_006_fan_chopper_cmfb",
       "kind": "verifiable",
@@ -7720,6 +8314,16 @@
       "class": "ldo",
       "cm_control": null,
       "compensation": "Miller cap (upstream mim XC0) + internal cascode pole control",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "AnalogGym Basic LDO (2-stage, cascoded load, capless)",
       "id": "ldo_001_analoggym_basic",
       "kind": "verifiable",
@@ -7895,6 +8499,16 @@
       "class": "ldo",
       "cm_control": null,
       "compensation": "Miller (Rz + Cc, pass gate -> vout)",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "AnalogGym folded-cascode LDO (9T folded-cascode OTA + PMOS pass, 5V devices)",
       "id": "ldo_002_analoggym_folded_cascode",
       "kind": "verifiable",
@@ -7926,10 +8540,7 @@
             "ratio": 0,
             "tied": 8
           }
-        },
-        "untied_symmetries": [
-          "matched_pair XM1+XM2 (tie l,m,w)"
-        ]
+        }
       },
       "pdks": [
         "sky130",
@@ -8072,6 +8683,16 @@
       "class": "ldo",
       "cm_control": null,
       "compensation": "Miller (Rz + Cc, pass gate -> vout)",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "AnalogGym simple LDO (5T OTA + PMOS pass, unity feedback, 5V devices)",
       "id": "ldo_003_analoggym_simple",
       "kind": "verifiable",
@@ -8101,10 +8722,7 @@
             "ratio": 0,
             "tied": 4
           }
-        },
-        "untied_symmetries": [
-          "matched_pair XM1+XM2 (tie l,m,w)"
-        ]
+        }
       },
       "pdks": [
         "sky130",
@@ -8248,6 +8866,16 @@
       "class": "ldo",
       "cm_control": null,
       "compensation": "none (dominant pole set by the pass-gate parasitic C)",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Basic PMOS LDO (minimal 4T error amp, uncompensated)",
       "id": "ldo_004_basic_pmos",
       "kind": "verifiable",
@@ -8277,10 +8905,7 @@
             "ratio": 0,
             "tied": 4
           }
-        },
-        "untied_symmetries": [
-          "matched_pair XM1+XM2 (tie l,m,w)"
-        ]
+        }
       },
       "pdks": [
         "ihp-sg13g2",
@@ -8422,6 +9047,16 @@
       "class": "ldo",
       "cm_control": null,
       "compensation": "Miller",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Buffered-reference LDO (ref-buffer + RC filter + error amp, Miller-compensated)",
       "id": "ldo_005_buffered_ref",
       "kind": "verifiable",
@@ -8450,11 +9085,7 @@
             "ratio": 0,
             "tied": 15
           }
-        },
-        "untied_symmetries": [
-          "matched_pair XMEA_1+XMEA_2 (tie l,m,w)",
-          "matched_pair XMRA_1+XMRA_2 (tie l,m,w)"
-        ]
+        }
       },
       "pdks": [
         "gf180mcu",
@@ -8557,6 +9188,16 @@
       "class": "ldo",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "LDO stub (source-follower pass device)",
       "id": "ldo_006_stub",
       "kind": "verifiable",
@@ -8691,6 +9332,16 @@
       "class": "ldo",
       "cm_control": null,
       "compensation": "Miller",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "PMOS-pass LDO (5T error amp, Miller-compensated)",
       "id": "ldo_007_pmos",
       "kind": "verifiable",
@@ -8721,10 +9372,7 @@
             "ratio": 0,
             "tied": 6
           }
-        },
-        "untied_symmetries": [
-          "matched_pair XM1+XM2 (tie l,m,w)"
-        ]
+        }
       },
       "pdks": [
         "sky130",
@@ -8866,6 +9514,16 @@
       "class": "ldo",
       "cm_control": null,
       "compensation": "rc_zero (R_COMP + C_COMP from the pass gate to vout)",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "LDO: mirror-loaded OTA error amp + PMOS pass, RC zero compensation",
       "id": "ldo_008_fer_mirror_ota",
       "kind": "verifiable",
@@ -8899,7 +9557,7 @@
           }
         },
         "untied_symmetries": [
-          "matched_pair XMDF+XMDR (tie l,m,w)"
+          "matched_pair XMDF+XMDR (tie m)"
         ]
       },
       "pdks": [
@@ -9056,6 +9714,16 @@
       "class": "ldo",
       "cm_control": null,
       "compensation": "miller (c_mil pass-gate to vout)",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "LDO: 5T OTA error amp + PMOS pass, unity feedback, Miller-compensated",
       "id": "ldo_009_fer_5t_pass",
       "kind": "verifiable",
@@ -9088,7 +9756,7 @@
           }
         },
         "untied_symmetries": [
-          "matched_pair XMIN+XMIP (tie l,m,w)"
+          "matched_pair XMIN+XMIP (tie m)"
         ]
       },
       "pdks": [
@@ -9224,10 +9892,133 @@
       "status": "draft"
     },
     {
+      "analyses": [
+        "dc_op",
+        "load_regulation",
+        "line_regulation",
+        "dropout",
+        "psrr",
+        "psrr_1m",
+        "tran_load_step",
+        "ac_loopgain",
+        "ac_loopgain_lo",
+        "ac_loopgain_hi",
+        "loop_stability",
+        "noise",
+        "tran_line_step"
+      ],
+      "class": "ldo",
+      "cm_control": null,
+      "compensation": "Miller cap across error-amp stage 2 (dominant pole at ea_o1); nothing at the pass gate (any C there is paid at the sink slew)",
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
+      "display_name": "Capless low-Iq LDO: double-mirror FVF output stage + two-stage error amp, resistor-referenced bias (IHP SG13G2, 1.5 V lv devices)",
+      "id": "ldo_010_capless_lowiq",
+      "kind": "verifiable",
+      "params": {
+        "devices": 50,
+        "groups": {},
+        "ratios": 0,
+        "symbols": {
+          "ihp-sg13g2": {
+            "free": 33,
+            "frozen": 0,
+            "ratio": 0,
+            "tied": 0
+          }
+        },
+        "untied_symmetries": [
+          "mirror XM3A\u2192XM4A,XM4B (tie l)",
+          "mirror XM3B\u2192XM4A,XM4B (tie l)",
+          "mirror XMA\u2192XMB (tie l)",
+          "mirror XMB0A\u2192XMB1A,XMB1B,XMSA,XMSB (tie l)",
+          "mirror XMB0B\u2192XMB1A,XMB1B,XMSA,XMSB (tie l)",
+          "mirror XMBP\u2192XM6,XMT (tie l)",
+          "mirror XMCP\u2192XMD (tie l)"
+        ]
+      },
+      "pdks": [
+        "ihp-sg13g2"
+      ],
+      "provenance": {
+        "aliases": [
+          "ldo_ihp_capless",
+          "ldo_fvf",
+          "capless_ldo"
+        ],
+        "designer": "Danial Noori Zadeh",
+        "source": "an agent-first design repo @ 40cad45 (feat/001-reference), circuits/ldo_ihp_capless"
+      },
+      "raw": {
+        "ihp-sg13g2": {
+          "_dut": "raw/ldo_010_capless_lowiq/ihp-sg13g2/_dut.spice",
+          "ac_loopgain": "raw/ldo_010_capless_lowiq/ihp-sg13g2/ac_loopgain.spice",
+          "ac_loopgain_hi": "raw/ldo_010_capless_lowiq/ihp-sg13g2/ac_loopgain_hi.spice",
+          "ac_loopgain_lo": "raw/ldo_010_capless_lowiq/ihp-sg13g2/ac_loopgain_lo.spice",
+          "dc_op": "raw/ldo_010_capless_lowiq/ihp-sg13g2/dc_op.spice",
+          "dropout": "raw/ldo_010_capless_lowiq/ihp-sg13g2/dropout.spice",
+          "line_regulation": "raw/ldo_010_capless_lowiq/ihp-sg13g2/line_regulation.spice",
+          "load_regulation": "raw/ldo_010_capless_lowiq/ihp-sg13g2/load_regulation.spice",
+          "loop_stability": "raw/ldo_010_capless_lowiq/ihp-sg13g2/loop_stability.spice",
+          "noise": "raw/ldo_010_capless_lowiq/ihp-sg13g2/noise.spice",
+          "psrr": "raw/ldo_010_capless_lowiq/ihp-sg13g2/psrr.spice",
+          "psrr_1m": "raw/ldo_010_capless_lowiq/ihp-sg13g2/psrr_1m.spice",
+          "tran_line_step": "raw/ldo_010_capless_lowiq/ihp-sg13g2/tran_line_step.spice",
+          "tran_load_step": "raw/ldo_010_capless_lowiq/ihp-sg13g2/tran_load_step.spice"
+        }
+      },
+      "realization": null,
+      "schematic": {
+        "abstract": "circuits/ldo_010_capless_lowiq/pdk/ihp-sg13g2/schematic/ldo_ihp_capless.sch"
+      },
+      "scoreboard": {
+        "ihp-sg13g2": {
+          "design_id": "4520e22ad0",
+          "ppa": {
+            "active_gate_area_um2": 91.834,
+            "corners_run": [
+              "tt"
+            ],
+            "performance": {
+              "load_reg": 2.6e-05,
+              "psrr_vdd_db": 70.00703,
+              "v_dropout": 0.104671,
+              "v_undershoot": 0.115057
+            },
+            "power_w": 5.0708085e-05
+          },
+          "spec": {
+            "fail": 0,
+            "none": 8,
+            "pass": 9
+          }
+        }
+      },
+      "signal_path": null,
+      "stages": 3,
+      "status": "draft"
+    },
+    {
       "analyses": [],
       "class": "voltage_reference",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0
+        ]
+      },
+      "derived_status": "reference",
       "display_name": "Sub-threshold voltage-reference / PTAT core library (AnalogGym, 26 topologies)",
       "id": "sfe_reference_core_library",
       "kind": "reference",
@@ -9261,6 +10052,16 @@
       "class": "sampler",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "NMOS track-and-hold sampler (switch + hold cap)",
       "id": "smp_001_nmos_th",
       "kind": "verifiable",
@@ -9327,6 +10128,16 @@
       "class": "support",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Resistive common-mode detector (Rm/Rm averager)",
       "id": "sup_001_vcm_detector",
       "kind": "verifiable",
@@ -9395,6 +10206,16 @@
       "class": "support",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Ripple-reduction-loop switched-capacitor integrator (Fan CCIA servo)",
       "id": "sup_003_rrl_sc_integrator",
       "kind": "verifiable",
@@ -9481,6 +10302,16 @@
       "class": "switch",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "CMOS transmission gate (complementary pass pair)",
       "id": "sw_001_transmission_gate_pair",
       "kind": "verifiable",
@@ -9553,6 +10384,16 @@
       "class": "switch",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Differential chopper modulator (2 straight + 2 cross transmission gates)",
       "id": "sw_002_chopper_diff",
       "kind": "verifiable",
@@ -9623,6 +10464,15 @@
       "class": "switch",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1
+        ]
+      },
+      "derived_status": "draft",
       "display_name": "3-bit binary-weighted TG-switched cap bank",
       "id": "sw_003_binary_capbank",
       "kind": "verifiable",
@@ -9675,6 +10525,16 @@
       "class": "trim",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "MOS-triode voltage-controlled trim (analog-code attenuator)",
       "id": "trm_001_vcr",
       "kind": "verifiable",
@@ -9746,6 +10606,16 @@
       "class": "temp_sensor",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "2-transistor subthreshold PTAT temperature-sensor core",
       "id": "tsn_001_ptat_2t",
       "kind": "verifiable",
@@ -9906,6 +10776,16 @@
       "class": "temp_sensor",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Classic PTAT reference core (NMOS pair + PMOS mirror + degeneration R)",
       "id": "tsn_002_ptat_classic",
       "kind": "verifiable",
@@ -10059,6 +10939,16 @@
       "class": "temp_sensor",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "Resistorless 4T PTAT cell (cross-coupled NMOS/PMOS pairs)",
       "id": "tsn_003_ptat_4t_xcoupled",
       "kind": "verifiable",
@@ -10212,6 +11102,16 @@
       "class": "voltage_reference",
       "cm_control": null,
       "compensation": null,
+      "derived_from": {
+        "date": "2026-10-08",
+        "platform": "c35a755399a9",
+        "tiers": [
+          0,
+          1,
+          2
+        ]
+      },
+      "derived_status": "generated",
       "display_name": "2-transistor \u0394Vth voltage reference (mixed-flavor sub-Vt core)",
       "id": "vref_001_vgs",
       "kind": "verifiable",
@@ -10364,7 +11264,8 @@
       "ldo_006_stub",
       "ldo_007_pmos",
       "ldo_008_fer_mirror_ota",
-      "ldo_009_fer_5t_pass"
+      "ldo_009_fer_5t_pass",
+      "ldo_010_capless_lowiq"
     ],
     "oscillator": [
       "ferrosim_ring5",

@@ -115,7 +115,7 @@ injects. The same counts ride the catalog's per-circuit `params` block and are r
 the deck via the `ungroup:` selector (`"<group>"` | `"kind:<kind>"` | `"ratio:<ref>"`) in a project's
 `params_file:` projection — it appends frozen shadow `.param`s that redefine the non-first members,
 so *untying = shadowing* end-to-end. Semantics live in the platform optimizer
-(`packages/spicexplorer/README.md` → `backends/params.py`, guide `notebooks/optimizer_quickstart.ipynb`)
+(`packages/spicexplorer/README.md` → `backends/params.py`, guide `notebooks/optimizer_quickstart.py`)
 and there is a runnable demo over the committed `raw_optimize/` decks (`raw_optimize/README.md`) —
 not duplicated here.
 
@@ -254,7 +254,7 @@ by sim (`w=5,nf=1` ok; `w=5,nf=114` → tiny defective bin; `w=4.89,nf=1` ok). I
   stays `incomplete` (a device below the sky130 W bin); it gets no IHP binding.
 - **in-repo OTAs → sky130:** `amp_001_5t` simulates on both PDKs (small devices, no fingers). The
   **cascodes (`amp_004_folded_cascode`, `amp_018_telescopic_cascode`)** lower correctly and the gm/ID
-  re-sizing (Phase 6 / `examples/notebooks/gmid_cascode_resizing.ipynb`) + the finger-convention fix
+  re-sizing (Phase 6 / `examples/notebooks/gmid_cascode_resizing.py`) + the finger-convention fix
   (above) clear the two binning walls — but a clean sky130 sim has **two more vendored-model
   constraints** mapped 2026-06-12 (each a per-instance bin limit, not a sizing error):
   1. **NMOS `Dsub<0`** for per-finger width **> ~5µm** → size with `wf_max ≈ 5µm` (more `nf`).

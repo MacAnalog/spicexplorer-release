@@ -40,9 +40,10 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 __all__ = [
     "SpectreDeckSpec",
@@ -62,6 +63,7 @@ __all__ = [
     "sine_source",
     "dc_oppoint_analysis",
     "DEFAULT_SIMULATOR_OPTIONS",
+    "DEFAULT_TNOM",
     "OPPOINT_INFO_LINE",
     "SAVE_OPTIONS_LINE",
 ]
@@ -73,6 +75,13 @@ DEFAULT_SIMULATOR_OPTIONS = (
 )
 OPPOINT_INFO_LINE = "finalTimeOP info what=oppoint where=rawfile"
 SAVE_OPTIONS_LINE = "saveOptions options save=allpub"
+# `tnom`, the temperature the model parameters are referred to. A corner deck writes it NEXT TO
+# `temp` (`tempOptions options temp=<T> tnom=<tnom>`): left out, the tool default decides it
+# with no message, and `spicexplorer_spectre.decklint` reports exactly that (`temp-without-tnom`).
+# 27 °C is Spectre's own default, so writing it changes no number; it only states it. A corner
+# overrides it through `Corner.options["tnom"]` (ngspice emits the same key as
+# `.options tnom=`); a model card's own `tnom` still wins for that model.
+DEFAULT_TNOM = 27.0
 
 # PSF prefixes are keyed by analysis *names*: these types must carry these names.
 _CONTRACT_NAMES: dict[str, tuple[str, ...]] = {
@@ -98,7 +107,9 @@ def ac_analysis(start: float = 1e3, stop: float = 1e8, dec: int = 101) -> str:
     return f"ac ac start={_fmt(float(start))} stop={_fmt(float(stop))} dec={int(dec)}"
 
 
-def dc_sweep_analysis(dev: str, start: float, stop: float, step: float, *, param: str = "dc") -> str:
+def dc_sweep_analysis(
+    dev: str, start: float, stop: float, step: float, *, param: str = "dc"
+) -> str:
     """A Spectre DC *sweep* named ``dc`` (→ a ``dc.dc`` swept PSF), sweeping a source.
 
     Emits ``dc dc dev=<instance> param=dc start=… stop=… step=…`` — the Spectre analogue of
@@ -313,8 +324,7 @@ def stb_analysis(probe: str, start: float = 1e3, stop: float = 1e9, dec: int = 1
     Numeric start/stop only (the eng-suffix-case landmine, matching :func:`ac_analysis`).
     """
     return (
-        f"stb stb probe={probe} "
-        f"start={_fmt(float(start))} stop={_fmt(float(stop))} dec={int(dec)}"
+        f"stb stb probe={probe} start={_fmt(float(start))} stop={_fmt(float(stop))} dec={int(dec)}"
     )
 
 
@@ -385,8 +395,12 @@ def _check_pss_riders(analyses: Sequence[str]) -> None:
             )
 
 
-_SECTION_INCLUDE_RE = re.compile(r'^\s*(?:include|ahdl_include)\s+"[^"]+"\s+section\s*=', re.IGNORECASE)
+_SECTION_INCLUDE_RE = re.compile(
+    r'^\s*(?:include|ahdl_include)\s+"[^"]+"\s+section\s*=', re.IGNORECASE
+)
 _PARAMS_RE = re.compile(r"^\s*parameters\b(.*)$", re.IGNORECASE)
+_OPTIONS_RE = re.compile(r"^\s*(?:\S+\s+)?options\b", re.IGNORECASE)
+_TNOM_RE = re.compile(r"(?<![\w.])tnom\s*=", re.IGNORECASE)
 
 
 def _logical_lines(text: str) -> list[str]:
@@ -404,7 +418,27 @@ def _logical_lines(text: str) -> list[str]:
     return out
 
 
-def _parse_param_tokens(body: str) -> "dict[str, str]":
+def _pins_tnom(text: str) -> bool:
+    """True when an `options` statement in `text` already sets `tnom` (`//` comments ignored)."""
+    for line in _logical_lines(text):
+        code = line.split("//", 1)[0]
+        if _OPTIONS_RE.match(code) and _TNOM_RE.search(code):
+            return True
+    return False
+
+
+def _temp_options_line(temp: float, tnom: float | None, *, deck_pins_tnom: bool) -> str:
+    """The corner's `tempOptions` statement: `temp`, and `tnom` beside it (`DEFAULT_TNOM`).
+
+    An explicit `tnom` (the corner's) is always written. Without one, a deck that already sets
+    `tnom` in its own options keeps it: the default never overrides what the deck states."""
+    line = f"tempOptions options temp={_fmt(float(temp))}"
+    if tnom is None and deck_pins_tnom:
+        return line
+    return f"{line} tnom={_fmt(float(DEFAULT_TNOM if tnom is None else tnom))}"
+
+
+def _parse_param_tokens(body: str) -> dict[str, str]:
     """Parse `k=v` pairs from the body of a `parameters` statement (order-preserving).
 
     Whitespace-separated `name=value`; a token with no `=` is treated as a continuation
@@ -422,7 +456,7 @@ def _parse_param_tokens(body: str) -> "dict[str, str]":
     return params
 
 
-def _declared_params(lines: Sequence[str]) -> "dict[str, list[str]]":
+def _declared_params(lines: Sequence[str]) -> dict[str, list[str]]:
     """Every ``parameters``-declared name, grouped by lowercase key in declaration order.
 
     Spectre is case-SENSITIVE, so an injection has to reuse the deck's casing — hence the
@@ -449,7 +483,7 @@ class AmbiguousParameterCaseError(ValueError):
     silently either moves a rail nobody asked to move or leaves the live one baked."""
 
 
-def _resolve_injection_key(key: str, variants: "dict[str, list[str]]", source: str) -> str | None:
+def _resolve_injection_key(key: str, variants: dict[str, list[str]], source: str) -> str | None:
     """Which declared spelling does ``key`` mean? ``None`` when the deck declares none.
 
     The resolution rule, in order:
@@ -490,7 +524,8 @@ def render_native_scs(
     parameters: Mapping[str, Any] | None = None,
     corner_includes: Sequence[str] | None = None,
     temp: float | None = None,
-    source: "str | Path | None" = None,
+    tnom: float | None = None,
+    source: str | Path | None = None,
 ) -> str:
     """Inject per-candidate overrides into a **native** Spectre `.scs` deck, in place.
 
@@ -523,7 +558,8 @@ def render_native_scs(
     * ``corner_includes`` — when given (a PVT corner), model ``include "…" section=…``
       lines are replaced wholesale (mirroring ngspice ``apply_corner`` strip+inject); a
       DUT ``include "dut.scs"`` (no ``section=``) is left untouched.
-    * ``temp`` — appends a ``tempOptions options temp=…`` statement.
+    * ``temp`` — appends a ``tempOptions options temp=… tnom=…`` statement: ``tnom`` when
+      given, else :data:`DEFAULT_TNOM` unless the deck's own options already set ``tnom``.
     * ``source`` — the deck's path/name, used only to make the ambiguity error locatable.
 
     If the deck declares no ``parameters`` statement, one is inserted after the
@@ -607,7 +643,7 @@ def render_native_scs(
         for inc in reversed(includes):
             out.insert(insert_at, inc)
     if temp is not None:
-        out.append(f"tempOptions options temp={_fmt(float(temp))}")
+        out.append(_temp_options_line(temp, tnom, deck_pins_tnom=_pins_tnom(text)))
     return "\n".join(out) + "\n"
 
 
@@ -639,12 +675,15 @@ def render_spectre_deck(
     parameters: Mapping[str, Any] | None = None,
     corner_includes: Sequence[str] | None = None,
     temp: float | None = None,
+    tnom: float | None = None,
 ) -> str:
     """Render the spec to `.scs` text; per-run injection wins over spec defaults.
 
     ``parameters`` overrides the spec's defaults (keys folded to lowercase — the deck's
     parameter namespace is lowercase). ``corner_includes`` *replaces* the spec's default
-    includes when given (corner selection). ``temp`` emits a dedicated options statement.
+    includes when given (corner selection). ``temp`` emits a dedicated options statement,
+    with ``tnom`` beside it (:data:`DEFAULT_TNOM` unless given, or unless the spec's own
+    options already set it).
     """
     merged: dict[str, Any] = {str(k).lower(): v for k, v in spec.parameters.items()}
     for key, value in (parameters or {}).items():
@@ -670,13 +709,16 @@ def render_spectre_deck(
     lines.append("")
     if spec.simulator_options:
         lines.append(spec.simulator_options)
-    if temp is not None:
-        lines.append(f"tempOptions options temp={_fmt(float(temp))}")
     lines.extend(spec.analyses)
     if spec.include_oppoint_info:
         lines.append(OPPOINT_INFO_LINE)
     lines.append(SAVE_OPTIONS_LINE)
     lines.extend(spec.extra_lines)
+    if temp is not None:
+        # Written last, as `render_native_scs` does: a `tnom` set in `spec.extra_lines` would
+        # otherwise follow the corner's line and be the value Spectre applies.
+        own = "\n".join(lines)
+        lines.append(_temp_options_line(temp, tnom, deck_pins_tnom=_pins_tnom(own)))
     return "\n".join(lines) + "\n"
 
 

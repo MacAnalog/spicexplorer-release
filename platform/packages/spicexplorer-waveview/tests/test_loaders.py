@@ -99,8 +99,13 @@ def test_ngspice_unknown_plot_title_kept(tmp_path):
     p = tmp_path / "exotic.raw"
     write_ngspice_ascii_raw(
         p,
-        [("Exotic Custom Analysis", [("time", "time"), ("v(x)", "voltage")],
-          [np.linspace(0, 1, 10), np.ones(10)])],
+        [
+            (
+                "Exotic Custom Analysis",
+                [("time", "time"), ("v(x)", "voltage")],
+                [np.linspace(0, 1, 10), np.ones(10)],
+            )
+        ],
     )
     ds = load_result(p)
     assert "exotic_custom_analysis" in ds.analyses  # slugified, not dropped
@@ -117,8 +122,11 @@ def test_ngspice_multi_plot_file(tmp_path):
     write_ngspice_ascii_raw(
         p,
         [
-            ("AC Analysis", [("frequency", "frequency"), ("v(out)", "voltage")],
-             [f.astype(complex), (1.0 / (1 + 1j * f / 1e3))]),
+            (
+                "AC Analysis",
+                [("frequency", "frequency"), ("v(out)", "voltage")],
+                [f.astype(complex), (1.0 / (1 + 1j * f / 1e3))],
+            ),
             ("Transient Analysis", [("time", "time"), ("v(out)", "voltage")], [t, t * 10.0]),
             ("Operating Point", [("v(out)", "voltage")], [np.array([0.6])]),
             ("Transient Analysis", [("time", "time"), ("v(out)", "voltage")], [t, t * 20.0]),
@@ -216,8 +224,15 @@ def test_spectre_real_signal_beats_abscissa_alias(tmp_path):
     d.mkdir()
     f = np.logspace(0, 6, 11)
     real_frequency_net = np.linspace(5.0, 6.0, 11)  # a net someone named "frequency"
-    _write_swept(d / "ac.ac", "ac", "ac", "freq", "Hz", f,
-                 {"vout": (1.0 / (1 + 1j * f / 1e3)), "frequency": real_frequency_net.astype(complex)})
+    _write_swept(
+        d / "ac.ac",
+        "ac",
+        "ac",
+        "freq",
+        "Hz",
+        f,
+        {"vout": (1.0 / (1 + 1j * f / 1e3)), "frequency": real_frequency_net.astype(complex)},
+    )
     ds = load_result(d)
     got = np.real(ds.analyses["ac"].signals["frequency"].data)
     np.testing.assert_allclose(got, real_frequency_net)
@@ -273,7 +288,9 @@ def test_binary_raw_signals_own_their_buffers(tmp_path):
     for i, fp in enumerate(poles):
         w.add_trace(
             WTrace(
-                f"v(n{i})", 1.0 / (1.0 + 1j * freq / fp), whattype="voltage",
+                f"v(n{i})",
+                1.0 / (1.0 + 1j * freq / fp),
+                whattype="voltage",
                 numerical_type="complex",
             )
         )
@@ -295,3 +312,18 @@ def test_binary_raw_signals_own_their_buffers(tmp_path):
     for sig in an.signals.values():
         arr = np.asarray(sig.data)
         assert arr.base is None, f"{sig.name} is a view — it pins the whole-plot buffer"
+
+
+def test_the_psf_parser_is_the_shared_one_not_a_sibling():
+    """WV-01: the README used to justify a duplicated reader; both sides import core's.
+
+    Pinned so the claim and the code cannot drift apart again — if either package grows its own
+    parser, the layering argument in the README has to be revisited, and this fails first.
+    """
+    import spicexplorer_core.spice_engine.psfascii as core_psf
+    import spicexplorer_waveview.spectre_loader as loader
+
+    backend = pytest.importorskip("spicexplorer.backends.spectre")
+
+    assert loader._psf is core_psf
+    assert backend._psf is core_psf

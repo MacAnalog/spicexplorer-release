@@ -30,12 +30,22 @@ def _tools_ok() -> bool:
     except ImportError:
         return False
     p = probe()
-    return bool(p.drc_ok and p.lvs_ok and p.kpex and p.kpex_klayout and shutil.which("ngspice") and _gds_python())
+    return bool(
+        p.drc_ok
+        and p.lvs_ok
+        and p.kpex
+        and p.kpex_klayout
+        and shutil.which("ngspice")
+        and _gds_python()
+    )
 
 
 pytestmark = [
     pytest.mark.slow,
-    pytest.mark.skipif(not _tools_ok(), reason="needs the gdsfactory env (GDS_PYTHON/ai_env), klayout, kpex, ngspice + PDK"),
+    pytest.mark.skipif(
+        not _tools_ok(),
+        reason="needs the gdsfactory env (GDS_PYTHON/ai_env), klayout, kpex, ngspice + PDK",
+    ),
 ]
 
 
@@ -47,8 +57,13 @@ def test_5t_ota_layout_flow_at_defaults(tmp_path: Path):
 
     spec = LayoutFlowSpec.from_yaml(FLOW)
     assert spec.postlayout is not None
-    sim = LayoutSimulator(spec, output_folder=tmp_path / "out", testbench_name="layout", verbose=True,
-                          path_to_simulator="ngspice")
+    sim = LayoutSimulator(
+        spec,
+        output_folder=tmp_path / "out",
+        testbench_name="layout",
+        verbose=True,
+        path_to_simulator="ngspice",
+    )
     sim.update_params({k: v for k, v in spec.param_defaults.items() if k in spec.bounds})
     res = sim.run(label="layout__tt")
     assert res.status == "ok", res.summary.get("error")
@@ -59,9 +74,15 @@ def test_5t_ota_layout_flow_at_defaults(tmp_path: Path):
     assert not math.isnan(res.scalar("c_vout_ff", "layout"))
     assert res.log_path is not None and res.log_path.is_file()
     # post-layout metrics: registry recipes on the AC waves READ THROUGH the layout result
-    post = {m: registry.measure(res, {"meas": m, "out": "v(vout)"}, default_analysis="ac") for m in ("dcgain", "ugf", "pm")}
+    post = {
+        m: registry.measure(res, {"meas": m, "out": "v(vout)"}, default_analysis="ac")
+        for m in ("dcgain", "ugf", "pm")
+    }
     pre_res = sim.run_prelayout_reference(tmp_path / "pre")["tb_ac"]
-    pre = {m: registry.measure(pre_res, {"meas": m, "out": "v(vout)"}, default_analysis="ac") for m in ("dcgain", "ugf", "pm")}
+    pre = {
+        m: registry.measure(pre_res, {"meas": m, "out": "v(vout)"}, default_analysis="ac")
+        for m in ("dcgain", "ugf", "pm")
+    }
     assert 29.5e6 < pre["ugf"] < 31e6 and 25e6 < post["ugf"] < 31e6, (pre, post)
     loss_mhz = (pre["ugf"] - post["ugf"]) / 1e6
     assert 0.3 < loss_mhz < 1.5, loss_mhz  # ≈ 0.70 MHz at the defaults

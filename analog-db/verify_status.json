@@ -1,0 +1,911 @@
+{
+  "circuits": {
+    "adc_001_inv1b": {
+      "date": "2026-10-08",
+      "fingerprint": "58e058f44e7c0bcc",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_001_5t": {
+      "date": "2026-10-08",
+      "fingerprint": "52bd7e82cda318a1",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_002_alfio_raffc": {
+      "date": "2026-10-08",
+      "fingerprint": "edce6d4dab4731f0",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_003_fan_smc": {
+      "date": "2026-10-08",
+      "fingerprint": "bd6d89b053bddb21",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_004_folded_cascode": {
+      "date": "2026-10-08",
+      "fingerprint": "e797ad683778583c",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_005_hoilee_affc": {
+      "date": "2026-10-08",
+      "fingerprint": "a200c310020d4c2e",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_006_leung_dfcfc1": {
+      "date": "2026-10-08",
+      "fingerprint": "9ef40a2199d380ec",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_007_leung_dfcfc2": {
+      "date": "2026-10-08",
+      "fingerprint": "59b9068630de6a8f",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_008_leung_nmcf": {
+      "date": "2026-10-08",
+      "fingerprint": "a27da9f914d38b33",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_009_leung_nmcnr": {
+      "date": "2026-10-08",
+      "fingerprint": "8ab84876205421b6",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_010_peng_acbc": {
+      "date": "2026-10-08",
+      "fingerprint": "abe006cfdf2f6765",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_011_peng_iac": {
+      "date": "2026-10-08",
+      "fingerprint": "29fbe35477d4a84b",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_012_peng_tcfc": {
+      "date": "2026-10-08",
+      "fingerprint": "7b35fce23720b67a",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_013_qu2017_azc": {
+      "date": "2026-10-08",
+      "fingerprint": "92ad01ecf05088c1",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_014_ramos_pfc": {
+      "date": "2026-10-08",
+      "fingerprint": "87e0f710d6ac8c80",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_015_sau_cfcc": {
+      "date": "2026-10-08",
+      "fingerprint": "0564d0d5161cdd85",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_016_song_dacfc": {
+      "date": "2026-10-08",
+      "fingerprint": "97635521a77d9fd2",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_017_tan_clia": {
+      "date": "2026-10-08",
+      "fingerprint": "f6a68324405eaf81",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_018_telescopic_cascode": {
+      "date": "2026-10-08",
+      "fingerprint": "b320d4d546ac5044",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_019_ti_ldo_error": {
+      "date": "2026-10-08",
+      "fingerprint": "c496194547af7096",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_021_yan_az": {
+      "date": "2026-10-08",
+      "fingerprint": "f6d8c7b7f66f62b6",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_022_fer_two_stage": {
+      "date": "2026-10-08",
+      "fingerprint": "36675cd194a18bf4",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_023_fer_fd2s": {
+      "date": "2026-10-08",
+      "fingerprint": "5344dfc7bca08fc9",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_024_smcnr": {
+      "date": "2026-10-08",
+      "fingerprint": "fa1f5cdb9511941d",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_025_hsu_classab_ota": {
+      "date": "2026-10-08",
+      "fingerprint": "a92e79fd5d21809d",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_026_fan_chopper_ota": {
+      "date": "2026-10-08",
+      "fingerprint": "b4b9e200e607d5e4",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_027_fan_rrl_ota": {
+      "date": "2026-10-08",
+      "fingerprint": "877a0f7c05e87295",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_028_ideal_fully_diff": {
+      "date": "2026-10-08",
+      "fingerprint": "873aae633756159a",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_029_two_stage_miller_comp": {
+      "date": "2026-10-08",
+      "fingerprint": "e3511beedfbe1f54",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_030_miller_cmfb_composite": {
+      "date": "2026-10-08",
+      "fingerprint": "73778d87fd3fe1c2",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_031_srmc_core_cmfb": {
+      "date": "2026-10-08",
+      "fingerprint": "27c1f2eb9e67cf6f",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_032_ti_ldo_error_selfbias": {
+      "date": "2026-10-08",
+      "fingerprint": "53540f9c5c3bb83b",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_033_ti_ldo_ref_selfbias": {
+      "date": "2026-10-08",
+      "fingerprint": "42b1328b0c53ced8",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_034_fan_chopper_cmfb": {
+      "date": "2026-10-08",
+      "fingerprint": "d1959836105a8496",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "amp_035_fan_chopper_cmfb_dual": {
+      "date": "2026-10-08",
+      "fingerprint": "86e96a9d95ec26f6",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "buf_001_super_follower": {
+      "date": "2026-10-08",
+      "fingerprint": "76757fd09152eb96",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "cmfb_001_ideal_rsense_servo": {
+      "date": "2026-10-08",
+      "fingerprint": "d5746812637b64e3",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "cmfb_002_5t_pmos_input": {
+      "date": "2026-10-08",
+      "fingerprint": "b5c34c7d19b50c14",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "cmfb_003_5t_nmos_input": {
+      "date": "2026-10-08",
+      "fingerprint": "bc4bb787b690f6c6",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "cmfb_004_output_switched_cap": {
+      "date": "2026-10-08",
+      "fingerprint": "78324b389ac9e36a",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "cmp_001_hyst_diffpair": {
+      "date": "2026-10-08",
+      "fingerprint": "ce7aad58e4d84727",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "cmp_002_strongarm": {
+      "date": "2026-10-08",
+      "fingerprint": "f32f179d36c6350a",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "dp_001_resistive_load": {
+      "date": "2026-10-08",
+      "fingerprint": "372cfbf4f4f1a72b",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "drv_001_pam4_sige_dac": {
+      "date": "2026-10-08",
+      "fingerprint": "9aaf70539b813fca",
+      "platform": "c35a755399a9",
+      "status": "draft",
+      "tiers": [
+        0,
+        1
+      ]
+    },
+    "ferrosim_bandgap_core": {
+      "date": "2026-10-08",
+      "fingerprint": "3e24a7e863395f1b",
+      "platform": "c35a755399a9",
+      "status": "reference",
+      "tiers": [
+        0
+      ]
+    },
+    "ferrosim_biquad": {
+      "date": "2026-10-08",
+      "fingerprint": "e71dea707136151f",
+      "platform": "c35a755399a9",
+      "status": "reference",
+      "tiers": [
+        0
+      ]
+    },
+    "ferrosim_inbuf": {
+      "date": "2026-10-08",
+      "fingerprint": "580d8b7169628694",
+      "platform": "c35a755399a9",
+      "status": "reference",
+      "tiers": [
+        0
+      ]
+    },
+    "ferrosim_pga_16step": {
+      "date": "2026-10-08",
+      "fingerprint": "dd0a8e39b48619ce",
+      "platform": "c35a755399a9",
+      "status": "reference",
+      "tiers": [
+        0
+      ]
+    },
+    "ferrosim_refbuf": {
+      "date": "2026-10-08",
+      "fingerprint": "2579a4b93fc0f5e8",
+      "platform": "c35a755399a9",
+      "status": "reference",
+      "tiers": [
+        0
+      ]
+    },
+    "ferrosim_restrim": {
+      "date": "2026-10-08",
+      "fingerprint": "5c0b324cf7e5b417",
+      "platform": "c35a755399a9",
+      "status": "reference",
+      "tiers": [
+        0
+      ]
+    },
+    "ferrosim_ring5": {
+      "date": "2026-10-08",
+      "fingerprint": "99d6dbdf155c4710",
+      "platform": "c35a755399a9",
+      "status": "reference",
+      "tiers": [
+        0
+      ]
+    },
+    "ferrosim_sampling_bts": {
+      "date": "2026-10-08",
+      "fingerprint": "8ec2576e959703d9",
+      "platform": "c35a755399a9",
+      "status": "reference",
+      "tiers": [
+        0
+      ]
+    },
+    "ferrosim_sar": {
+      "date": "2026-10-08",
+      "fingerprint": "7bd2902441344061",
+      "platform": "c35a755399a9",
+      "status": "reference",
+      "tiers": [
+        0
+      ]
+    },
+    "ferrosim_sc_integrator": {
+      "date": "2026-10-08",
+      "fingerprint": "d5ca8b21d60af4fe",
+      "platform": "c35a755399a9",
+      "status": "reference",
+      "tiers": [
+        0
+      ]
+    },
+    "ferrosim_sc_ring": {
+      "date": "2026-10-08",
+      "fingerprint": "7c3c1f024dfc3374",
+      "platform": "c35a755399a9",
+      "status": "reference",
+      "tiers": [
+        0
+      ]
+    },
+    "ferrosim_sc_sample": {
+      "date": "2026-10-08",
+      "fingerprint": "7154a9801214254a",
+      "platform": "c35a755399a9",
+      "status": "reference",
+      "tiers": [
+        0
+      ]
+    },
+    "gs_001_cascode_cs": {
+      "date": "2026-10-08",
+      "fingerprint": "389f09882dc0e10d",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ia_001_hsu_bandpass_classab": {
+      "date": "2026-10-08",
+      "fingerprint": "719484b693c49dd6",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ia_002_fan_chopper_simple": {
+      "date": "2026-10-08",
+      "fingerprint": "57f62565a8f7d18c",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ia_003_fan_chopper_pf": {
+      "date": "2026-10-08",
+      "fingerprint": "ee4ff9700551132d",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ia_004_fan_chopper_rrl": {
+      "date": "2026-10-08",
+      "fingerprint": "a9fca5ba3489cb1e",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ia_005_hsu_pga_ideal": {
+      "date": "2026-10-08",
+      "fingerprint": "e2be7b518bbee934",
+      "platform": "c35a755399a9",
+      "status": "draft",
+      "tiers": [
+        0,
+        1
+      ]
+    },
+    "ia_006_fan_chopper_cmfb": {
+      "date": "2026-10-08",
+      "fingerprint": "52881bcae8e74454",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ldo_001_analoggym_basic": {
+      "date": "2026-10-08",
+      "fingerprint": "065d1e310eb73c11",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ldo_002_analoggym_folded_cascode": {
+      "date": "2026-10-08",
+      "fingerprint": "ed2a12276ab5137d",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ldo_003_analoggym_simple": {
+      "date": "2026-10-08",
+      "fingerprint": "b77499bd090ddc2c",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ldo_004_basic_pmos": {
+      "date": "2026-10-08",
+      "fingerprint": "2af14114cb99a035",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ldo_005_buffered_ref": {
+      "date": "2026-10-08",
+      "fingerprint": "a71152940be8fdbe",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ldo_006_stub": {
+      "date": "2026-10-08",
+      "fingerprint": "0fba99db8b2a08c7",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ldo_007_pmos": {
+      "date": "2026-10-08",
+      "fingerprint": "3122eb6ed80f3519",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ldo_008_fer_mirror_ota": {
+      "date": "2026-10-08",
+      "fingerprint": "9b6c1c0279dfef9a",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ldo_009_fer_5t_pass": {
+      "date": "2026-10-08",
+      "fingerprint": "a458932e6d8a7854",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "ldo_010_capless_lowiq": {
+      "date": "2026-10-08",
+      "fingerprint": "d4675a3d4ca1f34a",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "sfe_reference_core_library": {
+      "date": "2026-10-08",
+      "fingerprint": "d0d26bca909fc0a2",
+      "platform": "c35a755399a9",
+      "status": "reference",
+      "tiers": [
+        0
+      ]
+    },
+    "smp_001_nmos_th": {
+      "date": "2026-10-08",
+      "fingerprint": "2148425acf5e3d28",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "sup_001_vcm_detector": {
+      "date": "2026-10-08",
+      "fingerprint": "8bb06234cd96927f",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "sup_003_rrl_sc_integrator": {
+      "date": "2026-10-08",
+      "fingerprint": "c8fa1903b52b7eac",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "sw_001_transmission_gate_pair": {
+      "date": "2026-10-08",
+      "fingerprint": "e181ed5576c04001",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "sw_002_chopper_diff": {
+      "date": "2026-10-08",
+      "fingerprint": "784985bda855528a",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "sw_003_binary_capbank": {
+      "date": "2026-10-08",
+      "fingerprint": "b2a26c26023712e1",
+      "platform": "c35a755399a9",
+      "status": "draft",
+      "tiers": [
+        0,
+        1
+      ]
+    },
+    "trm_001_vcr": {
+      "date": "2026-10-08",
+      "fingerprint": "53733ee59d143c71",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "tsn_001_ptat_2t": {
+      "date": "2026-10-08",
+      "fingerprint": "05e4686db5f79c48",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "tsn_002_ptat_classic": {
+      "date": "2026-10-08",
+      "fingerprint": "5cc4f15a97b31537",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "tsn_003_ptat_4t_xcoupled": {
+      "date": "2026-10-08",
+      "fingerprint": "772e442f8473db98",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    },
+    "vref_001_vgs": {
+      "date": "2026-10-08",
+      "fingerprint": "651054adccdca66b",
+      "platform": "c35a755399a9",
+      "status": "generated",
+      "tiers": [
+        0,
+        1,
+        2
+      ]
+    }
+  },
+  "schema": "spicexplorer/verify-status@1"
+}

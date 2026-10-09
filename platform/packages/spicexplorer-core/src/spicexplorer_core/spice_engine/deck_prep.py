@@ -23,8 +23,10 @@ Env toggles: per-spec ``spec.env_var`` (e.g. ``SPICEXPLORER_SKY130_SLIM_LIB``) o
 ``SPICEXPLORER_SLIM_LIB`` — ``auto`` (default) | ``off``/``0`` | ``<name-or-path>`` (force a
 lib); and ``SPICEXPLORER_NGSPICE_NOISE_SPARSE=0`` to disable the noise guard.
 """
+
 from __future__ import annotations
 
+import logging
 import os
 import re
 from dataclasses import dataclass
@@ -78,7 +80,9 @@ class SlimLibSpec:
 
     def setting(self) -> str:
         """The active toggle: per-spec env var, else the global, else ``auto``."""
-        return (os.environ.get(self.env_var) or os.environ.get("SPICEXPLORER_SLIM_LIB") or "auto").strip()
+        return (
+            os.environ.get(self.env_var) or os.environ.get("SPICEXPLORER_SLIM_LIB") or "auto"
+        ).strip()
 
 
 # The PDKs the slim-lib swap applies to. Append a SlimLibSpec to support another PDK
@@ -153,7 +157,7 @@ def _slim_lib_info(slim_path: Path, spec: SlimLibSpec) -> tuple[set[str], set[st
     return families, sections
 
 
-def _scan_devices(lines: "list[Any]", spec: SlimLibSpec) -> set[str]:
+def _scan_devices(lines: list[Any], spec: SlimLibSpec) -> set[str]:
     """Bare ``<prefix><family>`` device model refs on non-comment lines."""
     devs: set[str] = set()
     for ln in lines:
@@ -163,7 +167,7 @@ def _scan_devices(lines: "list[Any]", spec: SlimLibSpec) -> set[str]:
 
 
 def _plan_for_spec(
-    spec: SlimLibSpec, netlist_lines: "list[Any]", device_scan_lines: "list[Any] | None"
+    spec: SlimLibSpec, netlist_lines: list[Any], device_scan_lines: list[Any] | None
 ) -> SlimSwapPlan | None:
     setting = spec.setting()
     if setting.lower() in _FALSEY:
@@ -183,7 +187,9 @@ def _plan_for_spec(
         return None  # this PDK's full lib isn't selected in the deck
 
     def _plan(slim_name: str) -> SlimSwapPlan:
-        return SlimSwapPlan(slim_name, sections, spec.full_lib_strip, _slim_strip_pattern(slim_name))
+        return SlimSwapPlan(
+            slim_name, sections, spec.full_lib_strip, _slim_strip_pattern(slim_name)
+        )
 
     if setting.lower() not in _TRUTHY_AUTO:
         return _plan(setting)  # explicit lib named by the operator — trust it
@@ -201,7 +207,9 @@ def _plan_for_spec(
     if not set(sections).issubset(defined_sections):
         return None  # deck selects a section the slim lib doesn't define → keep full lib
     # scan devices from the raw deck text (has the .subckt body); fall back to the editor lines
-    devices = _scan_devices(device_scan_lines if device_scan_lines is not None else netlist_lines, spec)
+    devices = _scan_devices(
+        device_scan_lines if device_scan_lines is not None else netlist_lines, spec
+    )
     # a bare device model ref has the same `__` count as the prefix; extra `__` = a model param
     depth = spec.device_prefix.count("__")
     used = {d for d in devices if d.count("__") == depth}
@@ -216,7 +224,7 @@ def _plan_for_spec(
 
 
 def plan_slim_swap(
-    netlist_lines: "list[Any]", device_scan_lines: "list[Any] | None" = None
+    netlist_lines: list[Any], device_scan_lines: list[Any] | None = None
 ) -> SlimSwapPlan | None:
     """Decide whether to swap a full PDK corner lib for its slim one; ``None`` = keep full.
 
@@ -241,9 +249,7 @@ _NOISE_ANALYSIS_RE = re.compile(r"^\s*(?:\.noise|noise)\s+\S+", re.IGNORECASE)
 _SOLVER_OPTION_RE = re.compile(r"^\s*\.options?\b.*\b(?:sparse|klu)\b", re.IGNORECASE)
 
 
-def noise_needs_sparse(
-    editor_lines: "list[Any]", deck_lines: "list[str]", testbench_name: str
-) -> bool:
+def noise_needs_sparse(editor_lines: list[Any], deck_lines: list[str], testbench_name: str) -> bool:
     """True if the deck runs a noise analysis and no solver option is set yet.
 
     ngspice KLU can't run ``.noise``; the caller should add ``.option sparse`` when this is
@@ -261,3 +267,183 @@ def noise_needs_sparse(
         or any(_NOISE_ANALYSIS_RE.match(ln) for ln in deck_lines)
         or any(_NOISE_ANALYSIS_RE.match(ln) for ln in ed)
     )
+
+
+# ---------------------------------------------------------------------------------------
+# PVT corner emission (ngspice directive policy — ONE definition, two appliers)
+# ---------------------------------------------------------------------------------------
+_TEMP_CARD_STRIP = r"^\s*\.temp\s+\S+"
+_TEMP_OPTION_STRIP = r"^\s*\.options?\s+temp\s*=\s*\S+\s*$"
+
+
+def _lib_file_token(lib_file: str) -> str:
+    """Regex for ONE library-file token: its BASENAME, optionally behind a path that ends in a
+    separator, optionally quoted, and followed by whitespace or end of line.
+
+    The separator anchor keeps ``models.lib`` from also matching ``nmos_models.lib`` (another
+    library whose models the strip would silently drop); the trailing lookahead keeps it from
+    matching ``models.lib.bak``.
+    """
+    return rf"[\"']?(?:[^\s\"']*[/\\])?{re.escape(Path(lib_file).name)}[\"']?(?=\s|$)"
+
+
+def corner_lib_strip_pattern(lib_file: str) -> str:
+    """Regex matching a deck's ``.lib <file> [<section>]`` selection for ONE library.
+
+    Matches by BASENAME with an optional path prefix and optional surrounding quotes, so
+    ``.lib cornerHBT.lib hbt_typ``, ``.lib /pdk/cornerHBT.lib hbt_typ`` and
+    ``.lib "cornerHBT.lib" hbt_typ`` all strip. The quote tolerance matters: a deck that
+    quotes its lib paths (ngspice accepts both) would otherwise keep its ORIGINAL section
+    while the corner's section is added alongside — two sections of one lib loaded at once,
+    silently mixing corners. The section token is optional for the same reason: a bare
+    ``.lib <file>`` selection must be replaced too, not kept beside the corner's.
+    """
+    return rf"^\s*\.lib\s+{_lib_file_token(lib_file)}"
+
+
+def corner_include_strip_pattern(lib_file: str) -> str:
+    """Regex matching a deck's ``.include <file>`` / ``.inc <file>`` of ONE sectionless library
+    (e.g. gf180mcu's ``design.ngspice``) — same basename/path/quote rules as
+    :func:`corner_lib_strip_pattern`."""
+    return rf"^\s*\.inc(?:lude)?\s+{_lib_file_token(lib_file)}"
+
+
+@dataclass(frozen=True)
+class CornerPlan:
+    """Simulator-directive form of one PVT :class:`~spicexplorer_core.pvt.Corner`.
+
+    ``strips`` are regexes the applier removes FIRST (all of them, before any add — so a
+    corner that selects two sections of the same lib can't have the second delete the
+    first, BUG-B11), ``instructions`` are the directive lines to add in order, and
+    ``params`` are ``(name, value)`` assignments (supplies first, then extra params) for
+    the applier to set however its target allows.
+    """
+
+    strips: list[str]
+    instructions: list[str]
+    params: list[tuple[str, Any]]
+
+
+def plan_corner(corner: Any, model_lib_root: str | None = None) -> CornerPlan:
+    """Turn a PVT ``Corner`` into the strip+add directive plan every ngspice applier shares.
+
+    Pure/​side-effect-free, so the same policy drives the spicelib EDITOR path
+    (``NGSpice_Wrapper.apply_corner``) and the raw deck-TEXT path
+    (:func:`apply_corner_to_deck`) used by block harnesses that build decks themselves.
+    The emission rules encoded here:
+
+    * each referenced lib is stripped EXACTLY ONCE (path- and quote-agnostic), then every
+      corner include is added — ordered, cross-family; an include WITHOUT a section is a
+      library pulled in whole, emitted (and stripped) as ``.include <file>`` rather than
+      ``.lib <file> <section>``;
+    * temperature is authoritative via ``.options temp=``; any ``.temp`` card is stripped
+      because ngspice gives ``.temp`` PRECEDENCE over the option (a hardcoded ``.temp 27``
+      otherwise pins every corner to 27 °C), and only a STANDALONE prior ``.options temp=``
+      line is stripped so a combined ``.options temp=27 gmin=1e-12`` keeps its siblings
+      (BUG-B30);
+    * extra ``corner.options`` (e.g. a Monte Carlo sample's ``seed``) follow the same
+      standalone-strip discipline, which is what makes re-applying a corner idempotent
+      rather than cumulative.
+
+    :param corner: a ``core.pvt.Corner`` (read-only; only its attributes are used).
+    :param model_lib_root: optional directory prepended to each ``lib_file``.
+    """
+    strips: list[str] = []
+    instructions: list[str] = []
+    seen_libs: set[tuple[bool, str]] = set()
+    for inc in corner.model_includes:
+        key = (bool(inc.section), Path(inc.lib_file).name)
+        if key not in seen_libs:
+            strip = corner_lib_strip_pattern if inc.section else corner_include_strip_pattern
+            strips.append(strip(inc.lib_file))
+            seen_libs.add(key)
+    for inc in corner.model_includes:
+        path = inc.lib_file if not model_lib_root else str(Path(model_lib_root) / inc.lib_file)
+        instructions.append(f".lib {path} {inc.section}" if inc.section else f".include {path}")
+    strips.extend((_TEMP_CARD_STRIP, _TEMP_OPTION_STRIP))
+    instructions.append(f".options temp={corner.temp}")
+    for k, v in corner.options.items():
+        strips.append(rf"^\s*\.options?\s+{re.escape(str(k))}\s*=\s*\S+\s*$")
+        instructions.append(f".options {k}={v}")
+    params: list[tuple[str, Any]] = [(s.node, s.value) for s in corner.supplies]
+    params += list(corner.params.items())
+    return CornerPlan(strips=strips, instructions=instructions, params=params)
+
+
+_CONTROL_RE = re.compile(r"^\s*\.control\b", re.IGNORECASE)
+_END_RE = re.compile(r"^\s*\.end\s*$", re.IGNORECASE)
+
+
+def _param_assign_res(name: str) -> tuple[re.Pattern[str], re.Pattern[str]]:
+    """(standalone single-assignment line, name-is-assigned-anywhere) matchers for ``name``."""
+    esc = re.escape(str(name))
+    return (
+        re.compile(rf"^\s*\.param\s+{esc}\s*=\s*\S+\s*$", re.IGNORECASE),
+        re.compile(rf"^\s*\.param\b.*(?:^|[\s,]){esc}\s*=", re.IGNORECASE),
+    )
+
+
+def apply_corner_to_deck(
+    deck: str,
+    corner: Any,
+    *,
+    model_lib_root: str | None = None,
+    logger: Any | None = None,
+) -> str:
+    """Apply a PVT ``Corner`` to a raw ngspice deck STRING; return the rewritten deck.
+
+    The text-level twin of ``NGSpice_Wrapper.apply_corner`` — both consume the same
+    :func:`plan_corner` output, so the corner-emission policy has exactly ONE definition.
+    Use this from a block harness that composes its own deck text and shells out to
+    ngspice directly (no spicelib editor in the loop). Idempotent: re-applying replaces
+    rather than accumulates.
+
+    New directives are inserted before the first ``.control`` block when there is one (so
+    they stay in the netlist section), else before the final ``.end``. A supply/param
+    override rewrites the deck's existing standalone ``.param <name>=<value>`` line IN
+    PLACE, preserving its position; when the deck never declares that name the assignment
+    is appended and announced, mirroring the editor path's dangling-``.param`` warning.
+
+    :raises ValueError: the deck assigns an overridden name inside a MULTI-assignment
+        ``.param`` line — rewriting one assignment of such a line safely is out of scope,
+        and appending a duplicate would depend on ngspice's last-wins ordering, so this
+        fails loudly instead of silently maybe-working.
+    """
+    log = logger if logger is not None else logging.getLogger(__name__)
+    plan = plan_corner(corner, model_lib_root)
+    lines = deck.splitlines()
+    strip_res = [re.compile(p, re.IGNORECASE) for p in plan.strips]
+    kept = [ln for ln in lines if not any(r.match(ln) for r in strip_res)]
+    n_stripped = len(lines) - len(kept)
+
+    pending: list[str] = []
+    for name, value in plan.params:
+        single_re, any_re = _param_assign_res(name)
+        hits = [i for i, ln in enumerate(kept) if single_re.match(ln)]
+        if hits:
+            for i in hits:
+                kept[i] = f".param {name}={value}"
+            continue
+        if any(any_re.match(ln) for ln in kept):
+            raise ValueError(
+                f"PVT corner '{corner.name}': '{name}' is assigned inside a multi-assignment "
+                f".param line; rewrite that line to one assignment per .param card, or pass "
+                f"'{name}' to the deck builder instead of through the corner."
+            )
+        log.warning(
+            f"⚠️ PVT corner '{corner.name}': '{name}' is NOT a declared .param in this deck — "
+            f"appending '.param {name}={value}', which will NOT change anything the deck "
+            f"reads under a different name."
+        )
+        pending.append(f".param {name}={value}")
+
+    add = plan.instructions + pending
+    at = next((i for i, ln in enumerate(kept) if _CONTROL_RE.match(ln)), None)
+    if at is None:
+        at = next((i for i in range(len(kept) - 1, -1, -1) if _END_RE.match(kept[i])), len(kept))
+    out = kept[:at] + add + kept[at:]
+    log.info(
+        f"🌡️  corner '{corner.name}': stripped {n_stripped} line(s), "
+        f"added {len(add)} — {'; '.join(add)}"
+    )
+    return "\n".join(out) + ("\n" if deck.endswith("\n") else "")

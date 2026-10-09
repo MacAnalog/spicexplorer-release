@@ -1,4 +1,5 @@
 """Optimization run management: start, stop, and SSE stream."""
+
 from __future__ import annotations
 
 import asyncio
@@ -50,7 +51,7 @@ class StartRequest(BaseModel):
 class RunStartResponse(BaseModel):
     run_id: str
     replay: bool
-    resumed: bool        # `resume_path is not None` — always a real bool
+    resumed: bool  # `resume_path is not None` — always a real bool
     n_iters: int | None  # replayed-checkpoint row count; null for live/resume runs
 
 
@@ -60,16 +61,26 @@ class OkResponse(BaseModel):
 
 class AlgorithmsResponse(BaseModel):
     recommended: list[str]  # curated known-good presets (Run popover default set)
-    families: list[str]     # configurable classes — accept optimizer_kwargs in YAML
-    registry: list[str]     # every pre-configured Nevergrad preset name
+    families: list[str]  # configurable classes — accept optimizer_kwargs in YAML
+    registry: list[str]  # every pre-configured Nevergrad preset name
 
 
 # Curated subset for the Run popover's primary group. Backend-owned so the UI
 # never hardcodes algorithm names; filtered against the installed Nevergrad at
 # request time so a version bump can't advertise a name that won't construct.
 _RECOMMENDED_ALGORITHMS = [
-    "NGOpt", "LhsDE", "TwoPointsDE", "DE", "CMA", "PSO", "OnePlusOne",
-    "TBPSA", "RandomSearch", "LHSSearch", "LogBFGSCMAPlus", "SamplingSearch",
+    "NGOpt",
+    "LhsDE",
+    "TwoPointsDE",
+    "DE",
+    "CMA",
+    "PSO",
+    "OnePlusOne",
+    "TBPSA",
+    "RandomSearch",
+    "LHSSearch",
+    "LogBFGSCMAPlus",
+    "SamplingSearch",
 ]
 
 
@@ -79,7 +90,8 @@ def _algorithm_lists() -> tuple[list[str], list[str], list[str]]:
 
     registry = sorted(ng.optimizers.registry.keys())
     families = sorted(
-        n for n in dir(ng.families)
+        n
+        for n in dir(ng.families)
         if not n.startswith("_") and isinstance(getattr(ng.families, n), type)
     )
     known = set(registry) | set(families)
@@ -130,7 +142,9 @@ async def start_run(body: StartRequest, request: Request):
     if not body.replay:
         env = probe_env()
         if not env.get("live_runs_enabled", False):
-            raise HTTPException(409, env.get("pdk_detail") or "Live runs disabled: ngspice/PDK unavailable.")
+            raise HTTPException(
+                409, env.get("pdk_detail") or "Live runs disabled: ngspice/PDK unavailable."
+            )
 
     checkpoint_path: Path | None = None
     replay_len: int | None = None
@@ -143,6 +157,7 @@ async def start_run(body: StartRequest, request: Request):
         # length, not the unrelated live-run budget (default 200).
         try:
             from spicexplorer_api.services.checkpoint_reader import read_checkpoint
+
             replay_len = read_checkpoint(checkpoint_path).get("n_iters")
         except Exception:
             replay_len = None
@@ -173,7 +188,12 @@ async def start_run(body: StartRequest, request: Request):
         keep_raw=body.keep_raw,
         loop=loop,
     )
-    return {"run_id": run_id, "replay": body.replay, "resumed": resume_path is not None, "n_iters": replay_len}
+    return {
+        "run_id": run_id,
+        "replay": body.replay,
+        "resumed": resume_path is not None,
+        "n_iters": replay_len,
+    }
 
 
 @router.post("/optimize/stop/{run_id}", response_model=OkResponse)
@@ -212,11 +232,13 @@ async def stream_run(run_id: str, request: Request):
                 if await request.is_disconnected():
                     break
                 try:
-                    event = await asyncio.wait_for(state.queue.get(), timeout=_DISCONNECT_POLL_SECONDS)
+                    event = await asyncio.wait_for(
+                        state.queue.get(), timeout=_DISCONNECT_POLL_SECONDS
+                    )
                 except asyncio.TimeoutError:
                     if time.monotonic() - last_sent >= _HEARTBEAT_SECONDS:
                         last_sent = time.monotonic()
-                        yield "data: {\"heartbeat\": true}\n\n"
+                        yield 'data: {"heartbeat": true}\n\n'
                     continue
 
                 last_sent = time.monotonic()

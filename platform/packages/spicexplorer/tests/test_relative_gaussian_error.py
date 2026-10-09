@@ -18,10 +18,11 @@ Added alongside the error type itself. Three things are being pinned down:
 
 No SPICE, no PDK. The scoring methods read only their arguments, so they are invoked unbound.
 """
+
 from __future__ import annotations
 
 from types import SimpleNamespace
-from typing import cast
+from typing import Any, cast
 
 import numpy as np
 import pytest
@@ -41,12 +42,21 @@ GAUSS = Error_Types.RELATIVE_GAUSSIAN
 
 def _penalty(curr_val, spec):
     return Spice_Constraint_Satisfaction.compute_constraint_violation_penalty_for_spec(
-        cast("Spice_Constraint_Satisfaction", None), np.float64(curr_val), spec)
+        cast("Spice_Constraint_Satisfaction", None), np.float64(curr_val), spec
+    )
 
 
 def _spec(**kw):
-    base = dict(name="gain", testbench="tb", target=40.0, goal="exceed", sim_type="ac",
-                range=10.0, tolerance=0.0, error_type="relative-gaussian")
+    base: dict[str, Any] = dict(
+        name="gain",
+        testbench="tb",
+        target=40.0,
+        goal="exceed",
+        sim_type="ac",
+        range=10.0,
+        tolerance=0.0,
+        error_type="relative-gaussian",
+    )
     base.update(kw)
     return TargetSpec(**base)
 
@@ -61,12 +71,15 @@ class _Scorer:
     compute_fitness = Spice_Constraint_Satisfaction.compute_fitness
     compute_fitness_for_spec = Spice_Constraint_Satisfaction.compute_fitness_for_spec
     compute_constraint_violation_penalty_for_spec = (
-        Spice_Constraint_Satisfaction.compute_constraint_violation_penalty_for_spec)
+        Spice_Constraint_Satisfaction.compute_constraint_violation_penalty_for_spec
+    )
 
 
 # --------------------------------------------------------------------------- 1. kernel shape
 def test_zero_error_at_target():
-    assert compute_relative_gaussian_error(np.float64(40.0), np.float64(40.0), np.float64(10.0)) == 0.0
+    assert (
+        compute_relative_gaussian_error(np.float64(40.0), np.float64(40.0), np.float64(10.0)) == 0.0
+    )
 
 
 def test_bounded_in_unit_interval_and_saturates():
@@ -76,7 +89,9 @@ def test_bounded_in_unit_interval_and_saturates():
         assert 0.0 <= e <= 1.0, d
         assert np.isfinite(e), d
     # a wildly out-of-range metric saturates rather than overflowing
-    assert compute_relative_gaussian_error(np.float64(1e30), np.float64(0.0), np.float64(1.0)) == pytest.approx(1.0)
+    assert compute_relative_gaussian_error(
+        np.float64(1e30), np.float64(0.0), np.float64(1.0)
+    ) == pytest.approx(1.0)
 
 
 def test_saturates_to_exactly_one_far_sooner_than_sigmoid():
@@ -88,34 +103,48 @@ def test_saturates_to_exactly_one_far_sooner_than_sigmoid():
     range-units off target is indistinguishable from one a million units off.
     """
     from spicexplorer.core.utils import compute_relative_sigmoid_error
+
     def at(d):
         return compute_relative_gaussian_error(np.float64(d), np.float64(0.0), np.float64(1.0))
 
-    assert at(8.0) < 1.0                       # still has gradient
-    assert at(10.0) == 1.0                     # fully saturated
+    assert at(8.0) < 1.0  # still has gradient
+    assert at(10.0) == 1.0  # fully saturated
     assert compute_relative_sigmoid_error(np.float64(10.0), np.float64(0.0), np.float64(1.0)) < 1.0
     # a larger sigma pushes the flat region out, which is how to keep gradient far from target
-    assert compute_relative_gaussian_error(np.float64(10.0), np.float64(0.0), np.float64(1.0), sigma=4.0) < 1.0
+    assert (
+        compute_relative_gaussian_error(
+            np.float64(10.0), np.float64(0.0), np.float64(1.0), sigma=4.0
+        )
+        < 1.0
+    )
 
 
 def test_monotone_and_symmetric_in_the_normalized_error():
-    errs = [compute_relative_gaussian_error(np.float64(d), np.float64(0.0), np.float64(1.0))
-            for d in (0.0, 0.25, 0.5, 1.0, 2.0, 4.0)]
+    errs = [
+        compute_relative_gaussian_error(np.float64(d), np.float64(0.0), np.float64(1.0))
+        for d in (0.0, 0.25, 0.5, 1.0, 2.0, 4.0)
+    ]
     assert errs == sorted(errs)
     assert len(set(errs)) == len(errs)
     for d in (0.3, 1.7, 5.0):
-        assert (compute_relative_gaussian_error(np.float64(d), np.float64(0.0), np.float64(1.0))
-                == pytest.approx(compute_relative_gaussian_error(np.float64(-d), np.float64(0.0), np.float64(1.0))))
+        assert compute_relative_gaussian_error(
+            np.float64(d), np.float64(0.0), np.float64(1.0)
+        ) == pytest.approx(
+            compute_relative_gaussian_error(np.float64(-d), np.float64(0.0), np.float64(1.0))
+        )
 
 
 def test_matches_the_closed_form():
     """Pin the actual formula, not just its qualitative shape."""
     for d, sigma in ((1.0, 1.0), (2.0, 1.0), (1.0, 0.5), (3.0, 2.0)):
-        got = compute_relative_gaussian_error(np.float64(d), np.float64(0.0), np.float64(1.0), sigma=sigma)
-        assert got == pytest.approx(1.0 - np.exp(-(d ** 2) / (2 * sigma ** 2)))
+        got = compute_relative_gaussian_error(
+            np.float64(d), np.float64(0.0), np.float64(1.0), sigma=sigma
+        )
+        assert got == pytest.approx(1.0 - np.exp(-(d**2) / (2 * sigma**2)))
     # one decimal anchor so a sign/factor slip cannot hide behind the same expression
-    assert compute_relative_gaussian_error(np.float64(1.0), np.float64(0.0), np.float64(1.0), sigma=1.0) \
-        == pytest.approx(0.3934693402873666)
+    assert compute_relative_gaussian_error(
+        np.float64(1.0), np.float64(0.0), np.float64(1.0), sigma=1.0
+    ) == pytest.approx(0.3934693402873666)
 
 
 def test_slope_vanishes_at_target_unlike_sigmoid():
@@ -124,11 +153,12 @@ def test_slope_vanishes_at_target_unlike_sigmoid():
     If this ever inverts, the head-to-head comparison the error type exists for is meaningless.
     """
     from spicexplorer.core.utils import compute_relative_sigmoid_error
+
     h = 1e-6
     g_slope = compute_relative_gaussian_error(np.float64(h), np.float64(0.0), np.float64(1.0)) / h
     s_slope = compute_relative_sigmoid_error(np.float64(h), np.float64(0.0), np.float64(1.0)) / h
     assert g_slope == pytest.approx(0.0, abs=1e-5)
-    assert s_slope > 0.4                      # sigmoid derivative at 0 is 1/2
+    assert s_slope > 0.4  # sigmoid derivative at 0 is 1/2
     assert g_slope < s_slope
 
 
@@ -142,7 +172,9 @@ def test_smaller_sigma_penalizes_a_near_miss_harder():
 @pytest.mark.parametrize("sigma", [0.0, -1.0, float("nan"), float("inf")])
 def test_rejects_bad_sigma(sigma):
     with pytest.raises(ValueError):
-        compute_relative_gaussian_error(np.float64(1.0), np.float64(0.0), np.float64(1.0), sigma=sigma)
+        compute_relative_gaussian_error(
+            np.float64(1.0), np.float64(0.0), np.float64(1.0), sigma=sigma
+        )
 
 
 # --------------------------------------------------------------------------- 2. plumbing
@@ -157,18 +189,31 @@ def test_declared_and_implemented():
 
 
 def test_compute_error_routes_and_forwards_sigma():
-    direct = compute_relative_gaussian_error(np.float64(41.0), np.float64(40.0), np.float64(10.0), sigma=0.5)
-    routed = compute_error(np.float64(41.0), np.float64(40.0), GAUSS, np.float64(10.0), error_params={"sigma": 0.5})
+    direct = compute_relative_gaussian_error(
+        np.float64(41.0), np.float64(40.0), np.float64(10.0), sigma=0.5
+    )
+    routed = compute_error(
+        np.float64(41.0), np.float64(40.0), GAUSS, np.float64(10.0), error_params={"sigma": 0.5}
+    )
     assert routed == pytest.approx(direct)
     # and the default is genuinely applied when nothing is passed
-    assert compute_error(np.float64(41.0), np.float64(40.0), GAUSS, np.float64(10.0)) == pytest.approx(
-        compute_relative_gaussian_error(np.float64(41.0), np.float64(40.0), np.float64(10.0), sigma=1.0))
+    assert compute_error(
+        np.float64(41.0), np.float64(40.0), GAUSS, np.float64(10.0)
+    ) == pytest.approx(
+        compute_relative_gaussian_error(
+            np.float64(41.0), np.float64(40.0), np.float64(10.0), sigma=1.0
+        )
+    )
 
 
 def test_sigma_actually_changes_the_routed_result():
     """A swept parameter that never reaches the kernel would invalidate the sweep silently."""
-    vals = {s: compute_error(np.float64(45.0), np.float64(40.0), GAUSS, np.float64(10.0),
-                             error_params={"sigma": s}) for s in (0.25, 1.0, 4.0)}
+    vals = {
+        s: compute_error(
+            np.float64(45.0), np.float64(40.0), GAUSS, np.float64(10.0), error_params={"sigma": s}
+        )
+        for s in (0.25, 1.0, 4.0)
+    }
     assert len(set(vals.values())) == 3
     assert vals[0.25] > vals[1.0] > vals[4.0]
 
@@ -181,8 +226,13 @@ def test_unknown_error_param_is_rejected():
 def test_error_params_ignored_for_types_that_take_none():
     assert resolve_error_params(Error_Types.RELATIVE_ABSOLUTE, {"sigma": 2.0}) == {}
     # and passing them does not break the call
-    assert compute_error(np.float64(41.0), np.float64(40.0), Error_Types.RELATIVE_ABSOLUTE,
-                         np.float64(10.0), error_params={"sigma": 2.0}) == pytest.approx(0.1)
+    assert compute_error(
+        np.float64(41.0),
+        np.float64(40.0),
+        Error_Types.RELATIVE_ABSOLUTE,
+        np.float64(10.0),
+        error_params={"sigma": 2.0},
+    ) == pytest.approx(0.1)
 
 
 @pytest.mark.parametrize("etype", [e for e in Error_Types if e not in ERROR_SHAPE_PARAMS])
@@ -193,7 +243,9 @@ def test_existing_error_types_are_unchanged(etype):
     error type is covered by its own suite instead of silently failing the `is None` assertion
     here (`relative-adaptive` was the first to hit that)."""
     coeff = np.float64(10.0) if etype.is_relative() else None
-    before = ERROR_COMPUTE_FUNCTIONS[etype](np.float64(41.0), np.float64(40.0), *( [coeff] if coeff else [] ))
+    before = ERROR_COMPUTE_FUNCTIONS[etype](
+        np.float64(41.0), np.float64(40.0), *([coeff] if coeff else [])
+    )
     after = compute_error(np.float64(41.0), np.float64(40.0), etype, coeff)
     assert after == pytest.approx(before)
     assert ERROR_SHAPE_PARAMS.get(etype) is None
@@ -224,8 +276,8 @@ def test_spec_without_error_params_is_untouched():
 
 # --------------------------------------------------------------------------- 4. scoring
 def test_penalty_is_zero_when_the_spec_is_met():
-    assert _penalty(45.0, _spec()) == 0.0        # exceed 40, measured 45
-    assert _penalty(40.0, _spec()) == 0.0        # exactly at target
+    assert _penalty(45.0, _spec()) == 0.0  # exceed 40, measured 45
+    assert _penalty(40.0, _spec()) == 0.0  # exactly at target
 
 
 def test_penalty_is_bounded_by_the_weight():
@@ -246,8 +298,8 @@ def test_outlier_cannot_dominate_the_way_relative_absolute_does():
     lin_far = _penalty(blowup, _spec(error_type="relative-absolute"))
     g_near = _penalty(near_miss, _spec())
     g_far = _penalty(blowup, _spec())
-    assert lin_near > 0 and g_near > 0       # guard: the near miss must actually be penalized
-    assert g_far <= 1.0                      # bounded, whatever the metric does
+    assert lin_near > 0 and g_near > 0  # guard: the near miss must actually be penalized
+    assert g_far <= 1.0  # bounded, whatever the metric does
 
     # The claim is RELATIVE, so assert it relatively rather than against a magic threshold:
     # under linear the outlier outweighs the near-miss by ~5 orders of magnitude, so the
@@ -258,8 +310,8 @@ def test_outlier_cannot_dominate_the_way_relative_absolute_does():
     assert gaussian_dominance < linear_dominance / 1e3
 
     # Stated the way it matters to the optimizer: the near-miss's share of the total penalty.
-    assert lin_near / (lin_near + lin_far) < 1e-4      # linear: drowned out
-    assert g_near / (g_near + g_far) > 0.04            # gaussian: still steers the search
+    assert lin_near / (lin_near + lin_far) < 1e-4  # linear: drowned out
+    assert g_near / (g_near + g_far) > 0.04  # gaussian: still steers the search
 
 
 def test_tolerance_is_honoured_exactly_as_authored():
@@ -272,7 +324,7 @@ def test_tolerance_is_honoured_exactly_as_authored():
     OMITTED tolerance defaults to zero rather than inventing a 5 % relaxation.
     """
     assert _spec(tolerance=0.0).tolerance == pytest.approx(0.0)
-    assert _spec(tolerance=None).tolerance == pytest.approx(0.0)   # the default is exact
+    assert _spec(tolerance=None).tolerance == pytest.approx(0.0)  # the default is exact
     assert _spec(tolerance=0.5).tolerance == pytest.approx(0.5)
     # consequence: a metric off target now scores a real penalty instead of hiding in a band
     assert _penalty(39.0, _spec(tolerance=0.0)) > 0.0
@@ -284,10 +336,10 @@ def test_reward_is_suppressed_while_any_spec_is_violated():
     """Constraint-first aggregation: penalties alone until every spec passes."""
     specs = [_spec(name="gain", target=40.0), _spec(name="ugf", target=100.0)]
     total_bad, summary = _Scorer(specs).compute_fitness({"gain": 45.0, "ugf": 50.0})
-    assert total_bad < 0                                  # the violated spec sets the score
-    assert summary["gain"]["score"] == 0.0                # satisfied spec contributes nothing
+    assert total_bad < 0  # the violated spec sets the score
+    assert summary["gain"]["score"] == 0.0  # satisfied spec contributes nothing
     total_ok, _ = _Scorer(specs).compute_fitness({"gain": 45.0, "ugf": 120.0})
-    assert total_ok == 0.0                                # all constraints met, no reward configured
+    assert total_ok == 0.0  # all constraints met, no reward configured
     assert total_ok > total_bad
 
 
@@ -354,25 +406,33 @@ SIGMOID = Error_Types.RELATIVE_SIGMOID
 def test_sigmoid_alpha_defaults_to_the_previously_hardcoded_value():
     """Regression: every spec authored before `alpha` existed must score identically."""
     from spicexplorer.core.utils import compute_relative_sigmoid_error
+
     for d in (0.0, 0.3, 1.0, 5.0, 50.0):
         legacy = 2.0 / (1.0 + np.exp(-d)) - 1.0
-        assert compute_relative_sigmoid_error(np.float64(d), np.float64(0.0), np.float64(1.0)) == pytest.approx(legacy)
+        assert compute_relative_sigmoid_error(
+            np.float64(d), np.float64(0.0), np.float64(1.0)
+        ) == pytest.approx(legacy)
     assert ERROR_SHAPE_PARAMS[SIGMOID] == {"alpha": 1.0}
 
 
 def test_sigmoid_alpha_actually_changes_the_routed_result():
     """The whole reason to add it: an unswept parameter invalidates the sweep silently."""
-    vals = {a: compute_error(np.float64(41.0), np.float64(40.0), SIGMOID, np.float64(10.0),
-                             error_params={"alpha": a}) for a in (0.25, 1.0, 4.0)}
+    vals = {
+        a: compute_error(
+            np.float64(41.0), np.float64(40.0), SIGMOID, np.float64(10.0), error_params={"alpha": a}
+        )
+        for a in (0.25, 1.0, 4.0)
+    }
     assert len(set(vals.values())) == 3
-    assert vals[0.25] < vals[1.0] < vals[4.0]     # larger alpha saturates sooner => harsher
+    assert vals[0.25] < vals[1.0] < vals[4.0]  # larger alpha saturates sooner => harsher
 
 
 def test_sigmoid_stays_bounded_and_finite_for_any_alpha():
     for a in (0.01, 1.0, 1e3):
         for d in (0.0, 1.0, 1e6, 1e30):
-            e = compute_error(np.float64(d), np.float64(0.0), SIGMOID, np.float64(1.0),
-                              error_params={"alpha": a})
+            e = compute_error(
+                np.float64(d), np.float64(0.0), SIGMOID, np.float64(1.0), error_params={"alpha": a}
+            )
             assert 0.0 <= e <= 1.0 and np.isfinite(e), (a, d)
 
 
@@ -394,7 +454,7 @@ def test_alpha_and_sigma_are_not_interchangeable():
     d, coeff = np.float64(1.0), np.float64(10.0)
     sig = compute_error(d, np.float64(0.0), SIGMOID, coeff, error_params={"alpha": 1.0})
     gau = compute_error(d, np.float64(0.0), GAUSS, coeff, error_params={"sigma": 1.0})
-    assert sig > gau                                   # near target: sigmoid steeper
+    assert sig > gau  # near target: sigmoid steeper
 
 
 # --------------------------------------------------------------------------- 7. tolerance == 0
@@ -409,16 +469,20 @@ def test_explicit_zero_tolerance_is_honoured():
 
 def test_zero_tolerance_measures_the_penalty_from_the_BARE_target():
     """With tolerance 0 the implementation and paper Eq.1 finally agree."""
-    spec = _spec(goal="exceed", target=40.0, range=10.0, tolerance=0,
-                 error_type="relative-absolute")
-    assert _penalty(30.0, spec) == pytest.approx(1.0)          # |30 - 40| / 10, not |30 - 38|
-    assert _penalty(40.0, spec) == pytest.approx(0.0)          # exactly on target passes
+    spec = _spec(
+        goal="exceed", target=40.0, range=10.0, tolerance=0, error_type="relative-absolute"
+    )
+    assert _penalty(30.0, spec) == pytest.approx(1.0)  # |30 - 40| / 10, not |30 - 38|
+    assert _penalty(40.0, spec) == pytest.approx(0.0)  # exactly on target passes
 
 
-@pytest.mark.parametrize("goal,at_target,just_inside,just_outside", [
-    ("exceed", 40.0, 40.0 + 1e-9, 40.0 - 1e-9),
-    ("minimize", 40.0, 40.0 - 1e-9, 40.0 + 1e-9),
-])
+@pytest.mark.parametrize(
+    "goal,at_target,just_inside,just_outside",
+    [
+        ("exceed", 40.0, 40.0 + 1e-9, 40.0 - 1e-9),
+        ("minimize", 40.0, 40.0 - 1e-9, 40.0 + 1e-9),
+    ],
+)
 def test_zero_tolerance_makes_the_constraint_exact(goal, at_target, just_inside, just_outside):
     spec = _spec(goal=goal, target=40.0, range=10.0, tolerance=0, error_type="relative-absolute")
     assert _penalty(at_target, spec) == 0.0
@@ -438,8 +502,15 @@ def test_zero_tolerance_is_numerically_safe_on_every_error_type():
 def test_zero_tolerance_is_safe_under_log_scale():
     """`log_space_band` computes a half-width from log10(T +/- tol); at tol 0 that collapses to 0
     rather than dividing or taking log10(0)."""
-    spec = _spec(name="ugf", goal="exceed", target=1e6, range=1e6, tolerance=0, log_scale=True,
-                 error_type="relative-absolute")
+    spec = _spec(
+        name="ugf",
+        goal="exceed",
+        target=1e6,
+        range=1e6,
+        tolerance=0,
+        log_scale=True,
+        error_type="relative-absolute",
+    )
     assert np.isfinite(_penalty(1e4, spec))
     assert _penalty(1e6, spec) == pytest.approx(0.0)
 

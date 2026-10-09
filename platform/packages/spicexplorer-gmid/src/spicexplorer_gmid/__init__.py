@@ -10,7 +10,7 @@ It reads pygmid ``.pkl`` LUTs (the committed analog-db ``_shared/gmid/<pdk>/`` t
 on ``spicexplorer-core`` + ``pygmid`` + ``numpy`` + ``pydantic`` **only** — never on a peer tool
 (not ``spicexplorer`` the optimizer, not ``spicexplorer_netlist2tf``) and never on
 ``spicexplorer_analog_db`` (it takes LUT *paths/objects* and PDK constants as inputs; the
-DB-reading composition is an orchestration concern). See meta-repo ``doc/plan_gmid_sizing.md``.
+DB-reading composition is an orchestration concern). See meta-repo ``doc/archive/plan_gmid_sizing.md``.
 
 Quickstart::
 
@@ -41,7 +41,7 @@ from .contract import (
 from .errors import GmidError, OutOfGridError
 from .fingerwidth import FingerWidthSet
 from .passives import size_capacitor, size_resistor
-from .registry import LUTRegistry
+from .registry import LUTRegistry, default_roots, finger_width_set, load_lut, search_luts
 from .sizing import size_for_current_density, size_for_gm
 from .tables import DeviceTable, Sweep
 
@@ -59,6 +59,11 @@ __all__ = [
     "size_capacitor",
     # LUT registry (enumerate + load by pdk/device/corner)
     "LUTRegistry",
+    # discovery: where this installation keeps its LUTs (no root to hand in)
+    "load_lut",
+    "finger_width_set",
+    "search_luts",
+    "default_roots",
     # manifest models (the typed registration record beside each .pkl)
     "LUTManifest",
     "AxisSpec",

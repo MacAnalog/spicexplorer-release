@@ -79,13 +79,19 @@ def test_grid_and_topology_place_all_devices():
 
 
 def test_ports_detected_with_directions():
-    """The 5T's external nets are classified as ports: gate-driven → input, drain → output."""
+    """The 5T's external nets are classified as ports: gate-driven → input, drain → output.
+
+    ``vdd``/``vss`` are BOTH a rail (``circuit.supply``) and a DECLARED ``.subckt`` formal port here
+    (``into="xota"`` descends into ``.subckt ota-5t vdd vout vinp vinn ibias_20u d_ena vss``) — a
+    declared port stays a port even when it is also a supply net, otherwise a hierarchy child built
+    from this same circuit would drop vdd/vss from its own ``.subckt`` port list and no longer match
+    the generated block symbol's pins (see ``hierarchy._child_circuit``'s docstring)."""
     c = from_file(FIXTURES / "ota-5t_tb-ac.spice", into="xota")
     info = analyze(c)
     assert info.port_role.get("vinp") == "in"  # a gate-only net is an input
     assert info.port_role.get("vinn") == "in"
     assert info.port_role.get("vout") == "out"  # a net on a drain is an output
-    assert "vdd" not in info.port_role and "vss" not in info.port_role  # rails aren't ports
+    assert info.port_role.get("vdd") == "inout" and info.port_role.get("vss") == "inout"
 
 
 def test_gate_share_pairs_face_gate_to_gate():
@@ -196,8 +202,7 @@ def test_phased_chains_are_vertically_aligned():
         pair_src = frozenset(  # same exclusion place() uses: a current-source-tailed pair's source
             s
             for a, b in info.pairs
-            if (s := by_ref[a].nets.get("SOURCE")) is not None
-            and s == by_ref[b].nets.get("SOURCE")
+            if (s := by_ref[a].nets.get("SOURCE")) is not None and s == by_ref[b].nets.get("SOURCE")
         )
         level = {d.ref: info.device_level[d.ref] for d in mos}
         chain_of = PhasedPlacer._chains(mos, supply, pair_src, level)

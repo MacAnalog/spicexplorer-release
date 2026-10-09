@@ -1,8 +1,8 @@
-> **[REFERENCE]** — CACE field-mapping spike + adapter contract. Parent plan: `doc/plan_examples_db.md` O-1/D-12. The bidirectional CACE adapter described in §O-1 below was **not built in Phase 2** and remains **deferred** — `runner.py` slots the adapter in as a future pluggable backend (see its docstring). Do not rely on a working CACE adapter; use the native runner.
+> **[REFERENCE]** — CACE field-mapping spike + adapter contract. Parent plan: `doc/archive/plan_examples_db.md` O-1/D-12. The bidirectional CACE adapter described in §O-1 below was **not built in Phase 2** and remains **deferred** — `runner.py` slots the adapter in as a future pluggable backend (see its docstring). Do not rely on a working CACE adapter; use the native runner.
 
 # CACE `cace_format` 5.2 ↔ super-DSL datasheet — field overlap (resolves O-1)
 
-> Plan `doc/plan_examples_db.md` O-1 + follow-up #2 / D-12. The spike: `pip install cace`
+> Plan `doc/archive/plan_examples_db.md` O-1 + follow-up #2 / D-12. The spike: `pip install cace`
 > (v**2.9.0**), confirm the **Python API**, load the analog-circuit-design `5t` 5.2 datasheet,
 > and map its fields onto our `datasheet.yaml` super-DSL → decide **verbatim-reuse vs rename**.
 

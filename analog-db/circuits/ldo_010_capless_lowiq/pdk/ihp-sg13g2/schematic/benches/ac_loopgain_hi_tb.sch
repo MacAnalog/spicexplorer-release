@@ -1,0 +1,99 @@
+v {xschem version=3.4.6 file_version=1.2}
+G {}
+K {}
+V {}
+S {}
+E {}
+T {ac_loopgain_hi_tb} -40 -200 0 0 0.4 0.4 {}
+C {devices/vsource.sym} 480 0 0 0 {name=VDD value="dc \{VDD\}"}
+C {devices/vsource.sym} 0 240 0 0 {name=VSS value="dc 0"}
+C {devices/isource.sym} 240 0 0 0 {name=ILOAD value="dc 10m"}
+C {devices/capa.sym} 0 0 0 0 {name=CLOAD value=1p}
+C {ldo_ihp_capless.sym} 240 240 0 0 {name=XDUT value=ldo_ihp_capless}
+N 0 -90 0 -30 {}
+N 0 30 0 90 {}
+N 0 150 0 210 {}
+N 0 270 0 330 {}
+N 240 -90 240 -30 {}
+N 240 30 240 90 {}
+N 240 100 240 160 {}
+N 240 320 240 380 {}
+N 375 -60 375 240 {}
+N 480 -90 480 -30 {}
+N 480 30 480 90 {}
+N -60 -140 650 -140 {}
+N 0 -60 375 -60 {}
+N 345 240 375 240 {}
+N -60 430 650 430 {}
+C {devices/lab_wire.sym} -60 -140 0 0 {name=l0 lab=vdd}
+C {devices/lab_wire.sym} -60 430 0 0 {name=l1 lab=0}
+C {devices/lab_wire.sym} 0 -90 0 1 {name=l2 lab=vout}
+C {devices/lab_wire.sym} 240 380 2 0 {name=l3 lab=vss}
+C {devices/lab_wire.sym} 480 -90 0 1 {name=l4 lab=vdd}
+C {devices/lab_wire.sym} 480 90 2 0 {name=l5 lab=0}
+C {devices/lab_wire.sym} 0 330 2 0 {name=l6 lab=0}
+C {devices/lab_wire.sym} 240 90 2 0 {name=l7 lab=0}
+C {devices/lab_wire.sym} 0 150 0 1 {name=l8 lab=vss}
+C {devices/lab_wire.sym} 240 -90 0 1 {name=l9 lab=vout}
+C {devices/lab_wire.sym} 0 90 2 0 {name=l10 lab=0}
+C {devices/lab_wire.sym} 240 100 0 1 {name=l11 lab=vdd}
+T {ac_loopgain_hi_tb -- loop gain / phase margin (Middlebrook)} -60 470 0 0 0.5 0.5 {}
+T {drawn from decks/candidate/ac_loopgain_hi.spice; directives and .control lifted verbatim} -60 510 0 0 0.3 0.3 {}
+C {devices/code_shown.sym} -60 570 0 0 {name=DIRECTIVES only_toplevel=false value=".lib cornerMOSlv.lib mos_tt
+.lib cornerRES.lib res_typ
+.lib cornerCAP.lib cap_typ
+.temp 27
+.param VDD=1.5
+.param vref_val=0.6
+.param r_w=0.5u
+.param r_fb_l=340u
+.param c_ff_w=8u
+.param r_bias_l=138.5u
+.param x_dut_xmb0_w=1u
+.param x_dut_xmb0_l=1u
+.param x_dut_xmb1_w=1.39u
+.param x_dut_xmbp_w=10u
+.param x_dut_xmbp_l=1u
+.param x_dut_xmt_w=10u
+.param x_dut_xm1_w=9.53u
+.param x_dut_xm1_l=0.5u
+.param x_dut_xm3_w=2.95u
+.param x_dut_xm3_l=1u
+.param x_dut_xm5_w=2.42u
+.param x_dut_xm5_l=0.5u
+.param x_dut_xm6_w=5.53u
+.param c_comp_w=54u
+.param x_dut_xmc_w=15.76u
+.param x_dut_xmc_l=0.36u
+.param x_dut_xma_w=5.79u
+.param x_dut_xma_l=0.5u
+.param x_dut_xmcp_w=9.02u
+.param x_dut_xmcp_l=0.5u
+.param x_dut_xms_w=2.2u
+.param x_dut_xms_l=0.95u
+.param x_dut_xmp_w=10u
+.param x_dut_xmp_l=0.13u
+.param x_dut_xmp_m=19
+.param x_dut_xmp_nf_mult=4
+.param c_out_w=58u
+.param c_out_m=4"}
+C {devices/code_shown.sym} 316 570 0 0 {name=CONTROL only_toplevel=false value=".control
+  set filetype=ascii
+  alter @v.xdut.vlp[acmag] = 1
+  ac dec 20 1 1G
+  let tloop = v(vout) / v(xdut.lp_brk)
+  let tdb  = db(tloop)
+  let tphc = cph(tloop)*180/3.14159265
+  let tph  = 180 + tphc - tphc[0]
+  meas ac loopgain_db FIND tdb AT=1
+  meas ac ugf_loop    WHEN tdb=0 FALL=1
+  meas ac pm_loop     FIND tph WHEN tdb=0 FALL=1
+  meas ac gm_at_180 FIND tdb WHEN tph=0 FALL=1
+  let gm_loop_db = 0 - gm_at_180
+  let s_db = db(1/(1-tloop))
+  meas ac ms_peak     MAX s_db
+  meas ac tloop_ph_dc FIND tphc AT=1
+  print loopgain_db ugf_loop pm_loop gm_loop_db ms_peak tloop_ph_dc
+  write
+  quit
+.endc"}

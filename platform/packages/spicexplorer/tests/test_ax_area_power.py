@@ -3,13 +3,16 @@
 Mirrors ``test_smoke_optimization.py``'s no-SPICE pattern: every optimizer here is built with
 an EMPTY ``spicelib_wrappers`` dict, so ``parameterize()`` / ``denormalize_params()`` /
 ``_create_optimizer_obj()`` exercise the full proposer path without running ngspice. The Ax
-cases are gated on the optional ``ax`` extra (Python 3.11+); they skip cleanly where it is
-absent. Live end-to-end scoring is covered by the container-only demo (`examples/ax_area_power`).
+cases are ``ax``-marked and gated on the optional ``ax`` extra (Python 3.11+) through
+``require_ax()``: they skip where the extra is absent and fail where it is installed but broken.
+Live end-to-end scoring is covered by the container-only demo (`examples/ax_area_power`).
 """
+
+import math
 from pathlib import Path
 
 import pytest
-from _spicexplorer_fixtures import REPO_ROOT
+from _spicexplorer_fixtures import REPO_ROOT, require_ax
 from spicexplorer.core.domains import Project_Setup
 
 BASELINE_YAML = REPO_ROOT / "examples/ax_area_power/amp_029_baseline.yaml"
@@ -57,6 +60,7 @@ def _assert_denorm_in_bounds(setup, denorm):
 
 # ── engine selection — no ax required ──────────────────────────────────
 
+
 def test_optimizer_type_from_config_resolves_engine():
     from spicexplorer.optimization.orchestrator import (
         Optimizer_Type_Enum,
@@ -81,6 +85,7 @@ def test_optimizer_type_from_config_fails_loud(bad):
 
 # ── area/power specs load + derived-metric context (no ax, no SPICE) ──────────
 
+
 @pytest.mark.skipif(_AREA_POWER_DECK is None, reason=_NO_DECK_REASON)
 def test_area_power_yaml_specs_and_derived_context():
     from spicexplorer.optimization.derived_integration import DerivedMetricContext
@@ -100,8 +105,7 @@ def test_area_power_yaml_specs_and_derived_context():
     ctx = DerivedMetricContext.build(setup.optimizer_config.target_specs, netlist_path=deck)
     assert ctx is not None and ctx.spec_names == frozenset({"active_area"})
     # With the deck's own default sizing, every device resolves and area is a positive µm² number.
-    frozen_only = {p.name: float(p.val) for p in setup.dut_params
-                   if p.freeze and p.val is not None}
+    frozen_only = {p.name: float(p.val) for p in setup.dut_params if p.freeze and p.val is not None}
     rep = ctx.report(frozen_only)
     assert rep["transistor_count"] == 10 and rep["coverage"]["complete"]  # all 10, incl. XM9/XM10
     # 58.0 µm² = the amp_029 deck's OWN default sizing (the frozen-only vector overrides nothing
@@ -118,8 +122,10 @@ def test_baseline_yaml_has_no_derived_context():
 
 # ── Ax parameterize / denorm parity (gated on the ax extra) ───────────────────
 
+
+@pytest.mark.ax
 def test_ax_parameterize_excludes_frozen_and_denorm_in_bounds():
-    pytest.importorskip("ax")
+    require_ax()
     from spicexplorer.optimization.stochastic.bayesian_ax import Ax_Spice_Single_Objective
 
     setup = Project_Setup.from_yaml(AREA_POWER_YAML)
@@ -145,10 +151,11 @@ def test_ax_parameterize_excludes_frozen_and_denorm_in_bounds():
             assert float(denorm[p.name]) == pytest.approx(float(p.val))
 
 
+@pytest.mark.ax
 def test_ax_integer_and_log_param_types():
     """Integer params → Ax int ranges over physical bounds; log params → log-scaled float
     ranges over the log box (parity with Nevergrad's coordinate convention)."""
-    pytest.importorskip("ax")
+    require_ax()
     from spicexplorer.optimization.stochastic.bayesian_ax import Ax_Spice_Single_Objective
 
     setup = Project_Setup.from_yaml(BASELINE_YAML)
@@ -169,10 +176,12 @@ def test_ax_integer_and_log_param_types():
 
 # ── backend equivalence: same YAML, both engines, same contract ───────────────
 
+
+@pytest.mark.ax
 def test_backend_equivalence_search_space_and_frozen():
     """Nevergrad and Ax, built from the SAME YAML, expose the SAME searched-param set and the
     SAME frozen map, and both denormalize into bounds — the engine-swap guarantee."""
-    pytest.importorskip("ax")
+    require_ax()
     from spicexplorer.optimization.stochastic.bayesian_ax import Ax_Spice_Single_Objective
     from spicexplorer.optimization.stochastic.nevergrad import Nevergrad_Spice_Single_Objective
 
@@ -193,6 +202,7 @@ def test_backend_equivalence_search_space_and_frozen():
 
 
 # ── review fixes: derived-metric robustness + OCEAN tier filter ───────────────
+
 
 @pytest.mark.skipif(_AREA_POWER_DECK is None, reason=_NO_DECK_REASON)
 def test_derived_metric_netlist_mode_resolves_partial_vector_and_overrides():
@@ -222,6 +232,76 @@ def test_derived_metric_netlist_mode_resolves_partial_vector_and_overrides():
     assert bigger > area_partial
 
 
+def test_derived_metric_refuses_an_incomplete_area_walk(tmp_path):
+    """OPT-04: a walk that could not resolve every transistor must not score its partial sum — a
+    MINIMIZE-area spec would reward the undercount. The context scores NaN (→ the scorer's
+    penalty) while the report keeps the partial sum and the reason visible. No SPICE needed."""
+    from spicexplorer.optimization.derived_integration import DerivedMetricContext
+
+    deck = tmp_path / "dut.spice"
+    deck.write_text(
+        "* one transistor has a width no .param defines\n"
+        ".param w1=2u l1=0.5u\n"
+        "M1 d g s b nmos_model w=w1 l=l1\n"
+        "M2 d g s b nmos_model w=w_undefined l=l1\n"
+        ".end\n"
+    )
+    ctx = DerivedMetricContext(
+        {"active_area": {"derived": "active_area", "scale": 1e12}}, netlist_path=deck
+    )
+    rep = ctx.report({})
+    assert rep["coverage"]["complete"] is False
+    assert rep["active_area"] == pytest.approx(1.0)  # M1 only: the undercount the spec would see
+    assert math.isnan(ctx.compute({})["active_area"])
+
+
+_SUBCKT_M_UNRESOLVED = (
+    "* every transistor resolves; one subckt multiplier does not\n"
+    ".param w1=2u l1=0.5u\n"
+    ".subckt cell d g s b\n"
+    "M1 d g s b nmos_model w=w1 l=l1\n"
+    ".ends cell\n"
+    "X1 d g s b cell m=m_undefined\n"
+    ".end\n"
+)
+
+
+def test_derived_metric_refuses_a_walk_whose_only_gap_is_a_warning(tmp_path, caplog):
+    """OPT-04: `coverage.complete` is False on ANY walk warning, not only an unresolved
+    transistor. Here the walk assumed m=1 for X1 (every transistor resolved) — the area may be
+    off by the unknown multiplier, so it is refused the same way, and the log says why."""
+    import logging
+
+    from spicexplorer.optimization.derived_integration import DerivedMetricContext
+
+    deck = tmp_path / "dut.spice"
+    deck.write_text(_SUBCKT_M_UNRESOLVED)
+    ctx = DerivedMetricContext(
+        {"active_area": {"derived": "active_area", "scale": 1e12}}, netlist_path=deck
+    )
+    rep = ctx.report({})
+    assert rep["coverage"]["transistors_unresolved"] == 0
+    assert rep["coverage"]["complete"] is False
+    with caplog.at_level(logging.WARNING):
+        assert math.isnan(ctx.compute({})["active_area"])
+    assert "area walk incomplete" in caplog.text
+    assert "X1" in caplog.text
+
+
+def test_derived_metric_scores_a_complete_walk(tmp_path):
+    """The positive control for the refusal: once the multiplier resolves (from the candidate's
+    own parameters) the walk is complete and its area is scored — no analog-db deck needed."""
+    from spicexplorer.optimization.derived_integration import DerivedMetricContext
+
+    deck = tmp_path / "dut.spice"
+    deck.write_text(_SUBCKT_M_UNRESOLVED)
+    ctx = DerivedMetricContext(
+        {"active_area": {"derived": "active_area", "scale": 1e12}}, netlist_path=deck
+    )
+    assert ctx.report({"m_undefined": 3})["coverage"]["complete"] is True
+    assert ctx.compute({"m_undefined": 3})["active_area"] == pytest.approx(3.0)  # 2u*0.5u*3
+
+
 def test_ocean_build_recipes_skips_python_and_derived_recipes():
     """`ocean_integration.build_recipes` must pick up ONLY OCEAN-tier recipes; a Tier-1 `{meas}`
     or param-derived `{derived}` spec on a `sim_engine: spectre` run must be skipped (else it is
@@ -229,19 +309,34 @@ def test_ocean_build_recipes_skips_python_and_derived_recipes():
     from spicexplorer.core.domains import ListTargetSpec, TargetSpec
     from spicexplorer.optimization.ocean_integration import build_recipes
 
-    specs = ListTargetSpec([
-        TargetSpec(name="pm_py", testbench="tb", target=60, goal="exact", sim_type="ac",
-                   measurement={"meas": "pm", "out": "out"}),
-        TargetSpec(name="area", testbench="tb", target=4, goal="minimize", sim_type="op",
-                   measurement={"derived": "active_area", "devices": [{"w": "w", "l": "l"}]}),
-    ])
+    specs = ListTargetSpec(
+        [
+            TargetSpec(
+                name="pm_py",
+                testbench="tb",
+                target=60,
+                goal="exact",
+                sim_type="ac",
+                measurement={"meas": "pm", "out": "out"},
+            ),
+            TargetSpec(
+                name="area",
+                testbench="tb",
+                target=4,
+                goal="minimize",
+                sim_type="op",
+                measurement={"derived": "active_area", "devices": [{"w": "w", "l": "l"}]},
+            ),
+        ]
+    )
     assert build_recipes(specs) == {}  # neither is OCEAN-tier → no wiring, no KeyError
 
 
 # ── batched Ax generation (max_trials > 1): budget-preserving, serial-parity default ──────────
 
+
 def _make_ax_opt(batch_size=None):
-    pytest.importorskip("ax")
+    require_ax()
     from spicexplorer.optimization.stochastic.bayesian_ax import Ax_Spice_Single_Objective
 
     setup = Project_Setup.from_yaml(BASELINE_YAML)
@@ -253,16 +348,18 @@ def _make_ax_opt(batch_size=None):
     return opt
 
 
+@pytest.mark.ax
 def test_ax_batch_size_reads_optimizer_kwargs():
-    assert _make_ax_opt()._ax_batch_size() == 1            # default = serial parity
+    assert _make_ax_opt()._ax_batch_size() == 1  # default = serial parity
     assert _make_ax_opt(4)._ax_batch_size() == 4
-    assert _make_ax_opt(0)._ax_batch_size() == 1           # clamped to >= 1
-    assert _make_ax_opt("nope")._ax_batch_size() == 1      # non-int → 1
+    assert _make_ax_opt(0)._ax_batch_size() == 1  # clamped to >= 1
+    assert _make_ax_opt("nope")._ax_batch_size() == 1  # non-int → 1
 
 
 def _spy_and_stub(opt, monkeypatch):
     """Count get_next_trials calls and stub evaluate (no SPICE). Returns the call counter."""
     import numpy as np
+
     calls = {"gen": 0}
     real_get = opt.optimizer.get_next_trials
 
@@ -276,6 +373,7 @@ def _spy_and_stub(opt, monkeypatch):
     return calls
 
 
+@pytest.mark.ax
 def test_ax_batched_generation_drains_one_trial_per_step(monkeypatch):
     """A batch_size=3 run pulls all three candidates in ONE generation call, then drains one per
     base-loop step — so budget still counts individual trials and best-tracking is per-step."""
@@ -285,14 +383,15 @@ def test_ax_batched_generation_drains_one_trial_per_step(monkeypatch):
     names = {c.name for c in (opt.parametrization or [])}
     for _ in range(3):
         params, _score, _meta = opt.optimization_step()
-        assert set(params) == names            # a coordinate-space candidate each step
-    assert calls["gen"] == 1                    # all three came from ONE get_next_trials(max_trials=3)
-    assert opt._trial_queue == []               # fully drained
+        assert set(params) == names  # a coordinate-space candidate each step
+    assert calls["gen"] == 1  # all three came from ONE get_next_trials(max_trials=3)
+    assert opt._trial_queue == []  # fully drained
 
-    opt.optimization_step()                     # a 4th step starts the next batch
+    opt.optimization_step()  # a 4th step starts the next batch
     assert calls["gen"] == 2
 
 
+@pytest.mark.ax
 def test_ax_batch_size_one_generates_each_step(monkeypatch):
     """batch_size=1 is exact serial parity — one generation call per step."""
     opt = _make_ax_opt(1)

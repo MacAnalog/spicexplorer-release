@@ -6,6 +6,7 @@ back through dacite (WrongTypeError), so the API had to route around the library
 own primitive. Now ``log_file`` serializes as a proper Dict[str, str] and load
 tolerates the legacy string form (dropping it to None).
 """
+
 from __future__ import annotations
 
 import json
@@ -90,14 +91,20 @@ def test_load_checkpoint_tolerates_legacy_stringified_log_file(tmp_path):
     """A pre-fix checkpoint stored log_file as the repr of a dict containing
     PosixPath(...) — not a literal. Load must not crash; it drops it to None."""
     ck = tmp_path / "legacy_2020-01-01_00-00-00.json"
-    ck.write_text(json.dumps({
-        "schema_version": 999,  # also exercises the version-mismatch warning path
-        "optimization_log": [{
-            "point": {"params": {"w": 1e-6}, "score": 0.5, "metadata": {}},
-            "fit_summary": {"gain": {"curr_val": 55.0, "score": -1.0}},
-            "log_file": "{'ac': PosixPath('/x/ac.log')}",
-        }],
-    }))
+    ck.write_text(
+        json.dumps(
+            {
+                "schema_version": 999,  # also exercises the version-mismatch warning path
+                "optimization_log": [
+                    {
+                        "point": {"params": {"w": 1e-6}, "score": 0.5, "metadata": {}},
+                        "fit_summary": {"gain": {"curr_val": 55.0, "score": -1.0}},
+                        "log_file": "{'ac': PosixPath('/x/ac.log')}",
+                    }
+                ],
+            }
+        )
+    )
     reloaded = _StubOptimizer.load_checkpoint(setup_obj=_stub_setup(), path_to_checkpoint=ck)
     assert len(reloaded.optimization_log) == 1
     assert reloaded.optimization_log[0].log_file is None  # unparseable → dropped, no crash

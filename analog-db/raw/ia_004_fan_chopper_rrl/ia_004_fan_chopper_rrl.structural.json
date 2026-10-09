@@ -11,7 +11,7 @@
       "transmission_gate": 20
     },
     "structural_roles": {
-      "XM10_OPAMP_RRL": "differential_pair",
+      "XM10_OPAMP_RRL": "cascode_device",
       "XM13_OPAMP_RRL": "current_mirror",
       "XM14_MAIN": "tail_current_source",
       "XM14_OPAMP_RRL": "current_mirror",
@@ -72,7 +72,7 @@
       "XM8_MAIN": "tail_current_source",
       "XM8_OPAMP_RRL": "differential_pair",
       "XM9_MAIN": "tail_current_source",
-      "XM9_OPAMP_RRL": "differential_pair"
+      "XM9_OPAMP_RRL": "cascode_device"
     }
   },
   "groups": [

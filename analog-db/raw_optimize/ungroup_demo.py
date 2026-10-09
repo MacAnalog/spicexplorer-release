@@ -1,6 +1,6 @@
 """Live ``ungroup:`` re-sizing demo on amp_022 — the parameterization layer, end-to-end.
 
-The notebook ``notebooks/ungroup_resizing.ipynb`` is the guided counterpart; this script is
+The notebook ``notebooks/ungroup_resizing.py`` is the guided counterpart; this script is
 the reusable engine both it and a CI smoke can call. It runs TWO short, seeded live ngspice
 optimizations over amp_022's committed ihp-sg13g2 decks:
 
@@ -111,7 +111,7 @@ def run_optimization(*, ungroup: bool) -> dict:
     )
     from spicexplorer.optimization.orchestrator import Optimizer_Type_Enum
 
-    # Keep the committed notebook output clean: the optimizer wraps its loop in a tqdm bar that
+    # Keep the notebook output clean: the optimizer wraps its loop in a tqdm bar that
     # writes many carriage-return frames to stderr. TQDM_DISABLE silences it without touching the
     # optimizer code (the numbers are unaffected).
     os.environ.setdefault("TQDM_DISABLE", "1")

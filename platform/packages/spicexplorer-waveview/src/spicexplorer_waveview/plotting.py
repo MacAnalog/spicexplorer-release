@@ -14,7 +14,8 @@ for notebook display (pair with ``IPython.display.HTML``).
 from __future__ import annotations
 
 import html as _html
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 import plotly.graph_objects as go
@@ -69,15 +70,22 @@ def format_y(data: np.ndarray, fmt: str) -> tuple[np.ndarray, str]:
 
 
 def _xy(
-    ds: WaveDataset, analysis: str, signal: str, x: str | None, fmt: str,
-    max_points: int | None, method: str,
+    ds: WaveDataset,
+    analysis: str,
+    signal: str,
+    x: str | None,
+    fmt: str,
+    max_points: int | None,
+    method: str,
 ) -> tuple[np.ndarray, np.ndarray, str]:
     an = ds.resolve_analysis(analysis)
     if an is None:
         raise KeyError(f"dataset has no analysis {analysis!r} (have {sorted(ds.analyses)})")
     sig = ds.find_signal(analysis, signal)
     if sig is None:
-        raise KeyError(f"analysis {analysis!r} has no signal {signal!r} (have {sorted(an.signals)})")
+        raise KeyError(
+            f"analysis {analysis!r} has no signal {signal!r} (have {sorted(an.signals)})"
+        )
     y, label = format_y(sig.data, fmt)
     x_name = x or an.sweep
     if x_name is None:
@@ -125,9 +133,9 @@ def waveform_figure(
         sweep_names |= {"frequency", "freq"}
     elif canonical in ("tran", "pss_td"):
         sweep_names |= {"time"}
-    names = list(signals) if signals is not None else [
-        n for n in an.signals if n not in sweep_names
-    ]
+    names = (
+        list(signals) if signals is not None else [n for n in an.signals if n not in sweep_names]
+    )
 
     fig = go.Figure()
     y_label = "value"
@@ -180,8 +188,13 @@ def bode_figure(
     x_mag, mag_db, _ = _xy(ds, analysis, out, None, "mag_db", None, "none")
     x_ph, phase, _ = _xy(ds, analysis, out, None, "phase_deg", None, "none")
 
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.06,
-                        subplot_titles=("magnitude", "phase"))
+    fig = make_subplots(
+        rows=2,
+        cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.06,
+        subplot_titles=("magnitude", "phase"),
+    )
     fig.add_trace(go.Scatter(x=x_mag, y=mag_db, mode="lines", name=f"|{out}| (dB)"), row=1, col=1)
     fig.add_trace(go.Scatter(x=x_ph, y=phase, mode="lines", name=f"∠{out} (°)"), row=2, col=1)
     fig.update_xaxes(type="log", row=1, col=1)
@@ -194,7 +207,12 @@ def bode_figure(
         gain_meas = "loopgain_db" if stb else "dcgain"
         pm_meas = "pm_loop" if stb else "pm"
         dcgain = _try_measure(ds, {"meas": gain_meas, **recipe_extra})
-        ugf = _try_measure(ds, {"meas": "ugf", **recipe_extra} if not stb else {"meas": "ugf", "out": out, "analysis": analysis})
+        ugf = _try_measure(
+            ds,
+            {"meas": "ugf", **recipe_extra}
+            if not stb
+            else {"meas": "ugf", "out": out, "analysis": analysis},
+        )
         pm = _try_measure(ds, {"meas": pm_meas, **recipe_extra})
         f3db = None if stb else _try_measure(ds, {"meas": "f3db", **recipe_extra})
         gm = _try_measure(ds, {"meas": "gain_margin_db", **recipe_extra}) if stb else None
@@ -215,10 +233,17 @@ def bode_figure(
                 # the trace for any inverting transfer.
                 phi0 = float(phase[0]) if phase.size else 0.0
                 fig.add_trace(
-                    go.Scatter(x=[ugf], y=[pm - 180.0 + phi0], mode="markers+text",
-                               text=[f"PM {pm:.1f}°"], textposition="top right",
-                               marker=dict(size=9, color="crimson"), showlegend=False),
-                    row=2, col=1,
+                    go.Scatter(
+                        x=[ugf],
+                        y=[pm - 180.0 + phi0],
+                        mode="markers+text",
+                        text=[f"PM {pm:.1f}°"],
+                        textposition="top right",
+                        marker=dict(size=9, color="crimson"),
+                        showlegend=False,
+                    ),
+                    row=2,
+                    col=1,
                 )
         if f3db is not None:
             fig.add_vline(x=f3db, line_dash="dot", line_color="steelblue")
@@ -252,7 +277,9 @@ def tran_figure(
     or ``{"out": …, "tol": 1e-3}``): the registry's settling time is computed and drawn
     as a vertical marker, plus the tolerance band around the final value.
     """
-    fig = waveform_figure(ds, analysis, signals, max_points=max_points, title=title, method="minmax")
+    fig = waveform_figure(
+        ds, analysis, signals, max_points=max_points, title=title, method="minmax"
+    )
     if settle:
         recipe = {"meas": "t_settle", "analysis": analysis, **settle}
         ts = _try_measure(ds, recipe)
@@ -284,8 +311,13 @@ def tran_figure(
                 else:  # no tolerance given → t_settle was NaN/None upstream anyway
                     band = None
                 if band is not None:
-                    fig.add_hrect(y0=final - band, y1=final + band, fillcolor="crimson",
-                                  opacity=0.08, line_width=0)
+                    fig.add_hrect(
+                        y0=final - band,
+                        y1=final + band,
+                        fillcolor="crimson",
+                        opacity=0.08,
+                        line_width=0,
+                    )
         if slew is not None:
             labels.append(f"slew = {slew:.4g} V/s")
         if labels:
@@ -379,8 +411,14 @@ def pss_spectrum_figure(
     with np.errstate(divide="ignore"):
         mag_db = 20.0 * np.log10(np.where(mag > 0, mag, np.nan))
 
-    fig = go.Figure(go.Bar(x=freq, y=mag_db, width=(freq[1] - freq[0]) * 0.25 if freq.size > 1 else None,
-                           name=f"|{out}(k·f0)|"))
+    fig = go.Figure(
+        go.Bar(
+            x=freq,
+            y=mag_db,
+            width=(freq[1] - freq[0]) * 0.25 if freq.size > 1 else None,
+            name=f"|{out}(k·f0)|",
+        )
+    )
     labels = []
     for meas, fmt_label in (
         ("thd_pss_pct", "THD = {v:.4g} %"),
@@ -392,7 +430,8 @@ def pss_spectrum_figure(
         if v is not None:
             labels.append(fmt_label.format(v=v))
     fig.update_layout(
-        title=(title or f"PSS spectrum: {out}") + (f"<br><sup>{' · '.join(labels)}</sup>" if labels else ""),
+        title=(title or f"PSS spectrum: {out}")
+        + (f"<br><sup>{' · '.join(labels)}</sup>" if labels else ""),
         xaxis_title="frequency (Hz)",
         yaxis_title="harmonic magnitude (dBV)",
         template="plotly_white",

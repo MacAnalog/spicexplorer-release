@@ -5,6 +5,7 @@ The Explorer reads a resumed multi-corner checkpoint whose log can mix corners
 ``"<corner>::spec"``). These tests pin the feasibility + scatter behavior that
 keeps such a checkpoint honest instead of blank or all-red.
 """
+
 from __future__ import annotations
 
 from spicexplorer.core.domains import (
@@ -60,8 +61,8 @@ def test_simulated_corner_with_nan_spec_stays_infeasible():
         "per_metric": {
             "tt::ugf": [1e8],
             "tt::pm": [70.0],
-            "ss::ugf": [None],   # ran but measurement failed
-            "ss::pm": [68.0],    # proves ss WAS simulated
+            "ss::ugf": [None],  # ran but measurement failed
+            "ss::pm": [68.0],  # proves ss WAS simulated
         },
     }
     pts = compute_scatter(data, "tt::ugf", "tt::pm", SPECS)
@@ -75,7 +76,7 @@ def test_phase1_bare_key_nan_stays_infeasible():
     data = {
         "scores": [0.5, 0.4],
         "per_metric": {
-            "ugf": [1e8, None],   # trial 1 failed
+            "ugf": [1e8, None],  # trial 1 failed
             "pm": [70.0, 71.0],
             "power": [1e-3, 1.1e-3],
         },
@@ -102,7 +103,7 @@ def test_mixed_bare_and_namespaced_log_each_trial_judged_on_its_own_keys():
     bare = compute_scatter(data, "ugf", "pm", SPECS)
     assert _feasible_map(bare) == {0: True}  # trial 1 skipped (bare None), 0 feasible
     ns = compute_scatter(data, "tt::ugf", "tt::pm", SPECS)
-    assert _feasible_map(ns) == {1: True}    # trial 0 skipped (ns None), 1 feasible
+    assert _feasible_map(ns) == {1: True}  # trial 0 skipped (ns None), 1 feasible
 
 
 # ── CKPT-2: a bare axis vs a namespaced axis realigns instead of going blank ────
@@ -114,9 +115,9 @@ def test_scatter_realigns_non_cooccurring_axes_to_a_shared_corner():
     data = {
         "scores": [0.4, 0.5, 0.6],
         "per_metric": {
-            "ugf": [1e8, None, None],          # bare: only trial 0
+            "ugf": [1e8, None, None],  # bare: only trial 0
             "dcgain": [40.0, None, None],
-            "ss::ugf": [None, 9e7, 1.0e8],      # namespaced: trials 1,2
+            "ss::ugf": [None, 9e7, 1.0e8],  # namespaced: trials 1,2
             "ss::dcgain": [None, 41.0, 42.0],
         },
     }
@@ -125,7 +126,7 @@ def test_scatter_realigns_non_cooccurring_axes_to_a_shared_corner():
         {"name": "dcgain", "goal": "exceed", "target": 24.0, "tolerance": 0.0},
     ]
     pts = compute_scatter(data, "ugf", "ss::dcgain", specs)
-    assert [p["iter"] for p in pts] == [1, 2]     # was [] before the fix
+    assert [p["iter"] for p in pts] == [1, 2]  # was [] before the fix
     assert all(p["feasible"] for p in pts)
 
 
@@ -147,6 +148,7 @@ def test_scatter_fast_path_leaves_cooccurring_axes_untouched():
 # corner was never simulated" (keys ABSENT) — both flatten to None. These round-trip
 # a real checkpoint so read_json_checkpoint's ``per_metric_present`` mask carries the
 # distinction, which is the whole point of the CKPT-1 fix.
+
 
 def _cell(v):
     return {"curr_val": v, "score": 0.0}
@@ -172,12 +174,20 @@ def test_reader_marks_total_blowup_corner_present_so_scatter_is_infeasible(tmp_p
     The reader must record it PRESENT so feasibility treats it as a real violation,
     not skip it as 'never simulated'. This is the false-positive maskless data misses."""
     nan = float("nan")
-    data = _roundtrip(tmp_path, [
-        _entry(-1e6, {
-            "tt::ugf": _cell(1e8), "tt::pm": _cell(70.0),
-            "ss::ugf": _cell(nan), "ss::pm": _cell(nan),  # ss ran, TOTAL blowup
-        }),
-    ])
+    data = _roundtrip(
+        tmp_path,
+        [
+            _entry(
+                -1e6,
+                {
+                    "tt::ugf": _cell(1e8),
+                    "tt::pm": _cell(70.0),
+                    "ss::ugf": _cell(nan),
+                    "ss::pm": _cell(nan),  # ss ran, TOTAL blowup
+                },
+            ),
+        ],
+    )
     # The mask records ss keys PRESENT even though their values flattened to None.
     assert data["per_metric_present"]["ss::ugf"] == [True]
     assert data["per_metric"]["ss::ugf"] == [None]
@@ -190,17 +200,31 @@ def test_reader_marks_resume_added_corner_absent_so_pre_resume_trial_feasible(tm
     """ff is added on resume: absent from trial 0's keys, present at trial 1. The
     reader marks ff ABSENT at trial 0, so the passing pre-resume design stays
     feasible — the resume false-negative CKPT-1 set out to fix."""
-    data = _roundtrip(tmp_path, [
-        _entry(0.5, {
-            "tt::ugf": _cell(1e8), "tt::pm": _cell(70.0),
-            "ss::ugf": _cell(9e7), "ss::pm": _cell(68.0),
-        }),
-        _entry(0.6, {
-            "tt::ugf": _cell(1e8), "tt::pm": _cell(70.0),
-            "ss::ugf": _cell(9e7), "ss::pm": _cell(68.0),
-            "ff::ugf": _cell(2.5e8), "ff::pm": _cell(65.0),  # added on resume
-        }),
-    ])
+    data = _roundtrip(
+        tmp_path,
+        [
+            _entry(
+                0.5,
+                {
+                    "tt::ugf": _cell(1e8),
+                    "tt::pm": _cell(70.0),
+                    "ss::ugf": _cell(9e7),
+                    "ss::pm": _cell(68.0),
+                },
+            ),
+            _entry(
+                0.6,
+                {
+                    "tt::ugf": _cell(1e8),
+                    "tt::pm": _cell(70.0),
+                    "ss::ugf": _cell(9e7),
+                    "ss::pm": _cell(68.0),
+                    "ff::ugf": _cell(2.5e8),
+                    "ff::pm": _cell(65.0),  # added on resume
+                },
+            ),
+        ],
+    )
     assert data["per_metric_present"]["ff::ugf"] == [False, True]  # absent @ trial 0
     assert data["per_metric"]["ff::ugf"] == [None, 2.5e8]
 
@@ -217,16 +241,21 @@ def test_csv_reader_matches_json_on_resume_added_corner(tmp_path):
     value-proxy skips the resume-added corner — matching the JSON round-trip."""
     entries = [
         _entry(0.5, {"tt::ugf": _cell(1e8), "tt::pm": _cell(70.0)}),
-        _entry(0.6, {
-            "tt::ugf": _cell(1e8), "tt::pm": _cell(70.0),
-            "ff::ugf": _cell(2.5e8), "ff::pm": _cell(65.0),  # added on resume
-        }),
+        _entry(
+            0.6,
+            {
+                "tt::ugf": _cell(1e8),
+                "tt::pm": _cell(70.0),
+                "ff::ugf": _cell(2.5e8),
+                "ff::pm": _cell(65.0),  # added on resume
+            },
+        ),
     ]
     csv_path = tmp_path / "trace.csv"
     Optimization_Log_Visualizer(OptimizationLog(entries)).to_csv(csv_path)
 
     data = read_csv_checkpoint(csv_path)
-    assert "per_metric_present" not in data          # CSV omits the mask by design
+    assert "per_metric_present" not in data  # CSV omits the mask by design
     assert data["per_metric"]["ff::ugf"] == [None, 2.5e8]  # union column, blank @0
 
     pts = compute_scatter(data, "tt::ugf", "tt::pm", SPECS)

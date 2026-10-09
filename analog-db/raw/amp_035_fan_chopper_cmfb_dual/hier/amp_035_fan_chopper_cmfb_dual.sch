@@ -15,15 +15,15 @@ C {blocks/dp_pmos_simple_3.sym} 1320 0 0 0 {name=xdp_pmos_simple_3}
 C {devices/capa_np.sym} -2200 340 0 0 {name=CCM_S1 value='c_cm_s1'}
 C {devices/capa_np.sym} -1980 340 0 0 {name=CM1_CORE value='x_dut_cm1_core_value'}
 C {devices/capa_np.sym} -1760 340 0 0 {name=CM2_CORE value='x_dut_cm2_core_value'}
-C {devices/res_np.sym} -1540 340 0 0 {name=RMN_CMFB_OUT value=…b_out_value'}
-C {devices/res_np.sym} -1320 340 0 0 {name=RMN_CMFB_S1 value=…fb_s1_value'}
-C {devices/res_np.sym} -1100 340 0 0 {name=RMP_CMFB_OUT value=…b_out_value'}
-C {devices/res_np.sym} -880 340 0 0 {name=RMP_CMFB_S1 value=…fb_s1_value'}
-C {devices/vsource_np.sym} -2420 340 0 0 {name=VB1_CORE value="dc {vb1_core}"}
-C {devices/vsource_np.sym} -2420 120 0 0 {name=VB2_CORE value="dc {vb2_core}"}
-C {devices/vsource_np.sym} -2420 -100 0 0 {name=VB3_CORE value="dc {vb3_core}"}
-C {devices/vsource_np.sym} -2420 -320 0 0 {name=VREFOUT value="dc {vcm_ref}"}
-C {devices/vsource_np.sym} -2420 -540 0 0 {name=VREFS1 value="dc {vcm_ref_stg1}"}
+C {devices/res_np.sym} -1540 340 0 0 {name=RMN_CMFB_OUT value='x_dut_rmn_cmfb_out_value'}
+C {devices/res_np.sym} -1320 340 0 0 {name=RMN_CMFB_S1 value='x_dut_rmn_cmfb_s1_value'}
+C {devices/res_np.sym} -1100 340 0 0 {name=RMP_CMFB_OUT value='x_dut_rmp_cmfb_out_value'}
+C {devices/res_np.sym} -880 340 0 0 {name=RMP_CMFB_S1 value='x_dut_rmp_cmfb_s1_value'}
+C {devices/vsource_np.sym} -2420 340 0 0 {name=VB1_CORE value="dc \{vb1_core\}" savecurrent=false}
+C {devices/vsource_np.sym} -2420 120 0 0 {name=VB2_CORE value="dc \{vb2_core\}" savecurrent=false}
+C {devices/vsource_np.sym} -2420 -100 0 0 {name=VB3_CORE value="dc \{vb3_core\}" savecurrent=false}
+C {devices/vsource_np.sym} -2420 -320 0 0 {name=VREFOUT value="dc \{vcm_ref\}" savecurrent=false}
+C {devices/vsource_np.sym} -2420 -540 0 0 {name=VREFS1 value="dc \{vcm_ref_stg1\}" savecurrent=false}
 C {devices/sg13_lv_pmos_np.sym} -880 -340 0 0 {name=M10_CORE model=sg13_lv_pmos spiceprefix=X w=x_dut_xm10_core_w l=x_dut_xm10_core_l m=x_dut_xm10_core_m}
 C {devices/sg13_lv_pmos_np.sym} -660 -340 0 0 {name=M11_CORE model=sg13_lv_pmos spiceprefix=X w=x_dut_xm11_core_w l=x_dut_xm11_core_l m=x_dut_xm11_core_m}
 C {devices/sg13_lv_nmos_np.sym} -660 340 0 0 {name=M12_CORE model=sg13_lv_nmos spiceprefix=X w=x_dut_xm12_core_w l=x_dut_xm12_core_l m=x_dut_xm12_core_m}

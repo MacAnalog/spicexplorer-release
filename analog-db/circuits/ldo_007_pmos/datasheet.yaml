@@ -48,7 +48,7 @@ metrics:
     spec: {max: 0.02, unit: V}
   v_dropout:
     display: "Dropout voltage"
-    description: "Vin - Vout at which Vout has fallen to VOUT_THRESH under heavy load."
+    description: "Vin - Vout at the first sweep point where the output is in regulation (at target AND not following Vin), 10 mA load."
     unit: V
     analysis: dropout
     extract: {meas: v_dropout}
@@ -91,7 +91,8 @@ metrics:
     unit: V
     analysis: noise
     extract: {meas: vn_out_rms}
-    spec: {max: 0.02, unit: V}          # sky130 measured 13.4 mVrms (error-amp input pair dominates)
+    spec: {max: 1.0e-4, unit: V}       # 2x the worst regenerated per-PDK value (ihp/sky/gf 21.9/52.4/37.5 uVrms).
+                                       # Pre-fix limit was 0.02 V, calibrated against the sqrt-inflated scale.
   v_line_pp:
     display: "Line-transient deviation"
     description: "Peak-to-peak Vout deviation over a fast 1.6 -> 2.0 V supply step at nominal load."

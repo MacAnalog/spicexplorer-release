@@ -40,9 +40,7 @@ def _text_reach(attrs: dict[str, str]) -> int:
     return _PARAM_X0 + max((len(s) for s in strings), default=0) * _PARAM_CHAR_W
 
 
-def annotate_sch(
-    sch_text: str, annotations: BlockAnnotationSet
-) -> tuple[str, tuple[str, ...]]:
+def annotate_sch(sch_text: str, annotations: BlockAnnotationSet) -> tuple[str, tuple[str, ...]]:
     """Return ``sch_text`` with the block overlay appended, plus any warnings.
 
     Parses the schematic for its device coordinates and draws each block's labelled box around the

@@ -1,4 +1,5 @@
 """Promotion protocol: history snapshots + atomic current pointer (workspace.promote)."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -31,7 +32,7 @@ def test_promote_snapshots_and_points_current(tmp_path: Path):
 def test_history_is_immutable_and_current_advances(tmp_path: Path):
     _cell(tmp_path, "ota", sizing="W: 10u\n")
     first = promote(tmp_path, label="v1")
-    _cell(tmp_path, "ota", sizing="W: 20u\n")     # edit the live design
+    _cell(tmp_path, "ota", sizing="W: 20u\n")  # edit the live design
     second = promote(tmp_path, label="v2")
 
     assert first["id"] != second["id"]
@@ -63,7 +64,8 @@ def test_no_current_before_any_promotion(tmp_path: Path):
 
 def test_payload_is_recorded(tmp_path: Path):
     _cell(tmp_path, "ota")
-    rec = promote(tmp_path, payload={"from_run": "20260715-100000_optimize_abcd1234",
-                                     "best_score": -0.4})
+    rec = promote(
+        tmp_path, payload={"from_run": "20260715-100000_optimize_abcd1234", "best_score": -0.4}
+    )
     assert current_promotion(tmp_path)["payload"]["best_score"] == -0.4
     assert rec["payload"]["from_run"].endswith("abcd1234")

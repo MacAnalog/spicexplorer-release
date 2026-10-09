@@ -23,6 +23,7 @@ from __future__ import annotations
 from .base import (
     BaseDialectReader,
     DialectSpec,
+    DialectSyntaxError,
     Directive,
     NetlistDialect,
     ParsedDeck,
@@ -81,11 +82,27 @@ _CARD_KINDS: dict[str, str] = {
     ".unprotect": "option",
     ".malias": "option",
     ".vec": "option",
-    ".if": "option",
-    ".elseif": "option",
-    ".else": "option",
-    ".endif": "option",
 }
+
+# Conditional assembly. NOT in _CARD_KINDS: these were classified `option`, which drops the CARD
+# and lets the device lines between the cards fall through as ordinary devices — so every branch's
+# devices ended up in one circuit, in parallel (Codex review, items DIA-01 and CG-02). The deck
+# still simulates; it is simply not the circuit anyone wrote, and from the graph side the same
+# merge makes a round-trip equivalence test faithfully reproduce a wrong graph.
+#
+# The reader refuses instead of choosing. Choosing would mean evaluating the condition, and the
+# condition reads `.param` values that may be swept, overridden on the command line, or set in a
+# `.alter` block — the taken branch is a property of a RUN, not of the text, so there is no correct
+# answer this layer can give. Refusing is the same contract as `DialectSyntaxError` already states:
+# fail loud, never drop devices.
+_CONDITIONAL_CARDS = frozenset((".if", ".elseif", ".else", ".endif"))
+# Directive kinds that DEFINE the circuit even though the card is not structural text. A conditional
+# picking between corner libraries or two `.model` cards for the same device is the same defect
+# wearing different clothes: keeping both arms leaves two conflicting definitions of one device, so
+# these refuse alongside devices. Analyses, options and measures do not — a `.tran` behind
+# `.IF(RUN_TRAN==1)` is a real pattern in the corpora these readers were built against, and keeping
+# both arms of THAT changes nothing about the circuit.
+_DEFINING_KINDS = frozenset(("model", "include", "library"))
 
 # Cards kept in the canonical text (the structural subset).
 _STRUCTURAL_CARDS = frozenset((".subckt", ".ends", ".eom", ".param", ".global", ".end"))
@@ -161,6 +178,23 @@ def _collapse_assignments(line: str) -> str:
     return "".join(out)
 
 
+def _conditional_refusal(opening_card: str, offender: str) -> str:
+    """The message for a device (or other emitted card) found inside a `.if`/`.else` branch."""
+    return (
+        f"HSPICE conditional assembly is not supported around netlist structure: {offender[:60]!r} "
+        f"sits inside {opening_card[:60]!r}. Which branch is taken depends on parameter values "
+        "resolved at run time — a `.param` that a sweep, the command line or a `.alter` block may "
+        "override — so the taken branch is a property of a RUN, not of this text, and the reader "
+        "cannot choose one. Emitting every branch instead (which is what it used to do) puts all "
+        "of their devices in the same circuit, in parallel: a deck that still simulates and is "
+        "not the circuit you wrote. Resolve the conditional before handing the deck over — expand "
+        "the branch you mean into a plain netlist, one deck per configuration, or lift the choice "
+        "out into the parameter set the sweep already varies. Conditionals that guard only "
+        "directives (a `.tran` behind `.IF(RUN_TRAN==1)`) are still accepted and reported as "
+        "`conditional` directives."
+    )
+
+
 class HspiceReader(BaseDialectReader):
     """Normalize HSPICE netlist text into the canonical SPICE structural subset."""
 
@@ -183,6 +217,9 @@ class HspiceReader(BaseDialectReader):
 
         in_alter = False
         saw_end = False
+        # Open `.if`/`.elseif`/`.else` blocks, innermost last; each entry is the card that opened
+        # the block, so a refusal can quote the condition rather than just the offending device.
+        conditionals: list[str] = []
         for stmt in statements:
             stripped = stmt.strip()
             if not stripped or stripped.startswith("*"):
@@ -203,6 +240,27 @@ class HspiceReader(BaseDialectReader):
                 else:
                     directives.append(Directive("alter", stripped))
                 continue
+            if card in _CONDITIONAL_CARDS:
+                if card == ".endif":
+                    if conditionals:
+                        conditionals.pop()
+                elif card == ".if":
+                    conditionals.append(stripped)
+                elif conditionals:  # `.elseif` / `.else` — same block, next arm
+                    conditionals[-1] = stripped
+                else:  # an arm with no `.if` above it
+                    conditionals.append(stripped)
+                # Kept as a directive rather than dropped: a caller inspecting the deck can see
+                # that a branch existed, which classifying it as `option` hid completely.
+                directives.append(Directive("conditional", stripped))
+                continue
+            if conditionals and (
+                card in _STRUCTURAL_CARDS
+                or not card.startswith(".")
+                or _CARD_KINDS.get(card) in _DEFINING_KINDS
+            ):
+                # Something that defines the circuit, inside a conditional branch.
+                raise DialectSyntaxError(_conditional_refusal(conditionals[-1], stripped))
             if card.startswith("."):
                 if card in _STRUCTURAL_CARDS:
                     if card == ".end":
@@ -222,6 +280,16 @@ class HspiceReader(BaseDialectReader):
             # Device / instance line — canonical after token normalization.
             out.append(_collapse_assignments(stripped))
 
+        if any(d.kind == "conditional" for d in directives):
+            warnings.append(
+                "HSPICE conditional cards were preserved as directives but NOT evaluated: the "
+                "statements they guard are emitted unconditionally. What this reader RECOGNISES as "
+                "defining the circuit inside a branch — a device, a `.model`, a corner `.lib` — is "
+                "refused outright; what remains here is analyses, options, measures, `.alter`, and "
+                "any card this reader does not recognise — an unrecognised card carries a warning "
+                "of its own and, like every directive, is dropped from the canonical text. Every "
+                "guarded analysis will run regardless of its condition."
+            )
         if not saw_end:
             out.append(".end")
         return ParsedDeck(

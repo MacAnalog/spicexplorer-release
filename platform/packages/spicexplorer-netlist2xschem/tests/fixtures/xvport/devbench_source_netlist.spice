@@ -1,0 +1,14 @@
+** SYNTHETIC (not a captured oracle, unlike the tgate pair): the shape of a device-
+** characterisation bench — several structurally identical branches in parallel, each
+** differing from its neighbours only in SIZE and MODEL FLAVOUR. Written in the dialect
+** `xschem -n` produces, and named after the bench in issue #216 (dev_leak).
+**
+** This topology is what makes the graph isomorphism ambiguous: the two nch branches are
+** interchangeable under any wiring-preserving map, and so are the two pch branches.
+*.ipin VDD
+*.ipin VSS
+MNHVT10 dn1 gn1 VSS VSS nmos_lvt w=1u l=100n ng=1 m=1
+MNHVT15 dn2 gn2 VSS VSS nmos_lvt w=1u l=150n ng=1 m=1
+MPSTD10 dp1 gp1 VDD VDD pmos_lvt w=1u l=100n ng=1 m=1
+MPSTD15 dp2 gp2 VDD VDD pmos_lvt w=1u l=150n ng=1 m=1
+.end

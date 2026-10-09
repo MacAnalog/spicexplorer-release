@@ -1,4 +1,4 @@
-"""Numpy-only lambdify-at-jω — the numeric backbone of validation (and the numeric-refit path).
+"""Numpy-only lambdify-at-jω — the numeric backbone of validation.
 
 A torch-free reimplementation of the optimizer's ``eval_tf`` trick (the optimizer's version is a
 reference, not an import — it is torch-coupled and lives in a peer). Substituting the operating point
@@ -40,9 +40,7 @@ def log_sweep(f_lo: float, f_hi: float, points_per_decade: int = 20) -> np.ndarr
     return np.logspace(math.log10(f_lo), math.log10(f_hi), n)
 
 
-def frequency_response(
-    expr: sp.Expr, defs: dict[str, float], freqs_hz: np.ndarray
-) -> np.ndarray:
+def frequency_response(expr: sp.Expr, defs: dict[str, float], freqs_hz: np.ndarray) -> np.ndarray:
     """Evaluate ``H(s = j2πf)`` over ``freqs_hz`` after substituting the operating point ``defs``.
 
     Returns a complex ``ndarray`` the same length as ``freqs_hz``.
@@ -55,7 +53,15 @@ def frequency_response(
 
 
 def complex_value_at(expr: sp.Expr, defs: dict[str, float], freq_hz: float = 0.0) -> complex:
-    """Evaluate a (possibly constant) expression at a single frequency, returning a Python complex."""
+    """Evaluate a (possibly constant) expression at a single frequency, returning a Python complex.
+
+    A genuine DC pole (``1/s`` at ``freq_hz=0``) evaluates to ``complex(inf)``: sympy gives ``zoo``
+    there, which the float fallback below could not convert (audit TF-3)."""
     bound = _substitute(expr, defs)
     val = complex(bound.subs(S, 2j * math.pi * freq_hz))
-    return val if not cmath.isnan(val.real) else complex(float(bound.subs(S, 0)))
+    if not cmath.isnan(val.real):
+        return val
+    at_dc = bound.subs(S, 0)
+    if at_dc.is_finite is False:  # zoo / ±oo: the magnitude is unbounded
+        return complex(math.inf)
+    return complex(float(at_dc))

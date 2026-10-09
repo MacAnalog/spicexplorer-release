@@ -35,7 +35,9 @@ def test_analoggym_circuit_clears_t0_t2(cid):
 def test_classification_is_data_driven():
     """Folder name → compensation/stages, and the paper attribution is data-driven."""
     assert analoggym.parse_folder("Leung_NMCNR_Pin_3") == {
-        "author": "Leung", "compensation": "NMCNR", "stages": 3
+        "author": "Leung",
+        "compensation": "NMCNR",
+        "stages": 3,
     }
     c = model.load_circuit("amp_009_leung_nmcnr")
     m = c.manifest
@@ -78,5 +80,7 @@ def test_importer_is_reproducible_from_source(tmp_path):
         pytest.skip("AnalogGym source submodule absent (standalone DB checkout)")
     analoggym.import_circuit(amp, "Fan_SMC_Pin_3", tmp_path)
     fresh = (tmp_path / "amp_003_fan_smc" / "abstract" / "netlist.spice").read_text()
-    committed = (model.load_circuit("amp_003_fan_smc").dir / "abstract" / "netlist.spice").read_text()
+    committed = (
+        model.load_circuit("amp_003_fan_smc").dir / "abstract" / "netlist.spice"
+    ).read_text()
     assert fresh == committed, "committed abstract drifted from a fresh import"

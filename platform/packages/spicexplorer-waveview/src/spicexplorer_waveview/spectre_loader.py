@@ -5,59 +5,51 @@ Reads a persisted Spectre ``-raw`` output directory: every swept psfascii PSF
 ``<n>.fd.pss`` / ``stb.stb``), the non-swept op-point PSF (``dcOp.dc`` node values),
 and the per-device ``*.info`` op-point STRUCTs (``inst:param`` scalars like ``M0:gm``).
 
-This is a deliberate SIBLING of ``spicexplorer.backends.spectre.read_swept_psf`` /
-``parse_psfascii_oppoint`` — waveview is a leaf tool that must not import the optimizer
-package (peer tools never import each other), so the analysis→file contract is restated
-here and pinned to the backend's by tests, not imports. File-name → analysis mapping,
-contract-file preference, and abscissa aliasing all match the backend's semantics so a
-recipe measured through ``DatasetResult`` reads the same wave ``SpectreSimResult`` would.
+The psfascii CONTRACT — file-name → analysis table, abscissa aliasing, the ``*.info``
+STRUCT parser, the skip list for ADE model dumps — is core's
+:mod:`spicexplorer_core.spice_engine.psfascii`, shared with the optimizer's Spectre adapter
+(``spicexplorer.backends.spectre``): peer tools never import each other, so the one
+restatement both used to carry now lives in the layer both import. What stays here is the
+viewer's own shaping — :class:`WaveAnalysis` / :class:`WaveSignal` with units, warnings
+instead of exceptions, the viewer-only keys (``pss_td``, ``pac_sb``) — pinned to the
+adapter by tests so a recipe measured through ``DatasetResult`` reads the same wave
+``SpectreSimResult`` would.
 """
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 import numpy as np
+from spicexplorer_core.spice_engine import psfascii as _psf
 
 from .dataset import WaveAnalysis, WaveDataset, WaveSignal
 
-__all__ = ["load_spectre_raw_dir", "SWEEP_EXT_TO_ANALYSIS"]
+__all__ = ["load_spectre_raw_dir", "SWEEP_EXT_TO_ANALYSIS", "parse_info_structs"]
 
-# PSF file extension → engine-neutral analysis key (mirror of the backend's _SWEEP_EXT,
-# inverted). Ordered longest-suffix-first so `.fd.pss` wins over a plain suffix match.
+parse_info_structs = _psf.parse_info_structs
+
+# PSF file extension → engine-neutral analysis key: core's canonical inverse table plus the
+# viewer-only keys. Ordered longest-suffix-first so `.fd.pss` wins over a plain suffix match and
+# `.0.pac` over `.pac`. Periodic AC: one PSF per output sideband (pac.<k>.pac); harmonic 0 is the
+# signal-band (chopper/SC) transfer, so `.0.pac` claims the canonical `pac` key (the adapter's rule)
+# and other sidebands land under `pac_sb`; `.td.pss` (time-domain steady state) is `pss_td`. The
+# metadata-only `pac.pac` parent index is skipped explicitly in the load loop.
 SWEEP_EXT_TO_ANALYSIS: dict[str, str] = {
     ".fd.pss": "pss",
-    ".td.pss": "pss_td",  # time-domain steady state — viewer-only (no registry recipes)
-    # periodic AC: one PSF per output sideband (pac.<k>.pac). Harmonic 0 is the
-    # signal-band (chopper/SC) transfer, so `.0.pac` claims the canonical `pac` key
-    # (the backend reader's rule); other sidebands land under `pac_sb` (viewer-only).
-    # The suffix can't false-match `pac.10.pac` (its last 6 chars are `10.pac`). The
-    # metadata-only `pac.pac` parent index is skipped explicitly in the load loop.
+    ".td.pss": "pss_td",
     ".0.pac": "pac",
     ".pac": "pac_sb",
-    ".pnoise": "pnoise",
-    ".noise": "noise",
-    ".tran": "tran",
-    ".stb": "stb",
-    ".ac": "ac",
-    ".dc": "dc",
+    **{ext: key for ext, key in _psf.EXT_TO_ANALYSIS.items() if ext not in (".fd.pss", ".0.pac")},
 }
 
-# The canonical abscissa aliases per analysis (mirror of the backend's _SWEEP_ABSCISSA):
-# the sweep vector is exported under its native PSF name AND these, so recipes needn't
-# know Spectre spells frequency `freq`.
+# The canonical abscissa aliases per analysis: core's table plus the viewer-only keys. The sweep
+# vector is exported under its native PSF name AND these, so recipes needn't know Spectre spells
+# frequency `freq`.
 _SWEEP_ABSCISSA: dict[str, tuple[str, ...]] = {
-    "ac": ("frequency", "freq"),
-    "dc": ("dc", "sweep"),
-    "tran": ("time",),
-    "noise": ("frequency", "freq"),
-    "pnoise": ("frequency", "freq"),
-    "pss": ("frequency", "freq"),
+    **_psf.SWEEP_ABSCISSA,
     "pss_td": ("time",),
-    "pac": ("frequency", "freq"),
     "pac_sb": ("frequency", "freq"),
-    "stb": ("frequency", "freq"),
 }
 
 # Spectre dataset alias map: the registry's noise-family analysis strings all resolve to
@@ -67,82 +59,9 @@ _SPECTRE_ALIASES: dict[str, str] = {
     "noise_spectral": "noise",
 }
 
-# ADE-standard `info` dumps that are NOT operating-point data. Skipping them keeps the
-# dataset lean — and, for `modelParameter` (`info what=models`), keeps NDA foundry
-# model-card values from ever entering viewer data. (Same set as the Spectre backend.)
-_INFO_SKIP_STEMS: frozenset[str] = frozenset(
-    {"modelParameter", "designParamVals", "outputParameter", "primitives", "subckts", "element"}
-)
-
-_STRUCT_DEF_RE = re.compile(r'^"([^"]+)"\s+STRUCT\(')
-_STRUCT_MEMBER_RE = re.compile(r'^"([^"]+)"\s+(?:FLOAT|INT|DOUBLE|BYTE)\b')
-_STRUCT_VALUE_OPEN_RE = re.compile(r'^"([^"]+)"\s+"([^"]+)"\s+\(\s*$')
-
-
-def parse_info_structs(text: str) -> dict[str, float]:
-    """``inst:param`` scalars from one psfascii ``info`` file's STRUCT data.
-
-    Reimplements the Spectre backend's ``_parse_info_structs`` (see module docstring on
-    why it can't be imported): the TYPE section declares per-model STRUCT member names in
-    order; each VALUE entry ``"X0.M0" "bsim4" (`` is followed by one number per member.
-    """
-    lines = text.splitlines()
-
-    structs: dict[str, list[str]] = {}
-    section = ""
-    i = 0
-    while i < len(lines):
-        stripped = lines[i].strip()
-        if stripped in ("HEADER", "TYPE", "SWEEP", "TRACE", "VALUE", "END"):
-            section = stripped
-            i += 1
-            continue
-        if section == "TYPE":
-            m_def = _STRUCT_DEF_RE.match(stripped)
-            if m_def:
-                members: list[str] = []
-                depth = stripped.count("(") - stripped.count(")")
-                i += 1
-                while i < len(lines) and depth > 0:
-                    inner = lines[i].strip()
-                    if depth == 1:
-                        m_member = _STRUCT_MEMBER_RE.match(inner)
-                        if m_member:
-                            members.append(m_member.group(1))
-                    depth += inner.count("(") - inner.count(")")
-                    i += 1
-                structs[m_def.group(1)] = members
-                continue
-        elif section == "VALUE":
-            break
-        i += 1
-
-    out: dict[str, float] = {}
-    while i < len(lines):
-        stripped = lines[i].strip()
-        if stripped == "END":
-            break
-        m_open = _STRUCT_VALUE_OPEN_RE.match(stripped)
-        if m_open:
-            inst, type_name = m_open.group(1), m_open.group(2)
-            values: list[float | None] = []
-            i += 1
-            while i < len(lines):
-                inner = lines[i].strip()
-                if inner.startswith(")"):
-                    break
-                try:
-                    values.append(float(inner))
-                except ValueError:
-                    values.append(None)
-                i += 1
-            members = structs.get(type_name, [])
-            if members and len(members) == len(values):
-                for member, value in zip(members, values):
-                    if value is not None:
-                        out[f"{inst}:{member}"] = value
-        i += 1
-    return out
+_INFO_SKIP_STEMS = (
+    _psf.INFO_SKIP_STEMS
+)  # ADE model/parameter dumps are not op-point data (NDA-safe)
 
 
 def _match_ext(name: str) -> tuple[str, str] | None:
@@ -248,7 +167,9 @@ def load_spectre_raw_dir(path: str | Path) -> WaveDataset:
     # Contract-named file first per analysis key (matches read_swept_psf's sort), so it
     # claims the canonical key; siblings keep their stem as a suffix.
     taken: set[str] = set()
-    for f, ext, base in sorted(psf_files, key=lambda t: (t[2], t[0].name != f"{t[2]}{t[1]}", str(t[0]))):
+    for f, ext, base in sorted(
+        psf_files, key=lambda t: (t[2], t[0].name != f"{t[2]}{t[1]}", str(t[0]))
+    ):
         stem = f.name[: -len(ext)]
         if ext == ".dc" and stem == "dcOp":
             base = "op"

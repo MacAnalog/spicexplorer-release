@@ -44,7 +44,7 @@
         "noise": {
           "measures": {
             "onoise_total": 0.0001254142,
-            "vn_out_rms": 0.01119885
+            "vn_out_rms": 0.0001254142
           },
           "status": "ok"
         },
@@ -114,8 +114,8 @@
         "value": 0.021629
       },
       "vn_out_rms": {
-        "spec": "pass",
-        "value": 0.01119885
+        "spec": "fail",
+        "value": 0.0001254142
       },
       "zout_peak_db": {
         "spec": "pass",
@@ -128,19 +128,19 @@
       "c_comp": "0.05p",
       "c_ff": "60p",
       "i_tail": "200u",
-      "x_dut_xm1_l": "0.5u",
-      "x_dut_xm3_l": "0.5u",
-      "x_dut_xmp_l": "0.5u",
-      "x_dut_xm6_l": "1.0u",
-      "x_dut_xmp_m": 20,
       "r_bot": "100k",
       "r_top": "100k",
       "r_z": 1,
       "vref_val": 0.6,
+      "x_dut_xm1_l": "0.5u",
       "x_dut_xm1_w": "4u",
+      "x_dut_xm3_l": "0.5u",
       "x_dut_xm3_w": "4u",
-      "x_dut_xmp_w": "10u",
-      "x_dut_xm6_w": "4u"
+      "x_dut_xm6_l": "1.0u",
+      "x_dut_xm6_w": "4u",
+      "x_dut_xmp_l": "0.5u",
+      "x_dut_xmp_m": 20,
+      "x_dut_xmp_w": "10u"
     }
   },
   "pdk": "ihp-sg13g2",

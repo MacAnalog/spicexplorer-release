@@ -28,46 +28,183 @@ from typing import Any
 
 import yaml
 
-from . import export, model, paths
+from . import export, model, paths, pdks
+
+# --------------------------------------------------------------------------- engine routing
+
+# The only engine this generator writes a project for (`simulator: ngspice` below). A PDK's
+# registry (`_shared/pdk/<pdk>.yaml`) carries the committed `sim_engine` marker the platform
+# router reads; no marker means the open ngspice lane, as in the platform's library service.
+_NGSPICE = "ngspice"
+_SPECTRE = "spectre"
+
+
+class EngineNotNgspice(ValueError):
+    """The PDK's registry routes simulation to an engine other than ngspice, so an ngspice
+    optimizer project over its ``raw/`` decks would not run. Raised before anything is written."""
+
+
+def _require_ngspice_lane(circuit_id: str, pdk: str) -> None:
+    """Refuse a PDK whose ``sim_engine`` marker is not ngspice (read from the registry, never a
+    PDK-name literal). A Spectre-routed PDK is pointed at its own lane: its
+    ``raw/`` decks ``.lib`` an operator-supplied Spectre model wrapper that ngspice cannot load."""
+    if not (paths.shared_root() / "pdk" / f"{pdk}.yaml").is_file():  # not the cached registry_ids()
+        raise ValueError(f"{circuit_id}@{pdk}: no PDK registry _shared/pdk/{pdk}.yaml")
+    marker = pdks.load_registry(pdk).get("sim_engine")
+    engine = str(marker).strip().lower() if marker else _NGSPICE
+    if engine == _NGSPICE:
+        return
+    where = f"_shared/pdk/{pdk}.yaml sets sim_engine: {marker}"
+    if engine == _SPECTRE:
+        raise EngineNotNgspice(
+            f"{circuit_id}@{pdk}: refused — {where}. export-raw-project writes ngspice projects "
+            f"only, and ngspice cannot load this PDK's models. Run {pdk} on the "
+            "spicexplorer_spectre lane (a `sim_engine: spectre` project on the platform's "
+            "Spectre backend)."
+        )
+    raise EngineNotNgspice(
+        f"{circuit_id}@{pdk}: refused — {where}. export-raw-project writes ngspice projects only."
+    )
+
 
 # --------------------------------------------------------------------------- metric intent
 
 # base metric name (i()/v() stripped) → optimizer intent. A whitelist: a deck vector not listed
 # here has no defensible default goal/target, so it is skipped rather than guessed.
 _SPEC_REGISTRY: dict[str, dict[str, Any]] = {
-    "dcgain":       {"goal": "exceed",   "target": 40,      "range": 40,      "tolerance": 1,      "reward_type": "log"},
-    "ugf":          {"goal": "exceed",   "target": 1.0e6,   "range": 10.0e6,  "tolerance": 1.0e5,  "reward_type": "log"},
-    "pm":           {"goal": "exact",    "target": 60,      "range": 45,      "tolerance": 10,     "reward_type": "none"},
-    "i_supply":     {"goal": "minimize", "target": 1.0e-4,  "range": 1.0e-3,  "tolerance": 1.0e-6, "reward_type": "log"},
-    "vout_dc":      {"goal": "exact",    "target": 1.2,     "range": 1.0,     "tolerance": 0.02,   "reward_type": "none"},
-    "load_reg":     {"goal": "minimize", "target": 1.0e-2,  "range": 5.0e-2,  "tolerance": 1.0e-4, "reward_type": "log"},
-    "line_reg":     {"goal": "minimize", "target": 5.0e-3,  "range": 5.0e-2,  "tolerance": 1.0e-4, "reward_type": "log"},
-    "zout_peak_db": {"goal": "minimize", "target": 3,       "range": 20,      "tolerance": 0.5,    "reward_type": "log"},
+    "dcgain": {"goal": "exceed", "target": 40, "range": 40, "tolerance": 1, "reward_type": "log"},
+    "ugf": {
+        "goal": "exceed",
+        "target": 1.0e6,
+        "range": 10.0e6,
+        "tolerance": 1.0e5,
+        "reward_type": "log",
+    },
+    "pm": {"goal": "exact", "target": 60, "range": 45, "tolerance": 10, "reward_type": "none"},
+    "i_supply": {
+        "goal": "minimize",
+        "target": 1.0e-4,
+        "range": 1.0e-3,
+        "tolerance": 1.0e-6,
+        "reward_type": "log",
+    },
+    "vout_dc": {
+        "goal": "exact",
+        "target": 1.2,
+        "range": 1.0,
+        "tolerance": 0.02,
+        "reward_type": "none",
+    },
+    "load_reg": {
+        "goal": "minimize",
+        "target": 1.0e-2,
+        "range": 5.0e-2,
+        "tolerance": 1.0e-4,
+        "reward_type": "log",
+    },
+    "line_reg": {
+        "goal": "minimize",
+        "target": 5.0e-3,
+        "range": 5.0e-2,
+        "tolerance": 1.0e-4,
+        "reward_type": "log",
+    },
+    "zout_peak_db": {
+        "goal": "minimize",
+        "target": 3,
+        "range": 20,
+        "tolerance": 0.5,
+        "reward_type": "log",
+    },
     # rejection benches (unity-buffer residual → dB at 1 kHz; all saved bare)
-    "cmrr_db":      {"goal": "exceed",   "target": 40,      "range": 40,      "tolerance": 2,      "reward_type": "log"},
-    "psrr_vdd_db":  {"goal": "exceed",   "target": 40,      "range": 40,      "tolerance": 2,      "reward_type": "log"},
-    "psrr_db":      {"goal": "exceed",   "target": 40,      "range": 40,      "tolerance": 2,      "reward_type": "log"},
-    "psr_db":       {"goal": "exceed",   "target": 40,      "range": 40,      "tolerance": 2,      "reward_type": "log"},
+    "cmrr_db": {"goal": "exceed", "target": 40, "range": 40, "tolerance": 2, "reward_type": "log"},
+    "psrr_vdd_db": {
+        "goal": "exceed",
+        "target": 40,
+        "range": 40,
+        "tolerance": 2,
+        "reward_type": "log",
+    },
+    "psrr_db": {"goal": "exceed", "target": 40, "range": 40, "tolerance": 2, "reward_type": "log"},
+    "psr_db": {"goal": "exceed", "target": 40, "range": 40, "tolerance": 2, "reward_type": "log"},
     # distortion (in-deck coherent DFT; thd_db is negative-dB, so no log reward)
-    "thd_pct":      {"goal": "minimize", "target": 1.0,     "range": 10.0,    "tolerance": 0.05,   "reward_type": "log"},
-    "thd_db":       {"goal": "minimize", "target": -40,     "range": 40,      "tolerance": 1,      "reward_type": "none"},
+    "thd_pct": {
+        "goal": "minimize",
+        "target": 1.0,
+        "range": 10.0,
+        "tolerance": 0.05,
+        "reward_type": "log",
+    },
+    "thd_db": {
+        "goal": "minimize",
+        "target": -40,
+        "range": 40,
+        "tolerance": 1,
+        "reward_type": "none",
+    },
     # integrated input/output-referred noise (ngspice `.noise` native totals — see _NATIVE_PRINT)
-    "inoise_total": {"goal": "minimize", "target": 1.0e-4,  "range": 1.0e-3,  "tolerance": 1.0e-7, "reward_type": "log"},
-    "onoise_total": {"goal": "minimize", "target": 1.0e-3,  "range": 1.0e-2,  "tolerance": 1.0e-6, "reward_type": "log"},
+    "inoise_total": {
+        "goal": "minimize",
+        "target": 1.0e-4,
+        "range": 1.0e-3,
+        "tolerance": 1.0e-7,
+        "reward_type": "log",
+    },
+    "onoise_total": {
+        "goal": "minimize",
+        "target": 1.0e-3,
+        "range": 1.0e-2,
+        "tolerance": 1.0e-6,
+        "reward_type": "log",
+    },
     # step response + closed-loop buffer benches
-    "t_settle":     {"goal": "minimize", "target": 1.0e-6,  "range": 1.0e-5,  "tolerance": 1.0e-8, "reward_type": "log"},
-    "gain_cl":      {"goal": "exact",    "target": 1.0,     "range": 0.5,     "tolerance": 0.05,   "reward_type": "none"},
-    "bw_cl":        {"goal": "exceed",   "target": 1.0e6,   "range": 1.0e7,   "tolerance": 1.0e5,  "reward_type": "log"},
+    "t_settle": {
+        "goal": "minimize",
+        "target": 1.0e-6,
+        "range": 1.0e-5,
+        "tolerance": 1.0e-8,
+        "reward_type": "log",
+    },
+    "gain_cl": {
+        "goal": "exact",
+        "target": 1.0,
+        "range": 0.5,
+        "tolerance": 0.05,
+        "reward_type": "none",
+    },
+    "bw_cl": {
+        "goal": "exceed",
+        "target": 1.0e6,
+        "range": 1.0e7,
+        "tolerance": 1.0e5,
+        "reward_type": "log",
+    },
     # LDO dropout (dc sweep: vin at which vout reaches its target, minus vout)
-    "v_dropout":    {"goal": "minimize", "target": 0.3,     "range": 1.0,     "tolerance": 0.01,   "reward_type": "log"},
+    "v_dropout": {
+        "goal": "minimize",
+        "target": 0.3,
+        "range": 1.0,
+        "tolerance": 0.01,
+        "reward_type": "log",
+    },
 }
 
 # sizing-var units that are SEARCHED (continuous geometry / bias current); every other unit
 # (integer counts, ohms, farads, volts) is frozen at its default to hold the operating point.
 _SEARCH_UNITS = {"m", "a"}
 
-_ENG = {"t": 1e12, "g": 1e9, "meg": 1e6, "k": 1e3, "": 1.0,
-        "m": 1e-3, "u": 1e-6, "n": 1e-9, "p": 1e-12, "f": 1e-15}
+_ENG = {
+    "t": 1e12,
+    "g": 1e9,
+    "meg": 1e6,
+    "k": 1e3,
+    "": 1.0,
+    "m": 1e-3,
+    "u": 1e-6,
+    "n": 1e-9,
+    "p": 1e-12,
+    "f": 1e-15,
+}
 
 
 def _eng(value: Any) -> float:
@@ -95,12 +232,24 @@ def _control_block(deck_text: str) -> list[str]:
 
 
 _ANALYSIS_CMDS = ("ac", "dc", "tran", "noise", "op")
-_NON_ANALYSIS = ("meas", "let", "print", "set", "write", "quit", "echo", "plot", "save", "remzerovec")
+_NON_ANALYSIS = (
+    "meas",
+    "let",
+    "print",
+    "set",
+    "write",
+    "quit",
+    "echo",
+    "plot",
+    "save",
+    "remzerovec",
+)
 
 # Native analysis-output vectors a deck can ``print`` directly — no ``meas``, no ``let``. Keyed by
 # sim_type → {printed name: the name RawRead sees in the written raw file}. The ngspice ``.noise``
 # analysis emits ``inoise_total``/``onoise_total`` as VOLTAGE-typed vectors, so they land v()-wrapped
-# (verified against a written rawfile). Any ``let`` derived from them (e.g. ``sqrt(onoise_total)``)
+# (verified against a written rawfile). Any ``let`` derived from them (e.g. the ldo bench's
+# ``let vn_out_rms = onoise_total``)
 # inherits the voltage type and is likewise v()-wrapped — which ``_saved_name``'s RHS-scan can't see,
 # so such derived lets are deliberately left out of the registry (``onoise_total`` already covers them).
 _NATIVE_PRINT: dict[str, dict[str, str]] = {
@@ -186,7 +335,9 @@ def _sig(x: float, n: int = 3) -> float:
     return round(x, -int(floor(log10(abs(x)))) + (n - 1))
 
 
-def _band(default: float, lo: float | None, hi: float | None, factor: float = 2.0) -> tuple[float, float]:
+def _band(
+    default: float, lo: float | None, hi: float | None, factor: float = 2.0
+) -> tuple[float, float]:
     """A bias-preserving search band centred on ``default`` (``[default/factor, default*factor]``),
     clamped to the sizing var's own ``[min, max]`` when given."""
     a, b = default / factor, default * factor
@@ -207,13 +358,13 @@ def _search_var(var: dict[str, Any]) -> bool:
     if unit:
         return unit in _SEARCH_UNITS  # m (geometry) / a (current); ohm/f/v/count → freeze
     name = var["name"].lower()
-    if re.search(r"(^|_)m(_|$)", name):                                   # device-count multiplier
+    if re.search(r"(^|_)m(_|$)", name):  # device-count multiplier
         return False
     if re.search(r"(^|_)(w|l)(_|$)", name) or "width" in name or "length" in name:
-        return True                                                      # W / L geometry
+        return True  # W / L geometry
     if "current" in name or re.search(r"(^|_)i(_|bias|tail|$)", name):
-        return True                                                      # bias current
-    return False                                                          # caps / res / refs / unknown
+        return True  # bias current
+    return False  # caps / res / refs / unknown
 
 
 def _dut_params(sizing: dict[str, Any]) -> list[dict[str, Any]]:
@@ -222,7 +373,9 @@ def _dut_params(sizing: dict[str, Any]) -> list[dict[str, Any]]:
         name = var["name"]
         default = var.get("default")
         if default is None or not _search_var(var):
-            params.append({"name": name, "freeze": True, "val": _eng(default) if default is not None else 0})
+            params.append(
+                {"name": name, "freeze": True, "val": _eng(default) if default is not None else 0}
+            )
             continue
         lo, hi = _band(
             _eng(default),
@@ -241,9 +394,7 @@ def _testbenches_and_specs(
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Walk the circuit's committed raw decks; build one testbench per deck that yields ≥1 scorable
     spec, and the flattened target-spec list (spec.testbench = the deck/analysis id)."""
-    vout_target = (
-        circuit.datasheet().get("default_conditions", {}).get("vout", {}).get("typical")
-    )
+    vout_target = circuit.datasheet().get("default_conditions", {}).get("vout", {}).get("typical")
     tbs: list[dict[str, Any]] = []
     specs: list[dict[str, Any]] = []
     for aid in circuit.analyses:
@@ -254,19 +405,35 @@ def _testbenches_and_specs(
         if not metrics:
             continue
         rel = str(deck.relative_to(paths.db_root()))
-        tbs.append({"name": aid, "params": [], "netlist": rel, "enable": True,
-                    "description": f"raw deck: {aid}"})
+        tbs.append(
+            {
+                "name": aid,
+                "params": [],
+                "netlist": rel,
+                "enable": True,
+                "description": f"raw deck: {aid}",
+            }
+        )
         for saved, sim in metrics:
             base = re.sub(r"^[iv]\((.*)\)$", r"\1", saved)
             reg = _SPEC_REGISTRY[base]
             target = reg["target"]
             if base == "vout_dc" and vout_target is not None:
                 target = float(vout_target)
-            specs.append({
-                "name": saved, "testbench": aid, "sim_type": sim, "goal": reg["goal"],
-                "target": target, "range": reg["range"], "tolerance": reg["tolerance"],
-                "weight": 1.0, "reward_type": reg["reward_type"], "enable": True,
-            })
+            specs.append(
+                {
+                    "name": saved,
+                    "testbench": aid,
+                    "sim_type": sim,
+                    "goal": reg["goal"],
+                    "target": target,
+                    "range": reg["range"],
+                    "tolerance": reg["tolerance"],
+                    "weight": 1.0,
+                    "reward_type": reg["reward_type"],
+                    "enable": True,
+                }
+            )
     return tbs, specs
 
 
@@ -274,7 +441,9 @@ def generate(circuit_id: str, pdk: str | None, out_dir: Path) -> str:
     """Render the raw-targeting ``project_setup.yaml`` text for one circuit (no filesystem writes)."""
     circuit = model.load_circuit(circuit_id)
     pdk = pdk or circuit.pdks[0]
+    _require_ngspice_lane(circuit_id, pdk)
     tbs, specs = _testbenches_and_specs(circuit, pdk)
+
     # i_supply (quiescent current) is a COST, not an objective: a config that can only score
     # i_supply would just shrink the bias into a degenerate point. Require at least one
     # performance objective (gain/bandwidth/regulation/…) — otherwise skip the circuit (its
@@ -289,8 +458,8 @@ def generate(circuit_id: str, pdk: str | None, out_dir: Path) -> str:
         )
 
     db = paths.db_root()
-    ws_root = os.path.relpath(db, out_dir)                                  # YAML dir → db root
-    run_dir = os.path.relpath(out_dir / "_runs" / circuit_id, db)          # db root → run dir
+    ws_root = os.path.relpath(db, out_dir)  # YAML dir → db root
+    run_dir = os.path.relpath(out_dir / "_runs" / circuit_id, db)  # db root → run dir
     project = {
         "name": f"RAW-{circuit_id}",
         "description": f"Optimize {circuit_id} by driving its committed raw/ export decks ({pdk}).",
@@ -304,7 +473,10 @@ def generate(circuit_id: str, pdk: str | None, out_dir: Path) -> str:
         "dut_params": _dut_params(circuit.sizing(pdk)),
         "testbenches": tbs,
         "optimizer_config": {
-            "type": "nevergrad", "random_seed": 48, "budget": 15, "name": "NGOpt",
+            "type": "nevergrad",
+            "random_seed": 48,
+            "budget": 15,
+            "name": "NGOpt",
             "lin_variable_bounds": {"min": 0, "max": 100},
             "log_variable_bounds": {"min": 1, "max": 100},
             "target_specs": specs,
@@ -320,10 +492,12 @@ def generate(circuit_id: str, pdk: str | None, out_dir: Path) -> str:
 
 
 def write(circuit_id: str, pdk: str | None, out_dir: Path) -> Path:
-    """Write ``<out_dir>/<circuit_id>.yaml``; returns the path."""
+    """Write ``<out_dir>/<circuit_id>.yaml``; returns the path. Renders first, so a refused or
+    unscorable circuit leaves the filesystem untouched."""
+    text = generate(circuit_id, pdk, out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out = out_dir / f"{circuit_id}.yaml"
-    out.write_text(generate(circuit_id, pdk, out_dir))
+    out.write_text(text)
     return out
 
 
@@ -340,6 +514,7 @@ def generate_demo(circuit_id: str, pdk: str | None = None) -> str:
     """
     circuit = model.load_circuit(circuit_id)
     pdk = pdk or circuit.pdks[0]
+    _require_ngspice_lane(circuit_id, pdk)
     tbs, specs = _testbenches_and_specs(circuit, pdk)
 
     def _base(name: str) -> str:
@@ -367,7 +542,10 @@ def generate_demo(circuit_id: str, pdk: str | None = None) -> str:
         "dut_params": _dut_params(circuit.sizing(pdk)),
         "testbenches": tbs,
         "optimizer_config": {
-            "type": "nevergrad", "random_seed": 48, "budget": 15, "name": "NGOpt",
+            "type": "nevergrad",
+            "random_seed": 48,
+            "budget": 15,
+            "name": "NGOpt",
             "lin_variable_bounds": {"min": 0, "max": 100},
             "log_variable_bounds": {"min": 1, "max": 100},
             "target_specs": specs,

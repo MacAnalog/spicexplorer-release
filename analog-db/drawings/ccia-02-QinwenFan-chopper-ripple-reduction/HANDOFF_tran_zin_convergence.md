@@ -1,6 +1,6 @@
 # Handoff — ia_004 CCIA `tran_zin_chopped` convergence fix
 
-**Date:** 2026-07-21 · **Status:** FIXED + live-verified (native ngspice + IHP PDK, srv-elamien) ·
+**Date:** 2026-07-21 · **Status:** FIXED + live-verified (native ngspice + IHP PDK, the EDA server) ·
 **Circuit:** `ia_004_fan_chopper_rrl` (Qinwen-Fan chopper CCIA + ripple-reduction loop) ·
 **Drawing:** `examples/analog-db/drawings/ccia-02-QinwenFan-chopper-ripple-reduction`
 
@@ -61,7 +61,7 @@ and the generated deck:
 > ⚠ The `.spice` is generated from the `.sch`. If you regenerate/re-netlist, the `.sch` is what
 > matters — it's fixed. If they ever diverge, re-run the netlister from the `.sch`.
 
-## Verification (empirical, native ngspice + IHP PDK on srv-elamien)
+## Verification (empirical, native ngspice + IHP PDK on the EDA server)
 
 To reproduce: `ngspice -b tran_zin_chopped.spice` from the `simulation/` dir (the `.lib
 cornerMOSlv.lib` resolves via the sourcepath in `~/.spiceinit`; runs cwd-independent).

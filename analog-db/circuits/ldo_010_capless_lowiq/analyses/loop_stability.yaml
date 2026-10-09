@@ -1,0 +1,14 @@
+# Closed-loop Zout peaking at 1 mA (report-only proxy).
+schema: spicexplorer/analysis@1
+id: loop_stability
+template: loop_stability
+description: "Closed-loop Zout peaking at 1 mA (report-only proxy)."
+params:
+  VDD: 1.5
+  ILOAD: 1m
+  COUT: 1p
+  PPD: 20
+  FSTART: 10
+  FSTOP: 100meg
+flags: []
+produces: [zout_peak_db]

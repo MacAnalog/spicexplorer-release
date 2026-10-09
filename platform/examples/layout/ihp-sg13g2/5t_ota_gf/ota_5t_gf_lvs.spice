@@ -1,5 +1,5 @@
 * amp_001_5t — flat LVS reference for the gdsfactory lane (topcell ota_5t_gf).
-* Same circuit/sizing as ../5t_ota/ota_5t_lvs.spice; only the subckt name differs.
+* Same circuit/sizing as analog-db amp_001_5t (pdk/ihp-sg13g2); primitive M cards for the LVS deck.
 .subckt ota_5t_gf vdd vout vinp vinn ibias vss
 M1 outm vinp tail vss sg13_lv_nmos w=0.5u l=5u
 M2 vout vinn tail vss sg13_lv_nmos w=0.5u l=5u

@@ -1,9 +1,10 @@
-# KLayout GUI cheatsheet (for tweaking the 5T-OTA layout)
+# KLayout GUI cheatsheet (for tweaking an IHP sg13g2 layout)
 
 Default keyboard shortcuts, extracted from the KLayout 0.30.5 source. They are configurable
 under **File → Setup → Key Bindings** (or Edit → Key Bindings), so your build may differ.
-Open the layout with [`5t_ota/open_in_klayout.sh`](5t_ota/open_in_klayout.sh) (edit mode + IHP
-colors + live PyCells).
+Open the 5T-OTA layout with [`5t_ota_gf/open_in_klayout.sh`](5t_ota_gf/open_in_klayout.sh) (edit
+mode + IHP colors). Its ihp-gdsfactory cells are baked geometry; the PyCell workflow below applies
+to a layout that holds live foundry PyCell instances (the retired PyCell prototype's did).
 
 ## The one workflow you came for — edit a PyCell
 
@@ -12,9 +13,9 @@ colors + live PyCells).
    **`Space`** to cycle if several objects sit under the cursor.
 3. Press **`Q`** (Properties) → **PCell** tab → change `w` / `l` / `ng` → **Apply**. The
    geometry regenerates live.
-4. Re-run signoff after edits: `python 5t_ota/signoff.py` (KLayout) and/or
-   `python 5t_ota/signoff_magic_netgen.py` (Magic+netgen). If you changed *connectivity*,
-   update `5t_ota/ota_5t_lvs.spice` to match or LVS will (correctly) fail.
+4. Re-run signoff after edits: `spicexplorer-signoff drc` and `spicexplorer-signoff lvs` (see
+   [`5t_ota_gf/README.md`](5t_ota_gf/README.md)). If you changed *connectivity*, update the
+   LVS reference netlist to match or LVS will (correctly) fail.
 
 > Live PyCells need the Python-3.11 KLayout build (`~/local/klayout-py311`); the launcher uses
 > it automatically. With the stock py3.6 KLayout the instances are baked geometry — editable
@@ -79,5 +80,5 @@ they don't have default single-key bindings — assign your own in Key Bindings 
 
 The GUI can run the IHP KLayout decks via **Tools → DRC** / **Tools → LVS** when the sg13g2
 technology is loaded (it is, via `KLAYOUT_PATH`). For scripted/repeatable signoff, prefer the
-command-line runners in `5t_ota/` (`signoff.py`, `signoff_magic_netgen.py`) — they're what the
-example documents as passing.
+`spicexplorer-signoff` command-line runners (`drc`, `lvs`, `pex`): they return the verdicts the
+flows and the optimizer read.

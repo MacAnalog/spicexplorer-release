@@ -41,7 +41,12 @@ def test_resolvable_subckt_has_formal_named_ports_and_roles():
     assert roles["vss"] is SubcktPortRole.GROUND
     # formal port -> actual net connections
     assert g.connections(x1) == {
-        "vin-": "vin-", "vin+": "vin+", "vout": "out", "vdd": "vdd", "ib": "ib", "vss": "GND",
+        "vin-": "vin-",
+        "vin+": "vin+",
+        "vout": "out",
+        "vdd": "vdd",
+        "ib": "ib",
+        "vss": "GND",
     }
 
 
@@ -260,14 +265,14 @@ def test_a_definition_is_refused_when_the_child_build_dropped_a_device():
         "* top\n"
         ".subckt amp inp out vdd vss\n"
         "M1 out inp vss vss sg13_lv_nmos w=1u l=0.15u\n"
-        "Q1 out inp vss npnmod\n"          # a BJT: unmodelable, dropped by the child build
+        "Q1 out inp vss npnmod\n"  # a BJT: unmodelable, dropped by the child build
         ".ends amp\n"
         "V1 vdd 0 1.8\n"
         "X1 in out vdd 0 amp\n"
         ".end\n"
     )
     g = _from_str(nl, recurse=True)
-    assert g.skipped_components == []              # the parent census sees nothing
+    assert g.skipped_components == []  # the parent census sees nothing
     assert g.subgraphs["X1"].skipped_components == ["Q1"]
     with pytest.raises(ValueError, match="incomplete circuit"):
         to_netlist(g)
@@ -293,7 +298,7 @@ def test_a_definition_is_refused_when_its_ports_name_nothing_in_its_body():
         "M1 out inp vss vss sg13_lv_nmos w=1u l=0.15u\n"
         ".ends amp\n"
         "V1 vdd 0 1.8\n"
-        "X1 in out 0 vdd amp\n"           # 4 nets onto a 3-port master
+        "X1 in out 0 vdd amp\n"  # 4 nets onto a 3-port master
         ".end\n"
     )
     g = _from_str(nl, recurse=True)

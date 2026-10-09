@@ -2,7 +2,7 @@
 
 The canonical single-stage OTA: NMOS input pair, PMOS current-mirror load, NMOS tail
 biased by an NMOS mirror reference. The **Phase-0 proof circuit** for the analog-DB schema
-(plan `doc/plan_examples_db.md`).
+(plan `doc/archive/plan_examples_db.md`).
 
 ## Layout
 - `circuit.yaml` — the super-DSL manifest (identity, class, ports, pdks, analyses, optimize).

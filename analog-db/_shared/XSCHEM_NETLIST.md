@@ -1,8 +1,8 @@
-> **[REFERENCE / STALE-FRAMING]** — xschem netlisting runbook. Parent plan: `doc/plan_examples_db.md` D-11/O-3. This doc was written for a macOS host (xschem absent); the EDA server (`srv-elamien`) has xschem 3.4.5 on PATH. The Docker command below remains the authoritative path for PDK-symbol resolution. The Phase-0 "gated" framing is superseded — the base image now vendors three PDKs and xschem. The `analog-db export-raw --svg` step uses xschem on the host or container automatically.
+> **[REFERENCE / STALE-FRAMING]** — xschem netlisting runbook. Parent plan: `doc/archive/plan_examples_db.md` D-11/O-3. This doc was written for a macOS host (xschem absent); the EDA server (`the EDA server`) has xschem 3.4.5 on PATH. The Docker command below remains the authoritative path for PDK-symbol resolution. The Phase-0 "gated" framing is superseded — the base image now vendors three PDKs and xschem. The `analog-db export-raw --svg` step uses xschem on the host or container automatically.
 
 # xschem → SPICE netlisting (D-11)
 
-> Plan `doc/plan_examples_db.md` D-11 / O-3 (**resolved: Docker**). xschem is a tracked,
+> Plan `doc/archive/plan_examples_db.md` D-11 / O-3 (**resolved: Docker**). xschem is a tracked,
 > per-PDK netlist *source*: a topology may originate from a `.sch` (analog-circuit-design) or a
 > flat netlist (AnalogGym); the abstract netlist is the common product. The host EDA server has
 > xschem on PATH; the `api` container also has it. The verified command below remains the

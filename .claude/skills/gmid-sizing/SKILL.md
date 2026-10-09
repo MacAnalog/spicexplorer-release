@@ -117,7 +117,7 @@ weak inversion or when sweeping the whole inversion range during exploration.
   power) — `look_up`/`DeviceTable.sweep` vectorize over `gm_id`; loop `L`; build
   the ID/W/Av0/fT tradeoff arrays and pick the corner with margin.
 
-Both are demonstrated end-to-end in the repo's `gmid_sizing_demo.ipynb`.
+Both are demonstrated end-to-end in the repo's `gmid_sizing_demo.py` (a marimo notebook).
 
 ## Verification loop (always close the loop in SPICE)
 

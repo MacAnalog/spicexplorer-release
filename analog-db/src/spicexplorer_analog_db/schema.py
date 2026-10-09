@@ -24,6 +24,7 @@ _SCHEMA_FILES = {
     "scoreboard-entry": "scoreboard-entry.schema.json",
     "params": "params.schema.json",
     "composition": "composition.schema.json",
+    "verify-status": "verify-status.schema.json",
 }
 
 

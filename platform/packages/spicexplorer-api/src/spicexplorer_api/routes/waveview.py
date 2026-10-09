@@ -81,7 +81,9 @@ class DatasetClosedResponse(BaseModel):
 
 
 class OpenRequest(BaseModel):
-    path: str = Field(..., description="Absolute path: an ngspice .raw file or a Spectre psfascii raw dir")
+    path: str = Field(
+        ..., description="Absolute path: an ngspice .raw file or a Spectre psfascii raw dir"
+    )
     engine: Literal["ngspice", "spectre"] | None = Field(
         None, description="Force the engine; default sniffs from the artifact"
     )
@@ -108,7 +110,9 @@ class WaveResponse(BaseModel):
 
 
 class MeasureItem(BaseModel):
-    name: str | None = Field(None, description="Label for this measurement (defaults to the meas name)")
+    name: str | None = Field(
+        None, description="Label for this measurement (defaults to the meas name)"
+    )
     recipe: dict[str, Any] = Field(..., description="A Tier-1 {meas: ...} registry recipe")
 
 
@@ -224,7 +228,9 @@ class RunListResponse(BaseModel):
 
 
 class RunArtifact(BaseModel):
-    name: str = Field(..., description="Path relative to the run dir (e.g. sim/run_3_tb_ac__tt/tb_ac.raw)")
+    name: str = Field(
+        ..., description="Path relative to the run dir (e.g. sim/run_3_tb_ac__tt/tb_ac.raw)"
+    )
     path: str
     type: Literal["ngspice_raw", "spectre_raw_dir", "log"]
     mtime: float
@@ -239,22 +245,26 @@ class RunArtifactsResponse(BaseModel):
 
 class OpenRunRequest(BaseModel):
     run_id: str = Field(..., description="A run's full run_id (or its run-dir name)")
-    project_id: str | None = Field(None, description="Scope the lookup to one project (default: all)")
+    project_id: str | None = Field(
+        None, description="Scope the lookup to one project (default: all)"
+    )
     match: str | None = Field(
         None,
         description="Substring filter on the artifact's run-dir-relative path — "
-                    "e.g. a testbench or corner name like 'tb_ac' or '__ss'",
+        "e.g. a testbench or corner name like 'tb_ac' or '__ss'",
     )
     merge: bool = Field(
         False,
         description="Open the newest raw artifacts (up to `limit`) as ONE merged "
-                    "multi-analysis dataset — ac+tran+noise testbench raws become one "
-                    "viewer entry. Duplicate analysis keys get a '#2'/'#3' suffix.",
+        "multi-analysis dataset — ac+tran+noise testbench raws become one "
+        "viewer entry. Duplicate analysis keys get a '#2'/'#3' suffix.",
     )
     limit: int = Field(
-        8, ge=1, le=32,
+        8,
+        ge=1,
+        le=32,
         description="With merge: how many of the newest matching artifacts to combine "
-                    "(a big keep_raw run can hold hundreds of per-trial raws).",
+        "(a big keep_raw run can hold hundreds of per-trial raws).",
     )
 
 
@@ -262,11 +272,15 @@ class RunPruneResponse(BaseModel):
     run_id: str
     tier: str | None = Field(None, description="The retention tier that was enforced")
     pruned: bool
-    skipped: str | None = Field(None, description="Why nothing was pruned (running/already applied)")
+    skipped: str | None = Field(
+        None, description="Why nothing was pruned (running/already applied)"
+    )
     removed: list[str] = Field(default_factory=list, description="Run-dir children removed")
     freed_bytes: int = 0
     dry_run: bool = False
-    closed_datasets: int = Field(0, description="Open viewer datasets evicted because their files went away")
+    closed_datasets: int = Field(
+        0, description="Open viewer datasets evicted because their files went away"
+    )
 
 
 # --- helpers -------------------------------------------------------------------
@@ -311,7 +325,9 @@ def close_dataset(dataset_id: str):
 @router.get("/waveview/datasets/{dataset_id}/wave", response_model=WaveResponse)
 def get_wave(
     dataset_id: str,
-    analysis: str = Query(..., description="Engine-neutral analysis key (ac/tran/dc/noise/pss/stb/…)"),
+    analysis: str = Query(
+        ..., description="Engine-neutral analysis key (ac/tran/dc/noise/pss/stb/…)"
+    ),
     signals: str = Query(..., description="Comma-separated signal names"),
     x: str | None = Query(None, description="Abscissa signal (default: the analysis sweep)"),
     fmt: str = Query("auto", description="auto|mag_db|mag|phase_deg|re|im|complex"),
@@ -323,7 +339,9 @@ def get_wave(
     ds = entry.dataset
     an = ds.resolve_analysis(analysis)
     if an is None:
-        raise HTTPException(404, f"No analysis {analysis!r} in dataset (have {sorted(ds.analyses)})")
+        raise HTTPException(
+            404, f"No analysis {analysis!r} in dataset (have {sorted(ds.analyses)})"
+        )
 
     if method == "none" and an.n_points > max_points:
         raise HTTPException(
@@ -362,9 +380,13 @@ def get_wave(
                 downsampled = False
             out.append(
                 WaveSignalData(
-                    name=name, x=_json_floats(xa),
-                    y_re=_json_floats(np.real(arr)), y_im=_json_floats(np.imag(arr)),
-                    n_total=n_total, n_returned=int(arr.size), downsampled=downsampled,
+                    name=name,
+                    x=_json_floats(xa),
+                    y_re=_json_floats(np.real(arr)),
+                    y_im=_json_floats(np.imag(arr)),
+                    n_total=n_total,
+                    n_returned=int(arr.size),
+                    downsampled=downsampled,
                 )
             )
             continue
@@ -374,7 +396,9 @@ def get_wave(
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
         if method != "none" and y.size > max_points:
-            idx = downsample_indices(xa, np.nan_to_num(y, nan=0.0, posinf=0.0, neginf=0.0), max_points, method)
+            idx = downsample_indices(
+                xa, np.nan_to_num(y, nan=0.0, posinf=0.0, neginf=0.0), max_points, method
+            )
             xa_s, y_s = xa[idx], y[idx]
             downsampled = True
         else:
@@ -382,8 +406,12 @@ def get_wave(
             downsampled = False
         out.append(
             WaveSignalData(
-                name=name, x=_json_floats(xa_s), y=_json_floats(y_s),
-                n_total=n_total, n_returned=int(y_s.size), downsampled=downsampled,
+                name=name,
+                x=_json_floats(xa_s),
+                y=_json_floats(y_s),
+                n_total=n_total,
+                n_returned=int(y_s.size),
+                downsampled=downsampled,
             )
         )
 
@@ -408,7 +436,9 @@ def measure(dataset_id: str, req: MeasureRequest = Body(...)):
             results.append(MeasureResult(name=name, value=None, error=str(exc)))
             continue
         if not np.isfinite(value):
-            results.append(MeasureResult(name=name, value=None, error=f"non-finite result ({value})"))
+            results.append(
+                MeasureResult(name=name, value=None, error=f"non-finite result ({value})")
+            )
         else:
             results.append(MeasureResult(name=name, value=float(value), error=None))
     return MeasureResponse(dataset_id=dataset_id, results=results)
@@ -418,7 +448,9 @@ def measure(dataset_id: str, req: MeasureRequest = Body(...)):
 def get_scalars(
     dataset_id: str,
     analysis: str = Query("op", description="Analysis whose point scalars to return"),
-    prefix: str | None = Query(None, description="Only keys starting with this (e.g. an instance name)"),
+    prefix: str | None = Query(
+        None, description="Only keys starting with this (e.g. an instance name)"
+    ),
 ):
     """Point scalars of an analysis — op-point node values, per-device inst:param tables."""
     entry = svc.get_dataset(dataset_id)
@@ -437,7 +469,9 @@ def get_scalars(
 def get_log(
     dataset_id: str,
     min_level: str = Query("info", description="Severity floor: info|note|warning|error"),
-    tail: int = Query(2000, ge=1, le=50_000, description="Return at most the last N lines (after filtering)"),
+    tail: int = Query(
+        2000, ge=1, le=50_000, description="Return at most the last N lines (after filtering)"
+    ),
 ):
     """The dataset's simulator log, parsed + severity-classified."""
     entry = svc.get_dataset(dataset_id)
@@ -463,7 +497,9 @@ async def stream_log(
     request: Request,
     path: str = Query(..., description="Absolute path of a simulator log (whitelisted)"),
     from_line: int = Query(0, ge=0, description="Skip lines up to this number (resume support)"),
-    follow: bool = Query(True, description="Keep tailing for new lines (tail -f); false = drain + close"),
+    follow: bool = Query(
+        True, description="Keep tailing for new lines (tail -f); false = drain + close"
+    ),
     poll_s: float = Query(0.5, ge=0.1, le=5.0, description="Poll interval while following"),
 ):
     """SSE live tail of a simulator log — works while the simulation is still writing it.
@@ -478,7 +514,8 @@ async def stream_log(
     # defense-in-depth: only tail log-shaped files (the whitelist is the real gate, but
     # this endpoint should never become a generic file reader)
     if resolved.suffix.lower() not in (".log", ".out", ".txt") and resolved.name not in (
-        "logFile", "logStatus",
+        "logFile",
+        "logStatus",
     ):
         raise HTTPException(400, f"Not a simulator log (by name): {resolved.name}")
 
@@ -494,7 +531,7 @@ async def stream_log(
             try:
                 size = resolved.stat().st_size
             except OSError:
-                yield 'event: gone\ndata: {}\n\n'
+                yield "event: gone\ndata: {}\n\n"
                 return
             if size < offset:  # truncated/rotated — start over
                 offset, line_no, pending = 0, 0, b""
@@ -534,7 +571,9 @@ async def stream_log(
 
 @router.get("/waveview/runs", response_model=RunListResponse)
 def get_runs(
-    project_id: str | None = Query(None, description="Only this project's runs (default: all + unscoped)"),
+    project_id: str | None = Query(
+        None, description="Only this project's runs (default: all + unscoped)"
+    ),
 ):
     """Optimizer runs the viewer can open, resolved from their on-disk run.json (newest first)."""
     return {"runs": svc.list_runs(project_id)}
@@ -558,8 +597,10 @@ def get_run_artifacts(
 @router.get("/waveview/runs/{run_id}/artifacts/file")
 def get_run_artifact_file(
     run_id: str,
-    rel: str = Query(..., description="Run-dir-relative artifact path "
-                                      "(e.g. run.json, config_snapshot.yaml, run.log)"),
+    rel: str = Query(
+        ...,
+        description="Run-dir-relative artifact path (e.g. run.json, config_snapshot.yaml, run.log)",
+    ),
     project_id: str | None = Query(None, description="Scope the run lookup to one project"),
 ):
     """Download ANY artifact inside a run's dir by **identity** — ``(run_id, rel)`` —
@@ -580,13 +621,15 @@ class SnapshotRequest(BaseModel):
     name: str | None = Field(
         None,
         description="Snapshot label — slugified into snapshots/<name>.png; a repeat "
-                    "save under the same name overwrites (the thumbnail contract)",
+        "save under the same name overwrites (the thumbnail contract)",
     )
 
 
 class SnapshotResponse(BaseModel):
     run_id: str
-    rel: str = Field(..., description="Run-dir-relative path (serve it back via …/artifacts/file?rel=)")
+    rel: str = Field(
+        ..., description="Run-dir-relative path (serve it back via …/artifacts/file?rel=)"
+    )
     path: str
     size_bytes: int
 
@@ -748,9 +791,7 @@ def pvt_group_wave(
         try:
             main = _series(fmt)
         except ValueError as exc:
-            corners.append(
-                PvtCornerWave(corner=c, dataset_id=entry.dataset_id, error=str(exc))
-            )
+            corners.append(PvtCornerWave(corner=c, dataset_id=entry.dataset_id, error=str(exc)))
             continue
         phase_y: list[float | None] | None = None
         if phase and main is not None:
@@ -834,7 +875,8 @@ def open_run(req: OpenRunRequest = Body(...)):
     corner/MC sweep run merges ONE member per testbench (nominal preferred)."""
     info = svc.find_run(req.run_id, req.project_id)
     candidates = [
-        a for a in svc.list_run_artifacts(Path(info["run_dir"]))
+        a
+        for a in svc.list_run_artifacts(Path(info["run_dir"]))
         if a["type"] in ("ngspice_raw", "spectre_raw_dir")
         and (req.match is None or req.match in a["name"])
     ]
@@ -1032,14 +1074,16 @@ def list_uploads():
             except OSError:
                 continue
             size, n_files = _dir_stats(d)
-            out.append(UploadEntry(
-                upload_id=d.name,
-                staged_path=str(d),
-                mtime=mtime,
-                size_bytes=size,
-                n_files=n_files,
-                open_dataset_ids=svc.open_dataset_ids_under(d),
-            ))
+            out.append(
+                UploadEntry(
+                    upload_id=d.name,
+                    staged_path=str(d),
+                    mtime=mtime,
+                    size_bytes=size,
+                    n_files=n_files,
+                    open_dataset_ids=svc.open_dataset_ids_under(d),
+                )
+            )
         out.sort(key=lambda e: e.mtime, reverse=True)
     return UploadListResponse(uploads=out)
 
@@ -1125,11 +1169,13 @@ def _process_upload(dest: Path, staged: Path, ext: str, upload_id: str) -> Uploa
         found = _find_result_artifact(dest)
         if found is None:
             raise HTTPException(
-                415, "Zip contained no result artifact (.raw file or Spectre raw dir)")
+                415, "Zip contained no result artifact (.raw file or Spectre raw dir)"
+            )
         artifact, kind = found
     elif ext in _LOG_EXTS:
         return UploadResponse(
-            upload_id=upload_id, staged_path=str(staged), kind="log", dataset=None)
+            upload_id=upload_id, staged_path=str(staged), kind="log", dataset=None
+        )
     else:
         kind = svc.classify_artifact(staged) or ""
         if kind != "ngspice_raw":
@@ -1161,10 +1207,16 @@ _NETLIST_TIMEOUT_S = 180
 
 
 class RunNetlistRequest(BaseModel):
-    content: str = Field(..., description="A SELF-CONTAINED ngspice deck (its own analyses/"
-                                          "includes; `.control` blocks run as written)")
-    filename: str | None = Field(None, description="Display name; extension must be one of "
-                                                   ".spice/.cir/.net/.sp (default deck.spice)")
+    content: str = Field(
+        ...,
+        description="A SELF-CONTAINED ngspice deck (its own analyses/"
+        "includes; `.control` blocks run as written)",
+    )
+    filename: str | None = Field(
+        None,
+        description="Display name; extension must be one of "
+        ".spice/.cir/.net/.sp (default deck.spice)",
+    )
 
 
 class RunNetlistResponse(BaseModel):
@@ -1186,7 +1238,9 @@ def _run_netlist_sync(content: str, filename: str) -> RunNetlistResponse:
 
     env = probe_env()
     if not env.get("ngspice_ok"):
-        raise HTTPException(503, "ngspice is not available on this host — netlist runs are disabled")
+        raise HTTPException(
+            503, "ngspice is not available on this host — netlist runs are disabled"
+        )
 
     # A first-class (unscoped) run under WORK_ROOT/runs: the runs lister, the
     # artifact routes, retention/pruning, and open_run all work on it for free.
@@ -1213,8 +1267,15 @@ def _run_netlist_sync(content: str, filename: str) -> RunNetlistResponse:
 
     # -r catches decks with plain .ac/.tran cards and no explicit `write`; decks
     # whose .control writes named raws land those in cwd (= the run dir) instead.
-    cmd = [str(env.get("ngspice_path") or "ngspice"), "-b", "-o", "run.log",
-           "-r", "default.raw", filename]
+    cmd = [
+        str(env.get("ngspice_path") or "ngspice"),
+        "-b",
+        "-o",
+        "run.log",
+        "-r",
+        "default.raw",
+        filename,
+    ]
     try:
         proc = subprocess.run(
             cmd, cwd=run_dir, timeout=_NETLIST_TIMEOUT_S, capture_output=True, text=True
@@ -1247,7 +1308,9 @@ def _run_netlist_sync(content: str, filename: str) -> RunNetlistResponse:
     if not any(a["signals"] or a["n_scalars"] for a in meta["analyses"]):
         svc.close_dataset(meta["dataset_id"])
         _finish("error", "raw contains no waveform data")
-        raise HTTPException(422, f"{newest.name!r} parsed but contains no waveform data (run {run_id})")
+        raise HTTPException(
+            422, f"{newest.name!r} parsed but contains no waveform data (run {run_id})"
+        )
     _finish("done")
     return RunNetlistResponse(
         run_id=run_id, run_dir=str(run_dir), log_tail=tail, dataset=DatasetMeta(**meta)

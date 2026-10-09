@@ -35,17 +35,20 @@ disables this shim without a code change.
 Upstream reference: https://github.com/facebookresearch/nevergrad — `nevergrad/optimization/
 metamodel.py`, `loss_function_sm` on `main` vs. the released 1.0.12.
 """
+
 from __future__ import annotations
 
 import inspect
 import logging
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger("spicexplorer.optimization.stochastic.nevergrad_compat")
 
 #: The exact expression nevergrad <= 1.0.12 ships inside `learn_on_k_best.loss_function_sm`.
 #: Matched verbatim (whitespace included) so a reformatted / already-fixed release is left alone.
-_BUGGY_EXPR = "return float(model.predict(trans(np.asarray(x, dtype=X[0].dtype).flatten()[None, :])))"
+_BUGGY_EXPR = (
+    "return float(model.predict(trans(np.asarray(x, dtype=X[0].dtype).flatten()[None, :])))"
+)
 
 #: Upstream `main`'s replacement, re-indented to sit where `_BUGGY_EXPR` was (12 spaces in).
 _FIXED_EXPR = (
@@ -77,15 +80,18 @@ def apply_numpy2_metamodel_patch() -> bool:
         try:
             source = inspect.getsource(original)
         except (OSError, TypeError):  # zipped install / C-accelerated / stripped source
-            logger.debug("nevergrad's `learn_on_k_best` source is unavailable; skipping the "
-                         "numpy-2 backport (NGOpt may die when the metamodel engages).")
+            logger.debug(
+                "nevergrad's `learn_on_k_best` source is unavailable; skipping the "
+                "numpy-2 backport (NGOpt may die when the metamodel engages)."
+            )
             return False
 
         occurrences = source.count(_BUGGY_EXPR)
         if occurrences != 1:
             logger.debug(
                 f"nevergrad's `learn_on_k_best` does not carry the numpy-2 bug verbatim "
-                f"({occurrences} match(es)); leaving it untouched.")
+                f"({occurrences} match(es)); leaving it untouched."
+            )
             return False
 
         patched_source = source.replace(_BUGGY_EXPR, _FIXED_EXPR, 1)
@@ -93,8 +99,10 @@ def apply_numpy2_metamodel_patch() -> bool:
         # `tp`, `utils`, ... are the very objects the rest of nevergrad already holds. The `def`
         # binds into `namespace` (the exec locals), so `metamodel.learn_on_k_best` only moves
         # where we move it, below.
-        namespace: Dict[str, Any] = {}
-        code = compile(patched_source, f"<spicexplorer numpy-2 backport of {metamodel.__file__}>", "exec")
+        namespace: dict[str, Any] = {}
+        code = compile(
+            patched_source, f"<spicexplorer numpy-2 backport of {metamodel.__file__}>", "exec"
+        )
         exec(code, metamodel.__dict__, namespace)  # noqa: S102 - upstream source + one expression
         patched = namespace["learn_on_k_best"]
         setattr(patched, _PATCH_ATTR, True)
@@ -108,11 +116,14 @@ def apply_numpy2_metamodel_patch() -> bool:
 
         logger.info(
             "patched nevergrad's `learn_on_k_best` for numpy 2 (backport of the upstream "
-            "`float(...)` -> `.item()` fix; see nevergrad_compat.__doc__ / ledger E-052).")
+            "`float(...)` -> `.item()` fix; see nevergrad_compat.__doc__ / ledger E-052)."
+        )
         return True
     except Exception as exc:  # pragma: no cover - defensive: a shim must never break import
-        logger.warning(f"could not apply the nevergrad numpy-2 metamodel backport: "
-                       f"{exc.__class__.__name__}: {exc}")
+        logger.warning(
+            f"could not apply the nevergrad numpy-2 metamodel backport: "
+            f"{exc.__class__.__name__}: {exc}"
+        )
         return False
 
 

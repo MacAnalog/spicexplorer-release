@@ -153,7 +153,9 @@ def test_nested_cascode_round_trips_end_to_end():
     try:
         cg.default_subcircuit_library()
     except FileNotFoundError:
-        pytest.skip("subcircuit template catalogue not present (analog-db submodule not checked out)")
+        pytest.skip(
+            "subcircuit template catalogue not present (analog-db submodule not checked out)"
+        )
     cascode = (
         "* cascode nmos current mirror\n"
         "XM1 net2 net1 VSS VSS sg13_lv_nmos\n"
@@ -169,7 +171,9 @@ def test_nested_cascode_round_trips_end_to_end():
 
     from spicexplorer_netlist2xschem import from_string
 
-    doc = build_sch(from_string(cascode, name="cascode"), annotations=BlockAnnotationSet.from_dict(contract))
+    doc = build_sch(
+        from_string(cascode, name="cascode"), annotations=BlockAnnotationSet.from_dict(contract)
+    )
     boxes = [ln for ln in doc.text.splitlines() if ln.startswith("B ")]
     assert any("dash=" in ln for ln in boxes)  # the nested box is dashed
     assert any("dash=" not in ln for ln in boxes)  # the parent box is solid
@@ -190,7 +194,9 @@ def test_block_aware_placement_reduces_block_footprint_and_overlap(amp):
         pytest.skip(f"{RAW_AMP}/{amp} not present (analog-db submodule not checked out)")
 
     graph = cg.CircuitGraph.from_netlist(NetlistView.from_string(text), name=amp, pdk=cg.IHP_SG13G2)
-    aset = BlockAnnotationSet.from_dict(cg.export_subcircuit_annotations(cg.annotate_subcircuits(graph)))
+    aset = BlockAnnotationSet.from_dict(
+        cg.export_subcircuit_annotations(cg.annotate_subcircuits(graph))
+    )
     assert aset.blocks, f"{amp}: detector found no blocks to drive placement"
 
     circuit = from_string(text, name=amp)
@@ -199,10 +205,34 @@ def test_block_aware_placement_reduces_block_footprint_and_overlap(amp):
     aware = _overlap_and_footprint(aset, _place(circuit, hints))
 
     # never worse than the block-agnostic layout, on either metric
-    assert aware[1] <= agnostic[1], f"{amp}: block-aware placement grew the footprint {agnostic[1]}→{aware[1]}"
-    assert aware[0] <= agnostic[0], f"{amp}: block-aware placement grew the overlap {agnostic[0]}→{aware[0]}"
+    assert aware[1] <= agnostic[1], (
+        f"{amp}: block-aware placement grew the footprint {agnostic[1]}→{aware[1]}"
+    )
+    assert aware[0] <= agnostic[0], (
+        f"{amp}: block-aware placement grew the overlap {agnostic[0]}→{aware[0]}"
+    )
     # on the larger, scattered amp the win is decisive (overlap more than halved)
     if amp == "amp_011_peng_iac":
         assert aware[0] <= 0.6 * agnostic[0], (
             f"{amp}: expected the scatter to drop sharply, got {agnostic[0]}→{aware[0]}"
         )
+
+
+def test_readme_contract_documents_every_field_the_producer_emits():
+    """The README's `@1` table is the field list of record: a producer field it does not name is
+    either a contract change nobody wrote down, or an additive field that skipped the policy."""
+    import re
+
+    path = _example_path()
+    if path is None:
+        pytest.skip(f"{EXAMPLE} not present")
+    graph = cg.CircuitGraph.from_netlist(NetlistView.from_file(path), name="ota_5t")
+    contract = cg.export_subcircuit_annotations(cg.group_matches(cg.find_subcircuits(graph)))
+    emitted = {k for b in contract["blocks"] for k in b}
+    assert set(contract) == {"schema", "blocks"}
+
+    readme = (Path(__file__).resolve().parents[1] / "README.md").read_text(encoding="utf-8")
+    section = readme.split("### The `@1` contract", 1)[1].split("\n#", 1)[0]
+    rows = "\n".join(ln for ln in section.splitlines() if ln.startswith("| `"))
+    missing = emitted - set(re.findall(r"`(\w+)`", rows))
+    assert not missing, f"README contract table does not name producer field(s): {sorted(missing)}"

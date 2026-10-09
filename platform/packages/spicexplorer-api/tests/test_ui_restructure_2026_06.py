@@ -3,6 +3,7 @@
 Covers: duplicate PVT corner rejection, ephemeral Score-Shaping spec overrides,
 and engineering-string param parsing in the manual-sim request.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -16,10 +17,7 @@ from spicexplorer.core.domains import (
 )
 from spicexplorer_core import project_root
 
-EXAMPLE_YAML = (
-    project_root()
-    / "examples/OTA/folded_cascode/ihp-sg13g2/sizing/project_setup.yaml"
-)
+EXAMPLE_YAML = project_root() / "examples/OTA/folded_cascode/ihp-sg13g2/sizing/project_setup.yaml"
 
 pytest.importorskip("fastapi", reason="ui extra not installed")
 

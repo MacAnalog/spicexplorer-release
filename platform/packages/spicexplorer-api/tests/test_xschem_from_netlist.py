@@ -71,9 +71,12 @@ def test_render_degrades_gracefully_without_xschem(client):
 
 def test_requires_one_input(client):
     assert client.post("/api/xschem/from-netlist", json={}).status_code == 400
-    assert client.post(
-        "/api/xschem/from-netlist", json={"netlist_text": NETLIST, "netlist_path": "/x.spice"}
-    ).status_code == 400
+    assert (
+        client.post(
+            "/api/xschem/from-netlist", json={"netlist_text": NETLIST, "netlist_path": "/x.spice"}
+        ).status_code
+        == 400
+    )
 
 
 def test_relative_path_rejected(client):

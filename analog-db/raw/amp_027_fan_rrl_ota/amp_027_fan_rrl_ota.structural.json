@@ -11,7 +11,7 @@
     },
     "structural_roles": {
       "XM1": "tail_current_source",
-      "XM10": "differential_pair",
+      "XM10": "cascode_device",
       "XM13": "current_mirror",
       "XM14": "current_mirror",
       "XM15": "current_mirror_reference",
@@ -22,7 +22,7 @@
       "XM6": "differential_pair",
       "XM7": "differential_pair",
       "XM8": "differential_pair",
-      "XM9": "differential_pair"
+      "XM9": "cascode_device"
     }
   },
   "groups": [

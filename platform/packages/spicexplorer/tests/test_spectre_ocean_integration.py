@@ -29,8 +29,14 @@ FAKE_OCEAN = Path(__file__).parent / "fake_ocean.py"
 
 def _target(name, tb, measurement=None, enable=True):
     return TargetSpec(
-        name=name, testbench=tb, target=1.0, goal="exceed", sim_type="ac",
-        range=1.0, enable=enable, measurement=measurement,
+        name=name,
+        testbench=tb,
+        target=1.0,
+        goal="exceed",
+        sim_type="ac",
+        range=1.0,
+        enable=enable,
+        measurement=measurement,
     )
 
 
@@ -74,16 +80,21 @@ def test_builder_missing_arg_is_rejected():
 
 # -- grouping ---------------------------------------------------------------------
 def test_build_recipes_groups_enabled_targets_with_measurements_by_testbench():
-    specs = ListTargetSpec([
-        _target("ugf", "tb_ac", {"result": "ac", "expr": 'gainBwProd(v("o"))'}),
-        _target("pm", "tb_ac", {"result": "ac", "expr": 'phaseMargin(v("o"))'}),
-        _target("gm", "tb_op", {"builder": "device_op_param", "instance": "XM1", "param": "gm"}),
-        _target("no_recipe", "tb_ac", None),                       # skipped: no recipe
-        _target("disabled", "tb_ac", {"result": "ac", "expr": "x"}, enable=False),  # skipped
-    ])
+    specs = ListTargetSpec(
+        [
+            _target("ugf", "tb_ac", {"result": "ac", "expr": 'gainBwProd(v("o"))'}),
+            _target("pm", "tb_ac", {"result": "ac", "expr": 'phaseMargin(v("o"))'}),
+            _target(
+                "gm", "tb_op", {"builder": "device_op_param", "instance": "XM1", "param": "gm"}
+            ),
+            _target("no_recipe", "tb_ac", None),  # skipped: no recipe
+            _target("disabled", "tb_ac", {"result": "ac", "expr": "x"}, enable=False),  # skipped
+        ]
+    )
     recipes = build_recipes(specs)
     assert {tb: [m.name for m in ms] for tb, ms in recipes.items()} == {
-        "tb_ac": ["ugf", "pm"], "tb_op": ["gm"],
+        "tb_ac": ["ugf", "pm"],
+        "tb_op": ["gm"],
     }
 
 

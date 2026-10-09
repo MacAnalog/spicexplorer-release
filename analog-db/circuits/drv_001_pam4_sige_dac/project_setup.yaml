@@ -22,21 +22,27 @@ project:
   testbenches:
   - name: tb_gain_lsb
     netlist: testbenches/tb_gain_lsb.spice
+    params: []
     enable: true
   - name: tb_gain_msb
     netlist: testbenches/tb_gain_msb.spice
+    params: []
     enable: true
   - name: tb_s11
     netlist: testbenches/tb_s11.spice
+    params: []
     enable: true
   - name: tb_s22
     netlist: testbenches/tb_s22.spice
+    params: []
     enable: true
   - name: tb_bias
     netlist: testbenches/tb_bias.spice
+    params: []
     enable: true
   - name: tb_swing
     netlist: testbenches/tb_swing.spice
+    params: []
     enable: true
   optimizer_config:
     type: nevergrad
@@ -176,7 +182,7 @@ project:
     min_val: 1.6
     max_val: 2.2
   - name: x_dut_vcc
-    min_val: 4.0
-    max_val: 4.0
+    min_val: null
+    max_val: null
     freeze: true
     val: 4.0

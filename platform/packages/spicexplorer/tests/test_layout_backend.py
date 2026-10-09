@@ -99,6 +99,8 @@ class _State:
     def __init__(self):
         self.drc_pass = True
         self.lvs_match = True
+        self.lvs_reason = ""  # set → the runner matched but did not pass (SIGN-01 shape)
+        self.lvs_unmatched: dict[str, int] = {}  # the runner's unmatched counts on a mismatch
         self.pex_ok = True
         self.calls: list[str] = []
 
@@ -110,7 +112,9 @@ def _install_fakes(monkeypatch, state: _State):
     from spicexplorer_signoff.results import DrcResult, DrcViolation, LvsResult, PexResult
 
     class FakeBuilder:
-        def __init__(self, gen_path, out_dir, *, cell=None, sizing_json=None, inproc=False, python=None):
+        def __init__(
+            self, gen_path, out_dir, *, cell=None, sizing_json=None, inproc=False, python=None
+        ):
             self.out_dir = Path(out_dir)
             self.cell = cell or "cell"
             self.python = python
@@ -122,7 +126,9 @@ def _install_fakes(monkeypatch, state: _State):
             gds = self.out_dir / f"{self.cell}.gds"
             gds.write_bytes(b"GDS")
             w, h = 10.0 * float(params.get("gap_x", 1.0)), 5.0 * float(params.get("ch_y", 2.0))
-            self.last = GdsBuild(str(gds), self.cell, dict(params), (0.0, 0.0, w, h), w * h, "deadbeef")
+            self.last = GdsBuild(
+                str(gds), self.cell, dict(params), (0.0, 0.0, w, h), w * h, "deadbeef"
+            )
             return gds
 
     def fake_drc(gds, topcell, run_dir, **kw):
@@ -130,13 +136,25 @@ def _install_fakes(monkeypatch, state: _State):
         Path(run_dir).mkdir(parents=True, exist_ok=True)
         if state.drc_pass:
             return DrcResult(True, True, 0, [], report_path=str(Path(run_dir) / "r.lyrdb"))
-        return DrcResult(False, True, 3, [DrcViolation("M1.a", 3)], report_path=str(Path(run_dir) / "r.lyrdb"))
+        return DrcResult(
+            False, True, 3, [DrcViolation("M1.a", 3)], report_path=str(Path(run_dir) / "r.lyrdb")
+        )
 
     def fake_lvs(gds, netlist, topcell, run_dir, **kw):
         state.calls.append("lvs")
         assert Path(netlist).is_file(), "the LVS reference must exist (writer ran)"
         Path(run_dir).mkdir(parents=True, exist_ok=True)
-        return LvsResult(state.lvs_match, True, matched=state.lvs_match, netlist_path=str(netlist))
+        passed = (
+            state.lvs_match and not state.lvs_reason
+        )  # run_lvs: passed = matched and not reason
+        return LvsResult(
+            passed,
+            True,
+            matched=state.lvs_match,
+            unmatched=dict(state.lvs_unmatched),
+            netlist_path=str(netlist),
+            reason=state.lvs_reason,
+        )
 
     def fake_pex(gds, cell, schematic, out_dir, *, mode="CC", **kw):
         state.calls.append("pex")
@@ -149,8 +167,16 @@ def _install_fakes(monkeypatch, state: _State):
             f".subckt {cell} a b\n+ VSS\nM1 a b VSS VSS sg13_lv_nmos w=1u l=1u\n"
             "C1 a VSS 1.5f\nC2 a b 0.5f\nC3 b VSUBS 2f\nC4 VSS VSS 9f\n.ends\n"
         )
-        return PexResult(True, True, mode, netlist_path=str(net), n_c=4, n_r=0,
-                         per_net_c_ff={"a": 2.0, "b": 2.5}, coupling_ff={"a|b": 0.5, "VSS|a": 1.5, "VSUBS|b": 2.0})
+        return PexResult(
+            True,
+            True,
+            mode,
+            netlist_path=str(net),
+            n_c=4,
+            n_r=0,
+            per_net_c_ff={"a": 2.0, "b": 2.5},
+            coupling_ff={"a|b": 0.5, "VSS|a": 1.5, "VSUBS|b": 2.0},
+        )
 
     monkeypatch.setattr(spicexplorer_layout, "GdsBuilder", FakeBuilder)
     monkeypatch.setattr(spicexplorer_signoff, "run_drc", fake_drc)
@@ -175,8 +201,12 @@ def _write_flow(tmp_path: Path, *, lvs="writer", measure=True, extra=None, ac_gn
         "pex": {"mode": "CC", "ports": "a b", **({"ac_gnd_nets": ac_gnd} if ac_gnd else {})},
     }
     if measure:
-        spec["measure"] = {"module": "measure_fake.py", "callable": "measure", "python": sys.executable,
-                           "extra": extra or {}}
+        spec["measure"] = {
+            "module": "measure_fake.py",
+            "callable": "measure",
+            "python": sys.executable,
+            "extra": extra or {},
+        }
     p = tmp_path / "flow.yaml"
     p.write_text(yaml.safe_dump(spec))
     return p
@@ -190,7 +220,9 @@ def test_layout_enums_and_target_spec_coercion():
     assert SpiceSimulatorType("layout") is SpiceSimulatorType.LAYOUT
     assert resolve_engine("layout") is SpiceSimulatorType.LAYOUT
     assert SpiceSimulatorType.LAYOUT in SIMULATOR_BUILDERS
-    spec = TargetSpec(name="area_um2", testbench="layout", target=100.0, goal="minimize", sim_type="layout")
+    spec = TargetSpec(
+        name="area_um2", testbench="layout", target=100.0, goal="minimize", sim_type="layout"
+    )
     assert spec.sim_type is SimType.LAYOUT
     assert spec.get_analysis() == "layout"
     with pytest.raises(ValueError):
@@ -210,7 +242,9 @@ def test_factory_rejects_non_yaml_flow_spec(tmp_path: Path):
 def test_factory_builds_layout_simulator(tmp_path: Path, monkeypatch):
     _install_fakes(monkeypatch, _State())
     flow = _write_flow(tmp_path)
-    sim = build_simulator("layout", netlist_filename=flow, testbench_name="lay", output_folder=tmp_path / "out")
+    sim = build_simulator(
+        "layout", netlist_filename=flow, testbench_name="lay", output_folder=tmp_path / "out"
+    )
     assert isinstance(sim, LayoutSimulator)
     assert sim.output_folder == (tmp_path / "out" / "layout" / "lay").resolve()
     from spicexplorer_core.spice_engine import Simulator
@@ -225,11 +259,19 @@ def test_flow_spec_loads_and_casts(tmp_path: Path):
     flow = _write_flow(tmp_path)
     spec = LayoutFlowSpec.from_yaml(flow)
     assert spec.cell == "cell" and spec.generator == (tmp_path / "gen_fake.py").resolve()
-    assert spec.param_defaults == {"gap_x": 1.0, "ch_y": 2.0, "n_cols": 2, "mirror": True, "mode": "a"}
+    assert spec.param_defaults == {
+        "gap_x": 1.0,
+        "ch_y": 2.0,
+        "n_cols": 2,
+        "mirror": True,
+        "mode": "a",
+    }
     assert spec.bounds["gap_x"] == (0.5, 2.0)
     assert spec.lvs is not None and spec.lvs.writer == "write_lvs_reference"
     assert spec.pex is not None and spec.pex.ports == "a b"
-    cast = spec.cast_params({"gap_x": 1.23456, "n_cols": 2.6, "mirror": 0, "ch_y": np.float64(3.004)})
+    cast = spec.cast_params(
+        {"gap_x": 1.23456, "n_cols": 2.6, "mirror": 0, "ch_y": np.float64(3.004)}
+    )
     assert cast == {"gap_x": 1.23, "n_cols": 3, "mirror": False, "ch_y": 3.0}
     with pytest.raises(KeyError, match="not a knob"):
         spec.cast_params({"nope": 1})
@@ -237,23 +279,49 @@ def test_flow_spec_loads_and_casts(tmp_path: Path):
 
 def test_flow_spec_errors(tmp_path: Path):
     bad = tmp_path / "flow.yaml"
-    bad.write_text(yaml.safe_dump({"schema": "layout-flow/1", "generator": "missing.py", "cell": "c"}))
+    bad.write_text(
+        yaml.safe_dump({"schema": "layout-flow/1", "generator": "missing.py", "cell": "c"})
+    )
     with pytest.raises(FileNotFoundError):
         LayoutFlowSpec.from_yaml(bad)
     (tmp_path / "gen_fake.py").write_text(FAKE_GEN)
     bad.write_text(yaml.safe_dump({"schema": "nope/9", "generator": "gen_fake.py", "cell": "c"}))
     with pytest.raises(ValueError, match="schema"):
         LayoutFlowSpec.from_yaml(bad)
-    bad.write_text(yaml.safe_dump({"schema": "layout-flow/1", "generator": "gen_fake.py", "cell": "c",
-                                   "lvs": {"reference": "x.sp", "writer": "w"}}))
+    bad.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "layout-flow/1",
+                "generator": "gen_fake.py",
+                "cell": "c",
+                "lvs": {"reference": "x.sp", "writer": "w"},
+            }
+        )
+    )
     with pytest.raises(ValueError, match="exactly one"):
         LayoutFlowSpec.from_yaml(bad)
-    bad.write_text(yaml.safe_dump({"schema": "layout-flow/1", "generator": "gen_fake.py", "cell": "c",
-                                   "fixed_params": {"unknown_knob": 1}}))
+    bad.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "layout-flow/1",
+                "generator": "gen_fake.py",
+                "cell": "c",
+                "fixed_params": {"unknown_knob": 1},
+            }
+        )
+    )
     with pytest.raises(ValueError, match="fixed_params"):
         LayoutFlowSpec.from_yaml(bad)
-    bad.write_text(yaml.safe_dump({"schema": "layout-flow/1", "generator": "gen_fake.py", "cell": "c",
-                                   "pex": {"mode": "CC"}}))
+    bad.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "layout-flow/1",
+                "generator": "gen_fake.py",
+                "cell": "c",
+                "pex": {"mode": "CC"},
+            }
+        )
+    )
     with pytest.raises(ValueError, match="pex"):
         LayoutFlowSpec.from_yaml(bad)
 
@@ -324,7 +392,84 @@ def test_lvs_mismatch_gates_pex_and_measure(tmp_path: Path, monkeypatch):
     res = sim.run()
     assert res.status == "lvs_fail" and state.calls == ["build", "drc", "lvs"]
     assert res.scalar("drc_pass", "layout") == 1.0 and res.scalar("lvs_match", "layout") == 0.0
-    assert math.isnan(res.scalar("pex_ok", "layout")) and math.isnan(res.scalar("ugf_mhz", "layout"))
+    assert math.isnan(res.scalar("pex_ok", "layout")) and math.isnan(
+        res.scalar("ugf_mhz", "layout")
+    )
+
+
+def test_lvs_that_matched_but_did_not_pass_gates_pex_and_measure(tmp_path: Path, monkeypatch):
+    """LAY-D1: a runner that printed 'Netlists match' and then exited 7 is a FAILED LVS in the
+    signoff package (passed=False, matched=True). Gating on `matched` scored it lvs_match=1.0
+    and ran PEX + measure on it."""
+    state = _State()
+    state.lvs_reason = "LVS runner exited 7 and failed: Netlists match"
+    sim = _sim(tmp_path, monkeypatch, state)
+    sim.update_params({"gap_x": 1.0})
+    res = sim.run()
+    assert res.status == "lvs_fail" and state.calls == ["build", "drc", "lvs"]
+    assert res.scalar("lvs_match", "layout") == 0.0
+    assert math.isnan(res.scalar("pex_ok", "layout")) and math.isnan(
+        res.scalar("ugf_mhz", "layout")
+    )
+    summary = json.loads(res.log_path.read_text()) if res.log_path else {}
+    assert "exited 7" in summary["error"] and "exited 7" in summary["stages"]["lvs"]["error"]
+
+
+def test_lvs_matched_but_not_passed_says_so_and_keeps_both_flags(tmp_path: Path, monkeypatch):
+    """LAY-D1: the failure reads as an LVS that did not pass (with the runner's reason), not as a
+    mismatch, and the stage record keeps the tool's own matched=True next to passed=False."""
+    state = _State()
+    state.lvs_reason = "LVS runner exited 7 and failed: Netlists match"
+    sim = _sim(tmp_path, monkeypatch, state)
+    sim.update_params({"gap_x": 1.0})
+    res = sim.run()
+    summary = json.loads(res.log_path.read_text()) if res.log_path else {}
+    assert summary["error"] == "LVS did not pass: LVS runner exited 7 and failed: Netlists match"
+    lvs = summary["stages"]["lvs"]
+    assert lvs["matched"] is True and lvs["passed"] is False and lvs["error"] == summary["error"]
+
+
+def test_lvs_mismatch_message_carries_the_unmatched_counts_else_the_reason(
+    tmp_path: Path, monkeypatch
+):
+    """LAY-D1: a real mismatch keeps its old message — the unmatched counts, or the runner's reason
+    when it printed none — so an agent can still tell 'wrong netlist' from 'runner died'."""
+    state = _State()
+    state.lvs_match = False
+    state.lvs_unmatched = {"net": 2, "device": 1}
+    sim = _sim(tmp_path, monkeypatch, state)
+    sim.update_params({"gap_x": 1.0})
+    res = sim.run()
+    summary = json.loads(res.log_path.read_text()) if res.log_path else {}
+    assert res.status == "lvs_fail" and summary["error"] == "LVS mismatch: {'net': 2, 'device': 1}"
+    state.lvs_unmatched = {}
+    state.lvs_reason = "LVS runner exited 1 and failed: boom"
+    res = sim.run()
+    summary = json.loads(res.log_path.read_text()) if res.log_path else {}
+    assert (
+        res.status == "lvs_fail"
+        and summary["error"] == "LVS mismatch: LVS runner exited 1 and failed: boom"
+    )
+    assert res.scalar("lvs_match", "layout") == 0.0
+
+
+def test_lvs_gate_off_still_scores_a_matched_but_failed_lvs_zero(tmp_path: Path, monkeypatch):
+    """LAY-D1 with `gates: {lvs: false}`: the run goes on to PEX and measure (not blocking), but the
+    LVS is still reported failed and scored 0 — `passed` drives the score, not the gate flag."""
+    state = _State()
+    state.lvs_reason = "LVS runner exited 7 and failed: Netlists match"
+    _install_fakes(monkeypatch, state)
+    flow = _write_flow(tmp_path)
+    d = yaml.safe_load(flow.read_text())
+    d["gates"] = {"lvs": False}
+    flow.write_text(yaml.safe_dump(d))
+    sim = create_layout_simulator(flow, output_folder=tmp_path / "out")
+    sim.update_params({"gap_x": 1.0})
+    res = sim.run()
+    assert res.status == "lvs_fail"
+    assert state.calls == ["build", "drc", "lvs", "pex"]
+    assert res.scalar("lvs_match", "layout") == 0.0 and res.scalar("pex_ok", "layout") == 1.0
+    assert res.scalar("ugf_mhz", "layout") == 10.0
 
 
 def test_pex_failure_and_measure_error_never_raise(tmp_path: Path, monkeypatch):
@@ -372,7 +517,10 @@ def test_submit_collect_and_corner_forwarding(tmp_path: Path, monkeypatch):
     h2 = sim.submit(label="layout__hot")
     r1, r2 = sim.collect(h1), h2.result()
     assert h1.is_done() and h2.is_done()
-    assert {r1.log_path.parent.name, r2.log_path.parent.name} == {"run_1_layout__hot", "run_2_layout__hot"}  # type: ignore[union-attr]
+    assert {r1.log_path.parent.name, r2.log_path.parent.name} == {  # type: ignore[union-attr]
+        "run_1_layout__hot",
+        "run_2_layout__hot",
+    }
     assert r1.scalar("corner_temp", "layout") == 85.0  # the corner reached the bench
     assert json.loads(r1.log_path.read_text())["corner"]["name"] == "hot"  # type: ignore[union-attr]
     sim.close()
@@ -416,7 +564,12 @@ def test_measure_flow_accepts_bench_only_params_and_forwards_sizing(tmp_path: Pa
 def test_pex_schematic_writer_and_strip_mim_options(tmp_path: Path, monkeypatch):
     """`pex.schematic_writer` hands kpex a per-trial schematic written by the generator (the
     3-terminal-R flavour) instead of the LVS reference; `strip_mim_layers` /
-    `strip_mim_topmetal_margin_um` reach `strip_mim_for_pex`."""
+    `strip_mim_topmetal_margin_um` reach `strip_mim_for_pex`.
+
+    PLUMBING ONLY: `strip_mim_for_pex` is faked here, so this asserts the argument ARRIVES, not
+    that it does anything. It passed identically while the callee ignored `topmetal_margin_um=None`
+    entirely (Codex review, SIGN-03) — the effect is pinned in
+    spicexplorer-signoff/tests/test_signoff_offline.py against a real GDS."""
     import spicexplorer_signoff
 
     state = _State()
@@ -440,18 +593,29 @@ def test_pex_schematic_writer_and_strip_mim_options(tmp_path: Path, monkeypatch)
     monkeypatch.setattr(spicexplorer_signoff, "run_pex", spy_pex)
     flow = _write_flow(tmp_path)
     d = yaml.safe_load(flow.read_text())
-    d["pex"].update({"schematic_writer": "write_pex_schematic", "strip_mim": True,
-                     "strip_mim_layers": [[36, 0], [129, 0], [69, 0]], "strip_mim_topmetal_margin_um": None,
-                     "halo_um": 20})
+    d["pex"].update(
+        {
+            "schematic_writer": "write_pex_schematic",
+            "strip_mim": True,
+            "strip_mim_layers": [[36, 0], [129, 0], [69, 0]],
+            "strip_mim_topmetal_margin_um": None,
+            "halo_um": 20,
+        }
+    )
     flow.write_text(yaml.safe_dump(d))
     spec = LayoutFlowSpec.from_yaml(flow)
     assert spec.pex is not None and spec.pex.schematic_writer == "write_pex_schematic"
-    assert spec.pex.strip_mim_layers == ((36, 0), (129, 0), (69, 0)) and spec.pex.strip_mim_topmetal_margin_um is None
+    assert (
+        spec.pex.strip_mim_layers == ((36, 0), (129, 0), (69, 0))
+        and spec.pex.strip_mim_topmetal_margin_um is None
+    )
     sim = create_layout_simulator(flow, output_folder=tmp_path / "out")
     sim.update_params({"gap_x": 1.0})
     res = sim.run()
     assert res.status == "ok", res.summary["error"]
-    assert "rsil" in seen["schematic"] and "C1" not in seen["schematic"]  # writer's flavour, C cards stripped
+    assert (
+        "rsil" in seen["schematic"] and "C1" not in seen["schematic"]
+    )  # writer's flavour, C cards stripped
     assert seen["gds"].endswith("_nomim.gds")
     assert seen["layers"] == ((36, 0), (129, 0), (69, 0)) and seen["topmetal_margin_um"] is None
     assert spec.pex.halo_um == 20.0 and seen["halo_um"] == 20.0  # kpex --halo forwarded
@@ -474,6 +638,145 @@ def test_parasitic_scalars_ac_ground_math():
     s = parasitic_scalars(per, coup, ac_gnd_nets=["vdd"])
     # to node 0: 33 − (3+2+4) = 24; + VSUBS 4 + vdd 3 = 31 (vout is NOT ac ground)
     assert s["c_net2_ff"] == pytest.approx(31.0) and s["ctot_net2_ff"] == 33.0
+
+
+def test_parasitic_scalars_from_a_kpex_netlist_with_a_self_loop_and_substrate(tmp_path: Path):
+    """LAY-D2 / LAY-D3 end to end: kpex's self-loop (`sub sub`) and its substrate node VSUBS used
+    to reach the optimizer as ctot_sub_ff = 2 + 2 x 23 fF, c_sub__sub_ff, ctot_VSUBS_ff and
+    c_VSUBS__inp_ff. Ground C still lands in c_<net>_ff (it is C to ground, not a pair)."""
+    from spicexplorer_signoff.pex import summarize_parasitics
+
+    net = tmp_path / "cell_k25d_pex_netlist.spice"
+    net.write_text(
+        ".SUBCKT cell sub inp outp vss\n"
+        "Cext_1 inp outp 0.5f\nCext_2 outp sub 2f\nCext_3 sub sub 23f\n"
+        "Cext_4 inp VSUBS 1f\nCext_5 inp vss 0.25f\nCext_6 outp VSS 3f\n.ENDS cell\n"
+    )
+    _, _, per, coup = summarize_parasitics(net)
+    s = parasitic_scalars(per, coup)
+    assert s["ctot_sub_ff"] == pytest.approx(2.0)
+    assert not [
+        k for k in s if "vsubs" in k.lower() or "vss" in k.lower() or k == "c_sub__sub_ff"
+    ], s
+    assert s["c_inp__outp_ff"] == pytest.approx(0.5) and s["ctot_inp_ff"] == pytest.approx(1.75)
+    s = parasitic_scalars(per, coup, ac_gnd_nets=["outp"])
+    assert s["c_inp_ff"] == pytest.approx(1.75)  # to ground 1.25 (VSUBS + vss) + to outp 0.5
+    assert s["c_sub_ff"] == pytest.approx(2.0)  # sub has no ground C; its C to outp (ac gnd)
+
+
+def test_backend_ground_set_is_the_signoff_one():
+    """LAY-D3: `parasitic_scalars` keeps its own copy (the signoff extra is imported lazily), so
+    the two must not drift apart again."""
+    from spicexplorer_signoff.pex import GROUND_NETS
+
+    assert layout_mod._GROUND_NETS == GROUND_NETS
+
+
+# --- pex.ground_nets: a substrate pin is ground in the parasitic scalars (#281) ----------------
+
+# kpex CC output for a cell whose substrate is the pin `sub`, with a self-loop on it (the PAM-4
+# driver shape): C1 is 2 fF from `a` to the substrate, C3 the self-loop, C4 ground C on VSUBS.
+_SUB_PIN_NETLIST = (
+    ".SUBCKT cell a b sub\nM1 a b sub sub sg13_lv_nmos w=1u l=1u\n"
+    "C1 a sub 2f\nC2 a b 0.5f\nC3 sub sub 23f\nC4 b VSUBS 1f\n.ENDS cell\n"
+)
+
+
+def _real_pex_with_fake_kpex(monkeypatch, tmp_path: Path) -> None:
+    """Put the real `run_pex` back (`_install_fakes` replaces it) and give it a stand-in kpex."""
+    import spicexplorer_signoff
+    import spicexplorer_signoff.pex as pex_mod
+
+    exe = tmp_path / "kpex"
+    exe.write_text(
+        "#!/usr/bin/env python3\nimport pathlib, sys\na = sys.argv\n"
+        "gds, cell = pathlib.Path(a[a.index('--gds') + 1]), a[a.index('--cell') + 1]\n"
+        "d = pathlib.Path(a[a.index('--out_dir') + 1]) / f'{gds.stem}__{cell}'\n"
+        "d.mkdir(parents=True, exist_ok=True)\n"
+        f"(d / f'{{cell}}_k25d_pex_netlist.spice').write_text({_SUB_PIN_NETLIST!r})\n"
+    )
+    exe.chmod(0o755)
+    monkeypatch.setattr(spicexplorer_signoff, "run_pex", pex_mod.run_pex)
+    monkeypatch.setattr(pex_mod, "kpex_exe", lambda: str(exe))
+    monkeypatch.setattr(pex_mod, "kpex_klayout_exe", lambda: str(exe))
+
+
+def _flow_with_ground_nets(tmp_path: Path, ground_nets) -> Path:
+    flow = _write_flow(tmp_path, measure=False)
+    d = yaml.safe_load(flow.read_text())
+    if ground_nets is not None:
+        d["pex"]["ground_nets"] = ground_nets
+    flow.write_text(yaml.safe_dump(d))
+    return flow
+
+
+def test_flow_spec_loads_pex_ground_nets(tmp_path: Path):
+    def loaded(value) -> tuple[str, ...]:
+        spec = LayoutFlowSpec.from_yaml(_flow_with_ground_nets(tmp_path, value))
+        assert spec.pex is not None
+        return spec.pex.ground_nets
+
+    assert loaded(["sub", "VSUB2"]) == ("sub", "VSUB2")
+    assert loaded("sub") == ("sub",)  # one name as a plain string is one net, not three letters
+    assert loaded(None) == ()
+    with pytest.raises(ValueError, match="pex.ground_nets"):
+        loaded({"sub": 1})
+
+
+def test_pex_ground_nets_reach_run_pex_and_the_stage_summary(tmp_path: Path, monkeypatch):
+    """End to end through the real `run_pex`: with `pex.ground_nets: [sub]` the substrate pin gets
+    no `ctot_sub_ff` and no `c_a__sub_ff`, `a`'s 2 fF to it is C to ground, and summary.json
+    records the ground set and the one self-loop. The base had no `pex.ground_nets` key."""
+    _install_fakes(monkeypatch, _State())
+    _real_pex_with_fake_kpex(monkeypatch, tmp_path)
+    sim = create_layout_simulator(
+        _flow_with_ground_nets(tmp_path, ["sub"]), output_folder=tmp_path / "out"
+    )
+    sim.update_params({"gap_x": 1.0})
+    res = sim.run()
+    assert res.status == "ok", res.summary["error"]
+    pex = res.summary["stages"]["pex"]
+    assert pex["ground_nets"] == ["0", "gnd", "sub", "vss", "vsubs"] and pex["n_self"] == 1
+    s = res.summary["scalars"]
+    assert "ctot_sub_ff" not in s and "c_a__sub_ff" not in s and "c_sub_ff" not in s
+    assert s["ctot_a_ff"] == pytest.approx(2.5) and s["c_a__b_ff"] == pytest.approx(0.5)
+    assert s["pex_n_c"] == 3.0  # C1, C2, C4; the self-loop is not a card
+
+
+def test_pex_without_ground_nets_keeps_the_substrate_pin_a_signal_net(tmp_path: Path, monkeypatch):
+    """The default is unchanged: no `pex.ground_nets`, so `sub` is a signal net as before."""
+    _install_fakes(monkeypatch, _State())
+    _real_pex_with_fake_kpex(monkeypatch, tmp_path)
+    sim = create_layout_simulator(
+        _flow_with_ground_nets(tmp_path, None), output_folder=tmp_path / "out"
+    )
+    sim.update_params({"gap_x": 1.0})
+    res = sim.run()
+    assert res.status == "ok", res.summary["error"]
+    s = res.summary["scalars"]
+    assert s["ctot_sub_ff"] == pytest.approx(2.0) and s["c_a__sub_ff"] == pytest.approx(2.0)
+    assert res.summary["stages"]["pex"]["ground_nets"] == ["0", "gnd", "vss", "vsubs"]
+
+
+def test_parasitic_scalars_c_to_ground_is_the_same_with_or_without_ground_pairs():
+    """LAY-D3 backwards compatibility: a PexResult written before the fix carries ground pairs
+    (`VSS|a`, `VSUBS|b`) in coupling_ff, one written after does not. `c_<net>_ff` — the budget
+    number a spec targets — must come out the same for either shape and every ac-ground choice;
+    only the ground-pair scalars themselves go away."""
+    per = {"a": 2.0, "b": 2.5}
+    old = {"a|b": 0.5, "VSS|a": 1.5, "VSUBS|b": 2.0}
+    new = {"a|b": 0.5}
+    for acg in ([], ["b"], ["a"], ["a", "b"]):
+        so = parasitic_scalars(per, old, ac_gnd_nets=acg)
+        sn = parasitic_scalars(per, new, ac_gnd_nets=acg)
+        c_net = {k: v for k, v in so.items() if k.startswith("c_") and "__" not in k}
+        assert c_net == pytest.approx(
+            {k: v for k, v in sn.items() if k.startswith("c_") and "__" not in k}
+        ), acg
+        assert set(so) - set(sn) == {"c_VSS__a_ff", "c_VSUBS__b_ff"}
+    assert parasitic_scalars(per, new, ac_gnd_nets=["b"])["c_a_ff"] == pytest.approx(
+        2.0
+    )  # 1.5 to gnd + 0.5 to b
 
 
 def test_prepare_pex_subckt_reinserts_schematic_cards(tmp_path: Path):
@@ -538,14 +841,50 @@ def _project_yaml(tmp_path: Path, flow: Path) -> Path:
                 "lin_variable_bounds": {"min": 0, "max": 1},
                 "log_variable_bounds": {"min": 1, "max": 100},
                 "target_specs": [
-                    {"name": "area_um2", "testbench": "layout", "sim_type": "layout", "goal": "minimize",
-                     "target": 200, "range": 100, "tolerance": 0, "weight": 1, "reward_type": "relative-log"},
-                    {"name": "ugf_mhz", "testbench": "layout", "sim_type": "layout", "goal": "exceed",
-                     "target": 5.0, "range": 5, "tolerance": 0, "weight": 1, "reward_type": "none"},
-                    {"name": "c_a_ff", "testbench": "layout", "sim_type": "layout", "goal": "minimize",
-                     "target": 3.0, "range": 1, "tolerance": 0, "weight": 1, "reward_type": "none"},
-                    {"name": "drc_pass", "testbench": "layout", "sim_type": "layout", "goal": "exact",
-                     "target": 1, "range": 1, "tolerance": 0, "weight": 10, "reward_type": "none"},
+                    {
+                        "name": "area_um2",
+                        "testbench": "layout",
+                        "sim_type": "layout",
+                        "goal": "minimize",
+                        "target": 200,
+                        "range": 100,
+                        "tolerance": 0,
+                        "weight": 1,
+                        "reward_type": "relative-log",
+                    },
+                    {
+                        "name": "ugf_mhz",
+                        "testbench": "layout",
+                        "sim_type": "layout",
+                        "goal": "exceed",
+                        "target": 5.0,
+                        "range": 5,
+                        "tolerance": 0,
+                        "weight": 1,
+                        "reward_type": "none",
+                    },
+                    {
+                        "name": "c_a_ff",
+                        "testbench": "layout",
+                        "sim_type": "layout",
+                        "goal": "minimize",
+                        "target": 3.0,
+                        "range": 1,
+                        "tolerance": 0,
+                        "weight": 1,
+                        "reward_type": "none",
+                    },
+                    {
+                        "name": "drc_pass",
+                        "testbench": "layout",
+                        "sim_type": "layout",
+                        "goal": "exact",
+                        "target": 1,
+                        "range": 1,
+                        "tolerance": 0,
+                        "weight": 10,
+                        "reward_type": "none",
+                    },
                 ],
             },
         }
@@ -573,7 +912,8 @@ def test_orchestrator_runs_layout_flow_end_to_end(tmp_path: Path, monkeypatch):
     _install_fakes(monkeypatch, state)
     flow = _write_flow(tmp_path)
     orch = Circuit_Optimizer_Orchestrator_with_SPICE(
-        project_setup_path=_project_yaml(tmp_path, flow), optimizer_type=Optimizer_Type_Enum.NEVERGRAD_SINGLE
+        project_setup_path=_project_yaml(tmp_path, flow),
+        optimizer_type=Optimizer_Type_Enum.NEVERGRAD_SINGLE,
     )
     sims = orch.get_spicelib_wrapper()
     assert set(sims) == {"layout"} and isinstance(sims["layout"], LayoutSimulator)
@@ -689,7 +1029,9 @@ def _install_fake_ngspice(monkeypatch, calls: list):
     monkeypatch.setattr(fac, "build_simulator", fake_build)
 
 
-def _write_flow_postlayout(tmp_path: Path, *, inline=False, two_tbs=False, ground_nets=None) -> Path:
+def _write_flow_postlayout(
+    tmp_path: Path, *, inline=False, two_tbs=False, ground_nets=None
+) -> Path:
     flow = _write_flow(tmp_path, measure=False)
     (tmp_path / "dut.spice").write_text(FAKE_DUT)
     (tmp_path / "tb_ac.spice").write_text(FAKE_TB_INLINE if inline else FAKE_TB_INCLUDE)
@@ -698,7 +1040,8 @@ def _write_flow_postlayout(tmp_path: Path, *, inline=False, two_tbs=False, groun
     d["postlayout"] = {
         "dut": "dut.spice",
         "subckt": "cell",
-        "testbenches": [{"name": "tb_ac", "netlist": "tb_ac.spice"}] + ([{"name": "tb_op", "netlist": "tb_op.spice"}] if two_tbs else []),
+        "testbenches": [{"name": "tb_ac", "netlist": "tb_ac.spice"}]
+        + ([{"name": "tb_op", "netlist": "tb_op.spice"}] if two_tbs else []),
         "params": {"W1": 2e-6},
         **({"ground_nets": ground_nets} if ground_nets else {}),
     }
@@ -735,17 +1078,27 @@ def test_swap_dut_reference_include_and_inline(tmp_path: Path):
     dut.write_text(FAKE_DUT)
     (tmp_path / "cornerMOSlv.lib").write_text("* lib\n")
     pex = tmp_path / "run" / "dut_postlayout.spice"
-    text, how = swap_dut_reference(FAKE_TB_INCLUDE, dut_path=dut, subckt="cell", pex_path=pex, base_dirs=(tmp_path,))
+    text, how = swap_dut_reference(
+        FAKE_TB_INCLUDE, dut_path=dut, subckt="cell", pex_path=pex, base_dirs=(tmp_path,)
+    )
     assert how == "include"
     assert f".include {pex}" in text and ".include dut.spice" not in text
-    assert f".lib {tmp_path.resolve() / 'cornerMOSlv.lib'} mos_tt" in text  # other relative refs absolutised
-    assert ".param W1 = 1u" in text  # the deck's own params survive (NGSpice_Wrapper injects the fixed sizing)
-    text, how = swap_dut_reference(FAKE_TB_INLINE, dut_path=dut, subckt="cell", pex_path=pex, base_dirs=(tmp_path,))
+    assert (
+        f".lib {tmp_path.resolve() / 'cornerMOSlv.lib'} mos_tt" in text
+    )  # other relative refs absolutised
+    assert (
+        ".param W1 = 1u" in text
+    )  # the deck's own params survive (NGSpice_Wrapper injects the fixed sizing)
+    text, how = swap_dut_reference(
+        FAKE_TB_INLINE, dut_path=dut, subckt="cell", pex_path=pex, base_dirs=(tmp_path,)
+    )
     assert how == "inline"
     assert ".subckt cell" not in text and "XM1 a b vss" not in text and f".include {pex}" in text
     assert "XDUT a b 0 cell" in text
     with pytest.raises(ValueError, match="neither"):
-        swap_dut_reference("V1 a 0 1\n.end\n", dut_path=dut, subckt="cell", pex_path=pex, base_dirs=(tmp_path,))
+        swap_dut_reference(
+            "V1 a 0 1\n.end\n", dut_path=dut, subckt="cell", pex_path=pex, base_dirs=(tmp_path,)
+        )
 
 
 def test_build_postlayout_dut_reorders_pins_and_checks_set():
@@ -753,7 +1106,9 @@ def test_build_postlayout_dut_reorders_pins_and_checks_set():
     from spicexplorer_signoff.postlayout import prep_pex_subckt
 
     raw = ".SUBCKT cell vss b\n+ a\nM1 a b vss vss nmos L=1U W=1U\nC1 a VSUBS 1f\nC2 VSUBS vss 2f\n.ENDS cell\n"
-    out = build_postlayout_dut(raw, "cell", "cell", ["a", "b", "vss"], prep_pex_subckt, ground_nets=["VSUBS"])
+    out = build_postlayout_dut(
+        raw, "cell", "cell", ["a", "b", "vss"], prep_pex_subckt, ground_nets=["VSUBS"]
+    )
     lines = out.splitlines()
     assert lines[0] == ".subckt cell a b vss"  # DUT pin ORDER, kpex's dropped
     assert "XM1 a b vss vss nmos L=1U W=1U" in lines
@@ -849,20 +1204,64 @@ def test_orchestrator_scores_postlayout_registry_metrics(tmp_path: Path, monkeyp
     proj = _project_yaml(tmp_path, flow)
     d = yaml.safe_load(proj.read_text())
     d["project"]["optimizer_config"]["target_specs"] = [
-        {"name": "area_um2", "testbench": "layout", "sim_type": "layout", "goal": "minimize",
-         "target": 200, "range": 100, "tolerance": 0, "reward_type": "relative-log"},
-        {"name": "ugf", "testbench": "layout", "sim_type": "ac", "goal": "exceed", "target": 5e6,
-         "range": 5e6, "tolerance": 0, "reward_type": "none", "measurement": {"meas": "ugf", "out": "v(vout)"}},
-        {"name": "pm", "testbench": "layout", "sim_type": "ac", "goal": "exceed", "target": 60,
-         "range": 30, "tolerance": 0, "reward_type": "none", "measurement": {"meas": "pm", "out": "v(vout)"}},
-        {"name": "tb_ac:v(vout)", "testbench": "layout", "sim_type": "op", "goal": "exceed", "target": 0.5,
-         "range": 1, "tolerance": 0, "reward_type": "none"},
-        {"name": "postlayout_ok", "testbench": "layout", "sim_type": "layout", "goal": "exact", "target": 1,
-         "range": 1, "tolerance": 0, "reward_type": "none"},
+        {
+            "name": "area_um2",
+            "testbench": "layout",
+            "sim_type": "layout",
+            "goal": "minimize",
+            "target": 200,
+            "range": 100,
+            "tolerance": 0,
+            "reward_type": "relative-log",
+        },
+        {
+            "name": "ugf",
+            "testbench": "layout",
+            "sim_type": "ac",
+            "goal": "exceed",
+            "target": 5e6,
+            "range": 5e6,
+            "tolerance": 0,
+            "reward_type": "none",
+            "measurement": {"meas": "ugf", "out": "v(vout)"},
+        },
+        {
+            "name": "pm",
+            "testbench": "layout",
+            "sim_type": "ac",
+            "goal": "exceed",
+            "target": 60,
+            "range": 30,
+            "tolerance": 0,
+            "reward_type": "none",
+            "measurement": {"meas": "pm", "out": "v(vout)"},
+        },
+        {
+            "name": "tb_ac:v(vout)",
+            "testbench": "layout",
+            "sim_type": "op",
+            "goal": "exceed",
+            "target": 0.5,
+            "range": 1,
+            "tolerance": 0,
+            "reward_type": "none",
+        },
+        {
+            "name": "postlayout_ok",
+            "testbench": "layout",
+            "sim_type": "layout",
+            "goal": "exact",
+            "target": 1,
+            "range": 1,
+            "tolerance": 0,
+            "reward_type": "none",
+        },
     ]
     d["project"]["optimizer_config"]["budget"] = 1
     proj.write_text(yaml.safe_dump(d))
-    orch = Circuit_Optimizer_Orchestrator_with_SPICE(project_setup_path=proj, optimizer_type=Optimizer_Type_Enum.NEVERGRAD_SINGLE)
+    orch = Circuit_Optimizer_Orchestrator_with_SPICE(
+        project_setup_path=proj, optimizer_type=Optimizer_Type_Enum.NEVERGRAD_SINGLE
+    )
     opt = orch.get_optimizer()
     opt.disable_autosave = True
     opt.autosave_checkpoint_dir = tmp_path / "ckpt"
@@ -910,7 +1309,11 @@ def test_sizing_params_route_to_build_sizing_and_postlayout_decks(tmp_path: Path
     assert seen["sizing_json"] is not None and Path(seen["sizing_json"]).name == "sizing.json"
     assert json.loads(Path(seen["sizing_json"]).read_text()) == {"in_w": 3e-6, "tail_w": 2e-6}
     assert res.summary["sizing"] == {"in_w": 3e-6} and "W1" not in res.summary["params"]
-    assert ("params", "tb_ac", {"W1": 3e-6}) in calls  # deck `.param W1` gets the candidate (over postlayout.params)
+    assert (
+        "params",
+        "tb_ac",
+        {"W1": 3e-6},
+    ) in calls  # deck `.param W1` gets the candidate (over postlayout.params)
     # a sizing name that is also a knob is rejected at load
     d["sizing_params"] = {"gap_x": "in_w"}
     flow.write_text(yaml.safe_dump(d))

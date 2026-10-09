@@ -134,7 +134,7 @@ export function TargetSpecsStep() {
                 className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadForDiscovery(f); e.target.value = ""; }}
               />
-              <span className="inline-flex items-center gap-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-50">
+              <span className="inline-flex items-center gap-1 rounded-md border border-zinc-300 bg-panel px-2 py-1 text-xs text-zinc-700 hover:bg-bg">
                 <Upload className="h-3 w-3" /> {parsing ? "Scanning…" : "Discover from netlist"}
               </span>
             </label>
@@ -145,13 +145,13 @@ export function TargetSpecsStep() {
         </div>
 
         {discoverErr && (
-          <div className="rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-700">{discoverErr}</div>
+          <div className="rounded-md border border-red-200 bg-danger-soft p-2 text-xs text-red-700">{discoverErr}</div>
         )}
 
         {candidates.length > 0 && (
-          <div className="rounded-md border border-indigo-200 bg-indigo-50/60 p-3">
+          <div className="rounded-md border border-indigo-200 bg-primary-soft/60 p-3">
             <div className="mb-2 flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-xs font-medium text-indigo-700">
+              <span className="flex items-center gap-1.5 text-xs font-medium text-primary">
                 <BookOpen className="h-3.5 w-3.5" /> {candidates.length} measurement(s) found — pick specs to add
               </span>
               <Button variant="primary" onClick={addPicked} className="h-7! px-2! text-xs!" disabled={picked.size === 0}>
@@ -160,7 +160,7 @@ export function TargetSpecsStep() {
             </div>
             <div className="flex flex-wrap gap-2">
               {candidates.map((c) => (
-                <label key={c.name} className="flex items-center gap-1.5 rounded-sm border border-indigo-200 bg-white px-2 py-1 text-xs">
+                <label key={c.name} className="flex items-center gap-1.5 rounded-sm border border-indigo-200 bg-panel px-2 py-1 text-xs">
                   <input
                     type="checkbox"
                     checked={picked.has(c.name)}
@@ -181,7 +181,7 @@ export function TargetSpecsStep() {
         )}
 
         {specs.length === 0 && (
-          <div className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4 text-center text-xs text-zinc-500">
+          <div className="rounded-md border border-dashed border-zinc-300 bg-bg p-4 text-center text-xs text-muted">
             No specs yet — add at least one for the optimizer to chase.
           </div>
         )}
@@ -189,10 +189,10 @@ export function TargetSpecsStep() {
         {specs.map((s, i) => {
           const isOpen = openIdx === i;
           return (
-            <div key={i} className="rounded-md border border-zinc-200 bg-white">
+            <div key={i} className="rounded-md border border-border bg-panel">
               <button
                 type="button"
-                className="flex w-full items-center justify-between px-3 py-2 text-left text-xs hover:bg-zinc-50"
+                className="flex w-full items-center justify-between px-3 py-2 text-left text-xs hover:bg-bg"
                 onClick={() => setOpenIdx(isOpen ? null : i)}
               >
                 <span className="flex items-center gap-2">
@@ -201,12 +201,12 @@ export function TargetSpecsStep() {
                   <Badge variant={s.goal === "exceed" ? "indigo" : s.goal === "minimize" ? "warning" : "neutral"}>
                     {s.goal}
                   </Badge>
-                  <span className="text-zinc-500">target: {s.target || "—"}</span>
-                  <span className="text-zinc-400">@ {s.testbench || "—"}</span>
+                  <span className="text-muted">target: {s.target || "—"}</span>
+                  <span className="text-faint">@ {s.testbench || "—"}</span>
                   {!s.enable && <Badge variant="neutral">disabled</Badge>}
                 </span>
                 <span
-                  className="rounded-md border border-zinc-200 px-2 py-1 text-zinc-400 hover:bg-red-50 hover:text-red-600"
+                  className="rounded-md border border-border px-2 py-1 text-faint hover:bg-danger-soft hover:text-danger"
                   role="button"
                   aria-label="Remove spec"
                   onClick={(e) => { e.stopPropagation(); remove(i); }}
@@ -216,7 +216,7 @@ export function TargetSpecsStep() {
               </button>
 
               {isOpen && (
-                <div className="grid grid-cols-3 gap-3 border-t border-zinc-100 p-3">
+                <div className="grid grid-cols-3 gap-3 border-t border-hairline p-3">
                   <Field label="Name"><TextInput value={s.name} onChange={(e) => update(i, { name: e.target.value })} placeholder="ugf" /></Field>
                   <Field label="Testbench">
                     <select className={selectCn("sm") + " w-full"} value={s.testbench} onChange={(e) => update(i, { testbench: e.target.value })}>

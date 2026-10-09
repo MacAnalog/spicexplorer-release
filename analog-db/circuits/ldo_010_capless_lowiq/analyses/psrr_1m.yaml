@@ -1,0 +1,15 @@
+# AC PSRR Vdd -> Vout at 1 mA; read at 1 MHz (report-only psrr_1m_db).
+schema: spicexplorer/analysis@1
+id: psrr_1m
+template: psrr
+description: "AC PSRR Vdd -> Vout at 1 mA; read at 1 MHz (report-only psrr_1m_db)."
+params:
+  VDD: 1.5
+  ILOAD: 1m
+  COUT: 1p
+  PPD: 20
+  FSTART: 10
+  FSTOP: 100meg
+  FMEAS: 1meg
+flags: []
+produces: [psrr_vdd_db]

@@ -11,16 +11,29 @@ needs ngspice AND the PDK's corner libs on the ngspice sourcepath. Two execution
 
 from __future__ import annotations
 
+import math
 import os
 import re
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable, Protocol
+from typing import Protocol
 
 from spicexplorer_core.spice_engine.deck_prep import plan_slim_swap
+
+try:
+    from spicexplorer_core.spice_engine.sim_log import parse_measures
+except ImportError as _exc:  # pragma: no cover - exercised by the merge-order test
+    raise ImportError(
+        "spicexplorer_core.spice_engine.sim_log is missing. analog-db re-exports its "
+        "`parse_measures` instead of keeping a third private copy of the ngspice scalar-scrape "
+        "rules; the module lands on spicexplorer-platform with PR #129 "
+        "(branch `feat/harness-spec-v2`). MERGE ORDER: platform #129 must merge and the "
+        "meta-repo submodule pointer be re-pinned BEFORE this analog-db branch."
+    ) from _exc
 
 from .assemble import assemble
 from .model import Circuit
@@ -55,7 +68,9 @@ def _prepare_native_deck(netlist: str, pdk_dir: Path, spec: dict) -> str:
             out.append(ln)
         lines = out
 
-    search = [pdk_dir / spec["model_subdir"]] + [pdk_dir / p for p in spec.get("extra_sourcepath", [])]
+    search = [pdk_dir / spec["model_subdir"]] + [
+        pdk_dir / p for p in spec.get("extra_sourcepath", [])
+    ]
 
     def _resolve_include(ln: str) -> str:
         m = re.match(r"^(\s*\.inc(?:lude)?\s+)(\S+)(.*)$", ln, re.IGNORECASE)
@@ -71,14 +86,6 @@ def _prepare_native_deck(netlist: str, pdk_dir: Path, spec: dict) -> str:
         return ln
 
     return "\n".join(_resolve_include(ln) for ln in lines) + "\n"
-
-# ngspice meas/print output: "name              =  2.977862e+01"; MIN/MAX/PP/AVG
-# measures append the location, e.g. "name = 4.8e-01 at=  4.34e-06" — accept it.
-_MEASURE = re.compile(
-    r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([-+]?[0-9.]+(?:[eE][-+]?[0-9]+)?)"
-    r"(?:\s+(?:at|from|to)\s*=.*)?\s*$"
-)
-_FAILED = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*failed", re.IGNORECASE)
 
 
 class SpiceRunner(Protocol):
@@ -230,7 +237,9 @@ def native_pdk_runner(
     pdk_dir = native_pdk_dir(pdk, pdk_root)
     spec = _NATIVE_PDK.get(pdk)
     if pdk_dir is None or spec is None:
-        raise RuntimeError(f"native PDK {pdk!r} not installed under $PDK_ROOT={os.environ.get('PDK_ROOT')}")
+        raise RuntimeError(
+            f"native PDK {pdk!r} not installed under $PDK_ROOT={os.environ.get('PDK_ROOT')}"
+        )
     init = _native_spiceinit(pdk_dir, spec)
 
     def _run(netlist: str) -> str:
@@ -346,19 +355,36 @@ def parse_errors(
     return parse_errors_text(assemble(circuit, analysis_id, pdk, corner), runner)
 
 
-def parse_measures(output: str) -> tuple[dict[str, float], list[str]]:
-    """(measures, failed-measure names) from ngspice batch output."""
-    measures: dict[str, float] = {}
-    failed: list[str] = []
-    for line in output.splitlines():
-        m = _MEASURE.match(line)
-        if m:
-            measures[m.group(1).lower()] = float(m.group(2))
-            continue
-        f = _FAILED.match(line)
-        if f:
-            failed.append(f.group(1).lower())
-    return measures, failed
+# ``parse_measures`` is RE-EXPORTED (see the import at the top) from the one module that owns the
+# simulator-log rules, ``spicexplorer_core.spice_engine.sim_log``. It used to be a third private
+# copy of the ngspice scalar-scrape regexes, after the platform's and the waveform viewer's.
+#
+# The platform version is a strict SUPERSET of the copy that lived here — verified case by case in
+# ``tests/test_parse_measures_reuse.py``. It additionally reads ngspice-45's
+# ``meas tran <name> … failed!`` form (the copy here knew only the older ``<name> = failed`` line
+# and silently missed the other), ``trig=``/``targ=`` delay tails, dotted names, and ``inf``/``nan``
+# as non-finite floats. The name stays bound HERE because ``verify`` and the tests import it as
+# ``runner.parse_measures``.
+#
+# ``run_text``'s own fatal scan below is deliberately NOT replaced by ``sim_log.fatal_lines``.
+# The two CONTAINMENT gaps that used to justify this are now CLOSED (platform 2430bfc): both the
+# lowercase ``fatal: ngspice timed out after …`` marker :func:`native_pdk_runner` emits above and
+# every ``cannot open`` form are fatal to ``fatal_lines`` today, and on real ngspice logs the two
+# agree. The scan stays for a different and stronger reason: ``fatal_lines`` is deliberately
+# BROADER than this function's contract. It reports EVERY error-level line, including
+# ``could not find a valid modelname`` (W out of the model bin), ``singular matrix``,
+# ``no convergence``, ``timestep too small`` and ``doAnalyses: iteration limit reached`` — which
+# this database classifies as RECORDED FLOORS (a degenerate baseline sizing), not dead runs; see
+# TESTING.md §3 and ``tests/test_slow_sim.py::_LOAD_ERR``.
+#
+# Adopting it here would also undo the fix directly below: a deck that yields SOME finite measures
+# alongside one of those lines would raise, ``run_circuit`` would mark the whole analysis
+# ``sim_error``, and ``metric_values`` skips a non-``ok`` analysis — so every SIBLING metric would
+# vanish from the scorecard, which scores more leniently than failing. Measured: 0 of 65 sampled
+# committed decks (25 ihp-sg13g2 + 40 sky130/gf180mcu) currently pair finite measures with such a
+# line, so the hazard is latent rather than active — but it is exactly the hazard `run_text`'s
+# narrow, dead-run-only gate exists to avoid. ``fatal_lines`` remains the right rule for the
+# viewer's log panel and for ``run_deck``, which classify lines rather than gate a recording.
 
 
 class SimError(RuntimeError):
@@ -369,7 +395,16 @@ def run_text(
     netlist: str, label: str = "<netlist>", runner: SpiceRunner = local_runner
 ) -> dict[str, float]:
     """Simulate an arbitrary deck STRING (e.g. a committed ``raw/`` file) and return its measures.
-    Raises ``SimError`` on a fatal error, no parseable measures, or a NaN; ``label`` tags the message."""
+    Raises ``SimError`` on a fatal error, no parseable measure, or a run in which NO measure came
+    back finite; ``label`` tags the message.
+
+    A single non-finite measure is NOT fatal. ngspice reports a failed ``.meas`` two ways at once —
+    a ``-999`` sentinel and a ``… failed!`` line — and an overflowing ``let`` prints ``inf``/``nan``;
+    either way that is ONE dead metric, not a dead run. Non-finite measures are kept as NaN so
+    ``ppa.metric_values`` scores them ``{value: null, spec: fail}``, the honest verdict its docstring
+    promises. Raising on the first NaN instead would set the whole analysis ``status: sim_error``,
+    and ``metric_values`` skips a non-``ok`` analysis entirely — so every SIBLING metric of that
+    analysis would vanish from the scorecard, and absence scores more leniently than failure."""
     output = runner(netlist)
     lowered = output.lower()
     if "fatal" in lowered or "simulation interrupted" in lowered or "cannot open" in lowered:
@@ -377,11 +412,11 @@ def run_text(
     measures, failed = parse_measures(output)
     if not measures:
         raise SimError(f"{label}: no measures parsed:\n{output[-2000:]}")
-    for name, value in measures.items():
-        if value != value:  # NaN
-            raise SimError(f"{label}: {name} is NaN")
-    if failed:
-        measures.update({name: float("nan") for name in failed})
+    # failed `.meas` names become NaN FIRST, so the "did anything survive?" gate sees the whole
+    # picture (a `-999` sentinel must not count as a finite survivor).
+    measures.update({name: float("nan") for name in failed})
+    if not any(math.isfinite(v) for v in measures.values()):
+        raise SimError(f"{label}: no finite measure (all {len(measures)} are NaN/inf)")
     return measures
 
 

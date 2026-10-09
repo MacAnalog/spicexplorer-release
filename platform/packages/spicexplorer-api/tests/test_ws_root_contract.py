@@ -7,9 +7,10 @@ autosave that fixes the Docker checkpoint data-loss bug — i.e. ``output_root``
 checkpoints off the CWD while the default stays byte-identical for CLI/example scripts.
 This is the test that would have caught the ``yaml_path=""`` regression.
 """
+
 import sys
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import numpy as np
 import pytest
@@ -20,7 +21,9 @@ from spicexplorer.optimization.base import Base_Optimizer
 
 sys.path.insert(0, str(REPO_ROOT))  # so `ui.backend.app_config` imports
 
-CASCODE_YAML = REPO_ROOT / "examples" / "OTA" / "cascode" / "ihp-sg13g2" / "sizing" / "project_setup.yaml"
+CASCODE_YAML = (
+    REPO_ROOT / "examples" / "OTA" / "cascode" / "ihp-sg13g2" / "sizing" / "project_setup.yaml"
+)
 pytestmark = pytest.mark.skipif(not CASCODE_YAML.exists(), reason="cascode example missing")
 
 
@@ -40,6 +43,7 @@ def _load_with(tmp_path: Path, *, ws_root: Any = ..., subdir: str = "") -> Proje
 
 
 # ---------- (1) ws_root resolution branches ----------
+
 
 def test_ws_root_absolute_kept_as_is(tmp_path):
     abs_ws = (tmp_path / "ws").resolve()
@@ -70,16 +74,18 @@ def test_ws_root_tilde_expanded(tmp_path):
 
 # ---------- (2) de-CWD autosave (report.md P1) ----------
 
+
 class _NoopOpt(Base_Optimizer):
     """Concrete Base_Optimizer with no-op abstracts, so __init__'s autosave-path logic
     is testable without any SPICE/optimizer machinery."""
+
     def _create_optimizer_obj(self) -> bool:
         return True
 
     def parameterize(self) -> Any:
         return {}
 
-    def evaluate(self, parameterization: Dict[str, float]) -> Tuple[np.floating, Dict[str, Any]]:
+    def evaluate(self, parameterization: dict[str, float]) -> tuple[np.floating, dict[str, Any]]:
         return np.float64(0.0), {}
 
     def compute_fitness(self, performance_array):
@@ -121,11 +127,13 @@ def test_autosave_output_root_routes_off_cwd(tmp_path, monkeypatch):
 
 # ---------- (3) WORK_ROOT resolution (app_config) ----------
 
+
 def test_work_root_env_override(tmp_path, monkeypatch):
     monkeypatch.setenv("WORK_ROOT", str(tmp_path / "wr"))
     import importlib
 
     from spicexplorer_api import app_config
+
     importlib.reload(app_config)
     assert app_config.work_root() == (tmp_path / "wr").resolve()
     assert app_config.auto_save_root() == (tmp_path / "wr" / "auto_save").resolve()
@@ -136,5 +144,6 @@ def test_work_root_default_under_repo(monkeypatch):
     import importlib
 
     from spicexplorer_api import app_config
+
     importlib.reload(app_config)
     assert app_config.work_root() == (REPO_ROOT / "work").resolve()

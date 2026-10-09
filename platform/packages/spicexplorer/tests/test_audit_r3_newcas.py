@@ -8,9 +8,10 @@ These exercise the core library on the `examples/OTA/cascode` path — no ngspic
 - BUG-B9  a null / non-finite target-spec `weight` is coerced to 1.0 (was NaN-poisoning the score).
 - BUG-B10 a frozen dut_param given only an eng-string `val`/`init` (no min/max) loads instead of crashing.
 """
+
 import sys
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import numpy as np
 import pytest
@@ -21,7 +22,9 @@ from spicexplorer.optimization.base import Base_Optimizer
 
 sys.path.insert(0, str(REPO_ROOT))
 
-CASCODE_YAML = REPO_ROOT / "examples" / "OTA" / "cascode" / "ihp-sg13g2" / "sizing" / "project_setup.yaml"
+CASCODE_YAML = (
+    REPO_ROOT / "examples" / "OTA" / "cascode" / "ihp-sg13g2" / "sizing" / "project_setup.yaml"
+)
 pytestmark = pytest.mark.skipif(not CASCODE_YAML.exists(), reason="cascode example missing")
 
 
@@ -52,6 +55,7 @@ def _load_mutated(tmp_path: Path, mutate) -> Project_Setup:
 
 # ---------- BUG-B7: XeY string target ----------
 
+
 def test_targetspec_string_target_is_parsed():
     spec = TargetSpec(name="ugf", testbench="tb", target="200e6", goal="exceed", sim_type="ac")
     assert not isinstance(spec.target, str)
@@ -66,9 +70,11 @@ def test_eY_target_without_tolerance_loads(tmp_path):
     The original bug was `abs(0.05 * target)` raising TypeError on that string. The default is
     now 0 rather than 5 % of target, so the multiply is gone — but the coercion it depended on
     still has to happen, because `target` itself is used in arithmetic everywhere downstream."""
+
     def mut(d):
         for s in _find(d, "target_specs"):
             s.pop("tolerance", None)
+
     proj = _load_mutated(tmp_path, mut)  # previously: TypeError can't multiply str
     ugf = next(s for s in proj.optimizer_config.target_specs.targets if s.name == "ugf")
     assert not isinstance(ugf.target, str)
@@ -78,30 +84,38 @@ def test_eY_target_without_tolerance_loads(tmp_path):
 
 # ---------- BUG-B9: null / non-finite weight ----------
 
+
 def test_null_weight_coerced_to_one():
-    spec = TargetSpec(name="g", testbench="tb", target=1.0, goal="exceed", sim_type="ac", weight=None)
+    spec = TargetSpec(
+        name="g", testbench="tb", target=1.0, goal="exceed", sim_type="ac", weight=None
+    )
     assert spec.weight is not None and float(spec.weight) == 1.0
     assert np.isfinite(np.float64(spec.weight))
 
 
 def test_nan_weight_coerced_to_one():
-    spec = TargetSpec(name="g", testbench="tb", target=1.0, goal="exceed", sim_type="ac",
-                      weight=float("nan"))
+    spec = TargetSpec(
+        name="g", testbench="tb", target=1.0, goal="exceed", sim_type="ac", weight=float("nan")
+    )
     assert spec.weight is not None and float(spec.weight) == 1.0
 
 
 def test_explicit_weight_preserved():
-    spec = TargetSpec(name="g", testbench="tb", target=1.0, goal="exceed", sim_type="ac", weight=2.5)
+    spec = TargetSpec(
+        name="g", testbench="tb", target=1.0, goal="exceed", sim_type="ac", weight=2.5
+    )
     assert spec.weight is not None and float(spec.weight) == 2.5
 
 
 # ---------- BUG-B8: numeric min>=max rejected ----------
 
+
 def test_numeric_inverted_range_rejected(tmp_path):
     def mut(d):
         dps = _find(d, "dut_params")
-        dps[0]["min_val"] = 5      # plain numbers (previously skipped the min>=max check)
+        dps[0]["min_val"] = 5  # plain numbers (previously skipped the min>=max check)
         dps[0]["max_val"] = 1
+
     with pytest.raises(ValueError):
         _load_mutated(tmp_path, mut)
 
@@ -111,6 +125,7 @@ def test_numeric_equal_min_max_rejected(tmp_path):
         dps = _find(d, "dut_params")
         dps[0]["min_val"] = 3
         dps[0]["max_val"] = 3
+
     with pytest.raises(ValueError):
         _load_mutated(tmp_path, mut)
 
@@ -123,9 +138,11 @@ def test_valid_example_still_loads(tmp_path):
 
 # ---------- BUG-B10: frozen eng-string constant, no bounds ----------
 
+
 def test_frozen_eng_string_val_no_bounds_loads(tmp_path):
     def mut(d):
         _find(d, "dut_params").append({"name": "X_DUT_FROZEN_L", "freeze": True, "val": "0.18u"})
+
     proj = _load_mutated(tmp_path, mut)  # previously: ValueError "missing min or max value"
     frozen = next(p for p in proj.dut_params if p.name == "X_DUT_FROZEN_L")
     assert frozen.freeze is True
@@ -136,6 +153,7 @@ def test_frozen_eng_string_val_no_bounds_loads(tmp_path):
 def test_frozen_eng_string_init_no_bounds_loads(tmp_path):
     def mut(d):
         _find(d, "dut_params").append({"name": "X_DUT_FROZEN_I", "freeze": True, "init": "50f"})
+
     proj = _load_mutated(tmp_path, mut)
     frozen = next(p for p in proj.dut_params if p.name == "X_DUT_FROZEN_I")
     assert frozen.init is not None and not isinstance(frozen.init, str)
@@ -144,15 +162,17 @@ def test_frozen_eng_string_init_no_bounds_loads(tmp_path):
 
 # ---------- BUG-B6 / B5: optimizer-level (no SPICE) ----------
 
+
 class _NoopOpt(Base_Optimizer):
     """Concrete Base_Optimizer with no-op abstracts (mirrors test_ws_root_contract)."""
+
     def _create_optimizer_obj(self) -> bool:
         return True
 
     def parameterize(self) -> Any:
         return {}
 
-    def evaluate(self, parameterization: Dict[str, float]) -> Tuple[np.floating, Dict[str, Any]]:
+    def evaluate(self, parameterization: dict[str, float]) -> tuple[np.floating, dict[str, Any]]:
         return np.float64(0.0), {}
 
     def compute_fitness(self, performance_array):
@@ -200,6 +220,7 @@ def test_denormalize_linear_endpoints(tmp_path):
 
 class _CountingOpt(Base_Optimizer):
     """Appends one real log entry per step so the optimize() loop's indexing is exercised."""
+
     def _create_optimizer_obj(self) -> bool:
         self.optimizer = object()
         return True
@@ -215,6 +236,7 @@ class _CountingOpt(Base_Optimizer):
 
     def optimization_step(self):
         from spicexplorer.core.domains import OptimizationLogEntry, OptimizationPoint
+
         # GLOBALLY increasing score (instance step counter, not len(log)) so the best is
         # well-defined across autosave resets and "new best" fires every trial.
         step = getattr(self, "_step", 0)

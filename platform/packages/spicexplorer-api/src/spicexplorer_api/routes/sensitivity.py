@@ -15,6 +15,7 @@ values there) so the sensitivity is computed at the operating point on screen.
 Live SPICE is required — without the IHP PDK this endpoint fails the same way a
 live run does (the UI gates it behind ``/api/env``).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -117,20 +118,35 @@ def _run_sensitivity(
     try:
         project = Project_Setup.from_yaml(yaml_path)
     except Exception as e:  # noqa: BLE001
-        return {"ok": False, "spec": spec_name, "rel_delta": rel_delta, "n_sims": 0,
-                "error": f"Failed to load project: {e}"}
+        return {
+            "ok": False,
+            "spec": spec_name,
+            "rel_delta": rel_delta,
+            "n_sims": 0,
+            "error": f"Failed to load project: {e}",
+        }
 
     specs = project.optimizer_config.target_specs.targets
     spec = next((s for s in specs if s.name == spec_name), None)
     if spec is None:
-        return {"ok": False, "spec": spec_name, "rel_delta": rel_delta, "n_sims": 0,
-                "error": f"Spec '{spec_name}' not found. Available: {[s.name for s in specs]}"}
+        return {
+            "ok": False,
+            "spec": spec_name,
+            "rel_delta": rel_delta,
+            "n_sims": 0,
+            "error": f"Spec '{spec_name}' not found. Available: {[s.name for s in specs]}",
+        }
 
     by_name = {p.name: p for p in project.dut_params}
     bad = [n for n in (list(only or []) + list(overrides)) if n not in by_name]
     if bad:
-        return {"ok": False, "spec": spec_name, "rel_delta": rel_delta, "n_sims": 0,
-                "error": f"Unknown DUT param(s): {bad}. Available: {list(by_name)}"}
+        return {
+            "ok": False,
+            "spec": spec_name,
+            "rel_delta": rel_delta,
+            "n_sims": 0,
+            "error": f"Unknown DUT param(s): {bad}. Available: {list(by_name)}",
+        }
 
     sweep = [by_name[n] for n in only] if only else list(project.dut_params)
 
@@ -152,8 +168,13 @@ def _run_sensitivity(
         base_score, base_fit = opt.evaluate(baseline, append_to_log=False)
     except Exception as e:  # noqa: BLE001
         opt.close()  # P4: bare-evaluate() caller must release the OCEAN session
-        return {"ok": False, "spec": spec_name, "rel_delta": rel_delta, "n_sims": n_sims,
-                "error": f"Baseline simulation failed: {e}"}
+        return {
+            "ok": False,
+            "spec": spec_name,
+            "rel_delta": rel_delta,
+            "n_sims": n_sims,
+            "error": f"Baseline simulation failed: {e}",
+        }
     n_sims += 1
     base_metric = _safe_float(base_fit.get(spec_name, {}).get("curr_val"))
 
@@ -178,8 +199,12 @@ def _run_sensitivity(
 
         device, kind = _parse_device_kind(p.name)
         entry: dict[str, Any] = {
-            "name": p.name, "device": device, "kind": kind,
-            "nominal": nominal, "delta": delta, "perturbed_value": pert,
+            "name": p.name,
+            "device": device,
+            "kind": kind,
+            "nominal": nominal,
+            "delta": delta,
+            "perturbed_value": pert,
             "baseline_metric": base_metric,
         }
         if delta == 0:  # range too small to perturb without leaving bounds
@@ -208,8 +233,10 @@ def _run_sensitivity(
         results.append(entry)
 
     # Most-influential first (|elasticity|, falling back to |slope|).
-    results.sort(key=lambda e: abs(e.get("elasticity") or 0.0) or abs(e.get("sensitivity") or 0.0),
-                 reverse=True)
+    results.sort(
+        key=lambda e: abs(e.get("elasticity") or 0.0) or abs(e.get("sensitivity") or 0.0),
+        reverse=True,
+    )
     opt.close()  # P4: bare-evaluate() caller must release the OCEAN session
 
     return {
@@ -248,9 +275,15 @@ def _parse_overrides(at: str | None) -> dict[str, float]:
 async def spec_sensitivity(
     name: str,
     yaml_path: str | None = Query(None),
-    rel_delta: float = Query(0.05, gt=0, le=0.5, description="perturbation as a fraction of nominal"),
-    params: str | None = Query(None, description="comma-separated DUT param names to limit the sweep"),
-    at: str | None = Query(None, description="comma-separated name:value baseline overrides (absolute SI)"),
+    rel_delta: float = Query(
+        0.05, gt=0, le=0.5, description="perturbation as a fraction of nominal"
+    ),
+    params: str | None = Query(
+        None, description="comma-separated DUT param names to limit the sweep"
+    ),
+    at: str | None = Query(
+        None, description="comma-separated name:value baseline overrides (absolute SI)"
+    ),
 ):
     from spicexplorer_api.routes.checkpoint import require_yaml_under_allowed_root
 

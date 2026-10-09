@@ -7,8 +7,12 @@ with three binding mechanisms this module reproduces:
   (a T-junction), are the same electrical net;
 * **names bind**: a ``lab_wire``/``lab_pin`` component (or a wire's own ``lab=`` attribute)
   names the net its point sits on, and *equal names join disjoint groups* — including
-  circuit port pins (``ipin``/``opin``/``iopin``), which bind **by their ``lab`` only**
-  (real corpus schematics park them far away from any wire);
+  circuit port pins (``ipin``/``opin``/``iopin``). A port binds **both ways**, exactly as
+  xschem does: its ``lab`` names whatever group its own point lands on (its connection
+  point is the symbol origin in all three port symbols, whatever the rotation), and the
+  name then joins any other group carrying it. A port parked far from every wire — which
+  real corpus schematics do — therefore still binds by name alone, and a port dropped ON
+  the net's wire names that wire group instead of leaving it anonymous (#236);
 * **pins touch**: a device pin — the transformed centre of its symbol's ``B 5`` box — joins
   whatever wire/pin group occupies that point.
 
@@ -64,6 +68,11 @@ class NetExtraction:
     ports: list[PortPin] = field(default_factory=list)
     nets: set[str] = field(default_factory=set)
     warnings: list[str] = field(default_factory=list)
+    # Device instances whose symbol resolved to nothing, so they have NO terminals here and
+    # nothing downstream can place them. A structured field rather than a warning because
+    # dropping a device silently changes the circuit — the emitter turns each of these into
+    # an error, and the netcheck into a finding (#226).
+    dropped: list[str] = field(default_factory=list)
     # net name -> its wire segments (xschem coords), pre-split at every electrical node so
     # all junctions are endpoint-to-endpoint (Virtuoso does not auto-connect a wire endpoint
     # landing on another wire's interior) — what wire-mode draws.
@@ -201,7 +210,9 @@ def extract_nets(sch: Schematic, symlib: SymLibrary | None = None) -> NetExtract
             continue
         sym = symlib.load(comp.symref)
         if sym is None:
-            out.warnings.append(f"symbol not resolvable: {comp.symref} (instance {comp.name})")
+            # No pin geometry, so this device binds no nets at all. Recorded, not warned:
+            # the emitter raises the error that stops the port (#226).
+            out.dropped.append(comp.name)
             continue
         if any(name == comp.name for name, _pin, _x, _y, _o in pin_points):
             out.warnings.append(
@@ -255,10 +266,18 @@ def extract_nets(sch: Schematic, symlib: SymLibrary | None = None) -> NetExtract
     # make Virtuoso's by-name connectivity re-introduce the stale-label merge), and never
     # an xschem auto-name ('#netN' — the netlister renumbers those freely).
     claimed = {n for names in merged.values() for n in names}
+    # A hint this pass had to refuse is the most common reason a group ends up anonymous
+    # (a stale ``lab=`` whose name a real label/port already carries somewhere else); keep
+    # it so the anonymous-group warning below can say so instead of only naming a number.
+    refused_hints: dict[tuple[int, int], str] = {}
     for lab, x, y in wire_hints:
-        if lab.startswith("#") or lab in claimed:
-            continue
         root = uf.find(_key(x, y))
+        if lab.startswith("#"):
+            continue
+        if lab in claimed:
+            if not merged.get(root):
+                refused_hints.setdefault(root, lab)
+            continue
         if not merged.get(root):
             merged.setdefault(root, set()).add(lab)
             claimed.add(lab)
@@ -281,9 +300,12 @@ def extract_nets(sch: Schematic, symlib: SymLibrary | None = None) -> NetExtract
     def touches_wire(px: float, py: float) -> bool:
         return any(_on_segment(px, py, *seg) for seg in segments)
 
+    anonymous: dict[tuple[int, int], list[str]] = {}
     for inst, pin, ax, ay, origin in pin_points:
         root = uf.find(_key(ax, ay))
         net = net_name(root)
+        if not merged.get(root):
+            anonymous.setdefault(root, []).append(f"{inst}.{pin}")
         out.nets.add(net)
         out.pin_nets[(inst, pin)] = PinNet(
             inst=inst,
@@ -294,6 +316,24 @@ def extract_nets(sch: Schematic, symlib: SymLibrary | None = None) -> NetExtract
             stub_dir=_stub_direction(ax, ay, segments, origin),
             on_wire=touches_wire(ax, ay),
         )
+    # An anonymous group is not an error — an unlabeled internal node is ordinary xschem —
+    # but it is the shape #236 reported as a DIFFERENT CIRCUIT: the sheet's only name for
+    # the net lives somewhere the extractor cannot bind it, so every terminal on it reaches
+    # OA under a synthesized name and the net counts no longer match. Say so, naming the
+    # group's terminals, instead of auto-naming it in silence.
+    for root in sorted(anonymous):
+        terms = ", ".join(sorted(anonymous[root]))
+        hint = refused_hints.get(root)
+        because = (
+            f" — its wires still cache lab={hint!r}, but that name is already carried by a "
+            "label or port on another group, so it cannot name this one (draw a lab_wire "
+            "here, or move the port onto this wire)"
+            if hint
+            else " — no label, port or pin name reaches it (draw a lab_wire on it, or place "
+            "the port pin ON the wire)"
+        )
+        out.warnings.append(f"anonymous net {net_name(root)!r} with terminals [{terms}]{because}")
+
     for port in out.ports:
         out.nets.add(port.name)
 

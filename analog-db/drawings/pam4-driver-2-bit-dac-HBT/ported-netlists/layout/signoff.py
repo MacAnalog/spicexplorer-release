@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """DRC + LVS signoff for the PAM-4 driver layout DUTs.
 
-Reuses the engine-agnostic PDK-runner wrappers from the platform layout
-example (``examples/layout/ihp-sg13g2/5t_ota/signoff.py``).
+The runners are the platform's ``spicexplorer_signoff`` package: the PDK's own
+KLayout decks under ``$PDK_ROOT``, run by the ``klayout`` on PATH (or
+``$SIGNOFF_KLAYOUT``). ``run_drc`` and ``run_lvs`` below return the
+``(passed, text)`` pair that ``optimize_layout.py`` and notebook 02 unpack.
 
     python signoff.py                 # all three DUTs
     python signoff.py --dut pam4
@@ -13,26 +15,25 @@ import argparse
 import os
 import sys
 
+from spicexplorer_signoff import run_drc as _run_drc
+from spicexplorer_signoff import run_lvs as _run_lvs
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "out")
-# platform layout example (5T OTA) provides run_drc/run_lvs. Loaded by path
-# under a distinct module name (this file is also called signoff.py).
-_OTA = os.path.normpath(os.path.join(
-    HERE, "..", "..", "..", "..", "..", "layout", "ihp-sg13g2", "5t_ota"))
 
 
-def _load_ota_signoff():
-    import importlib.util
-    sys.path.insert(0, _OTA)   # its own `import pdk` needs the dir on path
-    spec = importlib.util.spec_from_file_location(
-        "ota_signoff", os.path.join(_OTA, "signoff.py"))
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+def _pair(res) -> tuple[bool, str]:
+    """The verdict, and the runner's reason and output tail as one text."""
+    return res.passed, "\n".join(t for t in (res.reason, res.log) if t)
 
 
-_ota = _load_ota_signoff()
-run_drc, run_lvs = _ota.run_drc, _ota.run_lvs
+def run_drc(gds: str, topcell: str, run_dir: str,
+            no_density: bool = True) -> tuple[bool, str]:
+    return _pair(_run_drc(gds, topcell, run_dir, no_density=no_density))
+
+
+def run_lvs(gds: str, netlist: str, topcell: str, run_dir: str) -> tuple[bool, str]:
+    return _pair(_run_lvs(gds, netlist, topcell, run_dir))
 
 
 def signoff_dut(dut: str, out_dir: str = OUT) -> bool:

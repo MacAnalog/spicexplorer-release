@@ -1,0 +1,18 @@
+# Supply step 1.4 -> 1.65 V in 100 ns at 1 mA; p2p output deviation (report-only).
+schema: spicexplorer/analysis@1
+id: tran_line_step
+template: tran_line_step
+description: "Supply step 1.4 -> 1.65 V in 100 ns at 1 mA; p2p output deviation (report-only)."
+params:
+  VDD_LO: 1.4
+  VDD_HI: 1.65
+  ILOAD: 1m
+  COUT: 1p
+  TSTART: 1u
+  TEDGE: 100n
+  TPULSE: 10u
+  TPER: 20u
+  TSTEP: 1n
+  TSTOP: 8u
+flags: []
+produces: [v_line_pp]

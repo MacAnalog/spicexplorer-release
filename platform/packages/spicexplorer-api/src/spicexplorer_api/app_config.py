@@ -1,4 +1,5 @@
 """Backend configuration — resolves repo-relative paths from app_config.json."""
+
 from __future__ import annotations
 
 import json

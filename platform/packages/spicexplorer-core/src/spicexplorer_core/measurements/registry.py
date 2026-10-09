@@ -23,7 +23,8 @@ no simulator, no bridge, no upward dependency.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Dict, Tuple
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -32,13 +33,20 @@ from spicexplorer_core.measurements import waveforms as _wf
 if TYPE_CHECKING:
     from spicexplorer_core.spice_engine.protocol import SimResult
 
-__all__ = ["measure", "validate_recipe", "known_measurements", "measurement_table", "kind_default_analysis"]
+__all__ = [
+    "measure",
+    "validate_recipe",
+    "known_measurements",
+    "measurement_table",
+    "kind_default_analysis",
+    "register_measurements",
+]
 
 
 # Each canonical name → (kind, required-arg keys). `kind` picks the analysis default and
 # the extractor; `required` are the recipe keys that must be present (checked at load, so
 # a typo'd recipe fails before any simulation runs — symmetric with the OCEAN builders).
-_MEAS_TABLE: Dict[str, Tuple[str, Tuple[str, ...]]] = {
+_MEAS_TABLE: dict[str, tuple[str, tuple[str, ...]]] = {
     # AC (frequency-domain transfer, unit-stimulus response)
     "dcgain": ("ac", ("out",)),
     "dc_gain_db": ("ac", ("out",)),
@@ -159,7 +167,7 @@ _MEAS_TABLE: Dict[str, Tuple[str, Tuple[str, ...]]] = {
     "phase_noise_dbc": ("pnoise", ("out", "f", "carrier_ampl")),
 }
 
-_KIND_DEFAULT_ANALYSIS: Dict[str, str] = {
+_KIND_DEFAULT_ANALYSIS: dict[str, str] = {
     "ac": "ac",
     "dc": "dc",
     "tran": "tran",
@@ -170,15 +178,63 @@ _KIND_DEFAULT_ANALYSIS: Dict[str, str] = {
     "stb": "stb",
 }
 
+# Extension kinds registered by a downstream package (``register_measurements``): kind →
+# ``extractor(result, recipe, analysis) -> float``. The names live in ``_MEAS_TABLE`` like every
+# built-in, so ``validate_recipe``/``measurement_table`` see them; only the math is elsewhere.
+# The waveview eye (BT4 receiver, scipy) registers this way — core stays numpy-only.
+_EXTENSIONS: dict[str, Callable[[SimResult, dict[str, Any], str], float]] = {}
+
+
+def register_measurements(
+    kind: str,
+    names: dict[str, tuple[str, ...]],
+    extractor: Callable[[SimResult, dict[str, Any], str], float],
+    *,
+    default_analysis: str = "tran",
+) -> None:
+    """Add a family of measurements under a new ``kind``.
+
+    ``names`` is ``{canonical name: required recipe keys}``; ``extractor(result, recipe,
+    analysis)`` evaluates any of them (it reads ``recipe["meas"]`` to tell which). A name
+    that already exists — built-in or from another kind — raises ``ValueError`` so two
+    packages can never disagree on a recipe silently. Re-registering a kind is a no-op only
+    when it is the same registration (the same names, required keys and extractor — a module
+    re-import); a changed name set, changed keys or another function raises, so a kind can
+    never be redefined under a caller's feet. Registered names are first-class: they appear
+    in :func:`known_measurements` / :func:`measurement_table`, validate through
+    :func:`validate_recipe` and dispatch through :func:`measure`.
+    """
+    if kind in _EXTENSIONS:
+        have = {n: r for n, (k, r) in _MEAS_TABLE.items() if k == kind}
+        old = _EXTENSIONS[kind]
+        same_fn = extractor is old or (
+            getattr(extractor, "__module__", None),
+            getattr(extractor, "__qualname__", None),
+        ) == (getattr(old, "__module__", None), getattr(old, "__qualname__", None))
+        if have == {n: tuple(r) for n, r in names.items()} and same_fn:
+            return
+        raise ValueError(
+            f"measurement kind {kind!r} is already registered with a different "
+            "name set, required keys or extractor"
+        )
+    clash = [n for n in names if n in _MEAS_TABLE and _MEAS_TABLE[n][0] != kind]
+    if clash:
+        raise ValueError(f"measurement name(s) already registered: {clash}")
+    for n, required in names.items():
+        _MEAS_TABLE[n] = (kind, tuple(required))
+    _KIND_DEFAULT_ANALYSIS.setdefault(kind, default_analysis)
+    _EXTENSIONS[kind] = extractor
+
+
 # stb figures of merit — ``fn(freq, loopGain)`` (the same shape as the AC table).
-_STB_FN: Dict[str, Callable[[Any, Any], float]] = {
+_STB_FN: dict[str, Callable[[Any, Any], float]] = {
     "pm_loop": _wf.phase_margin,
     "gain_margin_db": _wf.gain_margin_db,
     "loopgain_db": _wf.dc_gain_db,
 }
 
 # AC figures of merit that are computed as ``fn(freq, h)``.
-_AC_FN: Dict[str, Callable[[Any, Any], float]] = {
+_AC_FN: dict[str, Callable[[Any, Any], float]] = {
     "dcgain": _wf.dc_gain_db,
     "dc_gain_db": _wf.dc_gain_db,
     "ugf": _wf.unity_gain_freq,
@@ -199,12 +255,12 @@ _AC_FN: Dict[str, Callable[[Any, Any], float]] = {
 }
 
 
-def known_measurements() -> Tuple[str, ...]:
+def known_measurements() -> tuple[str, ...]:
     """The canonical measurement names accepted in a ``{meas: …}`` recipe."""
     return tuple(sorted(_MEAS_TABLE))
 
 
-def measurement_table() -> Dict[str, Tuple[str, Tuple[str, ...]]]:
+def measurement_table() -> dict[str, tuple[str, tuple[str, ...]]]:
     """A copy of the canonical measurement table: name → ``(kind, required-arg keys)``.
 
     The public read surface for tools that enumerate the recipe vocabulary (e.g. the
@@ -212,12 +268,12 @@ def measurement_table() -> Dict[str, Tuple[str, Tuple[str, ...]]]:
     return dict(_MEAS_TABLE)
 
 
-def kind_default_analysis() -> Dict[str, str]:
+def kind_default_analysis() -> dict[str, str]:
     """A copy of the kind → default engine-neutral analysis-string map."""
     return dict(_KIND_DEFAULT_ANALYSIS)
 
 
-def validate_recipe(spec_name: str, recipe: Dict[str, Any]) -> None:
+def validate_recipe(spec_name: str, recipe: dict[str, Any]) -> None:
     """Raise ``ValueError`` if ``recipe`` names an unknown measurement or omits a required
     argument. Called at project load (before any sim) so typos fail loudly and early."""
     meas = str(recipe.get("meas", "")).strip()
@@ -234,12 +290,10 @@ def validate_recipe(spec_name: str, recipe: Dict[str, Any]) -> None:
             f"target '{spec_name}': measurement {meas!r} needs {list(required)}; missing {missing}."
         )
     if meas == "t_settle" and "tol" not in recipe and "tol_frac" not in recipe:
-        raise ValueError(
-            f"target '{spec_name}': measurement 't_settle' needs `tol` or `tol_frac`."
-        )
+        raise ValueError(f"target '{spec_name}': measurement 't_settle' needs `tol` or `tol_frac`.")
 
 
-def _real_wave(result: "SimResult", name: str, analysis: str) -> np.ndarray:
+def _real_wave(result: SimResult, name: str, analysis: str) -> np.ndarray:
     return np.real(np.asarray(result.wave(name, analysis)))
 
 
@@ -256,12 +310,16 @@ def _iip3_variant(meas: str, iip3_v: float, ampl_in: float) -> float:
     if meas.endswith("_dbc"):  # im3_dbc / im3_pss_dbc (negative for any real amplifier)
         if not np.isfinite(iip3_v):
             return float(-iip3_v) if iip3_v == float("inf") else float("nan")
-        return float(-40.0 * np.log10(iip3_v / ampl_in)) if iip3_v > 0.0 and ampl_in > 0.0 else float("nan")
+        return (
+            float(-40.0 * np.log10(iip3_v / ampl_in))
+            if iip3_v > 0.0 and ampl_in > 0.0
+            else float("nan")
+        )
     return float(iip3_v)
 
 
 def _ac_transfer(
-    result: "SimResult", analysis: str, recipe: Dict[str, Any]
+    result: SimResult, analysis: str, recipe: dict[str, Any]
 ) -> tuple[np.ndarray, np.ndarray]:
     freq = _real_wave(result, str(recipe.get("freq", "frequency")), analysis)
     h = np.asarray(result.wave(str(recipe["out"]), analysis))
@@ -271,9 +329,7 @@ def _ac_transfer(
     return freq, h
 
 
-def measure(
-    result: "SimResult", recipe: Dict[str, Any], *, default_analysis: str
-) -> float:
+def measure(result: SimResult, recipe: dict[str, Any], *, default_analysis: str) -> float:
     """Evaluate one ``{meas: …}`` recipe against ``result`` → a scalar.
 
     ``default_analysis`` is the target's engine-neutral analysis string (from
@@ -286,9 +342,14 @@ def measure(
     kind, _required = _MEAS_TABLE[meas]
     analysis = str(recipe.get("analysis") or _KIND_DEFAULT_ANALYSIS.get(kind, default_analysis))
 
+    if kind in _EXTENSIONS:  # a downstream family (e.g. the waveview eye) — its own math
+        return float(_EXTENSIONS[kind](result, recipe, analysis))
+
     if kind == "ac":
         freq, h = _ac_transfer(result, analysis, recipe)
-        if meas == "zin_mag":  # |V| under unit-current drive (or scale·|out/ref|); spot f or low edge
+        if (
+            meas == "zin_mag"
+        ):  # |V| under unit-current drive (or scale·|out/ref|); spot f or low edge
             mag = np.abs(h) * float(recipe.get("scale", 1.0))
             at = float(recipe["f"]) if "f" in recipe else float(np.min(freq))
             return float(mag[int(np.argmin(np.abs(freq - at)))])
@@ -297,7 +358,9 @@ def measure(
         if meas in ("band_max_db", "band_min_db"):
             fs = recipe.get("f_start")
             return _wf.band_worst_db(
-                freq, h, float(recipe["f_edge"]),
+                freq,
+                h,
+                float(recipe["f_edge"]),
                 f_start=None if fs is None else float(fs),
                 worst="max" if meas == "band_max_db" else "min",
             )

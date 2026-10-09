@@ -9,12 +9,12 @@ C {blocks/cm_pmos_simple_1.sym} -440 0 0 0 {name=xcm_pmos_simple_1}
 C {blocks/cm_nmos_simple_1.sym} 0 0 0 0 {name=xcm_nmos_simple_1}
 C {blocks/dp_nmos_simple_1.sym} 440 0 0 0 {name=xdp_nmos_simple_1}
 C {devices/capa_np.sym} -330 340 0 0 {name=CC value=x_ccomp}
-C {devices/isource_np.sym} -660 340 0 0 {name=IBI value="dc {x_ibias_val}"}
+C {devices/isource_np.sym} -660 340 0 0 {name=IBI value="dc \{x_ibias_val\}"}
 C {devices/res_np.sym} -110 340 0 0 {name=RB value=x_dut_rb_value}
 C {devices/res_np.sym} 110 340 0 0 {name=RC value=x_rcomp}
 C {devices/res_np.sym} 330 340 0 0 {name=RT value=x_dut_rt_value}
-C {devices/vsource_np.sym} -660 120 0 0 {name=VLP value="dc 0"}
-C {devices/vsource_np.sym} -660 -100 0 0 {name=VREF value="dc {x_vref_val}"}
+C {devices/vsource_np.sym} -660 120 0 0 {name=VLP value="dc 0" savecurrent=false}
+C {devices/vsource_np.sym} -660 -100 0 0 {name=VREF value="dc \{x_vref_val\}" savecurrent=false}
 C {devices/sg13_lv_pmos_np.sym} 0 -340 0 0 {name=MP model=sg13_lv_pmos spiceprefix=X w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m}
 N -330 -20 -290 -20 {}
 C {devices/lab_wire.sym} -290 -20 0 1 {name=l0 lab=egate}

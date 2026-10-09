@@ -1,4 +1,4 @@
-** sch_path: /Users/danialnoorizadeh/Code/spicexplorer-workspace/spicexplorer-platform/examples/analog-db/templates/miscellaneous/cross_coupled_nmos.sch
+** sch_path: /Users/<user>/Code/spicexplorer-workspace/spicexplorer-platform/examples/analog-db/templates/miscellaneous/cross_coupled_nmos.sch
 **.subckt cross_coupled_nmos vinp vinn CM_tail VSS
 *.ipin vinp
 *.ipin vinn

@@ -165,7 +165,9 @@ class DeviceFactory:
         if ref_u.startswith(self.MOS_PREFIXES):
             model = view.get_component_value(reference)
             # 'Value' duplicates the model name on the MOS path → drop it from params.
-            params = {k: v for k, v in view.get_component_parameters(reference).items() if k != "Value"}
+            params = {
+                k: v for k, v in view.get_component_parameters(reference).items() if k != "Value"
+            }
             return MosfetNode(
                 name=reference,
                 device_type=DeviceType.MOS,

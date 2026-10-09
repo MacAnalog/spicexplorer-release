@@ -1,50 +1,26 @@
-"""This Module includes base """
+"""This Module includes base"""
+
 from __future__ import annotations
 
 import ast
 import json
 import logging
 import os
-from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Tuple, cast
+import re
 
-import numpy as np
-
-# torch / sympy are OPTIONAL — only the Bode optimizer (Spice_Bode_Optimizer) and plotting
-# helpers below use them at runtime. The common constraint/single-objective path is pure
-# numpy, so this module must import without torch. `from __future__ import annotations`
-# above keeps the `torch.Tensor` / `Expr` annotations lazy (never evaluated at import).
-# Install the Bode/RL features with:  pip install 'spicexplorer[torch]'.
-#
-# TYPE_CHECKING branch = what a static checker sees (the real module, so `torch.Tensor`
-# is a usable annotation and `torch.*` is a call on a module); the `= None` fallback is
-# the RUNTIME "extra not installed" sentinel. Typing it as `Module | None` reported every
-# annotation and call in this file as reportInvalidTypeForm / reportOptionalMemberAccess —
-# noise about the import guard, not about the code. Runtime behaviour is unchanged.
-if TYPE_CHECKING:
-    import torch
-else:
-    try:
-        import torch
-    except ModuleNotFoundError:
-        torch = None
+# torch-free since 2026-09-07 (owner ruling: torch ships only with the Ax optimizer, whose
+# ax-platform/botorch stack brings it). The plotting helpers are numpy.
 from abc import ABC, abstractmethod
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
+from time import monotonic
+from typing import Any, cast
 
+import numpy as np
 import plotly.graph_objects as go
 from dacite import Config, from_dict
-from tqdm import tqdm
-
-if TYPE_CHECKING:
-    from sympy import Expr
-else:
-    try:
-        from sympy import Expr
-    except ModuleNotFoundError:
-        Expr = None  # annotation-only (lazy via __future__ annotations); Bode path needs sympy
-from time import monotonic
-
 from spicexplorer.core.domains import (
     ListTargetSpec,
     OptimizationGoalType,
@@ -61,15 +37,12 @@ from spicexplorer.core.utils import (
     DEFAULT_UNMEASURED_POLICY,
     EPSILON,
     PER_SPEC_CORNER_AGGREGATION,
-    Frequency_Weight,
-    Transfer_Func_Helper,
     aggregate_corner_scores,
     aggregate_corner_spec_margins,
     aggregate_corner_spec_scores,
     aggregate_spec_scores,
     compute_error,
     compute_reward,
-    get_bode_fitness_loss,
     is_scoreable_metric,
     linear_denormalize,
     log_denormalize,
@@ -92,25 +65,17 @@ from spicexplorer_core.atomic_io import atomic_write_json
 # Symxplorer Specific Imports
 from spicexplorer_core.spice_engine import SimHandle, SimResult, Simulator
 from spicexplorer_core.spice_engine.spicelib import Ngspice_Plot_Type, NGSpice_Wrapper
+from tqdm import tqdm
 
 logger = logging.getLogger("spicexplorer.optimization.base")
-
-# Preserve the original global torch config when torch is available (no-op without it).
-if torch is not None:
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    dtype  = torch.double
-    torch.set_default_dtype(dtype)
-    torch.set_default_device(device)
-    logger.info(f'Using device: {device} and dtype: {dtype}')
-else:
-    device = None
-    dtype  = None
 
 # ----------------------------
 # --- Global Constants ---
 # ----------------------------
-MAX_PENALTY = np.float64(1e6) # The maximum score used when a trial does not have a performance metric in it.
-MAX_REWARD  = np.float64(1e6) # The maximum reward score a spec can achieve.
+MAX_PENALTY = np.float64(
+    1e6
+)  # The maximum score used when a trial does not have a performance metric in it.
+MAX_REWARD = np.float64(1e6)  # The maximum reward score a spec can achieve.
 CHECKPOINT_SCHEMA_VERSION = "1.0.0"
 # EPSILON is re-exported from core.utils (imported above) rather than redefined here: the spec-axis
 # aggregators need the same feasibility threshold the scorer uses, and two literals would be free to
@@ -123,6 +88,17 @@ CHECKPOINT_SCHEMA_VERSION = "1.0.0"
 # the run keeps going. Generous by default (a legit multi-corner batch is seconds–minutes) and
 # override­able for slow/loaded hosts; <= 0 restores the legacy wait-forever behavior.
 _SIM_WAIT_TIMEOUT_S: float = float(os.environ.get("SPICEXPLORER_SIM_WAIT_TIMEOUT_S", "600"))
+
+# OPT-06: the project `name` is free text, but it becomes a path component of the autosave dir and
+# of every checkpoint file. A '/' nested directories ("amp_029 baseline (gain/ugf/pm)"), a '..'
+# could leave auto_save/, and a '.' made save_checkpoint's `with_suffix` cut the stem at that dot
+# (dropping the `_trialN` label). Only [A-Za-z0-9_-] survive; each run of other chars -> one '_'.
+_UNSAFE_PATH_CHARS = re.compile(r"[^A-Za-z0-9_-]+")
+
+
+def _path_safe(text: object) -> str:
+    """`text` as a single, dot-free path component (see `_UNSAFE_PATH_CHARS`)."""
+    return _UNSAFE_PATH_CHARS.sub("_", str(text)).strip("_")
 
 
 class _FailedSimResult:
@@ -144,17 +120,19 @@ class _FailedSimResult:
 # --- Class Definitions ---
 # ----------------------------
 
+
 # ------------------------------------------------
 # [ABSTRACT] Optimizer Class
 # ------------------------------------------------
 class Base_Optimizer(ABC):
     """Base abstract class for all circuit optimizers"""
+
     def __init__(self, setup_obj: Project_Setup, output_root: Path | None = None):
         self.setup_obj = setup_obj
         self.optimizer_config = setup_obj.optimizer_config
 
         self._TIMESTAMP = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        self.autosave_checkpoint_freqeucny : int = 2500
+        self.autosave_checkpoint_freqeucny: int = 2500
         # Default autosave dir is `WORK_ROOT/auto_save/<run-name>` (the storage
         # kernel's resolver — meta plan_project_filesystem §6): a CLI/example/agent
         # run that passes no `output_root` lands its checkpoints in ONE discoverable
@@ -165,48 +143,53 @@ class Base_Optimizer(ABC):
         # survive `docker rm` rather than dying in the ephemeral image layer, and
         # each run's checkpoints are isolated.
         if output_root is not None:
-            self.autosave_checkpoint_dir : Path = Path(output_root)
+            self.autosave_checkpoint_dir: Path = Path(output_root)
         else:
             from spicexplorer_core.workspace import work_root
-            self.autosave_checkpoint_dir = work_root() / "auto_save" / (
-                f"{self.setup_obj.name}_{self.setup_obj.optimizer_config.name}_{self._TIMESTAMP}")
+
+            self.autosave_checkpoint_dir = (
+                work_root() / "auto_save" / (f"{self._run_label()}_{self._TIMESTAMP}")
+            )
         # Do NOT mkdir the checkpoint dir here — `save_checkpoint` creates it lazily on
         # the first autosave. The one-shot routes (/simulate, /sanity, /sensitivity)
         # build an optimizer just to call evaluate()/one step and never checkpoint, so
         # an eager mkdir leaked an empty auto_save/<...> dir per request (BUG-B41).
-        logger.debug(f"Autosave checkpoints (frequency : {self.autosave_checkpoint_freqeucny}) will be placed in {self.autosave_checkpoint_dir.absolute()}.")
-        self.disable_autosave : bool = False
+        logger.debug(
+            f"Autosave checkpoints (frequency : {self.autosave_checkpoint_freqeucny}) will be placed in {self.autosave_checkpoint_dir.absolute()}."
+        )
+        self.disable_autosave: bool = False
 
         # Instantiated & Typed by the base class
-        self.optimization_log : OptimizationLog = OptimizationLog()
-        self.global_best_index: int = 0 # the best's position within the current in-memory log chunk
+        self.optimization_log: OptimizationLog = OptimizationLog()
+        self.global_best_index: int = (
+            0  # the best's position within the current in-memory log chunk
+        )
         # The best entry seen across the WHOLE run, tracked on the instance so it survives the
         # autosave log reset (which empties optimization_log). get_best_params() prefers this.
-        self.global_best_entry: Optional["OptimizationLogEntry"] = None
+        self.global_best_entry: OptimizationLogEntry | None = None
         self.logger = logger
         self.verbose: bool = True
         # Instantiated & Typed by the children class
-        self.parametrization : Any = None
-        self.optimizer : Any = None
+        self.parametrization: Any = None
+        self.optimizer: Any = None
         # Frozen dut_params (excluded from the search space) → their fixed physical value,
         # populated by `parameterize()` (via the shared `_register_frozen_param` seam) and
         # re-injected into every candidate before `evaluate()` (via `_reinject_frozen_params`).
         # Shared by all backends so the freeze contract lives in ONE place (D-3), not copied
         # per mixin. Empty until parameterize() runs; a no-op when no param sets `freeze: true`.
-        self._frozen_params: Dict[str, float] = {}
+        self._frozen_params: dict[str, float] = {}
         # Per-trial wall-time telemetry (E-049), (re)built by `optimize()`; exposed on the
         # instance so a caller can read the run's cost profile after the fact. `stop_reason` is
         # None for a run that finished its budget, and a sentence for one a guard ended early —
         # the difference between "stopped" and "crashed", which a killed run cannot express.
-        self.trial_time_monitor: Optional[TrialTimeMonitor] = None
-        self.stop_reason: Optional[str] = None
+        self.trial_time_monitor: TrialTimeMonitor | None = None
+        self.stop_reason: str | None = None
 
         self._validate_constructor()
 
     def _validate_constructor(self) -> None:
         if self.setup_obj.optimizer_config is None:
             raise ValueError("cannot use a Null optimizer_config instance")
-
 
     # ----------------------------
     # --- Abstract Methods ---
@@ -222,22 +205,26 @@ class Base_Optimizer(ABC):
         pass
 
     @abstractmethod
-    def evaluate(self, parameterization: Dict[str, float | np.floating]) -> Tuple[np.floating, Dict[str, Any]]:
+    def evaluate(
+        self, parameterization: dict[str, float | np.floating]
+    ) -> tuple[np.floating, dict[str, Any]]:
         """Evaluate the objective function for the given parameterization (de-normalized)"""
         pass
 
     @abstractmethod
-    def compute_fitness(self, performance_array: Mapping[str, np.float64 | torch.Tensor]) -> Tuple[np.float64, Dict[str, Any]]:
+    def compute_fitness(
+        self, performance_array: Mapping[str, np.float64 | np.ndarray]
+    ) -> tuple[np.float64, dict[str, Any]]:
         """Compute the fittness of a set of performance metrics provided as an input dictionary"""
         pass
 
     @abstractmethod
-    def optimization_step(self) -> Tuple[Dict[str, np.floating], np.floating, Dict[str, Any]]:
+    def optimization_step(self) -> tuple[dict[str, np.floating], np.floating, dict[str, Any]]:
         """Implements one optimization step. Should return the parameters, score, and an optional metadata dictionary"""
         pass
 
     @abstractmethod
-    def plot_solution(self, parameterization: Dict[str, float], **kwargs):
+    def plot_solution(self, parameterization: dict[str, float], **kwargs):
         pass
 
     # ----------------------------
@@ -267,7 +254,7 @@ class Base_Optimizer(ABC):
             self._frozen_params[param.name] = float(fixed)
         return True
 
-    def _reinject_frozen_params(self, denorm_params: Dict[str, Any]) -> Dict[str, Any]:
+    def _reinject_frozen_params(self, denorm_params: dict[str, Any]) -> dict[str, Any]:
         """Re-inject the frozen params (excluded from the search space) at their fixed value
         just before `evaluate()`, so the deck is written with the full param set. Mutates and
         returns `denorm_params`; a no-op when nothing is frozen."""
@@ -275,7 +262,7 @@ class Base_Optimizer(ABC):
             denorm_params.update(self._frozen_params)
         return denorm_params
 
-    def _frozen_param_defaults(self) -> Dict[str, float]:
+    def _frozen_param_defaults(self) -> dict[str, float]:
         """Every frozen dut_param's fixed physical value (`val` → `init`), read from the project.
 
         Unlike `_frozen_params` (populated only by `parameterize()`), this is available on
@@ -285,7 +272,7 @@ class Base_Optimizer(ABC):
         multipliers): a sim metric falls back to the deck's own `.param` default for an omitted
         frozen param, but a derived metric has no deck — so it must read the frozen `val` here,
         or it would `KeyError`→NaN→penalty for a design the optimizer scores finitely."""
-        out: Dict[str, float] = {}
+        out: dict[str, float] = {}
         for p in self.setup_obj.dut_params:
             if getattr(p, "freeze", False):
                 fixed = p.val if p.val is not None else p.init
@@ -293,47 +280,153 @@ class Base_Optimizer(ABC):
                     out[p.name] = float(fixed)
         return out
 
-    def denormalize_params(self, parameterization: Dict[str, float | np.floating]) -> Dict[str, np.floating]:
-        denorm_params: Dict[str, np.floating] = {}
+    def denormalize_params(
+        self, parameterization: dict[str, float | np.floating]
+    ) -> dict[str, np.floating]:
+        denorm_params: dict[str, np.floating] = {}
 
         cfg = self.setup_obj.optimizer_config
-        log_bounds = cfg.log_variable_bounds
         lin_bounds = cfg.lin_variable_bounds
-        log_range = cfg.get_log_variable_range()  # max - min
         lin_range = cfg.get_lin_variable_range()
+        log_lo, log_hi = (np.log10(b) for b in cfg.get_log_min_max())  # the log box, in decades
 
         for param_name in parameterization:
             val = parameterization[param_name]
             param_obj = self.setup_obj.get_param_by_name(name=param_name)
 
             if param_obj is None:
-                raise KeyError(f"Could not find param name {param_name} in {self.setup_obj.list_params()}")
+                raise KeyError(
+                    f"Could not find param name {param_name} in {self.setup_obj.list_params()}"
+                )
 
             if param_obj.is_integer:
                 denorm_params[param_name] = val
 
             elif param_obj.log_scale:
-                # nevergrad samples the candidate in [log_bounds.min, log_bounds.max]
-                # (parameterize builds ng.p.Log(lower=min, upper=max)), so the [0,1] coordinate
-                # is (val - min)/range — NOT val/range, which only lands in [0,1] when min==0 and
-                # otherwise pushes the physical value outside [min_val, max_val] (BUG-B6).
-                x = (val - log_bounds.min) / log_range
-                denorm_params[param_name] = log_denormalize(x=x, pmin=param_obj.min_val, pmax=param_obj.max_val)
+                # Both backends sample the candidate LOG-uniformly in [log_bounds.min, log_bounds.max]
+                # (Nevergrad `ng.p.Log`, Ax `scaling="log"`), so the [0,1] coordinate is the
+                # candidate's position in DECADES across that box, and `log_denormalize` spreads it
+                # log-uniformly over [min_val, max_val]. A linear (val - min)/range here warped the
+                # coordinate a second time and piled ~3/4 of the samples into the lowest of three
+                # decades (OPT-03). Both forms keep the endpoints exact: min -> min_val, max -> max_val
+                # (BUG-B6). The inverse is `NevergradMixin._suggest_init_point`.
+                x = (np.log10(val) - log_lo) / (log_hi - log_lo)
+                denorm_params[param_name] = log_denormalize(
+                    x=x, pmin=param_obj.min_val, pmax=param_obj.max_val
+                )
             else:
                 x = (val - lin_bounds.min) / lin_range
-                denorm_params[param_name] = linear_denormalize(x=x, pmin=param_obj.min_val, pmax=param_obj.max_val)
+                denorm_params[param_name] = linear_denormalize(
+                    x=x, pmin=param_obj.min_val, pmax=param_obj.max_val
+                )
 
         return denorm_params
 
-    def optimize(self, render_optimization_trace: bool = False, keep_history: bool = False) -> OptimizationLog | None:
+    def normalize_params(self, physical: Mapping[str, Any]) -> dict[str, float]:
+        """The inverse of `denormalize_params` over the search space: a logged trial's PHYSICAL
+        params (`point.params`) as the per-param coordinates both engines search in.
+
+        Frozen params are not in the search space and are dropped (a checkpoint holds them
+        re-injected at their fixed value). Raises ValueError when a searched param is missing,
+        not a finite number, or outside the param's current `[min_val, max_val]` (the YAML
+        changed since the trial ran); a value within 1e-9 of a bound is put on it. The
+        arithmetic is `_suggest_init_point`'s (Nevergrad), so a point maps back to itself."""
+        cfg = self.setup_obj.optimizer_config
+        lin, lin_range = cfg.lin_variable_bounds, cfg.get_lin_variable_range()
+        log_lo, log_hi = (float(np.log10(b)) for b in cfg.get_log_min_max())
+        coords: dict[str, float] = {}
+        for param in self.setup_obj.dut_params:
+            if getattr(param, "freeze", False):
+                continue
+            if param.name not in physical:
+                raise ValueError(f"{param.name} is not in the point")
+            try:
+                v = float(physical[param.name])
+            except (TypeError, ValueError):
+                raise ValueError(f"{param.name}={physical[param.name]!r} is not a number") from None
+            lo, hi = float(param.min_val), float(param.max_val)  # type: ignore[arg-type]
+            if param.log_scale and not param.is_integer:
+                if not (np.isfinite(v) and v > 0.0):
+                    raise ValueError(f"{param.name}={v!r} is not a positive number")
+                span = float(np.log10(hi) - np.log10(lo))
+                x = 0.0 if span == 0.0 else float((np.log10(v) - np.log10(lo)) / span)
+            else:
+                if not np.isfinite(v):
+                    raise ValueError(f"{param.name}={v!r} is not finite")
+                x = 0.0 if hi == lo else (v - lo) / (hi - lo)
+            if not -1e-9 <= x <= 1.0 + 1e-9:
+                raise ValueError(f"{param.name}={v!r} is outside its bounds [{lo:g}, {hi:g}]")
+            x = min(max(x, 0.0), 1.0)
+            if param.is_integer:
+                coords[param.name] = int(round(v))
+            elif param.log_scale:
+                coords[param.name] = float(10.0 ** (log_lo + x * (log_hi - log_lo)))
+            else:
+                coords[param.name] = float(lin.min + x * lin_range)  # type: ignore[union-attr]
+        return coords
+
+    def _tell_prior_trials(self, prior_trials: Sequence[OptimizationLogEntry]) -> int:
+        """Tell the engine the trials a resumed run's checkpoints hold, before its first ask, and
+        return how many it was told. This default is for an engine with no API to be told a
+        point it did not propose: it tells nothing and says so; the Nevergrad and Ax mixins
+        override it."""
+        if prior_trials:
+            logger.info(
+                f"{type(self).__name__} cannot be told the {len(prior_trials)} prior "
+                f"trial(s) (no tell API for a point it did not propose); it starts its "
+                f"search afresh"
+            )
+        return 0
+
+    def _prior_coords(
+        self, prior_trials: Sequence[OptimizationLogEntry]
+    ) -> list[tuple[dict[str, float], float, OptimizationLogEntry]]:
+        """`(coordinates, score, entry)` for each prior trial an engine can be told: a trial with a
+        non-finite score, or a point outside the current search space, is logged and left out."""
+        told: list[tuple[dict[str, float], float, OptimizationLogEntry]] = []
+        for i, entry in enumerate(prior_trials):
+            try:
+                score = float(entry.point.score)
+            except (TypeError, ValueError):
+                score = float("nan")
+            if not np.isfinite(score):
+                logger.info(
+                    f"prior trial {i + 1}: score {entry.point.score!r} is not finite; not told"
+                )
+                continue
+            try:
+                coords = self.normalize_params(entry.point.params)
+            except ValueError as exc:
+                logger.warning(f"prior trial {i + 1}: {exc}; not told")
+                continue
+            told.append((coords, score, entry))
+        return told
+
+    def optimize(
+        self,
+        render_optimization_trace: bool = False,
+        keep_history: bool = False,
+        trial_offset: int = 0,
+        prior_trials: Sequence[OptimizationLogEntry] | None = None,
+    ) -> OptimizationLog | None:
         """Run the optimization process for a given budget and returns the optimization trace as
-        an OptimizationLog object."""
+        an OptimizationLog object.
+
+        `trial_offset` and `prior_trials` are for a resumed run (`run_project.run(resume=...)`):
+        the loop runs trials `trial_offset+1 .. budget` (the budget is the WHOLE run's), so the
+        checkpoint names continue the prior segment's numbering, and the engine is told
+        `prior_trials` (`_tell_prior_trials`) before its first ask. The prior trials are not
+        written into the new checkpoints. The defaults are a fresh run, unchanged."""
 
         logger.info("Optimization process started.")
         self._create_optimizer_obj()
         if self.optimizer is None:
             logger.critical("Oops... The optimizer object was not created!")
             return None
+        if prior_trials:
+            told = self._tell_prior_trials(prior_trials)
+            if told:
+                logger.info(f"told the optimizer {told} of the {len(prior_trials)} prior trial(s)")
 
         # Per-trial wall-time telemetry (ledger E-049). Every threshold defaults to None (off),
         # so a project that configures nothing gets the periodic INFO cadence line and no change
@@ -344,8 +437,9 @@ class Base_Optimizer(ABC):
             warn_s=getattr(_cfg, "trial_time_warn_s", None),
             warn_factor=getattr(_cfg, "trial_time_warn_factor", None),
             stop_s=getattr(_cfg, "trial_time_stop_s", None),
-            report_every=(DEFAULT_TRIAL_TIME_REPORT_EVERY if _report_every is None
-                          else int(_report_every)),
+            report_every=(
+                DEFAULT_TRIAL_TIME_REPORT_EVERY if _report_every is None else int(_report_every)
+            ),
         )
         self.trial_time_monitor = trial_timer
         self.stop_reason = None
@@ -364,17 +458,27 @@ class Base_Optimizer(ABC):
             self.global_best_entry = None
 
         # MAIN OPTIMIZATION LOOP
+        # Bound before the loop so the crash / final checkpoint names never hit an unbound `trial`
+        # (an exception before the first step, or a zero budget with keep_history). `trial` is
+        # 0-based across the WHOLE run: a resumed segment starts at `trial_offset`.
+        trial = trial_offset - 1
         try:
-            with tqdm(range(self.optimizer_config.budget), desc="Optimizing", unit="trial") as pbar:
+            with tqdm(
+                range(trial_offset, self.optimizer_config.budget), desc="Optimizing", unit="trial"
+            ) as pbar:
                 for trial in pbar:
-                    logger.debug("---------------------------------------------------------------------------")
-                    logger.debug(f"STARTING trial {trial+1}/{self.optimizer_config.budget}...")
+                    logger.debug(
+                        "---------------------------------------------------------------------------"
+                    )
+                    logger.debug(f"STARTING trial {trial + 1}/{self.optimizer_config.budget}...")
 
                     # (a) Perform the optimization logic for one step/trial
                     _t_trial = monotonic()
                     candidate, curr_score, metadata = self.optimization_step()
                     verdict = trial_timer.record(monotonic() - _t_trial)
-                    logger.debug(f"Trial {trial+1}/{self.optimizer_config.budget} COMPLETED with score: {curr_score:.4f}")
+                    logger.debug(
+                        f"Trial {trial + 1}/{self.optimizer_config.budget} COMPLETED with score: {curr_score:.4f}"
+                    )
 
                     # (a.1) Per-trial cost telemetry. A run's per-trial wall time is NOT constant:
                     #       a Bayesian backend's refit cost climbs with the observation count
@@ -402,19 +506,28 @@ class Base_Optimizer(ABC):
 
                     # (c) Autosave checkpoint if flag is not disabled. Resetting the in-memory log
                     #     also resets the per-chunk index; the best ENTRY survives on the instance.
-                    if (not self.disable_autosave) and (self.autosave_checkpoint_freqeucny is not None) and ((trial+1) % self.autosave_checkpoint_freqeucny == 0):
-                        self.save_checkpoint(name=self.get_auto_save_name(append_txt=f"trial{trial+1}"))
+                    if (
+                        (not self.disable_autosave)
+                        and (self.autosave_checkpoint_freqeucny is not None)
+                        and ((trial + 1) % self.autosave_checkpoint_freqeucny == 0)
+                    ):
+                        self.save_checkpoint(
+                            name=self.get_auto_save_name(append_txt=f"trial{trial + 1}")
+                        )
                         self.optimization_log = OptimizationLog()
                         self.global_best_index = 0
                         logger.debug("Reset the optimization_log after autosave")
 
                     # Update the progress bar from the instance-tracked best (valid across resets).
                     current_best = (
-                        self.global_best_entry.point.score if self.global_best_entry is not None
+                        self.global_best_entry.point.score
+                        if self.global_best_entry is not None
                         else curr_score
                     )
                     pbar.set_postfix(score=f"{curr_score:.4f}", best=f"{current_best:.4f}")
-                    logger.debug("---------------------------------------------------------------------------")
+                    logger.debug(
+                        "---------------------------------------------------------------------------"
+                    )
 
                     # (d) Optional hard stop. Placed LAST in the body so the trial is fully
                     #     recorded and autosaved first; breaking here falls through to the same
@@ -422,7 +535,7 @@ class Base_Optimizer(ABC):
                     #     run ends STOPPED (with a reason on the instance), not crashed.
                     if verdict.stop:
                         self.stop_reason = (
-                            f"stopped by the per-trial time guard at trial {trial+1}/"
+                            f"stopped by the per-trial time guard at trial {trial + 1}/"
                             f"{self.optimizer_config.budget}: rolling median "
                             f"{verdict.rolling_median_s:.1f} s/trial exceeded "
                             f"trial_time_stop_s={trial_timer.stop_s}."
@@ -432,6 +545,13 @@ class Base_Optimizer(ABC):
 
         except KeyboardInterrupt:
             logger.critical("User requested interrupt")
+        except BaseException:
+            # OPT-01: any OTHER exception (a backend error, the non-finite-candidate RuntimeError,
+            # an evaluate failure) used to propagate with nothing written — and autosave fires only
+            # every `autosave_checkpoint_freqeucny` (2500) trials, so a run shorter than that lost
+            # every completed trial. Save them first, then re-raise the original error unchanged.
+            self._save_crash_checkpoint(trial)
+            raise
         finally:
             # Release the persistent OCEAN session's license token if a Spectre+OCEAN run
             # spawned one (idempotent; a no-op for ngspice / metric-less runs). `optimize`
@@ -447,9 +567,10 @@ class Base_Optimizer(ABC):
                 close_derived()
 
         if not self.disable_autosave and not self.optimization_log.is_empty():
-            logger.info(f"saving the unsaved results... len = {len(self.optimization_log)} - Last Trial = {trial}")
-            self.save_checkpoint(name=self.get_auto_save_name(append_txt=f"trial{trial+1}_FINAL"))
-
+            logger.info(
+                f"saving the unsaved results... len = {len(self.optimization_log)} - Last Trial = {trial}"
+            )
+            self.save_checkpoint(name=self.get_auto_save_name(append_txt=f"trial{trial + 1}_FINAL"))
 
         # Plot the score as a function of optimization step
         if render_optimization_trace:
@@ -457,7 +578,25 @@ class Base_Optimizer(ABC):
         logger.info("Optimization process completed.")
         return self.optimization_log
 
-    def get_best_params(self, verbose: bool = False) -> Tuple[Dict[str, float], float, Dict[str, Any]] | None:
+    def _save_crash_checkpoint(self, trial: int) -> None:
+        """Write the in-memory (not yet autosaved) trials to a `..._trial<N>_CRASH` checkpoint,
+        where N is the 1-based trial that raised (OPT-01). Same conditions as the `_FINAL` save
+        (autosave enabled, something unsaved). Called from an `except` block that re-raises, so it
+        must never replace that error: a failed write is logged and swallowed."""
+        if self.disable_autosave or self.optimization_log.is_empty():
+            return
+        try:
+            logger.critical(
+                f"optimization raised at trial {trial + 1}; saving the "
+                f"{len(self.optimization_log)} unsaved trial(s) before re-raising"
+            )
+            self.save_checkpoint(name=self.get_auto_save_name(append_txt=f"trial{trial + 1}_CRASH"))
+        except Exception:
+            logger.exception("could not write the crash checkpoint; re-raising the original error")
+
+    def get_best_params(
+        self, verbose: bool = False
+    ) -> tuple[dict[str, float], float, dict[str, Any]] | None:
         """Retrieve the best parameters and corresponding score from the optimization trace."""
 
         if self.optimizer is None:
@@ -473,13 +612,15 @@ class Base_Optimizer(ABC):
                 return
             entry = self.optimization_log[self.global_best_index]
 
-        best_solution : Dict[str, np.floating | float]  = entry.get_params()
-        score : float                                   = float(entry.get_score())
-        metadata : Dict[str, Any] | None                = entry.get_metadata()
+        best_solution: dict[str, np.floating | float] = entry.get_params()
+        score: float = float(entry.get_score())
+        metadata: dict[str, Any] | None = entry.get_metadata()
 
         if verbose:
-            logger.info("Optimized x - normalized:", best_solution)
-            logger.info("Optimized x - de-normalized:", self.denormalize_params(best_solution))
+            # The log holds PHYSICAL params (`evaluate` records the denormalized vector), so they
+            # are printed as-is: denormalizing them again gave wrong values, and the old calls had
+            # no %s placeholder, so the dict never reached the log (OPT-13).
+            logger.info("Optimized x (physical): %s", best_solution)
         logger.info(f"best score: {float(score)}")
 
         return best_solution, score, metadata
@@ -501,30 +642,34 @@ class Base_Optimizer(ABC):
         fig = go.Figure()
 
         # Plot raw score values
-        fig.add_trace(go.Scatter(
-            x=x_values,
-            y=score_values,
-            mode="markers+lines",
-            name="Score",
-            line=dict(color="blue", width=2),
-            opacity=0.6
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=x_values,
+                y=score_values,
+                mode="markers+lines",
+                name="Score",
+                line=dict(color="blue", width=2),
+                opacity=0.6,
+            )
+        )
 
         # Plot best-so-far curve
-        fig.add_trace(go.Scatter(
-            x=x_values,
-            y=best_scores,
-            mode="lines",
-            name="Best Score So Far",
-            line=dict(color="red", width=2)
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=x_values,
+                y=best_scores,
+                mode="lines",
+                name="Best Score So Far",
+                line=dict(color="red", width=2),
+            )
+        )
 
         fig.update_layout(
             title="Score vs. Optimization Trial",
             xaxis_title="Optimization Step",
             yaxis_title="Score",
             template="plotly_dark",
-            showlegend=True
+            showlegend=True,
         )
 
         # Save to file if requested
@@ -539,7 +684,14 @@ class Base_Optimizer(ABC):
             logger.info("Opening interactive plot in browser...")
             fig.show()
 
-    def plot_design_space_exploration(self, param_x: str, param_y: str, save_path: Path | None = None, show: bool = False, denorm: bool = False) -> Tuple[torch.Tensor, torch.Tensor] | None:
+    def plot_design_space_exploration(
+        self,
+        param_x: str,
+        param_y: str,
+        save_path: Path | None = None,
+        show: bool = False,
+        denorm: bool = False,
+    ) -> tuple[np.ndarray, np.ndarray] | None:
         """Plot the exploration of the design space in terms of two parameters with Plotly."""
         logger = logging.getLogger("SpiceXplorer.plotter")
 
@@ -556,39 +708,50 @@ class Base_Optimizer(ABC):
 
         # De-normalize
         if denorm:
-            denormalized_params = [self.denormalize_params(entry.get_params()) for entry in self.optimization_log]
-            x_values = torch.tensor([entry[param_x] for entry in denormalized_params], device=device)
-            y_values = torch.tensor([entry[param_y] for entry in denormalized_params], device=device)
+            denormalized_params = [
+                self.denormalize_params(entry.get_params()) for entry in self.optimization_log
+            ]
+            x_values = np.asarray(
+                [entry[param_x] for entry in denormalized_params], dtype=np.float64
+            )
+            y_values = np.asarray(
+                [entry[param_y] for entry in denormalized_params], dtype=np.float64
+            )
         else:
-            x_values = torch.tensor([entry.get_param_val(param_x) for entry in self.optimization_log], device=device)
-            y_values = torch.tensor([entry.get_param_val(param_y) for entry in self.optimization_log], device=device)
+            x_values = np.asarray(
+                [entry.get_param_val(param_x) for entry in self.optimization_log], dtype=np.float64
+            )
+            y_values = np.asarray(
+                [entry.get_param_val(param_y) for entry in self.optimization_log], dtype=np.float64
+            )
 
-        loss      = torch.tensor([entry.get_score() for entry in self.optimization_log], device=device)
-
+        loss = np.asarray([entry.get_score() for entry in self.optimization_log], dtype=np.float64)
 
         fig = go.Figure()
 
         # Scatter with heatmap coloring by FOM
-        fig.add_trace(go.Scatter(
-            x=x_values.cpu().numpy(),
-            y=y_values.cpu().numpy(),
-            mode="markers",
-            marker=dict(
-                size=10,
-                color=loss.cpu().numpy(),   # heatmap coloring
-                colorscale="Viridis",      # you can change to "Plasma", "Cividis", etc.
-                colorbar=dict(title="Score"),
-                showscale=True
-            ),
-            name="Design Space Exploration"
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=x_values,
+                y=y_values,
+                mode="markers",
+                marker=dict(
+                    size=10,
+                    color=loss,  # heatmap coloring
+                    colorscale="Viridis",  # you can change to "Plasma", "Cividis", etc.
+                    colorbar=dict(title="Score"),
+                    showscale=True,
+                ),
+                name="Design Space Exploration",
+            )
+        )
 
         fig.update_layout(
             title=f"Design Space Exploration: {param_y} vs. {param_x}",
             xaxis_title=param_x,
             yaxis_title=param_y,
             template="plotly_dark",
-            showlegend=False
+            showlegend=False,
         )
 
         # Save to file if requested
@@ -625,12 +788,13 @@ class Base_Optimizer(ABC):
             logger.warning(
                 f"metric '{metric}' is corner-namespaced in this log — plotting the "
                 f"worst corner '{chosen}' (available: {candidates}; pass the full "
-                f"'<corner>::{metric}' key to pick a corner)")
+                f"'<corner>::{metric}' key to pick a corner)"
+            )
             return chosen
         logger.warning(f"metric '{metric}' not found in optimization log")
         return None
 
-    def _worst_corner_key(self, candidates: List[str]) -> str:
+    def _worst_corner_key(self, candidates: list[str]) -> str:
         """Of several ``"<corner>::<spec>"`` keys for one spec, return the corner that
         performs worst on it — the lowest mean per-spec ``score`` over the log (lower
         score = closer to / further into constraint violation). Ties keep the earlier
@@ -649,7 +813,9 @@ class Base_Optimizer(ABC):
                 worst_agg, worst_key = agg, key
         return worst_key
 
-    def plot_optimization_trace(self, metric_x: str, metric_y: str, save_path: Path | None = None, show: bool = False) -> Tuple[torch.Tensor, torch.Tensor] | None:
+    def plot_optimization_trace(
+        self, metric_x: str, metric_y: str, save_path: Path | None = None, show: bool = False
+    ) -> tuple[np.ndarray, np.ndarray] | None:
         logger = logging.getLogger("SpiceXplorer.plotter")
         if len(self.optimization_log) < 1:
             logger.warning("No optimization log to plot")
@@ -663,33 +829,41 @@ class Base_Optimizer(ABC):
         if metric_y is None:
             return None
 
-        x_values = torch.tensor([entry.get_fit_summary()[metric_x]['curr_val'] for entry in self.optimization_log], device=device)
-        y_values = torch.tensor([entry.get_fit_summary()[metric_y]['curr_val'] for entry in self.optimization_log], device=device)
-        fom      = torch.tensor([entry.get_score() for entry in self.optimization_log], device=device)
+        x_values = np.asarray(
+            [entry.get_fit_summary()[metric_x]["curr_val"] for entry in self.optimization_log],
+            dtype=np.float64,
+        )
+        y_values = np.asarray(
+            [entry.get_fit_summary()[metric_y]["curr_val"] for entry in self.optimization_log],
+            dtype=np.float64,
+        )
+        fom = np.asarray([entry.get_score() for entry in self.optimization_log], dtype=np.float64)
 
         fig = go.Figure()
 
         # Scatter with heatmap coloring by FOM
-        fig.add_trace(go.Scatter(
-            x=x_values.cpu().numpy(),
-            y=y_values.cpu().numpy(),
-            mode="markers",
-            marker=dict(
-                size=10,
-                color=fom.cpu().numpy(),   # heatmap coloring
-                colorscale="Viridis",      # you can change to "Plasma", "Cividis", etc.
-                colorbar=dict(title="FOM"),
-                showscale=True
-            ),
-            name="Optimization Trace"
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=x_values,
+                y=y_values,
+                mode="markers",
+                marker=dict(
+                    size=10,
+                    color=fom,  # heatmap coloring
+                    colorscale="Viridis",  # you can change to "Plasma", "Cividis", etc.
+                    colorbar=dict(title="FOM"),
+                    showscale=True,
+                ),
+                name="Optimization Trace",
+            )
+        )
 
         fig.update_layout(
             title=f"Optimization Trace: {metric_y} vs. {metric_x}",
             xaxis_title=metric_x,
             yaxis_title=metric_y,
             template="plotly_dark",
-            showlegend=False
+            showlegend=False,
         )
 
         # Save to file if requested
@@ -746,7 +920,9 @@ class Base_Optimizer(ABC):
         logger.info(f"✅ Checkpoint saved to {path}")
 
     @classmethod
-    def load_checkpoint(cls, setup_obj: Project_Setup, path_to_checkpoint: str | Path, **kwargs) -> "Base_Optimizer":
+    def load_checkpoint(
+        cls, setup_obj: Project_Setup, path_to_checkpoint: str | Path, **kwargs
+    ) -> Base_Optimizer:
         """Load optimizer and project setup from JSON checkpoint with version validation."""
         path = Path(path_to_checkpoint)
         with open(path, "r") as f:
@@ -755,7 +931,9 @@ class Base_Optimizer(ABC):
         # Validate schema version
         version = data.get("schema_version")
         if version != CHECKPOINT_SCHEMA_VERSION:
-            logger.warning(f"⚠️ Checkpoint version mismatch: {version} != {CHECKPOINT_SCHEMA_VERSION}")
+            logger.warning(
+                f"⚠️ Checkpoint version mismatch: {version} != {CHECKPOINT_SCHEMA_VERSION}"
+            )
 
         # Recreate optimizer instance
         obj = cls(setup_obj=setup_obj, **kwargs)
@@ -776,31 +954,45 @@ class Base_Optimizer(ABC):
                     entry["log_file"] = None
 
         # Rebuild optimization log
-        obj.optimization_log = OptimizationLog([
-            from_dict(OptimizationLogEntry, entry, Config(strict=False))
-            for entry in raw_entries
-        ])
+        obj.optimization_log = OptimizationLog(
+            [from_dict(OptimizationLogEntry, entry, Config(strict=False)) for entry in raw_entries]
+        )
 
         logger.info(f"✅ Checkpoint loaded successfully from {path}")
         return obj
 
-    def get_auto_save_name(self, append_txt: str ) -> Path:
-        return self.autosave_checkpoint_dir / Path(f"{self.setup_obj.name}_{self.setup_obj.optimizer_config.name}_{self.setup_obj.optimizer_config.budget}_{append_txt}")
+    def _run_label(self) -> str:
+        """`<project>_<algorithm>`, path-safe — the one prefix both the default autosave dir and
+        every checkpoint name are built from (OPT-06). The Ax classes use `<project>_bayesian_ax`
+        (`Ax_Client_Mixin._run_label`), since Ax does not read `optimizer_config.name`."""
+        return (
+            f"{_path_safe(self.setup_obj.name)}_{_path_safe(self.setup_obj.optimizer_config.name)}"
+        )
+
+    def get_auto_save_name(self, append_txt: str) -> Path:
+        return self.autosave_checkpoint_dir / Path(
+            f"{self._run_label()}_{self.setup_obj.optimizer_config.budget}_{append_txt}"
+        )
+
+
 # ------------------------------------------------
 # A [ABSTRACT] SPICE-based Optimizers
 # ------------------------------------------------
 class Spice_Base_Optimizer(Base_Optimizer):
-    """ Base class for optimizers that use SPICE simulations.
+    """Base class for optimizers that use SPICE simulations.
 
     ``spicelib_wrappers`` is any mapping of testbench name → `Simulator` (the
     structural protocol in `spicexplorer_core.spice_engine.protocol`): the concrete
     `NGSpice_Wrapper`, the optional Spectre adapter, or a test fake. The attribute
     keeps its historical name so checkpoints/callers are untouched."""
-    def __init__(self,
-                setup_obj: Project_Setup,
-                spicelib_wrappers : Dict[str, Simulator],
-                output_root: Path | None = None):
-        super().__init__(setup_obj = setup_obj, output_root = output_root)
+
+    def __init__(
+        self,
+        setup_obj: Project_Setup,
+        spicelib_wrappers: dict[str, Simulator],
+        output_root: Path | None = None,
+    ):
+        super().__init__(setup_obj=setup_obj, output_root=output_root)
         self.spicelib_wrappers = spicelib_wrappers
         # Opt-in artifact retention: when True the per-trial raw-file cleanup at the end of
         # every evaluate() is skipped, so run dirs keep their .raw waveforms for the result
@@ -812,7 +1004,7 @@ class Spice_Base_Optimizer(Base_Optimizer):
         # "<tb>__<corner>"). Parallel spans are each sim's own submit→done window, so a
         # fast bench is not billed for a slow sibling — but they do include any wait in
         # the runner's concurrency queue.
-        self.last_sim_timings_s: Dict[str, float] = {}
+        self.last_sim_timings_s: dict[str, float] = {}
         self.__post_init__()
 
     def __post_init__(self):
@@ -826,9 +1018,11 @@ class Spice_Base_Optimizer(Base_Optimizer):
             # KeyError. Skip any testbench without a wrapper.
             if tb.name not in self.spicelib_wrappers:
                 continue
-            tb_params = {param.name : param.get_val() for param in tb.params if param.has_val()}
+            tb_params = {param.name: param.get_val() for param in tb.params if param.has_val()}
             if tb_params:
-                logger.info(f"updating the parameters for testbench {tb.name} with the following values:")
+                logger.info(
+                    f"updating the parameters for testbench {tb.name} with the following values:"
+                )
                 for param_name, param_val in tb_params.items():
                     logger.info(f"\t{param_name}: {param_val}")
                 logger.info("")
@@ -889,7 +1083,10 @@ class Spice_Base_Optimizer(Base_Optimizer):
             return self._ocean_ctx
         self._ocean_ctx_built = True
         target_specs = getattr(self, "target_specs", None)
-        if target_specs is not None and getattr(self.setup_obj, "sim_engine", "ngspice") == "spectre":
+        if (
+            target_specs is not None
+            and getattr(self.setup_obj, "sim_engine", "ngspice") == "spectre"
+        ):
             from spicexplorer.optimization.ocean_integration import OceanMergeContext
 
             self._ocean_ctx = OceanMergeContext.build(
@@ -970,7 +1167,7 @@ class Spice_Base_Optimizer(Base_Optimizer):
         self._close_measure_ctx()
         self._close_derived_ctx()
 
-    def __enter__(self) -> "Spice_Base_Optimizer":
+    def __enter__(self) -> Spice_Base_Optimizer:
         return self
 
     def __exit__(self, *exc: Any) -> None:
@@ -992,8 +1189,8 @@ class Spice_Base_Optimizer(Base_Optimizer):
         return handle.result()
 
     def _wait_for_handles(
-        self, handles: Dict[str, SimHandle], timeout_s: float | None = None
-    ) -> Tuple[List[str], Dict[str, float]]:
+        self, handles: dict[str, SimHandle], timeout_s: float | None = None
+    ) -> tuple[list[str], dict[str, float]]:
         """Poll ``handles`` until all are ``is_done()`` or ``timeout_s`` elapses.
 
         Returns ``(pending, done_at)``: ``pending`` are the keys whose sim did NOT finish
@@ -1017,7 +1214,9 @@ class Spice_Base_Optimizer(Base_Optimizer):
             )
         return pending, done_at
 
-    def simulate_circuit(self, parameterization: Dict[str, float], run_label: str | None = None) -> Dict[str, SimResult]:
+    def simulate_circuit(
+        self, parameterization: dict[str, float], run_label: str | None = None
+    ) -> dict[str, SimResult]:
         """Run every enabled testbench once with the given params, returning each
         testbench's `SimResult`.
 
@@ -1032,10 +1231,10 @@ class Spice_Base_Optimizer(Base_Optimizer):
         per-corner artifacts of one trial don't overwrite each other. ``None``
         keeps the legacy per-testbench label."""
         logger.debug("Simulating the circuit with the given parameterization")
-        results :  Dict[str, SimResult] = {}
-        handles : Dict[str, SimHandle] = {}
-        submitted_at : Dict[str, float] = {}
-        timings : Dict[str, float] = {}
+        results: dict[str, SimResult] = {}
+        handles: dict[str, SimHandle] = {}
+        submitted_at: dict[str, float] = {}
+        timings: dict[str, float] = {}
         tb_idx = 0
 
         for tb, sim in self.spicelib_wrappers.items():
@@ -1056,7 +1255,8 @@ class Spice_Base_Optimizer(Base_Optimizer):
                 if getattr(result, "raw", True) is None:
                     logger.warning(
                         f"No RAW generated for testbench '{tb}' (sim failed/diverged); this trial's "
-                        f"'{tb}' metrics will score as failures.")
+                        f"'{tb}' metrics will score as failures."
+                    )
                 results[tb] = result
 
             else:
@@ -1069,22 +1269,30 @@ class Spice_Base_Optimizer(Base_Optimizer):
             pending, done_at = self._wait_for_handles(handles)
             timed_out = set(pending)
             t_end = monotonic()
-            logger.debug("All tasks completed." if not timed_out
-                         else f"{len(timed_out)} sim(s) timed out; scoring as failures.")
+            logger.debug(
+                "All tasks completed."
+                if not timed_out
+                else f"{len(timed_out)} sim(s) timed out; scoring as failures."
+            )
             for tb, handle in handles.items():
                 # Per-testbench span: this sim's own submit→done window (a timed-out sim
                 # is billed up to the wait bound), NOT the batch wall time.
                 timings[tb] = (done_at[tb] if tb not in timed_out else t_end) - submitted_at[tb]
                 # A timed-out handle is NOT collected — result()/collect() would block on the hung
                 # child. Substitute a NaN-scoring failure so only this trial's `tb` metrics fail.
-                results[tb] = (_FailedSimResult() if tb in timed_out
-                               else self._collect_result(self.spicelib_wrappers[tb], handle))
+                results[tb] = (
+                    _FailedSimResult()
+                    if tb in timed_out
+                    else self._collect_result(self.spicelib_wrappers[tb], handle)
+                )
         self.last_sim_timings_s = timings
         for tb, secs in timings.items():
             logger.debug(f"\t⏱️  sim time for testbench '{tb}': {secs:.3f} s")
         return results
 
-    def plot_score_value_by_spec(self, spec_name: str, save_path: Path | None = None, show: bool = False):
+    def plot_score_value_by_spec(
+        self, spec_name: str, save_path: Path | None = None, show: bool = False
+    ):
         """
         Plot the score value for a specific target spec over the optimization trials.
         Includes target spec value, tolerance band, and error type information.
@@ -1102,8 +1310,14 @@ class Spice_Base_Optimizer(Base_Optimizer):
         # against entry[0]; a resumed/mixed log can lack that key in later entries
         # (a corner absent post-resume), so index defensively — a missing cell is
         # NaN (a plotted gap), not a KeyError that kills the whole plot.
-        spec_values = [entry.get_fit_summary().get(spec_name, {}).get('curr_val', np.nan) for entry in self.optimization_log]
-        score_values = [entry.get_fit_summary().get(spec_name, {}).get('score', np.nan) for entry in self.optimization_log]
+        spec_values = [
+            entry.get_fit_summary().get(spec_name, {}).get("curr_val", np.nan)
+            for entry in self.optimization_log
+        ]
+        score_values = [
+            entry.get_fit_summary().get(spec_name, {}).get("score", np.nan)
+            for entry in self.optimization_log
+        ]
 
         finite_scores = [s for s in score_values if s is not None and not np.isnan(s)]
         if finite_scores:
@@ -1112,25 +1326,29 @@ class Spice_Base_Optimizer(Base_Optimizer):
         # Get TargetSpec definition. A multi-corner log namespaces the fit_summary
         # key as "<corner>::<spec>" — the spec definition is looked up by the bare
         # spec name (the target/tolerance are corner-independent).
-        target_spec = self.setup_obj.optimizer_config.target_specs.get_target_by_name(spec_name.split("::")[-1])
+        target_spec = self.setup_obj.optimizer_config.target_specs.get_target_by_name(
+            spec_name.split("::")[-1]
+        )
         if target_spec is None:
             logger.warning(f"No TargetSpec found for '{spec_name}'")
             return
 
         target_val = float(target_spec.target)
-        tolerance  = float(target_spec.tolerance if target_spec.tolerance is not None else 0.0)
+        tolerance = float(target_spec.tolerance if target_spec.tolerance is not None else 0.0)
         error_type = target_spec.error_type
 
         fig = go.Figure()
 
         # Scatter plot
-        fig.add_trace(go.Scatter(
-            x=spec_values,
-            y=score_values,
-            mode="markers",
-            name=f"Score: {spec_name}",
-            marker=dict(color="blue", size=8, opacity=0.7, symbol="circle"),
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=spec_values,
+                y=score_values,
+                mode="markers",
+                name=f"Score: {spec_name}",
+                marker=dict(color="blue", size=8, opacity=0.7, symbol="circle"),
+            )
+        )
 
         # Add vertical line at target value
         fig.add_vline(
@@ -1138,7 +1356,7 @@ class Spice_Base_Optimizer(Base_Optimizer):
             line=dict(color="red", width=2, dash="dash"),
             annotation_text=f"Target = {target_val:.2e}",
             annotation_position="top right",
-            annotation_font=dict(color="red")
+            annotation_font=dict(color="red"),
         )
 
         # Add tolerance bounds if available
@@ -1149,7 +1367,7 @@ class Spice_Base_Optimizer(Base_Optimizer):
                     line=dict(color="green", width=1, dash="dot"),
                     annotation_text=f"-tol ({target_val - tolerance:.2e})",
                     annotation_position="bottom left",
-                    annotation_font=dict(color="green")
+                    annotation_font=dict(color="green"),
                 )
 
             if target_spec.goal != OptimizationGoalType.EXCEED:
@@ -1158,7 +1376,7 @@ class Spice_Base_Optimizer(Base_Optimizer):
                     line=dict(color="green", width=1, dash="dot"),
                     annotation_text=f"+tol ({target_val + tolerance:.2e})",
                     annotation_position="bottom right",
-                    annotation_font=dict(color="green")
+                    annotation_font=dict(color="green"),
                 )
 
         # Dynamic title with error type info
@@ -1170,7 +1388,7 @@ class Spice_Base_Optimizer(Base_Optimizer):
             xaxis_title=f"{spec_name} Value",
             yaxis_title="Score",
             template="plotly_dark",
-            showlegend=True
+            showlegend=True,
         )
 
         # Save to file if requested
@@ -1185,16 +1403,17 @@ class Spice_Base_Optimizer(Base_Optimizer):
             logger.info("Opening interactive plot in browser...")
             fig.show()
 
-    def plot_solution(self, parameterization: Dict[str, float], **kwargs):
+    def plot_solution(self, parameterization: dict[str, float], **kwargs):
 
         score, fit_summary = self.evaluate(parameterization, append_to_log=False)
 
         logger.info(f"total score: {score}")
         for spec_name, spec_info in fit_summary.items():
-            logger.info(f"\tSpec '{spec_name}': curr_val={spec_info['curr_val']}, score={spec_info['score']}")
+            logger.info(
+                f"\tSpec '{spec_name}': curr_val={spec_info['curr_val']}, score={spec_info['score']}"
+            )
 
         if kwargs.get("show_plot", False):
-
             try:
                 trace_name = kwargs["trace_name"]
             except KeyError:
@@ -1202,30 +1421,35 @@ class Spice_Base_Optimizer(Base_Optimizer):
                 raise RuntimeError("To plot the solution, trace_name must be provided in kwargs")
 
             try:
-                plot_type : Ngspice_Plot_Type = kwargs["plot_type"]
+                plot_type: Ngspice_Plot_Type = kwargs["plot_type"]
             except KeyError:
                 logger.error("To plot the solution, plot_type must be provided in kwargs")
                 raise RuntimeError("To plot the solution, plot_type must be provided in kwargs")
 
             try:
-                tb_name : str = kwargs["testbench_name"]
+                tb_name: str = kwargs["testbench_name"]
             except KeyError:
                 logger.error("To plot the solution, testbench_name must be provided in kwargs")
-                raise RuntimeError("To plot the solution, testbench_name must be provided in kwargs")
+                raise RuntimeError(
+                    "To plot the solution, testbench_name must be provided in kwargs"
+                )
 
             wrapper = self.spicelib_wrappers[tb_name]
             if not isinstance(wrapper, NGSpice_Wrapper):
                 raise NotImplementedError(
                     "plot_solution's trace plotting reads ngspice plots (it takes an "
-                    "Ngspice_Plot_Type) and is ngspice-only for now.")
-            trace = torch.from_numpy(wrapper.extract_wave(trace_name, plot_type=plot_type, is_real=False))
+                    "Ngspice_Plot_Type) and is ngspice-only for now."
+                )
+            trace = np.asarray(wrapper.extract_wave(trace_name, plot_type=plot_type, is_real=False))
 
             plot_complex_response(
-                frequencies=torch.from_numpy(wrapper.extract_wave("frequency", plot_type=plot_type, is_real=True)),
+                frequencies=np.asarray(
+                    wrapper.extract_wave("frequency", plot_type=plot_type, is_real=True)
+                ),
                 complex_response_list=[trace],
-                labels = kwargs.get("labels", [trace_name]),
-                title  = kwargs.get("title", f"Response: {trace_name}")
-                )
+                labels=kwargs.get("labels", [trace_name]),
+                title=kwargs.get("title", f"Response: {trace_name}"),
+            )
 
     def clean_up(self, delete_raw_only: bool = False) -> None:
         """Clean up all SPICE simulations if needed."""
@@ -1238,181 +1462,29 @@ class Spice_Base_Optimizer(Base_Optimizer):
             # a backend with no local artifacts (Spectre runs remotely) simply lacks it.
             cleanup = getattr(wrapper, "clean_up", None)
             if not callable(cleanup):
-                logger.debug(f"Backend for testbench {tb} keeps no local artifacts; nothing to clean")
+                logger.debug(
+                    f"Backend for testbench {tb} keeps no local artifacts; nothing to clean"
+                )
                 continue
             logger.debug(f"Cleaning up SPICE wrapper for testbench: {tb}")
-            if delete_raw_only: cleanup(keep_netlist=True, keep_logs=True, keep_raw=False)
-            else:               cleanup(delete_directories=True)
+            if delete_raw_only:
+                cleanup(keep_netlist=True, keep_logs=True, keep_raw=False)
+            else:
+                cleanup(delete_directories=True)
         logger.debug("✅ Clean up completed for all SPICE wrappers.")
         logger.debug("")
 
-# ------------------------------------------------
-# A.1 [ABSTRACT] Bode Fitter
-# ------------------------------------------------
-class Spice_Bode_Optimizer(Spice_Base_Optimizer):
-    """ Nevergrad optimizer that fits a SPICE-simulated transfer function to a target transfer function. """
-    def __init__(self,
-                 setup_obj: Project_Setup,
-                 spicelib_wrappers : Dict[str, Simulator],
-                 target_tf: Expr,
-                 output_node: str = "Vout", # FIXME this needs to go into the spicelib_wrapper
-                 frequency_weight: Frequency_Weight | None = None,
-                 output_root: Path | None = None,
-                 ):
-
-        # Forward output_root so per-run checkpoint isolation works for Bode runs too (BUG-B26).
-        super().__init__(setup_obj = setup_obj, spicelib_wrappers = spicelib_wrappers,
-                         output_root = output_root)
-
-        self.target_tf = target_tf
-        self.output_node = output_node
-        self.frequency_weight  = frequency_weight
-
-        self.helper_functions = Transfer_Func_Helper()
-        # To be calculated during the program runtime
-        self.target_complex_response: torch.Tensor  | None = None
-        self.frequency_array: torch.Tensor | None = None # is resolved the first time the LTspice is run
-
-    # --- Overwriting the Abstract Methods ---
-    def evaluate(self, parameterization: Dict[str, float]) -> Tuple[np.float64, Dict[str, Any]]:
-        """
-        Evaluate the given parameterization by running a SPICE simulation,
-        computing the fitness score, and returning it as np.float64.
-        """
-        # 1 - Run a SPICE simulation
-        # ---------------------------------------------------------------
-        self.simulate_circuit(parameterization=parameterization)
-
-        # 2 - Extract frequency array (first run only)
-        # ---------------------------------------------------------------
-        self.prepare_frequency_array()
-
-        # 3 - Extract circuit response
-        # ---------------------------------------------------------------
-        current_complex_response = self.extract_circuit_response_from_latest_run()
-
-        # 4 - Compute the fitness
-        # ---------------------------------------------------------------
-        fitness_score, fit_summary = self.compute_fitness({"current_complex_response" : current_complex_response})
-
-        # --- Log results ---
-        mag_loss   = fit_summary['mag_loss']
-        phase_loss = fit_summary['phase_loss']
-
-        self.optimization_log.append(
-            OptimizationLogEntry(
-                OptimizationPoint(
-                    params=parameterization,
-                    score=np.float64(fitness_score),
-                    metadata={"complex_response": current_complex_response}
-                ),
-                fit_summary={
-                    "mag_loss": np.float64(mag_loss),
-                    "phase_loss": np.float64(phase_loss),
-                    "max_mag": np.float64(fit_summary['curr_max_mag'])
-                },
-                log_file=None
-                )
-            )
-
-        logger.debug("finished the trial evaluation.... summary")
-        logger.debug(f"\tmetric_value = {fitness_score}")
-        logger.debug(f"\t\t- mag_loss : {mag_loss}")
-        logger.debug(f"\t\t- phase_loss : {phase_loss}")
-
-        self.clean_up(delete_raw_only=True)
-
-        return np.float64(fitness_score), fit_summary
-
-    # --- Helper Methods (only in child class) ---
-    def extract_circuit_response_from_latest_run(self) -> torch.Tensor:
-        logger.debug("Extracting the circuit response from the latest RAW file")
-        current_complex_response = torch.from_numpy(self.spicelib_wrappers.extract_wave(self.output_node))
-        return current_complex_response
-
-    def examine_target(self, f_array: torch.Tensor):
-        logger.info(f"computing the target complex response for {self.target_tf}")
-        self.target_complex_response = self.helper_functions.eval_tf(tf=self.target_tf, f_val=f_array)
-        # mag, _ = self.helper_functions.get_mag_phase_from_complex_response(self.target_complex_response)
-
-    def compute_fitness(self, performance_array: Mapping[str, np.float64 | torch.Tensor]) -> Tuple[np.float64, Dict[str, Any]]:
-
-        current_complex_response: torch.Tensor = performance_array["current_complex_response"]
-
-        if self.setup_obj.optimizer_config is None:
-            raise RuntimeError("Optimizer config cannot be None.")
-        if self.target_complex_response is None:
-            raise RuntimeError("Reached the comparison between target and simulated performance but the target was not computed... make sure self.examine_target works correctly.")
-
-        loss_fn_config = self.setup_obj.optimizer_config.loss_function_config
-        fit_summary = get_bode_fitness_loss(
-            current_complex_response=current_complex_response,
-            target_complex_response=self.target_complex_response,
-            freq_weights=self.frequency_weight.weights,
-            norm_method=loss_fn_config.loss_norm_method,
-            loss_type=loss_fn_config.loss_type,
-            rescale=loss_fn_config.rescale_mag
-        )
-
-        mag_loss   = fit_summary['mag_loss']
-        phase_loss = fit_summary['phase_loss']
-
-        mag, _ = self.helper_functions.get_mag_phase_from_complex_response(
-            complex_response_array=current_complex_response
-        )
-
-        # --- Compute final metric (NumPy only) ---
-        metric_value = np.float64(0.0)
-        metric_value += np.float64(mag_loss if loss_fn_config.include_mag_loss else 0.0)
-        metric_value += np.float64(phase_loss if loss_fn_config.include_phase_loss else 0.0)
-        metric_value += np.float64(
-            max(0.0, fit_summary['target_max_mag'] - fit_summary['curr_max_mag']) ** 2
-        )
-
-        return metric_value, fit_summary
-
-    def prepare_frequency_array(self):
-        if self.frequency_array is None:
-            try:
-                self.frequency_array = torch.from_numpy(self.spicelib_wrappers.extract_wave("frequency", is_real=True))
-            except IndexError:
-                logger.critical("Attempted to look up the 'frequency' trace but it doesnt exist in the RAW file")
-                raise RuntimeError("Attempted to look up the 'frequency' trace but it doesnt exist in the RAW file")
-            self.examine_target(f_array=self.frequency_array)
-
-        if self.frequency_weight is None:
-            raise RuntimeError("frequency_weight must be specified.")
-        if self.frequency_weight.weights is None:
-            self.frequency_weight.parent_frequency_array = self.frequency_array
-            self.frequency_weight.compute_weights()
-
-    # --- Visualization Methods ---
-    # Over-writing the abstract method
-    def plot_solution(self, parameterization: Dict[str, float], **kwargs):
-
-        self.simulate_circuit(parameterization)
-        current_complex_response = self.extract_circuit_response_from_latest_run()
-        self.prepare_frequency_array()
-
-        loss, fit_summary = self.compute_fitness({"current_complex_response" : current_complex_response})
-
-        logger.info(f"total loss: {loss}")
-        logger.info(f"mag_loss {fit_summary['mag_loss']}, phase_loss {fit_summary['phase_loss']}")
-
-        plot_complex_response(
-            frequencies=self.frequency_array if self.frequency_array is not None else torch.tensor([]),
-            complex_response_list=[self.target_complex_response, current_complex_response],
-            labels=['Target', 'Optimized']
-            )
 
 # ------------------------------------------------
 # A.2 [ABSTRACT] Constraint Satisfaction
 # ------------------------------------------------
 class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
-    def __init__(self,
-                 setup_obj: Project_Setup,
-                 spicelib_wrappers : Dict[str, Simulator],
-                 output_root: Path | None = None):
+    def __init__(
+        self,
+        setup_obj: Project_Setup,
+        spicelib_wrappers: dict[str, Simulator],
+        output_root: Path | None = None,
+    ):
         """
         A Concrete implementation of Spice_Base_Optimizer that evaluates a circuit
         against a list of TargetSpecs.
@@ -1422,14 +1494,18 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         2. Extract scalar metrics defined in TargetSpecs.
         3. Calculate a scalar fitness score (Penalty only).
         """
-        super().__init__(setup_obj = setup_obj, spicelib_wrappers = spicelib_wrappers, output_root = output_root)
+        super().__init__(
+            setup_obj=setup_obj, spicelib_wrappers=spicelib_wrappers, output_root=output_root
+        )
         self.target_specs: ListTargetSpec = setup_obj.optimizer_config.target_specs
-        logger.info(f"Initialized the Nevergrad_Spice_Multi_Spec_Optimizer with {len(self.target_specs.targets)} target specs")
+        logger.info(
+            f"Initialized the Nevergrad_Spice_Multi_Spec_Optimizer with {len(self.target_specs.targets)} target specs"
+        )
 
     # --- Overwriting the Abstract Methods ---
     def _extract_and_score_current(
-        self, results: Dict[str, SimResult], parameterization: Dict[str, float] | None = None
-    ) -> Tuple[np.float64, Dict[str, Any]]:
+        self, results: dict[str, SimResult], parameterization: dict[str, float] | None = None
+    ) -> tuple[np.float64, dict[str, Any]]:
         """Extract each enabled target spec's scalar from this pass's `SimResult`s
         and score them with ``compute_fitness``.
 
@@ -1472,7 +1548,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         # sensitivity) whose partial vector omits frozen params (optimization_step's
         # re-injection didn't run); the passed `parameterization` wins any overlap.
         derived_ctx = self._ensure_derived_ctx()
-        derived_vals: Dict[str, float] = {}
+        derived_vals: dict[str, float] = {}
         if derived_ctx is not None and parameterization is not None:
             full_params = {**self._frozen_param_defaults(), **parameterization}
             derived_vals = derived_ctx.compute(full_params)
@@ -1482,8 +1558,10 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
                 try:
                     from spicexplorer_core.measurements.area import format_area_table
 
-                    logger.info("active-area breakdown:\n%s",
-                                format_area_table(derived_ctx.report(full_params)))
+                    logger.info(
+                        "active-area breakdown:\n%s",
+                        format_area_table(derived_ctx.report(full_params)),
+                    )
                 except Exception as exc:  # never let a debug dump break scoring
                     logger.debug("area breakdown unavailable: %s", exc)
         performance_array = {}
@@ -1505,8 +1583,8 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         on the instance (it cannot widen its return tuple — light scorer stand-ins unpack exactly
         two values). A multi-corner trial scores once PER CORNER, so those single-pass slots are
         overwritten; these accumulators keep the whole trial's, namespaced by corner."""
-        self._trial_unmeasured: List[str] = []
-        self._trial_spec_margins: Dict[str, Dict[str, Any]] = {}
+        self._trial_unmeasured: list[str] = []
+        self._trial_spec_margins: dict[str, dict[str, Any]] = {}
 
     def _record_trial_pass(self, corner_name: str | None = None) -> None:
         """Fold the pass `compute_fitness` just finished into this trial's accumulators.
@@ -1519,9 +1597,12 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         for name in getattr(self, "_last_unmeasured_specs", ()) or ():
             self._trial_unmeasured.append(f"{prefix}{name}")
         self._trial_spec_margins[corner_name or ""] = dict(
-            getattr(self, "_last_spec_margins", {}) or {})
+            getattr(self, "_last_spec_margins", {}) or {}
+        )
 
-    def _evaluate_at_current_corner(self, parameterization: Dict[str, float], run_label: str | None = None) -> Tuple[np.float64, Dict[str, Any], Dict[str, SimResult]]:
+    def _evaluate_at_current_corner(
+        self, parameterization: dict[str, float], run_label: str | None = None
+    ) -> tuple[np.float64, dict[str, Any], dict[str, SimResult]]:
         """One full pass at whatever corner the wrappers' netlists currently carry:
         simulate every enabled testbench, extract each enabled target spec's scalar,
         and score it. This is the Phase-1 evaluation body, factored out so the
@@ -1535,8 +1616,8 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         return score, fit_summary, results
 
     def _evaluate_corners_parallel(
-        self, parameterization: Dict[str, float], pvt
-    ) -> Tuple[Dict[str, np.float64], Dict[str, Any], Dict[str, Any]]:
+        self, parameterization: dict[str, float], pvt
+    ) -> tuple[dict[str, np.float64], dict[str, Any], dict[str, Any]]:
         """Multi-corner evaluation with the CORNER axis fanned out in parallel.
 
         The corner loop used to be strictly sequential — each corner's sims ran to
@@ -1559,10 +1640,10 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         # submit() snapshots the current (corner-applied) netlist into its own
         # run_<n>_<tb>__<corner> folder, so re-applying the next corner to the same
         # editor cannot disturb an already-launched run.
-        launched: Dict[str, Dict[str, SimHandle]] = {}
-        submitted_at: Dict[str, float] = {}
+        launched: dict[str, dict[str, SimHandle]] = {}
+        submitted_at: dict[str, float] = {}
         for corner in corners:
-            handles: Dict[str, SimHandle] = {}
+            handles: dict[str, SimHandle] = {}
             for tb, sim in self.spicelib_wrappers.items():
                 sim.apply_corner(corner, model_lib_root=pvt.model_lib_root)
                 sim.update_params(parameterization)
@@ -1571,7 +1652,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
             launched[corner.name] = handles
 
         # PHASE 2 — wait for EVERY (corner, testbench) sim across all corners (bounded).
-        flat_handles: Dict[str, SimHandle] = {
+        flat_handles: dict[str, SimHandle] = {
             f"{corner_name}::{tb}": h
             for corner_name, tb_map in launched.items()
             for tb, h in tb_map.items()
@@ -1583,14 +1664,18 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         pending, done_at = self._wait_for_handles(flat_handles)
         timed_out = set(pending)
         t_end = monotonic()
-        logger.debug("All corner×testbench sims completed." if not timed_out
-                     else f"{len(timed_out)} corner×testbench sim(s) timed out; scoring as failures.")
+        logger.debug(
+            "All corner×testbench sims completed."
+            if not timed_out
+            else f"{len(timed_out)} corner×testbench sim(s) timed out; scoring as failures."
+        )
         # Per-(corner, testbench) sim spans, keyed "<tb>__<corner>" like the log files.
-        timings: Dict[str, float] = {}
+        timings: dict[str, float] = {}
         for key in flat_handles:
             corner_name, tb = key.split("::", 1)
             timings[f"{tb}__{corner_name}"] = (
-                (done_at[key] if key not in timed_out else t_end) - submitted_at[key])
+                done_at[key] if key not in timed_out else t_end
+            ) - submitted_at[key]
         self.last_sim_timings_s = timings
         for run_key, secs in timings.items():
             logger.debug(f"\t⏱️  sim time for '{run_key}': {secs:.3f} s")
@@ -1600,16 +1685,21 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         # curr_raw/curr_log slot to keep pointed at the right corner any more);
         # `_collect_result` still cycles the ngspice wrapper's state per corner for
         # legacy readers, ending on the last corner exactly as before.
-        corner_scores: Dict[str, np.float64] = {}
-        fit_summary: Dict[str, Any] = {}
-        log_files: Dict[str, Any] = {}
+        corner_scores: dict[str, np.float64] = {}
+        fit_summary: dict[str, Any] = {}
+        log_files: dict[str, Any] = {}
         for corner in corners:
-            corner_results: Dict[str, SimResult] = {
-                tb: (_FailedSimResult() if f"{corner.name}::{tb}" in timed_out
-                     else self._collect_result(self.spicelib_wrappers[tb], launched[corner.name][tb]))
+            corner_results: dict[str, SimResult] = {
+                tb: (
+                    _FailedSimResult()
+                    if f"{corner.name}::{tb}" in timed_out
+                    else self._collect_result(self.spicelib_wrappers[tb], launched[corner.name][tb])
+                )
                 for tb in self.spicelib_wrappers
             }
-            corner_score, corner_fit = self._extract_and_score_current(corner_results, parameterization)
+            corner_score, corner_fit = self._extract_and_score_current(
+                corner_results, parameterization
+            )
             self._record_trial_pass(corner.name)
             corner_scores[corner.name] = np.float64(corner_score)
             for spec_name, spec_info in corner_fit.items():
@@ -1622,7 +1712,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
 
         return corner_scores, fit_summary, log_files
 
-    def _spec_axis_kwargs(self) -> Dict[str, Any]:
+    def _spec_axis_kwargs(self) -> dict[str, Any]:
         """The spec-axis aggregation knobs, resolved off `optimizer_config` with the SAME
         defensive defaults `compute_fitness` uses (it is also invoked unbound against light
         stand-ins that carry no config). One resolver, so the per-corner scorer and the
@@ -1635,17 +1725,20 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
             strategy=getattr(cfg, "spec_aggregation", "feasibility_reward"),
             params=getattr(cfg, "aggregation_params", None),
             tie_breaker=getattr(cfg, "tie_breaker", None),
-            tie_breaker_weight=(DEFAULT_TIE_BREAKER_WEIGHT if tb_weight is None
-                                else float(tb_weight)),
-            margin_reward_weight=(DEFAULT_MARGIN_REWARD_WEIGHT if margin_w is None
-                                  else float(margin_w)),
-            margin_reward_clip=(DEFAULT_MARGIN_REWARD_CLIP if margin_clip is None
-                                else float(margin_clip)),
+            tie_breaker_weight=(
+                DEFAULT_TIE_BREAKER_WEIGHT if tb_weight is None else float(tb_weight)
+            ),
+            margin_reward_weight=(
+                DEFAULT_MARGIN_REWARD_WEIGHT if margin_w is None else float(margin_w)
+            ),
+            margin_reward_clip=(
+                DEFAULT_MARGIN_REWARD_CLIP if margin_clip is None else float(margin_clip)
+            ),
         )
 
     def _aggregate_worst_spec_over_corners(
-        self, fit_summary: Dict[str, Any]
-    ) -> Tuple[np.float64, Dict[str, Any]]:
+        self, fit_summary: dict[str, Any]
+    ) -> tuple[np.float64, dict[str, Any]]:
         """`pvt.score_aggregation: worst_spec` — worst corner PER SPEC, then ONE spec aggregation.
 
         Reads the per-corner per-spec scores back out of the `"<corner>::<spec>"`-keyed
@@ -1660,16 +1753,18 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         is the diagnostic a user actually wants ("which corner is costing me?") and is not
         recoverable from the aggregated scalar.
         """
-        per_corner_spec_scores: Dict[str, Dict[str, np.float64]] = {}
+        per_corner_spec_scores: dict[str, dict[str, np.float64]] = {}
         for key, info in fit_summary.items():
             corner_name, sep, spec_name = str(key).partition("::")
             if not sep:  # a bare (non-namespaced) key cannot be attributed to a corner
                 continue
             per_corner_spec_scores.setdefault(corner_name, {})[spec_name] = np.float64(
-                info["score"])
+                info["score"]
+            )
         worst_scores, binding = aggregate_corner_spec_scores(per_corner_spec_scores)
         worst_margins = aggregate_corner_spec_margins(
-            getattr(self, "_trial_spec_margins", {}) or {})
+            getattr(self, "_trial_spec_margins", {}) or {}
+        )
         score = aggregate_spec_scores(
             worst_scores, spec_margins=worst_margins, **self._spec_axis_kwargs()
         )
@@ -1688,7 +1783,9 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
             "binding_corners": dict(binding),
         }
 
-    def evaluate(self, parameterization: Dict[str, float], append_to_log: bool = True) ->  Tuple[np.floating, Dict[str, Any]]:
+    def evaluate(
+        self, parameterization: dict[str, float], append_to_log: bool = True
+    ) -> tuple[np.floating, dict[str, Any]]:
         """
         Evaluate the given parameterization by running a SPICE simulation,
         computing the fitness score, and returning it as np.float64 plus a metadata dictionary.
@@ -1705,8 +1802,8 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         pvt = getattr(self.setup_obj, "pvt", None)
 
         self._reset_trial_records()
-        metadata: Dict[str, Any] = {}
-        log_files: Dict[str, Any] = {}
+        metadata: dict[str, Any] = {}
+        log_files: dict[str, Any] = {}
         if pvt is None or not getattr(pvt, "is_multi", lambda: False)():
             fitness_score, fit_summary, results = self._evaluate_at_current_corner(parameterization)
             log_files = {}
@@ -1725,7 +1822,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
             else:
                 # Sequential fallback (parallel_sim: false): one corner fully
                 # simulated + scored before the next — the exact pre-parallel behavior.
-                corner_scores: Dict[str, np.float64] = {}
+                corner_scores: dict[str, np.float64] = {}
                 fit_summary = {}
                 for corner in pvt.corners_to_run():
                     for sim in self.spicelib_wrappers.values():
@@ -1771,7 +1868,9 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         # from a design that converged to a terrible value and clipped to the same floor: the API
         # checkpoint reader RE-DERIVES feasibility from values and targets, and `fit_summary` only
         # carries `curr_val: nan`. `fail` records it explicitly on the trial.
-        _policy = getattr(self.optimizer_config, "unmeasured_policy", None) or DEFAULT_UNMEASURED_POLICY
+        _policy = (
+            getattr(self.optimizer_config, "unmeasured_policy", None) or DEFAULT_UNMEASURED_POLICY
+        )
         if _policy == "fail":
             unmeasured = list(getattr(self, "_trial_unmeasured", []))
             metadata = dict(metadata)
@@ -1780,8 +1879,7 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
             # An explicit, recorded feasibility verdict: no spec went unmeasured AND the aggregate
             # is not a net violation. `> -EPSILON` is the SAME threshold `aggregate_spec_scores`
             # uses, so "feasible" means one thing across the scorer and the log.
-            metadata["feasible"] = bool(
-                not unmeasured and float(fitness_score) > -float(EPSILON))
+            metadata["feasible"] = bool(not unmeasured and float(fitness_score) > -float(EPSILON))
             if unmeasured:
                 logger.warning(
                     f"unmeasured_policy='fail': {len(unmeasured)} enabled spec(s) had no "
@@ -1797,15 +1895,17 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
 
         # --- Log results ---
         if append_to_log:
-            self.optimization_log.append(OptimizationLogEntry(
-                OptimizationPoint(
-                    params=parameterization,
-                    score=fitness_score,
-                    metadata=metadata,
-                ),
-                fit_summary=fit_summary,
-                log_file=log_files
-                ))
+            self.optimization_log.append(
+                OptimizationLogEntry(
+                    OptimizationPoint(
+                        params=parameterization,
+                        score=fitness_score,
+                        metadata=metadata,
+                    ),
+                    fit_summary=fit_summary,
+                    log_file=log_files,
+                )
+            )
 
         logger.debug("finished the trial evaluation.... summary")
         logger.debug(f"\tmetric_value = {fitness_score}")
@@ -1814,26 +1914,28 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
 
         return fitness_score, fit_summary
 
-    def compute_fitness(self, performance_array: Mapping[str, float | np.float64 | torch.Tensor]) -> Tuple[np.float64, Dict[str, Any]]:
-        """ Compute the fitness based on the performance metrics extracted from SPICE simulations and the target specs. """
+    def compute_fitness(
+        self, performance_array: Mapping[str, float | np.float64 | np.ndarray]
+    ) -> tuple[np.float64, dict[str, Any]]:
+        """Compute the fitness based on the performance metrics extracted from SPICE simulations and the target specs."""
         # Initialize variables
-        reward      : np.float64 = np.float64(0.0)
-        penalty     : np.float64 = np.float64(0.0)
-        total_score : np.float64 = np.float64(0.0)
-        fit_summary : Dict[str, Any] = {}
-        spec_scores : Dict[str, np.float64] = {}
+        reward: np.float64 = np.float64(0.0)
+        penalty: np.float64 = np.float64(0.0)
+        total_score: np.float64 = np.float64(0.0)
+        fit_summary: dict[str, Any] = {}
+        spec_scores: dict[str, np.float64] = {}
         # Enabled specs this pass could NOT measure (missing key / non-finite / non-positive under
         # log_scale). Recorded ALWAYS (it costs one list append on a path that is already taking
         # the failure branch) and consumed only by `unmeasured_policy: fail` — see `evaluate`.
-        unmeasured_specs : List[str] = []
+        unmeasured_specs: list[str] = []
         # Per-spec normalized margins, populated only when the opt-in margin reward is ON, so the
         # default path never enters `normalized_spec_margin` at all (bit-identity by construction).
-        spec_margins : Dict[str, Any] = {}
+        spec_margins: dict[str, Any] = {}
         _cfg = getattr(self, "optimizer_config", None)
         _margin_w = getattr(_cfg, "margin_reward_weight", None)
-        _margin_w = (DEFAULT_MARGIN_REWARD_WEIGHT if _margin_w is None else float(_margin_w))
+        _margin_w = DEFAULT_MARGIN_REWARD_WEIGHT if _margin_w is None else float(_margin_w)
         _margin_clip = getattr(_cfg, "margin_reward_clip", None)
-        _margin_clip = (DEFAULT_MARGIN_REWARD_CLIP if _margin_clip is None else float(_margin_clip))
+        _margin_clip = DEFAULT_MARGIN_REWARD_CLIP if _margin_clip is None else float(_margin_clip)
 
         # Iterate over each target specification
         # ------------------------------------------------------------------------------
@@ -1845,16 +1947,23 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
                 and performance_array[spec.name] is not None
                 and is_scoreable_metric(performance_array[spec.name], log_scale=spec.log_scale)
             ):
-                spec_fitness = self.compute_fitness_for_spec(curr_val=performance_array[spec.name], target_spec=spec)
-                spec_fitness = np.clip(spec_fitness, -1 * MAX_PENALTY, MAX_REWARD) # cap the score to avoid overflow
+                spec_fitness = self.compute_fitness_for_spec(
+                    curr_val=performance_array[spec.name], target_spec=spec
+                )
+                spec_fitness = np.clip(
+                    spec_fitness, -1 * MAX_PENALTY, MAX_REWARD
+                )  # cap the score to avoid overflow
                 if _margin_w > 0:
                     # Same geometry the reward kernels use (boundary + normalizing_coeff), shared
                     # rather than re-derived — see `core.utils.normalized_spec_margin`.
                     spec_margins[spec.name] = normalized_spec_margin(
-                        performance_array[spec.name], spec)
+                        performance_array[spec.name], spec
+                    )
             else:
                 if self.verbose:
-                    logger.debug(f"Target spec name '{spec.name}' not found in performance array keys: {list(performance_array.keys())}")
+                    logger.debug(
+                        f"Target spec name '{spec.name}' not found in performance array keys: {list(performance_array.keys())}"
+                    )
                     logger.debug(f"assigning large penalty to the {spec.name} spec")
                 # A missing/degenerate metric means the sim failed or diverged: score it as the
                 # maximal penalty for EVERY error type, so a failed sim strictly dominates any
@@ -1871,17 +1980,21 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
                 # it is the SAME value a diverged solve returns, and the shipped EXCEED+reward
                 # specs are all `dcgain`, where +inf means the AC blew up. See
                 # `is_scoreable_metric` and doc/TODO.md §22.
-                spec_fitness = -1 * np.float64(MAX_PENALTY)  # assign the maximal penalty if the spec is not found
+                spec_fitness = -1 * np.float64(
+                    MAX_PENALTY
+                )  # assign the maximal penalty if the spec is not found
                 unmeasured_specs.append(spec.name)
             # b - Log the spec score
             fit_summary[spec.name] = {
-                "curr_val": performance_array.get(spec.name, np.nan) ,
-                "score": spec_fitness
+                "curr_val": performance_array.get(spec.name, np.nan),
+                "score": spec_fitness,
             }
             # c - Update the overall fitness
             spec_scores[spec.name] = spec_fitness
-            if spec_fitness > 0:    reward  += spec_fitness
-            else:                   penalty += spec_fitness
+            if spec_fitness > 0:
+                reward += spec_fitness
+            else:
+                penalty += spec_fitness
         # ------------------------------------------------------------------------------
 
         # SPEC-AXIS aggregation, selected by `optimizer_config.spec_aggregation` (validated at
@@ -1910,8 +2023,9 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
             strategy=getattr(_cfg, "spec_aggregation", "feasibility_reward"),
             params=getattr(_cfg, "aggregation_params", None),
             tie_breaker=getattr(_cfg, "tie_breaker", None),
-            tie_breaker_weight=(DEFAULT_TIE_BREAKER_WEIGHT if _tb_weight is None
-                                else float(_tb_weight)),
+            tie_breaker_weight=(
+                DEFAULT_TIE_BREAKER_WEIGHT if _tb_weight is None else float(_tb_weight)
+            ),
             spec_margins=spec_margins,
             margin_reward_weight=_margin_w,
             margin_reward_clip=_margin_clip,
@@ -1931,22 +2045,28 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         logger.debug(f"\tPenalty: {penalty}")
         return total_score, fit_summary
 
-    def compute_fitness_for_spec(self, curr_val: np.float64 | float, target_spec: TargetSpec) -> np.float64:
-        """Computes the fitness score for current achieved metric given the target spec. Negative values """
+    def compute_fitness_for_spec(
+        self, curr_val: np.float64 | float, target_spec: TargetSpec
+    ) -> np.float64:
+        """Computes the fitness score for current achieved metric given the target spec. Negative values"""
         score = np.float64(0.0)
         # (1) Only return the constraint satisfaction score.
-        score += -1 * self.compute_constraint_violation_penalty_for_spec(curr_val=curr_val, target_spec=target_spec)
+        score += -1 * self.compute_constraint_violation_penalty_for_spec(
+            curr_val=curr_val, target_spec=target_spec
+        )
         return score
 
     # --- Helper Methods (only in this child class) ---
-    def compute_constraint_violation_penalty_for_spec(self, curr_val: np.float64 | float, target_spec: TargetSpec) -> np.float64:
-        """ Compute a non-negative value representing the penalty for constraint violation. If zero is returned, the constraint is satisfied."""
-        spec_penalty:           np.float64 = np.float64(0.0)
-        spec_penalty_weighted:  np.float64 = np.float64(0.0)
+    def compute_constraint_violation_penalty_for_spec(
+        self, curr_val: np.float64 | float, target_spec: TargetSpec
+    ) -> np.float64:
+        """Compute a non-negative value representing the penalty for constraint violation. If zero is returned, the constraint is satisfied."""
+        spec_penalty: np.float64 = np.float64(0.0)
+        spec_penalty_weighted: np.float64 = np.float64(0.0)
 
         spec_curr_val: np.float64 = np.float64(curr_val)
         target_val: np.float64 = np.float64(target_spec.target)
-        tolerance:  np.float64 = np.float64(target_spec.tolerance)
+        tolerance: np.float64 = np.float64(target_spec.tolerance)
 
         if target_spec.log_scale:
             # The decade-space error below must be normalized by a DECADE-space range, derived from
@@ -1960,10 +2080,19 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         # --------------------------
         # Case 1: Exact Match
         # --------------------------
-        adjusted_target = target_val - tolerance if spec_curr_val < target_val else target_val + tolerance
+        adjusted_target = (
+            target_val - tolerance if spec_curr_val < target_val else target_val + tolerance
+        )
         if target_spec.goal == OptimizationGoalType.EXACT:
             if abs(spec_curr_val - target_val) > tolerance:
-                spec_penalty = compute_error(curr_val=spec_curr_val, target_val=adjusted_target, error_type=target_spec.error_type, normalizing_coeff=normalizing_coeff, error_params=target_spec.error_params, error_state=target_spec.error_state)
+                spec_penalty = compute_error(
+                    curr_val=spec_curr_val,
+                    target_val=adjusted_target,
+                    error_type=target_spec.error_type,
+                    normalizing_coeff=normalizing_coeff,
+                    error_params=target_spec.error_params,
+                    error_state=target_spec.error_state,
+                )
             else:
                 spec_penalty = np.float64(0.0)
         # --------------------------
@@ -1971,7 +2100,14 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         # --------------------------
         elif target_spec.goal == OptimizationGoalType.EXCEED:
             if spec_curr_val < target_val - tolerance:
-                spec_penalty = compute_error(curr_val=spec_curr_val, target_val=adjusted_target, error_type=target_spec.error_type, normalizing_coeff=normalizing_coeff, error_params=target_spec.error_params, error_state=target_spec.error_state)
+                spec_penalty = compute_error(
+                    curr_val=spec_curr_val,
+                    target_val=adjusted_target,
+                    error_type=target_spec.error_type,
+                    normalizing_coeff=normalizing_coeff,
+                    error_params=target_spec.error_params,
+                    error_state=target_spec.error_state,
+                )
             elif spec_curr_val > target_val + tolerance:
                 spec_penalty = np.float64(0.0)
         # --------------------------
@@ -1979,7 +2115,14 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         # --------------------------
         elif target_spec.goal == OptimizationGoalType.MINIMIZE:
             if spec_curr_val > target_val + tolerance:
-                spec_penalty = compute_error(curr_val=spec_curr_val, target_val=adjusted_target, error_type=target_spec.error_type, normalizing_coeff=normalizing_coeff, error_params=target_spec.error_params, error_state=target_spec.error_state)
+                spec_penalty = compute_error(
+                    curr_val=spec_curr_val,
+                    target_val=adjusted_target,
+                    error_type=target_spec.error_type,
+                    normalizing_coeff=normalizing_coeff,
+                    error_params=target_spec.error_params,
+                    error_state=target_spec.error_state,
+                )
             else:
                 spec_penalty = np.float64(0.0)
 
@@ -1992,36 +2135,49 @@ class Spice_Constraint_Satisfaction(Spice_Base_Optimizer):
         # --------------------------
 
         spec_penalty_weighted = spec_penalty * np.float64(target_spec.weight)
-        logger.debug(f"Computed Penalty - Spec '{target_spec.name}': curr_val={curr_val}, target={target_spec.target}, penalty={spec_penalty}, weighted_penalty={spec_penalty_weighted} - (goal={target_spec.goal})")
+        logger.debug(
+            f"Computed Penalty - Spec '{target_spec.name}': curr_val={curr_val}, target={target_spec.target}, penalty={spec_penalty}, weighted_penalty={spec_penalty_weighted} - (goal={target_spec.goal})"
+        )
         return spec_penalty_weighted
+
 
 # ------------------------------------------------
 # A.3 [ABSTRACT] Single-objective
 # ------------------------------------------------
 class Spice_Single_Objective(Spice_Constraint_Satisfaction):
-    def __init__(self,
-                setup_obj: Project_Setup,
-                spicelib_wrappers : Dict[str, Simulator],
-                output_root: Path | None = None):
-        super().__init__(setup_obj = setup_obj, spicelib_wrappers = spicelib_wrappers, output_root = output_root)
+    def __init__(
+        self,
+        setup_obj: Project_Setup,
+        spicelib_wrappers: dict[str, Simulator],
+        output_root: Path | None = None,
+    ):
+        super().__init__(
+            setup_obj=setup_obj, spicelib_wrappers=spicelib_wrappers, output_root=output_root
+        )
 
-    def compute_fitness_for_spec(self, curr_val: np.float64 | float, target_spec: TargetSpec) -> np.float64:
-        """Computes the fitness score for current achieved metric given the target spec. Negative values """
+    def compute_fitness_for_spec(
+        self, curr_val: np.float64 | float, target_spec: TargetSpec
+    ) -> np.float64:
+        """Computes the fitness score for current achieved metric given the target spec. Negative values"""
         score = np.float64(0.0)
         # (1) Only return the constraint satisfaction score.
-        score += -1 * self.compute_constraint_violation_penalty_for_spec(curr_val=curr_val, target_spec=target_spec)
-        score +=      self.compute_reward_for_spec(curr_val=curr_val, target_spec=target_spec)
+        score += -1 * self.compute_constraint_violation_penalty_for_spec(
+            curr_val=curr_val, target_spec=target_spec
+        )
+        score += self.compute_reward_for_spec(curr_val=curr_val, target_spec=target_spec)
         return score
 
     # --- Helper Methods (only in this child class) ---
-    def compute_reward_for_spec(self, curr_val: np.float64 | float, target_spec: TargetSpec) -> np.float64:
-        """ Compute a non-negative value representing the reward. Returns zero if the constraint is violated"""
-        spec_reward:           np.float64 = np.float64(0.0)
-        spec_reward_weighted:  np.float64 = np.float64(0.0)
+    def compute_reward_for_spec(
+        self, curr_val: np.float64 | float, target_spec: TargetSpec
+    ) -> np.float64:
+        """Compute a non-negative value representing the reward. Returns zero if the constraint is violated"""
+        spec_reward: np.float64 = np.float64(0.0)
+        spec_reward_weighted: np.float64 = np.float64(0.0)
 
         spec_curr_val: np.float64 = np.float64(curr_val)
         target_val: np.float64 = np.float64(target_spec.target)
-        tolerance:  np.float64 = np.float64(target_spec.tolerance)
+        tolerance: np.float64 = np.float64(target_spec.tolerance)
 
         if target_spec.log_scale:
             # The decade-space error below must be normalized by a DECADE-space range, derived from
@@ -2046,7 +2202,12 @@ class Spice_Single_Objective(Spice_Constraint_Satisfaction):
             # target + tolerance` branch that only re-assigned the default is gone; BUG-B20.)
             reward_boundary = target_val - tolerance
             if spec_curr_val > reward_boundary:
-                spec_reward = compute_reward(curr_val=spec_curr_val, target_val=reward_boundary, reward_type=target_spec.reward_type, normalizing_coeff=normalizing_coeff)
+                spec_reward = compute_reward(
+                    curr_val=spec_curr_val,
+                    target_val=reward_boundary,
+                    reward_type=target_spec.reward_type,
+                    normalizing_coeff=normalizing_coeff,
+                )
         # --------------------------
         # Case 2: Minimize the Target
         # --------------------------
@@ -2064,7 +2225,12 @@ class Spice_Single_Objective(Spice_Constraint_Satisfaction):
             # target - tolerance — so both goals have a smooth gradient through their grace band.
             reward_boundary = target_val + tolerance
             if spec_curr_val < reward_boundary:
-                spec_reward = compute_reward(curr_val=spec_curr_val, target_val=reward_boundary, reward_type=target_spec.reward_type, normalizing_coeff=normalizing_coeff)
+                spec_reward = compute_reward(
+                    curr_val=spec_curr_val,
+                    target_val=reward_boundary,
+                    reward_type=target_spec.reward_type,
+                    normalizing_coeff=normalizing_coeff,
+                )
             else:
                 spec_reward = np.float64(0.0)
         # --------------------------
@@ -2082,7 +2248,10 @@ class Spice_Single_Objective(Spice_Constraint_Satisfaction):
         # --------------------------
 
         spec_reward_weighted = spec_reward * np.float64(target_spec.weight)
-        logger.debug(f"Computed Reward - Spec '{target_spec.name}': curr_val={curr_val}, target={target_spec.target}, reward={spec_reward}, weighted_reward={spec_reward_weighted} - (goal={target_spec.goal})")
+        logger.debug(
+            f"Computed Reward - Spec '{target_spec.name}': curr_val={curr_val}, target={target_spec.target}, reward={spec_reward}, weighted_reward={spec_reward_weighted} - (goal={target_spec.goal})"
+        )
         return spec_reward_weighted
+
 
 # ------------------------------------------------

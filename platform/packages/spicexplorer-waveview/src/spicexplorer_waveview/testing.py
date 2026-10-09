@@ -83,8 +83,13 @@ def synth_ac_raw(path: str | Path, n: int = 901) -> dict[str, Any]:
     h = _single_pole(freq)
     write_ngspice_ascii_raw(
         path,
-        [("AC Analysis", [("frequency", "frequency"), ("v(vout)", "voltage")],
-          [freq.astype(complex), h])],
+        [
+            (
+                "AC Analysis",
+                [("frequency", "frequency"), ("v(vout)", "voltage")],
+                [freq.astype(complex), h],
+            )
+        ],
     )
     return {
         "out": "v(vout)",
@@ -164,7 +169,9 @@ def _write_swept(
     path.write_text("\n".join(lines) + "\n")
 
 
-def _write_nonswept(path: Path, analysis_type: str, analysis_name: str, values: dict[str, float]) -> None:
+def _write_nonswept(
+    path: Path, analysis_type: str, analysis_name: str, values: dict[str, float]
+) -> None:
     lines = [_psf_header(analysis_type, analysis_name)]
     lines.append("TYPE")
     lines.append('"V" FLOAT DOUBLE PROP(\n"units" "V"\n"key" "node"\n)')
@@ -175,7 +182,9 @@ def _write_nonswept(path: Path, analysis_type: str, analysis_name: str, values: 
     path.write_text("\n".join(lines) + "\n")
 
 
-def _write_info_struct(path: Path, struct_name: str, instances: dict[str, dict[str, float]]) -> None:
+def _write_info_struct(
+    path: Path, struct_name: str, instances: dict[str, dict[str, float]]
+) -> None:
     members = list(next(iter(instances.values())).keys())
     lines = [_psf_header("info", path.stem)]
     lines.append("TYPE")
@@ -213,26 +222,42 @@ def synth_spectre_raw_dir(root: str | Path) -> dict[str, Any]:
     _write_swept(d / "ac.ac", "ac", "ac", "freq", "Hz", freq, {"vout": _single_pole(freq)})
 
     vin = np.linspace(0.0, 1.2, 121)
-    vout = np.clip(vin, 0.2, 1.0)  # genuine tracking (vout follows vin, rail-pinned excluded): vin ∈ [0.2, 1.0]
+    vout = np.clip(
+        vin, 0.2, 1.0
+    )  # genuine tracking (vout follows vin, rail-pinned excluded): vin ∈ [0.2, 1.0]
     _write_swept(d / "dc.dc", "dc", "dc", "dc", "V", vin, {"vin": vin, "vout": vout})
 
     tau = 1e-6
     t = np.linspace(0.0, 20 * tau, 801)
-    _write_swept(d / "tran.tran", "tran", "tran", "time", "s", t,
-                 {"vout": 1.0 - np.exp(-t / tau)})
+    _write_swept(d / "tran.tran", "tran", "tran", "time", "s", t, {"vout": 1.0 - np.exp(-t / tau)})
 
     fn = np.logspace(0, 6, 61)
     density = 1e-7 * np.sqrt(1.0 + 1e3 / fn)
     # a real Spectre noise PSF also carries the input→output `gain` transfer it used
     # for input-referral — snapshot's noise selection must keep the densities only
-    _write_swept(d / "noise.noise", "noise", "noise", "freq", "Hz", fn,
-                 {"out": density, "in": density / 10.0, "gain": np.full(fn.size, 10.0)},
-                 units="V/sqrt(Hz)")
+    _write_swept(
+        d / "noise.noise",
+        "noise",
+        "noise",
+        "freq",
+        "Hz",
+        fn,
+        {"out": density, "in": density / 10.0, "gain": np.full(fn.size, 10.0)},
+        units="V/sqrt(Hz)",
+    )
 
     fp = np.logspace(3, 7, 41)  # pnoise offset band (Spectre pnoise riding a PSS)
     pdensity = 2e-8 * np.sqrt(1.0 + 1e4 / fp)
-    _write_swept(d / "pnoise.pnoise", "pnoise", "pnoise", "freq", "Hz", fp,
-                 {"out": pdensity, "in": pdensity / 10.0}, units="V/sqrt(Hz)")
+    _write_swept(
+        d / "pnoise.pnoise",
+        "pnoise",
+        "pnoise",
+        "freq",
+        "Hz",
+        fp,
+        {"out": pdensity, "in": pdensity / 10.0},
+        units="V/sqrt(Hz)",
+    )
 
     f0 = 1e3
     hfreq = np.array([0.0, f0, 2 * f0, 3 * f0, 4 * f0, 5 * f0])
@@ -243,10 +268,10 @@ def synth_spectre_raw_dir(root: str | Path) -> dict[str, Any]:
     # transfer → `pac`; a non-baseband sideband → `pac_sb`; the metadata-only `pac.pac`
     # parent index must be SKIPPED by name, never parsed
     fpac = np.logspace(0, 3, 31)
-    _write_swept(d / "pac.0.pac", "pac", "pac", "freq", "Hz", fpac,
-                 {"vout": np.full(31, 20.0 + 0j)})
-    _write_swept(d / "pac.3.pac", "pac", "pac", "freq", "Hz", fpac,
-                 {"vout": np.full(31, 0.5 + 0j)})
+    _write_swept(
+        d / "pac.0.pac", "pac", "pac", "freq", "Hz", fpac, {"vout": np.full(31, 20.0 + 0j)}
+    )
+    _write_swept(d / "pac.3.pac", "pac", "pac", "freq", "Hz", fpac, {"vout": np.full(31, 0.5 + 0j)})
     (d / "pac.pac").write_text("PSF pac parent index — types only, no node data\n")
 
     fstb = np.logspace(0, 8, 81)
@@ -263,8 +288,7 @@ def synth_spectre_raw_dir(root: str | Path) -> dict[str, Any]:
         + "END\n"
     )
 
-    _write_nonswept(d / "dcOp.dc", "dc", "dcOp",
-                    {"VDD": 1.2, "VOUT": 0.6, "Vdd:p": -3.3e-4})
+    _write_nonswept(d / "dcOp.dc", "dc", "dcOp", {"VDD": 1.2, "VOUT": 0.6, "Vdd:p": -3.3e-4})
 
     _write_info_struct(
         d / "finalTimeOP.info",
@@ -285,7 +309,10 @@ def synth_spectre_raw_dir(root: str | Path) -> dict[str, Any]:
         "dcgain_db": 20.0 * np.log10(A0),
         "ugf_hz": A0 * FPOLE,
         "f3db_hz": FPOLE,
-        "icmr": (0.20, 1.00),  # rail-excluded true tracking band (icmr_band no longer counts rail coincidence)
+        "icmr": (
+            0.20,
+            1.00,
+        ),  # rail-excluded true tracking band (icmr_band no longer counts rail coincidence)
         "vtrack": 0.05,
         "thd_pss": np.sqrt(0.01**2 + 1e-3**2 + 1e-4**2 + 1e-5**2) / 1.0,
         "hd2_db": -40.0,

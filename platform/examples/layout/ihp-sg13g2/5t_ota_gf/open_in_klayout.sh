@@ -2,11 +2,11 @@
 # Open the gdsfactory-lane 5T-OTA layout in the KLayout GUI (edit mode) with IHP sg13g2
 # layer colors. Requires an X display (SSH X-forwarding sets $DISPLAY).
 #
-# Unlike the PyCell lane, this GDS contains no live PCells — the ihp-gdsfactory cells are
+# Unlike a foundry-PyCell layout, this GDS contains no live PCells — the ihp-gdsfactory cells are
 # baked geometry (hierarchical cells, editable as plain shapes). Hand edits are fine; to
-# change W/L/nf, edit SIZING in gen_5t_ota_gf.py and regenerate (then re-run signoff.py).
-# Any KLayout works here; the py3.11 build is preferred only for consistency with the
-# PyCell lane's workflow.
+# change W/L/nf, edit SIZING in gen_5t_ota_gf.py and regenerate (then re-run
+# `spicexplorer-signoff drc` / `lvs`, see README.md). Any KLayout works here; the py3.11
+# build is preferred only for consistency with the PyCell-editing workflow.
 set -e
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PDK="${PDK_ROOT:?set PDK_ROOT to your PDK install root}/ihp-sg13g2"

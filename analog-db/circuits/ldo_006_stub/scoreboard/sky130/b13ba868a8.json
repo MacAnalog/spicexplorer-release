@@ -46,9 +46,9 @@
   },
   "parameters": {
     "sizing": {
-      "x_dut_xm1_l": 0.5,
       "r_bot": "100k",
       "r_top": "100k",
+      "x_dut_xm1_l": 0.5,
       "x_dut_xm1_w": 50
     }
   },

@@ -1,4 +1,5 @@
 """Serve the schematic SVG asset."""
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 

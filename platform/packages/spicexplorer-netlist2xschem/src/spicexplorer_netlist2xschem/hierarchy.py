@@ -31,14 +31,27 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .analysis import analyze
-from .emit import _HEADER, _attr_string, _device_attrs, _fmt_value, build_sch
+from .emit import (
+    _HEADER,
+    WiringMode,
+    _attr_string,
+    _device_attrs,
+    _fmt_value,
+    build_sch,
+    pdk_param_warnings,
+)
 from .geometry import Transform, apply_transform, snap
 from .ingest import Device, DeviceKind, N2XCircuit
-from .mapping import LABEL_SYMREF, align_pins, symref_for
+from .mapping import LABEL_SYMREF, align_pins, body_pin, symref_for
 from .sym_library import Symbol, SymLibrary
 from .symbol_gen import BlockPin, BlockSymbol, generate_block_symbol
+from .symbols import analog_icons
+
+if TYPE_CHECKING:
+    from .annotation import BlockAnnotationSet
 
 __all__ = ["HierarchicalResult", "build_hierarchical_sch", "write_hierarchy"]
 
@@ -46,7 +59,9 @@ _BLOCK_GAP = 220  # horizontal gap between block symbols on the parent
 _ROW_GAP = 240  # vertical gap from the block band to a rail-affinity leftover-device row
 _DEV_PITCH = 220  # horizontal pitch between leftover devices on one parent row
 _SRC_PITCH = 220  # vertical pitch of the bottom-left independent-source stack
-_STUB = 40  # length of the short wire stub grown off each pin (so net colouring shows a coloured lead)
+_STUB = (
+    40  # length of the short wire stub grown off each pin (so net colouring shows a coloured lead)
+)
 _DRIVEN_ROLES = frozenset({"DRAIN", "SOURCE", "P", "N"})  # a net a block *drives* (an output side)
 _SOURCE_KINDS = frozenset({DeviceKind.VSOURCE, DeviceKind.ISOURCE})  # independent V/I sources
 
@@ -58,10 +73,22 @@ class HierarchicalResult:
     parent_text: str
     children: dict[str, str] = field(default_factory=dict)  # "<name>.sch" -> text
     symbols: dict[str, str] = field(default_factory=dict)  # "<name>.sym" -> text
-    block_pins: dict[str, tuple[str, ...]] = field(default_factory=dict)  # "<name>" -> boundary nets
+    block_pins: dict[str, tuple[str, ...]] = field(
+        default_factory=dict
+    )  # "<name>" -> boundary nets
+    # "<name>" -> the functional icon its symbol was drawn with (only the blocks that got one).
+    # A block with no unambiguous icon keeps the plain box, so this is also the honest report of
+    # how much of the sheet reads as a block diagram and how much still reads as rectangles.
+    icons: dict[str, str] = field(default_factory=dict)
     warnings: tuple[str, ...] = ()
     block_count: int = 0
     device_count: int = 0
+    # `block_id`s of every DECLARED top-level block that formed no child (all its devices were
+    # missing from the circuit, or fewer than 2 resolved, or it had no boundary net). A block that
+    # silently vanishes here still leaves the topology gate green (device/net counts on the
+    # *collapsed* drawing can still match) — so a caller doing coverage-checking should treat a
+    # non-empty tuple as a hard failure, not just log it.
+    unformed_blocks: tuple[str, ...] = ()
 
 
 def _safe_name(block_id: str, taken: set[str]) -> str:
@@ -116,22 +143,51 @@ def _boundary_pins(
     return pins
 
 
+def _icon_requests(icons: Mapping[str, str] | None) -> dict[str, str]:
+    """Normalise a ``{cell|block_id|template_id|family: icon spec}`` request map for lookup."""
+    return {k.strip().lower(): v for k, v in (icons or {}).items()}
+
+
+def _icon_for_block(
+    block, name: str, requested: Mapping[str, str], auto: bool
+) -> tuple[str | None, str | None]:
+    """The icon spec for one block, and which request key claimed it (``None`` when automatic).
+
+    An explicit request wins, matched against the emitted cell name, the block id, the template id
+    and the family — a caller only learns the *cell* name after a run, so any of the four names it
+    already has is accepted. Failing that, the recognised block type is mapped, but only where the
+    mapping is unambiguous (:func:`~spicexplorer_netlist2xschem.symbols.analog_icons.icon_for_family`):
+    recognition that says nothing about this block leaves it the plain box it always was. An icon is
+    an assertion about what a block IS, and a wrong one passes every netlist gate there is.
+    """
+    for key in (name, block.block_id, block.template_id, block.family):
+        k = (key or "").strip().lower()
+        if k and k in requested:
+            return requested[k], k
+    if not auto:
+        return None, None
+    icon = analog_icons.icon_for_family(block.family, block.template_id)
+    return (icon.name if icon is not None else None), None
+
+
 def _child_circuit(
-    block_devs: list[Device], name: str, boundary: list[str]
+    block_devs: list[Device], name: str, boundary: list[str], supply: Mapping[str, str]
 ) -> N2XCircuit:
     """Extract the block's devices into a sub-circuit whose ports are *all* its boundary nets.
 
-    Supplies are passed as ``supply={}`` deliberately: a boundary supply must surface as a real subckt
-    **port** (an ``iopin``), not a drawn rail — otherwise the child's ``.subckt`` port list wouldn't
-    match the generated symbol's pins and the hierarchy wouldn't re-netlist. Standard practice anyway:
-    an IC sub-block exposes VDD/VSS as explicit power pins. Wiring is still by net name inside.
+    The parent's ``supply`` map is carried onto the child, so the child places with the same
+    rail-banded floorplan the top level gets: VDD row on top, VSS row on the bottom, the signal path
+    between. That is what makes an amplifier child read as a drawing rather than as one flat row.
+    A boundary supply is BOTH — a drawn rail and a real ``.subckt`` port (an ``iopin``), which
+    ``analysis._port_roles`` grants to a declared formal port; without that half, ``vdd``/``vss``
+    would drop out of the child's port list and the hierarchy would stop re-netlisting.
     """
     nets = tuple(sorted({net for dev in block_devs for net in dev.nets.values()}))
     return N2XCircuit(
         name=name,
         devices=tuple(block_devs),
         nets=nets,
-        supply={},
+        supply={n: r for n, r in supply.items() if n in nets},
         ports=tuple(sorted(boundary)),
     )
 
@@ -147,7 +203,7 @@ def _symbol_extent(sym: BlockSymbol) -> tuple[int, int]:
 
 def build_hierarchical_sch(
     circuit: N2XCircuit,
-    annotations,
+    annotations: BlockAnnotationSet | None,
     *,
     pdk: str | None = "ihp-sg13g2",
     lib: SymLibrary | None = None,
@@ -155,6 +211,9 @@ def build_hierarchical_sch(
     child_placement: str = "block-aware",
     template_root: Path | None = None,
     show_device_params: bool = False,
+    child_wiring: WiringMode | Mapping[str, WiringMode] = "hybrid",
+    icons: Mapping[str, str] | None = None,
+    auto_icons: bool = True,
 ) -> HierarchicalResult:
     """Render ``circuit`` as a hierarchy: one block symbol per detected block on a parent schematic.
 
@@ -162,6 +221,24 @@ def build_hierarchical_sch(
     ``child_placement`` is the placement mode for each block's interior (``"template-stamp"`` makes the
     children symmetric too); ``template_root`` is forwarded to stamping. Returns the parent text plus the
     child ``.sch`` / ``.sym`` files; :func:`write_hierarchy` materialises them.
+
+    ``icons`` requests a **functional icon** for a block — ``{"sar_cmp": "comparator"}``, or a scaled
+    spec (``"ldo@1.6"``) — keyed by the emitted cell name, the block id, the template id or the
+    family. ``auto_icons`` (on) additionally maps a *recognised* block type to its icon where that
+    mapping is unambiguous. Either way the icon only changes the block symbol's BODY: the pins,
+    stubs and labels are the plain symbol's, byte for byte, so the hierarchy re-netlists unchanged
+    (see :mod:`~spicexplorer_netlist2xschem.symbols.analog_icons`).
+
+    ``child_wiring`` is the :func:`~.emit.build_sch` ``wiring`` mode given to every child sheet — either
+    one mode for all of them, or a ``{block name: mode}`` map (a name absent from the map gets
+    ``"hybrid"``). ``"hybrid"`` (the default) draws real wires and is the readable one, but it is not
+    always correct: it lets a net's trunk wire *cross* a pin's stub without a junction, and xschem
+    connects only at a junction, so the pin can silently land on an unnamed net (measured on a
+    duplicated diode-connected pair — see the connectivity module's docstring). The proper fix is
+    computing wire pieces by xschem's own junction rule; until then, a caller that has *measured* a
+    child's hybrid netlist losing a pin (an auto-named ``netN`` where a real name was certified) can
+    rebuild just that child ``"labels"`` — labelling every pin individually can't lose one — without
+    forcing every other, correctly-wired child sheet back to the plainer mode.
     """
     lib = lib or SymLibrary.default()
     warnings: list[str] = []
@@ -176,10 +253,14 @@ def build_hierarchical_sch(
     blocks = [b for b in annotations.blocks if b.parent_id is None] if annotations else []
     blocked_refs: set[str] = set()
     taken_names: set[str] = set()
+    formed_block_ids: set[str] = set()
 
     children: dict[str, str] = {}
     symbols: dict[str, str] = {}
     block_pins: dict[str, tuple[str, ...]] = {}
+    icons_applied: dict[str, str] = {}
+    requested_icons = _icon_requests(icons)
+    honoured: set[str] = set()
     placed_blocks: list[tuple[str, BlockSymbol]] = []  # (instance name, block symbol)
 
     for b in blocks:
@@ -188,12 +269,11 @@ def build_hierarchical_sch(
             continue  # a 1-device "block" isn't worth a subcircuit
         member_refs = {d.ref for d in members}
         block_nets = {net for d in members for net in d.nets.values()}
-        outside_nets = {
-            net
-            for d in circuit.devices
-            if d.ref not in member_refs
-            for net in d.nets.values()
-        } | set(circuit.supply) | set(circuit.ports)
+        outside_nets = (
+            {net for d in circuit.devices if d.ref not in member_refs for net in d.nets.values()}
+            | set(circuit.supply)
+            | set(circuit.ports)
+        )
         # A net is a boundary pin if it is shared with another device, is a supply/port, is a circuit
         # I/O net (a diff pair's gate inputs touch only the block, yet are external), or is one of the
         # block's own declared template ports (``port_names`` — authoritative, so an input that nothing
@@ -202,44 +282,74 @@ def build_hierarchical_sch(
         if not boundary:
             continue  # fully internal (can't happen for a real sub-block) — skip
         name = _safe_name(b.block_id, taken_names)
+        wiring_mode: WiringMode = (
+            child_wiring if isinstance(child_wiring, str) else child_wiring.get(name, "hybrid")
+        )
 
-        child = _child_circuit(members, name, boundary)
+        child = _child_circuit(members, name, boundary, circuit.supply)
         child_doc = build_sch(
             child,
             pdk=pdk,
             lib=lib,
             title=name,
-            annotations=_single_block_annotations(b) if child_placement == "template-stamp" else None,
+            annotations=_single_block_annotations(b)
+            if child_placement == "template-stamp"
+            else None,
             placement_mode=child_placement if child_placement == "template-stamp" else None,
             template_root=template_root,
             show_device_params=show_device_params,
+            wiring=wiring_mode,
         )
         warnings.extend(f"{name}: {w}" for w in child_doc.warnings)
         children[f"{name}.sch"] = child_doc.text
 
+        icon_spec, claimed = _icon_for_block(b, name, requested_icons, auto_icons)
+        if claimed is not None:
+            honoured.add(claimed)
         sym = generate_block_symbol(
-            name, _boundary_pins(circuit, members, boundary, b.port_names())
+            name, _boundary_pins(circuit, members, boundary, b.port_names()), icon=icon_spec
         )
+        if sym.icon:
+            icons_applied[name] = sym.icon
+        # A glyph that declined to draw something (an input mark it could not place from the pin
+        # names) reports it: the drawing is wrong in a way no netlist gate can see.
+        warnings.extend(f"{name}: {w}" for w in sym.warnings)
         symbols[f"{name}.sym"] = sym.text
         block_pins[name] = tuple(boundary)
 
         placed_blocks.append((f"x{name}", sym))
         blocked_refs |= member_refs
+        formed_block_ids.add(b.block_id)
+
+    # A requested icon that matched no block is a typo'd cell name, and a silent no-op is exactly
+    # how a design ends up believing its sheet carries icons it does not carry.
+    warnings.extend(
+        f"--icon {key}={requested_icons[key]}: no block matched (nothing drawn for it)"
+        for key in sorted(set(requested_icons) - honoured)
+    )
 
     leftover = [d for d in circuit.devices if d.ref not in blocked_refs]
     parent_text = _emit_parent(
-        placed_blocks, leftover, lib, circuit=circuit, pdk=pdk,
-        title=title or circuit.name, warnings=warnings,
+        placed_blocks,
+        leftover,
+        lib,
+        circuit=circuit,
+        pdk=pdk,
+        title=title or circuit.name,
+        warnings=warnings,
         show_device_params=show_device_params,
     )
+    unformed_blocks = tuple(b.block_id for b in blocks if b.block_id not in formed_block_ids)
     return HierarchicalResult(
         parent_text=parent_text,
         children=children,
         symbols=symbols,
         block_pins=block_pins,
+        icons=icons_applied,
         warnings=tuple(warnings),
         block_count=len(placed_blocks),
         device_count=len(circuit.devices),
+        unformed_blocks=unformed_blocks,
     )
 
 
@@ -358,9 +468,11 @@ def _emit_parent(
             warnings.append(f"{dev.ref}: no symbol for kind={dev.kind.value}; omitted from parent")
             continue
         aligned = align_pins(dev, sym)
-        if any(p not in aligned for p in dev.pins):
+        body = body_pin(dev, sym)  # a body node is an attribute, never an unaligned pin
+        if any(p not in aligned and p != body for p in dev.pins):
             warnings.append(f"{dev.ref}: pins could not be aligned; omitted from parent")
             continue
+        warnings.extend(pdk_param_warnings(dev, sym))
         resolved.append((dev, symref, sym, aligned))
 
     pos = _parent_floorplan(placed_blocks, resolved, circuit.supply)
@@ -423,3 +535,132 @@ def write_hierarchy(
     parent = out / f"{parent_name}.sch"
     parent.write_text(result.parent_text)
     return parent
+
+
+# ------------------------------------------------------------------- hierarchy -> flat ----
+
+_CONT = re.compile(r"^\s*\+")
+
+
+def _logical_lines(text: str) -> list[str]:
+    """Netlist lines with ``+`` continuations joined and comment lines dropped."""
+    out: list[str] = []
+    for raw in text.splitlines():
+        if not raw.strip() or raw.lstrip().startswith("*"):
+            continue
+        if _CONT.match(raw) and out:
+            out[-1] = out[-1] + " " + raw.lstrip()[1:].strip()
+        else:
+            out.append(raw.strip())
+    return out
+
+
+@dataclass(frozen=True)
+class FlattenResult:
+    """What :func:`flatten_hierarchy` spliced: the file, the blocks, the device count."""
+
+    out: Path
+    spliced: tuple[str, ...]
+    devices: int
+    qualified_local_nets: tuple[str, ...]
+
+
+def flatten_hierarchy(netlist: Path | str, out: Path | str, *, note: str = "") -> FlattenResult:
+    """Splice every block subcircuit of a hierarchical netlist back inline, keeping leaf names.
+
+    The parent sheet of a block hierarchy netlists as a hierarchy — one ``.subckt`` per block —
+    but the gate that proves *drawing == netlist* compares against the certified **flat** cell.
+    Flattening with leaf instance names PRESERVED (``XM1`` stays ``XM1``) is what lets the
+    device-by-device parameter join still work afterwards; a flattener that renames leaves to
+    ``xblock.XM1`` produces a netlist that is equivalent and unjoinable.
+
+    Two things it refuses rather than papering over:
+
+    * a **leaf-name collision** between two blocks — it would make the parameter join ambiguous;
+    * an **internal-net collision** that the qualification below did not catch.
+
+    A child's unlabelled nodes are auto-named per sheet, so two children both own a ``net1``.
+    They are local by construction (not a formal port), so each is qualified with its instance
+    (``xbias_ref.net1``) and the flat result stays unambiguous instead of silently merging two
+    different nodes.
+
+    Parsing is delegated entirely to :class:`spicexplorer_core.spice_engine.NetlistView` — the net
+    tokens of a leaf line are identified by POSITION, from the parser's own node count for that
+    device — so this never re-implements SPICE parsing.
+    """
+    from spicexplorer_core.spice_engine import NetlistView
+
+    netlist, out = Path(netlist), Path(out)
+    lines = _logical_lines(netlist.read_text())
+    view = NetlistView.from_file(str(netlist))
+
+    defs: dict[str, list[str]] = {}
+    top: list[str] = []
+    cur: str | None = None
+    for ln in lines:
+        low = ln.lower()
+        if low.startswith(".subckt "):
+            cur = ln.split()[1].lower()
+            defs[cur] = []
+        elif low.startswith(".ends"):
+            cur = None
+        elif cur is not None:
+            defs[cur].append(ln)
+        elif low.startswith("."):
+            continue  # a top-level directive is not part of the cell body
+        else:
+            top.append(ln)
+
+    body: list[str] = []
+    spliced: list[str] = []
+    seen_refs: dict[str, str] = {}
+    seen_nets: dict[str, str] = {}
+    local_nets: list[str] = []
+    for ln in top:
+        ref = ln.split()[0]
+        model = (view.get_component_value(ref) or "").lower() if ref.upper().startswith("X") else ""
+        if model not in defs:
+            body.append(ln)
+            seen_refs.setdefault(ref.upper(), "<parent>")
+            continue
+        child = view.get_subcircuit(ref)
+        formals = [p.lower() for p in (view.get_subcircuit_ports(ref) or [])]
+        actuals = [n.lower() for n in view.get_component_nodes(ref)]
+        if len(formals) != len(actuals):
+            raise ValueError(f"{ref}: {len(formals)} ports but {len(actuals)} nets")
+        rename = dict(zip(formals, actuals))
+        for leaf in defs[model]:
+            tok = leaf.split()
+            n = len(child.get_component_nodes(tok[0]))
+            for net in tok[1 : 1 + n]:
+                low = net.lower()
+                if low not in rename and low != "0":
+                    rename[low] = f"{ref.lower()}.{low}"
+                    local_nets.append(rename[low])
+        for leaf in defs[model]:
+            tok = leaf.split()
+            n = len(child.get_component_nodes(tok[0]))
+            prev = seen_refs.get(tok[0].upper())
+            if prev is not None:
+                raise ValueError(f"leaf {tok[0]} appears in both {prev} and {ref}")
+            seen_refs[tok[0].upper()] = ref
+            for net in tok[1 : 1 + n]:
+                if net.lower() in rename or net == "0":  # formal, qualified, or ground
+                    continue
+                owner = seen_nets.setdefault(net.lower(), ref)
+                if owner != ref:
+                    raise ValueError(f"internal net {net} appears in both {owner} and {ref}")
+            body.append(
+                " ".join(
+                    tok[:1] + [rename.get(t.lower(), t) for t in tok[1 : 1 + n]] + tok[1 + n :]
+                )
+            )
+        spliced.append(f"{ref} -> {model} ({len(defs[model])} devices)")
+
+    out.write_text(
+        f"* flattened out of {netlist.name}{(' -- ' + note) if note else ''}\n"
+        "* block subcircuits spliced inline; leaf instance names preserved\n"
+        + "\n".join(body)
+        + "\n.end\n"
+    )
+    return FlattenResult(out, tuple(spliced), len(body), tuple(sorted(set(local_nets))))

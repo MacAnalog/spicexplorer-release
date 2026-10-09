@@ -22,16 +22,18 @@ Rebuild CLI: ``python -m spicexplorer_api.services.index_db [--work-root PATH]``
 Schema: ``projects`` + ``runs`` are populated in P2; ``metrics`` + ``artifacts``
 are reserved (DDL only) for the P3 run envelope.
 """
+
 from __future__ import annotations
 
 import json
 import logging
 import os
 import sqlite3
+from collections.abc import Iterator
 from contextlib import closing, contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +76,7 @@ def db_path() -> Path:
     if env:
         return Path(env).expanduser()
     from spicexplorer_api.app_config import work_root
+
     return work_root() / "index.db"
 
 
@@ -91,21 +94,24 @@ def _db() -> Iterator[sqlite3.Connection]:
 
 # ---------- FS truth → rows (the scanner) ----------
 
+
 def _fs_project_ids() -> list[str]:
     """The registry's project ids straight off the FS (the existence probe)."""
     from spicexplorer_api.app_config import projects_root
     from spicexplorer_api.services import project_service as ps
+
     return sorted(
-        pd.name for pd in projects_root().iterdir()
-        if pd.is_dir() and ps.project_exists(pd.name)
+        pd.name for pd in projects_root().iterdir() if pd.is_dir() and ps.project_exists(pd.name)
     )
 
 
 def _fs_run_dir_names(project_id: str | None) -> set[str]:
     """Run dir names (those carrying a run.json) for the probe — one scandir."""
     from spicexplorer_api.services import project_service as ps
+
     return {
-        rd.name for rd in ps.runs_dir(project_id or None).iterdir()
+        rd.name
+        for rd in ps.runs_dir(project_id or None).iterdir()
         if rd.is_dir() and (rd / "run.json").exists()
     }
 
@@ -115,6 +121,7 @@ def _scope_rows(project_id: str | None) -> tuple[list[tuple[Any, ...]], list[tup
     pass — each run.json is parsed once and its flat ``metrics: {name: value}``
     map is flattened to metric rows off the same dict (no second re-parse)."""
     from spicexplorer_api.services import project_service as ps
+
     run_rows: list[tuple[Any, ...]] = []
     metric_rows: list[tuple[Any, ...]] = []
     for rd in sorted(ps.runs_dir(project_id or None).glob("*")):
@@ -126,17 +133,24 @@ def _scope_rows(project_id: str | None) -> tuple[list[tuple[Any, ...]], list[tup
         except Exception:
             continue
         bs = d.get("best_score")
-        run_rows.append((
-            project_id or _UNSCOPED, rd.name,
-            d.get("run_id"), d.get("kind"), d.get("status"),
-            d.get("started"), d.get("ended"),
-            float(bs) if isinstance(bs, (int, float)) else None,
-            json.dumps(d),
-        ))
+        run_rows.append(
+            (
+                project_id or _UNSCOPED,
+                rd.name,
+                d.get("run_id"),
+                d.get("kind"),
+                d.get("status"),
+                d.get("started"),
+                d.get("ended"),
+                float(bs) if isinstance(bs, (int, float)) else None,
+                json.dumps(d),
+            )
+        )
         rid, metrics = d.get("run_id"), d.get("metrics")
         if rid and isinstance(metrics, dict):
             metric_rows.extend(
-                (rid, name, float(val), None) for name, val in metrics.items()
+                (rid, name, float(val), None)
+                for name, val in metrics.items()
                 if isinstance(val, (int, float))
             )
     return run_rows, metric_rows
@@ -146,6 +160,7 @@ def _project_row(project_id: str, run_rows: list[tuple[Any, ...]]) -> tuple[Any,
     """One projects-table row, derived from the manifest + this scope's run rows
     (same rollup rule as ``project_service.list_projects``: max best_score)."""
     from spicexplorer_api.services import project_service as ps
+
     man = ps.read_manifest(project_id)
     scores = [r[7] for r in run_rows if r[7] is not None]
     return (
@@ -160,8 +175,12 @@ def _project_row(project_id: str, run_rows: list[tuple[Any, ...]]) -> tuple[Any,
     )
 
 
-def _replace_scope(con: sqlite3.Connection, scope: str,
-                   run_rows: list[tuple[Any, ...]], metric_rows: list[tuple[Any, ...]]) -> None:
+def _replace_scope(
+    con: sqlite3.Connection,
+    scope: str,
+    run_rows: list[tuple[Any, ...]],
+    metric_rows: list[tuple[Any, ...]],
+) -> None:
     """Replace one scope's runs + metrics rows in a single batched pass. Metrics
     are deleted BEFORE the runs rows (the old run set identifies the stale
     metrics) and re-inserted with one executemany, not one per run."""
@@ -192,6 +211,7 @@ def _write_unscoped_runs(con: sqlite3.Connection) -> None:
 
 # ---------- rebuild ----------
 
+
 def rebuild() -> dict[str, int]:
     """Full rescan: FS truth → index, one transaction. Cheap at registry scale
     (it reads exactly what the FS listers read); called at API startup and by
@@ -214,6 +234,7 @@ def rebuild() -> dict[str, int]:
 
 # ---------- write-through (API-process mutations only) ----------
 
+
 def notify_project_changed(project_id: str) -> None:
     """Best-effort upsert after an API mutation (create/rename/touch/restore/
     run edit). Never raises — the FS write already succeeded and is canonical."""
@@ -228,8 +249,9 @@ def notify_project_deleted(project_id: str) -> None:
     try:
         with _db() as con:
             con.execute(
-                "DELETE FROM metrics WHERE run_id IN"
-                " (SELECT run_id FROM runs WHERE project_id=?)", (project_id,))
+                "DELETE FROM metrics WHERE run_id IN (SELECT run_id FROM runs WHERE project_id=?)",
+                (project_id,),
+            )
             con.execute("DELETE FROM projects WHERE id=?", (project_id,))
             con.execute("DELETE FROM runs WHERE project_id=?", (project_id,))
     except Exception:
@@ -250,10 +272,12 @@ def notify_runs_changed(project_id: str | None) -> None:
 
 # ---------- indexed reads (probe → self-heal → query; FS fallback) ----------
 
+
 def list_projects() -> list[dict[str, Any]]:
     """Indexed twin of ``project_service.list_projects`` (same shape + order).
     Existence-probes the registry first so out-of-band creates/deletes self-heal."""
     from spicexplorer_api.services import project_service as ps
+
     try:
         fs_ids = _fs_project_ids()
         with _db() as con:
@@ -268,13 +292,20 @@ def list_projects() -> list[dict[str, Any]]:
                 # project removal), so the metrics table can't outlive its runs.
                 con.execute(
                     "DELETE FROM metrics WHERE run_id NOT IN"
-                    " (SELECT run_id FROM runs WHERE run_id IS NOT NULL)")
+                    " (SELECT run_id FROM runs WHERE run_id IS NOT NULL)"
+                )
             rows = con.execute(
                 "SELECT id, name, updated, run_count, best_score, source_kind FROM projects"
             ).fetchall()
         out = [
-            {"id": r[0], "name": r[1], "updated": r[2], "run_count": r[3],
-             "best_score": r[4], "source": r[5]}
+            {
+                "id": r[0],
+                "name": r[1],
+                "updated": r[2],
+                "run_count": r[3],
+                "best_score": r[4],
+                "source": r[5],
+            }
             for r in rows
         ]
         out.sort(key=lambda p: p.get("updated") or "", reverse=True)
@@ -289,13 +320,13 @@ def list_runs(project_id: str | None) -> list[dict[str, Any]]:
     newest-first by RECORDED start time, dir-name tiebreak — the P3 ordering).
     Probes the run dir set for self-heal."""
     from spicexplorer_api.services import project_service as ps
+
     try:
         scope = project_id or _UNSCOPED
         fs_names = _fs_run_dir_names(project_id)
         with _db() as con:
             idx_names = {
-                r[0] for r in con.execute(
-                    "SELECT dir_name FROM runs WHERE project_id=?", (scope,))
+                r[0] for r in con.execute("SELECT dir_name FROM runs WHERE project_id=?", (scope,))
             }
             if idx_names != fs_names:
                 logger.info("index stale (runs of %r) — rescanning", scope)
@@ -305,7 +336,8 @@ def list_runs(project_id: str | None) -> list[dict[str, Any]]:
                     _write_unscoped_runs(con)
             rows = con.execute(
                 "SELECT raw FROM runs WHERE project_id=?"
-                " ORDER BY COALESCE(started, '') DESC, dir_name DESC", (scope,)
+                " ORDER BY COALESCE(started, '') DESC, dir_name DESC",
+                (scope,),
             ).fetchall()
         return [json.loads(r[0]) for r in rows]
     except Exception:
@@ -315,6 +347,7 @@ def list_runs(project_id: str | None) -> list[dict[str, Any]]:
 
 # ---------- CLI: python -m spicexplorer_api.services.index_db ----------
 
+
 def main(argv: list[str] | None = None) -> int:
     import argparse
 
@@ -322,8 +355,12 @@ def main(argv: list[str] | None = None) -> int:
         prog="python -m spicexplorer_api.services.index_db",
         description="Rebuild the derived WORK_ROOT index (FS is canonical).",
     )
-    ap.add_argument("--work-root", type=Path, default=None,
-                    help="WORK_ROOT to index (default: $WORK_ROOT, else <repo>/work)")
+    ap.add_argument(
+        "--work-root",
+        type=Path,
+        default=None,
+        help="WORK_ROOT to index (default: $WORK_ROOT, else <repo>/work)",
+    )
     args = ap.parse_args(argv)
     if args.work_root:
         os.environ["WORK_ROOT"] = str(args.work_root)

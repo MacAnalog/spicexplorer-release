@@ -100,7 +100,11 @@ def evaluate_symbolic_metric(
     input_ = tuple(args.pop("input")) if "input" in args else None
 
     abstract = str(circuit.dir / "abstract" / "netlist.spice")
-    res = call(abstract, output, input_, subs=subs, **args) if input_ else call(abstract, output, subs=subs, **args)
+    res = (
+        call(abstract, output, input_, subs=subs, **args)
+        if input_
+        else call(abstract, output, subs=subs, **args)
+    )
 
     value = res.dc_gain.value
     if value is not None and scale == "db":

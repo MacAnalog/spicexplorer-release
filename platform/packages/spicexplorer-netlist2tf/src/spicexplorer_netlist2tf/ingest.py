@@ -3,7 +3,7 @@
 This is the single ingestion seam. It starts at a :class:`~spicexplorer_core.spice_engine.NetlistView`
 (core owns all SPICE text parsing) and maps the string-level accessors into netlist2tf's **own**
 typed IR — it never re-parses SPICE and never imports the circuitgraph peer (the device-typing logic
-here is re-implemented, not borrowed; only *parsing* lives in core — ``doc/plan_netlist2tf.md`` §1/OD-5).
+here is re-implemented, not borrowed; only *parsing* lives in core — ``doc/archive/plan_netlist2tf.md`` §1/OD-5).
 
 Front-ends, all producing the same IR:
 
@@ -11,18 +11,25 @@ Front-ends, all producing the same IR:
 * :func:`from_file` / :func:`from_string` — convenience wrappers that build the ``NetlistView`` first.
 
 Everything is **sympified once** here (plan §4): geometry/value param strings → sympy ``Expr`` (numeric
-→ ``Float``; symbolic reference → ``Symbol``), with all netlist-derived symbol names lower-cased (SPICE
-is case-insensitive, so this is collision-free and makes device-card refs match global ``.param`` names).
+→ an exact ``Rational``; symbolic reference → ``Symbol``), with all netlist-derived symbol names
+lower-cased (SPICE is case-insensitive, so this is collision-free and makes device-card refs match
+global ``.param`` names). Net names are case-insensitive for the same reason: spellings that differ
+only in case are one net, which keeps the deck's first top-level spelling (device order). A subckt
+body may spell a formal port in either case, and the ``ports=`` nets and ``ground`` take the deck's
+spelling.
 """
 
 from __future__ import annotations
 
 import logging
+import math
 import re
+from dataclasses import replace
 from pathlib import Path
 
 import sympy as sp
 from spicexplorer_core.eng import parse_value
+from spicexplorer_core.spice_eng import spice_number
 from spicexplorer_core.spice_engine import NetlistView
 
 from .model.ir import (
@@ -58,6 +65,14 @@ _IND_PREFIXES = ("L", "XL")
 _MOS_PINS = (PinRole.DRAIN, PinRole.GATE, PinRole.SOURCE, PinRole.BULK)
 _MOS_PINS_NO_BULK = (PinRole.DRAIN, PinRole.GATE, PinRole.SOURCE)
 _TWO_TERMINAL = (PinRole.PLUS, PinRole.MINUS)
+_CONTROLLED = (PinRole.PLUS, PinRole.MINUS, PinRole.CONTROL_PLUS, PinRole.CONTROL_MINUS)
+#: The forms of a ``G`` card that are not one linear gain (behavioral, polynomial, table, Laplace).
+_NONLINEAR_G = re.compile(r"(value|poly|table|laplace|freq|cur|vccs)\b", re.IGNORECASE)
+
+# A source spec that opens with a transient function (``pulse(0 1 …)``, ``sin({VCM} …)``) has no
+# bare DC token to read — its small-signal value is 0 either way.
+_TRANSIENT_FN = re.compile(r"(pulse|sin|exp|pwl|sffm|am|trnoise|trrandom)\s*\(", re.IGNORECASE)
+_SIGNED_INF = re.compile(r"([+-]?)inf(inity)?", re.IGNORECASE)
 
 
 # ------------------------------------------------------------------------
@@ -69,37 +84,68 @@ def _lower_symbols(expr: sp.Expr) -> sp.Expr:
     return expr.xreplace(subs) if subs else expr
 
 
-# SPICE engineering scale factors (case-insensitive; 'meg' = 1e6, 'm' = milli — SPICE-correct).
-# Used as a fallback for tokens core's parse_value misses (e.g. an upper-case 'P', or 'meg').
-_ENG_SCALE = {"t": 1e12, "g": 1e9, "k": 1e3, "m": 1e-3, "u": 1e-6, "µ": 1e-6,
-              "n": 1e-9, "p": 1e-12, "f": 1e-15, "a": 1e-18}
-_ENG_RE = re.compile(r"^([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)([a-zµ]*)$", re.IGNORECASE)
-
-
 def _try_eng(s: str) -> float | None:
-    """SPICE-correct, case-insensitive engineering parse; ``None`` if ``s`` is not numeric."""
-    m = _ENG_RE.match(s)
-    if not m:
+    """SPICE-correct, case-insensitive engineering parse; ``None`` if ``s`` is not numeric.
+
+    Delegates to the workspace's one netlist-value table
+    (:func:`spicexplorer_core.spice_eng.spice_number`). This was a second, private copy of those
+    scale factors, and it was only ever reached as a FALLBACK — the DSL parser ran first, so an
+    upper-case ``M`` never got here and was read as *mega* where the rest of the workspace reads a
+    netlist ``M`` as *milli* (Codex review, item TF-01).
+
+    ``spice_number`` raises on a token written entirely out of number characters that is still not a
+    number (``1.2.3``). Here that is not an error: the caller falls through to a symbolic parse for
+    anything non-numeric, and ``None`` keeps that path open.
+    """
+    try:
+        return spice_number(s)
+    except ValueError:
         return None
-    mant, suf = m.group(1), m.group(2).lower()
-    if not suf:
-        return float(mant)
-    if suf.startswith("meg"):
-        return float(mant) * 1e6
-    factor = _ENG_SCALE.get(suf[0])  # trailing unit letters after the scale are ignored (SPICE)
-    return float(mant) * factor if factor is not None else None
 
 
 def _as_number(num: float) -> sp.Expr:
-    return sp.Integer(int(num)) if num == int(num) else sp.Float(num)
+    """A parsed netlist number as an EXACT sympy number — ``Integer``/``Rational``, never ``Float``.
+
+    ``spice_number`` scales the token's decimal mantissa in ``Decimal`` and returns the nearest
+    double; that double's ``repr`` is its shortest round-tripping decimal, which is the literal the
+    deck wrote (``2.7p`` → ``27/10**13``) for any value of up to 15 significant digits. Not
+    ``sp.Rational(num)`` (the double's exact binary fraction) and not ``nsimplify`` (a heuristic).
+
+    With ``Float`` entries ``cancel`` could not cancel exactly: its round-off survived as tiny
+    leading coefficients, and ``describe_tf`` rooted them into phantom poles/zeros at 1e18..1e32
+    rad/s — a passive RC ladder grew two zeros, a capacitor loop a fourth pole (audit LEAF-F06).
+    Numbers become floats only where they are evaluated (describe / numeric / pencil).
+    """
+    if math.isinf(num):  # int(inf) raises OverflowError, which no caller's except tuple catches
+        return sp.oo if num > 0 else -sp.oo
+    if math.isnan(num):  # sp.Rational raises TypeError here; keep the ValueError callers expect
+        raise ValueError(f"{num!r} is not a value")
+    return sp.Rational(repr(num))
+
+
+def _unwrap(s: str) -> str:
+    """Strip SPICE expression delimiters: braces, and a matching pair of single or double quotes.
+
+    analog-db exports design variables quoted (``C0 a b 'CAPACITOR_0'``); left on, the quotes made
+    sympy read a Python string literal and ingestion crashed (audit item ROAD-02).
+    """
+    while True:
+        s = s.strip("{}").strip()  # SPICE brace-expressions
+        if len(s) >= 2 and s[0] == s[-1] and s[0] in "'\"":
+            s = s[1:-1].strip()
+            continue
+        return s
 
 
 def sympify_value(raw: object) -> sp.Expr:
     """Parse one SPICE value token into a sympy ``Expr``.
 
-    Numeric (with optional engineering suffix, e.g. ``"50f"``, ``"0.18u"``, ``"0P"``, ``1.5``) → a
-    sympy ``Float``/``Integer``. A symbolic reference or expression (``"CL"``, ``"{2*W}"``,
+    Numeric (with optional engineering suffix, e.g. ``"50f"``, ``"0.18u"``, ``"0P"``, ``1.5``) → an
+    exact sympy ``Rational``/``Integer`` (``"inf"`` and ``"+inf"`` → ``sp.oo``, ``"-inf"`` →
+    ``-sp.oo``). A symbolic reference or expression (``"CL"``, ``"{2*W}"``, ``"'2*W'"``,
     ``"x_dut_nfet_input_w"``) → the corresponding symbolic ``Expr`` with lower-cased symbol names.
+    A token that parses to something other than an expression (a bool, a tuple), or to NaN or a
+    complex infinity (``"nan"``, ``"1/0"``), raises ``ValueError``.
     """
     if isinstance(raw, bool):  # guard: bool is an int subclass
         return sp.Integer(int(raw))
@@ -108,17 +154,36 @@ def sympify_value(raw: object) -> sp.Expr:
     s = str(raw).strip()
     if not s:
         raise ValueError("empty value token")
-    s = s.strip("{}").strip()  # SPICE brace-expressions
-    # Engineering numeric first: core's parse_value (platform-consistent), then a SPICE-correct
-    # case-insensitive fallback for tokens it misses ('0P', 'meg').
+    s = _unwrap(s)
+    if not s:
+        raise ValueError(f"empty value token {raw!r}")
+    # SPICE semantics FIRST. This function parses NETLIST tokens, and in a netlist the scale
+    # factors are case-insensitive with `M` = milli and `meg` the only mega. Trying core's
+    # parse_value first instead — the YAML DSL's parser, deliberately case-SENSITIVE with
+    # `M` = mega — meant `1M` came back as 1e6, a factor of 10⁹ away from what circuitgraph reads
+    # from the same token (Codex review, item TF-01).
+    eng = _try_eng(s)
+    if eng is not None:
+        return _as_number(eng)
+    # A signed infinity, as 'inf' is read: the DSL parser below reads '-inf' as '-in' femto and
+    # fails, and the symbolic parse took the 'inf' of '-inf' for a name (L-PF-5).
+    inf = _SIGNED_INF.fullmatch(s)
+    if inf:
+        return -sp.oo if inf.group(1) == "-" else sp.oo
+    # Then the DSL parser, for the forms it alone accepts.
     try:
         return _as_number(float(parse_value(s)))
     except (ValueError, TypeError):
-        eng = _try_eng(s)
-        if eng is not None:
-            return _as_number(eng)
+        pass
     # Symbolic reference / expression.
     expr = sp.sympify(s, rational=True)  # type: ignore[call-overload]
+    if not isinstance(expr, sp.Expr):
+        # e.g. 'True' → a sympy bool, '(1, 2)' → a Tuple; _lower_symbols needs an Expr
+        raise ValueError(
+            f"value token {raw!r} is not an expression (parsed as {type(expr).__name__})"
+        )
+    if expr.has(sp.nan, sp.zoo):  # 'nan', '1/0': refused, as a NaN number is by _as_number
+        raise ValueError(f"value token {raw!r} is not a value (parsed as {expr})")
     return _lower_symbols(expr)
 
 
@@ -207,16 +272,18 @@ def _source_params(view: NetlistView, ref: str) -> dict[str, sp.Expr]:
             try:
                 out[kw] = sympify_value(toks[i + 1])
             except (ValueError, TypeError, sp.SympifyError):
-                pass
+                # a dropped `ac` hides the stimulus from detect_ac_input — say so (audit TF-4)
+                logger.warning("ref %s: could not parse %s value %r; dropped", ref, kw, toks[i + 1])
             i += 2
             continue
         i += 1
-    # A bare leading token (no dc/ac keyword) is the DC value, e.g. 'IBIAS' or '0'.
-    if not saw_kw and toks:
+    # A bare leading token (no dc/ac keyword) is the DC value, e.g. 'IBIAS' or '0'. A transient
+    # function is not one: skipping it is not a dropped token, so it does not warn.
+    if not saw_kw and toks and not _TRANSIENT_FN.match(spec):
         try:
             out["dc"] = sympify_value(toks[0])
         except (ValueError, TypeError, sp.SympifyError):
-            pass
+            logger.warning("ref %s: could not parse dc value %r; dropped", ref, toks[0])
     return out
 
 
@@ -252,12 +319,27 @@ def build_device(view: NetlistView, ref: str) -> Device:
     if ref_u.startswith(_IND_PREFIXES) and len(nets) == 2:
         return _two_terminal(view, ref, nets, DeviceKind.INDUCTOR)
 
+    if ref_u.startswith("G") and len(nets) == 2:
+        vccs = _vccs(view, ref, nets)
+        if vccs is not None:
+            return vccs
+
     if ref_u.startswith("V") and len(nets) == 2:
-        return Device(ref, DeviceKind.VSOURCE, _terminals(_TWO_TERMINAL, nets),
-                      model=None, params=_source_params(view, ref))
+        return Device(
+            ref,
+            DeviceKind.VSOURCE,
+            _terminals(_TWO_TERMINAL, nets),
+            model=None,
+            params=_source_params(view, ref),
+        )
     if ref_u.startswith("I") and len(nets) == 2:
-        return Device(ref, DeviceKind.ISOURCE, _terminals(_TWO_TERMINAL, nets),
-                      model=None, params=_source_params(view, ref))
+        return Device(
+            ref,
+            DeviceKind.ISOURCE,
+            _terminals(_TWO_TERMINAL, nets),
+            model=None,
+            params=_source_params(view, ref),
+        )
 
     return _opaque_device(view, ref, nets)
 
@@ -272,14 +354,40 @@ def _two_terminal(view: NetlistView, ref: str, nets: list[str], kind: DeviceKind
     return Device(ref, kind, _terminals(_TWO_TERMINAL, nets), model=None, params=params)
 
 
+def _vccs(view: NetlistView, ref: str, nets: list[str]) -> Device | None:
+    """A linear ``G`` card (``G1 n+ n- nc+ nc- value``) as a :class:`DeviceKind.VCCS`, or ``None``.
+
+    The parser hands back the output pair as the nodes and ``nc+ nc- value`` as the value string;
+    the value is sympified like any other (``{gm_val}`` → the symbol ``gm_val``). A behavioral,
+    polynomial, table or Laplace form is not one linear gain and returns ``None`` (it stays an
+    unmodelled ``UNKNOWN`` device, listed in ``unmodelled``).
+    """
+    toks = str(view.get_component_value(ref)).split(None, 2)
+    if len(toks) != 3 or _NONLINEAR_G.match(toks[0]) or "=" in toks[2]:
+        return None
+    try:
+        value = sympify_value(toks[2])
+    except (ValueError, TypeError, sp.SympifyError):
+        logger.warning("ref %s: could not sympify the VCCS gain %r; kept unmodelled", ref, toks[2])
+        return None
+    return Device(
+        ref,
+        DeviceKind.VCCS,
+        _terminals(_CONTROLLED, [*nets, toks[0], toks[1]]),
+        model=None,
+        params={"value": value},
+    )
+
+
 def _opaque_device(view: NetlistView, ref: str, nets: list[str]) -> Device:
     """A subckt instance or an unhandled element: positional PORT terminals, model = referenced name."""
     kind = DeviceKind.SUBCKT if ref.upper().startswith("X") else DeviceKind.UNKNOWN
     roles = tuple(PinRole.PORT for _ in nets)
     model = view.get_component_value(ref) if kind is DeviceKind.SUBCKT else None
     logger.debug("ref %s typed as %s (%d ports)", ref, kind.value, len(nets))
-    return Device(ref, kind, _terminals(roles, nets), model=model,
-                  params=_geometry_params(view, ref))
+    return Device(
+        ref, kind, _terminals(roles, nets), model=model, params=_geometry_params(view, ref)
+    )
 
 
 # ------------------------------------------------------------------------
@@ -294,8 +402,8 @@ def _rename_for_instance(dev: Device, suffix: str, net_map: dict[str, str]) -> D
     other (internal) net/ref gets the per-instance postfix so instances never collide."""
 
     def map_net(n: str) -> str:
-        if n in net_map:
-            return net_map[n]
+        if n.lower() in net_map:  # net_map is keyed lower-case (SPICE names are case-insensitive)
+            return net_map[n.lower()]
         if classify_net_role(n) is not NetRole.SIGNAL:
             return n  # ground/supply names are global AC grounds either way — never localize
         return f"{n}{suffix}"
@@ -330,12 +438,16 @@ def _flatten_subckt(
     if not formals or len(formals) != len(actuals):
         logger.warning(
             "flatten: %s (%s) port mismatch (formal %s vs %d actual nets); kept opaque",
-            dev.ref, dev.model, formals, len(actuals),
+            dev.ref,
+            dev.model,
+            formals,
+            len(actuals),
         )
         return None
 
     suffix = f"_{dev.ref.lower()}"
-    net_map = dict(zip(formals, actuals))
+    # keyed by the lower-cased formal: a body may spell a port in another case than its header
+    net_map = {f.lower(): a for f, a in zip(formals, actuals)}
     out: list[Device] = []
     for ref in sub.get_components():
         d = build_device(sub, ref)
@@ -368,6 +480,13 @@ def _global_params(view: NetlistView) -> dict[str, sp.Expr]:
     return out
 
 
+def _fold_nets(dev: Device, canon: dict[str, str]) -> Device:
+    """``dev`` with every terminal net replaced by its canonical spelling (``canon`` is keyed by the
+    lower-cased name)."""
+    terminals = tuple(Terminal(t.role, canon[t.net.lower()]) for t in dev.terminals)
+    return dev if terminals == dev.terminals else replace(dev, terminals=terminals)
+
+
 def ingest_netlist(
     view: NetlistView,
     *,
@@ -381,7 +500,8 @@ def ingest_netlist(
 
     ``ports`` optionally names analysis ports up front (``{"in": ("vinp", "vinn"), "out": ("vout",
     "0")}``); they can also be supplied later at ``extract_tf`` time. ``ground`` is the canonical
-    reference-node name.
+    reference-node name. Net names are case-insensitive: each net keeps the deck's first spelling,
+    and the ``ports`` nets and ``ground`` are stored in that spelling.
 
     ``flatten`` (default on) steps into every resolvable ``X…`` subckt instance and splices its
     devices in with a ``_<inst>`` postfix on internal nets/refs, so a *testbench-level* netlist
@@ -390,9 +510,12 @@ def ingest_netlist(
     hook for behavioral/registered models.
     """
     keep = {k.lower() for k in keep_opaque}
+    canon: dict[str, str] = {}  # lower-cased net name -> the one spelling kept for it
     devices_list: list[Device] = []
     for ref in view.get_components():
         d = build_device(view, ref)
+        for t in d.terminals:  # top-level spellings first: a subckt body never renames a deck net
+            canon.setdefault(t.net.lower(), t.net)
         if flatten and d.kind is DeviceKind.SUBCKT and (d.model or "").lower() not in keep:
             expanded = _flatten_subckt(view, d, keep_opaque=keep, depth=_FLATTEN_MAX_DEPTH)
             if expanded is not None:
@@ -400,14 +523,27 @@ def ingest_netlist(
                 continue
             logger.warning("subckt instance %s (%s) not flattened; kept opaque", d.ref, d.model)
         devices_list.append(d)
-    devices = tuple(devices_list)
+    # SPICE net names are case-insensitive: spellings that differ only in case are one net. It keeps
+    # the first top-level spelling in device order, else a subckt body's first one, so a deck
+    # spelled in one case comes through unchanged.
+    for n in sorted(view.get_all_nodes()):
+        canon.setdefault(n.lower(), n)
+    for d in devices_list:
+        for t in d.terminals:
+            canon.setdefault(t.net.lower(), t.net)
+    devices = tuple(_fold_nets(d, canon) for d in devices_list)
 
-    nets = {n: Net(n, classify_net_role(n)) for n in view.get_all_nodes()}
+    nets = {
+        canon[n.lower()]: Net(canon[n.lower()], classify_net_role(n)) for n in view.get_all_nodes()
+    }
     for d in devices:  # flattened-internal nets exist only on devices, not on the top view
         for t in d.terminals:
             if t.net not in nets:
                 nets[t.net] = Net(t.net, classify_net_role(t.net))
-    port_pairs = {k: PortPair(*v) for k, v in (ports or {}).items()}
+    port_pairs = {
+        k: PortPair(canon.get(v[0].lower(), v[0]), canon.get(v[1].lower(), v[1]))
+        for k, v in (ports or {}).items()
+    }
     params = _global_params(view)
 
     ir = Circuit2TF(
@@ -416,7 +552,7 @@ def ingest_netlist(
         devices=devices,
         ports=port_pairs,
         params=params,
-        ground=ground,
+        ground=canon.get(ground.lower(), ground),
     )
     # The keep-symbolic allow-list: every symbol that survived ingestion (device + global params).
     ir.symbolic = ir.free_symbols
@@ -434,8 +570,14 @@ def from_file(
 ) -> Circuit2TF:
     """Ingest a netlist file (builds the ``NetlistView`` first)."""
     view = NetlistView.from_file(path)
-    return ingest_netlist(view, name=name or Path(path).stem, ports=ports, ground=ground,
-                          flatten=flatten, keep_opaque=keep_opaque)
+    return ingest_netlist(
+        view,
+        name=name or Path(path).stem,
+        ports=ports,
+        ground=ground,
+        flatten=flatten,
+        keep_opaque=keep_opaque,
+    )
 
 
 def from_string(
@@ -456,5 +598,11 @@ def from_string(
     first = next((ln for ln in text.lstrip().splitlines() if ln.strip()), "")
     if not first.lstrip().startswith("*"):
         text = f"* {name}\n{text}"
-    return ingest_netlist(NetlistView.from_string(text), name=name, ports=ports, ground=ground,
-                          flatten=flatten, keep_opaque=keep_opaque)
+    return ingest_netlist(
+        NetlistView.from_string(text),
+        name=name,
+        ports=ports,
+        ground=ground,
+        flatten=flatten,
+        keep_opaque=keep_opaque,
+    )

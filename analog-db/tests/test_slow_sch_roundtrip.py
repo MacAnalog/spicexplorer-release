@@ -46,7 +46,9 @@ try:
     from spicexplorer_netlist2xschem.sym_library import default_search_paths
 
     _DEPS = True
-except ImportError:  # netlist2xschem / circuitgraph not installed — the .sch were never generated either
+except (
+    ImportError
+):  # netlist2xschem / circuitgraph not installed — the .sch were never generated either
     _DEPS = False
 
 pytestmark = [
@@ -97,7 +99,18 @@ def _xschem_netlist(sch: Path, work: Path) -> str | None:
     env = os.environ.copy()
     env["XSCHEM_LIBRARY_PATH"] = lib_path
     subprocess.run(
-        ["xschem", "--rcfile", str(rc), "-x", "-q", "-n", "-s", "-o", str(work), str(sch.resolve())],
+        [
+            "xschem",
+            "--rcfile",
+            str(rc),
+            "-x",
+            "-q",
+            "-n",
+            "-s",
+            "-o",
+            str(work),
+            str(sch.resolve()),
+        ],
         env=env,
         capture_output=True,
         text=True,

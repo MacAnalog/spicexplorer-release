@@ -3,7 +3,6 @@ import json
 import logging
 from dataclasses import asdict
 from pathlib import Path
-from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -20,15 +19,12 @@ logger = logging.getLogger("spicexplorer.viz.plotting")
 # ----------------------------
 
 
-
-
-
 # ----------------------------
 # --- Class Definitions ---
 # ----------------------------
 
-class Optimization_Log_Visualizer:
 
+class Optimization_Log_Visualizer:
     def __init__(self, optimization_log: OptimizationLog):
         self.optimization_log = optimization_log
 
@@ -36,7 +32,9 @@ class Optimization_Log_Visualizer:
     # Load/Save Method
     # ------------------------------------------------------------
     @classmethod
-    def load_checkpoint(cls, path_to_checkpoint: str | Path, **kwargs) -> "Optimization_Log_Visualizer":
+    def load_checkpoint(
+        cls, path_to_checkpoint: str | Path, **kwargs
+    ) -> "Optimization_Log_Visualizer":
         """Load optimizer and project setup from JSON checkpoint with version validation."""
         path = Path(path_to_checkpoint)
         with open(path, "r") as f:
@@ -45,8 +43,9 @@ class Optimization_Log_Visualizer:
         # Validate schema version
         version = data.get("schema_version")
         if version != CHECKPOINT_SCHEMA_VERSION:
-            logger.warning(f"⚠️ Checkpoint version mismatch: {version} != {CHECKPOINT_SCHEMA_VERSION}")
-
+            logger.warning(
+                f"⚠️ Checkpoint version mismatch: {version} != {CHECKPOINT_SCHEMA_VERSION}"
+            )
 
         raw_log_data = data.get("optimization_log", [])
         if not isinstance(raw_log_data, list):
@@ -70,10 +69,9 @@ class Optimization_Log_Visualizer:
                     entry["log_file"] = None
 
         # Rebuild optimization log
-        optimization_log = OptimizationLog([
-            from_dict(OptimizationLogEntry, entry, Config(strict=False))
-            for entry in raw_log_data
-        ])
+        optimization_log = OptimizationLog(
+            [from_dict(OptimizationLogEntry, entry, Config(strict=False)) for entry in raw_log_data]
+        )
 
         # Recreate optimizer instance
         obj = cls(optimization_log=optimization_log, **kwargs)
@@ -93,10 +91,7 @@ class Optimization_Log_Visualizer:
         serializable_log = [asdict(entry) for entry in self.optimization_log]
 
         # 2. Construct the data wrapper
-        data = {
-            "schema_version": CHECKPOINT_SCHEMA_VERSION,
-            "optimization_log": serializable_log
-        }
+        data = {"schema_version": CHECKPOINT_SCHEMA_VERSION, "optimization_log": serializable_log}
 
         # 3. Define a custom encoder for Path and Numpy objects
         class SpiceXplorerEncoder(json.JSONEncoder):
@@ -135,10 +130,10 @@ class Optimization_Log_Visualizer:
             return False
         return True
 
-    def list_available_metrics(self) -> List[str]:
+    def list_available_metrics(self) -> list[str]:
         return self.optimization_log.list_available_metrics()
 
-    def list_available_params(self) -> List[str]:
+    def list_available_params(self) -> list[str]:
         return self.optimization_log.list_available_params()
 
     def filter_top_n(self, n: int) -> None:
@@ -155,20 +150,22 @@ class Optimization_Log_Visualizer:
         # 1. Sort the internal log list by score (Descending: Best -> Worst)
         #    We access the underlying list via self.optimization_log.log
         sorted_entries = sorted(
-            self.optimization_log.log,
-            key=lambda entry: entry.get_score(),
-            reverse=True
+            self.optimization_log.log, key=lambda entry: entry.get_score(), reverse=True
         )
 
         # 2. Slice the list to keep only the top n
         self.optimization_log.log = sorted_entries[:n]
 
-        logger.info(f"✂️ Filtered optimization log: keeping top {len(self.optimization_log.log)} entries.")
+        logger.info(
+            f"✂️ Filtered optimization log: keeping top {len(self.optimization_log.log)} entries."
+        )
 
     # ------------------------------------------------------------
     # Re-computing Loss
     # ------------------------------------------------------------
-    def recompute_loss_from_optimization_config(self, optimizer: Spice_Constraint_Satisfaction) -> None:
+    def recompute_loss_from_optimization_config(
+        self, optimizer: Spice_Constraint_Satisfaction
+    ) -> None:
         """Re-score every logged point against `optimizer`'s current target specs.
 
         Writes BOTH halves of the re-score: the per-spec `fit_summary` *and* the entry's
@@ -176,8 +173,10 @@ class Optimization_Log_Visualizer:
         plot, `filter_top_n`, the best-point pick — reporting the score from the config the
         run was originally executed under, i.e. the re-score silently did nothing."""
         for i, entry in enumerate(self.optimization_log):
-            performance_array  = entry.get_performance_params()
-            total_score, fit_summary = optimizer.compute_fitness(performance_array=performance_array)
+            performance_array = entry.get_performance_params()
+            total_score, fit_summary = optimizer.compute_fitness(
+                performance_array=performance_array
+            )
             self.optimization_log.update_entry_fit_summary(index=i, fit_summary=fit_summary)
             self.optimization_log.update_entry_score(index=i, score=total_score)
 
@@ -191,8 +190,8 @@ class Optimization_Log_Visualizer:
         save_path: Path | None = None,
         show: bool = False,
         log_x: bool = False,
-        log_y: bool = False
-    ) -> Tuple[np.ndarray, np.ndarray] | None:
+        log_y: bool = False,
+    ) -> tuple[np.ndarray, np.ndarray] | None:
 
         if self.is_empty():
             logger.warning("optimizatio log is empty")
@@ -203,40 +202,37 @@ class Optimization_Log_Visualizer:
             return None
 
         x_values = np.array(
-            [entry.get_param_val(param_x) for entry in self.optimization_log],
-            dtype=float
+            [entry.get_param_val(param_x) for entry in self.optimization_log], dtype=float
         )
         y_values = np.array(
-            [entry.get_param_val(param_y) for entry in self.optimization_log],
-            dtype=float
+            [entry.get_param_val(param_y) for entry in self.optimization_log], dtype=float
         )
-        loss = np.array(
-            [entry.get_score() for entry in self.optimization_log],
-            dtype=float
-        )
+        loss = np.array([entry.get_score() for entry in self.optimization_log], dtype=float)
 
         fig = go.Figure()
 
-        fig.add_trace(go.Scatter(
-            x=x_values,
-            y=y_values,
-            mode="markers",
-            marker=dict(
-                size=10,
-                color=loss,
-                colorscale="Viridis",
-                colorbar=dict(title="Score"),
-                showscale=True
-            ),
-            name="Design Space Exploration"
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=x_values,
+                y=y_values,
+                mode="markers",
+                marker=dict(
+                    size=10,
+                    color=loss,
+                    colorscale="Viridis",
+                    colorbar=dict(title="Score"),
+                    showscale=True,
+                ),
+                name="Design Space Exploration",
+            )
+        )
 
         fig.update_layout(
             title=f"Design Space Exploration: {param_y} vs. {param_x}",
             xaxis_title=param_x,
             yaxis_title=param_y,
             template="plotly_dark",
-            showlegend=False
+            showlegend=False,
         )
 
         fig.update_xaxes(type="log" if log_x else "linear")
@@ -260,8 +256,8 @@ class Optimization_Log_Visualizer:
         save_path: Path | None = None,
         show: bool = False,
         log_x: bool = False,
-        log_y: bool = False
-    ) -> Tuple[np.ndarray, np.ndarray] | None:
+        log_y: bool = False,
+    ) -> tuple[np.ndarray, np.ndarray] | None:
 
         if self.is_empty():
             return None
@@ -280,42 +276,45 @@ class Optimization_Log_Visualizer:
         # drop the key from later entries (a corner absent post-resume), so index
         # defensively — a missing cell becomes NaN (a plotted gap), not a KeyError.
         x_values = np.array(
-            [entry.get_fit_summary().get(metric_x, {}).get("curr_val", np.nan)
-             for entry in self.optimization_log],
-            dtype=float
+            [
+                entry.get_fit_summary().get(metric_x, {}).get("curr_val", np.nan)
+                for entry in self.optimization_log
+            ],
+            dtype=float,
         )
         y_values = np.array(
-            [entry.get_fit_summary().get(metric_y, {}).get("curr_val", np.nan)
-             for entry in self.optimization_log],
-            dtype=float
+            [
+                entry.get_fit_summary().get(metric_y, {}).get("curr_val", np.nan)
+                for entry in self.optimization_log
+            ],
+            dtype=float,
         )
-        fom = np.array(
-            [entry.get_score() for entry in self.optimization_log],
-            dtype=float
-        )
+        fom = np.array([entry.get_score() for entry in self.optimization_log], dtype=float)
 
         fig = go.Figure()
 
-        fig.add_trace(go.Scatter(
-            x=x_values,
-            y=y_values,
-            mode="markers",
-            marker=dict(
-                size=10,
-                color=fom,
-                colorscale="Viridis",
-                colorbar=dict(title="FOM"),
-                showscale=True
-            ),
-            name="Optimization Trace"
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=x_values,
+                y=y_values,
+                mode="markers",
+                marker=dict(
+                    size=10,
+                    color=fom,
+                    colorscale="Viridis",
+                    colorbar=dict(title="FOM"),
+                    showscale=True,
+                ),
+                name="Optimization Trace",
+            )
+        )
 
         fig.update_layout(
             title=f"Optimization Trace: {metric_y} vs. {metric_x}",
             xaxis_title=metric_x,
             yaxis_title=metric_y,
             template="plotly_dark",
-            showlegend=False
+            showlegend=False,
         )
 
         fig.update_xaxes(type="log" if log_x else "linear")
@@ -333,10 +332,7 @@ class Optimization_Log_Visualizer:
         return x_values, y_values
 
     def plot_loss_breakdown(
-        self,
-        save_path: Path | None = None,
-        show: bool = False,
-        log_y: bool = False
+        self, save_path: Path | None = None, show: bool = False, log_y: bool = False
     ) -> go.Figure | None:
         """
         Plots the Total Score, Best Score So Far, and individual metric contributions.
@@ -349,10 +345,7 @@ class Optimization_Log_Visualizer:
         iterations = np.arange(len(self.optimization_log))
 
         # Current Score per iteration
-        total_scores = np.array(
-            [entry.get_score() for entry in self.optimization_log],
-            dtype=float
-        )
+        total_scores = np.array([entry.get_score() for entry in self.optimization_log], dtype=float)
 
         # Best Score So Far (Cumulative Maximum)
         # We use maximum because you specified "most positive" is best.
@@ -366,25 +359,29 @@ class Optimization_Log_Visualizer:
         fig = go.Figure()
 
         # TRACE: Best Score So Far (Green Dashed Line)
-        fig.add_trace(go.Scatter(
-            x=iterations,
-            y=best_so_far,
-            mode='lines',
-            name='<b>BEST SO FAR</b>',
-            line=dict(width=3, color='#00FF00', dash='dash'), # Green, Dashed
-            hovertemplate="Iter: %{x}<br>Best: %{y:.4f}<extra></extra>"
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=iterations,
+                y=best_so_far,
+                mode="lines",
+                name="<b>BEST SO FAR</b>",
+                line=dict(width=3, color="#00FF00", dash="dash"),  # Green, Dashed
+                hovertemplate="Iter: %{x}<br>Best: %{y:.4f}<extra></extra>",
+            )
+        )
 
         # TRACE: Current Total Score (Solid White Line)
-        fig.add_trace(go.Scatter(
-            x=iterations,
-            y=total_scores,
-            mode='lines+markers',
-            name='Current Score',
-            line=dict(width=2, color='white'),
-            marker=dict(size=5, opacity=0.8),
-            hovertemplate="Iter: %{x}<br>Curr: %{y:.4f}<extra></extra>"
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=iterations,
+                y=total_scores,
+                mode="lines+markers",
+                name="Current Score",
+                line=dict(width=2, color="white"),
+                marker=dict(size=5, opacity=0.8),
+                hovertemplate="Iter: %{x}<br>Curr: %{y:.4f}<extra></extra>",
+            )
+        )
 
         # TRACES: Individual Metrics (Thinner, colored lines)
         for metric in metric_keys:
@@ -395,15 +392,17 @@ class Optimization_Log_Visualizer:
                 val = summary.get(metric, {}).get("score", np.nan)
                 metric_scores.append(val)
 
-            fig.add_trace(go.Scatter(
-                x=iterations,
-                y=metric_scores,
-                mode='lines',
-                name=f"{metric}",
-                opacity=0.5, # Transparent to keep main lines dominant
-                line=dict(width=1),
-                hovertemplate=f"Iter: %{{x}}<br>{metric}: %{{y:.4f}}<extra></extra>"
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=iterations,
+                    y=metric_scores,
+                    mode="lines",
+                    name=f"{metric}",
+                    opacity=0.5,  # Transparent to keep main lines dominant
+                    line=dict(width=1),
+                    hovertemplate=f"Iter: %{{x}}<br>{metric}: %{{y:.4f}}<extra></extra>",
+                )
+            )
 
         # --- 3. Styling ---
         fig.update_layout(
@@ -411,14 +410,8 @@ class Optimization_Log_Visualizer:
             xaxis_title="Iteration",
             yaxis_title="Score (Higher is Better)",
             template="plotly_dark",
-            hovermode="x unified", # Shows all traces for an iteration on hover
-            legend=dict(
-                yanchor="top",
-                y=0.99,
-                xanchor="left",
-                x=0.01,
-                bgcolor="rgba(0,0,0,0.5)"
-            )
+            hovermode="x unified",  # Shows all traces for an iteration on hover
+            legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, bgcolor="rgba(0,0,0,0.5)"),
         )
 
         if log_y:
@@ -437,10 +430,7 @@ class Optimization_Log_Visualizer:
         return fig
 
     def plot_best_score_evolution(
-        self,
-        save_path: Path | None = None,
-        show: bool = False,
-        log_y: bool = False
+        self, save_path: Path | None = None, show: bool = False, log_y: bool = False
     ) -> go.Figure | None:
         """
         Plots the 'Best Score So Far' (Cumulative Maximum) for the Total Score
@@ -454,10 +444,7 @@ class Optimization_Log_Visualizer:
         iterations = np.arange(len(self.optimization_log))
 
         # A. Total Score Best So Far
-        total_scores = np.array(
-            [entry.get_score() for entry in self.optimization_log],
-            dtype=float
-        )
+        total_scores = np.array([entry.get_score() for entry in self.optimization_log], dtype=float)
         # Calculate cumulative maximum (best seen up to index i)
         total_best_so_far = np.maximum.accumulate(total_scores)
 
@@ -469,14 +456,16 @@ class Optimization_Log_Visualizer:
         fig = go.Figure()
 
         # TRACE: Total Score Best (Thick, White)
-        fig.add_trace(go.Scatter(
-            x=iterations,
-            y=total_best_so_far,
-            mode='lines',
-            name='<b>TOTAL BEST</b>',
-            line=dict(width=4, color='white'),
-            hovertemplate="Iter: %{x}<br>Total Best: %{y:.4f}<extra></extra>"
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=iterations,
+                y=total_best_so_far,
+                mode="lines",
+                name="<b>TOTAL BEST</b>",
+                line=dict(width=4, color="white"),
+                hovertemplate="Iter: %{x}<br>Total Best: %{y:.4f}<extra></extra>",
+            )
+        )
 
         # TRACES: Individual Metrics Best So Far
         for metric in metric_keys:
@@ -493,15 +482,17 @@ class Optimization_Log_Visualizer:
             # We use fmax to ignore NaNs if they sneak in, though we defaulted to -inf
             metric_best_so_far = np.maximum.accumulate(metric_scores)
 
-            fig.add_trace(go.Scatter(
-                x=iterations,
-                y=metric_best_so_far,
-                mode='lines',
-                name=f"{metric} (Best)",
-                opacity=0.8,
-                line=dict(width=2), # Slightly thinner than total
-                hovertemplate=f"Iter: %{{x}}<br>{metric} Best: %{{y:.4f}}<extra></extra>"
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=iterations,
+                    y=metric_best_so_far,
+                    mode="lines",
+                    name=f"{metric} (Best)",
+                    opacity=0.8,
+                    line=dict(width=2),  # Slightly thinner than total
+                    hovertemplate=f"Iter: %{{x}}<br>{metric} Best: %{{y:.4f}}<extra></extra>",
+                )
+            )
 
         # --- 3. Styling ---
         fig.update_layout(
@@ -510,13 +501,7 @@ class Optimization_Log_Visualizer:
             yaxis_title="Best Score Achieved (Higher is Better)",
             template="plotly_dark",
             hovermode="x unified",
-            legend=dict(
-                yanchor="top",
-                y=0.99,
-                xanchor="left",
-                x=0.01,
-                bgcolor="rgba(0,0,0,0.5)"
-            )
+            legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, bgcolor="rgba(0,0,0,0.5)"),
         )
 
         if log_y:
@@ -538,9 +523,7 @@ class Optimization_Log_Visualizer:
     # Exporting Methods
     # ------------------------------------------------------------
     def extract_best_score_evolution(
-        self,
-        include_metrics: bool = True,
-        running_avg_n: int | None = None
+        self, include_metrics: bool = True, running_avg_n: int | None = None
     ) -> pd.DataFrame:
         """
         Returns a DataFrame tracking the 'Best Score So Far' (Cumulative Maximum)
@@ -556,17 +539,14 @@ class Optimization_Log_Visualizer:
             return pd.DataFrame()
 
         # 1. Total Score Data
-        total_scores = np.array(
-            [entry.get_score() for entry in self.optimization_log],
-            dtype=float
-        )
+        total_scores = np.array([entry.get_score() for entry in self.optimization_log], dtype=float)
         # Calculate cumulative maximum
         best_total = np.maximum.accumulate(total_scores)
 
         data = {
             "iteration": np.arange(len(self.optimization_log)),
-            "score_current": total_scores,         # Raw score (useful for reference)
-            "score_best_so_far": best_total        # Cumulative Max
+            "score_current": total_scores,  # Raw score (useful for reference)
+            "score_best_so_far": best_total,  # Cumulative Max
         }
 
         # 2. Calculate Total Score Running Average (if requested)
@@ -617,11 +597,7 @@ class Optimization_Log_Visualizer:
         log_entries = self.optimization_log.log
         if top_n is not None:
             # Sort in-place for temporary list, or create new list
-            sorted_entries = sorted(
-                log_entries,
-                key=lambda x: x.get_score(),
-                reverse=True
-            )
+            sorted_entries = sorted(log_entries, key=lambda x: x.get_score(), reverse=True)
             log_entries = sorted_entries[:top_n]
 
         # 2. Convert filtered/sorted entries to dicts

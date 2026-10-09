@@ -34,7 +34,7 @@ postlayout:
   testbenches:
     - { name: tb_ac, netlist: tb_ac.spice }   # open-loop AC (+ .op): dcgain / ugf / pm on v(vout)
   params: {}                        # fixed DUT sizing the pre-layout run would inject (none: sizes are literal)
-  # ground_nets: [VSUBS]            # tie kpex's substrate node to 0 (default: left floating, like sim_pex_compare)
+  # ground_nets: [VSUBS]            # tie kpex's substrate node to 0 (default: left floating)
 
 gates: { drc: true, lvs: true, pex: true }   # a failed stage skips the rest (→ NaN → MAX_PENALTY)
 retain: all                                   # every run dir kept (GDS + reports + summary.json)

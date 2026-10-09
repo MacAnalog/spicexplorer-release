@@ -1,7 +1,7 @@
 # Unit-test fixtures
 
 Small SPICE netlists copied from the analog example DB so this package's **unit** tests run
-without depending on the example database (plan `doc/plan_examples_db.md` §3c part 1). The DB
+without depending on the example database (plan `doc/archive/plan_examples_db.md` §3c part 1). The DB
 may be absent on a shallow clone or, after the Phase-4 extraction, live in the
 `examples/analog-db/` submodule — leaf unit tests must not require it.
 

@@ -1,7 +1,7 @@
 # DUT parameterization — `spicexplorer/params@1`
 
 The per-circuit `abstract/params.yaml` contract: the **atomic per-instance parameter inventory**
-plus **declarative default tying**. Plan: meta `doc/plan_parameterization.md`. Schema:
+plus **declarative default tying**. Plan: meta `doc/archive/plan_parameterization.md`. Schema:
 [`schema/params.schema.json`](schema/params.schema.json) (validated at Tier 0 when the file is
 present — adoption is per circuit, absence is not a failure until the P2 migration).
 
@@ -27,7 +27,7 @@ ratios:                       # mirror gains: frozen constants, or integer knobs
 > decision — `ratios:` entries are slated to become ratio-space knobs exposed in `sizing.yaml`
 > by default (lowering: `.param x_dut_gain_<ref>=…` + `{<of> * x_dut_gain_<ref>}`), with an
 > explicit `fixed: true` opt-out. Today the gain literal is baked inside the tie expression and
-> is un-sweepable. Design + caveats: meta `doc/plan_parameterization.md` §6.
+> is un-sweepable. Design + caveats: meta `doc/archive/plan_parameterization.md` §6.
 
 ## Settled design decisions (plan §4, locked in P0)
 

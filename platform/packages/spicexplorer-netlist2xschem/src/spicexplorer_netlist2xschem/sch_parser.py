@@ -87,12 +87,44 @@ class SchComponent:
         return base in ("ipin.sym", "opin.sym", "iopin.sym")
 
     @property
+    def is_directive_block(self) -> bool:
+        """A simulator-directive block — a ``code``/``code_shown`` record.
+
+        Its ``value`` is verbatim deck text (analyses, ``include``s, ``save``s): not a
+        circuit element, and not a cellview object either, which is why the port cannot
+        build it and must say what it is leaving behind (#250).
+        """
+        return self.symref.rsplit("/", 1)[-1] in ("code.sym", "code_shown.sym")
+
+    @property
+    def directive_text(self) -> str:
+        """The directive block's deck text (empty for anything else)."""
+        return self.attrs.get("value", "") if self.is_directive_block else ""
+
+    @property
     def is_device(self) -> bool:
         """A real device instance (not a net label, not a port pin, not a decorative title,
-        not a no-connect marker)."""
+        not a directives/code block, not a no-connect marker).
+
+        ``code_shown.sym`` is xschem's "show the text on the sheet *and* emit it into the
+        netlist" variant of ``code.sym`` — the same kind of object, an annotation rather than
+        a circuit element, and what a testbench carries its simulator directives in. Missing
+        from this tuple it read as a device, so ``xvport`` invented a ``code_shown`` cell in
+        the target OA library and dropped the directive text with a warning (issue #215).
+
+        **Why a basename tuple and not the symbol's ``K{}`` ``type``.** A `.sch` record names
+        a symbol; it does not contain one. Keying on ``type=netlist_commands`` would mean
+        resolving and parsing the ``.sym`` from inside a pure text parser — file IO this class
+        deliberately has not got — and it would not even be complete: the vendored ``code.sym``
+        declares that type in its ``G{}`` block, not its ``K{}``, so :class:`~...sym_library.Symbol`
+        reads its ``type`` as ``None``. The tuple says less about *why*, but it is exact.
+        """
         base = self.symref.rsplit("/", 1)[-1]
         return not (
-            self.is_label or self.is_port or base in ("title.sym", "code.sym", "noconn.sym")
+            self.is_label
+            or self.is_port
+            or self.is_directive_block
+            or base in ("title.sym", "noconn.sym")
         )
 
 
@@ -186,8 +218,18 @@ class Schematic:
 
     @property
     def devices(self) -> tuple[SchComponent, ...]:
-        """Just the real device instances (excludes net labels, port pins, and the title block)."""
+        """Just the real device instances (excludes net labels, port pins, the title block,
+        the no-connect marker and a `code`/`code_shown` directives block)."""
         return tuple(c for c in self.components if c.is_device)
+
+    @property
+    def directives(self) -> tuple[SchComponent, ...]:
+        """The simulator-directive blocks, in drawing order (``code``/``code_shown``).
+
+        `is_device` excludes them — they are annotations, not circuit elements (#215) — so
+        a port that ignores them drops the whole measurement setup without a word (#250).
+        """
+        return tuple(c for c in self.components if c.is_directive_block)
 
     def component(self, name: str) -> SchComponent | None:
         """The component whose instance ``name`` matches (exact), or ``None``."""
@@ -307,10 +349,17 @@ def _attrs(block: str) -> dict[str, str]:
     return {k: _unquote(v) for k, v in _ATTR.findall(block)}
 
 
+# xschem escapes these inside an attribute value: the quote, the backslash itself, and BOTH braces
+# (a bare brace would otherwise close the enclosing `{...}` attribute block). Substituted in ONE
+# pass, so a backslash-escaped brace and an escaped backslash next to a brace stay distinct — the
+# sequential `.replace()` chain this grew out of got that pair wrong.
+_ESCAPED = re.compile(r'\\([\\"{}])')
+
+
 def _unquote(token: str) -> str:
     if len(token) >= 2 and token[0] == '"' and token[-1] == '"':
         token = token[1:-1]
-    return token.replace('\\"', '"').replace("\\\\", "\\")
+    return _ESCAPED.sub(r"\1", token)
 
 
 def _num(token: str) -> float:

@@ -17,14 +17,20 @@ series with one device pin — a ΔV_T on a gate when the model wrapper hard-cod
 ``delvto``, as IHP's ``sg13_hv_*`` do), :func:`inject_isource` (dc current into nodes —
 the leakage / ESD-diode budget primitive). Everything is inserted just before the
 subckt's ``.ends`` so the block stays a valid, same-pins drop-in.
+
+On an **extracted** block the design's device names are gone, so :func:`find_mos_cards` locates
+a device class by connectivity and :func:`inject_threshold_offset` applies a ΔV_T to every card
+of it with the sign convention stated once. :func:`filter_caps` and :func:`insert_series_return`
+are the two what-ifs an extraction invites: which parasitic capacitance actually costs the
+metric, and what the return path the extraction did not model would cost.
 """
 
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Iterable, Sequence
 
 from .postlayout import _read, extract_subckt
 
@@ -232,3 +238,109 @@ def sweep(
             inject_vsource(text, name, dev, volts, pin=pin),
         )
     return base, rows
+
+
+# ------------------------------------------------------- working on an EXTRACTED block ----
+# An extraction carries no design-device names: every MOS is `XMn_<k>`, every parasitic a
+# `Cext_`/`Rext_`. What IS labelled is the nets, because a generator names them after the
+# certified netlist -- so a design device is found by its connectivity, not by its name.
+
+_C_CARD = re.compile(r"^(C\S*)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
+
+
+def find_mos_cards(
+    block: str | Path,
+    *,
+    family: str,
+    drain: str,
+    gate: str,
+    source: str,
+    prefix: str = "XM",
+) -> list[str]:
+    """Names of every extracted MOS card matching ``(model family, d, g, s)``.
+
+    ``family`` is matched as a model-name SUFFIX (``"nmos"`` matches ``sg13_lv_nmos``), so the
+    caller names the device class, not one PDK's model string. A design device drawn as several
+    half-width cards returns several names — assert the count you expect: a class whose member
+    count silently changed is a re-certification the injection did not follow.
+    """
+    out: list[str] = []
+    for ln in _read(block).splitlines():
+        t = ln.split()
+        if len(t) < 6 or not t[0].upper().startswith(prefix.upper()):
+            continue
+        if not t[5].lower().endswith(family.lower()):
+            continue
+        if (t[1], t[2], t[3]) == (drain, gate, source):
+            out.append(t[0])
+    return out
+
+
+def inject_threshold_offset(
+    subckt: str | Path, name: str, cards: Sequence[str], dvt_v: float, *, pin: str = "g"
+) -> str:
+    """A threshold-voltage offset of ``+dvt_v`` on every card of one design device.
+
+    :func:`inject_vsource` makes the device see ``net + dv`` on the chosen pin, so a threshold
+    INCREASE of ``dvt`` is a gate source of ``-dvt``. Getting that sign backwards is a mismatch
+    study that reports the safe direction as the dangerous one, so it lives here once rather
+    than in each caller.
+    """
+    text = _read(subckt)
+    for c in cards:
+        text = inject_vsource(text, name, c, -dvt_v, pin=pin)
+    return text
+
+
+def filter_caps(
+    block: str, *, keep: Iterable[str] = (), drop: Iterable[str] = (), prefix: str = "Cext"
+) -> tuple[str, int, int]:
+    """Delete extracted coupling/ground capacitors, for a what-if. ``(text, kept, dropped)``.
+
+    ``keep`` keeps only the cards touching one of those nets; ``drop`` keeps everything except
+    those; give neither and nothing changes. Nothing else in the block moves, so the difference
+    between two runs is exactly the capacitance named — this is how "the parasitics on THIS net
+    move the metric by X" is measured rather than asserted. Only cards whose name starts with
+    ``prefix`` are considered, so re-inserted devices (``X`` calls) always survive.
+    """
+    kk, dd = {n for n in keep if n}, {n for n in drop if n}
+    out, gone, left = [], 0, 0
+    for ln in block.splitlines():
+        m = _C_CARD.match(ln.strip())
+        if m and m.group(1).lower().startswith(prefix.lower()):
+            nets = {m.group(2), m.group(3)}
+            hit = bool(nets & kk) if kk else not (nets & dd)
+            if not hit:
+                gone += 1
+                continue
+            left += 1
+        out.append(ln)
+    return "\n".join(out) + "\n", left, gone
+
+
+def insert_series_return(
+    block: str, net: str, ohm: float, *, kelvin: Iterable[str] = ()
+) -> tuple[str, int]:
+    """Put a series resistance in the block's own ``net`` return path. ``(text, cards_moved)``.
+
+    A capacitance-only extraction carries no wire resistance at all, so every metric it produces
+    is measured with an IDEAL return. This renames ``net`` to ``<net>_ret`` on every card inside
+    the block except the ``.subckt`` header and the Kelvin-returned devices named in ``kelvin``
+    (whose own strap reaches the pin), and adds one resistor ``<net>_ret -> <net>``. ``ohm`` is
+    therefore the COMMON series element — the quantity a return-path budget is written on; the
+    per-device spread beyond it is a separate, much smaller term.
+    """
+    keep = {k.strip().upper() for k in kelvin if k.strip()}
+    ret = f"{net}_ret"
+    out, touched = [], 0
+    for ln in block.splitlines():
+        t = ln.split()
+        s = ln.lstrip()
+        if t and not s.startswith("*") and not s.startswith(".") and t[0].upper() not in keep:
+            if net in t[1:]:
+                ln = " ".join([t[0]] + [ret if x == net else x for x in t[1:]])
+                touched += 1
+        out.append(ln)
+    text = "\n".join(out)
+    i = text.lower().rindex(".ends")
+    return text[:i] + f"R{net}ret {ret} {net} {ohm:g}\n" + text[i:] + "\n", touched

@@ -52,7 +52,7 @@ class _FakeBridge:
         self.calls.append((Path(netlist), dict(params)))
         return _FakeSimulationResult(self._data, dict(self.metadata))
 
-    def submit(self, netlist: Path, params: dict[str, Any]) -> "Future[_FakeSimulationResult]":
+    def submit(self, netlist: Path, params: dict[str, Any]) -> Future[_FakeSimulationResult]:
         self.calls.append((Path(netlist), dict(params)))
         fut: Future[_FakeSimulationResult] = Future()
         fut.set_result(_FakeSimulationResult(self._data, dict(self.metadata)))
@@ -81,9 +81,9 @@ def test_simresult_scalar_lookup_prefix_bare_and_op_point() -> None:
     res = SpectreSimResult(
         {
             "ac_out": np.array([1 + 2j, 3 + 4j]),  # analysis-prefixed AC signal
-            "M0:gm": 1.5e-3,                        # per-MOS op-point scalar (bare key)
-            "dc_VOUT": 0.94,                        # dcOp node voltage → dc_ prefix
-            "vout": 0.9,                            # bare signal
+            "M0:gm": 1.5e-3,  # per-MOS op-point scalar (bare key)
+            "dc_VOUT": 0.94,  # dcOp node voltage → dc_ prefix
+            "vout": 0.9,  # bare signal
         }
     )
     # prefixed lookup: first point, real part (mirrors ngspice is_real scalar)
@@ -265,6 +265,30 @@ def test_apply_corner_emits_spectre_include_section_and_rails() -> None:
     assert sim.staged_params["corner_includes"] == ['include "models.scs" section=tt']
 
 
+def test_apply_corner_sectionless_include_has_no_section_clause() -> None:
+    """A model include without a section (DATA-F3) is a plain `include "<file>"` — never
+    `section=None`, which Spectre would read as a section literally named None."""
+    sim = SpectreSimulator(_FakeBridge(), Path("tb.scs"))
+    sim.apply_corner(
+        Corner(
+            name="tt",
+            model_includes=[ModelInclude(lib_file="design.scs"), ModelInclude("models.scs", "tt")],
+        ),
+        model_lib_root="/pdk",
+    )
+    assert sim.staged_params["corner_includes"] == [
+        'include "/pdk/design.scs"',
+        'include "/pdk/models.scs" section=tt',
+    ]
+
+
+def test_apply_corner_blank_section_is_sectionless_too() -> None:
+    """`section=""` is no section as well: no `section=` clause (an empty one is a Spectre error)."""
+    sim = SpectreSimulator(_FakeBridge(), Path("tb.scs"))
+    sim.apply_corner(Corner(name="tt", model_includes=[ModelInclude("design.scs", "")]))
+    assert sim.staged_params["corner_includes"] == ['include "design.scs"']
+
+
 def test_update_params_stages_design_variables() -> None:
     sim = SpectreSimulator(_FakeBridge(), Path("tb.scs"))
     assert sim.update_params({"W_M0": 2e-6, "L_M0": 6e-8}) is True
@@ -300,11 +324,13 @@ def test_create_spectre_simulator_vb_env_never_clobbers(monkeypatch: pytest.Monk
     # happen BEFORE the (failing) bridge import.
     monkeypatch.setenv("VB_REMOTE_HOST", "already-set")
     with pytest.raises(ImportError):
-        create_spectre_simulator(Path("tb.scs"), vb_env={"VB_REMOTE_HOST": "override", "VB_NEW": "x"})
+        create_spectre_simulator(
+            Path("tb.scs"), vb_env={"VB_REMOTE_HOST": "override", "VB_NEW": "x"}
+        )
     import os
 
     assert os.environ["VB_REMOTE_HOST"] == "already-set"  # not clobbered
-    assert os.environ.get("VB_NEW") == "x"                # newly set
+    assert os.environ.get("VB_NEW") == "x"  # newly set
 
 
 # ---------------------------------------------------------------------------
@@ -341,8 +367,8 @@ def test_composed_mode_materializes_staged_params_per_run(tmp_path: Path) -> Non
     assert netlist.parent == tmp_path  # materialized under deck_dir, not the spec
     text = netlist.read_text()
     assert 'include "/opt/kit/models.scs" section=ss_lvt' in text  # corner selection
-    assert "w1=2e-06" in text                     # design param injected over the default
-    assert "vdd=1.35" in text                     # corner supply wins (lowercase namespace)
+    assert "w1=2e-06" in text  # design param injected over the default
+    assert "vdd=1.35" in text  # corner supply wins (lowercase namespace)
     assert "tempOptions options temp=125" in text
     assert "dcOp dc" in text
     assert "finalTimeOP info what=oppoint where=rawfile" in text
@@ -360,7 +386,7 @@ def test_composed_mode_each_run_is_a_fresh_deck_and_labels_are_filename_safe(
     sim.run(label="tb::weird label")  # checkpoint-style separators must not hit the fs
     (first, _), (second, _) = bridge.calls
     assert first != second
-    assert "w1=1e-06" in first.read_text()   # spec default at run 1
+    assert "w1=1e-06" in first.read_text()  # spec default at run 1
     assert "w1=3e-06" in second.read_text()  # updated staging materialized at run 2
     assert ":" not in second.name and " " not in second.name
 

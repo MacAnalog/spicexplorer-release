@@ -15,6 +15,11 @@ import pytest
 from spicexplorer_netlist2xschem import (
     BlockAnnotation,
     BlockAnnotationSet,
+    BlockStamp,
+    PlacementHints,
+    TemplateStampPlacer,
+    Transform,
+    build_block_stamps,
     build_sch,
     from_string,
     parse_sch,
@@ -90,6 +95,111 @@ def test_unstampable_block_falls_back_to_block_aware(sym_lib):
     doc = build_sch(circuit, lib=sym_lib, annotations=aset, placement_mode="template-stamp")
     assert doc.device_count == 2  # still drawn
     assert any("template-stamp" in w for w in doc.warnings)
+
+
+class _HintSpyPlacer:
+    """A base placer that records the hints it was handed (and lays devices out on one row)."""
+
+    def __init__(self) -> None:
+        self.seen: PlacementHints | None = None
+
+    def place(self, circuit, lib=None, *, hints=None):
+        self.seen = hints
+        return {d.ref: Transform(240 * i, 0, 0, 0) for i, d in enumerate(circuit.devices)}
+
+
+def test_caller_hints_survive_alongside_the_stamp_clusters():
+    """LEAF-F15 (XS-2): with a stamp present, a caller's own hints used to be dropped — the base
+    placer saw only the stamp clusters. They are merged now; a device already in a stamp cluster
+    stays in that cluster only (a device may belong to at most one cluster)."""
+    extra = "XM3 x drain_p vss vss sg13_lv_nmos\nXM4 y x vss vss sg13_lv_nmos\n"
+    circuit = from_string(_HOST.replace(".end\n", extra + ".end\n"), name="pair")
+    stamp = BlockStamp(
+        block_id="dp#1",
+        local={"XM1": Transform(0, 0, 0, 0), "XM2": Transform(280, 0, 0, 1)},
+        width=420,
+    )
+    spy = _HintSpyPlacer()
+    caller = PlacementHints(
+        clusters=(("XM2", "XM3", "XM4"),), stage={"XM3": 1}, role={"XM4": "load"}
+    )
+    placement = TemplateStampPlacer(stamps=(stamp,), base=spy).place(circuit, None, hints=caller)
+
+    assert spy.seen is not None
+    assert spy.seen.clusters == (("XM1", "XM2"), ("XM3", "XM4"))
+    assert (spy.seen.stage, spy.seen.role) == ({"XM3": 1}, {"XM4": "load"})
+    assert set(placement) == {"XM1", "XM2", "XM3", "XM4"}
+
+
+_PAIR_STAMP = BlockStamp(
+    block_id="dp#1",
+    local={"XM1": Transform(0, 0, 0, 0), "XM2": Transform(280, 0, 0, 1)},
+    width=420,
+)
+_STAMP_CLUSTERS = (("XM1", "XM2"),)
+_CALLER_HINTS = PlacementHints(clusters=(("XM3", "XM4"),), stage={"XM3": 1}, role={"XM4": "load"})
+
+
+@pytest.mark.parametrize(
+    ("stamps", "hints", "seen"),
+    [
+        # no stamp: the caller's hints reach the base placer as given
+        ((), _CALLER_HINTS, _CALLER_HINTS),
+        # a stamp and no caller hints (None, or empty): the stamp clusters alone
+        ((_PAIR_STAMP,), None, PlacementHints(clusters=_STAMP_CLUSTERS)),
+        ((_PAIR_STAMP,), PlacementHints(), PlacementHints(clusters=_STAMP_CLUSTERS)),
+        # stage/role-only caller hints (no clusters) are still passed with the stamp clusters
+        (
+            (_PAIR_STAMP,),
+            PlacementHints(stage={"XM3": 1}, role={"XM4": "load"}),
+            PlacementHints(clusters=_STAMP_CLUSTERS, stage={"XM3": 1}, role={"XM4": "load"}),
+        ),
+        # a caller cluster whose devices are all in the stamp is dropped, not kept empty
+        (
+            (_PAIR_STAMP,),
+            PlacementHints(clusters=(("XM2", "XM1"), ("XM3", "XM4"))),
+            PlacementHints(clusters=(("XM1", "XM2"), ("XM3", "XM4"))),
+        ),
+    ],
+    ids=["no-stamp", "stamp-no-hints", "stamp-empty-hints", "stage-role-only", "owned-cluster"],
+)
+def test_base_placer_sees_the_stamp_clusters_merged_with_the_callers_hints(stamps, hints, seen):
+    extra = "XM3 x drain_p vss vss sg13_lv_nmos\nXM4 y x vss vss sg13_lv_nmos\n"
+    circuit = from_string(_HOST.replace(".end\n", extra + ".end\n"), name="pair")
+    spy = _HintSpyPlacer()
+    placement = TemplateStampPlacer(stamps=stamps, base=spy).place(circuit, None, hints=hints)
+    assert spy.seen == seen
+    assert set(placement) == {"XM1", "XM2", "XM3", "XM4"}
+
+
+def test_a_recovered_bias_ref_slot_is_laid_out_as_a_leftover_device(tmp_path, sym_lib):
+    """circuitgraph gives a recovered bias reference the synthetic slot `bias_ref`, which no
+    template draws: the stamp skips that device (the block still stamps) and it is placed as a
+    leftover, at its own origin."""
+    tpl = tmp_path / "mini_pair.sch"
+    tpl.write_text(_MINI_PAIR_SCH)
+    circuit = from_string(_HOST.replace(".end\n", "XMB vb vb vss vss sg13_lv_nmos\n.end\n"))
+    aset = BlockAnnotationSet(
+        (
+            BlockAnnotation(
+                block_id="cm#1",
+                devices=("XM1", "XM2", "XMB"),
+                label="pair + bias reference",
+                family="current_mirror",
+                template_sch=str(tpl),
+                device_slots=(("XM1", "XM1"), ("XM2", "XM2"), ("XMB", "bias_ref")),
+            ),
+        )
+    )
+    (stamp,) = build_block_stamps(aset, {d.ref for d in circuit.devices})
+    assert stamp.devices == ("XM1", "XM2")
+    placement = TemplateStampPlacer(stamps=(stamp,)).place(circuit, sym_lib)
+    assert set(placement) == {"XM1", "XM2", "XMB"}
+    assert len({(t.x, t.y) for t in placement.values()}) == 3
+
+    doc = build_sch(circuit, lib=sym_lib, annotations=aset, placement_mode="template-stamp")
+    assert doc.device_count == 3
+    assert not any("template-stamp" in w for w in doc.warnings)
 
 
 # --- end-to-end with the real detector + analog-db templates ----------------------------------

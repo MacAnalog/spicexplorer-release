@@ -22,6 +22,7 @@ Every run records its matrix ``coordinates``, so "is PSRR met
 across corners?" is a query over run history (see :mod:`spicexplorer_core.workspace.state`).
 This module is pure data + FS I/O — it never runs a simulation.
 """
+
 from __future__ import annotations
 
 import re
@@ -48,6 +49,7 @@ _OPS = {
 @dataclass(frozen=True)
 class Target:
     """A parsed comparison like ``>= 60`` — the pass predicate for one spec."""
+
     op: str
     value: float
     raw: str
@@ -70,6 +72,7 @@ def parse_target(raw: str) -> Target:
 @dataclass(frozen=True)
 class Spec:
     """One verifiable spec: what to measure, on which test, over which matrix."""
+
     id: str
     measurement: str
     aggregate: str
@@ -165,7 +168,12 @@ def load_verify_plan(project_dir: Path) -> VerifyPlan | None:
         raw_target = canonical.get(str(sid), body.get("target"))
         target = parse_target(raw_target) if raw_target is not None else None
         specs[str(sid)] = Spec(
-            id=str(sid), measurement=str(measurement), aggregate=aggregate,
-            corners=corners, temps=temps, test=body.get("test"), target=target,
+            id=str(sid),
+            measurement=str(measurement),
+            aggregate=aggregate,
+            corners=corners,
+            temps=temps,
+            test=body.get("test"),
+            target=target,
         )
     return VerifyPlan(specs=specs)

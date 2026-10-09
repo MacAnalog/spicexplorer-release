@@ -51,7 +51,9 @@ def add_mosfet_roles(comp: ComponentNode, entry: dict[str, Any]) -> None:
             entry["subcircuit_electrical_role"] = comp.subcircuit_electrical_role.value
 
 
-def add_subckt_info(comp: ComponentNode, entry: dict[str, Any], *, include_model: bool = True) -> None:
+def add_subckt_info(
+    comp: ComponentNode, entry: dict[str, Any], *, include_model: bool = True
+) -> None:
     if not isinstance(comp, SubcktInstanceNode):
         return
     # The subckt MASTER name is a foundry-identifying token in the same class as spice_model:

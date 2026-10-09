@@ -3,9 +3,13 @@ generator + the NEWCAS regression gate. PDK-free."""
 
 from __future__ import annotations
 
+import shutil
+import subprocess
+from pathlib import Path
+
 import pytest
 
-from spicexplorer_analog_db import generate, model, verify
+from spicexplorer_analog_db import generate, model, paths, verify
 from spicexplorer_analog_db.extends import generate_project_setup
 
 MIGRATED = ["amp_018_telescopic_cascode", "amp_004_folded_cascode", "amp_001_5t"]
@@ -51,13 +55,21 @@ def test_generated_project_setup_is_current_and_loads(cid):
 # P4 atomic sweep: the legacy pair-encoded NEWCAS knobs map 1:1 onto the atomic FIRST-member
 # symbols (the pair/mirror ties now live in abstract/params.yaml, not in the knob names).
 _NEWCAS_KNOB_MAP = {
-    "x_dut_m1m2_w": "x_dut_xm1_w", "x_dut_m1m2_l": "x_dut_xm1_l",
-    "x_dut_m1cm2c_w": "x_dut_xm1c_w", "x_dut_m1cm2c_l": "x_dut_xm1c_l",
-    "x_dut_m3m4_w": "x_dut_xm3_w", "x_dut_m3m4_l": "x_dut_xm3_l",
-    "x_dut_m3cm4c_w": "x_dut_xm3c_w", "x_dut_m3cm4c_l": "x_dut_xm3c_l",
-    "x_dut_m5_w": "x_dut_xm5_w", "x_dut_m5_l": "x_dut_xm5_l", "x_dut_m5_ng": "x_dut_xm5_ng",
-    "x_dut_m6_w": "x_dut_xm6_w", "x_dut_m6_l": "x_dut_xm6_l",
-    "x_dut_v_bias_1": "x_dut_v_bias_1", "x_dut_v_bias_2": "x_dut_v_bias_2",
+    "x_dut_m1m2_w": "x_dut_xm1_w",
+    "x_dut_m1m2_l": "x_dut_xm1_l",
+    "x_dut_m1cm2c_w": "x_dut_xm1c_w",
+    "x_dut_m1cm2c_l": "x_dut_xm1c_l",
+    "x_dut_m3m4_w": "x_dut_xm3_w",
+    "x_dut_m3m4_l": "x_dut_xm3_l",
+    "x_dut_m3cm4c_w": "x_dut_xm3c_w",
+    "x_dut_m3cm4c_l": "x_dut_xm3c_l",
+    "x_dut_m5_w": "x_dut_xm5_w",
+    "x_dut_m5_l": "x_dut_xm5_l",
+    "x_dut_m5_ng": "x_dut_xm5_ng",
+    "x_dut_m6_w": "x_dut_xm6_w",
+    "x_dut_m6_l": "x_dut_xm6_l",
+    "x_dut_v_bias_1": "x_dut_v_bias_1",
+    "x_dut_v_bias_2": "x_dut_v_bias_2",
 }
 
 
@@ -75,12 +87,20 @@ def test_cascode_reproduces_newcas_baseline():
     gen = Project_Setup.from_yaml(str(c.dir / "project_setup.yaml"))
 
     def knobs(p):
-        return {dp.name.lower(): (round(dp.min_val, 12), round(dp.max_val, 12), getattr(dp, "is_integer", False))
-                for dp in p.dut_params}
+        return {
+            dp.name.lower(): (
+                round(dp.min_val, 12),
+                round(dp.max_val, 12),
+                getattr(dp, "is_integer", False),
+            )
+            for dp in p.dut_params
+        }
 
     def specs(p):
-        return {t.name: (t.goal, float(t.target), t.sim_type, t.testbench, float(t.weight))
-                for t in p.optimizer_config.target_specs.targets}
+        return {
+            t.name: (t.goal, float(t.target), t.sim_type, t.testbench, float(t.weight))
+            for t in p.optimizer_config.target_specs.targets
+        }
 
     frozen = {v["name"].lower() for v in c.sizing("ihp-sg13g2")["variables"] if v.get("freeze")}
     searched = {n: v for n, v in knobs(gen).items() if n not in frozen}
@@ -101,18 +121,64 @@ def test_newcas_appendix_preserved_verbatim():
     dst = model.load_circuit("amp_018_telescopic_cascode").dir / "artifacts/newcas2026"
     names = [p.name for p in src.iterdir() if p.is_file()]
     match, mismatch, errors = filecmp.cmpfiles(src, dst, names, shallow=False)
-    assert not mismatch and not errors, f"appendix not verbatim: mismatch={mismatch} errors={errors}"
+    assert not mismatch and not errors, (
+        f"appendix not verbatim: mismatch={mismatch} errors={errors}"
+    )
     assert set(match) == set(names) and len(match) >= 15
 
 
+def _ruff_bin() -> str | None:
+    try:
+        from ruff.__main__ import find_ruff_bin
+
+        return str(find_ruff_bin())
+    except Exception:
+        return shutil.which("ruff")
+
+
+def _ruff_would_check(ruff: str, target: Path) -> list[str]:
+    """The files a ``ruff check`` sweep over ``target`` would read, honouring the repo's
+    ``[tool.ruff] extend-exclude`` even for an explicitly named path (``--force-exclude``)."""
+    out = subprocess.run(
+        [ruff, "check", "--force-exclude", "--show-files", str(target)],
+        cwd=paths.db_root(),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return [ln.strip() for ln in out.stdout.splitlines() if ln.strip()]
+
+
+def test_newcas_appendix_is_outside_every_lint_sweep():
+    """The verbatim check above failed once because a repo-wide ``ruff --fix`` (663cccf2,
+    2026-07-23) rewrote ``draw.py``/``draw.ipynb`` (a trailing newline, whitespace, a dropped
+    import). The appendix is excluded from ruff like the third-party ``reference/`` corpora, so no
+    sweep can touch it again. Runs on a standalone DB checkout too (no platform legacy needed)."""
+    ruff = _ruff_bin()
+    if ruff is None:
+        pytest.skip("ruff not installed in this venv")
+    appendix = model.load_circuit("amp_018_telescopic_cascode").dir / "artifacts/newcas2026"
+    assert (appendix / "draw.py").is_file() and (appendix / "draw.ipynb").is_file()
+    assert _ruff_would_check(ruff, appendix) == [], (
+        "ruff would lint (and --fix) the verbatim appendix"
+    )
+    # control: the same probe does list an ordinary source file, so an empty answer above means
+    # "excluded", not "the probe is broken"
+    own = Path(paths.__file__).resolve()
+    assert any(ln.endswith("paths.py") for ln in _ruff_would_check(ruff, own))
+
+
 def test_legacy_netlist_preserved_verbatim():
-    """Skips when the platform legacy is absent (standalone DB checkout)."""
+    """Skips when the platform legacy is absent (standalone DB checkout). Byte for byte: both copies
+    name the home directory in xschem's ``sch_path`` comment ``/home/<user>/`` (ADB-HOME-SCRUB here,
+    the platform's own scrub since its main 1b08a0a), so the comparison rewrites nothing (L-PF-38)."""
     ota = _platform_legacy_ota()
     if ota is None:
         pytest.skip("platform examples/OTA legacy absent (standalone DB checkout)")
     legacy = (ota / "cascode/ihp-sg13g2/spice/ota-improved.spice").read_text()
-    migrated = (model.load_circuit("amp_018_telescopic_cascode").dir
-                / "pdk/ihp-sg13g2/netlist.legacy.spice").read_text()
+    migrated = (
+        model.load_circuit("amp_018_telescopic_cascode").dir / "pdk/ihp-sg13g2/netlist.legacy.spice"
+    ).read_text()
     assert legacy == migrated
 
 
@@ -121,4 +187,6 @@ def test_abstract_lowers_to_committed_pdk_netlist():
     for cid in ["amp_018_telescopic_cascode", "amp_004_folded_cascode"]:
         c = model.load_circuit(cid)
         for pdk in c.pdks:
-            assert (c.dir / "pdk" / pdk / "netlist.spice").read_text() == generate.lowered_netlist(c, pdk)
+            assert (c.dir / "pdk" / pdk / "netlist.spice").read_text() == generate.lowered_netlist(
+                c, pdk
+            )

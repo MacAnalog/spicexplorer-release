@@ -9,6 +9,7 @@ project:
   description: 5-corner (PVT) sizing of a 5-transistor OTA in ihp-sg13g2
   simulator: ngspice
   save_sim: False
+  parallel_sim: true            # fan out the corner axis (each corner sims concurrently)
 
   ws_root : ..
   netlist : spice/ota-5t_tb-loopgain.spice
@@ -35,7 +36,7 @@ project:
   # ------------------------
   pvt:
     mode: multi
-    score_aggregation: mean       # constraint-first: masking-safe (see doc/PVT_plan.md AGG-1)
+    score_aggregation: mean       # constraint-first: masking-safe (see doc/archive/PVT_plan.md AGG-1)
     active_corner: tt_27C_1V50    # used by single-corner manual sims / UI corner picks
 
     process_bundles:
@@ -137,7 +138,6 @@ project:
     random_seed: 48
     budget: 20
     name: NGOpt
-    parallel_sim: true            # fan out the corner axis (each corner sims concurrently)
 
     lin_variable_bounds: { min: 0, max: 100 }
     log_variable_bounds: { min: 1, max: 100 }

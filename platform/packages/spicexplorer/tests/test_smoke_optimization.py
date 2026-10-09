@@ -10,6 +10,7 @@ Coverage (layered — each layer builds on the previous):
   Layer 3 — ngspice required + slow:
     - One optimization_step() runs a real simulation without crashing
 """
+
 import re
 from pathlib import Path
 
@@ -27,6 +28,7 @@ PORTABLE_EXAMPLE_YAMLS = [
 
 
 # ── Layer 1: no SPICE required ──────────────────────────────────────────────
+
 
 @pytest.mark.parametrize("rel_yaml", PORTABLE_EXAMPLE_YAMLS)
 def test_ws_root_resolves_relative_to_yaml(rel_yaml):
@@ -152,6 +154,7 @@ def test_orchestrator_no_autoload():
 
 # ── Layer 2: ngspice required ────────────────────────────────────────────────
 
+
 @requires_ngspice
 def test_orchestrator_initialize_creates_wrappers(tmp_path):
     """initialize() creates one NGSpice_Wrapper per enabled testbench."""
@@ -200,6 +203,7 @@ def test_optimizer_parameterize(tmp_path):
 
 # ── Layer 3: slow end-to-end ─────────────────────────────────────────────────
 
+
 @requires_ngspice
 @requires_pdk
 @slow
@@ -223,6 +227,8 @@ def test_one_optimization_step():
 
     params, score, metadata = optimizer.optimization_step()
 
-    assert isinstance(params, dict) and len(params) > 0, "optimization_step() must return a non-empty params dict"
+    assert isinstance(params, dict) and len(params) > 0, (
+        "optimization_step() must return a non-empty params dict"
+    )
     assert score is not None, "optimization_step() must return a numeric score"
     assert metadata is not None, "optimization_step() must return metadata"

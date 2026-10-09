@@ -96,25 +96,57 @@ def test_migrated_db_state():
             assert scoreboard.entry_path(c, pdk, did).is_file(), (cid, pdk, did)
 
 
+def test_ia_004_keeps_no_design_point_its_netlist_cannot_reproduce():
+    """ia_004's pre-S7-fix entry ee77a983e2 hashed a knob set the netlist no longer has (no
+    vb40 / *_cmfb knobs, a vb4_main the netlist dropped), so it was retired 2026-09. Its two
+    authored comments had called "the scoreboard" stale while the baseline already pointed at
+    03a2fe3857; one of them sat in raw_optimize/ia_004_fan_chopper_rrl.yaml, since retired with
+    its missing ac_closed_loop deck (tests/test_raw_optimize_configs.py). Every ia_004 point left
+    is reproducible from the current sizing, the baseline resolves, and no authored comment still
+    calls the scoreboard stale."""
+    c = model.load_circuit("ia_004_fan_chopper_rrl")
+    knobs = {v["name"] for v in c.sizing("ihp-sg13g2")["variables"]}
+    entries = {e["design_id"]: e for e in scoreboard.load_entries(c)}
+    assert "ee77a983e2" not in entries
+    assert scoreboard.baselines(c) == {"ihp-sg13g2": "03a2fe3857"}
+    assert "03a2fe3857" in entries
+    for did, e in entries.items():
+        assert set(e["parameters"]["sizing"]) == knobs, f"{did}: knob set differs from sizing.yaml"
+    authored = [c.dir / "analyses" / "dc_op.yaml"]
+    for f in authored:
+        text = f.read_text()
+        prose = " ".join(ln.strip().lstrip("#").strip() for ln in text.splitlines()).lower()
+        assert "is stale" not in prose, f"{f.name}: still calls the scoreboard stale"
+        assert "03a2fe3857" in text, f"{f.name}: does not name the current baseline"
+
+
 def test_pareto_front_is_direction_aware():
     def entry(did, power, gain):
         return {
             "design_id": did,
-            "ppa": {"power_w": power, "active_gate_area_um2": 10.0,
-                    "performance": {"dc_gain_db": gain, "ugf_hz": 1e6, "pm_deg": 60.0}},
+            "ppa": {
+                "power_w": power,
+                "active_gate_area_um2": 10.0,
+                "performance": {"dc_gain_db": gain, "ugf_hz": 1e6, "pm_deg": 60.0},
+            },
         }
 
-    a = entry("a" * 10, 1e-4, 60.0)   # more power, more gain
-    b = entry("b" * 10, 5e-5, 40.0)   # less power, less gain
-    c = entry("c" * 10, 2e-4, 30.0)   # dominated by both
+    a = entry("a" * 10, 1e-4, 60.0)  # more power, more gain
+    b = entry("b" * 10, 5e-5, 40.0)  # less power, less gain
+    c = entry("c" * 10, 2e-4, 30.0)  # dominated by both
     front = scoreboard.pareto_front([a, b, c], "amplifier")
     assert front == {"a" * 10, "b" * 10}
 
 
 def test_pareto_missing_axis_never_dominates():
-    full = {"design_id": "f" * 10,
-            "ppa": {"power_w": 1e-4, "active_gate_area_um2": 10.0,
-                    "performance": {"dc_gain_db": 60.0, "ugf_hz": 1e6, "pm_deg": 60.0}}}
+    full = {
+        "design_id": "f" * 10,
+        "ppa": {
+            "power_w": 1e-4,
+            "active_gate_area_um2": 10.0,
+            "performance": {"dc_gain_db": 60.0, "ugf_hz": 1e6, "pm_deg": 60.0},
+        },
+    }
     sparse = {"design_id": "s" * 10, "ppa": {"performance": {}, "corners_run": []}}
     assert scoreboard.pareto_front([full, sparse], "amplifier") == {"f" * 10}
 
@@ -135,7 +167,9 @@ def test_committed_index_matches_fresh_build():
 
 
 def test_catalog_carries_baseline_ppa():
-    cat = json.loads((model.load_circuit("amp_001_5t").dir.parent.parent / "catalog.json").read_text())
+    cat = json.loads(
+        (model.load_circuit("amp_001_5t").dir.parent.parent / "catalog.json").read_text()
+    )
     entry = next(c for c in cat["circuits"] if c["id"] == "amp_001_5t")
     sky = entry["scoreboard"]["sky130"]
     assert sky["ppa"]["power_w"] > 0 and sky["ppa"]["active_gate_area_um2"] > 0
@@ -149,6 +183,7 @@ def test_migration_preserved_the_symbolic_crosscheck():
     migrated entry keeps its historical design_id beside it."""
     c = model.load_circuit("amp_018_telescopic_cascode")
     entries = scoreboard.load_entries(c, "ihp-sg13g2")
-    assert any("dc_gain_db" in ((e["corners"]["tt"].get("symbolic_crosscheck") or {})
-                                .get("metrics") or {})
-               for e in entries), "migrated symbolic_crosscheck entry lost"
+    assert any(
+        "dc_gain_db" in ((e["corners"]["tt"].get("symbolic_crosscheck") or {}).get("metrics") or {})
+        for e in entries
+    ), "migrated symbolic_crosscheck entry lost"

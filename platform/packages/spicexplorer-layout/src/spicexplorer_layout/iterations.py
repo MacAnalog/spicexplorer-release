@@ -6,7 +6,8 @@ paragraph. This module keeps that trail mechanically:
 
 - :func:`snapshot` — after every round, copy the generator source and the GDS into
   ``<iter_dir>/it<NN>/`` (``gen.py``, ``layout.gds``, ``layout.png``), record the verdicts
-  (DRC per-rule counts + hit locations, LVS, PEX, scorecard if any), the knob values, the
+  (DRC per-rule counts + hit locations, LVS, PEX, scorecard if any — each with the runner's
+  ``reason`` when it failed to run), the knob values, the
   designer's one-line *note* ("what changed / what it fixed") and shas, and append the entry
   to ``<iter_dir>/iterations.yaml``.
 - :func:`diff_png` — a **before | after** picture for two snapshots: both renders side by
@@ -34,18 +35,24 @@ from .review import Finding, Review, annotate
 
 @dataclass
 class IterationEntry:
-    id: str                              # "it03"
-    note: str                            # ONE terse line: problem -> fix -> effect (titles, tables)
-    detail: str = ""                     # optional long form (numbers, reasoning); never drawn on pictures
+    id: str  # "it03"
+    note: str  # ONE terse line: problem -> fix -> effect (titles, tables)
+    detail: str = ""  # optional long form (numbers, reasoning); never drawn on pictures
     gen_sha256: str = ""
     gds_sha256: str = ""
     params: dict[str, Any] = field(default_factory=dict)
     area_um2: float | None = None
-    drc: dict[str, Any] = field(default_factory=dict)      # {passed, n, rules: {rule: count}}
-    lvs: dict[str, Any] = field(default_factory=dict)      # {passed, matched, unmatched}
-    pex: dict[str, Any] = field(default_factory=dict)      # {ok, mode, n_c, n_r}
+    drc: dict[str, Any] = field(
+        default_factory=dict
+    )  # {passed, available, n, rules: {rule: count}, reason}
+    lvs: dict[str, Any] = field(
+        default_factory=dict
+    )  # {passed, available, matched, unmatched, netlist_sha, reason}
+    pex: dict[str, Any] = field(
+        default_factory=dict
+    )  # {ok, available, mode, n_c, n_r, mesh_connected, reason}
     scorecard: dict[str, Any] = field(default_factory=dict)
-    files: dict[str, str] = field(default_factory=dict)    # relative paths: gen, gds, png, diff
+    files: dict[str, str] = field(default_factory=dict)  # relative paths: gen, gds, png, diff
     drc_hits: dict[str, list[list[float]]] = field(default_factory=dict)  # rule -> [[x,y],...]
 
     def to_dict(self) -> dict[str, Any]:
@@ -73,14 +80,39 @@ def _save_log(iter_dir: Path, log: dict[str, Any]) -> None:
     )
 
 
-NOTE_MAX = 140   # a headline, not a paragraph — longer text belongs in ``detail``
+NOTE_MAX = 140  # a headline, not a paragraph — longer text belongs in ``detail``
+REASON_MAX = 300  # tail of a runner's ``reason`` kept in the trail: the error line, not the log
 
 
-def snapshot(iter_dir: str | Path, *, note: str, gen_path: str | Path, gds: str | Path | None,
-             params: dict[str, Any] | None = None, drc: Any = None, lvs: Any = None, pex: Any = None,
-             scorecard: dict[str, Any] | None = None, area_um2: float | None = None,
-             keep_gds: bool = True, render: bool = True, pdk: str = "ihp-sg13g2",
-             size: tuple[int, int] = (1600, 1200), detail: str = "") -> IterationEntry:
+def _reason(v: dict[str, Any]) -> str:
+    return str(v.get("reason") or "")[-REASON_MAX:]
+
+
+def _crashed(v: dict[str, Any], found: Any) -> bool:
+    """A stage that failed WITH a reason and found nothing (no DRC hits, no unmatched counts) did
+    not run to a verdict: calling that a MISMATCH or "0 violations" sends the reader to the layout
+    when the fault is the runner."""
+    return not v.get("passed") and bool(v.get("reason")) and not found
+
+
+def snapshot(
+    iter_dir: str | Path,
+    *,
+    note: str,
+    gen_path: str | Path,
+    gds: str | Path | None,
+    params: dict[str, Any] | None = None,
+    drc: Any = None,
+    lvs: Any = None,
+    pex: Any = None,
+    scorecard: dict[str, Any] | None = None,
+    area_um2: float | None = None,
+    keep_gds: bool = True,
+    render: bool = True,
+    pdk: str = "ihp-sg13g2",
+    size: tuple[int, int] = (1600, 1200),
+    detail: str = "",
+) -> IterationEntry:
     """Record one iteration. ``drc/lvs/pex`` are the signoff verdict objects (or dicts); a
     verdict of ``None`` means the stage was not run this round.
 
@@ -91,8 +123,11 @@ def snapshot(iter_dir: str | Path, *, note: str, gen_path: str | Path, gds: str 
     if len(note) > NOTE_MAX:
         import warnings
 
-        warnings.warn(f"iteration note is {len(note)} chars (> {NOTE_MAX}); keep the note a headline "
-                      f"and move the rest to detail=", stacklevel=2)
+        warnings.warn(
+            f"iteration note is {len(note)} chars (> {NOTE_MAX}); keep the note a headline "
+            f"and move the rest to detail=",
+            stacklevel=2,
+        )
     iter_dir = Path(iter_dir)
     log = _load_log(iter_dir)
     n = len(log["iterations"]) + 1
@@ -127,23 +162,60 @@ def snapshot(iter_dir: str | Path, *, note: str, gen_path: str | Path, gds: str 
     for v in dd.get("violations", []) or []:
         hits[v["rule"]] = [[float(x), float(y)] for x, y in v.get("locations", [])]
     entry = IterationEntry(
-        id=it, note=note, detail=detail, gen_sha256=_sha(gen_path), gds_sha256=_sha(gds), params=dict(params or {}),
+        id=it,
+        note=note,
+        detail=detail,
+        gen_sha256=_sha(gen_path),
+        gds_sha256=_sha(gds),
+        params=dict(params or {}),
         area_um2=area_um2,
-        drc={"passed": dd.get("passed"), "n": dd.get("n_violations"),
-             "rules": {v["rule"]: v["count"] for v in dd.get("violations", []) or []}} if dd else {},
-        lvs={"passed": ld.get("passed"), "matched": ld.get("matched"),
-             "unmatched": ld.get("unmatched"), "netlist_sha": ld.get("netlist_sha")} if ld else {},
-        pex={"ok": pd_.get("ok"), "mode": pd_.get("mode"), "n_c": pd_.get("n_c"),
-             "n_r": pd_.get("n_r")} if pd_ else {},
-        scorecard=dict(scorecard or {}), files=files, drc_hits=hits,
+        drc={
+            "passed": dd.get("passed"),
+            "available": dd.get("available"),
+            "n": dd.get("n_violations"),
+            "rules": {v["rule"]: v["count"] for v in dd.get("violations", []) or []},
+            "reason": _reason(dd),
+        }
+        if dd
+        else {},
+        lvs={
+            "passed": ld.get("passed"),
+            "available": ld.get("available"),
+            "matched": ld.get("matched"),
+            "unmatched": ld.get("unmatched"),
+            "netlist_sha": ld.get("netlist_sha"),
+            "reason": _reason(ld),
+        }
+        if ld
+        else {},
+        pex={
+            "ok": pd_.get("ok"),
+            "available": pd_.get("available"),
+            "mode": pd_.get("mode"),
+            "n_c": pd_.get("n_c"),
+            "n_r": pd_.get("n_r"),
+            "mesh_connected": pd_.get("mesh_connected"),
+            "reason": _reason(pd_),
+        }
+        if pd_
+        else {},
+        scorecard=dict(scorecard or {}),
+        files=files,
+        drc_hits=hits,
     )
     log["iterations"].append(entry.to_dict())
     _save_log(iter_dir, log)
     return entry
 
 
-def _xor_boxes(gds_a: str | Path, gds_b: str | Path, *, min_area_um2: float = 0.05,
-               merge_um: float = 2.0, max_boxes: int = 40) -> tuple[list[dict[str, Any]], float]:
+def _xor_boxes(
+    gds_a: str | Path,
+    gds_b: str | Path,
+    *,
+    min_area_um2: float = 0.05,
+    merge_um: float = 2.0,
+    max_boxes: int = 40,
+) -> tuple[list[dict[str, Any]], float]:
     """Regions that differ between two GDS files: the per-layer XORs are unioned, clustered
     (``merge_um`` apart) and returned as boxes (µm, largest first) together with the changed
     fraction of the drawn area, summed over layers (0..1). Layers touched are listed per box."""
@@ -154,7 +226,8 @@ def _xor_boxes(gds_a: str | Path, gds_b: str | Path, *, min_area_um2: float = 0.
     lb.read(str(gds_b))
     ta, tb = la.top_cell(), lb.top_cell()
     infos = {(li.layer, li.datatype) for li in la.layer_infos()} | {
-        (li.layer, li.datatype) for li in lb.layer_infos()}
+        (li.layer, li.datatype) for li in lb.layer_infos()
+    }
     dbu = la.dbu
     union = db.Region()
     per_layer: list[tuple[str, Any]] = []
@@ -182,16 +255,32 @@ def _xor_boxes(gds_a: str | Path, gds_b: str | Path, *, min_area_um2: float = 0.
         if area < min_area_um2:
             continue
         layers = [name for name, x in per_layer if not (x & probe).is_empty()]
-        out.append({"layers": layers, "x0": b.left * dbu, "y0": b.bottom * dbu,
-                    "x1": b.right * dbu, "y1": b.top * dbu, "area": area,
-                    "bbox_frac": b.area() / max(full, 1)})
+        out.append(
+            {
+                "layers": layers,
+                "x0": b.left * dbu,
+                "y0": b.bottom * dbu,
+                "x1": b.right * dbu,
+                "y1": b.top * dbu,
+                "area": area,
+                "bbox_frac": b.area() / max(full, 1),
+            }
+        )
     out.sort(key=lambda r: -r["area"])
     return out[:max_boxes], frac
 
 
-def diff_png(iter_dir: str | Path, before: str, after: str, out_png: str | Path | None = None, *,
-             pdk: str = "ihp-sg13g2", size: tuple[int, int] = (1400, 1050),
-             cell: str = "", global_change_frac: float = 0.4) -> Path:
+def diff_png(
+    iter_dir: str | Path,
+    before: str,
+    after: str,
+    out_png: str | Path | None = None,
+    *,
+    pdk: str = "ihp-sg13g2",
+    size: tuple[int, int] = (1400, 1050),
+    cell: str = "",
+    global_change_frac: float = 0.4,
+) -> Path:
     """Render **before | after** for two iteration ids (e.g. ``"it02"``, ``"it03"``).
 
     Left: the before layout with its DRC hits (red squares) and, as a note, its LVS state.
@@ -216,15 +305,35 @@ def diff_png(iter_dir: str | Path, before: str, after: str, out_png: str | Path 
     # --- before: its own DRC hits
     fa: list[Finding] = []
     for i, (rule, locs) in enumerate(ea.get("drc_hits", {}).items(), 1):
-        fa.append(Finding(f"F{i}", "blocker", "drc", f"{rule} ×{ea['drc'].get('rules', {}).get(rule, len(locs))}",
-                          where=[{"kind": "rule", "name": rule, "locations": locs}]))
+        fa.append(
+            Finding(
+                f"F{i}",
+                "blocker",
+                "drc",
+                f"{rule} ×{ea['drc'].get('rules', {}).get(rule, len(locs))}",
+                where=[{"kind": "rule", "name": rule, "locations": locs}],
+            )
+        )
+
     def _status(e: dict[str, Any]) -> str:
         d, lv, px_ = e.get("drc") or {}, e.get("lvs") or {}, e.get("pex") or {}
         parts = []
         if d:
-            parts.append("DRC 0" if d.get("passed") else f"DRC {d.get('n')}")
+            parts.append(
+                "DRC 0"
+                if d.get("passed")
+                else "DRC ERROR"
+                if _crashed(d, d.get("rules") or d.get("n"))
+                else f"DRC {d.get('n')}"
+            )
         if lv:
-            parts.append("LVS ok" if lv.get("passed") else "LVS MISMATCH")
+            parts.append(
+                "LVS ok"
+                if lv.get("passed")
+                else "LVS ERROR"
+                if _crashed(lv, lv.get("unmatched"))
+                else "LVS MISMATCH"
+            )
         if px_ and px_.get("ok"):
             parts.append(f"PEX {px_.get('mode')} {px_.get('n_c')}C")
         if e.get("area_um2"):
@@ -232,7 +341,9 @@ def diff_png(iter_dir: str | Path, before: str, after: str, out_png: str | Path 
         return " · ".join(parts)
 
     ra = Review(cell=cell or before, gds=str(ga), verdict=_status(ea), findings=fa)
-    pa = annotate(ga, ra, out_png.with_name(out_png.stem + "_a.png"), size=size, pdk=pdk, legend=True)
+    pa = annotate(
+        ga, ra, out_png.with_name(out_png.stem + "_a.png"), size=size, pdk=pdk, legend=True
+    )
 
     # --- after: changed regions + before-hits fixed/remaining
     fb: list[Finding] = []
@@ -240,19 +351,35 @@ def diff_png(iter_dir: str | Path, before: str, after: str, out_png: str | Path 
     wide = [bx for bx in boxes if bx["bbox_frac"] > global_change_frac]
     if frac > global_change_frac or wide:
         # a floorplan-wide change (shift / resize / re-pitch): boxing "everything" hides the picture
-        fb.append(Finding("F1", "major", "other",
-                          f"floorplan-wide change ({frac:.0%} of drawn area) — large boxes suppressed"))
-        boxes = [bx for bx in boxes if bx["bbox_frac"] <= global_change_frac and bx["bbox_frac"] < 0.1]
+        fb.append(
+            Finding(
+                "F1",
+                "major",
+                "other",
+                f"floorplan-wide change ({frac:.0%} of drawn area) — large boxes suppressed",
+            )
+        )
+        boxes = [
+            bx for bx in boxes if bx["bbox_frac"] <= global_change_frac and bx["bbox_frac"] < 0.1
+        ]
     # change boxes: ONE legend line for all of them (the boxes themselves localize; per-box
     # rows were noise), numbered markers still land on each box
     if boxes:
         tot = sum(bx["area"] for bx in boxes)
         lays = sorted({name for bx in boxes for name in bx["layers"]})
-        fb.append(Finding(f"F{len(fb) + 1}", "major", "other",
-                          f"{len(boxes)} changed region(s), {tot:.1f} µm² on {len(lays)} layer(s)"
-                          + (f" [{','.join(lays[:4])}{'…' if len(lays) > 4 else ''}]"),
-                          where=[{"kind": "box", "x0": bx["x0"], "y0": bx["y0"],
-                                  "x1": bx["x1"], "y1": bx["y1"]} for bx in boxes]))
+        fb.append(
+            Finding(
+                f"F{len(fb) + 1}",
+                "major",
+                "other",
+                f"{len(boxes)} changed region(s), {tot:.1f} µm² on {len(lays)} layer(s)"
+                + (f" [{','.join(lays[:4])}{'…' if len(lays) > 4 else ''}]"),
+                where=[
+                    {"kind": "box", "x0": bx["x0"], "y0": bx["y0"], "x1": bx["x1"], "y1": bx["y1"]}
+                    for bx in boxes
+                ],
+            )
+        )
     after_hits = eb.get("drc_hits", {})
     k = len(fb)
     for rule, locs in ea.get("drc_hits", {}).items():
@@ -261,19 +388,42 @@ def diff_png(iter_dir: str | Path, before: str, after: str, out_png: str | Path 
         fixed = [p for p in locs if (round(p[0], 2), round(p[1], 2)) not in rem_set]
         if fixed:
             k += 1
-            fb.append(Finding(f"F{k}", "note", "drc", f"{rule}: fixed ×{len(fixed)}",
-                              where=[{"kind": "rule", "name": rule, "locations": fixed}]))
+            fb.append(
+                Finding(
+                    f"F{k}",
+                    "note",
+                    "drc",
+                    f"{rule}: fixed ×{len(fixed)}",
+                    where=[{"kind": "rule", "name": rule, "locations": fixed}],
+                )
+            )
         if remaining:
             k += 1
-            fb.append(Finding(f"F{k}", "blocker", "drc", f"{rule}: still ×{len(remaining)}",
-                              where=[{"kind": "rule", "name": rule, "locations": remaining}]))
+            fb.append(
+                Finding(
+                    f"F{k}",
+                    "blocker",
+                    "drc",
+                    f"{rule}: still ×{len(remaining)}",
+                    where=[{"kind": "rule", "name": rule, "locations": remaining}],
+                )
+            )
     for rule, locs in after_hits.items():
         if rule not in ea.get("drc_hits", {}) and locs:
             k += 1
-            fb.append(Finding(f"F{k}", "blocker", "drc", f"{rule}: NEW ×{len(locs)}",
-                              where=[{"kind": "rule", "name": rule, "locations": locs}]))
+            fb.append(
+                Finding(
+                    f"F{k}",
+                    "blocker",
+                    "drc",
+                    f"{rule}: NEW ×{len(locs)}",
+                    where=[{"kind": "rule", "name": rule, "locations": locs}],
+                )
+            )
     rb = Review(cell=cell or after, gds=str(gb), verdict=_status(eb), findings=fb)
-    pb = annotate(gb, rb, out_png.with_name(out_png.stem + "_b.png"), size=size, pdk=pdk, legend=True)
+    pb = annotate(
+        gb, rb, out_png.with_name(out_png.stem + "_b.png"), size=size, pdk=pdk, legend=True
+    )
 
     # --- side by side: short title, then the headline note wrapped under it (never clipped)
     A, B = Image.open(pa), Image.open(pb)
@@ -324,18 +474,49 @@ def iterations_table_md(iter_dir: str | Path, *, rel_prefix: str = "") -> str:
     """Markdown for the report's *Iterations* section, from ``iterations.yaml``."""
     iter_dir = Path(iter_dir)
     log = _load_log(iter_dir)
-    rows = ["| it | what changed / what it fixed | DRC | LVS | PEX | area µm² | files |",
-            "|---|---|---|---|---|---|---|"]
+    rows = [
+        "| it | what changed / what it fixed | DRC | LVS | PEX | area µm² | files |",
+        "|---|---|---|---|---|---|---|",
+    ]
     for e in log["iterations"]:
         d = e.get("drc") or {}
-        drc = "—" if not d else ("**0**" if d.get("passed") else
-                                  f"{d.get('n')} (" + ", ".join(f"{r} ×{c}" for r, c in list((d.get('rules') or {}).items())[:4]) + ")")
+        drc = (
+            "—"
+            if not d
+            else (
+                "**0**"
+                if d.get("passed")
+                else "ERROR"
+                if _crashed(d, d.get("rules") or d.get("n"))
+                else f"{d.get('n')} ("
+                + ", ".join(f"{r} ×{c}" for r, c in list((d.get("rules") or {}).items())[:4])
+                + ")"
+            )
+        )
         lv = e.get("lvs") or {}
-        lvs = "—" if not lv else ("match" if lv.get("passed") else "MISMATCH")
+        lvs = (
+            "—"
+            if not lv
+            else (
+                "match"
+                if lv.get("passed")
+                else "ERROR"
+                if _crashed(lv, lv.get("unmatched"))
+                else "MISMATCH"
+            )
+        )
         px = e.get("pex") or {}
-        pex = "—" if not px else (f"{px.get('mode')} {px.get('n_c')}C/{px.get('n_r')}R" if px.get("ok") else "fail")
+        pex = (
+            "—"
+            if not px
+            else (f"{px.get('mode')} {px.get('n_c')}C/{px.get('n_r')}R" if px.get("ok") else "fail")
+        )
         f = e.get("files") or {}
-        links = " ".join(f"[{k}]({rel_prefix}{v})" for k, v in f.items() if k in ("png", "gen") or k.startswith("diff_from_"))
+        links = " ".join(
+            f"[{k}]({rel_prefix}{v})"
+            for k, v in f.items()
+            if k in ("png", "gen") or k.startswith("diff_from_")
+        )
         area = f"{e['area_um2']:.0f}" if e.get("area_um2") else ""
         rows.append(f"| {e['id']} | {e['note']} | {drc} | {lvs} | {pex} | {area} | {links} |")
     return "\n".join(rows) + "\n"
@@ -349,7 +530,7 @@ def set_note(iter_dir: str | Path, it: str, note: str, detail: str | None = None
     for e in log["iterations"]:
         if e["id"] == it:
             if detail is None and len(e.get("note", "")) > len(note) and not e.get("detail"):
-                e["detail"] = e["note"]          # keep the long form, don't lose information
+                e["detail"] = e["note"]  # keep the long form, don't lose information
             elif detail is not None:
                 e["detail"] = detail
             e["note"] = note
@@ -359,4 +540,12 @@ def set_note(iter_dir: str | Path, it: str, note: str, detail: str | None = None
     _save_log(iter_dir, log)
 
 
-__all__ = ["IterationEntry", "NOTE_MAX", "snapshot", "diff_png", "iterations_table_md", "set_note"]
+__all__ = [
+    "IterationEntry",
+    "NOTE_MAX",
+    "REASON_MAX",
+    "snapshot",
+    "diff_png",
+    "iterations_table_md",
+    "set_note",
+]

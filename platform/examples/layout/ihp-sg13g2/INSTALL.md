@@ -1,7 +1,7 @@
 # IHP sg13g2 layout toolchain — setup & installation
 
-How the open-source IHP `sg13g2` layout toolchain was stood up on **srv-elamien** (RHEL 8.10,
-glibc 2.28, **no root**). This is a record + reproduction guide; the exact build recipes with
+How the open-source IHP `sg13g2` layout toolchain was stood up on **the EDA server** (glibc 2.28,
+**no root**). This is a record + reproduction guide; the exact build recipes with
 every host-specific fix live in two on-machine notes referenced below.
 
 None of the prebuilt EDA binaries from the shared OSIC bundle run here (they need glibc ≥2.34),
@@ -45,8 +45,8 @@ ships everything under `libs.tech/`: `klayout/` (DRC+LVS decks, PyCells, `sg13g2
 ```bash
 pip install klayout gdsfactory graphviz      # klayout module 0.30.5, gdsfactory 9.25.2
 ```
-The IHP PyCells are imported by adding two dirs to `sys.path` (done automatically by
-`5t_ota/pdk.py`): `libs.tech/klayout/python` and `.../python/pycell4klayout-api/source/python`.
+The IHP PyCells are imported by adding two dirs to `sys.path` (the retired PyCell prototype's
+bootstrap did this): `libs.tech/klayout/python` and `.../python/pycell4klayout-api/source/python`.
 `ai_env` also carries the **Qt 5.15 / Python 3.11 / Ruby 2.7** used to build KLayout and netgen.
 
 ## 3. KLayout — batch DRC/LVS shim (`~/local/klayout-runtime`)
@@ -130,7 +130,7 @@ conda activate pex && pip install klayout-pex
 kpex shells out to a KLayout **executable** whose LVS engine needs **Ruby >= 2.6**. The
 rpm-shim batch klayout (Ruby 2.5) fails parsing the kpex deck; use the py3.11 source
 build via its headless wrapper `~/local/klayout-py311/klayout-batch.sh` (Ruby 2.7 from
-`ai_env`) — `pex_kpex.py` sets `KPEX_KLAYOUT_EXE` to it by default.
+`ai_env`) — `spicexplorer-signoff` falls back to it when `KPEX_KLAYOUT_EXE` is unset.
 
 ## Environment variables
 
@@ -151,20 +151,16 @@ echo quit | netgen -batch                       # -> Netgen 1.5.99
 python -c "import klayout, gdsfactory"          # ai_env modules import
 ~/local/klayout-py311/klayout-gui.sh -b -v      # -> 0.30.5, embedded Python 3.11
 
-# end-to-end on the example (from 5t_ota/):
-python gen_5t_ota.py                             # -> ota_5t.gds
-python signoff.py                                # KLayout DRC + LVS   -> PASS / PASS
-python signoff_magic_netgen.py                   # Magic DRC + netgen  -> PASS / PASS
-
-# gdsfactory lane + PEX (from the parent ihp-sg13g2/ dir):
-python 5t_ota_gf/gen_5t_ota_gf.py                # -> ota_5t_gf.gds (ai_env)
-python 5t_ota_gf/signoff.py                      # PASS / PASS
-conda run -n pex python pex_kpex.py --gds 5t_ota_gf/ota_5t_gf.gds \
-    --cell ota_5t_gf --schematic 5t_ota_gf/ota_5t_gf_lvs.spice     # PEX OK
-python sim_pex_compare.py --schematic 5t_ota_gf/ota_5t_gf_lvs.spice \
-    --pex 5t_ota_gf/pex_out/kpex/ota_5t_gf__ota_5t_gf/ota_5t_gf_k25d_pex_netlist.spice \
-    --cell ota_5t_gf                             # pre vs post-layout AC
+# end-to-end on the example (from 5t_ota_gf/):
+python gen_5t_ota_gf.py                          # -> ota_5t_gf.gds (ai_env)
+uv run spicexplorer-signoff probe                # which decks/tools the runners see
+uv run spicexplorer-signoff drc ota_5t_gf.gds --cell ota_5t_gf --run-dir signoff_out/drc
+uv run spicexplorer-signoff lvs ota_5t_gf.gds --cell ota_5t_gf \
+    --netlist ota_5t_gf_lvs.spice --run-dir signoff_out/lvs      # PASS / PASS
+uv run spicexplorer-signoff pex ota_5t_gf.gds --cell ota_5t_gf \
+    --netlist ota_5t_gf_lvs.spice --out-dir pex_out --mode CC    # PEX OK
 ```
+The pre- vs post-layout AC comparison is one trial of `5t_ota_gf/opt/` (see its README).
 
 ## Path quick-reference
 

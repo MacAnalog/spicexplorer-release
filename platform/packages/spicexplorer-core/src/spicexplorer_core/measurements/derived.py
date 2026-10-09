@@ -19,7 +19,8 @@ Layering: ``spicexplorer-core`` beside the measurement registry — no upward de
 
 from __future__ import annotations
 
-from typing import Any, Dict, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 __all__ = ["known_derived", "validate_derived_recipe", "compute_derived", "active_area"]
 
@@ -30,7 +31,7 @@ __all__ = ["known_derived", "validate_derived_recipe", "compute_derived", "activ
 # (legacy, engine-agnostic — this module); with the list omitted it is computed by the
 # **recursive netlist walk** in :mod:`spicexplorer_core.measurements.area` (the optimizer feeds
 # it the deck), which cannot silently drop a device or its multiplier the way a hand list can.
-_DERIVED_TABLE: Dict[str, tuple[str, ...]] = {
+_DERIVED_TABLE: dict[str, tuple[str, ...]] = {
     "active_area": (),
 }
 
@@ -53,7 +54,7 @@ def _resolve(token: Any, params: Mapping[str, float]) -> float:
     return float(token)
 
 
-def active_area(recipe: Dict[str, Any], params: Mapping[str, float]) -> float:
+def active_area(recipe: dict[str, Any], params: Mapping[str, float]) -> float:
     """``scale · Σ Wᵢ·Lᵢ·mᵢ`` over ``recipe['devices']``.
 
     Each device term is a mapping ``{w, l, m?}`` whose fields are each a param name (looked
@@ -66,9 +67,7 @@ def active_area(recipe: Dict[str, Any], params: Mapping[str, float]) -> float:
     total = 0.0
     for term in devices:
         if not isinstance(term, Mapping) or "w" not in term or "l" not in term:
-            raise ValueError(
-                f"active_area: each device term needs `w` and `l` (got {term!r})."
-            )
+            raise ValueError(f"active_area: each device term needs `w` and `l` (got {term!r}).")
         w = _resolve(term["w"], params)
         length = _resolve(term["l"], params)
         m = _resolve(term.get("m", 1.0), params)
@@ -77,12 +76,12 @@ def active_area(recipe: Dict[str, Any], params: Mapping[str, float]) -> float:
 
 
 # name → callable(recipe, params) -> float
-_DERIVED_FN: Dict[str, Any] = {
+_DERIVED_FN: dict[str, Any] = {
     "active_area": active_area,
 }
 
 
-def validate_derived_recipe(spec_name: str, recipe: Dict[str, Any]) -> None:
+def validate_derived_recipe(spec_name: str, recipe: dict[str, Any]) -> None:
     """Raise ``ValueError`` if ``recipe`` names an unknown derived metric or omits a required
     argument. Called at project load (before any sim) so typos fail loudly and early."""
     name = str(recipe.get("derived", "")).strip()
@@ -99,7 +98,7 @@ def validate_derived_recipe(spec_name: str, recipe: Dict[str, Any]) -> None:
         )
 
 
-def compute_derived(recipe: Dict[str, Any], params: Mapping[str, float]) -> float:
+def compute_derived(recipe: dict[str, Any], params: Mapping[str, float]) -> float:
     """Evaluate one ``{derived: …}`` recipe against the candidate ``params`` → a scalar."""
     name = str(recipe["derived"]).strip()
     fn = _DERIVED_FN.get(name)

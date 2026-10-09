@@ -135,19 +135,32 @@ def test_wave_complex_fmt(client, ac_raw):
 def test_wave_errors(client, ac_raw):
     path, _ = ac_raw
     ds_id = _open(client, path)["dataset_id"]
-    assert client.get(
-        f"/api/waveview/datasets/{ds_id}/wave", params={"analysis": "tran", "signals": "v(vout)"}
-    ).status_code == 404
-    assert client.get(
-        f"/api/waveview/datasets/{ds_id}/wave", params={"analysis": "ac", "signals": "v(nope)"}
-    ).status_code == 404
-    assert client.get(
-        f"/api/waveview/datasets/{ds_id}/wave",
-        params={"analysis": "ac", "signals": "v(vout)", "fmt": "bogus"},
-    ).status_code == 422
-    assert client.get(
-        "/api/waveview/datasets/nonexistent/wave", params={"analysis": "ac", "signals": "x"}
-    ).status_code == 404
+    assert (
+        client.get(
+            f"/api/waveview/datasets/{ds_id}/wave",
+            params={"analysis": "tran", "signals": "v(vout)"},
+        ).status_code
+        == 404
+    )
+    assert (
+        client.get(
+            f"/api/waveview/datasets/{ds_id}/wave", params={"analysis": "ac", "signals": "v(nope)"}
+        ).status_code
+        == 404
+    )
+    assert (
+        client.get(
+            f"/api/waveview/datasets/{ds_id}/wave",
+            params={"analysis": "ac", "signals": "v(vout)", "fmt": "bogus"},
+        ).status_code
+        == 422
+    )
+    assert (
+        client.get(
+            "/api/waveview/datasets/nonexistent/wave", params={"analysis": "ac", "signals": "x"}
+        ).status_code
+        == 404
+    )
 
 
 # --- measurements ------------------------------------------------------------------
@@ -203,8 +216,7 @@ def test_wave_method_none_respects_budget(client, ac_raw):
     assert "max_points" in r.json()["detail"]
     ok = client.get(
         f"/api/waveview/datasets/{ds_id}/wave",
-        params={"analysis": "ac", "signals": "v(vout)", "method": "none",
-                "max_points": truth["n"]},
+        params={"analysis": "ac", "signals": "v(vout)", "method": "none", "max_points": truth["n"]},
     )
     assert ok.status_code == 200
     assert ok.json()["signals"][0]["n_returned"] == truth["n"]

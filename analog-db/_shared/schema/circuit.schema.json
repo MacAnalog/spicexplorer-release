@@ -108,7 +108,7 @@
     },
     "status": {
       "type": "string",
-      "description": "DERIVED by the verify harness from the highest tier cleared (plan §6). Authored value is the floor. 'reference' is terminal for kind: reference circuits (they are never lowered/simulated here).",
+      "description": "AUTHORED: published verbatim as catalog.json `status`; no verify run rewrites it. The DERIVED rung of plan §6 (draft < generated = T0-T2 < simulated = T3 < validated = T4) is catalog.json `derived_status`, read from the committed verify_status.json (`analog-db verify-status`). 'reference' is terminal for kind: reference circuits (they are never lowered/simulated here).",
       "enum": ["draft", "generated", "simulated", "validated", "incomplete", "reference"]
     }
   }

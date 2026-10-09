@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Generate the amp_001_5t 5T-OTA layout with **gdsfactory + the ihp-gdsfactory PDK**.
 
-This is the gdsfactory lane — kept separate from the pure-KLayout/PyCell lane in
-``../5t_ota/``. Same circuit, same LVS reference topology, different generator:
+This is the gdsfactory lane, the reference generator of the ``spicexplorer_layout``
+contract. It replaced a foundry-PyCell prototype of the same circuit (retired in the
+2026-09 close-out): same LVS reference topology, different generator:
 
     M1 outm vinp tail vss nmos    M2 vout vinn tail vss nmos   (input pair)
     M3 outm outm vdd  vdd pmos    M4 vout outm vdd  vdd pmos   (mirror load)
     M5 tail ibias vss vss nmos    M6 ibias ibias vss vss nmos  (tail + bias ref)
 
-What is *better* about this flow (vs the PyCell lane):
+What is *better* about this flow (vs the PyCell prototype):
 
 - **Devices expose real ports.** ``ihp.cells.nmos/pmos`` return gdsfactory
   components with named ``S``/``D``/``G`` ports — no reverse-engineering terminal
@@ -27,8 +28,8 @@ What is *better* about this flow (vs the PyCell lane):
   (LU.b latch-up by construction), the n-well cover + n-taps are computed from
   the pmos row bbox.
 
-Result: passes KLayout DRC (``--no_density``) and LVS ("Netlists match") with
-the same signoff decks as the PyCell lane. See README.md.
+Result: passes KLayout DRC (``--no_density``) and LVS ("Netlists match") through
+``spicexplorer_signoff``. See README.md.
 """
 from __future__ import annotations
 
@@ -52,7 +53,7 @@ SIZING: dict[str, float] = dict(in_w=0.5, in_l=5.0, pld_w=1.5, pld_l=5.0,
 class LayoutParams:
     """The free layout constants (um) — the search space for layout optimization.
 
-    Defaults = the optimize_layout.py winner (2026-07-09, budget 2x30, DRC/LVS
+    Defaults = the July layout search's winner (2026-07-09, budget 2x30, DRC/LVS
     hard-gated, kpex-CC + ngspice in the loop): 205.9 um2 / -0.699 MHz UGF vs
     the hand-tuned 232.1 um2 / -0.726 MHz. Hand-tuned values in comments.
     """
@@ -85,8 +86,8 @@ def _pair(comp_l: gf.Component, comp_r: gf.Component, mirror_l: bool, mirror_r: 
 
 
 CELL = "ota_5t_gf"
-# legal range per knob (um) — the spicexplorer_layout generator contract; also the
-# optimize_layout.py search space
+# legal range per knob (um) — the spicexplorer_layout generator contract; the opt/ and
+# coopt/ projects search within it
 BOUNDS: dict[str, tuple[float, float]] = {
     "gap_x": (0.8, 1.8), "ch_y": (0.9, 2.2), "edge_x": (0.8, 2.0),
     "w_m1": (0.2, 0.5), "w_m2": (0.2, 0.5), "tab_w": (0.3, 0.5),

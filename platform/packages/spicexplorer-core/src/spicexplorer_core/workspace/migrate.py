@@ -15,6 +15,7 @@ run against a live WORK_ROOT:
 
 CLI: ``python -m spicexplorer_core.workspace [--work-root PATH] [--dry-run]``.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

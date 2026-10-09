@@ -96,7 +96,7 @@ export function SchematicViewer({ heightClass = "h-[184px]" }: { heightClass?: s
         type="button"
         onClick={() => setEnlarged(true)}
         title="Click to enlarge"
-        className={cn("flex w-full cursor-zoom-in items-center justify-center bg-white p-2", heightClass)}
+        className={cn("flex w-full cursor-zoom-in items-center justify-center bg-panel p-2", heightClass)}
       >
         {/* dynamic external SVG streamed from the API; a plain <img> (next/image can't optimize SVG) */}
         <img

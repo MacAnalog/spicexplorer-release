@@ -20,6 +20,7 @@ from spicexplorer_netlist2tf import (
     from_string,
     small_signal_model,
 )
+from spicexplorer_netlist2tf.mna import SingularSystemError, check_solvable
 from spicexplorer_netlist2tf.tf import S, as_num_den
 
 _FIX = Path(__file__).resolve().parent / "fixtures"
@@ -52,7 +53,8 @@ def test_rc_lowpass_exact():
 def test_common_source_gain_exact():
     raw = _tf(
         "* cs\nM1 out in 0 0 nmos\nRload out 0 RL\n.end",
-        ("out", "0"), ("in", "0"),
+        ("out", "0"),
+        ("in", "0"),
     )
     gm = sp.Symbol("gm_m1", positive=True)
     ro = sp.Symbol("ro_m1", positive=True)
@@ -68,7 +70,9 @@ def test_common_source_gain_exact():
 def test_common_source_miller_zero():
     raw = _tf(
         "* cs miller\nM1 out in 0 0 nmos\nRload out 0 RL\n.end",
-        ("out", "0"), ("in", "0"), level=Fidelity.FULL,
+        ("out", "0"),
+        ("in", "0"),
+        level=Fidelity.FULL,
     )
     num, _den = as_num_den(raw.expr)
     gm = sp.Symbol("gm_m1", positive=True)
@@ -94,7 +98,9 @@ def test_selective_numericization():
     subs = {"ro_m1": 2e4, "rl": 1e4}
     raw = _tf(
         "* cs\nM1 out in 0 0 nmos\nRload out 0 RL\n.end",
-        ("out", "0"), ("in", "0"), subs=subs,
+        ("out", "0"),
+        ("in", "0"),
+        subs=subs,
     )
     gm = sp.Symbol("gm_m1", positive=True)
     assert raw.kept_symbolic == ("gm_m1",)
@@ -112,8 +118,32 @@ def test_floating_internal_node_is_singular():
     # 'mid' is M2's gate only (a control node with no admittance path) and is NOT excited → its
     # matrix row is all-zero → the system is singular. Caught and reported, not returned as garbage.
     nl = "* float\nM1 out in 0 0 nmos\nM2 z mid 0 0 nmos\nRload out 0 RL\n.end"
-    with pytest.raises(ValueError, match="singular"):
+    with pytest.raises(SingularSystemError, match="singular") as exc:  # a ValueError
         _tf(nl, ("out", "0"), ("in", "0"))
+    assert exc.value.nets == ("mid",)  # the refusal names the net (WP-50)
+    assert "no element carries current into net(s) mid" in str(exc.value)
+
+
+def test_a_net_met_only_by_drains_is_named_at_ideal():
+    """At ``Fidelity.IDEAL`` a MOS drain is an ideal current source (no ``ro``), so a net that
+    only drains meet has no admittance and an undetermined voltage: the replica branch
+    (``DM_1``, ``net7``) of the analog-db three-stage amplifiers (L-PF-40)."""
+    nl = "* replica\nM1 x in 0 0 nmos\nM2 x 0 vdd vdd pmos\nR1 in out 1k\nR2 out 0 1k\n.end"
+    with pytest.raises(SingularSystemError, match="singular") as exc:
+        _tf(nl, ("out", "0"), ("in", "0"), level=Fidelity.IDEAL)
+    assert exc.value.nets == ("x",)
+    assert "no current depends on the voltage of net(s) x" in str(exc.value)
+    # ro gives the net a conductance: the same deck solves one level up
+    assert _equal(_tf(nl, ("out", "0"), ("in", "0")).expr, sp.Rational(1, 2))
+
+
+def test_check_solvable_names_the_nets_without_the_symbolic_solve():
+    ssir = small_signal_model(from_string("M1 x in 0 0 nmos\nR1 in 0 1k\n.end"), Fidelity.IDEAL)
+    with pytest.raises(SingularSystemError) as exc:
+        check_solvable(build_system(ssir), ("in", "0"))
+    assert exc.value.nets == ("x",)
+    solvable = small_signal_model(from_string("R1 in out 1k\nC1 out 0 1n\n.end"))
+    check_solvable(build_system(solvable), ("in", "0"))  # passes, raises nothing
 
 
 # ------------------------------------------------------------------------
@@ -131,8 +161,14 @@ Itail tail 0 dc ibias
 
 def test_diff_pair_builds_and_solves_numericized():
     subs = {
-        "gm_m1": 1e-3, "gm_m2": 1e-3, "gm_m3": 1e-3, "gm_m4": 1e-3,
-        "ro_m1": 5e4, "ro_m2": 5e4, "ro_m3": 8e4, "ro_m4": 8e4,
+        "gm_m1": 1e-3,
+        "gm_m2": 1e-3,
+        "gm_m3": 1e-3,
+        "gm_m4": 1e-3,
+        "ro_m1": 5e4,
+        "ro_m2": 5e4,
+        "ro_m3": 8e4,
+        "ro_m4": 8e4,
     }
     raw = _tf(_DIFF_PAIR, ("outp", "0"), ("vinp", "vinn"), subs=subs)
     # A well-posed, frequency-independent (no caps) numeric gain of the right order.
@@ -146,9 +182,7 @@ def test_build_system_over_real_cascode():
     # reference, and the input-pair small-signal symbols are present. (Not solved end-to-end: the
     # committed netlist's DC-only enable gates float at the bare-subckt level — that's the stimulus
     # overlay's job in P7, and the ceiling benchmark's territory.)
-    ir = from_file(
-        _FIX / "ota-improved.spice", name="cascode"
-    )
+    ir = from_file(_FIX / "ota-improved.spice", name="cascode")
     system = build_system(small_signal_model(ir, level=Fidelity.SOME_PARASITIC))
     assert system.n > 5
     assert {"gm_m1", "ro_m1", "gm_m2"} <= system.free_symbols
@@ -160,8 +194,12 @@ def test_build_system_over_real_cascode():
 def test_diff_pair_symbolic_gm_only():
     # Keep the two input-pair gm's symbolic, numericize everything else → readable gm-form.
     subs = {
-        "gm_m3": 1e-3, "gm_m4": 1e-3,
-        "ro_m1": 5e4, "ro_m2": 5e4, "ro_m3": 8e4, "ro_m4": 8e4,
+        "gm_m3": 1e-3,
+        "gm_m4": 1e-3,
+        "ro_m1": 5e4,
+        "ro_m2": 5e4,
+        "ro_m3": 8e4,
+        "ro_m4": 8e4,
     }
     raw = _tf(_DIFF_PAIR, ("outp", "0"), ("vinp", "vinn"), subs=subs)
     assert set(raw.kept_symbolic) == {"gm_m1", "gm_m2"}

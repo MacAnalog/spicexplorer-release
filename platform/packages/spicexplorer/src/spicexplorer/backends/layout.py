@@ -41,10 +41,11 @@ import subprocess
 import sys
 import threading
 import time
+from collections.abc import Mapping
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping, Optional
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import yaml
@@ -55,6 +56,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("spicexplorer.backends.layout")
 
 SCHEMA = "layout-flow/1"
+#: = ``spicexplorer_signoff.pex.GROUND_NETS`` (the extra is imported lazily; a test checks they match)
 _GROUND_NETS = frozenset({"0", "gnd", "vss", "vsubs"})
 _MISSING_EXTRA_MSG = (
     "The layout backend needs the leaf tools spicexplorer_layout + spicexplorer_signoff "
@@ -115,10 +117,10 @@ class DrcSpec:
 @dataclass
 class LvsSpec:
     #: a fixed reference netlist (the LVS "schematic")…
-    reference: Optional[Path] = None
+    reference: Path | None = None
     #: …OR a callable in the generator module, ``writer(LayoutParams, out=path) -> path``, run
     #: in `gds_python` per trial (the reference may depend on the knobs: dummies, splits).
-    writer: Optional[str] = None
+    writer: str | None = None
     timeout_s: int = 1800
 
 
@@ -129,31 +131,38 @@ class PexSpec:
     #: before extraction — the IHP kpex recipe; the schematic cap cards are re-inserted below.
     strip_mim: bool = False
     #: schematic file whose ``xc*`` (default) cards are re-inserted into the prepared subckt
-    schematic_cards_from: Optional[Path] = None
+    schematic_cards_from: Path | None = None
     schematic_card_prefixes: tuple[str, ...] = ("xc",)
     #: rewrite the extracted header to ``.subckt <cell> <ports>`` (+ VSS/VSUBS→0, drop 0-0
     #: elements) — the block's benches instantiate the cell with this exact port order.
-    ports: Optional[str] = None
+    ports: str | None = None
     #: an explicit schematic for kpex when there is no LVS stage (else the LVS reference)
-    schematic: Optional[Path] = None
+    schematic: Path | None = None
     #: …OR a callable in the generator module, ``writer(LayoutParams, out=path) -> path``, run in
     #: `gds_python` per trial: the kpex-flavour schematic when it differs from the LVS reference
     #: (e.g. 3-terminal poly resistors in the IHP kpex deck vs 2-terminal in the KLayout LVS deck)
-    schematic_writer: Optional[str] = None
+    schematic_writer: str | None = None
     #: GDS (layer, datatype) pairs removed for the PEX copy when `strip_mim` is set (default: the
     #: IHP MIM + Vmim layers); the PAM4/HBT recipe also drops MemCap (69, 0)
     strip_mim_layers: tuple[tuple[int, int], ...] = ((36, 0), (129, 0))
     #: margin (µm) by which TopMetal1 is cut back over the MIM plates; ``None`` keeps TopMetal1
     #: intact (the plates stay as plain metal, so their coupling is still extracted)
-    strip_mim_topmetal_margin_um: Optional[float] = 0.2
+    strip_mim_topmetal_margin_um: float | None = 0.2
     #: kpex sidewall halo override (µm; ``--halo``). Couplings between shapes farther apart
     #: than the halo are dropped by the extractor, so a spacing knob that crosses the tech
     #: default (IHP 8 µm) sees a fake C step — set e.g. 20 when the search spans it
-    halo_um: Optional[float] = None
+    halo_um: float | None = None
     #: nets that are AC ground for the block's benches; when given, ``c_<net>_ff`` is the
     #: C from <net> to {ground ∪ ac_gnd_nets} (the number a bench sees), and the plain
     #: Σ-to-anything sum is ``ctot_<net>_ff``. Without it, ``c_<net>_ff`` = Σ-to-anything.
     ac_gnd_nets: tuple[str, ...] = ()
+    #: node names that are ground when kpex's C is summed (any case), added to 0/gnd/vss/vsubs:
+    #: e.g. ``sub`` when the substrate carries a pin name. Such a net gets no ``ctot_``/``c_``
+    #: scalar and is in no ``c_<a>__<b>_ff`` pair; C between it and a signal net counts as that
+    #: signal net's C to ground. Not ``ac_gnd_nets`` (those stay signal nets and only change what
+    #: ``c_<net>_ff`` counts), and not ``postlayout.ground_nets`` (nodes tied to 0 in the
+    #: post-layout DUT). The PEX stage summary records the ground set applied and ``n_self``.
+    ground_nets: tuple[str, ...] = ()
     timeout_s: int = 3600
 
 
@@ -161,8 +170,8 @@ class PexSpec:
 class MeasureSpec:
     module: Path
     callable: str = "measure"
-    python: Optional[str] = None  # interpreter for the bench (default: this one)
-    cwd: Optional[Path] = None
+    python: str | None = None  # interpreter for the bench (default: this one)
+    cwd: Path | None = None
     pythonpath: tuple[str, ...] = ()
     env: dict[str, str] = field(default_factory=dict)
     extra: dict[str, Any] = field(default_factory=dict)
@@ -189,7 +198,7 @@ class PostlayoutSpec:
     engine: str = "ngspice"
     params: dict[str, Any] = field(default_factory=dict)
     #: kpex globals (e.g. VSUBS) to tie to node 0 inside the post-layout subckt; ports are
-    #: never rewritten. Default: none (a floating substrate node — the `sim_pex_compare` convention).
+    #: never rewritten. Default: none (the substrate node is left floating, as the 5T-OTA examples do).
     ground_nets: tuple[str, ...] = ()
     #: the schematic DUT's pin list (from its .subckt line), filled at load
     dut_ports: list[str] = field(default_factory=list)
@@ -211,7 +220,7 @@ class LayoutFlowSpec:
     path: Path
     generator: Path
     cell: str
-    sizing: Optional[Path] = None
+    sizing: Path | None = None
     gds_python: str = ""
     pdk: str = "ihp-sg13g2"
     fixed_params: dict[str, Any] = field(default_factory=dict)
@@ -222,17 +231,17 @@ class LayoutFlowSpec:
     #: name == key.
     sizing_params: dict[str, str] = field(default_factory=dict)
     #: grid the float knobs snap to (µm); 0/None = no rounding
-    param_grid: Optional[float] = 0.01
+    param_grid: float | None = 0.01
     #: grid the `sizing_params` candidates snap to, in the SIZING dict's own units;
     #: None (default) = pass the optimizer's raw float through untouched. Set it whenever the
     #: sizing draws geometry — see `LayoutFlowSpec.snap_sizing`.
-    sizing_grid: Optional[float] = None
+    sizing_grid: float | None = None
     env: dict[str, str] = field(default_factory=dict)
     drc: DrcSpec = field(default_factory=DrcSpec)
-    lvs: Optional[LvsSpec] = None
-    pex: Optional[PexSpec] = None
-    measure: Optional[MeasureSpec] = None
-    postlayout: Optional[PostlayoutSpec] = None
+    lvs: LvsSpec | None = None
+    pex: PexSpec | None = None
+    measure: MeasureSpec | None = None
+    postlayout: PostlayoutSpec | None = None
     gates: GateSpec = field(default_factory=GateSpec)
     max_workers: int = 1
     #: ``all`` keeps every trial dir; ``summary`` deletes the heavy artifacts (drc/lvs/pex
@@ -247,7 +256,7 @@ class LayoutFlowSpec:
 
     # -- loading -----------------------------------------------------------------
     @classmethod
-    def from_yaml(cls, path: str | Path) -> "LayoutFlowSpec":
+    def from_yaml(cls, path: str | Path) -> LayoutFlowSpec:
         path = Path(os.path.normpath(Path(path).expanduser().absolute()))
         if path.suffix.lower() not in (".yaml", ".yml"):
             raise ValueError(
@@ -262,7 +271,9 @@ class LayoutFlowSpec:
         return cls.from_dict(raw, base=path.parent, path=path)
 
     @classmethod
-    def from_dict(cls, raw: Mapping[str, Any], *, base: Path, path: Path | None = None) -> "LayoutFlowSpec":
+    def from_dict(
+        cls, raw: Mapping[str, Any], *, base: Path, path: Path | None = None
+    ) -> LayoutFlowSpec:
         schema = raw.get("schema")
         if schema != SCHEMA:
             raise ValueError(f"{path or '<dict>'}: expected `schema: {SCHEMA}`, got {schema!r}")
@@ -295,7 +306,7 @@ class LayoutFlowSpec:
         elif drc_raw is False:
             drc = DrcSpec(enabled=False)
 
-        lvs: Optional[LvsSpec] = None
+        lvs: LvsSpec | None = None
         lvs_raw = raw.get("lvs")
         if isinstance(lvs_raw, dict) and lvs_raw.get("enabled", True):
             ref = _expand(lvs_raw["reference"], base) if lvs_raw.get("reference") else None
@@ -304,15 +315,21 @@ class LayoutFlowSpec:
                 raise ValueError(f"{path}: `lvs` needs exactly one of `reference` / `writer`")
             if ref is not None and not ref.is_file():
                 raise FileNotFoundError(f"{path}: LVS reference not found: {ref}")
-            lvs = LvsSpec(reference=ref, writer=writer, timeout_s=int(lvs_raw.get("timeout_s", 1800)))
+            lvs = LvsSpec(
+                reference=ref, writer=writer, timeout_s=int(lvs_raw.get("timeout_s", 1800))
+            )
 
-        pex: Optional[PexSpec] = None
+        pex: PexSpec | None = None
         pex_raw = raw.get("pex")
         if isinstance(pex_raw, dict) and pex_raw.get("enabled", True):
             mode = str(pex_raw.get("mode", "CC")).upper()
             if mode not in ("CC", "RC", "R"):
                 raise ValueError(f"{path}: pex.mode must be CC|RC|R, got {mode!r}")
-            cards = _expand(pex_raw["schematic_cards_from"], base) if pex_raw.get("schematic_cards_from") else None
+            cards = (
+                _expand(pex_raw["schematic_cards_from"], base)
+                if pex_raw.get("schematic_cards_from")
+                else None
+            )
             if cards is not None and not cards.is_file():
                 raise FileNotFoundError(f"{path}: pex.schematic_cards_from not found: {cards}")
             sch = _expand(pex_raw["schematic"], base) if pex_raw.get("schematic") else None
@@ -320,34 +337,50 @@ class LayoutFlowSpec:
             if sch is not None and sch_writer:
                 raise ValueError(f"{path}: `pex` takes `schematic` OR `schematic_writer`, not both")
             if sch is None and sch_writer is None and lvs is None:
-                raise ValueError(f"{path}: `pex` needs an `lvs` stage (its reference is kpex's schematic), `pex.schematic` or `pex.schematic_writer`")
+                raise ValueError(
+                    f"{path}: `pex` needs an `lvs` stage (its reference is kpex's schematic), `pex.schematic` or `pex.schematic_writer`"
+                )
             sm_layers_raw = pex_raw.get("strip_mim_layers")
             sm_layers: tuple[tuple[int, int], ...] = ((36, 0), (129, 0))
             if sm_layers_raw is not None:
                 try:
                     sm_layers = tuple((int(ly), int(d)) for ly, d in sm_layers_raw)
                 except (TypeError, ValueError):
-                    raise ValueError(f"{path}: pex.strip_mim_layers must be a list of [layer, datatype] pairs")
+                    raise ValueError(
+                        f"{path}: pex.strip_mim_layers must be a list of [layer, datatype] pairs"
+                    )
             sm_margin_raw = pex_raw.get("strip_mim_topmetal_margin_um", 0.2)
             sm_margin = None if sm_margin_raw is None else float(sm_margin_raw)
             prefixes = pex_raw.get("schematic_card_prefixes", ["xc"])
             ports = pex_raw.get("ports")
+            gnd_raw = pex_raw.get("ground_nets") or []
+            if isinstance(gnd_raw, str):
+                gnd_raw = [gnd_raw]  # one name; iterating the string would split it into letters
+            if not isinstance(gnd_raw, list):
+                raise ValueError(
+                    f"{path}: pex.ground_nets must be a net name or a list of net names"
+                )
             pex = PexSpec(
                 mode=mode,
                 strip_mim=bool(pex_raw.get("strip_mim", False)),
                 schematic_cards_from=cards,
-                schematic_card_prefixes=tuple(str(p).lower() for p in (prefixes if isinstance(prefixes, list) else [prefixes])),
-                ports=" ".join(ports) if isinstance(ports, list) else (str(ports) if ports else None),
+                schematic_card_prefixes=tuple(
+                    str(p).lower() for p in (prefixes if isinstance(prefixes, list) else [prefixes])
+                ),
+                ports=" ".join(ports)
+                if isinstance(ports, list)
+                else (str(ports) if ports else None),
                 schematic=sch,
                 schematic_writer=str(sch_writer) if sch_writer else None,
                 strip_mim_layers=sm_layers,
                 strip_mim_topmetal_margin_um=sm_margin,
                 halo_um=(float(pex_raw["halo_um"]) if pex_raw.get("halo_um") is not None else None),
                 ac_gnd_nets=tuple(str(n) for n in (pex_raw.get("ac_gnd_nets") or [])),
+                ground_nets=tuple(str(n) for n in gnd_raw),
                 timeout_s=int(pex_raw.get("timeout_s", 3600)),
             )
 
-        measure: Optional[MeasureSpec] = None
+        measure: MeasureSpec | None = None
         m_raw = raw.get("measure")
         if isinstance(m_raw, dict) and m_raw.get("enabled", True):
             if not m_raw.get("module"):
@@ -356,7 +389,9 @@ class LayoutFlowSpec:
             if not module.is_file():
                 raise FileNotFoundError(f"{path}: measure module not found: {module}")
             if pex is None:
-                raise ValueError(f"{path}: `measure` needs a `pex` stage (it receives the extracted subckt)")
+                raise ValueError(
+                    f"{path}: `measure` needs a `pex` stage (it receives the extracted subckt)"
+                )
             py = m_raw.get("python")
             if py and ("/" in str(py) or str(py).startswith("~")):
                 py = str(_expand(py, base))  # a path (relative to the spec) — else a command name
@@ -371,30 +406,42 @@ class LayoutFlowSpec:
                 timeout_s=int(m_raw.get("timeout_s", 1800)),
             )
 
-        postlayout: Optional[PostlayoutSpec] = None
+        postlayout: PostlayoutSpec | None = None
         pl_raw = raw.get("postlayout")
         if isinstance(pl_raw, dict) and pl_raw.get("enabled", True):
             if pex is None:
-                raise ValueError(f"{path}: `postlayout` needs a `pex` stage (it simulates the extracted subckt)")
+                raise ValueError(
+                    f"{path}: `postlayout` needs a `pex` stage (it simulates the extracted subckt)"
+                )
             if not pl_raw.get("dut"):
-                raise ValueError(f"{path}: `postlayout` needs `dut` (the pre-layout DUT netlist the testbenches include)")
+                raise ValueError(
+                    f"{path}: `postlayout` needs `dut` (the pre-layout DUT netlist the testbenches include)"
+                )
             dut = _expand(pl_raw["dut"], base)
             if not dut.is_file():
                 raise FileNotFoundError(f"{path}: postlayout.dut not found: {dut}")
             engine = str(pl_raw.get("engine", "ngspice")).lower()
             if engine != "ngspice":
-                raise NotImplementedError(f"{path}: postlayout.engine={engine!r} — only 'ngspice' is wired today")
+                raise NotImplementedError(
+                    f"{path}: postlayout.engine={engine!r} — only 'ngspice' is wired today"
+                )
             subckt = str(pl_raw.get("subckt") or raw["cell"])
             tbs_raw = pl_raw.get("testbenches") or []
             if not isinstance(tbs_raw, list) or not tbs_raw:
-                raise ValueError(f"{path}: `postlayout.testbenches` must be a non-empty list of {{name, netlist}}")
+                raise ValueError(
+                    f"{path}: `postlayout.testbenches` must be a non-empty list of {{name, netlist}}"
+                )
             tbs: list[tuple[str, Path]] = []
             for i, t in enumerate(tbs_raw):
                 if not isinstance(t, dict) or not t.get("name") or not t.get("netlist"):
-                    raise ValueError(f"{path}: postlayout.testbenches[{i}] needs `name` and `netlist`")
+                    raise ValueError(
+                        f"{path}: postlayout.testbenches[{i}] needs `name` and `netlist`"
+                    )
                 deck = _expand(t["netlist"], base)
                 if not deck.is_file():
-                    raise FileNotFoundError(f"{path}: postlayout testbench {t['name']!r} deck not found: {deck}")
+                    raise FileNotFoundError(
+                        f"{path}: postlayout testbench {t['name']!r} deck not found: {deck}"
+                    )
                 tbs.append((str(t["name"]), deck))
             if len({n for n, _ in tbs}) != len(tbs):
                 raise ValueError(f"{path}: duplicate postlayout testbench names")
@@ -407,7 +454,12 @@ class LayoutFlowSpec:
             # every deck must reference the DUT one of the two supported ways (checked here so
             # a mis-pointed deck fails at load, not on trial 0)
             for name, deck in tbs:
-                how = detect_dut_reference(deck.read_text(errors="replace"), dut_path=dut, subckt=subckt, base_dirs=(deck.parent, base))
+                how = detect_dut_reference(
+                    deck.read_text(errors="replace"),
+                    dut_path=dut,
+                    subckt=subckt,
+                    base_dirs=(deck.parent, base),
+                )
                 if how is None:
                     raise ValueError(
                         f"{path}: postlayout testbench {name!r} ({deck}) neither `.include`s {dut.name} nor "
@@ -437,7 +489,9 @@ class LayoutFlowSpec:
 
         g_raw = raw.get("gates") or {}
         gates = GateSpec(
-            drc=bool(g_raw.get("drc", True)), lvs=bool(g_raw.get("lvs", True)), pex=bool(g_raw.get("pex", True))
+            drc=bool(g_raw.get("drc", True)),
+            lvs=bool(g_raw.get("lvs", True)),
+            pex=bool(g_raw.get("pex", True)),
         )
         retain = str(raw.get("retain", "all")).lower()
         if retain not in ("all", "summary", "none"):
@@ -449,17 +503,23 @@ class LayoutFlowSpec:
         if defaults:
             unknown = sorted(set(fixed) - set(defaults))
             if unknown:
-                raise ValueError(f"{path}: fixed_params not in {gen.name}'s LayoutParams: {unknown}")
+                raise ValueError(
+                    f"{path}: fixed_params not in {gen.name}'s LayoutParams: {unknown}"
+                )
         sp_raw = raw.get("sizing_params") or {}
         if isinstance(sp_raw, list):
             sizing_params = {str(n): str(n) for n in sp_raw}
         elif isinstance(sp_raw, dict):
             sizing_params = {str(k): str(v) for k, v in sp_raw.items()}
         else:
-            raise ValueError(f"{path}: sizing_params must be a list of names or a {{dut_param: sizing_key}} map")
+            raise ValueError(
+                f"{path}: sizing_params must be a list of names or a {{dut_param: sizing_key}} map"
+            )
         clash = sorted(set(sizing_params) & set(defaults))
         if clash:
-            raise ValueError(f"{path}: sizing_params {clash} are also LayoutParams knobs — a name must be one or the other")
+            raise ValueError(
+                f"{path}: sizing_params {clash} are also LayoutParams knobs — a name must be one or the other"
+            )
         return cls(
             path=path or base / "<dict>",
             generator=gen,
@@ -500,7 +560,9 @@ class LayoutFlowSpec:
             default = known.get(name)
             if isinstance(val, (bool, str)) or isinstance(default, (bool, str)):
                 out[name] = val if not isinstance(default, bool) else bool(val)
-            elif isinstance(default, int) or (default is None and isinstance(val, (int, np.integer)) and not isinstance(val, bool)):
+            elif isinstance(default, int) or (
+                default is None and isinstance(val, (int, np.integer)) and not isinstance(val, bool)
+            ):
                 out[name] = int(round(float(val)))
             else:
                 out[name] = snap_to_grid(val, self.param_grid)
@@ -525,7 +587,7 @@ class LayoutFlowSpec:
         return snap_to_grid(value, self.sizing_grid)
 
 
-def snap_to_grid(value: Any, grid: Optional[float]) -> float:
+def snap_to_grid(value: Any, grid: float | None) -> float:
     """Round ``value`` onto ``grid``; a falsy grid passes the value through unchanged."""
     f = float(value)
     if not grid:
@@ -546,13 +608,21 @@ def introspect_generator(gen_path: Path) -> tuple[dict[str, Any], dict[str, tupl
     for node in tree.body:
         if isinstance(node, ast.ClassDef) and node.name == "LayoutParams":
             for st in node.body:
-                if isinstance(st, ast.AnnAssign) and st.value is not None and isinstance(st.target, ast.Name):
+                if (
+                    isinstance(st, ast.AnnAssign)
+                    and st.value is not None
+                    and isinstance(st.target, ast.Name)
+                ):
                     try:
                         defaults[st.target.id] = ast.literal_eval(st.value)
                     except (ValueError, TypeError):
                         pass  # a computed default: unknown type, casting falls back to the value's own
         elif isinstance(node, (ast.AnnAssign, ast.Assign)):
-            target = node.target if isinstance(node, ast.AnnAssign) else (node.targets[0] if node.targets else None)
+            target = (
+                node.target
+                if isinstance(node, ast.AnnAssign)
+                else (node.targets[0] if node.targets else None)
+            )
             if isinstance(target, ast.Name) and target.id == "BOUNDS" and node.value is not None:
                 try:
                     b = ast.literal_eval(node.value)
@@ -653,7 +723,9 @@ class LayoutSimResult:
                 return res.wave(bare, analysis)
             except Exception as exc:  # try the next inner testbench
                 last_exc = exc
-        raise KeyError(f"wave {name!r} ({analysis}) not found in post-layout testbenches {list(self.inner)}: {last_exc}")
+        raise KeyError(
+            f"wave {name!r} ({analysis}) not found in post-layout testbenches {list(self.inner)}: {last_exc}"
+        )
 
     @property
     def log_path(self) -> Path | None:
@@ -668,14 +740,16 @@ class LayoutSimResult:
         return str(self.summary.get("status", "unknown"))
 
     def __repr__(self) -> str:
-        return (f"LayoutSimResult(status={self.status!r}, n_scalars={len(self._scalars)}, "
-                f"inner={list(self.inner)}, log={self._log_path})")
+        return (
+            f"LayoutSimResult(status={self.status!r}, n_scalars={len(self._scalars)}, "
+            f"inner={list(self.inner)}, log={self._log_path})"
+        )
 
 
 class LayoutSimHandle:
     """`SimHandle` over a `Future[LayoutSimResult]`."""
 
-    def __init__(self, future: "Future[LayoutSimResult]"):
+    def __init__(self, future: Future[LayoutSimResult]):
         self._future = future
 
     def is_done(self) -> bool:
@@ -754,10 +828,12 @@ class LayoutSimulator:
                 # width draws off-grid geometry and every candidate dies on `OffGrid.*`
                 snapped = self.spec.snap_sizing(val)
                 self._sizing[self.spec.sizing_params[name]] = snapped
-                self._deck_params[name] = snapped  # the deck's `.param <name>` too (co-optimization)
+                self._deck_params[name] = (
+                    snapped  # the deck's `.param <name>` too (co-optimization)
+                )
         return True
 
-    def apply_corner(self, corner: "Corner", /, *, model_lib_root: str | None = None) -> None:
+    def apply_corner(self, corner: Corner, /, *, model_lib_root: str | None = None) -> None:
         """Layout is corner-independent; the corner is stored and forwarded to `measure`
         (the block's benches may honour it: temp, supplies, cap corner…)."""
         self._corner_obj = corner
@@ -769,7 +845,11 @@ class LayoutSimulator:
         if dataclasses.is_dataclass(corner) and not isinstance(corner, type):
             d = dataclasses.asdict(corner)
         else:
-            d = {k: getattr(corner, k) for k in ("name", "temp", "supplies", "params", "options") if hasattr(corner, k)}
+            d = {
+                k: getattr(corner, k)
+                for k in ("name", "temp", "supplies", "params", "options")
+                if hasattr(corner, k)
+            }
         if model_lib_root is not None:
             d["model_lib_root"] = model_lib_root
         self._corner = json.loads(json.dumps(d, default=str))
@@ -781,7 +861,9 @@ class LayoutSimulator:
     def submit(self, *, label: str | None = None) -> LayoutSimHandle:
         run_dir, params, corner = self._next_run(label)
         if self._pool is None:
-            self._pool = ThreadPoolExecutor(max_workers=max(1, self.spec.max_workers), thread_name_prefix="layout-flow")
+            self._pool = ThreadPoolExecutor(
+                max_workers=max(1, self.spec.max_workers), thread_name_prefix="layout-flow"
+            )
         return LayoutSimHandle(self._pool.submit(self._execute, run_dir, params, corner))
 
     def collect(self, handle: LayoutSimHandle) -> LayoutSimResult:
@@ -803,20 +885,32 @@ class LayoutSimulator:
                 params["__sizing__"] = dict(self._sizing)  # popped by _execute (not a knob)
             if self._deck_params and self.spec.measure is not None:
                 # popped by _execute: the bench-only knobs (sizing keys travel as `sizing`)
-                params["__deck__"] = {k: v for k, v in self._deck_params.items() if k not in self.spec.sizing_params}
+                params["__deck__"] = {
+                    k: v for k, v in self._deck_params.items() if k not in self.spec.sizing_params
+                }
         tag = label or self.testbench_name
         run_dir = self.output_folder / f"run_{n}_{tag}"
         return run_dir, params, corner
 
-    def _execute(self, run_dir: Path, params: dict[str, Any], corner: dict[str, Any] | None) -> LayoutSimResult:
-        (GdsBuilder, run_drc, run_lvs, run_pex, strip_cards, strip_mim_for_pex, prep_pex_subckt) = _import_leaf_tools()
+    def _execute(
+        self, run_dir: Path, params: dict[str, Any], corner: dict[str, Any] | None
+    ) -> LayoutSimResult:
+        (GdsBuilder, run_drc, run_lvs, run_pex, strip_cards, strip_mim_for_pex, prep_pex_subckt) = (
+            _import_leaf_tools()
+        )
         spec = self.spec
         run_dir.mkdir(parents=True, exist_ok=True)
         t_start = time.time()
-        sizing_over: dict[str, Any] = params.pop("__sizing__", {}) if isinstance(params.get("__sizing__"), dict) else {}
-        deck_params: dict[str, Any] = params.pop("__deck__", {}) if isinstance(params.get("__deck__"), dict) else {}
+        sizing_over: dict[str, Any] = (
+            params.pop("__sizing__", {}) if isinstance(params.get("__sizing__"), dict) else {}
+        )
+        deck_params: dict[str, Any] = (
+            params.pop("__deck__", {}) if isinstance(params.get("__deck__"), dict) else {}
+        )
         sizing_json: Path | None = spec.sizing
-        sizing_merged: dict[str, Any] = json.loads(spec.sizing.read_text()) if spec.sizing is not None else {}
+        sizing_merged: dict[str, Any] = (
+            json.loads(spec.sizing.read_text()) if spec.sizing is not None else {}
+        )
         if sizing_over:
             sizing_json = run_dir / "sizing.json"
             sizing_merged = {**sizing_merged, **sizing_over}
@@ -850,7 +944,13 @@ class LayoutSimulator:
         t0 = time.time()
         gds: Path | None = None
         try:
-            builder = GdsBuilder(spec.generator, run_dir, cell=spec.cell, sizing_json=sizing_json, python=spec.gds_python)
+            builder = GdsBuilder(
+                spec.generator,
+                run_dir,
+                cell=spec.cell,
+                sizing_json=sizing_json,
+                python=spec.gds_python,
+            )
             gds = builder(params)
             b = builder.last
             assert b is not None
@@ -858,7 +958,12 @@ class LayoutSimulator:
             left, bottom, right, top = b.bbox_um
             scalars["width_um"] = float(right - left)
             scalars["height_um"] = float(top - bottom)
-            stages["build"] = {"ok": True, "gds": str(gds), "sha256": b.sha256, "bbox_um": list(b.bbox_um)}
+            stages["build"] = {
+                "ok": True,
+                "gds": str(gds),
+                "sha256": b.sha256,
+                "bbox_um": list(b.bbox_um),
+            }
         except Exception as exc:  # build-time assertions (symmetry / keep-apart / validate)
             stages["build"] = {"ok": False}
             _fail("build", str(exc))
@@ -871,8 +976,18 @@ class LayoutSimulator:
         if build_ok and spec.drc.enabled:
             t0 = time.time()
             try:
-                drc = run_drc(gds, spec.cell, run_dir / "drc", pdk=spec.pdk, no_density=spec.drc.no_density, timeout_s=spec.drc.timeout_s)
-                stages["drc"] = {**{k: v for k, v in drc.to_dict().items() if k != "log"}, "secs": time.time() - t0}
+                drc = run_drc(
+                    gds,
+                    spec.cell,
+                    run_dir / "drc",
+                    pdk=spec.pdk,
+                    no_density=spec.drc.no_density,
+                    timeout_s=spec.drc.timeout_s,
+                )
+                stages["drc"] = {
+                    **{k: v for k, v in drc.to_dict().items() if k != "log"},
+                    "secs": time.time() - t0,
+                }
                 if not drc.available:
                     _fail("drc", f"DRC unavailable: {drc.reason}")
                 else:
@@ -895,15 +1010,33 @@ class LayoutSimulator:
             t0 = time.time()
             try:
                 lvs_ref = self._lvs_reference(params, run_dir, sizing_json)
-                lvs = run_lvs(gds, lvs_ref, spec.cell, run_dir / "lvs", pdk=spec.pdk, timeout_s=spec.lvs.timeout_s)
-                stages["lvs"] = {**{k: v for k, v in lvs.to_dict().items() if k != "log"}, "secs": time.time() - t0}
+                lvs = run_lvs(
+                    gds,
+                    lvs_ref,
+                    spec.cell,
+                    run_dir / "lvs",
+                    pdk=spec.pdk,
+                    timeout_s=spec.lvs.timeout_s,
+                )
+                stages["lvs"] = {
+                    **{k: v for k, v in lvs.to_dict().items() if k != "log"},
+                    "secs": time.time() - t0,
+                }
                 if not lvs.available:
                     _fail("lvs", f"LVS unavailable: {lvs.reason}")
                 else:
-                    lvs_ok = bool(lvs.matched)
+                    # `passed`, not `matched`: a runner that printed "Netlists match" and then
+                    # exited non-zero is matched=True, passed=False (SIGN-01): a FAILED LVS that
+                    # must neither score 1 nor pass `lvs_gate` (orchestration uses the same rule).
+                    lvs_ok = bool(lvs.passed)
                     scalars["lvs_match"] = 1.0 if lvs_ok else 0.0
                     if not lvs_ok:
-                        _fail("lvs", f"LVS mismatch: {lvs.unmatched or lvs.reason}")
+                        why = (
+                            f"LVS did not pass: {lvs.reason}"
+                            if lvs.matched
+                            else f"LVS mismatch: {lvs.unmatched or lvs.reason}"
+                        )
+                        _fail("lvs", why)
             except Exception as exc:
                 stages["lvs"] = {"ok": False, "secs": time.time() - t0}
                 _fail("lvs", f"LVS error: {exc}")
@@ -917,20 +1050,45 @@ class LayoutSimulator:
             try:
                 px_spec = spec.pex
                 if px_spec.schematic_writer is not None:
-                    schematic = self._run_generator_writer(px_spec.schematic_writer, params, run_dir / f"{spec.cell}_pex_schematic.sp", sizing_json, timeout_s=px_spec.timeout_s)
+                    schematic = self._run_generator_writer(
+                        px_spec.schematic_writer,
+                        params,
+                        run_dir / f"{spec.cell}_pex_schematic.sp",
+                        sizing_json,
+                        timeout_s=px_spec.timeout_s,
+                    )
                 else:
                     schematic = px_spec.schematic or lvs_ref
                 if schematic is None:  # the lvs writer failed but its gate is off
                     raise RuntimeError("no schematic for kpex (LVS reference missing)")
                 pex_gds: Path = gds  # type: ignore[assignment]  (build_ok ⇒ gds is a Path)
                 if px_spec.strip_mim:
-                    pex_gds = strip_mim_for_pex(pex_gds, run_dir / f"{spec.cell}_nomim.gds", layers=px_spec.strip_mim_layers, topmetal_margin_um=px_spec.strip_mim_topmetal_margin_um)
+                    pex_gds = strip_mim_for_pex(
+                        pex_gds,
+                        run_dir / f"{spec.cell}_nomim.gds",
+                        layers=px_spec.strip_mim_layers,
+                        topmetal_margin_um=px_spec.strip_mim_topmetal_margin_um,
+                    )
                     nomim_sch = run_dir / f"{Path(schematic).stem}_nomim.sp"
                     nomim_sch.write_text(strip_cards(Path(schematic).read_text()))
                     schematic = nomim_sch
-                px = run_pex(pex_gds, spec.cell, schematic, run_dir / "pex", mode=px_spec.mode, pdk=spec.pdk, timeout_s=px_spec.timeout_s, halo_um=px_spec.halo_um)
+                px = run_pex(
+                    pex_gds,
+                    spec.cell,
+                    schematic,
+                    run_dir / "pex",
+                    mode=px_spec.mode,
+                    pdk=spec.pdk,
+                    timeout_s=px_spec.timeout_s,
+                    halo_um=px_spec.halo_um,
+                    ground_nets=px_spec.ground_nets,
+                )
                 stages["pex"] = {
-                    **{k: v for k, v in px.to_dict().items() if k not in ("log", "per_net_c_ff", "coupling_ff")},
+                    **{
+                        k: v
+                        for k, v in px.to_dict().items()
+                        if k not in ("log", "per_net_c_ff", "coupling_ff")
+                    },
                     "secs": time.time() - t0,
                 }
                 if not px.available:
@@ -941,11 +1099,24 @@ class LayoutSimulator:
                     if pex_ok:
                         scalars["pex_n_c"] = float(px.n_c)
                         scalars["pex_n_r"] = float(px.n_r)
-                        scalars.update(parasitic_scalars(px.per_net_c_ff, px.coupling_ff, ac_gnd_nets=px_spec.ac_gnd_nets))
+                        scalars.update(
+                            parasitic_scalars(
+                                px.per_net_c_ff, px.coupling_ff, ac_gnd_nets=px_spec.ac_gnd_nets
+                            )
+                        )
                         assert px.netlist_path
                         raw_txt = Path(px.netlist_path).read_text()
                         pex_subckt = run_dir / f"{spec.cell}_pex_{px_spec.mode.lower()}.sp"
-                        pex_subckt.write_text(prepare_pex_subckt(raw_txt, spec.cell, prep_pex_subckt, ports=px_spec.ports, cards_from=px_spec.schematic_cards_from, card_prefixes=px_spec.schematic_card_prefixes))
+                        pex_subckt.write_text(
+                            prepare_pex_subckt(
+                                raw_txt,
+                                spec.cell,
+                                prep_pex_subckt,
+                                ports=px_spec.ports,
+                                cards_from=px_spec.schematic_cards_from,
+                                card_prefixes=px_spec.schematic_card_prefixes,
+                            )
+                        )
                         stages["pex"]["subckt"] = str(pex_subckt)
                     else:
                         _fail("pex", f"PEX failed: {px.reason}")
@@ -958,27 +1129,52 @@ class LayoutSimulator:
 
         # 5) postlayout: the platform's own testbenches on the extracted subckt --------
         inner: dict[str, Any] = {}
-        if spec.postlayout is not None and pex_subckt is not None and (pex_ok is True or not spec.gates.pex):
+        if (
+            spec.postlayout is not None
+            and pex_subckt is not None
+            and (pex_ok is True or not spec.gates.pex)
+        ):
             t0 = time.time()
             try:
                 inner = self._postlayout(run_dir, params, stages, prep_pex_subckt)
                 pl = stages.setdefault("postlayout", {})
                 pl["secs"] = time.time() - t0
                 n_ok = sum(1 for tb in inner if getattr(inner[tb], "raw", None) is not None)
-                scalars["postlayout_ok"] = 1.0 if (inner and n_ok == len(spec.postlayout.testbenches)) else 0.0
+                scalars["postlayout_ok"] = (
+                    1.0 if (inner and n_ok == len(spec.postlayout.testbenches)) else 0.0
+                )
                 if not inner or n_ok != len(spec.postlayout.testbenches):
-                    _fail("postlayout", f"{len(spec.postlayout.testbenches) - n_ok} post-layout testbench(es) produced no RAW")
+                    _fail(
+                        "postlayout",
+                        f"{len(spec.postlayout.testbenches) - n_ok} post-layout testbench(es) produced no RAW",
+                    )
             except Exception as exc:
                 stages.setdefault("postlayout", {})["secs"] = time.time() - t0
                 scalars["postlayout_ok"] = 0.0
                 _fail("postlayout", f"postlayout error: {exc}")
 
         # 6) measure -----------------------------------------------------------
-        if spec.measure is not None and pex_subckt is not None and (pex_ok is True or not spec.gates.pex):
+        if (
+            spec.measure is not None
+            and pex_subckt is not None
+            and (pex_ok is True or not spec.gates.pex)
+        ):
             t0 = time.time()
             try:
-                reply = self._measure(pex_subckt, run_dir, params, corner, stages, sizing=sizing_merged, sizing_json=sizing_json, deck_params=deck_params)
-                stages["measure"] = {**{k: v for k, v in reply.items() if k != "scalars"}, "secs": time.time() - t0}
+                reply = self._measure(
+                    pex_subckt,
+                    run_dir,
+                    params,
+                    corner,
+                    stages,
+                    sizing=sizing_merged,
+                    sizing_json=sizing_json,
+                    deck_params=deck_params,
+                )
+                stages["measure"] = {
+                    **{k: v for k, v in reply.items() if k != "scalars"},
+                    "secs": time.time() - t0,
+                }
                 if reply.get("status", "ok") != "ok":
                     _fail("measure", str(reply.get("error") or "measure reported an error"))
                 for k, v in (reply.get("scalars") or {}).items():
@@ -989,10 +1185,15 @@ class LayoutSimulator:
 
         scalars["total_secs"] = time.time() - t_start
         summary["status"], summary["error"] = status, error
-        summary["scalars"] = {k: (None if isinstance(v, float) and not math.isfinite(v) else v) for k, v in scalars.items()}
+        summary["scalars"] = {
+            k: (None if isinstance(v, float) and not math.isfinite(v) else v)
+            for k, v in scalars.items()
+        }
         log_path = self._write_summary(run_dir, summary)
         if self.verbose:
-            logger.info(f"[{run_dir.name}] {status} area={scalars.get('area_um2')} ({scalars['total_secs']:.1f}s)")
+            logger.info(
+                f"[{run_dir.name}] {status} area={scalars.get('area_um2')} ({scalars['total_secs']:.1f}s)"
+            )
         return LayoutSimResult(scalars, summary=summary, log_path=log_path, inner=inner)
 
     def _write_summary(self, run_dir: Path, summary: dict[str, Any]) -> Path:
@@ -1012,7 +1213,9 @@ class LayoutSimulator:
             shutil.rmtree(run_dir, ignore_errors=True)
         return path
 
-    def _postlayout(self, run_dir: Path, params: dict[str, Any], stages: dict[str, Any], prep_pex_subckt) -> dict[str, Any]:
+    def _postlayout(
+        self, run_dir: Path, params: dict[str, Any], stages: dict[str, Any], prep_pex_subckt
+    ) -> dict[str, Any]:
         """Write ``dut_postlayout.spice`` and run every `postlayout` testbench on it through the
         ngspice backend (built via the factory so the project's simulator path flows through).
         Returns {tb name: NgspiceSimResult}. Raises on a config-level problem (port mismatch,
@@ -1021,7 +1224,14 @@ class LayoutSimulator:
         assert pl is not None
         px = stages.get("pex", {})
         raw = Path(px["netlist_path"]).read_text()
-        pex_dut = build_postlayout_dut(raw, self.spec.cell, pl.subckt, pl.dut_ports, prep_pex_subckt, ground_nets=pl.ground_nets)
+        pex_dut = build_postlayout_dut(
+            raw,
+            self.spec.cell,
+            pl.subckt,
+            pl.dut_ports,
+            prep_pex_subckt,
+            ground_nets=pl.ground_nets,
+        )
         dut_path = run_dir / "dut_postlayout.spice"
         dut_path.write_text(pex_dut)
         stages.setdefault("postlayout", {})["dut"] = str(dut_path)
@@ -1049,7 +1259,13 @@ class LayoutSimulator:
         for tb_name, deck in pl.testbenches:
             t0 = time.time()
             text = deck.read_text(errors="replace")
-            swapped, how = swap_dut_reference(text, dut_path=pl.dut, subckt=pl.subckt, pex_path=dut_file, base_dirs=(deck.parent, self.spec.path.parent))
+            swapped, how = swap_dut_reference(
+                text,
+                dut_path=pl.dut,
+                subckt=pl.subckt,
+                pex_path=dut_file,
+                base_dirs=(deck.parent, self.spec.path.parent),
+            )
             tb_deck = deck_dir / f"{tb_name}.spice"
             tb_deck.write_text(swapped)
             sim = build_simulator(
@@ -1075,7 +1291,9 @@ class LayoutSimulator:
             }
         return inner
 
-    def _lvs_reference(self, params: dict[str, Any], run_dir: Path, sizing_json: Path | None = None) -> Path:
+    def _lvs_reference(
+        self, params: dict[str, Any], run_dir: Path, sizing_json: Path | None = None
+    ) -> Path:
         """The LVS reference for this candidate: the fixed `lvs.reference`, or the generator's
         `lvs.writer` run in `gds_python` — called as ``writer(LayoutParams, out=…)``, plus
         ``sizing=<dict>`` when the writer's signature accepts it (co-optimization: the
@@ -1084,14 +1302,30 @@ class LayoutSimulator:
         if self.spec.lvs.reference is not None:
             return self.spec.lvs.reference
         assert self.spec.lvs.writer is not None
-        return self._run_generator_writer(self.spec.lvs.writer, params, run_dir / f"{self.spec.cell}_lvs.sp", sizing_json, timeout_s=self.spec.lvs.timeout_s)
+        return self._run_generator_writer(
+            self.spec.lvs.writer,
+            params,
+            run_dir / f"{self.spec.cell}_lvs.sp",
+            sizing_json,
+            timeout_s=self.spec.lvs.timeout_s,
+        )
 
-    def _run_generator_writer(self, writer: str, params: dict[str, Any], out: Path, sizing_json: Path | None = None, *, timeout_s: int = 1800) -> Path:
+    def _run_generator_writer(
+        self,
+        writer: str,
+        params: dict[str, Any],
+        out: Path,
+        sizing_json: Path | None = None,
+        *,
+        timeout_s: int = 1800,
+    ) -> Path:
         """Run a netlist-writer callable of the generator module in `gds_python`:
         ``writer(LayoutParams(**params), out=<out>[, sizing=<dict>])`` (the `lvs.writer` and
         `pex.schematic_writer` contract). Raises when the callable fails or writes nothing."""
         env = dict(os.environ)
-        env["PYTHONPATH"] = os.pathsep.join(_leaf_src_paths() + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else []))
+        env["PYTHONPATH"] = os.pathsep.join(
+            _leaf_src_paths() + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else [])
+        )
         code = (
             "import importlib.util, inspect, json, sys\n"
             f"spec = importlib.util.spec_from_file_location('gen_mod', {str(self.spec.generator)!r})\n"
@@ -1102,12 +1336,32 @@ class LayoutSimulator:
             "kw = {'sizing': sizing} if (sizing is not None and 'sizing' in inspect.signature(fn).parameters) else {}\n"
             f"print(fn(p, out={str(out)!r}, **kw))\n"
         )
-        r = subprocess.run([self.spec.gds_python, "-c", code], env=env, capture_output=True, text=True, timeout=timeout_s, cwd=str(out.parent))  # per-run cwd: PyCell scratch files (ihp `temp.gds`) must not collide across islands
+        r = subprocess.run(
+            [self.spec.gds_python, "-c", code],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=timeout_s,
+            cwd=str(out.parent),
+        )  # per-run cwd: PyCell scratch files (ihp `temp.gds`) must not collide across islands
         if r.returncode != 0 or not out.is_file():
-            raise RuntimeError(f"generator writer {writer!r} failed ({r.returncode}): {(r.stderr or r.stdout)[-1500:]}")
+            raise RuntimeError(
+                f"generator writer {writer!r} failed ({r.returncode}): {(r.stderr or r.stdout)[-1500:]}"
+            )
         return out
 
-    def _measure(self, pex_subckt: Path, run_dir: Path, params: dict[str, Any], corner: dict[str, Any] | None, stages: dict[str, Any], *, sizing: dict[str, Any] | None = None, sizing_json: Path | None = None, deck_params: dict[str, Any] | None = None) -> dict[str, Any]:
+    def _measure(
+        self,
+        pex_subckt: Path,
+        run_dir: Path,
+        params: dict[str, Any],
+        corner: dict[str, Any] | None,
+        stages: dict[str, Any],
+        *,
+        sizing: dict[str, Any] | None = None,
+        sizing_json: Path | None = None,
+        deck_params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         from spicexplorer_layout.measure_protocol import parse_result
 
         m = self.spec.measure
@@ -1115,7 +1369,11 @@ class LayoutSimulator:
         python = m.python or sys.executable
         env = dict(os.environ)
         env.update(m.env)
-        env["PYTHONPATH"] = os.pathsep.join(list(m.pythonpath) + _leaf_src_paths() + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else []))
+        env["PYTHONPATH"] = os.pathsep.join(
+            list(m.pythonpath)
+            + _leaf_src_paths()
+            + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else [])
+        )
         request = {
             "pex_subckt": str(pex_subckt),
             "pex_netlist": stages.get("pex", {}).get("netlist_path"),
@@ -1148,10 +1406,14 @@ class LayoutSimulator:
             cwd=str(m.cwd or m.module.parent),
             timeout=m.timeout_s,
         )
-        (run_dir / "measure.log").write_text((r.stdout or "") + "\n--- stderr ---\n" + (r.stderr or ""))
+        (run_dir / "measure.log").write_text(
+            (r.stdout or "") + "\n--- stderr ---\n" + (r.stderr or "")
+        )
         reply = parse_result(r.stdout or "")
         if reply is None:
-            raise RuntimeError(f"measure produced no result line (exit {r.returncode}): {(r.stderr or r.stdout)[-1500:]}")
+            raise RuntimeError(
+                f"measure produced no result line (exit {r.returncode}): {(r.stderr or r.stdout)[-1500:]}"
+            )
         return reply
 
 
@@ -1195,7 +1457,7 @@ def parasitic_scalars(
             to_others += cc
             if other.lower() in acg:
                 to_acg += cc
-        c_to_0 = float(c) - to_others  # what remains is C to node 0 (excluded from coupling)
+        c_to_0 = float(c) - to_others  # what remains is C to ground (no ground net is in a pair)
         out[f"c_{net}_ff"] = c_to_0 + to_acg
     return out
 
@@ -1232,13 +1494,23 @@ def prepare_pex_subckt(
         skip_cont = False
         if ports is not None:
             toks = [("0" if w.upper() in ("VSS", "VSUBS") else w) for w in ln.split()]
-            if toks and toks[0][:1].lower() in "cr" and len(toks) >= 4 and toks[1] == "0" and toks[2] == "0":
+            if (
+                toks
+                and toks[0][:1].lower() in "cr"
+                and len(toks) >= 4
+                and toks[1] == "0"
+                and toks[2] == "0"
+            ):
                 continue
             ln = " ".join(toks)
         lines.append(ln)
     if cards_from is not None:
         prefixes = tuple(p.lower() for p in card_prefixes)
-        cards = [ln.strip() for ln in Path(cards_from).read_text().splitlines() if ln.strip().lower().startswith(prefixes)]
+        cards = [
+            ln.strip()
+            for ln in Path(cards_from).read_text().splitlines()
+            if ln.strip().lower().startswith(prefixes)
+        ]
         ends = [k for k, ln in enumerate(lines) if ln.strip().lower().startswith(".ends")]
         i = ends[0] if ends else len(lines)
         lines = lines[:i] + cards + lines[i:]
@@ -1267,7 +1539,9 @@ def _resolve_ref(target: str, base_dirs: tuple[Path, ...]) -> Path | None:
     return None
 
 
-def detect_dut_reference(tb_text: str, *, dut_path: Path, subckt: str, base_dirs: tuple[Path, ...]) -> str | None:
+def detect_dut_reference(
+    tb_text: str, *, dut_path: Path, subckt: str, base_dirs: tuple[Path, ...]
+) -> str | None:
     """How a testbench deck references the DUT: ``"include"`` (an ``.include``/``.inc`` that
     resolves to ``dut_path`` — or names its basename), ``"inline"`` (a ``.subckt <subckt>``
     block in the deck), or ``None``."""
@@ -1277,7 +1551,9 @@ def detect_dut_reference(tb_text: str, *, dut_path: Path, subckt: str, base_dirs
             continue
         target = m.group(1)
         resolved = _resolve_ref(target, base_dirs)
-        if (resolved is not None and _same_file(resolved, dut_path)) or Path(target).name == dut_path.name:
+        if (resolved is not None and _same_file(resolved, dut_path)) or Path(
+            target
+        ).name == dut_path.name:
             return "include"
     if re.search(rf"(?im)^\s*\.subckt\s+{re.escape(subckt)}\b", tb_text):
         return "inline"
@@ -1309,7 +1585,10 @@ def swap_dut_reference(
         if m:
             target = m.group(1)
             resolved = _resolve_ref(target, base_dirs)
-            if not swapped and ((resolved is not None and _same_file(resolved, dut_path)) or Path(target).name == dut_path.name):
+            if not swapped and (
+                (resolved is not None and _same_file(resolved, dut_path))
+                or Path(target).name == dut_path.name
+            ):
                 out.append(f".include {pex_path}")
                 swapped = True
                 continue
@@ -1333,7 +1612,9 @@ def swap_dut_reference(
     hdr = re.compile(rf"^\s*\.subckt\s+{re.escape(subckt)}\b", re.IGNORECASE)
     start = next((i for i, ln in enumerate(out) if hdr.match(ln)), None)
     if start is None:
-        raise ValueError(f"testbench deck references neither `.include {dut_path.name}` nor an inline `.subckt {subckt}`")
+        raise ValueError(
+            f"testbench deck references neither `.include {dut_path.name}` nor an inline `.subckt {subckt}`"
+        )
     depth = 0
     end = None
     for i in range(start, len(out)):
@@ -1347,7 +1628,7 @@ def swap_dut_reference(
                 break
     if end is None:
         raise ValueError(f"inline `.subckt {subckt}` has no matching .ends")
-    new_lines = out[:start] + [f".include {pex_path}"] + out[end + 1:]
+    new_lines = out[:start] + [f".include {pex_path}"] + out[end + 1 :]
     return "\n".join(new_lines) + ("\n" if tb_text.endswith("\n") else ""), "inline"
 
 
@@ -1401,8 +1682,13 @@ def create_layout_simulator(
 ) -> LayoutSimulator:
     """Factory entry: load the ``layout-flow/1`` spec and build the simulator."""
     spec = LayoutFlowSpec.from_yaml(spec_path)
-    return LayoutSimulator(spec, output_folder=output_folder, testbench_name=testbench_name, verbose=verbose,
-                           path_to_simulator=path_to_simulator)
+    return LayoutSimulator(
+        spec,
+        output_folder=output_folder,
+        testbench_name=testbench_name,
+        verbose=verbose,
+        path_to_simulator=path_to_simulator,
+    )
 
 
 __all__ = [

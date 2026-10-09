@@ -1,6 +1,6 @@
 > **[REFERENCE]** — the concrete WORK_ROOT v2 on-disk layout + lifecycle scenarios for
 > `spicexplorer_core.workspace`. Living; kept current with the kernel. Canonical design +
-> locked decisions (D-1…D-11) live in the meta-repo `doc/plan_project_filesystem.md` — this
+> locked decisions (D-1…D-11) live in the meta-repo `doc/archive/plan_project_filesystem.md` — this
 > doc shows what the code actually writes; that doc says *why*.
 
 # WORK_ROOT v2 — filesystem layout & lifecycle
@@ -241,7 +241,7 @@ python -m spicexplorer_core.workspace [--work-root PATH] [--dry-run]            
 python -m spicexplorer_core.workspace.retention [--older-than-days N] [--dry-run] # retention GC sweep
 ```
 
-See the runnable tours: [`../notebooks/workspace_quickstart.ipynb`](../notebooks/workspace_quickstart.ipynb)
+See the runnable tours: [`../notebooks/workspace_quickstart.py`](../notebooks/workspace_quickstart.py)
 (scaffold → manifest → run envelope) and
-[`../notebooks/project_lifecycle.ipynb`](../notebooks/project_lifecycle.ipynb)
+[`../notebooks/project_lifecycle.py`](../notebooks/project_lifecycle.py)
 (retention → verify → state → promote → annotations → library → context).

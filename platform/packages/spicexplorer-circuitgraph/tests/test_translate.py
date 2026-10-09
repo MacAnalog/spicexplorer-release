@@ -246,3 +246,23 @@ def test_viprb_marker_rejects_nonzero_or_stimulus(tmp_path: Path) -> None:
     p2.write_text("* bad probe\nVIPRB a b dc 0 ac 1\nR1 a 0 1k\nR2 b 0 1k\n.end\n")
     with pytest.raises(ValueError, match="VIPRB"):
         translate_ngspice_to_spectre(p2, pdk="generic-n65", source_pdk="ihp-sg13g2")
+
+
+def test_deck_parameter_on_a_geometry_card_stays_an_expression(tmp_path: Path) -> None:
+    """The Spectre emitter reads a passive's bare token as a MODEL when the card carries
+    geometry (`R2 a 0 rupolym l=10u`). A token that names a deck `.param` is still a value
+    there: translate brace-wraps it first, so Spectre gets `resistor r=rload`, never a
+    phantom master called `rload`; a real model name on the same kind of card is untouched."""
+    p = tmp_path / "geometry.spice"
+    p.write_text(
+        "* geometry-card fixture\n"
+        ".param rload=1k\n"
+        "R1 a b RLOAD w=1u l=10u\n"
+        "R2 b 0 rupolym l=10u\n"
+        "V1 a 0 1\n"
+        ".end\n"
+    )
+    d = translate_ngspice_to_spectre(p)
+    lines = d.stimulus.splitlines()
+    assert "R1 (a b) resistor r=rload l=1e-05 w=1e-06" in lines
+    assert "R2 (b 0) rupolym l=1e-05" in lines

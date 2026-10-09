@@ -10,7 +10,7 @@ from pathlib import Path
 from time import sleep
 
 # For typing
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from spicelib import AscEditor, RawRead, SimRunner, SpiceEditor
@@ -27,7 +27,12 @@ if TYPE_CHECKING:
     from spicexplorer_core.pvt import Corner
 
 from spicexplorer_core.logging import setup_loggers
-from spicexplorer_core.spice_engine.deck_prep import noise_needs_sparse, plan_slim_swap
+from spicexplorer_core.spice_engine.deck_prep import (
+    noise_needs_sparse,
+    plan_corner,
+    plan_slim_swap,
+)
+from spicexplorer_core.spice_engine.save_list import SaveList, apply_save_list_to_deck
 
 logger = logging.getLogger("spicexplorer.spice_engine.spicelib")
 
@@ -48,13 +53,15 @@ _WIPED_OUTPUT_FOLDERS_LOCK = threading.Lock()
 class Sim_Engines_Type(Enum):
     LTSPICE = "ltspice"
     NGSPICE = "ngspice"
-    XYCE    = "xyce"
+    XYCE = "xyce"
+
 
 class Sim_Execution_Type(Enum):
-    RUN_AND_WAIT        = "RUN_AND_WAIT"
-    RUN_AND_PASS        = "RUN_AND_PASS"
-    RUN_NOW             = "RUN_NOW"
-    RUN_WITH_CALLBACK   = "RUN_WITH_CALLBACK"
+    RUN_AND_WAIT = "RUN_AND_WAIT"
+    RUN_AND_PASS = "RUN_AND_PASS"
+    RUN_NOW = "RUN_NOW"
+    RUN_WITH_CALLBACK = "RUN_WITH_CALLBACK"
+
 
 class Ngspice_Plot_Type(Enum):
     AC = "AC Analysis"
@@ -68,6 +75,7 @@ class Ngspice_Plot_Type(Enum):
     # silently returning NaN against a name that never appears in the raw.
     DC = "DC transfer characteristic"
 
+
 # ---------------------------------
 # Analysis-string ↔ plot-type resolution (the `SimResult` analysis vocabulary)
 # ---------------------------------
@@ -76,7 +84,7 @@ class Ngspice_Plot_Type(Enum):
 # `SimType` values ("ac"/"dc"/"op"/"tran"/"noise"/"noise_spectrum") so callers speak one
 # vocabulary across engines — but this map lives in `core` (which must not import the
 # optimizer package), so it is defined here independently.
-_ANALYSIS_TO_PLOT_TYPE: Dict[str, Ngspice_Plot_Type] = {
+_ANALYSIS_TO_PLOT_TYPE: dict[str, Ngspice_Plot_Type] = {
     "ac": Ngspice_Plot_Type.AC,
     "dc": Ngspice_Plot_Type.DC,
     "op": Ngspice_Plot_Type.OP,
@@ -90,7 +98,7 @@ _ANALYSIS_TO_PLOT_TYPE: Dict[str, Ngspice_Plot_Type] = {
 }
 
 
-def resolve_ngspice_plot_type(analysis: "str | Ngspice_Plot_Type") -> Ngspice_Plot_Type:
+def resolve_ngspice_plot_type(analysis: str | Ngspice_Plot_Type) -> Ngspice_Plot_Type:
     """Map an engine-neutral `analysis` string to an `Ngspice_Plot_Type`.
 
     Accepts (case-insensitively): a canonical short key (`"ac"`, `"op"`, `"noise_spectrum"`,
@@ -115,11 +123,12 @@ def resolve_ngspice_plot_type(analysis: "str | Ngspice_Plot_Type") -> Ngspice_Pl
 # ---------------------------------
 # Pure RawRead extraction helpers (single source of truth for the SimResult adapter)
 # ---------------------------------
-# These replicate `NGSpice_Wrapper.extract_wave` / `extract_scalar_variable_from_raw`
-# EXACTLY, operating on a standalone `RawRead` rather than `self.curr_raw`. The wrapper's
-# own methods are left byte-for-byte untouched (zero behaviour change); `NgspiceSimResult`
-# uses these so its numbers are, by construction, the same the optimizer reads today. The
-# parity is pinned by unit tests.
+# These replicate `NGSpice_Wrapper.extract_wave` / `extract_scalar_variable_from_raw`,
+# operating on a standalone `RawRead` rather than `self.curr_raw`. The wrapper's own methods
+# are left byte-for-byte untouched; `NgspiceSimResult` uses these. They agree number for number
+# with ONE deliberate exception: the scalar of a complex trace (an AC phasor) is its magnitude
+# |H|, where the wrapper's extractor reads Re(H) (OPT-12). Unit tests check both the agreement
+# and that exception.
 def _extract_wave_from_raw(
     raw: RawRead, wave_name: str, plot_type: Ngspice_Plot_Type, is_real: bool = False
 ) -> np.ndarray:
@@ -143,8 +152,15 @@ def _extract_scalar_from_raw(
     raw: RawRead, var_name: str, plot_type: Ngspice_Plot_Type, is_real: bool = True
 ) -> np.float64:
     try:
-        wave_data = _extract_wave_from_raw(raw, var_name, plot_type, is_real)
+        wave_data = _extract_wave_from_raw(raw, var_name, plot_type)
         val = np.asarray(wave_data)
+        if is_real and np.iscomplexobj(val):
+            # ngspice writes EVERY vector of a complex (AC) plot as complex. A node phasor has a
+            # non-zero imaginary part somewhere in the sweep and reads as its magnitude |H| — its
+            # real part is not a gain. A real-valued vector stored in the same plot (a `.meas`
+            # result, 0j-padded to the sweep length, or a `let` of db()/cph()) has none and keeps
+            # its sign: a -20 degree phase margin must not read as +20.
+            val = np.abs(val) if np.any(np.imag(val) != 0) else np.real(val)
         if val.size > 0:
             return np.float64(val.item(0) if val.ndim > 0 else val.item())
         return np.float64(np.nan)
@@ -197,6 +213,12 @@ class NgspiceSimResult:
             self._merged[str(key)] = float(value)
 
     def scalar(self, name: str, analysis: str, is_real: bool = True) -> float:
+        """The first point of ``name`` in ``analysis`` as a real number (NaN when absent).
+
+        An AC node phasor reads its magnitude |H|, not its real part. A real-valued vector in
+        the AC plot (a ``.meas`` result, a ``let`` of db()/cph()) keeps its sign; so does a
+        trace that happens to be real at every sweep point — the two cannot be told apart.
+        """
         if name in self._merged:  # merged canonical scalars are authoritative
             return self._merged[name]
         if self._raw is None:
@@ -206,9 +228,7 @@ class NgspiceSimResult:
 
     def wave(self, name: str, analysis: str, is_real: bool = False) -> np.ndarray:
         if self._raw is None:
-            raise RuntimeError(
-                "No simulation data (raw is None — the run produced no RAW file)."
-            )
+            raise RuntimeError("No simulation data (raw is None — the run produced no RAW file).")
         plot_type = resolve_ngspice_plot_type(analysis)
         return _extract_wave_from_raw(self._raw, name, plot_type, is_real)
 
@@ -255,7 +275,13 @@ class NgspiceSimHandle:
 # Class Definitions
 # ---------------------------------
 class LTspice_Wrapper:
-    def __init__(self, asc_filename: str, traces_of_interest: List[str] = [], dump_parent_folder: str = "runner", verbose: bool = False):
+    def __init__(
+        self,
+        asc_filename: str,
+        traces_of_interest: list[str] | None = None,
+        dump_parent_folder: str = "runner",
+        verbose: bool = False,
+    ):
         """Reads and simulates the circuit defined in the given .asc file"""
         self.asc_filename: str = asc_filename
         self.netlist: AscEditor = AscEditor(asc_file=asc_filename)
@@ -265,41 +291,45 @@ class LTspice_Wrapper:
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
-        self.runner: SimRunner = SimRunner(simulator=self.simengine, verbose=verbose, output_folder=output_folder)
+        self.runner: SimRunner = SimRunner(
+            simulator=self.simengine, verbose=verbose, output_folder=output_folder
+        )
         self.output_folder = output_folder
         self.verbose = verbose
 
         if not self.validate_runner():
-            raise RuntimeError("Runner Cannot be validated --- check LTspice simulator is available to spicelib")
-
+            raise RuntimeError(
+                "Runner Cannot be validated --- check LTspice simulator is available to spicelib"
+            )
 
         # Storing Simulation Runs
-        self.traces:     List[str]    = traces_of_interest
-        self.curr_raw: RawRead  = None
-        self.tasks: Dict[SpicelibRunTaskClass] = {}
+        self.traces: list[str] = traces_of_interest if traces_of_interest is not None else []
+        self.curr_raw: RawRead = None
+        self.tasks: dict[SpicelibRunTaskClass] = {}
 
     def validate_runner(self) -> bool:
         """Validation logic to check SPICE simulator is loaded correctly"""
 
         if len(self.runner.simulator.get_default_library_paths()) < 1:
-            print(f"* default libs for {self.runner.simulator.__name__} cannot be ressolved")
+            logger.warning(
+                f"* default libs for {self.runner.simulator.__name__} cannot be ressolved"
+            )
             return False
 
         if len(self.runner.simulator.spice_exe) < 1:
-            print(f"* spice_exe for {self.runner.simulator.__name__} cannot be ressolved")
+            logger.warning(f"* spice_exe for {self.runner.simulator.__name__} cannot be ressolved")
             return False
 
         return True
 
-    def update_params(self, parameterization: Dict[str, float]) -> bool:
+    def update_params(self, parameterization: dict[str, float]) -> bool:
         # Values arrive ALREADY in absolute SI (eng strings like "50f" resolve to floats
         # via parse_value upstream) and param names carry NO unit convention — set them
         # verbatim, exactly like NGSpice_Wrapper.update_params. The previous code
         # appended a unit by NAME PREFIX (C* → 'p', R* → 'k'), a dead convention that
         # silently corrupted any C*/R* param (CL 5e-14 became "5e-14p" = 5e-26 F).
         for key, value in parameterization.items():
-
-            try: # Validate parameter already exists
+            try:  # Validate parameter already exists
                 self.netlist.get_parameter(key)
             except ParameterNotFoundError:
                 return False
@@ -308,11 +338,10 @@ class LTspice_Wrapper:
 
         return True
 
-    def update_component_values(self, parameterization: Dict[str, float]) -> bool:
+    def update_component_values(self, parameterization: dict[str, float]) -> bool:
         # Same verbatim-SI rule as update_params (the C*/R* unit-suffix convention is dead).
         for key, value in parameterization.items():
-
-            try: # Validate parameter already exists
+            try:  # Validate parameter already exists
                 self.netlist.get_parameter(key)
             except ParameterNotFoundError:
                 return False
@@ -321,7 +350,7 @@ class LTspice_Wrapper:
 
         return True
 
-    def update_component_parameters(self, parameterization: Dict[str, Dict[str, float]]) -> bool:
+    def update_component_parameters(self, parameterization: dict[str, dict[str, float]]) -> bool:
         for component_name, component_parameters in parameterization.items():
             try:
                 self.netlist.set_component_parameters(component_name, **component_parameters)
@@ -335,12 +364,12 @@ class LTspice_Wrapper:
         raw_read = RawRead(raw_filename=raw_file, traces_to_read=traces_to_read)
         return raw_read
 
-    def run_and_wait(self, exe_log: bool = True) -> Tuple[RawRead, str]:
+    def run_and_wait(self, exe_log: bool = True) -> tuple[RawRead, str]:
 
         task = self.runner.run(self.netlist, exe_log=exe_log)
 
         while task.is_alive():
-            pass # wait so its done
+            pass  # wait so its done
 
         raw_file, log_file = task.get_results()
         self.tasks[task.name] = (raw_file, log_file)
@@ -364,47 +393,68 @@ class LTspice_Wrapper:
 
         return wave
 
+
 class NGSpice_Wrapper:
-    def __init__(self,
-                 netlist_filename:      Path,
-                 traces_of_interest:    List[str] = [],
-                 testbench_name:        str = "DEFAULT",
-                 output_folder:         Path = Path("./spicelib_runs"),
-                 sim_execution_t:       Sim_Execution_Type = Sim_Execution_Type.RUN_AND_WAIT,
-                 path_to_simulator:     None | Path = None,
-                 verbose:               bool = False,
-                 ):
-        """Reads, modifies, and simulates the circuit defined in the given netlist_filename .spice file"""
+    def __init__(
+        self,
+        netlist_filename: Path,
+        traces_of_interest: list[str] | None = None,
+        testbench_name: str = "DEFAULT",
+        output_folder: Path = Path("./spicelib_runs"),
+        sim_execution_t: Sim_Execution_Type = Sim_Execution_Type.RUN_AND_WAIT,
+        path_to_simulator: None | Path = None,
+        verbose: bool = False,
+        save_list: SaveList | None = None,
+        save_list_bench: str | None = None,
+    ):
+        """Reads, modifies, and simulates the circuit defined in the given netlist_filename .spice file
+
+        `save_list` (a `spice_engine.save_list.SaveList`) OVERRIDES the netlist's own
+        `.save`/`.probe`/`save` statements with the signals the list names — the storage
+        control for extracted netlists, whose "save everything" rawfiles run to gigabytes.
+        The rewrite happens at TEXT level, before the `SpiceEditor` is built: the editor
+        stores a `.control` block opaquely, so a `save` command inside one is invisible to it
+        and could not be replaced through the editor API. The rewritten netlist is written
+        into the wrapper's own (disposable) `output_folder` as `<testbench_name>.save_list<suffix>`
+        and the wrapper runs THAT — the caller's netlist file is never modified.
+        `save_list_bench` names the `benches:` entry to look up (default: `testbench_name`).
+        `save_list=None` leaves the netlist untouched.
+        """
         # self.logger = setup_loggers(parent_folder=output_folder.parent, out_logname=project_name)
         self.logger = logger
 
-        self.netlist_filename   = netlist_filename
-        self.traces_of_interest = traces_of_interest
-        self.testbench_name     = testbench_name
-        self.output_folder      = output_folder
-        self.path_to_simulator  = path_to_simulator
-        self.sim_execution_t    = sim_execution_t
-        self.verbose            = verbose
+        self.netlist_filename = netlist_filename
+        self.traces_of_interest = traces_of_interest if traces_of_interest is not None else []
+        self.testbench_name = testbench_name
+        self.output_folder = output_folder
+        self.path_to_simulator = path_to_simulator
+        self.sim_execution_t = sim_execution_t
+        self.verbose = verbose
+        self.save_list = save_list
+        self.save_list_bench = save_list_bench
 
-        self._default_compatibility_mode: str   = "a"   # ngspice compatibility mode (refer to spicelib and ngspice docs for details)
+        self._default_compatibility_mode: str = (
+            "a"  # ngspice compatibility mode (refer to spicelib and ngspice docs for details)
+        )
         # DISPLAY-ONLY heuristic for get_dut_params/get_tb_params (matched
         # case-insensitively): many decks name their sizing knobs x_dut_*, but the
         # convention is NOT load-bearing — LDO decks size w_pass/i_tail, and the
         # optimizer's real DUT-param list is the project YAML's dut_params. Nothing in
         # the run path branches on a parameter's name.
-        self._dut_parameter_prefix: str         = "X_DUT"
+        self._dut_parameter_prefix: str = "X_DUT"
 
-        self.runner: SimRunner | None       = None
-        self.editor: None | SpiceEditor     = None
-        self.tasks_outputs: Dict[str, Any]  = {}    # task name -> (raw, log) Tuple[Path, Path]
-        self.curr_raw: RawRead | None       = None
-        self.curr_log: str | None           = None
+        self.runner: SimRunner | None = None
+        self.editor: None | SpiceEditor = None
+        self.tasks_outputs: dict[str, Any] = {}  # task name -> (raw, log) Tuple[Path, Path]
+        self.curr_raw: RawRead | None = None
+        self.curr_log: str | None = None
         # RawRead does not retain its filename — track the parsed raw's path alongside
-        self.curr_raw_path: str | None      = None
+        self.curr_raw_path: str | None = None
 
         self._counter: int = 1
 
         self.__post_init__()
+
     # ----------------------------------------------------
     # [Private] Initialization and Validation
     # ----------------------------------------------------
@@ -414,20 +464,45 @@ class NGSpice_Wrapper:
             raise RuntimeError("Spicelib wrapper validation failed")
 
         # (2) Create the simulator
-        simulator : type[NGspiceSimulator] = self._create_simulator()
+        simulator: type[NGspiceSimulator] = self._create_simulator()
 
         # (3) Create the runner
         self.runner = SimRunner(
-            simulator=simulator,
-            output_folder=self.output_folder,
-            verbose=self.verbose
-            )
+            simulator=simulator, output_folder=self.output_folder, verbose=self.verbose
+        )
+
+        # (3b) Apply the save list to the netlist TEXT, before the editor sees it.
+        self.netlist_filename = self._apply_save_list(self.netlist_filename)
 
         # (4) Create a SpiceEditor Instance
         self.editor = SpiceEditor(netlist_file=self.netlist_filename)
 
         # (5) print circuit info
         self.print_circuit_info()
+
+    def _apply_save_list(self, netlist: Path) -> Path:
+        """Rewrite `netlist` through `self.save_list`; return the path the wrapper should run.
+
+        A no-op (returns `netlist` unchanged) when no save list is configured or the list says
+        nothing about this deck. Called AFTER `_validate()`, so `output_folder` exists and the
+        original netlist has already been proved to live outside it.
+        """
+        if self.save_list is None:
+            return netlist
+        original = Path(netlist).read_text()
+        rewritten = apply_save_list_to_deck(
+            original, self.save_list, bench=self.save_list_bench or self.testbench_name
+        )
+        if rewritten == original:
+            self.logger.info("💾 save list: no entry applies to this netlist — running it verbatim")
+            return netlist
+        # Named for the TESTBENCH, not the netlist stem: sibling wrappers may share one
+        # `output_folder`, and two benches over the same source deck must not collide.
+        stem = re.sub(r"[^A-Za-z0-9_.-]+", "_", self.testbench_name) or "deck"
+        out = Path(self.output_folder) / f"{stem}.save_list{Path(netlist).suffix}"
+        out.write_text(rewritten)
+        self.logger.info(f"💾 save list applied — running {out}")
+        return out
 
     def _validate(self) -> bool:
         # The output folder is WIPED below — refuse to wipe a folder that contains the input
@@ -440,6 +515,14 @@ class NGSpice_Wrapper:
                 f"({self.netlist_filename}) and would be deleted — give the wrapper its own "
                 f"disposable output directory"
             )
+        # Every input is validated BEFORE anything destructive happens. This check used to sit
+        # AFTER the wipe below, so a mistyped netlist name destroyed the previous run's artifacts
+        # before any simulation started (Codex review, item SIM-01).
+        if not self.netlist_filename.exists():
+            self.logger.critical(f"❌ Initial netlist not found: {self.netlist_filename}")
+            self.logger.critical(f"Check the PWD: {Path.cwd()}")
+            raise FileNotFoundError(f"Initial netlist not found: {self.netlist_filename}")
+
         # Prepare the output folder. The wipe-on-construction gives a lone wrapper a clean
         # slate, but is DESTRUCTIVE when sibling wrappers share one folder (the orchestrator
         # builds one wrapper per testbench, all pointed at the project `outdir`): the 2nd..Nth
@@ -455,21 +538,19 @@ class NGSpice_Wrapper:
                         f"(not re-wiping — a sibling wrapper may share it): {self.output_folder}"
                     )
                 else:
-                    self.logger.warning(f"⚠️ Output directory already exists, re-creating: {self.output_folder}")
+                    self.logger.warning(
+                        f"⚠️ Output directory already exists, re-creating: {self.output_folder}"
+                    )
                     shutil.rmtree(self.output_folder)
             else:
-                self.logger.info(f"📂 Creating output directory for the first time: {self.output_folder}")
+                self.logger.info(
+                    f"📂 Creating output directory for the first time: {self.output_folder}"
+                )
 
             # exist_ok=True: in the shared-folder reuse path we deliberately did NOT rmtree,
             # so the directory is still present and must not raise.
             os.makedirs(self.output_folder, exist_ok=True)
             _WIPED_OUTPUT_FOLDERS.add(out_resolved)
-
-        # Check for netlist existence
-        if not self.netlist_filename.exists():
-            self.logger.critical(f"❌ Initial netlist not found: {self.netlist_filename}")
-            self.logger.critical(f"Check the PWD: {Path.cwd()}")
-            raise FileNotFoundError(f"Initial netlist not found: {self.netlist_filename}")
 
         # Log project info
         self.logger.info("--------------------------------------------------")
@@ -498,7 +579,8 @@ class NGSpice_Wrapper:
             self.runner.output_folder = self.runner.output_folder / f"run_{self._counter}_{label}"
             self.runner.output_folder.mkdir(parents=True, exist_ok=True)
             self._counter += 1
-        else: raise RuntimeError("Runner output folder is not a Path instance")
+        else:
+            raise RuntimeError("Runner output folder is not a Path instance")
 
         return self.runner.output_folder
 
@@ -519,7 +601,7 @@ class NGSpice_Wrapper:
     # ----------------------------------------------------
     # [Public] Simulation Running Methods
     # ----------------------------------------------------
-    def update_params(self, parameterization: Dict[str, float]) -> bool:
+    def update_params(self, parameterization: dict[str, float]) -> bool:
         logger = self.logger
         logger.debug("Updating parameters...")
         if self.editor is None:
@@ -565,7 +647,7 @@ class NGSpice_Wrapper:
             return True
         return False
 
-    def apply_corner(self, corner: "Corner", model_lib_root: str | None = None) -> None:
+    def apply_corner(self, corner: Corner, model_lib_root: str | None = None) -> None:
         """Apply a PVT `Corner` to this testbench's netlist editor (one-time setup).
 
         Concretely, for the chosen corner this:
@@ -591,68 +673,46 @@ class NGSpice_Wrapper:
         log = self.logger
         log.info(f"🌡️  Applying PVT corner '{corner.name}' to testbench '{self.testbench_name}'")
 
-        # (1) process model includes — strip the netlist's prior `.lib <file> <section>` selection
-        #     for each referenced library EXACTLY ONCE (path-agnostic: matches a bare basename or a
-        #     full path), THEN add all corner includes. Stripping inside the per-include loop would
-        #     delete a sibling section of the SAME lib_file that an earlier include just added,
-        #     collapsing multiple sections of one `.lib` to only the last (BUG-B11). Re-apply stays
-        #     idempotent: the upfront strip also removes any prior corner's includes for those libs.
-        stripped_libs: set[str] = set()
-        for inc in corner.model_includes:
-            basename = Path(inc.lib_file).name
-            if basename not in stripped_libs:
-                self._strip_matching_instructions(rf"^\s*\.lib\s+\S*{re.escape(basename)}\s+\S+")
-                stripped_libs.add(basename)
-        for inc in corner.model_includes:
-            path = inc.lib_file if not model_lib_root else str(Path(model_lib_root) / inc.lib_file)
-            ed.add_instruction(f".lib {path} {inc.section}")
-            log.info(f"\t🧩 .lib {path} {inc.section}")
+        # (1)-(2) directive policy (lib strip/add, authoritative temp, extra options) is
+        #     shared with the deck-TEXT applier via `deck_prep.plan_corner` — one definition,
+        #     two appliers. Every strip runs BEFORE any add, so a corner selecting two
+        #     sections of the SAME lib can't have the second strip delete the first (BUG-B11),
+        #     and only STANDALONE `.options temp=`/`.options <k>=` lines are stripped so a
+        #     combined `.options temp=27 gmin=1e-12` keeps its siblings (BUG-B30).
+        plan = plan_corner(corner, model_lib_root)
+        for pattern in plan.strips:
+            self._strip_matching_instructions(pattern)
+        for line in plan.instructions:
+            ed.add_instruction(line)
+            log.info(f"\t🧩 {line}")
 
-        # (2) temperature — append an authoritative `.options temp=` (ngspice processes .options
-        #     cumulatively, last temp wins). Strip only a prior STANDALONE injected temp line (for
-        #     re-apply idempotency); do NOT strip a COMBINED line like `.options temp=27 gmin=1e-12`,
-        #     which the old broad regex deleted whole — dropping the sibling options (BUG-B30).
-        #     ALSO strip any `.temp <val>` card: ngspice gives `.temp` PRECEDENCE over
-        #     `.options temp=`, so a netlist-hardcoded `.temp 27` silently pinned every corner
-        #     to 27°C while the injected option looked correct in the netlist.
-        self._strip_matching_instructions(r"^\s*\.temp\s+\S+")
-        self._strip_matching_instructions(r"^\s*\.options?\s+temp\s*=\s*\S+\s*$")
-        ed.add_instruction(f".options temp={corner.temp}")
-        log.info(f"\t🌡️  .options temp={corner.temp}")
-
-        # (2b) extra simulator options (e.g. a Monte Carlo sample's RNG seed —
-        #      `.options seed=<n>` re-rolls the model library's agauss() draws per
-        #      run). Same standalone-line strip discipline as temp for idempotency.
-        for k, v in corner.options.items():
-            self._strip_matching_instructions(rf"^\s*\.options?\s+{re.escape(str(k))}\s*=\s*\S+\s*$")
-            ed.add_instruction(f".options {k}={v}")
-            log.info(f"\t🎛️  .options {k}={v}")
-
-        # (3) environment overrides — supplies then extra params (override `.param` defaults).
-        #     A supply override is a `.param <node>=<value>`; spicelib's set_parameter SILENTLY
-        #     INSERTS a dangling `.param` when <node> isn't already declared, so a mis-named rail
-        #     (e.g. the source instance `Vdd` instead of the param `VDD`, or an undeclared `VSS`)
-        #     would leave the sim at the netlist's DEFAULT supply with no error. Warn loudly when
-        #     the node isn't a declared `.param` so this isn't silent (BUG-B12).
+        # (3) environment overrides — supplies then extra params (plan.params keeps that
+        #     order). A supply override is a `.param <node>=<value>`; spicelib's set_parameter
+        #     SILENTLY INSERTS a dangling `.param` when <node> isn't already declared, so a
+        #     mis-named rail (e.g. the source instance `Vdd` instead of the param `VDD`, or an
+        #     undeclared `VSS`) would leave the sim at the netlist's DEFAULT supply with no
+        #     error. Warn loudly when the node isn't a declared `.param` (BUG-B12).
         try:
             declared = {str(n).upper() for n in ed.get_all_parameter_names()}
         except Exception:
             declared = None  # param introspection unavailable → skip the check, still apply
-        for s in corner.supplies:
-            if declared is not None and str(s.node).upper() not in declared:
+        for name, value in plan.params:
+            if declared is not None and str(name).upper() not in declared:
                 log.warning(
-                    f"⚠️ PVT corner '{corner.name}': supply node '{s.node}' is NOT a declared "
-                    f".param in testbench '{self.testbench_name}' — this override adds a dangling "
+                    f"⚠️ PVT corner '{corner.name}': '{name}' is NOT a declared .param in "
+                    f"testbench '{self.testbench_name}' — this override adds a dangling "
                     f".param and will NOT change the supply. 'node' must match a .param name "
                     f"(e.g. .param VDD=...). Declared params: {sorted(declared)}"
                 )
-            ed.set_parameter(s.node, s.value)
-            log.info(f"\t🔌 .param {s.node}={s.value}")
-        for k, v in corner.params.items():
-            ed.set_parameter(k, v)
-            log.info(f"\t⚙️  .param {k}={v}")
+            ed.set_parameter(name, value)
+            log.info(f"\t⚙️  .param {name}={value}")
 
-    def run_sanity_check(self, use_editor: bool = True, sim_execution_t: Sim_Execution_Type = Sim_Execution_Type.RUN_NOW, clean_up_after: bool = True) -> bool:
+    def run_sanity_check(
+        self,
+        use_editor: bool = True,
+        sim_execution_t: Sim_Execution_Type = Sim_Execution_Type.RUN_NOW,
+        clean_up_after: bool = True,
+    ) -> bool:
         logger = self.logger
 
         # (1) Pre-body
@@ -681,9 +741,7 @@ class NGSpice_Wrapper:
         if sim_execution_t == Sim_Execution_Type.RUN_NOW:
             logger.debug("⚡ Executing simulation immediately (RUN_NOW)")
             raw, log = self.runner.run_now(
-                netlist=netlist_used,
-                exe_log=True,
-                run_filename=run_filename
+                netlist=netlist_used, exe_log=True, run_filename=run_filename
             )
             logger.info(f"simulator log: {log}")
             logger.info(f"simulator RAW: {raw}")
@@ -692,7 +750,9 @@ class NGSpice_Wrapper:
             self.run_and_wait(exe_log=True)
         elif sim_execution_t == Sim_Execution_Type.RUN_WITH_CALLBACK:
             logger.warning("🛑 RUN_WITH_CALLBACK not implemented yet 🚧")
-            raise NotImplementedError("RUN_WITH_CALLBACK simulation execution type is not implemented yet :(")
+            raise NotImplementedError(
+                "RUN_WITH_CALLBACK simulation execution type is not implemented yet :("
+            )
         else:
             logger.critical("🚨 Invalid sim_execution_t provided!")
             raise RuntimeError("Invalid sim_execution_t")
@@ -720,7 +780,8 @@ class NGSpice_Wrapper:
             self.runner.output_folder = self.runner.output_folder.parent
 
         # (5) Clean up if needed
-        if clean_up_after: self.clean_up(delete_directories=True)
+        if clean_up_after:
+            self.clean_up(delete_directories=True)
 
         return True
 
@@ -756,14 +817,20 @@ class NGSpice_Wrapper:
             self._strip_matching_instructions(plan.slim_lib_strip)
             for section in plan.sections:
                 self.editor.add_instruction(f".lib {plan.slim_lib} {section}")
-            self.logger.info(f"\t⚡ slim corner lib: .lib {plan.slim_lib} [{', '.join(plan.sections)}]")
+            self.logger.info(
+                f"\t⚡ slim corner lib: .lib {plan.slim_lib} [{', '.join(plan.sections)}]"
+            )
 
         # (B) noise solver guard
         if noise_needs_sparse(self.editor.netlist, deck_lines, self.testbench_name):
             self.editor.add_instruction(".option sparse")
-            self.logger.info("\t🧮 noise analysis → forcing '.option sparse' (KLU can't run .noise)")
+            self.logger.info(
+                "\t🧮 noise analysis → forcing '.option sparse' (KLU can't run .noise)"
+            )
 
-    def run_and_wait(self, exe_log: bool = True, label: str | None = None) -> Tuple[RawRead | None, str | None, str]:
+    def run_and_wait(
+        self, exe_log: bool = True, label: str | None = None
+    ) -> tuple[RawRead | None, str | None, str]:
         """Runs the simulation and waits for it to complete, returning the RawRead instance (or None), the log filename (or None), and task name.
 
         ``label`` names this run's artifact subfolder (``run_<n>_<label>``); it
@@ -780,9 +847,7 @@ class NGSpice_Wrapper:
         self._move_to_run_folder(label=label if label is not None else self.testbench_name)
 
         # (2) Run the simulation with the parameters already in the editor instance
-        task = self.runner.run(
-            netlist=self.editor,
-            exe_log=exe_log)
+        task = self.runner.run(netlist=self.editor, exe_log=exe_log)
 
         if task is None:
             raise RuntimeError("Failed to create a RunTask --- cannot proceed")
@@ -790,7 +855,7 @@ class NGSpice_Wrapper:
         # (3) Wait for the task to complete
         while task.is_alive():
             sleep(0.01)
-            pass # wait so its done
+            pass  # wait so its done
 
         # (4) Get the results
         self.read_and_save_task_outputs(task)
@@ -812,9 +877,7 @@ class NGSpice_Wrapper:
         self._move_to_run_folder(label=label if label is not None else self.testbench_name)
 
         # (2) Run the simulation with the parameters already in the editor instance
-        task = self.runner.run(
-            netlist=self.editor,
-            exe_log=exe_log)
+        task = self.runner.run(netlist=self.editor, exe_log=exe_log)
 
         if task is None:
             raise RuntimeError("Failed to create a RunTask --- cannot proceed")
@@ -892,7 +955,8 @@ class NGSpice_Wrapper:
             if raw_file is None or not Path(raw_file).exists():
                 logger.warning(
                     f"⚠️ Task {task_name} produced no RAW file (sim failed/diverged); "
-                    f"its metrics will read as NaN. Log: {log_file}")
+                    f"its metrics will read as NaN. Log: {log_file}"
+                )
                 self.curr_raw = None
                 self.curr_log = log_file
                 self.curr_raw_path = None
@@ -918,14 +982,16 @@ class NGSpice_Wrapper:
         self.curr_raw = RawRead(raw_filename=raw_file)
         self.curr_raw_path = str(raw_file)
 
-    def get_available_plots(self) -> List[str]:
+    def get_available_plots(self) -> list[str]:
         """Helper to see what plots are actually inside the current raw file."""
         if self.curr_raw is None:
             logger.warning("⚠️ No RAW file loaded; cannot get available plots")
             return []
         return self.curr_raw.get_plot_names()
 
-    def extract_wave(self, wave_name: str,  plot_type: Ngspice_Plot_Type, is_real: bool = False) -> np.ndarray:
+    def extract_wave(
+        self, wave_name: str, plot_type: Ngspice_Plot_Type, is_real: bool = False
+    ) -> np.ndarray:
         """
         The endpiont to extract a waveform from the last simulation run
         Extracts a waveform from the simulation results based on the specific plot type.
@@ -961,7 +1027,9 @@ class NGSpice_Wrapper:
             self.logger.debug(f"❌ Waveform '{wave_name}' not found in plot '{plot_type.value}'.")
             raise e
         except Exception as e:
-            self.logger.critical(f"❌ Unexpected error while extracting waveform '{wave_name}': {e.__class__.__name__}: {e}")
+            self.logger.critical(
+                f"❌ Unexpected error while extracting waveform '{wave_name}': {e.__class__.__name__}: {e}"
+            )
             raise e
 
         # 4. Return the waveform as a NumPy array. Core stays torch-free (so the MCP
@@ -972,14 +1040,16 @@ class NGSpice_Wrapper:
             return wave.real.astype(np.float64)
         return wave
 
-    def extract_scalar_variable_from_raw(self, var_name: str | List[str], plot_type: Ngspice_Plot_Type,is_real: bool = True) -> Dict[str, np.float64]:
+    def extract_scalar_variable_from_raw(
+        self, var_name: str | list[str], plot_type: Ngspice_Plot_Type, is_real: bool = True
+    ) -> dict[str, np.float64]:
         """
         Extracts the first point of a trace, useful for OP analysis or single-point measurements.
         """
         if not isinstance(var_name, list):
             var_name = [var_name]
 
-        outputs: Dict[str, np.float64] = {}
+        outputs: dict[str, np.float64] = {}
 
         for var in var_name:
             try:
@@ -995,7 +1065,9 @@ class NGSpice_Wrapper:
                     outputs[var] = np.float64(np.nan)
 
             except (ValueError, IndexError, RuntimeError):
-                self.logger.debug(f"❌ Scalar Variable {var} not found in the raw file for plot {plot_type.value}")
+                self.logger.debug(
+                    f"❌ Scalar Variable {var} not found in the raw file for plot {plot_type.value}"
+                )
                 outputs[var] = np.float64(np.nan)
 
         return outputs
@@ -1046,23 +1118,35 @@ class NGSpice_Wrapper:
         """
         return self._dut_parameter_prefix.upper() in name.upper()
 
-    def get_dut_params(self) -> List[Tuple[str, Any]]:
+    def get_dut_params(self) -> list[tuple[str, Any]]:
         self.logger.debug("Getting DUT parameters")
         if self.editor is None:
             raise RuntimeError("Editor not initialized")
         editor = self.editor
         params = editor.get_all_parameter_names()
-        return [(param, editor.get_parameter(param)) for param in params if self._is_dut_param(param)]
+        return [
+            (param, editor.get_parameter(param)) for param in params if self._is_dut_param(param)
+        ]
 
-    def get_tb_params(self) -> List[Tuple[str, Any]]:
+    def get_tb_params(self) -> list[tuple[str, Any]]:
         self.logger.debug("Getting TB parameters")
         if self.editor is None:
             raise RuntimeError("Editor not initialized")
         editor = self.editor
         params = editor.get_all_parameter_names()
-        return [(param, editor.get_parameter(param)) for param in params if not self._is_dut_param(param)]
+        return [
+            (param, editor.get_parameter(param))
+            for param in params
+            if not self._is_dut_param(param)
+        ]
 
-    def clean_up(self, delete_directories: bool = False, keep_netlist: bool = False, keep_logs: bool = False, keep_raw: bool = False) -> None:
+    def clean_up(
+        self,
+        delete_directories: bool = False,
+        keep_netlist: bool = False,
+        keep_logs: bool = False,
+        keep_raw: bool = False,
+    ) -> None:
         """
         Cleans up the files generated during the simulation runs.
 
@@ -1074,26 +1158,29 @@ class NGSpice_Wrapper:
         """
 
         if delete_directories and (keep_netlist or keep_logs):
-            self.logger.warning("⚠️ 'delete_directories' is True; 'keep_spice_netlist' and 'keep_logs' will be ignored.")
+            self.logger.warning(
+                "⚠️ 'delete_directories' is True; 'keep_spice_netlist' and 'keep_logs' will be ignored."
+            )
             keep_netlist = False
             keep_logs = False
 
-        NETLIST_EXTENSIONS = {'.spice', '.net', '.cir'}
-        LOG_EXTENSIONS = {'.log'}
-        RAW_EXTENSIONS = {'.raw'}
+        NETLIST_EXTENSIONS = {".spice", ".net", ".cir"}
+        LOG_EXTENSIONS = {".log"}
+        RAW_EXTENSIONS = {".raw"}
 
         if self.runner is None:
             raise RuntimeError("Runner not initialized")
 
         if not self.output_folder.exists():
-            self.logger.warning(f"⚠️ Output folder {self.output_folder} does not exist. Nothing to clean.")
+            self.logger.warning(
+                f"⚠️ Output folder {self.output_folder} does not exist. Nothing to clean."
+            )
             return
 
         self.logger.debug(f"🧹 Starting cleanup in: {self.output_folder}")
 
         for item in self.output_folder.iterdir():
             if item.is_dir():
-
                 # --- Mode A: Delete entire directory ---
                 if delete_directories:
                     try:
@@ -1110,9 +1197,12 @@ class NGSpice_Wrapper:
                         continue
 
                     should_delete = True
-                    if keep_netlist   and file.suffix.lower() in NETLIST_EXTENSIONS:    should_delete = False
-                    if keep_logs      and file.suffix.lower() in LOG_EXTENSIONS:        should_delete = False
-                    if keep_raw       and file.suffix.lower() in RAW_EXTENSIONS:        should_delete = False
+                    if keep_netlist and file.suffix.lower() in NETLIST_EXTENSIONS:
+                        should_delete = False
+                    if keep_logs and file.suffix.lower() in LOG_EXTENSIONS:
+                        should_delete = False
+                    if keep_raw and file.suffix.lower() in RAW_EXTENSIONS:
+                        should_delete = False
 
                     if should_delete:
                         try:
@@ -1130,6 +1220,7 @@ class NGSpice_Wrapper:
         if self.logger is None:
             raise RuntimeError("Logger not initialized")
         return self.logger
+
 
 if __name__ == "__main__":
     logger = setup_loggers()

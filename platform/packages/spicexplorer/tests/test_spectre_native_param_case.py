@@ -131,8 +131,8 @@ def test_injection_moves_exactly_one_case_variant_symbol() -> None:
     BEFORE: `{'vdd': 0.81}` rendered `parameters vdd=0.81 … VDD=0.81` — one key, two symbols.
     """
     params = _params_of(render_native_scs(CASE_COLLIDING_SCS, parameters={"vdd": 0.81}))
-    assert params["vdd"] == "0.81"   # the EXACT spelling the caller named
-    assert params["VDD"] == "0.9"    # a DIFFERENT Spectre symbol: untouched
+    assert params["vdd"] == "0.81"  # the EXACT spelling the caller named
+    assert params["VDD"] == "0.9"  # a DIFFERENT Spectre symbol: untouched
     # nothing else drifted
     assert params["code"] == "7" and params["Vcm"] == "0.475" and params["Vid"] == "1m"
 
@@ -148,8 +148,8 @@ def test_an_exact_spelling_injection_moves_that_exact_symbol() -> None:
     BEFORE: `{'VDD': 0.81}` rendered `parameters vdd=0.81 … VDD=0.9`.
     """
     params = _params_of(render_native_scs(CASE_COLLIDING_SCS, parameters={"VDD": 0.81}))
-    assert params["VDD"] == "0.81"   # BEFORE: "0.9" — the live rail never moved
-    assert params["vdd"] == "0.95"   # BEFORE: "0.81" — the dead symbol moved instead
+    assert params["VDD"] == "0.81"  # BEFORE: "0.9" — the live rail never moved
+    assert params["vdd"] == "0.95"  # BEFORE: "0.81" — the dead symbol moved instead
 
 
 def test_a_case_variant_rail_follows_only_its_own_spelling() -> None:
@@ -163,8 +163,8 @@ def test_a_case_variant_rail_follows_only_its_own_spelling() -> None:
     deck = "simulator lang=spectre\nglobal 0\nparameters VDD=1.8 vdd=0.25\n"
     # the lowercase 0.25 V symbol is the one named → the 1.8 V rail stays put
     assert _params_of(render_native_scs(deck, parameters={"vdd": 0.30})) == {
-        "VDD": "1.8",   # BEFORE: "0.3" — the 1.8 V rail DID follow the injection
-        "vdd": "0.3",   # BEFORE: "0.25" — the named symbol did NOT move
+        "VDD": "1.8",  # BEFORE: "0.3" — the 1.8 V rail DID follow the injection
+        "vdd": "0.3",  # BEFORE: "0.25" — the named symbol did NOT move
     }
     # …and the mirror: naming the uppercase rail moves only it
     assert _params_of(render_native_scs(deck, parameters={"VDD": 0.30})) == {
@@ -182,9 +182,9 @@ def test_an_ambiguous_case_variant_injection_raises_instead_of_guessing() -> Non
     with pytest.raises(AmbiguousParameterCaseError) as exc:
         render_native_scs(deck, parameters={"Vdd": 0.30}, source="tb_ldo.scs")
     msg = str(exc.value)
-    assert "tb_ldo.scs" in msg                       # the deck
-    assert "'Vdd'" in msg                            # the key
-    assert "VDD" in msg and "vdd" in msg             # the candidates
+    assert "tb_ldo.scs" in msg  # the deck
+    assert "'Vdd'" in msg  # the key
+    assert "VDD" in msg and "vdd" in msg  # the candidates
 
 
 def test_a_case_variant_collision_is_announced(caplog) -> None:
@@ -202,7 +202,7 @@ def test_no_collision_warning_without_a_collision(caplog) -> None:
     assert [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING] == []
 
 
-def _cmp_002_run_decks() -> "list[Path]":
+def _cmp_002_run_decks() -> list[Path]:
     """The 8 committed cmp_002 run decks, or a skip when analog-db is not checked out."""
     root = Path(__file__).resolve().parents[3] / "examples/analog-db/circuits"
     runs = root / "cmp_002_strongarm/spectre/28nm/netlist/runs"
@@ -230,7 +230,7 @@ def test_the_committed_cmp_002_decks_still_declare_the_colliding_pair() -> None:
 
         # rule 1 — an exact spelling wins, in BOTH directions, and moves nothing else
         upper = _params_of(render_native_scs(text, parameters={"VDD": 0.81}, source=str(deck)))
-        assert upper["VDD"] == "0.81", deck.name   # BEFORE: params["VDD"] — the live rail
+        assert upper["VDD"] == "0.81", deck.name  # BEFORE: params["VDD"] — the live rail
         assert upper["vdd"] == params["vdd"], deck.name  # BEFORE: "0.81"
         lower = _params_of(render_native_scs(text, parameters={"vdd": 0.81}, source=str(deck)))
         assert lower["vdd"] == "0.81", deck.name
@@ -258,7 +258,7 @@ def test_a_collision_free_committed_deck_still_takes_the_case_insensitive_fallba
     text = deck.read_text()
     assert _params_of(text) == {"VDD": "0.9"}, "fixture drifted — retarget this test"
     out = _params_of(render_native_scs(text, parameters={"vdd": 0.81}, source=str(deck)))
-    assert out == {"VDD": "0.81"}   # the deck's own spelling moved, nothing inert appended
+    assert out == {"VDD": "0.81"}  # the deck's own spelling moved, nothing inert appended
 
 
 class _FakeBridge:
@@ -292,6 +292,6 @@ def test_a_pvt_voltage_corner_reaches_an_uppercase_declared_rail(tmp_path: Path)
     sim.run(label="ldo__ss")
 
     rendered = _params_of(bridge.calls[-1][0].read_text())
-    assert rendered["VDD"] == "0.81"    # the corner's rail, not the deck's baked 0.9
+    assert rendered["VDD"] == "0.81"  # the corner's rail, not the deck's baked 0.9
     assert rendered["ILOAD"] == "0.0015"
     assert "vdd" not in rendered

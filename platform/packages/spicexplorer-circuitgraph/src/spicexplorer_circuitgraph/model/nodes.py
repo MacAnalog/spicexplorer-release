@@ -42,6 +42,8 @@ class StructuralRole(str, Enum):
     MOS_TAIL_CURRENT_SOURCE = "tail_current_source"
     MOS_PSEUDO_RESISTOR = "pseudo_resistor"
     MOS_ANALOG_SWITCH = "analog_switch"
+    MOS_INVERTER = "inverter"
+    MOS_CROSS_COUPLED = "cross_coupled"
 
     ENABLE_DEVICE = "enable_device"
     BIAS_DEVICE = "bias_device"
@@ -70,6 +72,8 @@ DETERMINISTIC_ROLES: frozenset[StructuralRole] = frozenset(
         StructuralRole.MOS_TAIL_CURRENT_SOURCE,
         StructuralRole.MOS_PSEUDO_RESISTOR,
         StructuralRole.MOS_ANALOG_SWITCH,
+        StructuralRole.MOS_INVERTER,
+        StructuralRole.MOS_CROSS_COUPLED,
     }
 )
 
@@ -217,7 +221,7 @@ class MosfetNode(ComponentNode):
     polarity: MosPolarityType = MosPolarityType.UNKNOWN
     operating_point: TransistorOperatingPoint | None = None
 
-    def _terminal_nets(self, graph: "nx.MultiGraph") -> dict[PinTypeMOSFET, NetNode]:
+    def _terminal_nets(self, graph: nx.MultiGraph) -> dict[PinTypeMOSFET, NetNode]:
         """DRAIN/GATE/SOURCE/BULK → connected net, read from the live edges (keyed by the pin enum)."""
         nets: dict[PinTypeMOSFET, NetNode] = {}
         for _, net, _key, data in graph.edges(self, data=True, keys=True):
@@ -227,22 +231,22 @@ class MosfetNode(ComponentNode):
         return nets
 
     def _terminals_share_net(
-        self, graph: "nx.MultiGraph", a: PinTypeMOSFET, b: PinTypeMOSFET
+        self, graph: nx.MultiGraph, a: PinTypeMOSFET, b: PinTypeMOSFET
     ) -> bool:
         nets = self._terminal_nets(graph)
         na, nb = nets.get(a), nets.get(b)
         return na is not None and nb is not None and na.name == nb.name
 
-    def is_diode_connected(self, graph: "nx.MultiGraph") -> bool:
+    def is_diode_connected(self, graph: nx.MultiGraph) -> bool:
         """True when DRAIN and GATE share a net (a diode-connected device — always in saturation)."""
         return self._terminals_share_net(graph, PinTypeMOSFET.DRAIN, PinTypeMOSFET.GATE)
 
-    def is_gate_source_shorted(self, graph: "nx.MultiGraph") -> bool:
+    def is_gate_source_shorted(self, graph: nx.MultiGraph) -> bool:
         """True when GATE and SOURCE share a net — Vgs = 0, so an *enhancement* device is off
         (a depletion / negative-Vth device may still conduct)."""
         return self._terminals_share_net(graph, PinTypeMOSFET.GATE, PinTypeMOSFET.SOURCE)
 
-    def is_drain_source_shorted(self, graph: "nx.MultiGraph") -> bool:
+    def is_drain_source_shorted(self, graph: nx.MultiGraph) -> bool:
         """True when DRAIN and SOURCE share a net — the channel is shorted, so the transistor is
         *killed* (e.g. a MOS device wired as a decoupling capacitor)."""
         return self._terminals_share_net(graph, PinTypeMOSFET.DRAIN, PinTypeMOSFET.SOURCE)

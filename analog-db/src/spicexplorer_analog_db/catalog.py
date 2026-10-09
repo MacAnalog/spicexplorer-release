@@ -1,7 +1,15 @@
 """The class-aware ``catalog.json`` — the machine-readable entry point.
 
-A typed, queryable index of every circuit + its derived status, grouped by class. Generated
-deterministically; Tier 0 diffs the committed file against a fresh build (the determinism guard).
+A typed, queryable index of every circuit + its AUTHORED ``status`` (circuit.yaml), grouped by
+class. Generated deterministically; Tier 0 diffs the committed file against a fresh build (the
+determinism guard).
+
+The DERIVED status of plan §6 / D-13 (the highest verify rung a circuit clears) is published
+beside it as ``derived_status``, read from the committed ``verify_status.json``, never from a
+verify run of its own: T1 inside the build would recurse into the tiers and make the catalog
+depend on the installed platform, and T3/T4 need ngspice + a PDK. ``derived_from`` gives the date,
+platform commit and tiers of the run; a rung the record no longer backs is left out and
+``derived_from.invalidated`` says why (``verify_status`` module doc).
 """
 
 from __future__ import annotations
@@ -9,7 +17,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from . import export, paths, scoreboard
+from . import export, paths, scoreboard, verify_status
 from .model import Circuit, load_all_circuits
 
 CATALOG_SCHEMA = "spicexplorer/catalog@1"
@@ -70,9 +78,12 @@ def _reference_index(c: Circuit) -> list[dict[str, Any]]:
                 segs = {s.lower() for s in p.relative_to(bdir).parts[:-1]}
                 name = p.stem.lower()
                 role = (
-                    "tb" if ("tb" in segs or name.startswith("tb_") or name.endswith("_tb"))
-                    else "runs" if ("runs" in segs or "variants" in segs)
-                    else "dut" if ("dut" in segs or name.endswith("_dut"))
+                    "tb"
+                    if ("tb" in segs or name.startswith("tb_") or name.endswith("_tb"))
+                    else "runs"
+                    if ("runs" in segs or "variants" in segs)
+                    else "dut"
+                    if ("dut" in segs or name.endswith("_dut"))
                     else "other"
                 )
                 buckets.setdefault(role, []).append(str(p.relative_to(root)))
@@ -118,6 +129,7 @@ def build_catalog() -> dict[str, Any]:
     )  # {circuit: {pdk: {testbench: relpath}}} — built from the same generator
     circuits: list[dict[str, Any]] = []
     by_class: dict[str, list[str]] = {}
+    recorded = verify_status.load()
     for c in load_all_circuits():
         m = c.manifest
         entry = {
@@ -134,10 +146,12 @@ def build_catalog() -> dict[str, Any]:
             "realization": m.get("realization"),
             "pdks": c.pdks,
             "analyses": c.analyses,
-            "status": c.status,
+            "status": c.status,  # authored, not derived — see the module doc
             "provenance": m.get("provenance", {}),
             "raw": raw_index.get(c.id, {}),
         }
+        # derived_status + derived_from, from the committed verify record only
+        entry.update(verify_status.published(recorded.get(c.id), c.dir))
         if not c.is_published:
             # De-published (see circuit.schema.json `published`): still a verifiable, resolvable
             # circuit — it keeps its bindings/params here — but it is out of the scoreboard index

@@ -90,23 +90,22 @@ def test_registry_composites_validate_and_regenerate_byte_identical():
             ), f"{c.id} {pdk} sizing drift"
 
 
-def test_pin_mismatch_is_reported():
+def test_pin_mismatch_is_reported(tmp_path):
     comps = _composites()
     if not comps:
         pytest.skip("no composites in the registry yet")
     c = comps[0]
     doc = compose.load_composition(c)
     doc["instances"][0]["pin"] = "0" * 12
+    import dataclasses
+
     import yaml
 
-    bad = c.dir / "composition.yaml"
-    original = bad.read_text()
-    try:
-        bad.write_text(yaml.safe_dump(doc))
-        errs = compose.validate(c)
-        assert any("pin" in e for e in errs)
-    finally:
-        bad.write_text(original)
+    # a copy, never the committed composition.yaml: another -n worker may be fingerprinting the
+    # circuit for the catalog build at the same moment
+    (tmp_path / "composition.yaml").write_text(yaml.safe_dump(doc))
+    errs = compose.validate(dataclasses.replace(c, dir=tmp_path))
+    assert any("pin" in e for e in errs)
 
 
 def test_composed_block_groups_port_through_rename():

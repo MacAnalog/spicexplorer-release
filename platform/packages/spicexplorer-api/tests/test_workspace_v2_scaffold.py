@@ -5,6 +5,7 @@ writes v2 manifests atomically, and lazily migrates a v1 project on restore —
 with zero behavior change to the v1 surface (covered by test_project_service.py,
 which keeps passing untouched).
 """
+
 import json
 import sys
 
@@ -20,6 +21,7 @@ pytest.importorskip("fastapi", reason="ui extra not installed")
 def ps(tmp_path, monkeypatch):
     monkeypatch.setenv("WORK_ROOT", str(tmp_path / "work"))
     from spicexplorer_api.services import project_service as _ps
+
     return _ps
 
 
@@ -60,13 +62,29 @@ def test_restore_lazily_migrates_a_v1_project(ps):
     pd = ps.project_dir(pid)
     # Devolve to a v1 project: strip the v2 additions, downgrade the manifest.
     import shutil
-    for rel in ("spec", "topology", "design", "testbenches", "jobs", "analyses",
-                "layout", "context"):
+
+    for rel in (
+        "spec",
+        "topology",
+        "design",
+        "testbenches",
+        "jobs",
+        "analyses",
+        "layout",
+        "context",
+    ):
         shutil.rmtree(pd / rel)
-    (pd / "manifest.json").write_text(json.dumps({
-        "id": pid, "slug": pid.rsplit("-", 1)[0], "name": "Time Traveler",
-        "source": {"kind": "new"}, "schema_version": 1,
-    }))
+    (pd / "manifest.json").write_text(
+        json.dumps(
+            {
+                "id": pid,
+                "slug": pid.rsplit("-", 1)[0],
+                "name": "Time Traveler",
+                "source": {"kind": "new"},
+                "schema_version": 1,
+            }
+        )
+    )
     trash_id = ps.soft_delete_project(pid)
     restored = ps.restore_project(trash_id)
     assert restored == pid

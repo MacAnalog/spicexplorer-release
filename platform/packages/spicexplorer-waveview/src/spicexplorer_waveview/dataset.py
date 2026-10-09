@@ -19,8 +19,8 @@ Semantics mirror the engines' own result adapters (``NgspiceSimResult`` /
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import Iterator
 
 import numpy as np
 
@@ -174,7 +174,7 @@ class DatasetResult:
 
 
 def merge_datasets(
-    members: "list[tuple[str, WaveDataset]]",
+    members: list[tuple[str, WaveDataset]],
     *,
     source: str,
     log_path: str | None = None,

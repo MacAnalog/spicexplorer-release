@@ -1,4 +1,5 @@
 """Background optimization runner with SSE event streaming."""
+
 from __future__ import annotations
 
 import asyncio
@@ -48,15 +49,17 @@ class _QueueLogHandler(logging.Handler):
     per-trial events. The frontend renders it in a dedicated bottom-panel tab.
     """
 
-    def __init__(self, state: "RunState"):
+    def __init__(self, state: RunState):
         super().__init__(level=logging.INFO)
         self._state = state
         # Mirror the library's console/file formatter so the streamed lines look
         # identical to the log file the user already likes.
-        self.setFormatter(logging.Formatter(
-            fmt="%(asctime)s - %(name)s: [%(levelname)s] %(message)s",
-            datefmt="%H:%M:%S",
-        ))
+        self.setFormatter(
+            logging.Formatter(
+                fmt="%(asctime)s - %(name)s: [%(levelname)s] %(message)s",
+                datefmt="%H:%M:%S",
+            )
+        )
 
     def emit(self, record: logging.LogRecord) -> None:
         try:
@@ -128,7 +131,7 @@ def _put_bounded_nowait(queue: asyncio.Queue, item: object) -> None:
             pass
 
 
-def _enqueue(state: "RunState", item: object) -> None:
+def _enqueue(state: RunState, item: object) -> None:
     """Thread-safe, bounded enqueue for a run's SSE events, called from the optimizer worker
     thread. Schedules a non-blocking drop-oldest put on the loop that owns the queue; never
     blocks the worker and never grows the queue past ``_QUEUE_MAXSIZE``."""
@@ -136,6 +139,7 @@ def _enqueue(state: "RunState", item: object) -> None:
         state.loop.call_soon_threadsafe(_put_bounded_nowait, state.queue, item)
     except RuntimeError:  # loop already closed (backend shutting down) — nothing to stream to
         pass
+
 
 # Projects with a delete in progress. A run that STARTS in the window between stop_runs_for() and the
 # dir move would otherwise re-create the moved-away tree (the start-after-stop TOCTOU residual of
@@ -171,6 +175,7 @@ def _prune_finished_runs() -> None:
 
 
 # ---------- live optimizer ----------
+
 
 def _build_spicelib_wrappers(
     project: Project_Setup,
@@ -227,8 +232,7 @@ def _build_spicelib_wrappers(
     return wrappers
 
 
-def _config_snapshot_yaml(project_path: str, state: "RunState",
-                          ws_root: str | None = None) -> str:
+def _config_snapshot_yaml(project_path: str, state: RunState, ws_root: str | None = None) -> str:
     """The exact config a run used: the original YAML with the ephemeral overrides
     (algorithm/budget/seed/active_corner) BAKED IN — so the run dir reproduces itself
     (report.md §6). Best-effort: on any parse error, persist the original text.
@@ -245,8 +249,11 @@ def _config_snapshot_yaml(project_path: str, state: "RunState",
         return ""
     # The DSL nests everything under a top-level `project:` key (optimizer_config,
     # pvt, …); fall back to the document root for robustness.
-    roots = [r for r in (data.get("project") if isinstance(data, dict) else None, data)
-             if isinstance(r, dict)]
+    roots = [
+        r
+        for r in (data.get("project") if isinstance(data, dict) else None, data)
+        if isinstance(r, dict)
+    ]
     for root in roots:
         for key in ("optimizer_config", "optimizer"):
             opt = root.get(key)
@@ -261,8 +268,9 @@ def _config_snapshot_yaml(project_path: str, state: "RunState",
             # Bake the override only when the corner actually exists in the YAML —
             # _apply_overrides ignores an unknown corner, so the snapshot must not
             # claim it (or collapse the mode) for a run that never honored it.
-            known = {c.get("name") for c in (root["pvt"].get("corners") or [])
-                     if isinstance(c, dict)}
+            known = {
+                c.get("name") for c in (root["pvt"].get("corners") or []) if isinstance(c, dict)
+            }
             if state.active_corner in known:
                 root["pvt"]["active_corner"] = state.active_corner
                 # Mirror _apply_overrides: an explicit corner pick collapses a
@@ -281,7 +289,7 @@ def _config_snapshot_yaml(project_path: str, state: "RunState",
         return text
 
 
-def _tee_event(state: "RunState", event: dict) -> None:
+def _tee_event(state: RunState, event: dict) -> None:
     """Append one SSE event to the run's replayable ``events.ndjson`` (report.md §6)."""
     rd = state.run_dir
     if rd is None:
@@ -296,9 +304,15 @@ def _tee_event(state: "RunState", event: dict) -> None:
     ws_runs.touch_heartbeat(rd)
 
 
-def _write_run_json(state: "RunState", *, status: str, started: str,
-                    best_score: float | None = None, ended: str | None = None,
-                    metrics: dict[str, float] | None = None) -> None:
+def _write_run_json(
+    state: RunState,
+    *,
+    status: str,
+    started: str,
+    best_score: float | None = None,
+    ended: str | None = None,
+    metrics: dict[str, float] | None = None,
+) -> None:
     """Commit the per-run ``run.json`` (label/algo/seed/budget/corner/status/timing/best).
 
     Atomic (kernel ``write_run_record``) and merged with the run-envelope block
@@ -336,6 +350,7 @@ def _write_run_json(state: "RunState", *, status: str, started: str,
     # final best_score never change the run-dir set, so the read-side existence
     # probe can't catch them — this is the one writer that must notify.
     from spicexplorer_api.services import index_db
+
     index_db.notify_runs_changed(state.project_id)
 
 
@@ -397,7 +412,9 @@ def _streaming_optimizer_class(state: RunState, project):
     # entries are lazy factories (import the optional extra only when selected); a plain
     # class otherwise — call the factory, use the class directly.
     _factory = SPICE_OPTIMIZER_CLASSES[optimizer_type_from_config(project)]
-    _base_cls: type = _factory() if (callable(_factory) and not isinstance(_factory, type)) else _factory
+    _base_cls: type = (
+        _factory() if (callable(_factory) and not isinstance(_factory, type)) else _factory
+    )
 
     def _emit(event: dict) -> None:
         _tee_event(state, event)  # persist to events.ndjson for offline replay
@@ -434,22 +451,22 @@ def _streaming_optimizer_class(state: RunState, project):
                 # reflect the design whose params/score they display — not a later, lower-
                 # scoring trial's metrics (BUG-A13 / OPT-1 / RAIL-2).
                 self._best_metrics = {
-                    k: _safe_float(v.get("curr_val"))
-                    for k, v in fit.items()
-                    if isinstance(v, dict)
+                    k: _safe_float(v.get("curr_val")) for k, v in fit.items() if isinstance(v, dict)
                 }
-            _emit({
-                "iter": self._abs_iter,
-                "score": sval,
-                "best_score": self._best_score,
-                "metrics": {
-                    k: _safe_float(v.get("curr_val"))
-                    for k, v in fit.items()
-                    if isinstance(v, dict)
-                },
-                "best_params": self._best_params,
-                "best_metrics": self._best_metrics,
-            })
+            _emit(
+                {
+                    "iter": self._abs_iter,
+                    "score": sval,
+                    "best_score": self._best_score,
+                    "metrics": {
+                        k: _safe_float(v.get("curr_val"))
+                        for k, v in fit.items()
+                        if isinstance(v, dict)
+                    },
+                    "best_params": self._best_params,
+                    "best_metrics": self._best_metrics,
+                }
+            )
             return params, score, metadata
 
         def save_checkpoint(self, name):
@@ -489,14 +506,21 @@ def _streaming_optimizer_class(state: RunState, project):
             try:
                 for trial in range(remaining):
                     self.optimization_step()
-                    if (not self.disable_autosave) and self.autosave_checkpoint_freqeucny \
-                            and ((trial + 1) % self.autosave_checkpoint_freqeucny == 0):
-                        self.save_checkpoint(name=self.get_auto_save_name(append_txt=f"trial{self._abs_iter}"))
+                    if (
+                        (not self.disable_autosave)
+                        and self.autosave_checkpoint_freqeucny
+                        and ((trial + 1) % self.autosave_checkpoint_freqeucny == 0)
+                    ):
+                        self.save_checkpoint(
+                            name=self.get_auto_save_name(append_txt=f"trial{self._abs_iter}")
+                        )
             except KeyboardInterrupt:
                 logger.info("[run %s] interrupted at trial %d", state.run_id[:8], trial + 1)
             # Always leave a FINAL checkpoint (end-of-run or stop) to resume from.
             if (not self.disable_autosave) and (not self.optimization_log.is_empty()):
-                self.save_checkpoint(name=self.get_auto_save_name(append_txt=f"trial{self._abs_iter}_FINAL"))
+                self.save_checkpoint(
+                    name=self.get_auto_save_name(append_txt=f"trial{self._abs_iter}_FINAL")
+                )
             return self.optimization_log
 
     return _StreamingOpt
@@ -530,8 +554,12 @@ def _apply_overrides(
         # sampler=… was the observed failure). An override always runs the
         # picked algorithm with its own defaults.
         if cfg.optimizer_kwargs:
-            logger.info("[run %s] override drops YAML optimizer_kwargs %s (configured for '%s')",
-                        run_id[:8], cfg.optimizer_kwargs, cfg.name)
+            logger.info(
+                "[run %s] override drops YAML optimizer_kwargs %s (configured for '%s')",
+                run_id[:8],
+                cfg.optimizer_kwargs,
+                cfg.name,
+            )
             cfg.optimizer_kwargs = {}
         cfg.name = algorithm
     if seed is not None and seed != cfg.random_seed:
@@ -544,8 +572,12 @@ def _apply_overrides(
     if active_corner and project.pvt is not None:
         if project.pvt.get(active_corner) is not None:
             if active_corner != project.pvt.active_corner:
-                logger.info("[run %s] override active_corner %s -> %s",
-                            run_id[:8], project.pvt.active_corner, active_corner)
+                logger.info(
+                    "[run %s] override active_corner %s -> %s",
+                    run_id[:8],
+                    project.pvt.active_corner,
+                    active_corner,
+                )
                 project.pvt.active_corner = active_corner
             # An explicit corner pick means "run at THIS corner": on a multi-mode
             # project, collapse this run to single-corner so the override isn't
@@ -556,7 +588,9 @@ def _apply_overrides(
             if project.pvt.is_multi():
                 logging.getLogger("spicexplorer").info(
                     "PVT: explicit corner '%s' requested — running SINGLE-corner for "
-                    "this run (project default is mode: multi).", active_corner)
+                    "this run (project default is mode: multi).",
+                    active_corner,
+                )
                 project.pvt.mode = "single"
         else:
             # Route through the `spicexplorer` logger (not this module's `ui.backend.*` logger) so
@@ -564,7 +598,9 @@ def _apply_overrides(
             # requested corner was unknown and the default is being used (BUG-B31).
             logging.getLogger("spicexplorer").warning(
                 "Requested active_corner '%s' is not defined; keeping '%s' for this run.",
-                active_corner, project.pvt.active_corner)
+                active_corner,
+                project.pvt.active_corner,
+            )
 
 
 def _run_live(state: RunState, project_path: str) -> None:
@@ -624,8 +660,11 @@ def _run_live(state: RunState, project_path: str) -> None:
         proj_dir = project_service.project_dir(state.project_id) if state.project_id else None
         inputs = ws_runs.snapshot_inputs(
             ws_runs.project_objects_dir(proj_dir),
-            files={f"tb:{tb.name}": Path(project.ws_root) / Path(tb.netlist)
-                   for tb in project.testbenches if tb.enable},
+            files={
+                f"tb:{tb.name}": Path(project.ws_root) / Path(tb.netlist)
+                for tb in project.testbenches
+                if tb.enable
+            },
             values={"config_snapshot": _snap} if _snap else None,
         )
         state.envelope = ws_runs.envelope_fields(
@@ -637,7 +676,8 @@ def _run_live(state: RunState, project_path: str) -> None:
         file_log_handler = logging.FileHandler(rdir / "run.log")
         file_log_handler.setLevel(logging.DEBUG)
         file_log_handler.setFormatter(
-            logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
+            logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+        )
         file_log_handler.addFilter(run_thread_filter)  # this run's thread only (BUG-B13)
         lib_logger.addHandler(file_log_handler)
         logger.info("[run %s] isolated run dir: %s", state.run_id[:8], rdir)
@@ -651,7 +691,9 @@ def _run_live(state: RunState, project_path: str) -> None:
             logger.info("[run %s] resuming from checkpoint %s", state.run_id[:8], state.resume_path)
             opt = stream_cls(setup_obj=project, spicelib_wrappers=wrappers, output_root=save_root)
             opt.optimization_log = _load_checkpoint_log(state.resume_path)
-            logger.info("[run %s] restored %d prior trials", state.run_id[:8], len(opt.optimization_log))
+            logger.info(
+                "[run %s] restored %d prior trials", state.run_id[:8], len(opt.optimization_log)
+            )
             keep_history = True
         else:
             logger.info("[run %s] building optimizer", state.run_id[:8])
@@ -659,7 +701,9 @@ def _run_live(state: RunState, project_path: str) -> None:
             keep_history = False
         opt.keep_raw_artifacts = state.keep_raw
         if state.keep_raw:
-            logger.info("[run %s] keep_raw: per-trial raw waveforms will be retained", state.run_id[:8])
+            logger.info(
+                "[run %s] keep_raw: per-trial raw waveforms will be retained", state.run_id[:8]
+            )
         if state.autosave_every and state.autosave_every > 0:
             opt.autosave_checkpoint_freqeucny = state.autosave_every
             logger.info("[run %s] autosave every %d trials", state.run_id[:8], state.autosave_every)
@@ -680,17 +724,19 @@ def _run_live(state: RunState, project_path: str) -> None:
                 # (which on a near-optimal resume may never come). (BUG-A13 resume gap)
                 fit = entry.fit_summary or {}
                 best_metrics = {
-                    k: _safe_float(v.get("curr_val"))
-                    for k, v in fit.items()
-                    if isinstance(v, dict)
+                    k: _safe_float(v.get("curr_val")) for k, v in fit.items() if isinstance(v, dict)
                 }
         opt._best_score = best_score
         opt._best_params = best_params
         opt._best_metrics = best_metrics
         logger.info("[run %s] parameterizing", state.run_id[:8])
         opt.parameterize()
-        logger.info("[run %s] starting optimize() — budget %d%s", state.run_id[:8], state.budget,
-                    " (resume)" if keep_history else "")
+        logger.info(
+            "[run %s] starting optimize() — budget %d%s",
+            state.run_id[:8],
+            state.budget,
+            " (resume)" if keep_history else "",
+        )
         opt.optimize(keep_history=keep_history)
         best_for_json = _safe_float(getattr(opt, "_best_score", None))
         logger.info("[run %s] optimize() finished", state.run_id[:8])
@@ -700,7 +746,9 @@ def _run_live(state: RunState, project_path: str) -> None:
         logger.info("[run %s] stopped by user", state.run_id[:8])
     except Exception as e:
         final_status = "error"
-        logger.error("[run %s] optimizer error: %s\n%s", state.run_id[:8], e, traceback.format_exc())
+        logger.error(
+            "[run %s] optimizer error: %s\n%s", state.run_id[:8], e, traceback.format_exc()
+        )
         _enqueue(state, {"error": str(e)})
     finally:
         # P4: release engine-side resources — the Spectre path's persistent OCEAN
@@ -710,8 +758,7 @@ def _run_live(state: RunState, project_path: str) -> None:
             try:
                 _run_opt.close()
             except Exception:
-                logger.warning("[run %s] optimizer close() failed", state.run_id[:8],
-                               exc_info=True)
+                logger.warning("[run %s] optimizer close() failed", state.run_id[:8], exc_info=True)
         if file_log_handler is not None:
             lib_logger.removeHandler(file_log_handler)
             file_log_handler.close()
@@ -721,21 +768,29 @@ def _run_live(state: RunState, project_path: str) -> None:
         # design's spec→value map feeds the same indexed metrics table as a manual sim.
         _best = locals().get("opt")
         best_metrics = {
-            k: float(v) for k, v in (getattr(_best, "_best_metrics", None) or {}).items()
+            k: float(v)
+            for k, v in (getattr(_best, "_best_metrics", None) or {}).items()
             if isinstance(v, (int, float))
         }
-        _write_run_json(state, status=final_status, started=started, best_score=best_for_json,
-                        ended=datetime.now().isoformat(timespec="seconds"), metrics=best_metrics)
+        _write_run_json(
+            state,
+            status=final_status,
+            started=started,
+            best_score=best_for_json,
+            ended=datetime.now().isoformat(timespec="seconds"),
+            metrics=best_metrics,
+        )
         if state.project_id:
             try:
                 project_service.touch_manifest(state.project_id)
             except Exception:
-                pass
+                logger.debug("touch_manifest failed for %r", state.project_id, exc_info=True)
         state.done = True
         _enqueue(state, None)
 
 
 # ---------- replay mode ----------
+
 
 async def _run_replay(state: RunState, checkpoint_path: Path) -> None:
     """Drip-feed CSV/JSON trace rows as SSE events at ~50ms per event."""
@@ -778,6 +833,7 @@ async def _run_replay(state: RunState, checkpoint_path: Path) -> None:
 
 
 # ---------- public API ----------
+
 
 def start_run(
     *,
@@ -835,8 +891,9 @@ def stop_run(run_id: str) -> None:
         state.stop_event.set()
 
 
-def stop_runs_for(*, project_id: str | None = None, run_id: str | None = None,
-                  timeout: float = 10.0) -> tuple[int, list[str]]:
+def stop_runs_for(
+    *, project_id: str | None = None, run_id: str | None = None, timeout: float = 10.0
+) -> tuple[int, list[str]]:
     """Stop + join any IN-FLIGHT live runs matching a project or a specific run.
 
     Returns ``(attempted, still_alive)`` — the number of runs signalled to stop, and the ids
@@ -854,7 +911,8 @@ def stop_runs_for(*, project_id: str | None = None, run_id: str | None = None,
     ``finally`` (the last checkpoint/run.json write) has run, so the dir is genuinely quiescent.
     """
     targets = [
-        st for st in _runs.values()
+        st
+        for st in _runs.values()
         if not st.done
         and (run_id is None or st.run_id == run_id)
         and (project_id is None or st.project_id == project_id)
@@ -864,10 +922,7 @@ def stop_runs_for(*, project_id: str | None = None, run_id: str | None = None,
     for st in targets:
         if st.thread is not None and st.thread.is_alive():
             st.thread.join(timeout=timeout)
-    still_alive = [
-        st.run_id for st in targets
-        if st.thread is not None and st.thread.is_alive()
-    ]
+    still_alive = [st.run_id for st in targets if st.thread is not None and st.thread.is_alive()]
     return len(targets), still_alive
 
 

@@ -25,7 +25,9 @@ def test_circuit_binds_all_pdks(circuit):
 @pytest.mark.corpus
 def test_tier1_is_fully_green(tier1_results):
     failures = [r for r in tier1_results if r.status == "fail"]
-    assert not failures, "Tier 1 failures:\n" + "\n".join(f"{r.circuit} {r.check}: {r.reason}" for r in failures)
+    assert not failures, "Tier 1 failures:\n" + "\n".join(
+        f"{r.circuit} {r.check}: {r.reason}" for r in failures
+    )
     assert any(r.circuit == CIRCUIT and r.status == "pass" for r in tier1_results)
 
 

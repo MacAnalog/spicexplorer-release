@@ -193,7 +193,9 @@ def load_circuit_detail(circuit_id: str) -> dict[str, Any]:
         if entry:
             detail["schematic"] = entry.get("schematic", {})
             detail["raw"] = entry.get("raw", {})
-    detail["schematics"] = {mode: _rel(mods, p) for mode, p in _schematic_paths(mods, circuit).items() if p.is_file()}
+    detail["schematics"] = {
+        mode: _rel(mods, p) for mode, p in _schematic_paths(mods, circuit).items() if p.is_file()
+    }
     detail["results"] = _results_for(mods, circuit)
     return detail
 
@@ -257,8 +259,12 @@ def schematic_sources(circuit_id: str) -> dict[str, Any]:
                 reference.append({"name": rel, "path": _rel(mods, p)})
             elif p.suffix.lower() in (".sch", ".sym", ".asc", ".cir", ".sp", ".spice"):
                 reference_other.append(rel)
-    return {"circuit_id": circuit_id, "generated": generated,
-            "reference": reference, "reference_other": reference_other}
+    return {
+        "circuit_id": circuit_id,
+        "generated": generated,
+        "reference": reference,
+        "reference_other": reference_other,
+    }
 
 
 def reference_image(circuit_id: str, name: str) -> tuple[bytes, str] | None:
@@ -275,8 +281,12 @@ def reference_image(circuit_id: str, name: str) -> tuple[bytes, str] | None:
     if ext not in _REF_IMAGE_EXTS:
         return None
     media = {
-        ".png": "image/png", ".svg": "image/svg+xml", ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp",
+        ".png": "image/png",
+        ".svg": "image/svg+xml",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".gif": "image/gif",
+        ".webp": "image/webp",
     }[ext]
     return p.read_bytes(), media
 
@@ -362,7 +372,10 @@ def _source_netlist(cdir: Path, pdk: str | None) -> Path | None:
 
 
 def seed_from_catalog(
-    circuit_id: str, *, name: str | None = None, pdk: str | None = None,
+    circuit_id: str,
+    *,
+    name: str | None = None,
+    pdk: str | None = None,
 ) -> dict[str, Any]:
     """Create a new WORK_ROOT v2 project seeded from an analog-db catalog circuit (project-fs P5).
 
@@ -409,25 +422,34 @@ def seed_from_catalog(
         if sizing.is_file():
             shutil.copy2(sizing, cell_dir / "sizing.yaml")
 
-    atomic_write_json(pd / "topology" / "selection.json", {
-        "source": "analog-db",
-        "circuit_id": circuit_id,
-        "cell": cell,
-        "class": meta.get("class"),
-        "display_name": meta.get("display_name"),
-        "pdk": chosen_pdk,
-        "netlist_from": netlist_src.relative_to(cdir).as_posix() if netlist_src else None,
-        "provenance": meta.get("provenance", {}),
-        "selected_at": datetime.now().isoformat(timespec="seconds"),
-    }, indent=2)
+    atomic_write_json(
+        pd / "topology" / "selection.json",
+        {
+            "source": "analog-db",
+            "circuit_id": circuit_id,
+            "cell": cell,
+            "class": meta.get("class"),
+            "display_name": meta.get("display_name"),
+            "pdk": chosen_pdk,
+            "netlist_from": netlist_src.relative_to(cdir).as_posix() if netlist_src else None,
+            "provenance": meta.get("provenance", {}),
+            "selected_at": datetime.now().isoformat(timespec="seconds"),
+        },
+        indent=2,
+    )
 
     m = project_service.read_manifest(pid)
     m["source"] = {"kind": "analog-db", "ref": circuit_id, "pdk": chosen_pdk}
     m["default_pdk"] = chosen_pdk
     project_service.write_manifest(pid, m)
 
-    return {"id": pid, "circuit_id": circuit_id, "cell": cell, "pdk": chosen_pdk,
-            "netlist_seeded": netlist_src is not None}
+    return {
+        "id": pid,
+        "circuit_id": circuit_id,
+        "cell": cell,
+        "pdk": chosen_pdk,
+        "netlist_seeded": netlist_src is not None,
+    }
 
 
 def load_all_results() -> dict[str, dict[str, Any]]:
@@ -488,7 +510,9 @@ def _tb_profile(
             # Authored header: "** AUTHORED TEMPLATE — class/name: <desc>" — some templates
             # carry the description after the colon, others on the next comment line. Keep
             # the first sentence of the substance.
-            comments = [ln.lstrip("*").strip() for ln in text.lstrip().splitlines() if ln.startswith("*")]
+            comments = [
+                ln.lstrip("*").strip() for ln in text.lstrip().splitlines() if ln.startswith("*")
+            ]
             desc = ""
             if comments:
                 first = comments[0]
@@ -612,11 +636,13 @@ def _spectre_bench_view(
     templates = _load_yaml_map(eng / "analyses.yaml").get("templates") or {}
     expressions = _load_yaml_map(eng / "calculator.yaml").get("expressions") or {}
     used_templates = [
-        a["template"] for a in bench.get("analyses") or []
+        a["template"]
+        for a in bench.get("analyses") or []
         if isinstance(a, dict) and a.get("template") in templates
     ]
     used_exprs = [
-        c["expr"] for c in bench.get("calculator") or []
+        c["expr"]
+        for c in bench.get("calculator") or []
         if isinstance(c, dict) and c.get("expr") in expressions
     ]
     doc = {

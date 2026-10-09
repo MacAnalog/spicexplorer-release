@@ -19,11 +19,12 @@ def test_from_registry_loads_defaults_and_infers_polarity():
 
 
 def test_axes_grid_matches_ngspice_compose():
-    cfg = gmid.GmidConfig.from_registry("sky130", vgs=(0, 0.5, 1.0), vds=(0, 0.5, 1.0),
-                                        vsb=(0, -0.4, -0.4), length_um=[0.15, 1.0])
+    cfg = gmid.GmidConfig.from_registry(
+        "sky130", vgs=(0, 0.5, 1.0), vds=(0, 0.5, 1.0), vsb=(0, -0.4, -0.4), length_um=[0.15, 1.0]
+    )
     ax = gmid.axes(cfg)
     assert list(ax["VGS"]) == [0.0, 0.5, 1.0]
-    assert list(ax["VSB"]) == [0.0, 0.4]            # stored positive
+    assert list(ax["VSB"]) == [0.0, 0.4]  # stored positive
     assert list(ax["L"]) == [0.15, 1.0]
 
 
@@ -31,12 +32,12 @@ def test_axes_grid_matches_ngspice_compose():
 def test_deck_bsim4_sky130():
     cfg = gmid.GmidConfig.from_registry("sky130")
     deck, txt = gmid.build_deck(cfg, pdks.load_registry("sky130"))
-    assert "XM1 d g 0 b sky130_fd_pr__nfet_01v8" in deck and " nf=1 " in deck   # BSIM4 ports + nf
+    assert "XM1 d g 0 b sky130_fd_pr__nfet_01v8" in deck and " nf=1 " in deck  # BSIM4 ports + nf
     # the instance MUST reference the lx/wx params — a literal L would make `alterparam lx` a
     # no-op and every "L" slice identical (the bug the gate notebooks caught)
     assert " L={lx} W={wx} " in deck and "alterparam lx=$var1" in deck
-    assert ".noise v(n) vg lin 1 1 1 1" in deck                                  # BSIM4 noise method
-    assert "@m.xm1.msky130_fd_pr__nfet_01v8[gmbs]" in deck                       # BSIM4 gmb name + probe
+    assert ".noise v(n) vg lin 1 1 1 1" in deck  # BSIM4 noise method
+    assert "@m.xm1.msky130_fd_pr__nfet_01v8[gmbs]" in deck  # BSIM4 gmb name + probe
     assert "onoise.m.xm1.msky130_fd_pr__nfet_01v8.1overf" in deck
     assert ".lib sky130.lib.spice tt" in deck and txt.endswith(".txt")
 
@@ -44,19 +45,24 @@ def test_deck_bsim4_sky130():
 def test_deck_psp_ihp_uses_ng_and_op_and_direct_noise():
     cfg = gmid.GmidConfig.from_registry("ihp-sg13g2")
     deck, _ = gmid.build_deck(cfg, pdks.load_registry("ihp-sg13g2"))
-    assert "XM1 0 g d b sg13_lv_nmos" in deck and " ng=1 " in deck               # PSP ports + ng (not nf)
-    assert ".op" in deck and ".noise" not in deck                                # PSP: direct sid/sfl, no .noise
+    assert "XM1 0 g d b sg13_lv_nmos" in deck and " ng=1 " in deck  # PSP ports + ng (not nf)
+    assert ".op" in deck and ".noise" not in deck  # PSP: direct sid/sfl, no .noise
     assert "@n.xm1.nsg13_lv_nmos[gmb]" in deck and "@n.xm1.nsg13_lv_nmos[sid]" in deck
-    assert ".lib cornerMOSlv.lib mos_tt" in deck                                 # mos_ prefix mapped
+    assert ".lib cornerMOSlv.lib mos_tt" in deck  # mos_ prefix mapped
 
 
 def test_deck_pmos_mirrors_bias_polarity():
-    cfg = gmid.GmidConfig.from_registry("sky130", device="sky130_fd_pr__pfet_01v8",
-                                        vgs=(0, 0.5, 1.5), vds=(0, 0.5, 1.5), vsb=(0, -0.5, -0.5))
+    cfg = gmid.GmidConfig.from_registry(
+        "sky130",
+        device="sky130_fd_pr__pfet_01v8",
+        vgs=(0, 0.5, 1.5),
+        vds=(0, 0.5, 1.5),
+        vsb=(0, -0.5, -0.5),
+    )
     deck, _ = gmid.build_deck(cfg, pdks.load_registry("sky130"))
     # pmos mirrors the biases: vg/vd swept negative (stop = sgn*1.5 + half-step = -1.75, step -0.5)
     assert "stop=-1.75 step=-0.5" in deck
-    assert "DC -0 " not in deck and "DC 0 AC 1" in deck                          # zero start not '-0'
+    assert "DC -0 " not in deck and "DC 0 AC 1" in deck  # zero start not '-0'
 
 
 # ── HV/LV variant corner resolution (the `gmid.variants` override) ────────────────────────────────
@@ -94,15 +100,51 @@ def test_variant_corner_not_available_is_clear_error():
 # ── txt → LUT parse (synthetic; the reshape + cap/noise reduction) ───────────────────────────────
 def _synth_bsim4_txt(rows: list[dict]) -> str:
     """A minimal `wrdata noise1.all`-shaped table (incl. the duplicate `frequency` column)."""
-    params = ["id", "gmbs", "vth", "gm", "gds", "cgg", "cgs", "cgd", "cgb",
-              "cdd", "css", "cgdo", "cgso", "capbd", "capbs", "l"]
+    params = [
+        "id",
+        "gmbs",
+        "vth",
+        "gm",
+        "gds",
+        "cgg",
+        "cgs",
+        "cgd",
+        "cgb",
+        "cdd",
+        "css",
+        "cgdo",
+        "cgso",
+        "capbd",
+        "capbs",
+        "l",
+    ]
     pre = "@m.xm1.mDEV["
-    header = ["frequency"] + [f"{pre}{p}]" for p in params] + ["@vg[dc]", "@vd[dc]", "@vb[dc]",
-             "frequency", "onoise.m.xm1.mDEV.id", "onoise.m.xm1.mDEV.1overf"]
+    header = (
+        ["frequency"]
+        + [f"{pre}{p}]" for p in params]
+        + [
+            "@vg[dc]",
+            "@vd[dc]",
+            "@vb[dc]",
+            "frequency",
+            "onoise.m.xm1.mDEV.id",
+            "onoise.m.xm1.mDEV.1overf",
+        ]
+    )
     lines = [" ".join(header)]
     for r in rows:
-        vals = ["1.0"] + [str(r.get(p, 0.0)) for p in params] + \
-               [str(r["vg"]), str(r["vd"]), str(r["vb"]), "1.0", str(r.get("n_id", 0.0)), str(r.get("n_1f", 0.0))]
+        vals = (
+            ["1.0"]
+            + [str(r.get(p, 0.0)) for p in params]
+            + [
+                str(r["vg"]),
+                str(r["vd"]),
+                str(r["vb"]),
+                "1.0",
+                str(r.get("n_id", 0.0)),
+                str(r.get("n_1f", 0.0)),
+            ]
+        )
         lines.append(" ".join(vals))
     return "\n".join(lines) + "\n"
 
@@ -110,15 +152,54 @@ def _synth_bsim4_txt(rows: list[dict]) -> str:
 def test_parse_reshapes_and_reduces_caps():
     # 1 L × 2 VGS × 1 VDS × 1 VSB; foreach order = (L,VGS,VDS,VSB) → 2 rows
     rows = [
-        {"vg": 0.4, "vd": 0.9, "vb": 0.0, "id": 1e-7, "gm": 2e-6, "gds": 1e-7, "vth": 0.5,
-         "cgg": 1e-15, "cgs": -6e-16, "cgd": -2e-16, "cgb": -2e-16, "cdd": 3e-16, "css": 4e-16,
-         "cgdo": 1e-16, "cgso": 1e-16, "capbd": 5e-17, "capbs": 5e-17, "gmbs": 4e-7, "n_id": 2e-12, "n_1f": 3e-12},
-        {"vg": 0.8, "vd": 0.9, "vb": 0.0, "id": 1e-4, "gm": 1e-3, "gds": 5e-6, "vth": 0.5,
-         "cgg": 2e-15, "cgs": -1.2e-15, "cgd": -4e-16, "cgb": -3e-16, "cdd": 6e-16, "css": 8e-16,
-         "cgdo": 1e-16, "cgso": 1e-16, "capbd": 5e-17, "capbs": 5e-17, "gmbs": 2e-4, "n_id": 5e-12, "n_1f": 7e-12},
+        {
+            "vg": 0.4,
+            "vd": 0.9,
+            "vb": 0.0,
+            "id": 1e-7,
+            "gm": 2e-6,
+            "gds": 1e-7,
+            "vth": 0.5,
+            "cgg": 1e-15,
+            "cgs": -6e-16,
+            "cgd": -2e-16,
+            "cgb": -2e-16,
+            "cdd": 3e-16,
+            "css": 4e-16,
+            "cgdo": 1e-16,
+            "cgso": 1e-16,
+            "capbd": 5e-17,
+            "capbs": 5e-17,
+            "gmbs": 4e-7,
+            "n_id": 2e-12,
+            "n_1f": 3e-12,
+        },
+        {
+            "vg": 0.8,
+            "vd": 0.9,
+            "vb": 0.0,
+            "id": 1e-4,
+            "gm": 1e-3,
+            "gds": 5e-6,
+            "vth": 0.5,
+            "cgg": 2e-15,
+            "cgs": -1.2e-15,
+            "cgd": -4e-16,
+            "cgb": -3e-16,
+            "cdd": 6e-16,
+            "css": 8e-16,
+            "cgdo": 1e-16,
+            "cgso": 1e-16,
+            "capbd": 5e-17,
+            "capbs": 5e-17,
+            "gmbs": 2e-4,
+            "n_id": 5e-12,
+            "n_1f": 7e-12,
+        },
     ]
-    cfg = gmid.GmidConfig.from_registry("sky130", vgs=(0.4, 0.4, 0.8), vds=(0.9, 0.9, 0.9),
-                                        vsb=(0, 0, 0), length_um=[0.15])
+    cfg = gmid.GmidConfig.from_registry(
+        "sky130", vgs=(0.4, 0.4, 0.8), vds=(0.9, 0.9, 0.9), vsb=(0, 0, 0), length_um=[0.15]
+    )
     lut = gmid.parse_lut(_synth_bsim4_txt(rows), cfg)
     assert lut["GM"].shape == (1, 2, 1, 1)
     assert lut["ID"][0, 1, 0, 0] == pytest.approx(1e-4)
@@ -127,7 +208,7 @@ def test_parse_reshapes_and_reduces_caps():
     assert lut["CGG"][0, 0, 0, 0] == pytest.approx(1e-15 + 1e-16 + 1e-16)
     assert lut["CGD"][0, 0, 0, 0] == pytest.approx(-(-2e-16) + 1e-16)
     assert lut["STH"][0, 1, 0, 0] == pytest.approx((5e-12) ** 2)
-    assert lut["GMB"][0, 1, 0, 0] == pytest.approx(2e-4)   # bsim4 'gmbs' → GMB
+    assert lut["GMB"][0, 1, 0, 0] == pytest.approx(2e-4)  # bsim4 'gmbs' → GMB
 
 
 def test_parse_rejects_wrong_row_count():
@@ -144,7 +225,7 @@ def test_parse_rejects_truncated_row_loudly():
     rows = [{"vg": v, "vd": 0.9, "vb": 0.0, "id": 1e-6} for v in (0.4, 0.8)]
     txt = _synth_bsim4_txt(rows)
     lines = txt.splitlines()
-    lines[1] = " ".join(lines[1].split()[:-1])          # chop the last column of row 1
+    lines[1] = " ".join(lines[1].split()[:-1])  # chop the last column of row 1
     cfg = gmid.GmidConfig.from_registry("sky130", length_um=[0.15])
     with pytest.raises(ValueError, match="malformed wrdata row"):
         gmid.parse_lut("\n".join(lines) + "\n", cfg)
@@ -172,7 +253,7 @@ def test_variant_first_match_wins(monkeypatch):
     rigged["gmid"] = dict(real["gmid"])
     rigged["gmid"]["variants"] = [
         {"match": "_hv_", "corners": {"lib_file": "first.lib"}},
-        {"match": "hv",   "corners": {"lib_file": "second.lib"}},   # also matches sg13_hv_nmos
+        {"match": "hv", "corners": {"lib_file": "second.lib"}},  # also matches sg13_hv_nmos
     ]
     monkeypatch.setattr(pdks_mod, "load_registry", lambda name: rigged)
     cfg = gmid.GmidConfig.from_registry("ihp-sg13g2", device="sg13_hv_nmos")
@@ -186,16 +267,54 @@ def test_parse_pmos_stores_positive_magnitude_axes():
     pmos slice (strong inversion ended up tagged as VGS≈0)."""
     # foreach order (L, VGS, VDS, VSB): VGS = [0, -0.8] (a pmos sweep), one VDS=-0.9, one VSB.
     rows = [
-        {"vg": 0.0, "vd": -0.9, "vb": 0.0, "id": 1e-9, "gm": 1e-9, "gds": 1e-10, "vth": -0.5,
-         "cgg": 1e-15, "cgs": -6e-16, "cgd": -2e-16, "cgb": -2e-16, "cdd": 3e-16, "css": 4e-16,
-         "cgdo": 1e-16, "cgso": 1e-16, "capbd": 5e-17, "capbs": 5e-17, "gmbs": 1e-10},
-        {"vg": -0.8, "vd": -0.9, "vb": 0.0, "id": 1e-4, "gm": 1e-3, "gds": 5e-6, "vth": -0.5,
-         "cgg": 2e-15, "cgs": -1.2e-15, "cgd": -4e-16, "cgb": -3e-16, "cdd": 6e-16, "css": 8e-16,
-         "cgdo": 1e-16, "cgso": 1e-16, "capbd": 5e-17, "capbs": 5e-17, "gmbs": 2e-4},
+        {
+            "vg": 0.0,
+            "vd": -0.9,
+            "vb": 0.0,
+            "id": 1e-9,
+            "gm": 1e-9,
+            "gds": 1e-10,
+            "vth": -0.5,
+            "cgg": 1e-15,
+            "cgs": -6e-16,
+            "cgd": -2e-16,
+            "cgb": -2e-16,
+            "cdd": 3e-16,
+            "css": 4e-16,
+            "cgdo": 1e-16,
+            "cgso": 1e-16,
+            "capbd": 5e-17,
+            "capbs": 5e-17,
+            "gmbs": 1e-10,
+        },
+        {
+            "vg": -0.8,
+            "vd": -0.9,
+            "vb": 0.0,
+            "id": 1e-4,
+            "gm": 1e-3,
+            "gds": 5e-6,
+            "vth": -0.5,
+            "cgg": 2e-15,
+            "cgs": -1.2e-15,
+            "cgd": -4e-16,
+            "cgb": -3e-16,
+            "cdd": 6e-16,
+            "css": 8e-16,
+            "cgdo": 1e-16,
+            "cgso": 1e-16,
+            "capbd": 5e-17,
+            "capbs": 5e-17,
+            "gmbs": 2e-4,
+        },
     ]
     cfg = gmid.GmidConfig.from_registry(
-        "sky130", device="sky130_fd_pr__pfet_01v8",
-        vgs=(0, -0.8, -0.8), vds=(-0.9, -0.9, -0.9), vsb=(0, 0, 0), length_um=[0.15],
+        "sky130",
+        device="sky130_fd_pr__pfet_01v8",
+        vgs=(0, -0.8, -0.8),
+        vds=(-0.9, -0.9, -0.9),
+        vsb=(0, 0, 0),
+        length_um=[0.15],
     )
     lut = gmid.parse_lut(_synth_bsim4_txt(rows), cfg)
     # axes are positive magnitudes
@@ -229,18 +348,25 @@ def test_lut_convenience_loads_and_errors_clearly():
 def test_build_manifest_captures_dimensions_corner_and_model():
     cfg = gmid.GmidConfig.from_registry("sky130", device="sky130_fd_pr__pfet_01v8")
     lut = {
-        "INFO": "x", "CORNER": "TT", "TEMP": 300.0, "NFING": 1, "W": 5.0,
-        "L": np.array([0.15, 0.5, 2.0]), "VGS": np.array([0.0, 0.5, 1.0, 1.5]),
-        "VDS": np.array([0.0, 0.9]), "VSB": np.array([0.0, 0.4]),
-        "ID": np.zeros((3, 4, 2, 2)), "GM": np.zeros((3, 4, 2, 2)),
+        "INFO": "x",
+        "CORNER": "TT",
+        "TEMP": 300.0,
+        "NFING": 1,
+        "W": 5.0,
+        "L": np.array([0.15, 0.5, 2.0]),
+        "VGS": np.array([0.0, 0.5, 1.0, 1.5]),
+        "VDS": np.array([0.0, 0.9]),
+        "VSB": np.array([0.0, 0.4]),
+        "ID": np.zeros((3, 4, 2, 2)),
+        "GM": np.zeros((3, 4, 2, 2)),
     }
     m = gmid.build_manifest(cfg, lut)
     assert m["corner"] == "tt" and m["model_family"] == "bsim4" and m["polarity"] == "p"
-    assert m["model"]["corner_lines"] == [".lib sky130.lib.spice tt"]            # the EXACT model
-    assert m["dimensions"]["L_um"]["values"] == [0.15, 0.5, 2.0]                  # non-uniform L grid
+    assert m["model"]["corner_lines"] == [".lib sky130.lib.spice tt"]  # the EXACT model
+    assert m["dimensions"]["L_um"]["values"] == [0.15, 0.5, 2.0]  # non-uniform L grid
     assert m["dimensions"]["VGS_V"] == {"n": 4, "min": 0.0, "max": 1.5, "step": 0.5}
     assert m["dimensions"]["VSB_V"]["stored"] == "magnitude"
-    assert set(m["params"]) == {"ID", "GM"}                                       # axes/scalars excluded
+    assert set(m["params"]) == {"ID", "GM"}  # axes/scalars excluded
     assert m["conditions"] == {"temp_k": 300.0, "width_um": 5.0, "nfing": 1}
 
 
@@ -254,11 +380,15 @@ def test_manifest_reader_and_list_luts():
     if not rows:
         pytest.skip("gm/ID store not populated (regenerate with tools/regen_gmid_luts.py)")
     assert {r["device"] for r in rows} >= {"sky130_fd_pr__nfet_01v8", "sky130_fd_pr__pfet_01v8"}
-    assert all(r["manifest"] for r in rows)                 # every present LUT has its manifest
+    assert all(r["manifest"] for r in rows)  # every present LUT has its manifest
     m = gmid.manifest("sky130", "sky130_fd_pr__pfet_01v8")  # matches the pfet LUT grid (any store)
     # L count is grid-dependent (>=8; the densified registry grid is 12) — assert a floor, not a
     # brittle exact count, so grid refinements don't break the reader test.
-    assert m["pdk"] == "sky130" and m["dimensions"]["L_um"]["n"] >= 8 and m["lut_file"].endswith(".pkl")
+    assert (
+        m["pdk"] == "sky130"
+        and m["dimensions"]["L_um"]["n"] >= 8
+        and m["lut_file"].endswith(".pkl")
+    )
 
 
 # ── simulator block + per-L parallel extraction (the native/docker-less lane) ────────────────────
@@ -277,17 +407,25 @@ def test_extract_parallel_merges_per_l_slices(monkeypatch):
         assert len(one_cfg.length_um) == 1  # fan-out is one job per L
         val = float(one_cfg.length_um[0])
         return {
-            "INFO": "x", "CORNER": "TT", "TEMP": 300.0, "NFING": 1, "W": 5.0,
-            "L": np.array(one_cfg.length_um), "VGS": np.zeros(4), "VDS": np.zeros(3),
-            "VSB": np.zeros(2), "ID": np.full(shape, val), "GM": np.full(shape, 10 * val),
+            "INFO": "x",
+            "CORNER": "TT",
+            "TEMP": 300.0,
+            "NFING": 1,
+            "W": 5.0,
+            "L": np.array(one_cfg.length_um),
+            "VGS": np.zeros(4),
+            "VDS": np.zeros(3),
+            "VSB": np.zeros(2),
+            "ID": np.full(shape, val),
+            "GM": np.full(shape, 10 * val),
         }
 
     monkeypatch.setattr(gmid, "extract", fake_extract)
     lut = gmid.extract_parallel(cfg, run=None, workers=3)
     assert lut["ID"].shape == (3, 4, 3, 2)
-    assert list(lut["L"]) == [0.15, 0.5, 2.0]                      # L order preserved
+    assert list(lut["L"]) == [0.15, 0.5, 2.0]  # L order preserved
     assert lut["ID"][0].flat[0] == 0.15 and lut["ID"][2].flat[0] == 2.0
-    assert lut["GM"][1].flat[0] == 5.0                              # slices land at their own index
+    assert lut["GM"][1].flat[0] == 5.0  # slices land at their own index
 
 
 def test_extract_parallel_single_worker_falls_through(monkeypatch):
@@ -300,7 +438,7 @@ def test_extract_parallel_single_worker_falls_through(monkeypatch):
 
     monkeypatch.setattr(gmid, "extract", fake_extract)
     gmid.extract_parallel(cfg, run=None, workers=1)
-    assert called["lengths"] == cfg.length_um                       # classic one-deck path
+    assert called["lengths"] == cfg.length_um  # classic one-deck path
 
 
 def test_extract_parallel_rejects_inconsistent_slices(monkeypatch):
@@ -314,3 +452,23 @@ def test_extract_parallel_rejects_inconsistent_slices(monkeypatch):
     monkeypatch.setattr(gmid, "extract", fake_extract)
     with pytest.raises(ValueError, match="inconsistent"):
         gmid.extract_parallel(cfg, run=None, workers=2)
+
+
+# ── #76: the ngspice-lane manifest's lut_file names the .pkl the sidecar sits beside ───────────
+@pytest.mark.parametrize(
+    "temp_k, width_um, tag",
+    [(300.0, 5.0, ""), (233.15, 5.0, "__-40C"), (300.0, 1.0, "__wf1u")],
+)
+def test_manifest_lut_file_is_the_tagged_table_name(temp_k, width_um, tag):
+    reg = {"corners": {"lib_file": "models.lib", "sections": ["tt"]}}
+    lut = {k: np.linspace(0.1, 1.0, 4) for k in ("L", "VGS", "VDS", "VSB")}
+    cfg = gmid.GmidConfig(
+        pdk="sky130",
+        device="sky130_fd_pr__nfet_01v8",
+        family="nfet_01v8",
+        probe="m",
+        temp_k=temp_k,
+        width_um=width_um,
+    )
+    m = gmid.build_manifest(cfg, lut, reg)
+    assert m["lut_file"] == gmid.lut_path(cfg).name == f"sky130_fd_pr__nfet_01v8__tt{tag}.pkl"

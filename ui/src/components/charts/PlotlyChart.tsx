@@ -122,6 +122,10 @@ const DEFAULT_CONFIG: Partial<Plotly.Config> = {
   // no Plotly logo. Shown on hover so it never crowds the small panels.
   displayModeBar: "hover",
   displaylogo: false,
+  // plotly.js 4 flipped this default to true (v3 had it false), which adds a
+  // "sendChartToCloud" modebar button that uploads the chart to cloud.plotly.com.
+  // Simulation data must not leave the deployment — keep it off explicitly.
+  showSendToCloud: false,
   responsive: true,
   modeBarButtonsToRemove: ["lasso2d", "select2d"],
   modeBarButtonsToAdd: [

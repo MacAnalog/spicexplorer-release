@@ -121,7 +121,7 @@ project:
     enable: true
     description: 'raw deck: tran_step'
   optimizer_config:
-    type: ax
+    type: bayesian_ax
     random_seed: 48
     budget: 30
     name: AxConstraint

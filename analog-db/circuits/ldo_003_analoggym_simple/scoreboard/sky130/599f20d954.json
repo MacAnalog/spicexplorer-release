@@ -47,7 +47,7 @@
         "noise": {
           "measures": {
             "onoise_total": 0.0001617997,
-            "vn_out_rms": 0.01272005
+            "vn_out_rms": 0.0001617997
           },
           "status": "ok"
         },
@@ -122,7 +122,7 @@
       },
       "vn_out_rms": {
         "spec": "pass",
-        "value": 0.01272005
+        "value": 0.0001617997
       },
       "zout_peak_db": {
         "spec": "pass",
@@ -133,19 +133,19 @@
   "parameters": {
     "sizing": {
       "c_comp": "1p",
-      "x_dut_xm1_l": "2",
-      "x_dut_xm4_l": "0.5",
-      "x_dut_xmp_l": "0.5",
-      "x_dut_xm5_l": "0.5",
-      "x_dut_xmp_m": "360",
       "r_bleed": "100k",
       "r_z": "3k",
       "vb_val": 1.2,
       "vref_val": 1.8,
+      "x_dut_xm1_l": "2",
       "x_dut_xm1_w": "2",
+      "x_dut_xm4_l": "0.5",
       "x_dut_xm4_w": "80",
-      "x_dut_xmp_w": "20",
-      "x_dut_xm5_w": "100"
+      "x_dut_xm5_l": "0.5",
+      "x_dut_xm5_w": "100",
+      "x_dut_xmp_l": "0.5",
+      "x_dut_xmp_m": "360",
+      "x_dut_xmp_w": "20"
     }
   },
   "pdk": "sky130",

@@ -99,9 +99,7 @@ def test_render_template_optional_segment_drops_when_unresolved():
     assert render_template(tpl, {"TSTOP": 5e-6, "TSTEP": 1e-9}) == (
         "tran tran stop=5e-06 step=1e-09 errpreset=conservative"
     )
-    assert render_template(tpl, {"TSTOP": 5e-6}) == (
-        "tran tran stop=5e-06 errpreset=conservative"
-    )
+    assert render_template(tpl, {"TSTOP": 5e-6}) == ("tran tran stop=5e-06 errpreset=conservative")
 
 
 def test_render_template_missing_placeholder_raises():
@@ -137,7 +135,9 @@ def test_spectre_analyses_prefers_the_template_db(mini_db: Path, monkeypatch):
 
     engine = mini_db / "_shared/engines/spectre/analyses.yaml"
     engine.write_text(_ENGINE_YAML.replace("dcOp dc", "dcOp dc oppoint=logfile"))
-    op, _ac = _spectre_analyses("ac_open_loop", {"FSTART": "1k", "FSTOP": "1G", "PPD": 101}, root=mini_db)
+    op, _ac = _spectre_analyses(
+        "ac_open_loop", {"FSTART": "1k", "FSTOP": "1G", "PPD": 101}, root=mini_db
+    )
     assert op == "dcOp dc oppoint=logfile"
 
 
@@ -148,7 +148,9 @@ def test_bench_analyses_unknown_bench_raises_keyerror(mini_db: Path):
 
 def test_bench_analyses_unknown_template_is_a_config_error(mini_db: Path):
     benches = mini_db / "_shared/classes/amplifier/spectre-benches.yaml"
-    benches.write_text(_BENCHES_YAML.replace("{template: dc_op}, {template: ac}", "{template: nope}", 1))
+    benches.write_text(
+        _BENCHES_YAML.replace("{template: dc_op}, {template: ac}", "{template: nope}", 1)
+    )
     with pytest.raises(SpectreTemplateError, match="nope"):
         bench_analyses("ac_open_loop", {"FSTART": 1.0, "FSTOP": 2.0, "PPD": 3}, root=mini_db)
 

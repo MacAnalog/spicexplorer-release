@@ -46,22 +46,24 @@ def _chop_clock() -> str:
 
 def _chopper_core() -> list[str]:
     return [
-        "Bmod ( ma 0 ) bsource v=v(sig)*v(sq)",             # up-modulate: sig x square
-        "Eamp ( ea 0 ma 0 ) vcvs gain=100",                 # ideal gain block
-        "Ra ( ea amp ) resistor r=1e3",                     # amp output pole (159 MHz)
+        "Bmod ( ma 0 ) bsource v=v(sig)*v(sq)",  # up-modulate: sig x square
+        "Eamp ( ea 0 ma 0 ) vcvs gain=100",  # ideal gain block
+        "Ra ( ea amp ) resistor r=1e3",  # amp output pole (159 MHz)
         "Ca ( amp 0 ) capacitor c=1e-12",
-        "Bdem ( dm 0 ) bsource v=v(amp)*v(sq)",             # down-modulate: amp x square
-        "Ro ( dm out ) resistor r=1e4",                     # output LPF (159 kHz)
+        "Bdem ( dm 0 ) bsource v=v(amp)*v(sq)",  # down-modulate: amp x square
+        "Ro ( dm out ) resistor r=1e4",  # output LPF (159 kHz)
         "Co ( out 0 ) capacitor c=1e-10",
     ]
 
 
 def _ideal_chopper_stimulus() -> str:
-    return "\n".join([
-        _chop_clock(),
-        "Vsig ( sig 0 ) vsource dc=0 pacmag=1 pacphase=0",  # PAC small-signal excitation
-        *_chopper_core(),
-    ])
+    return "\n".join(
+        [
+            _chop_clock(),
+            "Vsig ( sig 0 ) vsource dc=0 pacmag=1 pacphase=0",  # PAC small-signal excitation
+            *_chopper_core(),
+        ]
+    )
 
 
 def _ideal_chopper_zin_stimulus() -> str:
@@ -70,13 +72,15 @@ def _ideal_chopper_zin_stimulus() -> str:
     # it senses v(sig) through an ideal bsource (no loading), so the analytic answer is
     # |Z| = Rin at the low edge, Rin/√2 at the 1 kHz corner — while the operating point
     # is genuinely periodic (the pss chop drive runs underneath).
-    return "\n".join([
-        _chop_clock(),
-        "Iin ( 0 sig ) isource dc=0 pacmag=1",              # unit small-signal current INTO sig
-        f"Rin ( sig 0 ) resistor r={RIN:.10g}",
-        f"Cin ( sig 0 ) capacitor c={CIN:.10e}",
-        *_chopper_core(),
-    ])
+    return "\n".join(
+        [
+            _chop_clock(),
+            "Iin ( 0 sig ) isource dc=0 pacmag=1",  # unit small-signal current INTO sig
+            f"Rin ( sig 0 ) resistor r={RIN:.10g}",
+            f"Cin ( sig 0 ) capacitor c={CIN:.10e}",
+            *_chopper_core(),
+        ]
+    )
 
 
 @pytest.mark.skipif(
@@ -118,7 +122,9 @@ def test_live_ideal_chopper_pac_baseband_gain(tmp_path: Path) -> None:
 
     mag = np.abs(out)
     # the chopper conveys its signal band: baseband gain == the amp gain (100 V/V = 40 dB)
-    assert mag.min() == pytest.approx(100.0, rel=0.05), f"chopper baseband gain off: {mag.min()} V/V"
+    assert mag.min() == pytest.approx(100.0, rel=0.05), (
+        f"chopper baseband gain off: {mag.min()} V/V"
+    )
     # …and it is essentially flat across the baseband (no roll-off inside 1 Hz–2 kHz)
     assert mag.max() / mag.min() < 1.1, f"baseband not flat: {mag.min()}..{mag.max()} V/V"
 
@@ -163,13 +169,19 @@ def test_live_ideal_chopper_pac_input_impedance(tmp_path: Path) -> None:
     assert freq.size == zwave.size >= 8
 
     # low edge: the resistive plateau
-    assert zwave[np.argmin(freq)] == pytest.approx(RIN, rel=0.03), f"Z_in plateau off: {zwave[0]:.4g}"
+    assert zwave[np.argmin(freq)] == pytest.approx(RIN, rel=0.03), (
+        f"Z_in plateau off: {zwave[0]:.4g}"
+    )
     # the same numbers through the registry recipe (the chopper-bench vocabulary)
-    zin_lo = measure(result, {"meas": "zin_mag", "analysis": "pac", "out": "sig"},
-                     default_analysis="ac")
+    zin_lo = measure(
+        result, {"meas": "zin_mag", "analysis": "pac", "out": "sig"}, default_analysis="ac"
+    )
     assert zin_lo == pytest.approx(RIN, rel=0.03)
-    zin_fc = measure(result, {"meas": "zin_mag", "analysis": "pac", "out": "sig", "f": 1.0e3},
-                     default_analysis="ac")
+    zin_fc = measure(
+        result,
+        {"meas": "zin_mag", "analysis": "pac", "out": "sig", "f": 1.0e3},
+        default_analysis="ac",
+    )
     assert zin_fc == pytest.approx(RIN / np.sqrt(2.0), rel=0.07), (
         f"|Z| at the 1 kHz corner should be Rin/√2: {zin_fc:.4g}"
     )

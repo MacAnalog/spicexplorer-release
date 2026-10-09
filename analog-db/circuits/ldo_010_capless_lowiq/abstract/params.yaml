@@ -1,0 +1,75 @@
+# ldo_010_capless_lowiq — DUT parameterization (spicexplorer/params@1; contract: _shared/PARAMS.md).
+#
+# DO NOT run `analog-db gen-params --circuit ldo_010_capless_lowiq --write` on this entry.
+# Everywhere else `devices:` is GENERATED from abstract/topology.cgraph.json and a refresh is
+# free; here it is AUTHORED, because this entry carries the certified design's DRAWN DEVICE SET
+# rather than the schematic shorthand. The generator's params@1 rule D-1 gives every MOS field
+# its own mechanical per-instance symbol (`x_dut_xm1a_w`), and that rule cannot express the three
+# things this port depends on:
+#
+#   * one sizing symbol shared across the half-width cards of a common-centroid pair
+#     (`XM1A`/`XM1B` are the two halves of ONE device: `w: '{x_dut_xm1_w/2}'`);
+#   * `l` shared with the device a card mirrors (`XM6`/`XMT` take `x_dut_xmbp_l`);
+#   * the pass device's finger split (`x_dut_xmp_nf_mult` divides w and multiplies m).
+#
+# A refresh would replace all of that with 30-odd new free symbols that have no sizing.yaml row
+# (Tier-1 `params:sizing` turns red) and would silently re-lower the certified point to a
+# different device set. The rows below are the netlist's OWN bindings, echoed verbatim, so the
+# generated deck reproduces `decks/candidate/` device for device.
+#
+# `groups:`/`ratios:` are AUTHORED default tying (plan D-2). This entry declares NONE on purpose:
+# the tie block would shadow the bindings above, and the certified point already carries its
+# matching in the netlist. `gen-params` reports the untied mirrors it detects as warnings — they
+# are the intended state here, not a to-do.
+schema: spicexplorer/params@1
+devices:
+  VLP: {Value: dc 0}
+  VREF: {Value: vref_val}
+  XCC: {l: c_comp_w, w: c_comp_w}
+  XCFF: {l: c_ff_w, w: c_ff_w}
+  XCOUT: {l: c_out_w, m: c_out_m, w: c_out_w}
+  XM1A: {l: x_dut_xm1_l, w: '{x_dut_xm1_w/2}'}
+  XM1B: {l: x_dut_xm1_l, w: '{x_dut_xm1_w/2}'}
+  XM2A: {l: x_dut_xm1_l, w: '{x_dut_xm1_w/2}'}
+  XM2B: {l: x_dut_xm1_l, w: '{x_dut_xm1_w/2}'}
+  XM3A: {l: x_dut_xm3_l, w: '{x_dut_xm3_w/2}'}
+  XM3B: {l: x_dut_xm3_l, w: '{x_dut_xm3_w/2}'}
+  XM4A: {l: x_dut_xm3_l, w: '{x_dut_xm3_w/2}'}
+  XM4B: {l: x_dut_xm3_l, w: '{x_dut_xm3_w/2}'}
+  XM5: {l: x_dut_xm5_l, w: x_dut_xm5_w}
+  XM6: {l: x_dut_xmbp_l, w: x_dut_xm6_w}
+  XMA: {l: x_dut_xma_l, w: x_dut_xma_w}
+  XMB: {l: x_dut_xma_l, w: x_dut_xma_w}
+  XMB0A: {l: x_dut_xmb0_l, w: '{x_dut_xmb0_w/2}'}
+  XMB0B: {l: x_dut_xmb0_l, w: '{x_dut_xmb0_w/2}'}
+  XMB1A: {l: x_dut_xmb0_l, w: '{x_dut_xmb1_w/2}'}
+  XMB1B: {l: x_dut_xmb0_l, w: '{x_dut_xmb1_w/2}'}
+  XMBP: {l: x_dut_xmbp_l, w: x_dut_xmbp_w}
+  XMC: {l: x_dut_xmc_l, w: x_dut_xmc_w}
+  XMCP: {l: x_dut_xmcp_l, w: x_dut_xmcp_w}
+  XMD: {l: x_dut_xmcp_l, w: x_dut_xmcp_w}
+  XMP: {l: x_dut_xmp_l, m: '{x_dut_xmp_m*x_dut_xmp_nf_mult}', w: '{x_dut_xmp_w/x_dut_xmp_nf_mult}'}
+  XMSA: {l: x_dut_xms_l, w: '{x_dut_xms_w/2}'}
+  XMSB: {l: x_dut_xms_l, w: '{x_dut_xms_w/2}'}
+  XMT: {l: x_dut_xmbp_l, w: x_dut_xmt_w}
+  XR1_1: {l: '{r_fb_l/8}', w: r_w}
+  XR1_2: {l: '{r_fb_l/8}', w: r_w}
+  XR1_3: {l: '{r_fb_l/8}', w: r_w}
+  XR1_4: {l: '{r_fb_l/8}', w: r_w}
+  XR1_5: {l: '{r_fb_l/8}', w: r_w}
+  XR1_6: {l: '{r_fb_l/8}', w: r_w}
+  XR1_7: {l: '{r_fb_l/8}', w: r_w}
+  XR1_8: {l: '{r_fb_l/8}', w: r_w}
+  XR2_1: {l: '{r_fb_l/8}', w: r_w}
+  XR2_2: {l: '{r_fb_l/8}', w: r_w}
+  XR2_3: {l: '{r_fb_l/8}', w: r_w}
+  XR2_4: {l: '{r_fb_l/8}', w: r_w}
+  XR2_5: {l: '{r_fb_l/8}', w: r_w}
+  XR2_6: {l: '{r_fb_l/8}', w: r_w}
+  XR2_7: {l: '{r_fb_l/8}', w: r_w}
+  XR2_8: {l: '{r_fb_l/8}', w: r_w}
+  XRB_1: {l: '{r_bias_l/5}', w: r_w}
+  XRB_2: {l: '{r_bias_l/5}', w: r_w}
+  XRB_3: {l: '{r_bias_l/5}', w: r_w}
+  XRB_4: {l: '{r_bias_l/5}', w: r_w}
+  XRB_5: {l: '{r_bias_l/5}', w: r_w}

@@ -32,7 +32,9 @@ def sniff_engine(path: str | Path) -> str | None:
             head = p.open("rb").read(64)
         except OSError:
             return None
-        if head.startswith(b"Title:") or head.startswith(b"\xff\xfeT\x00i\x00"):  # ascii / utf-16 raw
+        if head.startswith(b"Title:") or head.startswith(
+            b"\xff\xfeT\x00i\x00"
+        ):  # ascii / utf-16 raw
             return "ngspice"
         return None
     if p.is_dir():

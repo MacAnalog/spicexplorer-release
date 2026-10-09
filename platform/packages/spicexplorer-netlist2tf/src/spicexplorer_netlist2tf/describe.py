@@ -70,10 +70,13 @@ def _roots(poly_expr: sp.Expr, defs: dict[str, float] | None) -> list[ComplexRoo
     Numeric coefficients (after optionally substituting ``defs``) → ``numpy.roots``; symbolic ones →
     ``sympy.roots`` closed forms (uncapped order) with numeric coordinates when ``defs`` resolve them.
 
-    NOTE: rooting *expanded* coefficients loses roots to floating-point cancellation once they
-    span many decades — a 4th-order filter's degree-15 denominator is already enough. When the
-    numbers matter more than the closed form, use :func:`spicexplorer_netlist2tf.poles_zeros`,
-    which solves the MNA pencil directly and never forms a polynomial.
+    NOTE: with exact coefficients (ingestion keeps netlist numbers as rationals) rooting the
+    expanded polynomial is accurate on the RC ladder the pencil notebook checks (section 2):
+    coefficients spanning 1e24, roots with a residual of 1.75e-22 against the pencil's 2.79e-22.
+    The degree-15 denominator of a 4th-order filter that motivated this note was not re-checked.
+    When the symbolic determinant behind ``H(s)`` will not finish, use
+    :func:`spicexplorer_netlist2tf.poles_zeros`, which solves the MNA pencil directly and never
+    forms a polynomial.
     """
     expr = sp.expand(_bind(poly_expr, defs))
     if expr == 0 or not expr.has(S):
@@ -103,7 +106,7 @@ def _roots(poly_expr: sp.Expr, defs: dict[str, float] | None) -> list[ComplexRoo
 
 
 def _conv_type(inp: PortPair, ground: str, drive: str = "dm") -> str:
-    single = inp.neg == ground or inp.neg.lower() in GROUND_NAMES
+    single = inp.neg.lower() == ground.lower() or inp.neg.lower() in GROUND_NAMES
     if not single and drive == "cm":
         return "cm"
     return "se" if single else "diff"
@@ -163,4 +166,5 @@ def describe_tf(
         gbw_hz=gbw,
         assumptions_applied=list(simplified.ledger) if simplified is not None else [],
         validation=simplified.validation if simplified is not None else None,  # type: ignore[arg-type]
+        unmodelled=list(raw.unmodelled),  # devices the MNA never saw (Codex review, item TF-02)
     )

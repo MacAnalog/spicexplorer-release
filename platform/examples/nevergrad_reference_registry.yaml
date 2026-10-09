@@ -3,6 +3,14 @@
 # ==============================================================================
 # This file categorizes the available registry keys for the 'name' field.
 # Use these strings directly in: optimizer_config.name
+# Every name below builds with the platform's nevergrad and a package uv.lock holds
+# (tests/test_nevergrad_reference_registry.py). A name whose package comes from a platform extra is
+# marked "needs the `<extra>` extra": it builds after `uv sync --extra <extra>`, and a plain
+# `uv sync --frozen` does not install it (AXP: the `ax` extra, ax-platform).
+# Left out: names nevergrad 1.0.12 does not hold (TinyDE, MEDA, PCEDA, MPCEDA, NGOpt38, Rescaled,
+# SplitOptimizer, MultipleSingleRuns), Chaining (needs optimizer objects, not names), names whose
+# package is not in uv.lock (FCMA: fcmaes; BayesOptim, PCABO: bayes_optim), and AX (nevergrad's AX
+# imports ax.optimize, which the locked ax-platform 1.3.1 does not have, with or without the extra).
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -21,7 +29,6 @@ Differential_Evolution:
     - DiscreteDE          # Specialized for integer/discrete parameters
     - GeneticDE           # More "genetic algorithm" style mutation
     - MiniDE              # Low budget variant
-    - TinyDE              # Very low budget variant
   
   Rotation_Invariant:     # Good if parameters are highly correlated
     - RotatedTwoPointsDE
@@ -41,13 +48,9 @@ CMA_ES:
   Variants:
     - MetaCMA             # Adapts CMA settings dynamically
     - DoubleFastGADiscreteOnePlusOne # (Often beats CMA on discrete problems)
-    - FCMA                # Fast CMA
   
   Estimation_of_Distribution: # Algorithms based on probabilistic modeling
     - EDA                 # Estimation of Distribution Algorithm
-    - MEDA                # Mixed EDA
-    - PCEDA               # PC-based EDA
-    - MPCEDA              # Multi-PC EDA
     - EMNA                # Estimation of Multivariate Normal Algorithm (Isotropic/Separable)
   
   Population_Sizes:
@@ -64,7 +67,7 @@ AutoML:
     - NGOpt               # The main entry point (adapts to everything)
     - NGO                 # Base NGO implementation
     - NGOptRW             # Real-world optimized
-    - NGOpt4, NGOpt8, NGOpt10, NGOpt38, NGOpt39 # Iteration specific variants
+    - NGOpt4, NGOpt8, NGOpt10, NGOpt39 # Iteration specific variants
     - NgDS, NgDS11, NgDS2 # Competence map approaches
     - NgIoh, NgIoh10, NgIoh21 # IO-Hprofiler tuned variants
   
@@ -101,11 +104,7 @@ AutoML:
     - MultiSQPPlus        # Passive portfolio of several SQP
   
   Meta_Wrappers:          # Optimizers that modify the flow of others
-    - Chaining            # Runs Alg A, then Alg B, feeding history
-    - Rescaled            # Rescales the domain (e.g., focus on center)
-    - SplitOptimizer      # Splits variables among optimizers (Monovariate/Multivariate)
     - NoisySplit          # Non-progressive noisy split
-    - MultipleSingleRuns  # For multi-objective, runs single-obj multiple times
 
 # ------------------------------------------------------------------------------
 # 4. ONE PLUS ONE (1+1) FAMILY
@@ -172,9 +171,7 @@ Gradient_Based:
 # ------------------------------------------------------------------------------
 Bayesian:
   - BO                    # Standard Bayesian Optimization
-  - BayesOptim            # Wraps bayes-optim package
   - ParametrizedBO        # Wraps bayes_opt package with tuning
-  - PCABO                 # BO with PCA (good for higher dimensions)
   - NoisyBandit           # Upper Confidence Bound (UCB) approach
 
 # ------------------------------------------------------------------------------
@@ -186,4 +183,4 @@ Others:
   - ParametrizedTBPSA     # Tuned TBPSA
   - cGA                   # Compact Genetic Algorithm (Discrete baseline)
   - VoronoiDE             # Voronoi-based DE
-  - AX, AXP               # Wrappers for Ax platform (Facebook)
+  - AXP                   # Ax service loop (ax.service.ax_client.AxClient); needs the `ax` extra

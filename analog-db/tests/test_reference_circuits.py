@@ -29,16 +29,22 @@ def test_reference_circuits_present_and_wellformed():
         assert not schema.validation_errors(c.manifest, "circuit"), cid
         # mandatory provenance
         prov = c.manifest.get("provenance") or {}
-        assert prov.get("source") and prov.get("license"), f"{cid}: missing provenance source/license"
+        assert prov.get("source") and prov.get("license"), (
+            f"{cid}: missing provenance source/license"
+        )
         # every declared binding is either an upstream pointer or an on-disk deck dir
         assert c.references, f"{cid}: no reference bindings"
         for entry in c.references:
             if entry.get("upstream"):
-                assert entry["upstream"].startswith("http"), f"{cid}: binding {entry} has a malformed upstream URL"
+                assert entry["upstream"].startswith("http"), (
+                    f"{cid}: binding {entry} has a malformed upstream URL"
+                )
                 continue
             bdir = c.reference_dir(entry)
             assert bdir.is_dir(), f"{cid}: binding {entry} missing"
-            assert next(bdir.rglob("*.scs"), None) is not None, f"{cid}: binding {entry} has no decks"
+            assert next(bdir.rglob("*.scs"), None) is not None, (
+                f"{cid}: binding {entry} has no decks"
+            )
 
 
 def test_reference_tier0_passes_and_higher_tiers_skip():
@@ -51,8 +57,7 @@ def test_reference_tier0_passes_and_higher_tiers_skip():
     # tier-0 is environment-free except ref:parse, which skips on a pre-dialect
     # spicexplorer-core (it self-activates once the platform dialect feature is present)
     assert t0 and all(
-        r.status == "pass" or (r.check.startswith("ref:parse") and r.status == "skip")
-        for r in t0
+        r.status == "pass" or (r.check.startswith("ref:parse") and r.status == "skip") for r in t0
     )
     for tier in (1, 2):
         tier_rows = [r for r in rows if r.tier == tier]
@@ -73,8 +78,12 @@ def test_catalog_indexes_reference_bindings():
     assert entry.get("references"), "reference bindings must be indexed in the catalog"
     for b in entry["references"]:
         decks = [p for role in ("dut", "tb", "runs", "other") for p in b.get(role, [])]
-        assert b.get("upstream") or decks, f"binding {b} indexes neither an upstream pointer nor a deck"
-    assert any(b.get("upstream") for b in entry["references"]), "expected at least one upstream pointer binding"
+        assert b.get("upstream") or decks, (
+            f"binding {b} indexes neither an upstream pointer nor a deck"
+        )
+    assert any(b.get("upstream") for b in entry["references"]), (
+        "expected at least one upstream pointer binding"
+    )
 
 
 def _make_fake_ferrosim(root: Path) -> Path:

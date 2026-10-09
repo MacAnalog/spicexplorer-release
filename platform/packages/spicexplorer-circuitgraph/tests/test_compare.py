@@ -62,9 +62,17 @@ def test_consistent_relabel_and_reorder_is_equivalent():
     renamed = _relabel(
         OTA_CORE,
         {
-            "M1": "MQ", "M2": "MW", "M3": "ME", "M4": "MR", "M5": "MT",
-            "out1": "a1", "out2": "a2", "tail": "tt",
-            "vinp": "ip", "vinn": "in", "vbias": "bb",
+            "M1": "MQ",
+            "M2": "MW",
+            "M3": "ME",
+            "M4": "MR",
+            "M5": "MT",
+            "out1": "a1",
+            "out2": "a2",
+            "tail": "tt",
+            "vinp": "ip",
+            "vinn": "in",
+            "vbias": "bb",
         },
     )
     # reorder the device lines — order must not matter
@@ -133,9 +141,7 @@ def test_diode_connection_is_structural():
 # degree 2) — they are distinguishable *only* by a real isomorphism test, not the cheap pre-checks.
 _RING6 = "* ring\n" + "".join(f"R{i} n{i} n{i % 6 + 1} 1k\n" for i in range(1, 7)) + ".end\n"
 _TWO_TRIANGLES = (
-    "* triangles\n"
-    "R1 a b 1k\nR2 b c 1k\nR3 c a 1k\n"
-    "R4 d e 1k\nR5 e f 1k\nR6 f d 1k\n.end\n"
+    "* triangles\nR1 a b 1k\nR2 b c 1k\nR3 c a 1k\nR4 d e 1k\nR5 e f 1k\nR6 f d 1k\n.end\n"
 )
 
 
@@ -318,7 +324,9 @@ _OUT_PORTS = [IOPort("outp"), IOPort("outn")]
 
 def test_io_differential_swap_is_equivalent_when_swappable():
     result = compare_netlists(
-        _DIFF_BASE, _DIFF_SWAPPED, pdk=IHP_SG13G2,
+        _DIFF_BASE,
+        _DIFF_SWAPPED,
+        pdk=IHP_SG13G2,
         io_ports=[IOPort("vinp", "vinn"), *_OUT_PORTS],  # +/- interchangeable
     )
     assert result.equivalent
@@ -326,7 +334,9 @@ def test_io_differential_swap_is_equivalent_when_swappable():
 
 def test_io_differential_swap_is_caught_under_strict_polarity():
     result = compare_netlists(
-        _DIFF_BASE, _DIFF_SWAPPED, pdk=IHP_SG13G2,
+        _DIFF_BASE,
+        _DIFF_SWAPPED,
+        pdk=IHP_SG13G2,
         io_ports=[IOPort("vinp", "vinn", swappable=False), *_OUT_PORTS],
     )
     assert not result.equivalent
@@ -345,7 +355,9 @@ def test_io_ports_b_handles_differing_net_names():
     a = "* a\nV1 vin 0 dc 1\nR1 vin out 1k\n.end\n"
     b = "* b\nV1 sigin 0 dc 1\nR1 sigin sigout 1k\n.end\n"  # same circuit, different I/O names
     result = compare_netlists(
-        a, b, pdk=IHP_SG13G2,
+        a,
+        b,
+        pdk=IHP_SG13G2,
         io_ports=[IOPort("vin"), IOPort("out")],
         io_ports_b=[IOPort("sigin"), IOPort("sigout")],  # corresponds by position
     )
@@ -379,11 +391,16 @@ def test_io_port_validation():
     with pytest.raises(ValueError):
         IOPort("a", "b", "c")  # three nets
     with pytest.raises(ValueError):  # a net anchored by two ports is ambiguous
-        compare_netlists(_CHAIN_A, _CHAIN_A, pdk=IHP_SG13G2, io_ports=[IOPort("vin"), IOPort("vin")])
+        compare_netlists(
+            _CHAIN_A, _CHAIN_A, pdk=IHP_SG13G2, io_ports=[IOPort("vin"), IOPort("vin")]
+        )
     with pytest.raises(ValueError):  # per-side lists must line up by position
         compare_netlists(
-            _CHAIN_A, _CHAIN_A, pdk=IHP_SG13G2,
-            io_ports=[IOPort("vin")], io_ports_b=[IOPort("vin"), IOPort("vout")],
+            _CHAIN_A,
+            _CHAIN_A,
+            pdk=IHP_SG13G2,
+            io_ports=[IOPort("vin")],
+            io_ports_b=[IOPort("vin"), IOPort("vout")],
         )
 
 
@@ -487,8 +504,19 @@ def test_returned_mapping_is_a_valid_isomorphism():
     # Use the all-MOSFET core (strict pins) so the witness can be checked pin-exact.
     renamed = _relabel(
         OTA_CORE,
-        {"M1": "MQ", "M2": "MW", "M3": "ME", "M4": "MR", "M5": "MT",
-         "out1": "a1", "out2": "a2", "tail": "tt", "vinp": "ip", "vinn": "in", "vbias": "bb"},
+        {
+            "M1": "MQ",
+            "M2": "MW",
+            "M3": "ME",
+            "M4": "MR",
+            "M5": "MT",
+            "out1": "a1",
+            "out2": "a2",
+            "tail": "tt",
+            "vinp": "ip",
+            "vinn": "in",
+            "vbias": "bb",
+        },
     )
     ga, gb = _g(OTA_CORE), _g(renamed)
     result = compare_graphs(ga, gb)

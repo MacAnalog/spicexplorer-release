@@ -22,9 +22,7 @@ C1 out 0 100p
 .end
 """
 
-needs_ngspice = pytest.mark.skipif(
-    shutil.which("ngspice") is None, reason="ngspice not on PATH"
-)
+needs_ngspice = pytest.mark.skipif(shutil.which("ngspice") is None, reason="ngspice not on PATH")
 
 
 def test_output_folder_containing_netlist_is_refused(tmp_path: Path):
@@ -48,8 +46,8 @@ def test_separate_output_folder_constructs_and_wipes_only_itself(tmp_path: Path)
     # A never-before-seen folder is a first-touch → the documented wipe still fires.
     _WIPED_OUTPUT_FOLDERS.discard(out.resolve())
     w = NGSpice_Wrapper(netlist_filename=deck, output_folder=out, testbench_name="guard")
-    assert deck.exists()                      # input untouched
-    assert not (out / "stale.raw").exists()   # output folder re-created (documented behavior)
+    assert deck.exists()  # input untouched
+    assert not (out / "stale.raw").exists()  # output folder re-created (documented behavior)
     assert w.editor is not None
 
 
@@ -139,7 +137,10 @@ def test_ltspice_update_params_writes_c_and_r_params_verbatim():
     w = _bare_ltspice_wrapper()
     assert w.update_params({"CL": 5e-14, "RFB": 1e5, "x_dut_nfet_w": 5e-7, "Cc": 2e-12})
     assert w.netlist.params == {
-        "CL": "5e-14", "RFB": "100000.0", "x_dut_nfet_w": "5e-07", "Cc": "2e-12",
+        "CL": "5e-14",
+        "RFB": "100000.0",
+        "x_dut_nfet_w": "5e-07",
+        "Cc": "2e-12",
     }
 
 
@@ -158,4 +159,25 @@ def test_ngspice_dut_param_heuristic_is_case_insensitive():
     assert w._is_dut_param("x_dut_nfet_input_w")  # analog-db raw decks are lowercase
     assert w._is_dut_param("X_DUT_PFET_LOAD_L")
     assert not w._is_dut_param("w_pass")  # LDO knobs have no prefix — TB by heuristic,
-    assert not w._is_dut_param("VDD")     # the YAML dut_params list stays authoritative
+    assert not w._is_dut_param("VDD")  # the YAML dut_params list stays authoritative
+
+
+def test_missing_netlist_does_not_wipe_the_previous_run(tmp_path: Path):
+    """A mistyped netlist name must not destroy the previous run's artifacts (SIM-01).
+
+    `_validate` used to rmtree `output_folder` and only then check that the netlist exists, so
+    naming a netlist that is not there deleted the last run before any simulation started. The
+    adjacent guard above (a mis-pointed `output_folder` must not eat the netlist) is a different
+    check and passes either way -- this one pins the ORDER: validate the inputs, then delete.
+    """
+    out = tmp_path / "run"
+    out.mkdir()
+    keepsake = out / "previous_run.raw"
+    keepsake.write_text("the last good result")
+
+    _WIPED_OUTPUT_FOLDERS.discard(out.resolve())  # a fresh folder, as at the start of a run
+    with pytest.raises(FileNotFoundError, match="Initial netlist not found"):
+        NGSpice_Wrapper(netlist_filename=tmp_path / "typo.cir", output_folder=out)
+
+    assert keepsake.exists(), "the previous run's artifacts were deleted before input validation"
+    assert keepsake.read_text() == "the last good result"

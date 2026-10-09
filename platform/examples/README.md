@@ -13,8 +13,8 @@
 - **`notebooks/`** ([`notebooks/README.md`](notebooks/README.md)) — orchestration-style guide notebooks
   that **compose** platform tools over the analog-db corpus (multi-corner PVT sweep, in-library run,
   bench validation, …), as opposed to the per-package quickstarts under `packages/<pkg>/notebooks/`.
-- **`layout/`** ([`layout/ihp-sg13g2/README.md`](layout/ihp-sg13g2/README.md)) — prototype programmatic
-  **layout generation + physical signoff + PEX** for IHP `sg13g2` (a 5T OTA via two independent
-  generator lanes); scripts + a notebook, not yet a platform package.
+- **`layout/`** ([`layout/ihp-sg13g2/README.md`](layout/ihp-sg13g2/README.md)) — programmatic
+  **layout generation + physical signoff + PEX** for IHP `sg13g2`: the gdsfactory 5T OTA reference
+  generator and its optimizer projects, on the `spicexplorer-layout` / `spicexplorer-signoff` packages.
 - `spec_library.yaml`, `nevergrad_reference_*.yaml`, `coding_style.xml` — root reusable assets
   (a canonical copy of the first two also lives under the submodule's `_shared/`).

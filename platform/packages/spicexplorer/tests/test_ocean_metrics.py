@@ -127,9 +127,7 @@ def test_session_missing_raw_dir(tmp_path: Path) -> None:
             sess.measure(tmp_path / "nope.raw", [ac_peak_mag("peak", "v_out")])
 
 
-def test_session_respawns_after_death(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_session_respawns_after_death(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SXQ_FAKE_DIE_AFTER", "1")
     raw = tmp_path / "cand.raw"
     raw.mkdir()
@@ -142,9 +140,7 @@ def test_session_respawns_after_death(
         assert sess._proc is not None and sess._proc.pid != pid
 
 
-def test_session_timeout_kills_and_raises(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_session_timeout_kills_and_raises(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SXQ_FAKE_HANG", "1")
     raw = tmp_path / "cand.raw"
     raw.mkdir()

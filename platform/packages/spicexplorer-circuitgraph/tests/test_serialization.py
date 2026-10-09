@@ -92,8 +92,11 @@ def test_golden_flat_primitive():
     # Body pin is dropped by default — descriptions omit the BULK tie to avoid clutter.
     flat = serialize(_flat(), "flat")
     assert flat["XM1"] == {
-        "DRAIN": "net4", "GATE": "vinp", "SOURCE": "tail",
-        "type": "Nmos_Mosfet", "spice_model": "sg13_lv_nmos",
+        "DRAIN": "net4",
+        "GATE": "vinp",
+        "SOURCE": "tail",
+        "type": "Nmos_Mosfet",
+        "spice_model": "sg13_lv_nmos",
     }
 
 
@@ -101,26 +104,43 @@ def test_flat_include_body_restores_bulk():
     # Opt-in include_body=True brings the MOSFET BULK terminal back into the view.
     flat = serialize(_flat(), "flat", include_body=True)
     assert flat["XM1"] == {
-        "DRAIN": "net4", "GATE": "vinp", "SOURCE": "tail", "BULK": "vss",
-        "type": "Nmos_Mosfet", "spice_model": "sg13_lv_nmos",
+        "DRAIN": "net4",
+        "GATE": "vinp",
+        "SOURCE": "tail",
+        "BULK": "vss",
+        "type": "Nmos_Mosfet",
+        "spice_model": "sg13_lv_nmos",
     }
 
 
 def test_golden_flat_subckt_instance():
     flat = serialize(_subckt(), "flat")
     assert flat["X1"] == {
-        "vin-": "vin-", "vin+": "vin+", "vout": "out", "vdd": "vdd", "ib": "ib", "vss": "GND",
-        "type": "SubcktInstance", "subckt_name": "opamp",
+        "vin-": "vin-",
+        "vin+": "vin+",
+        "vout": "out",
+        "vdd": "vdd",
+        "ib": "ib",
+        "vss": "GND",
+        "type": "SubcktInstance",
+        "subckt_name": "opamp",
         "port_roles": {
-            "vin-": "input", "vin+": "input", "vout": "output",
-            "vdd": "power", "ib": "bias", "vss": "ground",
+            "vin-": "input",
+            "vin+": "input",
+            "vout": "output",
+            "vdd": "power",
+            "ib": "bias",
+            "vss": "ground",
         },
     }
 
 
 def test_golden_topology_text_is_stable():
     text = serialize(_subckt(), "topology")
-    assert "- SubcktInstance X1 (None): ib=ib, vdd=vdd, vin+=vin+, vin-=vin-, vout=out, vss=GND" in text
+    assert (
+        "- SubcktInstance X1 (None): ib=ib, vdd=vdd, vin+=vin+, vin-=vin-, vout=out, vss=GND"
+        in text
+    )
     assert "- out: C2.P, X1.vout" in text  # net-to-component adjacency (sorted)
 
 
@@ -194,4 +214,6 @@ def test_coverage_uses_token_membership_not_substring():
     nc = {m.name: m for m in evaluate_strategies(g)}["net_centric"]
     assert nc.net_coverage == 1.0  # both nets genuinely present (not a substring artifact)
     # a view that omits a net scores < 1.0 (structural_role_summary names no nets at all)
-    assert {m.name: m for m in evaluate_strategies(g)}["structural_role_summary"].net_coverage == 0.0
+    assert {m.name: m for m in evaluate_strategies(g)}[
+        "structural_role_summary"
+    ].net_coverage == 0.0

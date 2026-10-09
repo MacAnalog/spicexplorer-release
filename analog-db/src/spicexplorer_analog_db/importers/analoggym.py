@@ -54,18 +54,48 @@ _PAPER: dict[str, str] = {
 # template output (no symbolic: 3-stage param-arithmetic isn't netlist2tf-ingestible yet; the
 # dedicated CMRR/PSRR/vos benches are deferred with their fragments).
 _BENCHMARK_METRICS: dict[str, dict[str, Any]] = {
-    "dc_gain_db": {"display": "DC open-loop gain", "unit": "dB", "analysis": "ac_open_loop",
-                   "extract": {"meas": "dcgain"}, "spec": {"min": 100, "unit": "dB"}},
-    "ugf_hz": {"display": "Unity-gain frequency", "unit": "Hz", "analysis": "ac_open_loop",
-               "extract": {"meas": "ugf"}, "spec": {"min": "any", "unit": "Hz"}},
-    "pm_deg": {"display": "Phase margin", "unit": "deg", "analysis": "ac_open_loop",
-               "extract": {"meas": "pm"}, "spec": {"min": 45, "max": 90, "unit": "deg"}},
-    "vn_in": {"display": "Input-referred noise", "unit": "V/sqrt(Hz)", "analysis": "noise",
-              "extract": {"meas": "inoise_total"}, "spec": {"max": "any"}},
-    "i_supply": {"display": "Supply current", "unit": "A", "analysis": "dc_op",
-                 "extract": {"meas": "i_supply"}, "spec": {"max": "any"}},
-    "t_settle": {"display": "Settling time", "unit": "s", "analysis": "tran_step",
-                 "extract": {"meas": "t_settle"}, "spec": {"max": 1.0e-6, "unit": "s"}},
+    "dc_gain_db": {
+        "display": "DC open-loop gain",
+        "unit": "dB",
+        "analysis": "ac_open_loop",
+        "extract": {"meas": "dcgain"},
+        "spec": {"min": 100, "unit": "dB"},
+    },
+    "ugf_hz": {
+        "display": "Unity-gain frequency",
+        "unit": "Hz",
+        "analysis": "ac_open_loop",
+        "extract": {"meas": "ugf"},
+        "spec": {"min": "any", "unit": "Hz"},
+    },
+    "pm_deg": {
+        "display": "Phase margin",
+        "unit": "deg",
+        "analysis": "ac_open_loop",
+        "extract": {"meas": "pm"},
+        "spec": {"min": 45, "max": 90, "unit": "deg"},
+    },
+    "vn_in": {
+        "display": "Input-referred noise",
+        "unit": "V/sqrt(Hz)",
+        "analysis": "noise",
+        "extract": {"meas": "inoise_total"},
+        "spec": {"max": "any"},
+    },
+    "i_supply": {
+        "display": "Supply current",
+        "unit": "A",
+        "analysis": "dc_op",
+        "extract": {"meas": "i_supply"},
+        "spec": {"max": "any"},
+    },
+    "t_settle": {
+        "display": "Settling time",
+        "unit": "s",
+        "analysis": "tran_step",
+        "extract": {"meas": "t_settle"},
+        "spec": {"max": 1.0e-6, "unit": "s"},
+    },
 }
 _ANALYSES = ["ac_open_loop", "dc_op", "noise", "tran_step"]
 
@@ -90,8 +120,8 @@ def parse_folder(name: str) -> dict[str, Any]:
 def _read_design_variables(path: Path) -> dict[str, str]:
     """Flatten the ``.PARAM`` continuation block into {NAME: value}."""
     text = path.read_text()
-    body = re.sub(r"(?im)^\s*\.param\b", " ", text)         # drop the .PARAM keyword
-    body = re.sub(r"(?m)^\s*\+", " ", body)                  # join continuation lines
+    body = re.sub(r"(?im)^\s*\.param\b", " ", text)  # drop the .PARAM keyword
+    body = re.sub(r"(?m)^\s*\+", " ", body)  # join continuation lines
     out: dict[str, str] = {}
     for tok in body.split():
         if "=" in tok:
@@ -132,13 +162,13 @@ def _split_design_vars(dvars: dict[str, str]) -> tuple[list[dict[str, Any]], dic
     for name, val in dvars.items():
         up = name.upper()
         if up in _COND_EXACT:
-            conds[_COND_EXACT[up]] = val            # CLOAD/VCM are testbench-level conditions
+            conds[_COND_EXACT[up]] = val  # CLOAD/VCM are testbench-level conditions
         else:
             # everything else (MOSFET_*, CAPACITOR_*, RESISTOR_*, CURRENT_*_BIAS) is referenced
             # by the DUT netlist → a sizing knob that MUST be injected as a .param at assembly.
             knobs.append({"name": name, "default": val})
         if up.endswith("_BIAS") or up.startswith("CURRENT_"):
-            conds["ibias"] = val                    # also surface as a datasheet condition
+            conds["ibias"] = val  # also surface as a datasheet condition
     return sorted(knobs, key=lambda k: k["name"]), conds
 
 
@@ -192,15 +222,18 @@ def import_circuit(src_amplifier_dir: Path, folder: str, dest_circuits_root: Pat
     (cdir / "pdk" / "sky130" / "sizing.yaml").write_text(
         "# AnalogGym design variables (role-encoded). W/L in um, M integer; the netlist scales\n"
         "# them (e.g. m='4*<M>'). Defaults are the committed AnalogGym values.\n"
-        + yaml.safe_dump(sizing, sort_keys=False, width=100))
+        + yaml.safe_dump(sizing, sort_keys=False, width=100)
+    )
     (cdir / "pdk" / "sky130" / "devices.map.yaml").write_text(
         "pdk: sky130\ndevices:\n  nmos: {model: sky130_fd_pr__nfet_01v8}\n"
-        "  pmos: {model: sky130_fd_pr__pfet_01v8}\n")
+        "  pmos: {model: sky130_fd_pr__pfet_01v8}\n"
+    )
     (cdir / "pdk" / "sky130" / "corners.yaml").write_text(
         "# sky130 corner libs are out-of-repo (D-6); AnalogGym vendors them under its PDK/.\n"
         "pdk: sky130\ncorners:\n  tt: [{lib_file: sky130.lib.spice, section: tt}]\n"
         "  ss: [{lib_file: sky130.lib.spice, section: ss}]\n"
-        "  ff: [{lib_file: sky130.lib.spice, section: ff}]\ndefault_corner: tt\n")
+        "  ff: [{lib_file: sky130.lib.spice, section: ff}]\ndefault_corner: tt\n"
+    )
 
     # --- circuit.yaml ---
     comp = meta["compensation"]
@@ -211,7 +244,7 @@ def import_circuit(src_amplifier_dir: Path, folder: str, dest_circuits_root: Pat
         "display_name": f"{meta['stages']}-stage OTA — {comp} compensation ({meta['author']})",
         "compensation": comp,
         "stages": meta["stages"],
-        "ports": ["vss", "vdd", "vinn", "vinp", "vout"],   # = AnalogGym subckt order, normalized
+        "ports": ["vss", "vdd", "vinn", "vinp", "vout"],  # = AnalogGym subckt order, normalized
         "provenance": {
             "source": "AnalogGym",
             # the upstream folder + the pre-accession legacy id — the re-import match keys
@@ -232,24 +265,32 @@ def import_circuit(src_amplifier_dir: Path, folder: str, dest_circuits_root: Pat
         manifest["provenance"]["note"] = _SIM_INCOMPLETE[folder]
     (cdir / "circuit.yaml").write_text(
         "# SUPER-DSL manifest — AnalogGym import (plan Phase 5).\n"
-        + yaml.safe_dump(manifest, sort_keys=False, width=100))
+        + yaml.safe_dump(manifest, sort_keys=False, width=100)
+    )
 
     # --- datasheet.yaml (extract-only; conditions from design_variables) ---
     supply = "1.8"  # AnalogGym shipped TB / README rail
-    dconds: dict[str, Any] = {"supply": {"unit": "V", "typical": float(_eng(supply))},
-                              "corner": {"typical": "tt"}, "temp": {"unit": "degC", "typical": 27}}
+    dconds: dict[str, Any] = {
+        "supply": {"unit": "V", "typical": float(_eng(supply))},
+        "corner": {"typical": "tt"},
+        "temp": {"unit": "degC", "typical": 27},
+    }
     if "cload" in conds:
         dconds["cload"] = {"unit": "F", "typical": _eng(conds["cload"])}
     if "vcm" in conds:
         dconds["vcm"] = {"unit": "V", "typical": _eng(conds["vcm"])}
     if "ibias" in conds:
         dconds["ibias"] = {"unit": "A", "typical": _eng(conds["ibias"])}
-    datasheet = {"schema": "spicexplorer/datasheet@1", "default_conditions": dconds,
-                 "metrics": _BENCHMARK_METRICS}
+    datasheet = {
+        "schema": "spicexplorer/datasheet@1",
+        "default_conditions": dconds,
+        "metrics": _BENCHMARK_METRICS,
+    }
     (cdir / "datasheet.yaml").write_text(
         "# Datasheet — AnalogGym single-objective benchmark specs (skill §6 / Eq. 5), extract-only.\n"
         "# Conditions (cload/vcm/ibias) read from the AnalogGym design_variables.\n"
-        + yaml.safe_dump(datasheet, sort_keys=False, width=100))
+        + yaml.safe_dump(datasheet, sort_keys=False, width=100)
+    )
 
     # --- analysis bindings (the AnalogGym amps self-bias via an internal I0 source — no ibias
     #     port; the bias_wrap flag is an advisory hint for the wrapped open-loop template, deferred) ---
@@ -261,27 +302,43 @@ def import_circuit(src_amplifier_dir: Path, folder: str, dest_circuits_root: Pat
     # AC-open that loop (Cin), tran_step closes a real unity loop for settling. Validated live on ihp
     # (M4, design-review 2026-07-05).
     bindings = {
-        "ac_open_loop": ("ac_open_loop_biaswrap", True,
-                         "Open-loop AC gain/phase via the AnalogGym bias-wrap (Lfb/Cin).",
-                         "[dc_gain_db, ugf_hz, pm_deg]",
-                         f"{{VDD: {supply}, VCM: {vcm}, CL: {cl}, FSTART: 0.1, FSTOP: 1G, PPD: 50}}"),
-        "dc_op": ("dc_op_biaswrap", True,
-                  "DC operating point + supply current via the self-bias bias-wrap.", "[i_supply]",
-                  f"{{VDD: {supply}, VCM: {vcm}}}"),
-        "noise": ("noise_biaswrap", True,
-                  "Input-referred noise via the AnalogGym self-bias bias-wrap (Lfb/Cin).", "[vn_in]",
-                  f"{{VDD: {supply}, VCM: {vcm}, CL: {cl}, FSTART: 1k, FSTOP: 1G, PPD: 50}}"),
-        "tran_step": ("tran_step_biaswrap", True,
-                      "Unity-gain step settling (self-bias follower).", "[t_settle]",
-                      f"{{VDD: {supply}, VCM: {vcm}, CL: {cl}, VSTEP: 0.2, VTOL: 2m, "
-                      f"TSTART: 1u, TSTEP: 10n, TSTOP: 200u}}"),
+        "ac_open_loop": (
+            "ac_open_loop_biaswrap",
+            True,
+            "Open-loop AC gain/phase via the AnalogGym bias-wrap (Lfb/Cin).",
+            "[dc_gain_db, ugf_hz, pm_deg]",
+            f"{{VDD: {supply}, VCM: {vcm}, CL: {cl}, FSTART: 0.1, FSTOP: 1G, PPD: 50}}",
+        ),
+        "dc_op": (
+            "dc_op_biaswrap",
+            True,
+            "DC operating point + supply current via the self-bias bias-wrap.",
+            "[i_supply]",
+            f"{{VDD: {supply}, VCM: {vcm}}}",
+        ),
+        "noise": (
+            "noise_biaswrap",
+            True,
+            "Input-referred noise via the AnalogGym self-bias bias-wrap (Lfb/Cin).",
+            "[vn_in]",
+            f"{{VDD: {supply}, VCM: {vcm}, CL: {cl}, FSTART: 1k, FSTOP: 1G, PPD: 50}}",
+        ),
+        "tran_step": (
+            "tran_step_biaswrap",
+            True,
+            "Unity-gain step settling (self-bias follower).",
+            "[t_settle]",
+            f"{{VDD: {supply}, VCM: {vcm}, CL: {cl}, VSTEP: 0.2, VTOL: 2m, "
+            f"TSTART: 1u, TSTEP: 10n, TSTOP: 200u}}",
+        ),
     }
     for aid, (template, enabled, desc, produces, params) in bindings.items():
         (cdir / "analyses" / f"{aid}.yaml").write_text(
             f"# AnalogGym analysis binding ({aid}).\n"
             f"schema: spicexplorer/analysis@1\nid: {aid}\ntemplate: {template}\n"
-            f"description: \"{desc}\"\nenabled: {str(enabled).lower()}\n"
-            f"params: {params}\nflags: []\nproduces: {produces}\n")
+            f'description: "{desc}"\nenabled: {str(enabled).lower()}\n'
+            f"params: {params}\nflags: []\nproduces: {produces}\n"
+        )
 
     (cdir / "README.md").write_text(
         f"# {cid} — {meta['stages']}-stage OTA, {comp} compensation\n\n"
@@ -292,15 +349,15 @@ def import_circuit(src_amplifier_dir: Path, folder: str, dest_circuits_root: Pat
         "  design-variable symbols preserved.\n"
         "- `pdk/sky130/sizing.yaml` — the AnalogGym design variables (W/L/M + compensation passives).\n"
         "- `datasheet.yaml` — extract-only benchmark specs (skill §6); per-topology CLoad from the\n"
-        "  AnalogGym design_variables. Sim/symbolic deferred (needs the AnalogGym sky130 PDK).\n")
+        "  AnalogGym design_variables. Sim/symbolic deferred (needs the AnalogGym sky130 PDK).\n"
+    )
     return cdir
 
 
 def _eng(s: str) -> float:
     """Parse an eng-suffixed value (10p, 60u, 300m, 1.8) to float."""
     s = s.strip()
-    mult = {"f": 1e-15, "p": 1e-12, "n": 1e-9, "u": 1e-6, "m": 1e-3,
-            "k": 1e3, "meg": 1e6, "g": 1e9}
+    mult = {"f": 1e-15, "p": 1e-12, "n": 1e-9, "u": 1e-6, "m": 1e-3, "k": 1e3, "meg": 1e6, "g": 1e9}
     low = s.lower()
     for suf in ("meg", "f", "p", "n", "u", "m", "k", "g"):
         if low.endswith(suf):

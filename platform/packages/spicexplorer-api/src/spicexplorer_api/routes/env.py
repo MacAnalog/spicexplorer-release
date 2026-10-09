@@ -4,6 +4,7 @@ The Studio UI calls ``GET /api/env`` on load to decide whether live optimization
 possible. On a machine without the IHP ``ihp-sg13g2`` PDK (e.g. this personal Mac),
 ``live_runs_enabled`` is False and the frontend steers the user to Replay.
 """
+
 from __future__ import annotations
 
 from fastapi import APIRouter
@@ -20,6 +21,7 @@ class EnvResponse(BaseModel):
     Matches ``probe_env()`` exactly, so declaring it as ``response_model`` types the
     OpenAPI schema (→ codegen) without changing what the route returns.
     """
+
     ngspice_path: str | None
     ngspice_ok: bool
     pdk_root: str | None

@@ -3,6 +3,7 @@
 These expose the P4/P5 kernel (build_state, render_project_md, append_decision) so an MCP
 server or the UI reads "where is this design at" without globbing — plan §3.6/D-10.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -39,8 +40,10 @@ def test_state_endpoint_returns_rollup(client, project):
 
 
 def test_decisions_append_then_render_context(client, project):
-    r = client.post(f"/api/projects/{project}/decisions",
-                    json={"summary": "chose folded cascode", "by": "agent", "kind": "topology"})
+    r = client.post(
+        f"/api/projects/{project}/decisions",
+        json={"summary": "chose folded cascode", "by": "agent", "kind": "topology"},
+    )
     assert r.status_code == 200 and r.json()["ok"] is True
 
     ctx = client.get(f"/api/projects/{project}/context")
@@ -53,7 +56,9 @@ def test_decisions_append_then_render_context(client, project):
 
 def test_runs_kind_filter(client, project):
     # No runs yet — the filter is a passthrough that must not error.
-    assert client.get(f"/api/projects/{project}/runs", params={"kind": "xschem"}).json()["runs"] == []
+    assert (
+        client.get(f"/api/projects/{project}/runs", params={"kind": "xschem"}).json()["runs"] == []
+    )
     assert client.get(f"/api/projects/{project}/runs").json()["runs"] == []
 
 
@@ -70,5 +75,7 @@ def test_get_state_and_context_are_side_effect_free(client, project, work):
 def test_unknown_project_404s(client):
     assert client.get("/api/projects/ghost-00000000/state").status_code == 404
     assert client.get("/api/projects/ghost-00000000/context").status_code == 404
-    assert client.post("/api/projects/ghost-00000000/decisions",
-                       json={"summary": "x"}).status_code == 404
+    assert (
+        client.post("/api/projects/ghost-00000000/decisions", json={"summary": "x"}).status_code
+        == 404
+    )

@@ -52,8 +52,13 @@ class _UnmergeableResult:
 
 def _ac_target(name: str, meas: str) -> TargetSpec:
     return TargetSpec(
-        name=name, testbench="tb_ac", target=1e6, goal="exceed", sim_type="ac",
-        range=1e6, measurement={"meas": meas, "out": "v_out"},
+        name=name,
+        testbench="tb_ac",
+        target=1e6,
+        goal="exceed",
+        sim_type="ac",
+        range=1e6,
+        measurement={"meas": meas, "out": "v_out"},
     )
 
 
@@ -64,33 +69,65 @@ def test_target_tier_discrimination():
     assert py.has_python_measurement() and not py.has_ocean_measurement()
 
     oc = TargetSpec(
-        name="gain", testbench="tb_ac", target=1.0, goal="exceed", sim_type="ac",
-        range=1.0, measurement={"builder": "device_op_param", "instance": "XM1", "param": "gm"},
+        name="gain",
+        testbench="tb_ac",
+        target=1.0,
+        goal="exceed",
+        sim_type="ac",
+        range=1.0,
+        measurement={"builder": "device_op_param", "instance": "XM1", "param": "gm"},
     )
     assert oc.measurement_tier() == "ocean"
     assert oc.has_ocean_measurement() and not oc.has_python_measurement()
 
-    plain = TargetSpec(name="v_out", testbench="tb", target=1.0, goal="exceed", sim_type="dc", range=1.0)
+    plain = TargetSpec(
+        name="v_out", testbench="tb", target=1.0, goal="exceed", sim_type="dc", range=1.0
+    )
     assert plain.measurement_tier() is None
 
 
 def test_target_measurement_shape_validation():
     with pytest.raises(ValueError, match="meas"):
-        TargetSpec(name="g", testbench="tb", target=1.0, goal="exceed", sim_type="ac",
-                   range=1.0, measurement={"meas": ""})
+        TargetSpec(
+            name="g",
+            testbench="tb",
+            target=1.0,
+            goal="exceed",
+            sim_type="ac",
+            range=1.0,
+            measurement={"meas": ""},
+        )
     with pytest.raises(ValueError, match="one of"):
-        TargetSpec(name="g", testbench="tb", target=1.0, goal="exceed", sim_type="ac",
-                   range=1.0, measurement={"nonsense": 1})
+        TargetSpec(
+            name="g",
+            testbench="tb",
+            target=1.0,
+            goal="exceed",
+            sim_type="ac",
+            range=1.0,
+            measurement={"nonsense": 1},
+        )
 
 
 # ------------------------------------------------------------- build_recipes + validate
 def test_build_recipes_python_only_and_validated():
-    specs = ListTargetSpec([
-        _ac_target("ugf_hz", "ugf"),
-        TargetSpec(name="gain", testbench="tb_ac", target=1.0, goal="exceed", sim_type="ac",
-                   range=1.0, measurement={"builder": "ac_peak_mag", "signal": "v_out"}),  # OCEAN — skipped
-        TargetSpec(name="v_out", testbench="tb_dc", target=1.0, goal="exceed", sim_type="dc", range=1.0),  # no recipe
-    ])
+    specs = ListTargetSpec(
+        [
+            _ac_target("ugf_hz", "ugf"),
+            TargetSpec(
+                name="gain",
+                testbench="tb_ac",
+                target=1.0,
+                goal="exceed",
+                sim_type="ac",
+                range=1.0,
+                measurement={"builder": "ac_peak_mag", "signal": "v_out"},
+            ),  # OCEAN — skipped
+            TargetSpec(
+                name="v_out", testbench="tb_dc", target=1.0, goal="exceed", sim_type="dc", range=1.0
+            ),  # no recipe
+        ]
+    )
     recipes = build_recipes(specs)
     assert set(recipes) == {"tb_ac"}
     assert [name for name, _r, _a in recipes["tb_ac"]] == ["ugf_hz"]
@@ -103,9 +140,13 @@ def test_build_recipes_rejects_unknown_meas_at_load():
 
 
 def test_build_returns_none_without_python_recipes():
-    specs = ListTargetSpec([
-        TargetSpec(name="v_out", testbench="tb", target=1.0, goal="exceed", sim_type="dc", range=1.0),
-    ])
+    specs = ListTargetSpec(
+        [
+            TargetSpec(
+                name="v_out", testbench="tb", target=1.0, goal="exceed", sim_type="dc", range=1.0
+            ),
+        ]
+    )
     assert MeasureMergeContext.build(specs) is None
 
 
@@ -113,7 +154,9 @@ def test_build_returns_none_without_python_recipes():
 def test_merge_folds_scalars_into_result():
     freq = np.logspace(0, 9, 4000)
     result = _FakeResult({"frequency": freq, "v_out": _single_pole(freq)})
-    ctx = MeasureMergeContext.build(ListTargetSpec([_ac_target("ugf_hz", "ugf"), _ac_target("pm_deg", "pm")]))
+    ctx = MeasureMergeContext.build(
+        ListTargetSpec([_ac_target("ugf_hz", "ugf"), _ac_target("pm_deg", "pm")])
+    )
     assert ctx is not None
 
     ctx.merge({"tb_ac": result})

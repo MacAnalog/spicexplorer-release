@@ -5,8 +5,29 @@ protocol takes the abstract :class:`~.ingest.N2XCircuit` (not a graph), so a ric
 dropped in later — e.g. a topology-aware one that reads ``circuit.supply`` to put PMOS near VDD and
 NMOS near VSS — without changing the emit pipeline.
 
-v1 ships :class:`GridPlacer`: a deterministic grid (devices sorted by ref). :class:`TopologyPlacer`
-is the readable one used by default.
+**Which placer is live, measured (issue #177 SCH-02).** A review flagged this module's 1,078 lines
+as multiple algorithms behind one documented path. All three are reachable and each answers a
+different question, so the surface is recorded here rather than reduced:
+
+=================== ============================= ==================================================
+placer              reached from                  why it exists
+=================== ============================= ==================================================
+:class:`PhasedPlacer` the default; ``--placer      the readable sheet: phases, chains, column
+                    phased``; ``stamp.py``'s      spacing, annotation-aware clustering. What every
+                    ``base``                      ordinary port draws.
+:class:`TopologyPlacer` ``--placer topology``      the COMPACT sheet. Its ``_columns`` walks the
+                                                  signal path, so a wide drawing (a 20-device
+                                                  commercial-kit OTA) fits where the phased one
+                                                  spreads past the page (#159).
+:class:`GridPlacer`   ``--placer grid``            the deterministic fallback: refs sorted, no
+                                                  topology read. What to reach for when a placer
+                                                  bug is suspected, and the reference a regression
+                                                  is diffed against.
+=================== ============================= ==================================================
+
+``test_placement_surface.py`` holds that claim honest: it places a real circuit through every
+entry of the CLI's ``PLACERS`` map, and it fails on any function in this module that nothing
+calls — so dead code cannot accumulate here again unnoticed.
 
 **Block-aware placement.** ``place`` also accepts an optional :class:`PlacementHints` carrying
 *device-ref clusters* — groups of instance refs an upstream detector recognised as one functional
@@ -28,12 +49,65 @@ from typing import Protocol, runtime_checkable
 
 from .analysis import TopologyInfo, analyze
 from .geometry import Transform, snap
-from .ingest import DeviceKind, N2XCircuit
+from .ingest import Device, DeviceKind, N2XCircuit
 from .sym_library import SymLibrary
 
-__all__ = ["Placer", "PlacementHints", "GridPlacer", "TopologyPlacer", "PhasedPlacer", "place_with_hints"]
+__all__ = [
+    "Placer",
+    "PlacementHints",
+    "GridPlacer",
+    "TopologyPlacer",
+    "PhasedPlacer",
+    "place_with_hints",
+    "text_reach",
+]
 
 _SOURCE_KINDS = frozenset({DeviceKind.VSOURCE, DeviceKind.ISOURCE})  # independent V/I sources
+
+# Attribute-text geometry, mirrored from emit/wiring: the symbol draws its text just outside the
+# body, on the +x side (flipped to −x by a device flip).
+_SYM_HALF = 30  # half the device body width (gate at −20, drain/source/bulk at +20)
+# 60, not 22 (issue #244): the generic MOS symbols anchor their `@w\/@l\/@m` (hsize 0.2) and
+# `@model` (hsize 0.15) lines at local x=60, so the drain/source pin column at x=+-20 -- and every
+# wire, lead and label stub the wiring layer draws on it -- is clear of the text instead of running
+# through it. The 40 units between the column and the anchor are an overflow budget for the
+# MIRRORED case: a flipped device mirrors the anchor and xschem right-justifies the string using
+# its OWN width estimate, while the SVG export draws a wider proportional font from that same left
+# edge, so the string overruns its box to the right -- measured ~3.0 drawn units per character at
+# hsize 0.2 and ~2.4 at 0.15. 40 units therefore cover roughly 13 characters of sizing text and 16
+# of model name; a longer one grazes the column again, on flipped devices only.
+_TEXT_X0 = 60  # where the attribute text starts
+_CHAR_W = 8  # drawn width of one attribute-text character
+_TEXT_CLEAR = 24  # clear gap kept between one device's text band and the next device
+
+
+def text_reach(dev: Device, *, x0: int = _TEXT_X0, char_w: int = _CHAR_W) -> int:
+    """How far a device's attribute text reaches from its body, from the strings it actually draws.
+
+    Conservative by design: it measures the raw, un-abbreviated values, so a reserved lane is never
+    shorter than what :mod:`~spicexplorer_netlist2xschem.emit` writes.
+
+    * A **MOSFET** draws its model name and ``w``/``l``/``ng``/``m``.
+    * **Everything else** draws the ``value`` slot — which for a passive is its value and for an
+      independent **source is its whole stimulus specification**. That is the case this function
+      existed to miss: a source has no ``model``, so sizing its lane from ``model`` alone reserved
+      ``x0`` and nothing more, while the symbol drew a pulse spec ~40 characters wide straight
+      through the next source on the sheet (issue #223). The stimulus is the one thing a reviewer
+      opens a transient bench sheet to read.
+    """
+    if dev.kind is DeviceKind.MOS:
+        params = {k.lower(): v for k, v in dev.params.items()}
+        strings = [str(dev.model or "")]
+        strings += [f"{k}={params[k]}" for k in ("w", "l", "ng", "m") if k in params]
+    else:
+        # ``model`` IS the value slot for a two-terminal device the way ingest fills it in (a SPICE
+        # ``V1 a 0 PULSE(…)`` lands there whole); a ``value`` parameter is honoured as well, so a
+        # front-end that carries the stimulus under that name is measured too.
+        strings = [str(dev.model or "")]
+        strings += [
+            str(v) for k, v in dev.params.items() if k.lower() == "value" and v not in (None, "")
+        ]
+    return x0 + max((len(s) for s in strings), default=0) * char_w
 
 
 @dataclass(frozen=True)
@@ -95,14 +169,23 @@ def place_with_hints(
     by inspecting the signature instead of catching."""
     if hints is not None:
         params = inspect.signature(placer.place).parameters
-        if "hints" in params or any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values()):
+        if "hints" in params or any(
+            p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values()
+        ):
             return placer.place(circuit, lib, hints=hints)
     return placer.place(circuit, lib)
 
 
 @dataclass
 class GridPlacer:
-    """Lay devices on a coarse grid, sorted by ref. rot/flip are 0 (v1)."""
+    """Lay devices on a coarse grid, sorted by ref. rot/flip are 0 (v1).
+
+    Columns are ``pitch_x`` apart unless a column's widest **attribute text** needs more room, in
+    which case that column is widened to clear it (:func:`text_reach`). Without that, a testbench —
+    which is exactly the shape that lands here, since :class:`PhasedPlacer` falls back to this
+    placer when a deck has no MOSFET to lay out topologically — drew every source's stimulus
+    straight through its right-hand neighbour (issue #223).
+    """
 
     cols: int | None = None
     pitch_x: int = 240
@@ -120,11 +203,22 @@ class GridPlacer:
         devices = sorted(circuit.devices, key=lambda d: d.ref)
         n = len(devices)
         cols = self.cols or max(1, math.ceil(math.sqrt(n)))
+        # Column x's first: each column is as wide as its widest text lane, never narrower than
+        # pitch_x, so a grid of short-valued devices keeps the coordinates it always had.
+        need: dict[int, int] = {}
+        for i, dev in enumerate(devices):
+            col = i % cols
+            need[col] = max(need.get(col, 0), text_reach(dev) + _SYM_HALF + _TEXT_CLEAR)
+        col_x: dict[int, int] = {}
+        cursor = self.origin_x
+        for col in range(cols):
+            col_x[col] = cursor
+            cursor += max(self.pitch_x, need.get(col, 0))
         out: dict[str, Transform] = {}
         for i, dev in enumerate(devices):
             col, row = i % cols, i // cols
             out[dev.ref] = Transform(
-                x=snap(self.origin_x + col * self.pitch_x),
+                x=snap(col_x[col]),
                 y=snap(self.origin_y + row * self.pitch_y),
                 rot=0,
                 flip=0,
@@ -205,9 +299,7 @@ class TopologyPlacer:
 
     # ----------------------------------------------------------------- columns
 
-    def _columns(
-        self, circuit: N2XCircuit, info: TopologyInfo
-    ) -> tuple[dict[str, int], set[str]]:
+    def _columns(self, circuit: N2XCircuit, info: TopologyInfo) -> tuple[dict[str, int], set[str]]:
         """An x per device plus the set of **anchor** refs (the two main-leg stacks and the centred tail
         device) that row-alignment must not move: vertical branches become columns, the two main legs sit
         astride centre with the diff pair between them, and every other (bias) branch is packed into a
@@ -397,7 +489,9 @@ class TopologyPlacer:
                     ):
                         for r in members(root):
                             x_of[r] = center_x
-                        anchor_refs.update(members(root))  # the tail device defines its mirror's row
+                        anchor_refs.update(
+                            members(root)
+                        )  # the tail device defines its mirror's row
                         tail_gates |= gate_nets(root)
                         placed.add(root)
                 # the tail mirror's diode reference parks just beside the centred device so the pair
@@ -407,8 +501,13 @@ class TopologyPlacer:
                 adj = center_x - self.bias_pitch
                 for root in sorted(bias_roots, key=minref):
                     ms = members(root)
-                    if root not in placed and len(ms) == 1 and (
-                        ms[0] in info.diode_refs and by_ref[ms[0]].nets.get("GATE") in tail_gates
+                    if (
+                        root not in placed
+                        and len(ms) == 1
+                        and (
+                            ms[0] in info.diode_refs
+                            and by_ref[ms[0]].nets.get("GATE") in tail_gates
+                        )
                     ):
                         x_of[ms[0]] = adj
                         placed.add(root)
@@ -597,9 +696,7 @@ class TopologyPlacer:
                 prev = nx
 
 
-def _assign_gate_flips(
-    circuit: N2XCircuit, info: TopologyInfo, out: dict[str, Transform]
-) -> None:
+def _assign_gate_flips(circuit: N2XCircuit, info: TopologyInfo, out: dict[str, Transform]) -> None:
     """Flip each device so that two MOSFETs sharing a gate net face **gate-to-gate**.
 
     The gate sits on a MOS symbol's left edge, so ``flip=1`` points it right. A column points its
@@ -688,7 +785,7 @@ class PhasedPlacer:
     # flipped to −x by a device flip). Estimated from the device's own strings — conservative (raw,
     # un-abbreviated) so a lane is never under-sized.
     _SYM_HALF: int = 30  # half the device body width (gate at −20, drain/source/bulk at +20)
-    _TEXT_X0: int = 22  # where the parameter text starts, just past the body
+    _TEXT_X0: int = 60  # where the parameter text starts (see the module constant: issue #244)
     _CHAR_W: int = 8  # drawn width of one attribute-text character
     _TEXT_CLEAR: int = 24  # clear gap kept between one device's text band and the next device
 
@@ -714,8 +811,7 @@ class PhasedPlacer:
         pair_src_nets = {
             s
             for a, b in info.pairs
-            if (s := by_ref[a].nets.get("SOURCE")) is not None
-            and s == by_ref[b].nets.get("SOURCE")
+            if (s := by_ref[a].nets.get("SOURCE")) is not None and s == by_ref[b].nets.get("SOURCE")
         }
         chain_of = self._chains(mos, supply, pair_src_nets, row)
         chains: dict[str, list[str]] = defaultdict(list)
@@ -801,11 +897,15 @@ class PhasedPlacer:
                 if o != ref and o in chain_of and chain_of[o] in real_set
             } - {chain_of[ref]}
 
-        for c in interstitial:  # drop each between the real columns it bridges (else among its block)
+        for (
+            c
+        ) in interstitial:  # drop each between the real columns it bridges (else among its block)
             r = chains[c][0]
             cols = connected_cols(r, real_set) or cluster_cols(r)
-            x[r] = sum(col_x[c2] for c2 in cols) / len(cols) if cols else (
-                sum(col_x.values()) / len(col_x) if col_x else 0.0
+            x[r] = (
+                sum(col_x[c2] for c2 in cols) / len(cols)
+                if cols
+                else (sum(col_x.values()) / len(col_x) if col_x else 0.0)
             )
 
         # Centre about x=0 on the differential pair's midpoint when there is one (so the input stage
@@ -872,7 +972,9 @@ class PhasedPlacer:
             on = ds_on[net]
             uniq = sorted(set(on))
             if len(on) == 2 and len(uniq) == 2 and level[uniq[0]] != level[uniq[1]]:
-                parent[find(uniq[0])] = find(uniq[1])  # two distinct devices, different rows → series
+                parent[find(uniq[0])] = find(
+                    uniq[1]
+                )  # two distinct devices, different rows → series
         return {r: find(r) for r in refs}
 
     def _assign_columns(
@@ -930,8 +1032,12 @@ class PhasedPlacer:
         they straddle two columns — the Miller/feed-forward case. Placed in sorted order so a later
         passive can stack beside an earlier one deterministically."""
         supply = info.vdd_nets | info.vss_nets
-        xds_on_net: dict[str, list[int]] = defaultdict(list)  # drain/source columns (the current path)
-        xany_on_net: dict[str, list[int]] = defaultdict(list)  # any pin (fallback for gate-only nets)
+        xds_on_net: dict[str, list[int]] = defaultdict(
+            list
+        )  # drain/source columns (the current path)
+        xany_on_net: dict[str, list[int]] = defaultdict(
+            list
+        )  # any pin (fallback for gate-only nets)
         for d in circuit.devices:
             if d.kind is DeviceKind.MOS and d.ref in out:
                 for pin, net in d.nets.items():
@@ -945,7 +1051,9 @@ class PhasedPlacer:
             return int(round(sum(xs) / len(xs))) if xs else fallback
 
         passives = [
-            d for d in circuit.devices if d.kind is not DeviceKind.MOS and d.kind not in _SOURCE_KINDS
+            d
+            for d in circuit.devices
+            if d.kind is not DeviceKind.MOS and d.kind not in _SOURCE_KINDS
         ]
         for d in sorted(passives, key=lambda d: d.ref):
             nets = [n for n in d.nets.values() if n is not None]
@@ -976,28 +1084,41 @@ class PhasedPlacer:
         sources = [d for d in circuit.devices if d.kind in _SOURCE_KINDS]
         if not sources or not out:
             return
+        # The lane a source's own text needs, not the generic column pitch. `vsource.sym` draws
+        # `@value`, and a pulse specification is several times `col_pitch` wide — stacking sources at
+        # the column pitch drew each one's stimulus through the next (issue #223).
+        lane = max(self._text_reach(d) for d in sources) + self._TEXT_CLEAR
+        pitch = max(self.col_pitch, lane + self._SYM_HALF)  # source stack to source stack
         xs = [t.x for t in out.values()]
         ys = [t.y for t in out.values()]
-        left, bottom, top = min(xs) - self.col_pitch, max(ys), min(ys)
+        # The FIRST gap is not source-to-source: the leftmost circuit column may be FLIPPED, and a
+        # flipped device points its own w/l/model band left, straight at the source stack. Clearing
+        # only the body half-width there put the two bands on top of each other as soon as the text
+        # lane grew (#244); measure the edge column's actual leftward reach instead.
+        edge_x = min(xs)
+        by_ref = {d.ref: d for d in circuit.devices}
+        edge_reach = max(
+            (
+                self._text_reach(by_ref[ref]) if t.flip else self._SYM_HALF
+                for ref, t in out.items()
+                if t.x == edge_x and ref in by_ref
+            ),
+            default=self._SYM_HALF,
+        )
+        left, bottom, top = edge_x - max(pitch, lane + edge_reach), max(ys), min(ys)
         x, y = left, bottom
         for d in sorted(sources, key=lambda d: d.ref):
-            if y < top:  # stack reached the top of the floorplan — wrap to a new column further left
-                x -= self.col_pitch
+            if (
+                y < top
+            ):  # stack reached the top of the floorplan — wrap to a new column further left
+                x -= pitch
                 y = bottom
             out[d.ref] = Transform(x=snap(x), y=snap(y), rot=0, flip=0)
             y -= self.row_pitch
 
-    def _text_reach(self, dev) -> int:
-        """How far a device's parameter text reaches from its body, estimated from its own drawn
-        strings (model + w/l/ng/m, or a passive's value). Conservative: uses the raw, un-abbreviated
-        param values, so the reserved lane is never shorter than what emit actually draws."""
-        if dev.kind is DeviceKind.MOS:
-            params = {k.lower(): v for k, v in dev.params.items()}
-            strings = [str(dev.model or "")]
-            strings += [f"{k}={params[k]}" for k in ("w", "l", "ng", "m") if k in params]
-        else:
-            strings = [str(dev.model or "")]
-        return self._TEXT_X0 + max((len(s) for s in strings), default=0) * self._CHAR_W
+    def _text_reach(self, dev: Device) -> int:
+        """This placer's text lane for ``dev`` — :func:`text_reach` with its own geometry knobs."""
+        return text_reach(dev, x0=self._TEXT_X0, char_w=self._CHAR_W)
 
     def _space_columns(self, circuit: N2XCircuit, out: dict[str, Transform]) -> None:
         """Widen any inter-column gap too small for the two columns' facing parameter-text bands.
@@ -1025,7 +1146,9 @@ class PhasedPlacer:
         new_x = {xs[0]: xs[0]}
         for i in range(1, len(xs)):
             xi = xs[i]
-            cand = xi + (new_x[xs[i - 1]] - xs[i - 1])  # default: preserve the original gap (carry shift)
+            cand = xi + (
+                new_x[xs[i - 1]] - xs[i - 1]
+            )  # default: preserve the original gap (carry shift)
             for j in range(i):
                 shared = col[xs[j]].keys() & col[xi].keys()
                 if not shared:

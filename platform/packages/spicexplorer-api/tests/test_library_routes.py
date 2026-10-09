@@ -7,8 +7,9 @@ Two groups:
   optional-submodule contract regardless of whether analog-db is installed in the env.
 * **Live contract** (run only when the analog-db submodule is checked out): the catalog,
   per-circuit datasheet + recorded results, class registry, and template library shapes — with
-  a few values pinned against the committed DB (the 5t OTA's sky130 numbers, the telescopic
-  cascode's symbolic cross-check, the current-mirror templates).
+  a few values pinned against the committed DB (the 5t OTA's sky130 numbers, the current-mirror
+  templates). The symbolic cross-check is compared with the scoreboard entries that record one,
+  found in the DB at test time, not with typed-in numbers.
 
 No SPICE: everything is reads of committed JSON/YAML.
 """
@@ -157,14 +158,117 @@ def test_bulk_results_map(client):
     assert all(results[cid] for cid in by_circuit)  # no empty per-circuit maps
 
 
+def _served_crosscheck(entry: dict) -> dict | None:
+    """The ``symbolic`` value the detail route should serve for one scoreboard entry: the
+    entry's ``tt`` dc-gain cross-check under the route's field names, or ``None`` when the
+    entry has no cross-check."""
+    block = (entry.get("corners") or {}).get("tt") or {}
+    dc = ((block.get("symbolic_crosscheck") or {}).get("metrics") or {}).get("dc_gain_db")
+    if not dc:
+        return None
+    return {
+        "sym": dc.get("symbolic"),
+        "sim": dc.get("sim"),
+        "err": dc.get("abs_error"),
+        "tol": dc.get("tolerance"),
+        "agrees": dc.get("agrees"),
+    }
+
+
+def _db() -> SimpleNamespace:
+    """The analog-db ``model``, ``paths`` and ``scoreboard`` modules, taken from the service
+    that the route uses. The package is optional and absent when the type checker runs, so this
+    file does not import it by name."""
+    mods = library_db._modules()
+    assert mods is not None, "spicexplorer_analog_db does not import"
+    return mods
+
+
+def _entries_by_circuit_pdk() -> dict[tuple[str, str], list[dict]]:
+    """Every recorded scoreboard entry in the committed DB, grouped by ``(circuit, pdk)`` and
+    sorted by design id. The files are read directly, so the draft circuits that other tests
+    in this file create and delete are never loaded."""
+    import json
+
+    out: dict[tuple[str, str], list[dict]] = {}
+    for f in sorted(_db().paths.circuits_root().glob("*/scoreboard/*/*.json")):
+        entry = json.loads(f.read_text())
+        out.setdefault((entry["circuit"], entry["pdk"]), []).append(entry)
+    return out
+
+
+def _crosscheck_groups() -> dict[tuple[str, str], list[dict]]:
+    """The ``(circuit, pdk)`` groups in which at least one recorded entry carries a cross-check.
+    Fails, never skips, when the committed DB has none, because the ``symbolic`` field would
+    then go untested against recorded data."""
+    groups = {
+        key: entries
+        for key, entries in _entries_by_circuit_pdk().items()
+        if any(_served_crosscheck(e) for e in entries)
+    }
+    if not groups:
+        pytest.fail(
+            "no scoreboard entry in the committed analog-db carries a symbolic_crosscheck, "
+            "so the detail route's `symbolic` field cannot be checked against recorded data"
+        )
+    return groups
+
+
+def _symbolic(client, cid: str, pdk: str):
+    return client.get(f"/api/library/circuits/{cid}").json()["results"][pdk]["symbolic"]
+
+
 @requires_db
-def test_circuit_detail_symbolic_crosscheck(client):
-    body = client.get("/api/library/circuits/amp_018_telescopic_cascode").json()
-    sym = body["results"]["ihp-sg13g2"]["symbolic"]
-    assert sym is not None
-    assert sym["sim"] == pytest.approx(52.81459)
-    assert sym["sym"] == pytest.approx(52.192716, rel=1e-5)
-    assert sym["agrees"] is True
+def test_circuit_detail_symbolic_crosscheck(client, monkeypatch):
+    """``symbolic`` is the dc-gain cross-check of the PDK's baseline entry, and of no other entry.
+
+    No committed baseline carries a cross-check at present: analog-db #51 moved the telescopic
+    cascode's ihp-sg13g2 baseline to a re-sized, stable design point recorded without one. So
+    each recorded entry that has a cross-check is named the baseline in turn, and the route must
+    serve its five numbers unchanged. Naming a same-circuit entry without a cross-check the
+    baseline must then give ``None``, not a cross-check taken from another entry."""
+    scoreboard = _db().scoreboard
+    committed_baselines = scoreboard.baselines
+    pointer: dict[str, dict[str, str]] = {}
+    monkeypatch.setattr(
+        scoreboard, "baselines", lambda c: {**committed_baselines(c), **pointer.get(c.id, {})}
+    )
+
+    checked_none = 0
+    for (cid, pdk), entries in _crosscheck_groups().items():
+        for entry in entries:
+            expected = _served_crosscheck(entry)
+            if expected is None:
+                continue
+            assert None not in expected.values(), (cid, pdk, entry["design_id"], expected)
+            pointer[cid] = {pdk: entry["design_id"]}
+            assert _symbolic(client, cid, pdk) == expected, (cid, pdk, entry["design_id"])
+        without = [
+            e
+            for e in entries
+            if _served_crosscheck(e) is None and (e.get("corners") or {}).get("tt")
+        ]
+        if without:
+            pointer[cid] = {pdk: without[0]["design_id"]}
+            assert _symbolic(client, cid, pdk) is None, (cid, pdk, without[0]["design_id"])
+            checked_none += 1
+    assert checked_none, (
+        "every (circuit, pdk) that has a cross-check entry has only such entries, so the "
+        "`symbolic: None` case for a baseline without one is not checked"
+    )
+
+
+@requires_db
+def test_circuit_detail_symbolic_follows_the_committed_baseline(client):
+    """With the committed baseline pointers, each served ``symbolic`` matches its baseline
+    entry: the cross-check when that entry carries one, ``None`` when only another entry does."""
+    db = _db()
+    by_key = _entries_by_circuit_pdk()
+    for cid, pdk in _crosscheck_groups():
+        did = db.scoreboard.baselines(db.model.load_circuit(cid)).get(pdk)
+        baseline = next((e for e in by_key[(cid, pdk)] if e["design_id"] == did), None)
+        assert baseline is not None, f"{cid}@{pdk}: baseline {did!r} has no recorded entry"
+        assert _symbolic(client, cid, pdk) == _served_crosscheck(baseline), (cid, pdk, did)
 
 
 @requires_db
@@ -253,7 +357,9 @@ def test_create_circuit_conflict_409(client, draft_cleanup):
 
 
 @requires_db
-@pytest.mark.parametrize("mutate", [{"id": "../evil"}, {"id": "Bad Id"}, {"pdks": []}, {"ports": []}])
+@pytest.mark.parametrize(
+    "mutate", [{"id": "../evil"}, {"id": "Bad Id"}, {"pdks": []}, {"ports": []}]
+)
 def test_create_circuit_bad_manifest_400(client, mutate):
     payload = {**_new_circuit_payload("wizard_test_reject"), **mutate}
     assert client.post("/api/library/circuits", json=payload).status_code == 400
@@ -363,8 +469,9 @@ def test_testbench_netlist_shared_fallback_and_404(client):
 
 @requires_db
 def test_testbench_spectre_view_composed(client):
-    r = client.get("/api/library/testbenches/amplifier/ac_open_loop/netlist",
-                   params={"engine": "spectre"})
+    r = client.get(
+        "/api/library/testbenches/amplifier/ac_open_loop/netlist", params={"engine": "spectre"}
+    )
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["engine"] == "spectre" and body["language"] == "yaml"
@@ -373,10 +480,18 @@ def test_testbench_spectre_view_composed(client):
     assert "bench:" in body["content"] and "calculator_expressions:" in body["content"]
     assert "gainBwProd" in body["content"] or "cross(dB20" in body["content"]
     # a bench with no spectre wiring (or unknown engine) degrades cleanly
-    assert client.get("/api/library/testbenches/amplifier/no_such/netlist",
-                      params={"engine": "spectre"}).status_code == 404
-    assert client.get("/api/library/testbenches/amplifier/ac_open_loop/netlist",
-                      params={"engine": "xyce"}).status_code == 400
+    assert (
+        client.get(
+            "/api/library/testbenches/amplifier/no_such/netlist", params={"engine": "spectre"}
+        ).status_code
+        == 404
+    )
+    assert (
+        client.get(
+            "/api/library/testbenches/amplifier/ac_open_loop/netlist", params={"engine": "xyce"}
+        ).status_code
+        == 400
+    )
 
 
 @requires_db
@@ -407,10 +522,14 @@ def test_schematic_sources_inventory(client):
 def test_reference_image_served_and_guarded(client):
     src = client.get("/api/library/circuits/amp_010_peng_acbc/schematic-sources").json()
     name = src["reference"][0]["name"]
-    r = client.get("/api/library/circuits/amp_010_peng_acbc/reference-image",
-                   params={"name": name})
+    r = client.get("/api/library/circuits/amp_010_peng_acbc/reference-image", params={"name": name})
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("image/")
     # traversal + non-displayable are 404
-    assert client.get("/api/library/circuits/amp_010_peng_acbc/reference-image",
-                      params={"name": "../circuit.yaml"}).status_code == 404
+    assert (
+        client.get(
+            "/api/library/circuits/amp_010_peng_acbc/reference-image",
+            params={"name": "../circuit.yaml"},
+        ).status_code
+        == 404
+    )

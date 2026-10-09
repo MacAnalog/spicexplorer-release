@@ -13,6 +13,7 @@ instance via ``NetlistView.get_subcircuit`` before ingesting.
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
@@ -32,11 +33,14 @@ __all__ = [
     "from_string",
     "MOS_PINS",
     "TWO_TERMINAL_PINS",
+    "CONTROLLED_PINS",
 ]
 
 # Canonical pin orders (match circuitgraph's MOSFET / two-terminal pin enums and spicelib's node order).
 MOS_PINS: tuple[str, ...] = ("DRAIN", "GATE", "SOURCE", "BULK")
 TWO_TERMINAL_PINS: tuple[str, ...] = ("P", "N")
+#: A voltage-controlled source (``E``/``G``) senses across a second node pair.
+CONTROLLED_PINS: tuple[str, ...] = ("P", "N", "CP", "CN")
 
 
 class DeviceKind(str, Enum):
@@ -46,6 +50,10 @@ class DeviceKind(str, Enum):
     IND = "ind"
     VSOURCE = "vsource"
     ISOURCE = "isource"
+    #: A behavioural (``B``) or controlled (``E``/``G``/``F``/``H``) source. One kind, because
+    #: what they have in common -- an output branch plus an expression or a controlling quantity
+    #: -- is what placement and wiring need; the reference letter still picks the symbol.
+    BSOURCE = "bsource"
     SUBCKT = "subckt"
 
 
@@ -85,6 +93,13 @@ _CAP_PREFIXES = ("C", "XC")
 _IND_PREFIXES = ("L", "XL")
 _VSOURCE_PREFIXES = ("V",)
 _ISOURCE_PREFIXES = ("I",)
+#: Behavioural + controlled sources. `B` carries an expression on two nodes; `E`/`G` sense a
+#: second node pair; `F`/`H` name a controlling source instead, so they stay two-terminal.
+#: Dropping these (the old "unrecognized device prefix" path) draws a sheet with the source
+#: MISSING -- a drawing that netlists to a different circuit, silently.
+_BSOURCE_PREFIXES = ("B",)
+_VCONTROLLED_PREFIXES = ("E", "G")
+_CCONTROLLED_PREFIXES = ("F", "H")
 
 _TWO_TERMINAL = {
     _RES_PREFIXES: DeviceKind.RES,
@@ -95,14 +110,39 @@ _TWO_TERMINAL = {
 }
 
 
+#: The ``nch``/``pch`` MOSFET naming convention, as commercial kits spell it: ``nch``, ``nch_25``,
+#: ``pmos_lvt``, ``pch_18``, and library-prefixed forms like ``kit_nch``.
+#:
+#: ANCHORED to a word start or an underscore on purpose. ``"nch" in model`` would be true of any
+#: model whose name merely contains those letters (``bench_r``), and mistyping a device's polarity
+#: is worse than not typing it: the drawing would show an NMOS where the netlist has something
+#: else. Requiring a boundary on both sides keeps the rule specific.
+_NCH_RE = re.compile(r"(?:^|_)nch(?:[_0-9]|$)")
+_PCH_RE = re.compile(r"(?:^|_)pch(?:[_0-9]|$)")
+
+
 def _mos_polarity(model: str | None) -> MosPolarity:
-    # Match the common device-model naming conventions across PDKs: ``nmos``/``pmos`` (IHP, generic)
-    # and ``nfet``/``pfet`` (sky130 ``nfet_01v8``, gf180 ``nfet_03v3``, …).
+    """The polarity of a MOSFET model, read off its name.
+
+    Polarity is what selects the symbol, so a model whose convention is not recognised here is
+    undrawable — it resolves to no symbol and the device is dropped from the sheet. Two families of
+    convention are recognised:
+
+    * ``nmos``/``pmos`` (IHP, generic) and ``nfet``/``pfet`` (sky130 ``nfet_01v8``, gf180
+      ``nfet_03v3``) — the open PDKs, which are drawn with their own vendored symbols;
+    * ``nch``/``pch`` — the convention commercial kits use (``nch_25``, ``pmos_lvt``). These are
+      drawn on the GENERIC lane (``mapping._GENERIC_MOS_SYMREF``), because an NDA kit's symbol
+      library cannot be vendored here.
+    """
     if model:
         lowered = model.lower()
         if "nmos" in lowered or "nfet" in lowered:
             return MosPolarity.NMOS
         if "pmos" in lowered or "pfet" in lowered:
+            return MosPolarity.PMOS
+        if _NCH_RE.search(lowered):
+            return MosPolarity.NMOS
+        if _PCH_RE.search(lowered):
             return MosPolarity.PMOS
     return MosPolarity.UNKNOWN
 
@@ -114,23 +154,94 @@ def _params(view: NetlistView, ref: str) -> dict[str, str | float]:
 
 def _classify_supply(net: str) -> str | None:
     """Coarse rail classification by name (display/placement hint only; wiring is by-name)."""
+    # `!` is Cadence's global-net marker (`vdd!`, `gnd!`) and carries no role information.
     n = net.strip().lower().strip("!")
-    if n in {"0", "gnd", "vgnd", "gnd_a", "vsubs"}:
+    # The analog/digital-domain spellings are the ones a real mixed-signal deck uses, and their
+    # absence meant a commercial-kit design's sheets were drawn with NO SUPPLY RAIL AT ALL: every
+    # `avdd`/`agnd` net fell through to "not a supply", so the rail the reader looks for first was
+    # simply not there (issue #159).
+    if n in {"0", "gnd", "vgnd", "gnd_a", "vsubs", "agnd", "dgnd", "gnda", "gndd", "vsub"}:
         return "GND"
-    if n.startswith(("vdd", "vcc", "vpwr", "vdda")):
+    if n.startswith(("vdd", "vcc", "vpwr", "vdda", "avdd", "dvdd", "avd", "vcca")):
         return "VDD"
-    if n.startswith(("vss", "vee", "vssa", "vnw")):
+    if n.startswith(("vss", "vee", "vssa", "vnw", "avss", "dvss")):
         return "VSS"
     return None
 
 
+#: Value forms after which the next two tokens are NOT a controlling node pair.
+_NOT_NODES = ("poly", "value", "vol", "cur", "table", "laplace", "freq", "pwl")
+
+
+def _controlling_nodes(value: str) -> tuple[list[str], str]:
+    """Split an ``E``/``G`` value into its controlling node pair and the remainder.
+
+    The netlist parser reports only the OUTPUT branch of a controlled source as nodes; the
+    controlling pair lives at the head of the value string (``E1 out 0 in 0 2`` -> nodes
+    ``[out, 0]``, value ``"in 0 2"``). Recovering it is what lets the drawn symbol be wired to
+    what it actually senses instead of floating.
+
+    Returns ``([], value)`` unchanged for the keyword forms (``POLY``, ``VALUE=``, a Laplace or
+    table expression), where the two tokens after the output branch are not nodes at all.
+    """
+    tok = value.split()
+    if len(tok) < 3:
+        return [], value
+    if tok[0].lower().split("=")[0] in _NOT_NODES or "=" in tok[0] or "(" in tok[0]:
+        return [], value
+    return tok[:2], " ".join(tok[2:])
+
+
+def _make_subckt(ref: str, view: NetlistView, nodes: list[str]) -> Device | None:
+    """A generic ``X`` instance: formal port names when they line up, else positional pins."""
+    if not nodes:
+        logger.warning("skipping %s: subckt instance has no connected nets", ref)
+        return None
+    formal = view.get_subcircuit_ports(ref)
+    if formal and len(formal) == len(nodes) and len(set(formal)) == len(formal):
+        names = tuple(formal)
+    else:
+        names = tuple(str(i) for i in range(1, len(nodes) + 1))
+    return Device(
+        ref=ref,
+        kind=DeviceKind.SUBCKT,
+        model=view.get_component_value(ref),
+        polarity=MosPolarity.UNKNOWN,
+        pins=names,
+        nets=dict(zip(names, nodes)),
+        params=_params(view, ref),
+    )
+
+
 def _make_device(ref: str, view: NetlistView) -> Device | None:
-    """Type ``ref`` by prefix and capture its pin→net map, or ``None`` if it can't be modeled."""
+    """Type ``ref`` by prefix and capture its pin→net map, or ``None`` if it can't be modeled.
+
+    The prefix tests come FIRST and stay first — ``XM1`` is a MOSFET, not a subcircuit. But an
+    ``X`` reference that fails its primitive's pin-count check falls through to :func:`_make_subckt`
+    instead of being dropped: PDKs ship primitives as subcircuits with an extra node (IHP's
+    ``XR1 a b sub rhigh`` poly resistor carries the substrate), and those used to be skipped with
+    "3 nets but res expects 2" even though the branch below models them fine.
+
+    A SUBCKT still needs a symbol to be *drawn*: :func:`~.mapping.symref_for` resolves subcircuit
+    instances through ``_PDK_SUBCKT_SYMREF``, which covers the SG13G2 HBTs and the poly resistors
+    (``rhigh``/``rppd``/``rsil``), so ``XR1 a b sub rhigh`` both ingests here and draws. Its third
+    net becomes the symbol's ``body=`` attribute (see :func:`~.mapping.body_pin`; the ``.sym`` has
+    two pins). A subcircuit with no entry in that table still ingests and is still skipped by the
+    emitter with "no symbol mapping" — add the model there to draw it.
+    """
     ref_u = ref.upper()
     nodes = view.get_component_nodes(ref)
 
     if ref_u.startswith(_MOS_PREFIXES):
         if len(nodes) != len(MOS_PINS):
+            if ref_u.startswith("X"):
+                logger.info(
+                    "%s: %d nets, not a %d-pin MOSFET — ingesting as a subcircuit instance",
+                    ref,
+                    len(nodes),
+                    len(MOS_PINS),
+                )
+                return _make_subckt(ref, view, nodes)
             logger.warning(
                 "skipping %s: %d nets but MOSFET expects %d", ref, len(nodes), len(MOS_PINS)
             )
@@ -146,9 +257,43 @@ def _make_device(ref: str, view: NetlistView) -> Device | None:
             params=_params(view, ref),
         )
 
+    if ref_u.startswith(_VCONTROLLED_PREFIXES + _CCONTROLLED_PREFIXES + _BSOURCE_PREFIXES):
+        value = view.get_component_value(ref) or ""
+        pins, nets = TWO_TERMINAL_PINS, list(nodes)
+        if ref_u.startswith(_VCONTROLLED_PREFIXES):
+            ctrl, value = _controlling_nodes(value)
+            if ctrl:
+                pins, nets = CONTROLLED_PINS, nodes + ctrl
+        if len(nets) < len(pins):
+            logger.warning(
+                "skipping %s: %d nets but a %s source needs %d",
+                ref,
+                len(nets),
+                ref_u[:1],
+                len(pins),
+            )
+            return None
+        return Device(
+            ref=ref,
+            kind=DeviceKind.BSOURCE,
+            model=value or None,
+            polarity=MosPolarity.UNKNOWN,
+            pins=pins,
+            nets=dict(zip(pins, nets)),
+            params=_params(view, ref),
+        )
+
     for prefixes, kind in _TWO_TERMINAL.items():
         if ref_u.startswith(prefixes):
             if len(nodes) != len(TWO_TERMINAL_PINS):
+                if ref_u.startswith("X"):
+                    logger.info(
+                        "%s: %d nets, not a 2-pin %s — ingesting as a subcircuit instance",
+                        ref,
+                        len(nodes),
+                        kind.value,
+                    )
+                    return _make_subckt(ref, view, nodes)
                 logger.warning("skipping %s: %d nets but %s expects 2", ref, len(nodes), kind.value)
                 return None
             return Device(
@@ -162,31 +307,13 @@ def _make_device(ref: str, view: NetlistView) -> Device | None:
             )
 
     if ref_u.startswith("X"):
-        if not nodes:
-            logger.warning("skipping %s: subckt instance has no connected nets", ref)
-            return None
-        formal = view.get_subcircuit_ports(ref)
-        if formal and len(formal) == len(nodes) and len(set(formal)) == len(formal):
-            names = tuple(formal)
-        else:
-            names = tuple(str(i) for i in range(1, len(nodes) + 1))
-        return Device(
-            ref=ref,
-            kind=DeviceKind.SUBCKT,
-            model=view.get_component_value(ref),
-            polarity=MosPolarity.UNKNOWN,
-            pins=names,
-            nets=dict(zip(names, nodes)),
-            params=_params(view, ref),
-        )
+        return _make_subckt(ref, view, nodes)
 
     logger.warning("skipping %s: unrecognized device prefix", ref)
     return None
 
 
-def ingest(
-    view: NetlistView, *, name: str = "circuit", ports: tuple[str, ...] = ()
-) -> N2XCircuit:
+def ingest(view: NetlistView, *, name: str = "circuit", ports: tuple[str, ...] = ()) -> N2XCircuit:
     """Build an :class:`N2XCircuit` from the devices at ``view``'s current level.
 
     ``ports`` are the declared external port nets (a descended subckt's formal-header names), kept

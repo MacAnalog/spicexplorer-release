@@ -4,6 +4,7 @@ Fast, NO SPICE. Pins: sortable dir==run_id minting (collision-proof), the
 envelope record fields, heartbeat/owner-liveness semantics (the reconcile
 gate), and content-addressed input snapshots that survive by hash.
 """
+
 import json
 import os
 import socket
@@ -19,6 +20,7 @@ def test_new_run_id_is_sortable_and_checkpoint_safe():
     assert "." not in rid and "/" not in rid and "::" not in rid
     # Lexical order == chronological order (the dir listing stays browsable).
     from datetime import datetime
+
     a = wr.new_run_id("sim", now=datetime(2026, 7, 14, 1, 0, 0))
     b = wr.new_run_id("sim", now=datetime(2026, 7, 14, 2, 0, 0))
     assert a < b
@@ -33,8 +35,7 @@ def test_mint_run_dir_dir_equals_run_id(tmp_path):
 
 def test_envelope_fields_and_record_roundtrip(tmp_path):
     rid, d = wr.mint_run_dir(tmp_path / "runs", "simulate")
-    rec = {"run_id": rid, "status": "running",
-           **wr.envelope_fields("simulate", retention="full")}
+    rec = {"run_id": rid, "status": "running", **wr.envelope_fields("simulate", retention="full")}
     wr.write_run_record(d, rec)
     back = wr.read_run_record(d)
     assert back["envelope"] == wr.ENVELOPE_VERSION and back["kind"] == "simulate"
@@ -98,8 +99,7 @@ def test_snapshot_inputs_content_addresses_and_tolerates_errors(tmp_path):
     assert "error" in out["missing"] and "sha256" not in out["missing"]
     # Values hash over canonical JSON and land in the store too.
     vsha = out["params"]["sha256"]
-    assert json.loads((proj / ".objects" / vsha).read_text()) == {
-        "W1": 2e-6, "L1": 0.18e-6}
+    assert json.loads((proj / ".objects" / vsha).read_text()) == {"W1": 2e-6, "L1": 0.18e-6}
     # Idempotent: re-snapshot → same sha, no duplicate objects.
     out2 = wr.snapshot_inputs(objects, files={"dut": netlist})
     assert out2["dut"]["sha256"] == sha

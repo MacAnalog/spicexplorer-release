@@ -74,23 +74,25 @@ def test_yaml_round_trips_netlist_testbench_and_measurements(tmp_path):
     specs = {t.name: t for t in proj.optimizer_config.target_specs.targets}
     assert specs["ugf"].measurement == {"result": "ac", "expr": 'gainBwProd(v("v_out"))'}
     assert specs["m1_gm"].measurement == {
-        "builder": "device_op_param", "instance": "XM1", "param": "gm",
+        "builder": "device_op_param",
+        "instance": "XM1",
+        "param": "gm",
     }
     recipes = build_recipes(proj.optimizer_config.target_specs)
     assert {tb: [m.name for m in ms] for tb, ms in recipes.items()} == {
-        "tb_ac": ["ugf"], "tb_op": ["m1_gm"],
+        "tb_ac": ["ugf"],
+        "tb_op": ["m1_gm"],
     }
 
 
 def test_malformed_measurement_is_rejected_at_load(tmp_path):
     bad = _YAML.replace(
-        '{result: ac, expr: \'gainBwProd(v("v_out"))\'}', "{result: ac}"
+        "{result: ac, expr: 'gainBwProd(v(\"v_out\"))'}", "{result: ac}"
     )  # expr missing → invalid raw recipe
     with pytest.raises(ValueError, match="measurement"):
         Project_Setup.from_yaml(_write(tmp_path, bad))
 
 
 def test_measurement_is_optional_and_ngspice_projects_are_unaffected():
-    t = TargetSpec(name="gain", testbench="tb", target=30, goal="exceed",
-                   sim_type="ac", range=10)
+    t = TargetSpec(name="gain", testbench="tb", target=30, goal="exceed", sim_type="ac", range=10)
     assert t.measurement is None and not t.has_ocean_measurement()

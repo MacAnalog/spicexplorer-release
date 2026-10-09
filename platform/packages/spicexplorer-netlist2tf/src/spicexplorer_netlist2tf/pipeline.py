@@ -35,17 +35,31 @@ def _to_ir(
     if isinstance(source, Circuit2TF):
         return source
     if isinstance(source, NetlistView):
-        return ingest_netlist(source, name=name or "circuit", ports=ports, ground=ground,
-                              flatten=flatten, keep_opaque=keep_opaque)
+        return ingest_netlist(
+            source,
+            name=name or "circuit",
+            ports=ports,
+            ground=ground,
+            flatten=flatten,
+            keep_opaque=keep_opaque,
+        )
     if isinstance(source, Path):
-        return from_file(source, name=name, ports=ports, ground=ground,
-                         flatten=flatten, keep_opaque=keep_opaque)
+        return from_file(
+            source, name=name, ports=ports, ground=ground, flatten=flatten, keep_opaque=keep_opaque
+        )
     # str: multi-line ⇒ SPICE text; otherwise a path (fall back to text if it doesn't exist).
     if "\n" in source or (not Path(source).exists() and source.lstrip().startswith("*")):
-        return from_string(source, name=name or "circuit", ports=ports, ground=ground,
-                           flatten=flatten, keep_opaque=keep_opaque)
-    return from_file(source, name=name, ports=ports, ground=ground,
-                     flatten=flatten, keep_opaque=keep_opaque)
+        return from_string(
+            source,
+            name=name or "circuit",
+            ports=ports,
+            ground=ground,
+            flatten=flatten,
+            keep_opaque=keep_opaque,
+        )
+    return from_file(
+        source, name=name, ports=ports, ground=ground, flatten=flatten, keep_opaque=keep_opaque
+    )
 
 
 def transfer_function(
@@ -69,7 +83,8 @@ def transfer_function(
 
     ``source`` is a netlist path, raw SPICE text, a ``NetlistView``, or a pre-built ``Circuit2TF``.
     ``input`` may be omitted for a *testbench-level* netlist: the input port is then auto-detected
-    as the unique AC voltage source (``Vin in 0 dc VCM ac 1``) via :func:`detect_ac_input`.
+    as the unique AC voltage source (``Vin in 0 dc VCM ac 1``), or a ``±a`` DM pair on one
+    reference net (``Vinp vinp vcm ac 0.5`` / ``Vinn vinn vcm ac -0.5``), via :func:`detect_ac_input`.
     ``assumptions`` defaults to ``"full"`` (exact, with advisory suggestions surfaced in the ledger —
     the trustworthy default); pass a bundle (``"low_freq"``/``"ideal"``/``"dominant_pole"``) or a
     list of :class:`~spicexplorer_netlist2tf.assumptions.Assumption` to reduce. ``operating_point``
@@ -77,18 +92,25 @@ def transfer_function(
     before the determinant (selective numericization). ``flatten``/``keep_opaque`` control subckt
     flattening at ingestion (see :func:`ingest_netlist`).
     """
-    ir = _to_ir(source, name=name, ports=ports, ground=ground,
-                flatten=flatten, keep_opaque=keep_opaque)
+    ir = _to_ir(
+        source, name=name, ports=ports, ground=ground, flatten=flatten, keep_opaque=keep_opaque
+    )
     ssir = small_signal_model(ir, level=level)
     system = build_system(ssir, subs=subs)
     if input is None:
         input = detect_ac_input(ssir)
     raw = extract_tf(system, output, input, numeric_subs=subs)
     simplified = simplify_tf(
-        raw, assumptions, operating_point=operating_point,
-        ratio_floor=ratio_floor, tolerance=tolerance,
+        raw,
+        assumptions,
+        operating_point=operating_point,
+        ratio_floor=ratio_floor,
+        tolerance=tolerance,
     )
     return describe_tf(
-        raw, simplified=simplified, operating_point=operating_point,
-        model_level=level.value, ground=ir.ground,
+        raw,
+        simplified=simplified,
+        operating_point=operating_point,
+        model_level=level.value,
+        ground=ir.ground,
     )

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -140,6 +141,29 @@ def _apply_fd_cm_correction(circuit: Circuit, metrics_by_corner: dict[str, Any])
 # --------------------------------------------------------------------------- write / upsert
 
 
+def _json_safe_analyses(analyses: dict[str, Any]) -> dict[str, Any]:
+    """Copy of an ``analyses`` block with every non-finite measure mapped to ``None``.
+
+    ``json.dumps`` defaults to ``allow_nan=True`` and emits bare ``NaN``/``Infinity``, which is not
+    valid JSON — any strict reader (jq, a JS consumer, `json.loads(..., parse_constant=raise)`)
+    chokes on the entry. ``None`` is the representation ``ppa.metric_values`` already scores as a
+    spec FAILURE, so the meaning is preserved exactly while the file stays strict JSON."""
+    out: dict[str, Any] = {}
+    for aid, block in analyses.items():
+        if not isinstance(block, dict):
+            out[aid] = block
+            continue
+        new = dict(block)
+        measures = block.get("measures")
+        if isinstance(measures, dict):
+            new["measures"] = {
+                k: (v if not isinstance(v, float) or math.isfinite(v) else None)
+                for k, v in measures.items()
+            }
+        out[aid] = new
+    return out
+
+
 def record(
     circuit: Circuit, results: dict[str, Any], sizing_override: dict[str, Any] | None = None
 ) -> Path:
@@ -171,7 +195,7 @@ def record(
             "metrics": {},
         }
     corner_block: dict[str, Any] = {
-        "analyses": results["analyses"],
+        "analyses": _json_safe_analyses(results["analyses"]),
         "provenance": results.get("provenance", {}),
     }
     if results.get("symbolic_crosscheck"):

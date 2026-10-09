@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spicexplorer/verify-status@1",
+  "title": "SpiceXplorer verify record (verify_status.json)",
+  "description": "Each circuit's DERIVED status rung as one `analog-db verify --json` run recorded it (plan §6 / D-13), reduced by `analog-db verify-status`. catalog.json reads it to publish `derived_status` beside the AUTHORED `status`; a rung is published only while the circuit's fingerprint is unchanged, the tiers that ran back it, and (for validated) every conform:* row passed. Recorded, NOT byte-drift-guarded; the catalog built from it is.",
+  "type": "object",
+  "required": ["schema", "circuits"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "spicexplorer/verify-status@1"},
+    "circuits": {
+      "type": "object",
+      "description": "circuit id -> its record",
+      "additionalProperties": {"$ref": "#/$defs/record"}
+    }
+  },
+  "$defs": {
+    "record": {
+      "type": "object",
+      "required": ["status", "tiers", "date", "platform", "fingerprint"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": ["draft", "generated", "simulated", "validated", "incomplete", "reference"],
+          "description": "The rung verify.derive_status gave for this run."
+        },
+        "tiers": {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 0, "maximum": 4},
+          "uniqueItems": true,
+          "description": "Tiers with at least one pass or fail row for this circuit in the run (an all-skip tier did not run)."
+        },
+        "date": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$", "description": "Run date (UTC)."},
+        "platform": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Platform commit the harness ran on (12 hex digits, `-modified` when its checkout had uncommitted changes), or `unknown`."
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$",
+          "description": "verify_status.fingerprint at reduction time: the files under circuits/<id>/ except scoreboard/, layout entries, prose, figures and machine-local by-products, and, for a composite, those of each block its composition.yaml instantiates; any later change to those files voids the rung. scoreboard/ is read by T0's scoreboard:* rows but left out on purpose, because analog-db run --write appends to it."
+        },
+        "conform": {
+          "type": "object",
+          "required": ["passed", "total"],
+          "additionalProperties": false,
+          "description": "Present when Tier 4 ran: spec-bounded conform:*@<pdk> rows that passed, of all of them.",
+          "properties": {
+            "passed": {"type": "integer", "minimum": 0},
+            "total": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    }
+  }
+}

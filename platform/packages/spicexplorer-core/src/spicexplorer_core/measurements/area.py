@@ -16,10 +16,11 @@ set *is* the netlist.
 
 Layering: lives in ``spicexplorer-core`` on top of the **parse-only**
 :class:`~spicexplorer_core.spice_engine.NetlistView` (needs neither ngspice nor a PDK) and
-:func:`~spicexplorer_core.eng.parse_value`. No ``circuitgraph`` / optimizer dependency, so it
-is engine-agnostic and unit-testable in isolation. The pure ``Σ`` arithmetic for the legacy
-listed-device recipe stays in :mod:`spicexplorer_core.measurements.derived`; this module owns
-the netlist-derived path.
+:func:`~spicexplorer_core.spice_eng.spice_number` — deck tokens are SPICE, so ``1M`` is milli
+and every suffix is case-insensitive (the YAML DSL's ``eng.parse_value`` reads ``1M`` as mega).
+No ``circuitgraph`` / optimizer dependency, so it is engine-agnostic and unit-testable in
+isolation. The pure ``Σ`` arithmetic for the legacy listed-device recipe stays in
+:mod:`spicexplorer_core.measurements.derived`; this module holds the netlist-derived path.
 """
 
 from __future__ import annotations
@@ -29,9 +30,10 @@ import json
 import logging
 import operator
 import re
-from typing import Any, Dict, List, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
-from spicexplorer_core.eng import parse_value
+from spicexplorer_core.spice_eng import spice_number
 
 __all__ = [
     "active_area_report",
@@ -56,9 +58,14 @@ _BIN_OPS = {
 _UNARY_OPS = {ast.UAdd: operator.pos, ast.USub: operator.neg}
 
 # An eng-suffixed numeric literal appearing *inside* an expression (`{1u+2u}`) — number-led,
-# ending in suffix letters. ngspice allows these; Python's parser does not, so we pre-convert
-# them before ast.parse. A plain `4` or `1.5e-6` (no trailing alpha) is left for ast.
-_ENG_LITERAL = re.compile(r"(?<![A-Za-z0-9_.])(\d+\.?\d*(?:[eE][+-]?\d+)?)([fpnumkMGT]|meg|MEG)(?![A-Za-z0-9_])")
+# ending in an ngspice scale factor (any case: `2U`, `1M` = milli, `1Meg`). ngspice allows these;
+# Python's parser does not, so we pre-convert them before ast.parse. A plain `4` or `1.5e-6` (no
+# trailing alpha) is left for ast.
+_ENG_LITERAL = re.compile(
+    r"(?<![A-Za-z0-9_.])(\d+\.?\d*(?:[eE][+-]?\d+)?|\.\d+(?:[eE][+-]?\d+)?)"
+    r"(meg|mil|[fpnumkgta])(?![A-Za-z0-9_])",
+    re.IGNORECASE,
+)
 
 
 class _ParamResolver:
@@ -74,16 +81,16 @@ class _ParamResolver:
     def __init__(self, params: Mapping[str, Any]) -> None:
         # Case-insensitive: spicelib may echo card symbols in a different case than the `.param`
         # names, and optimizer overrides arrive lower-cased.
-        self._params: Dict[str, Any] = {str(k).lower(): v for k, v in params.items()}
-        self._cache: Dict[str, Optional[float]] = {}
-        self.warnings: List[str] = []
+        self._params: dict[str, Any] = {str(k).lower(): v for k, v in params.items()}
+        self._cache: dict[str, float | None] = {}
+        self.warnings: list[str] = []
 
-    def resolve(self, token: Any) -> Optional[float]:
+    def resolve(self, token: Any) -> float | None:
         """A device field (a param NAME like ``x_dut_xm1_w``, a literal ``2u``, or an inline
         expression) → float, or ``None`` if it cannot be resolved."""
         return self._eval(token, frozenset())
 
-    def _eval(self, token: Any, stack: frozenset[str]) -> Optional[float]:
+    def _eval(self, token: Any, stack: frozenset[str]) -> float | None:
         if token is None:
             return None
         if not isinstance(token, str):
@@ -94,11 +101,15 @@ class _ParamResolver:
         s = _strip_braces(token)
         if not s:
             return None
-        # A bare numeric/eng literal is the common leaf — try it first.
+        # A bare numeric/eng literal is the common leaf — try it first, with ngspice semantics.
+        # `None` means a symbol or an expression; a ValueError means number characters that do not
+        # form one number (`1.2.3`, but also the arithmetic `2e-6+1e-6`). Both go on to ast below.
         try:
-            return float(parse_value(s))
-        except (ValueError, TypeError):
-            pass
+            value = spice_number(s)
+        except ValueError:
+            value = None
+        if value is not None:
+            return value
         # Otherwise an identifier or an arithmetic expression.
         try:
             tree = ast.parse(s, mode="eval")
@@ -161,7 +172,7 @@ def _sub_eng_literals(expr: str) -> str:
     parser accepts them (`{2u*3}` → `{2e-06*3}`). Identifiers are untouched."""
 
     def repl(m: re.Match[str]) -> str:
-        return repr(float(parse_value(m.group(1) + m.group(2))))
+        return repr(spice_number(m.group(1) + m.group(2)))
 
     return _ENG_LITERAL.sub(repl, expr)
 
@@ -173,7 +184,7 @@ def _sub_eng_literals(expr: str) -> str:
 _MOS_MODEL = re.compile(r"(?i)(?:^|[^a-z])(?:n|p)?mos|(?:^|[^a-z])[np]fet|(?:^|[^a-z])mosfet")
 
 
-def is_mosfet(reference: str, model: Optional[str], params: Mapping[str, Any]) -> bool:
+def is_mosfet(reference: str, model: str | None, params: Mapping[str, Any]) -> bool:
     """A device counts as a transistor when it exposes both ``w`` and ``l`` geometry AND looks
     like a MOS (by ``M``/``XM`` reference prefix or by MOS model name)."""
     lp = {str(k).lower() for k in params}
@@ -185,7 +196,7 @@ def is_mosfet(reference: str, model: Optional[str], params: Mapping[str, Any]) -
     return bool(model and _MOS_MODEL.search(model))
 
 
-def _lower_params(raw: Mapping[str, Any]) -> Dict[str, Any]:
+def _lower_params(raw: Mapping[str, Any]) -> dict[str, Any]:
     return {str(k).lower(): v for k, v in raw.items() if str(k).lower() != "value"}
 
 
@@ -196,9 +207,9 @@ def _walk(
     path: str,
     inst_mult: float,
     seen: frozenset[str],
-    devices: List[dict],
-    others: List[dict],
-    warnings: List[str],
+    devices: list[dict],
+    others: list[dict],
+    warnings: list[str],
 ) -> None:
     """Recurse one hierarchy level, classifying each component into ``devices`` (transistors)
     or ``others``, and stepping into subckt instances with the cumulative ``inst_mult``."""
@@ -213,7 +224,7 @@ def _walk(
             w = resolver.resolve(lp.get("w"))
             length = resolver.resolve(lp.get("l"))
             m = resolver.resolve(lp["m"]) if "m" in lp else 1.0
-            entry: Dict[str, Any] = {
+            entry: dict[str, Any] = {
                 "path": full,
                 "ref": ref,
                 "model": model,
@@ -241,8 +252,16 @@ def _walk(
         if is_subckt_instance:
             if value.lower() in seen:
                 warnings.append(f"{full}: cyclic subckt reference to {value!r}; not expanded")
-                others.append({"path": full, "ref": ref, "kind": "subckt", "model": model,
-                               "area": None, "reason": "cyclic reference"})
+                others.append(
+                    {
+                        "path": full,
+                        "ref": ref,
+                        "kind": "subckt",
+                        "model": model,
+                        "area": None,
+                        "reason": "cyclic reference",
+                    }
+                )
                 continue
             child_mult = resolver.resolve(lp["m"]) if "m" in lp else 1.0
             if child_mult is None:
@@ -252,20 +271,48 @@ def _walk(
                 child = view.get_subcircuit(ref)
             except Exception as exc:  # pragma: no cover - defensive
                 warnings.append(f"{full}: cannot step into {value!r}: {exc}")
-                others.append({"path": full, "ref": ref, "kind": "subckt", "model": model,
-                               "area": None, "reason": f"cannot expand: {exc}"})
+                others.append(
+                    {
+                        "path": full,
+                        "ref": ref,
+                        "kind": "subckt",
+                        "model": model,
+                        "area": None,
+                        "reason": f"cannot expand: {exc}",
+                    }
+                )
                 continue
-            others.append({"path": full, "ref": ref, "kind": "subckt", "model": model,
-                           "m": child_mult, "area": None, "reason": "container (expanded)"})
-            _walk(child, resolver, path=full, inst_mult=inst_mult * child_mult,
-                  seen=seen | {value.lower()}, devices=devices, others=others, warnings=warnings)
+            others.append(
+                {
+                    "path": full,
+                    "ref": ref,
+                    "kind": "subckt",
+                    "model": model,
+                    "m": child_mult,
+                    "area": None,
+                    "reason": "container (expanded)",
+                }
+            )
+            _walk(
+                child,
+                resolver,
+                path=full,
+                inst_mult=inst_mult * child_mult,
+                seen=seen | {value.lower()},
+                devices=devices,
+                others=others,
+                warnings=warnings,
+            )
             continue
 
         # A non-MOS leaf (R, C, source, or a geometry-less block). Report it; if it happens to
         # carry w/l geometry (e.g. a PDK passive subckt device), report an area estimate in the
         # separate bucket — never folded into the transistor total.
-        other: Dict[str, Any] = {
-            "path": full, "ref": ref, "kind": _passive_kind(ref, model), "model": model,
+        other: dict[str, Any] = {
+            "path": full,
+            "ref": ref,
+            "kind": _passive_kind(ref, model),
+            "model": model,
             "value": _as_str(params.get("Value")) if "Value" in params else None,
         }
         if "w" in lp and "l" in lp:
@@ -287,10 +334,10 @@ def _walk(
 def active_area_report(
     netlist: Any,
     *,
-    overrides: Optional[Mapping[str, Any]] = None,
+    overrides: Mapping[str, Any] | None = None,
     scale: float = 1.0,
     verbose: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Walk ``netlist`` recursively and return a JSON-serializable active-area report.
 
     Args:
@@ -308,16 +355,24 @@ def active_area_report(
     """
     view = _as_view(netlist)
     global_params = view.get_parameters()
-    merged: Dict[str, Any] = dict(global_params)
+    merged: dict[str, Any] = dict(global_params)
     if overrides:
         merged.update({str(k): v for k, v in overrides.items()})
     resolver = _ParamResolver(merged)
 
-    devices: List[dict] = []
-    others: List[dict] = []
-    warnings: List[str] = []
-    _walk(view, resolver, path="", inst_mult=1.0, seen=frozenset(),
-          devices=devices, others=others, warnings=warnings)
+    devices: list[dict] = []
+    others: list[dict] = []
+    warnings: list[str] = []
+    _walk(
+        view,
+        resolver,
+        path="",
+        inst_mult=1.0,
+        seen=frozenset(),
+        devices=devices,
+        others=others,
+        warnings=warnings,
+    )
     warnings.extend(resolver.warnings)
 
     counted = [d for d in devices if d.get("counted")]
@@ -334,7 +389,7 @@ def active_area_report(
         if o.get("area") is not None:
             o["area"] *= scale
 
-    report: Dict[str, Any] = {
+    report: dict[str, Any] = {
         "active_area": scale * raw_area,
         "scale": scale,
         "unit": "um^2" if scale == 1e12 else ("m^2" if scale == 1.0 else f"m^2 * {scale:g}"),
@@ -360,22 +415,26 @@ def active_area_report(
 def format_area_table(report: Mapping[str, Any]) -> str:
     """A human-readable per-device table for debug logs / CLI ``--table``."""
     unit = report.get("unit", "")
-    lines: List[str] = []
-    lines.append(f"{'device':<28}{'kind':<10}{'W':>12}{'L':>12}{'m':>8}{'mult':>7}{'area['+unit+']':>16}")
+    lines: list[str] = []
+    lines.append(
+        f"{'device':<28}{'kind':<10}{'W':>12}{'L':>12}{'m':>8}{'mult':>7}{'area[' + unit + ']':>16}"
+    )
     lines.append("-" * 93)
     for d in report.get("devices", []):
         area = d.get("area")  # already in the report's unit (scaled)
         area_s = "  (skipped)" if area is None else f"{area:>15.5g}"
         lines.append(
-            f"{d['path']:<28}{str(d.get('kind','mos')):<10}"
+            f"{d['path']:<28}{str(d.get('kind', 'mos')):<10}"
             f"{_fmt(d.get('w')):>12}{_fmt(d.get('l')):>12}"
             f"{_fmt(d.get('m')):>8}{_fmt(d.get('inst_mult')):>7}{area_s:>16}"
         )
     if report.get("others"):
         lines.append("-" * 93)
         for o in report["others"]:
-            lines.append(f"{o['path']:<28}{str(o.get('kind','?')):<10}"
-                         f"{'':>12}{'':>12}{'':>8}{'':>7}{('  '+(o.get('reason') or '')):>16}")
+            lines.append(
+                f"{o['path']:<28}{str(o.get('kind', '?')):<10}"
+                f"{'':>12}{'':>12}{'':>8}{'':>7}{('  ' + (o.get('reason') or '')):>16}"
+            )
     cov = report.get("coverage", {})
     lines.append("-" * 93)
     lines.append(
@@ -388,7 +447,7 @@ def format_area_table(report: Mapping[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def resolve_param_value(token: Any, params: Mapping[str, Any]) -> Optional[float]:
+def resolve_param_value(token: Any, params: Mapping[str, Any]) -> float | None:
     """Standalone helper: resolve one symbol/expression ``token`` against a ``.param`` map.
     Exposed for testing and reuse; returns ``None`` (not raise) when unresolvable."""
     return _ParamResolver(params).resolve(token)
@@ -416,11 +475,11 @@ def _as_view(netlist: Any) -> Any:
     raise TypeError(f"active_area_report: unsupported netlist source {type(netlist).__name__}")
 
 
-def _as_str(v: Any) -> Optional[str]:
+def _as_str(v: Any) -> str | None:
     return None if v is None else str(v)
 
 
-def _mos_kind(model: Optional[str]) -> str:
+def _mos_kind(model: str | None) -> str:
     m = (model or "").lower()
     if "pmos" in m or "pfet" in m:
         return "pmos"
@@ -429,11 +488,16 @@ def _mos_kind(model: Optional[str]) -> str:
     return "mos"
 
 
-def _passive_kind(reference: str, model: Optional[str]) -> str:
+def _passive_kind(reference: str, model: str | None) -> str:
     c = reference[:1].upper()
     return {
-        "R": "resistor", "C": "capacitor", "L": "inductor",
-        "V": "vsource", "I": "isource", "D": "diode", "Q": "bjt",
+        "R": "resistor",
+        "C": "capacitor",
+        "L": "inductor",
+        "V": "vsource",
+        "I": "isource",
+        "D": "diode",
+        "Q": "bjt",
     }.get(c, "subckt" if c == "X" else "other")
 
 
@@ -449,8 +513,8 @@ def _fmt(v: Any) -> str:
 # CLI ------------------------------------------------------------------------------------
 
 
-def _parse_overrides(items: Optional[List[str]]) -> Dict[str, Any]:
-    out: Dict[str, Any] = {}
+def _parse_overrides(items: list[str] | None) -> dict[str, Any]:
+    out: dict[str, Any] = {}
     for item in items or []:
         if "=" not in item:
             raise SystemExit(f"--set expects name=value, got {item!r}")
@@ -459,7 +523,7 @@ def _parse_overrides(items: Optional[List[str]]) -> Dict[str, Any]:
     return out
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     """``python -m spicexplorer_core.measurements.area <deck.spice> [options]`` — walk a deck and
     print the active-area report as JSON (and, with ``--table``, the debug table)."""
     import argparse
@@ -469,10 +533,16 @@ def main(argv: Optional[List[str]] = None) -> int:
         description="Recursively sum MOSFET gate area (Σ W·L·m) over every device in a netlist.",
     )
     ap.add_argument("netlist", help="deck path (.spice/.cir/.net/.sp)")
-    ap.add_argument("--scale", type=float, default=1e12,
-                    help="area scale (default 1e12 → µm²; use 1 for m²)")
-    ap.add_argument("--set", action="append", metavar="NAME=VALUE", dest="overrides",
-                    help="override a .param (repeatable), e.g. --set x_dut_xm1_w=3u")
+    ap.add_argument(
+        "--scale", type=float, default=1e12, help="area scale (default 1e12 → µm²; use 1 for m²)"
+    )
+    ap.add_argument(
+        "--set",
+        action="append",
+        metavar="NAME=VALUE",
+        dest="overrides",
+        help="override a .param (repeatable), e.g. --set x_dut_xm1_w=3u",
+    )
     ap.add_argument("--table", action="store_true", help="also print the per-device table")
     ap.add_argument("--json", metavar="PATH", help="write the JSON report to PATH (else stdout)")
     args = ap.parse_args(argv)

@@ -1,0 +1,280 @@
+{
+  "schema": "spicexplorer/xschem-block-annotations@1",
+  "circuit": "ldo_010_capless_lowiq",
+  "source_netlist": "abstract/netlist.spice",
+  "summary": {
+    "device_count": 50,
+    "blocks_detected": 11,
+    "by_family": {
+      "current_mirror": 7,
+      "differential_pair": 4
+    },
+    "structural_roles": {
+      "XM1A": "differential_pair",
+      "XM1B": "differential_pair",
+      "XM2A": "differential_pair",
+      "XM2B": "differential_pair",
+      "XM3A": "current_mirror_reference",
+      "XM3B": "current_mirror_reference",
+      "XM4A": "current_mirror",
+      "XM4B": "current_mirror",
+      "XM6": "current_mirror",
+      "XMA": "current_mirror_reference",
+      "XMB": "current_mirror",
+      "XMB0A": "current_mirror_reference",
+      "XMB0B": "current_mirror_reference",
+      "XMB1A": "current_mirror",
+      "XMB1B": "current_mirror",
+      "XMBP": "current_mirror_reference",
+      "XMCP": "current_mirror_reference",
+      "XMD": "current_mirror",
+      "XMSA": "current_mirror",
+      "XMSB": "current_mirror",
+      "XMT": "tail_current_source"
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cm.nmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XM3A",
+      "output_devices": [
+        "XM4A",
+        "XM4B"
+      ],
+      "devices": [
+        "XM3A",
+        "XM4A",
+        "XM4B"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "ea_n",
+        "out": "ea_o1"
+      }
+    },
+    {
+      "group_id": "cm.nmos.simple#2",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XM3B",
+      "output_devices": [
+        "XM4A",
+        "XM4B"
+      ],
+      "devices": [
+        "XM3B",
+        "XM4A",
+        "XM4B"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "ea_n",
+        "out": "ea_o1"
+      }
+    },
+    {
+      "group_id": "cm.nmos.simple#3",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XMA",
+      "output_devices": [
+        "XMB"
+      ],
+      "devices": [
+        "XMA",
+        "XMB"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "x1",
+        "out": "y"
+      }
+    },
+    {
+      "group_id": "cm.nmos.simple#4",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XMB0A",
+      "output_devices": [
+        "XMB1A",
+        "XMB1B",
+        "XMSA",
+        "XMSB"
+      ],
+      "devices": [
+        "XMB0A",
+        "XMB1A",
+        "XMB1B",
+        "XMSA",
+        "XMSB"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "nbias",
+        "out": "pbias"
+      }
+    },
+    {
+      "group_id": "cm.nmos.simple#5",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "nmos",
+      "template_id": "cm.nmos.simple",
+      "reference_device": "XMB0B",
+      "output_devices": [
+        "XMB1A",
+        "XMB1B",
+        "XMSA",
+        "XMSB"
+      ],
+      "devices": [
+        "XMB0B",
+        "XMB1A",
+        "XMB1B",
+        "XMSA",
+        "XMSB"
+      ],
+      "ports": {
+        "supply": "vss",
+        "ref_in": "nbias",
+        "out": "pbias"
+      }
+    },
+    {
+      "group_id": "cm.pmos.simple#1",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XMBP",
+      "output_devices": [
+        "XM6",
+        "XMT"
+      ],
+      "devices": [
+        "XM6",
+        "XMBP",
+        "XMT"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "pbias",
+        "out": "ea_out"
+      }
+    },
+    {
+      "group_id": "cm.pmos.simple#2",
+      "family": "current_mirror",
+      "mirror_class": "simple",
+      "polarity": "pmos",
+      "template_id": "cm.pmos.simple",
+      "reference_device": "XMCP",
+      "output_devices": [
+        "XMD"
+      ],
+      "devices": [
+        "XMCP",
+        "XMD"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "ref_in": "y",
+        "out": "gate"
+      }
+    },
+    {
+      "group_id": "dp.pmos.simple#1",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "pmos",
+      "template_id": "dp.pmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM1A",
+        "XM2A"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "in_p": "vref",
+        "in_n": "fb",
+        "CM_tail": "ea_tail",
+        "out_n": "ea_n",
+        "out_p": "ea_o1"
+      }
+    },
+    {
+      "group_id": "dp.pmos.simple#2",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "pmos",
+      "template_id": "dp.pmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM1A",
+        "XM2B"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "in_p": "vref",
+        "in_n": "fb",
+        "CM_tail": "ea_tail",
+        "out_n": "ea_n",
+        "out_p": "ea_o1"
+      }
+    },
+    {
+      "group_id": "dp.pmos.simple#3",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "pmos",
+      "template_id": "dp.pmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM1B",
+        "XM2A"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "in_p": "vref",
+        "in_n": "fb",
+        "CM_tail": "ea_tail",
+        "out_n": "ea_n",
+        "out_p": "ea_o1"
+      }
+    },
+    {
+      "group_id": "dp.pmos.simple#4",
+      "family": "differential_pair",
+      "mirror_class": "differential_pair",
+      "polarity": "pmos",
+      "template_id": "dp.pmos.simple",
+      "reference_device": null,
+      "output_devices": [],
+      "devices": [
+        "XM1B",
+        "XM2B"
+      ],
+      "ports": {
+        "supply": "vdd",
+        "in_p": "vref",
+        "in_n": "fb",
+        "CM_tail": "ea_tail",
+        "out_n": "ea_n",
+        "out_p": "ea_o1"
+      }
+    }
+  ]
+}

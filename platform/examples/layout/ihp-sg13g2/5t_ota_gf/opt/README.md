@@ -4,8 +4,8 @@ The gdsfactory-lane 5T OTA (`../gen_5t_ota_gf.py`) optimized "the platform way":
 `spicexplorer` project whose DUT parameters are the generator's 9 layout knobs and whose one
 testbench is the **layout flow** — `sim_engine: layout` selects
 `spicexplorer.backends.layout` in the backend factory; Nevergrad, checkpoints, reports and the
-UI's replay are the standard path. This replaces the stand-alone `../optimize_layout.py` loop
-for the platform lane (that script stays as the deterministic reference).
+UI's replay are the standard path. This replaced the July stand-alone nevergrad loop (retired in
+the 2026-09 close-out).
 
 ```bash
 cd examples/layout/ihp-sg13g2/5t_ota_gf/opt
@@ -57,8 +57,7 @@ be qualified `<tb>:<name>` (e.g. `tb_ac:i(vdd)`); unqualified names search them 
 | pre-layout (schematic DUT, `LayoutSimulator.run_prelayout_reference`) | 29.77 dB | 30.145 MHz | 61.5° | — |
 | post-layout (kpex CC, this flow) | 29.78 dB | 29.447 MHz | 61.9° | 205.9 µm² |
 
-UGF loss 0.70 MHz — the figure `../sim_pex_compare.py` / `../optimize_layout.py` report for the
-committed defaults. One trial ≈ 35–70 s (KLayout DRC dominates).
+UGF loss 0.70 MHz — the figure the July prototype scripts reported for the committed defaults. One trial ≈ 35–70 s (KLayout DRC dominates).
 
 ## Co-optimization (sizing + layout)
 

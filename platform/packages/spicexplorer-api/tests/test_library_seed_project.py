@@ -5,6 +5,7 @@ project seeded with its netlist + topology provenance. Tests are hermetic: a fix
 + a monkeypatched `_require`, so they run without the analog-db package installed (the
 worktree submodule is empty) and still exercise the full seeding + degradation paths.
 """
+
 from __future__ import annotations
 
 import json
@@ -39,7 +40,8 @@ def corpus(tmp_path, monkeypatch) -> Path:
     (cdir / "pdk" / "ihp-sg13g2" / "sizing.yaml").write_text("W: 10u\n")
     (cdir / "circuit.yaml").write_text(
         "class: amplifier\ndisplay_name: Demo Amp\npdks: [ihp-sg13g2]\n"
-        "provenance: {source: test-corpus, designer: nobody}\n")
+        "provenance: {source: test-corpus, designer: nobody}\n"
+    )
     fake = SimpleNamespace(paths=SimpleNamespace(db_root=lambda: root, db_present=lambda: True))
     monkeypatch.setattr(library_db, "_require", lambda: fake)
     return root
@@ -48,14 +50,23 @@ def corpus(tmp_path, monkeypatch) -> Path:
 def test_seed_service_copies_netlist_and_provenance(work, corpus):
     out = library_db.seed_from_catalog("amp_demo", pdk="ihp-sg13g2")
     pid = out["id"]
-    assert out["cell"] == "amp_demo" and out["pdk"] == "ihp-sg13g2" and out["netlist_seeded"] is True
+    assert (
+        out["cell"] == "amp_demo" and out["pdk"] == "ihp-sg13g2" and out["netlist_seeded"] is True
+    )
 
     pd = work / "projects" / pid
-    assert (pd / "design" / "cells" / "amp_demo" / "netlist.spice").read_text().startswith("* demo amp")
+    assert (
+        (pd / "design" / "cells" / "amp_demo" / "netlist.spice")
+        .read_text()
+        .startswith("* demo amp")
+    )
     assert (pd / "design" / "cells" / "amp_demo" / "sizing.yaml").read_text() == "W: 10u\n"
     sel = json.loads((pd / "topology" / "selection.json").read_text())
     assert sel["source"] == "analog-db" and sel["circuit_id"] == "amp_demo"
-    assert sel["provenance"]["source"] == "test-corpus" and sel["netlist_from"] == "abstract/netlist.spice"
+    assert (
+        sel["provenance"]["source"] == "test-corpus"
+        and sel["netlist_from"] == "abstract/netlist.spice"
+    )
     man = json.loads((pd / "manifest.json").read_text())
     assert man["source"] == {"kind": "analog-db", "ref": "amp_demo", "pdk": "ihp-sg13g2"}
     assert man["default_pdk"] == "ihp-sg13g2"
@@ -75,7 +86,7 @@ def test_seed_route_returns_201_and_registers(client, work, corpus):
 
 
 def test_seed_defaults_pdk_to_first_when_unspecified(work, corpus):
-    out = library_db.seed_from_catalog("amp_demo")   # no pdk → first in circuit.yaml
+    out = library_db.seed_from_catalog("amp_demo")  # no pdk → first in circuit.yaml
     assert out["pdk"] == "ihp-sg13g2"
 
 
@@ -86,6 +97,6 @@ def test_unknown_circuit_404(client, corpus):
 
 
 def test_degrades_503_when_analog_db_absent(client, monkeypatch):
-    monkeypatch.setattr(library_db, "_modules", lambda: None)   # analog-db not installed
+    monkeypatch.setattr(library_db, "_modules", lambda: None)  # analog-db not installed
     r = client.post("/api/library/circuits/amp_demo/project", json={})
     assert r.status_code == 503

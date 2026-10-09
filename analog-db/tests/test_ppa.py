@@ -72,8 +72,14 @@ def test_metric_values_and_spec_verdicts():
 def test_ppa_rollup_direction_aware():
     c = model.load_circuit("ldo_007_pmos")
     corners = {
-        "tt": {"i_q": {"value": 2.0e-4, "spec": "pass"}, "load_reg": {"value": 0.002, "spec": "pass"}},
-        "ss": {"i_q": {"value": 2.4e-4, "spec": "pass"}, "load_reg": {"value": 0.004, "spec": "pass"}},
+        "tt": {
+            "i_q": {"value": 2.0e-4, "spec": "pass"},
+            "load_reg": {"value": 0.002, "spec": "pass"},
+        },
+        "ss": {
+            "i_q": {"value": 2.4e-4, "spec": "pass"},
+            "load_reg": {"value": 0.004, "spec": "pass"},
+        },
     }
     roll = ppa.ppa_rollup(c, corners, {"active_gate_area_um2": 123.0})
     assert roll["power_w"] == pytest.approx(2.4e-4 * 1.8)  # worst corner x typical VDD

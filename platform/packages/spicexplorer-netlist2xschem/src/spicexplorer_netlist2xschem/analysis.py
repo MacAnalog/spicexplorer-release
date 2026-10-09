@@ -216,7 +216,15 @@ def _port_roles(
     candidates = set(circuit.ports) | {n for n, p in net_pins.items() if len(p) == 1}
     roles: dict[str, str] = {}
     for net in candidates:
-        if net in supply or net not in net_pins:
+        if net not in net_pins:
+            continue
+        if net in supply:
+            # A supply net is normally drawn as a rail, not a port -- but a DECLARED `.subckt`
+            # formal port stays a port even when it is also a rail. An IC sub-block exposes VDD/VSS
+            # as explicit power pins, and without this a hierarchy child that keeps its supply map
+            # would silently drop vdd/vss from its port list and stop matching its own symbol.
+            if net in circuit.ports:
+                roles[net] = "inout"
             continue
         pin_names = {pin for _, pin in net_pins[net]}
         if pin_names <= {"GATE"}:
@@ -246,14 +254,13 @@ def _diode_refs(circuit: N2XCircuit) -> frozenset[str]:
     return frozenset(
         d.ref
         for d in circuit.devices
-        if d.kind is DeviceKind.MOS and d.nets.get("GATE") is not None
+        if d.kind is DeviceKind.MOS
+        and d.nets.get("GATE") is not None
         and d.nets.get("GATE") == d.nets.get("DRAIN")
     )
 
 
-def _net_levels(
-    circuit: N2XCircuit, vdd: frozenset[str], vss: frozenset[str]
-) -> dict[str, int]:
+def _net_levels(circuit: N2XCircuit, vdd: frozenset[str], vss: frozenset[str]) -> dict[str, int]:
     """Discrete row index per net by **longest-path layering** of the drain↔source current graph.
 
     Each MOS contributes a directed edge ``high → low`` (high = the net drawn toward VDD; reuse
@@ -340,7 +347,9 @@ def _net_levels(
             if cand:
                 bot[u] = max(cand) + 1
 
-    height = max([v for v in top.values() if v != UNSET] + [v for v in bot.values() if v != UNSET] + [0])
+    height = max(
+        [v for v in top.values() if v != UNSET] + [v for v in bot.values() if v != UNSET] + [0]
+    )
     level: dict[str, int] = {}
     for n in nets:
         if top[n] != UNSET:

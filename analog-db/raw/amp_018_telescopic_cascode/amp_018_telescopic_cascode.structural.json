@@ -11,9 +11,9 @@
     },
     "structural_roles": {
       "XM1": "differential_pair",
-      "XM1C": "differential_pair",
+      "XM1C": "cascode_device",
       "XM2": "differential_pair",
-      "XM2C": "differential_pair",
+      "XM2C": "cascode_device",
       "XM3": "current_mirror",
       "XM3C": "cascode_device",
       "XM4": "current_mirror",

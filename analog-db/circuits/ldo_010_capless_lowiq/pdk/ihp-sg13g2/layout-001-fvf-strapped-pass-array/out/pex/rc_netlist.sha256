@@ -1,0 +1,24 @@
+# Digest of the extracted RC netlist behind the post-layout ROW OF RECORD
+# (out/scorecard_post_rc.json). The netlist itself is a ~5 500-card extractor output — a rawfile,
+# not an artefact — so it is not committed; this file is what a provenance block hashes, the
+# pattern spicexplorer_harness.hashes.recompute documents for an untracked rawfile.
+#
+# Produced by the DESIGNER's round-5 run in the source repo (gen_ldo.py -> signoff.py
+#   --stages guards,build,cd,drc,lvs,pex --pex-mode RC, kpex 2.5D with the mesh stitcher on),
+# on a GDS that was DRC 0 / LVS matched. The extractor stamps its own run date into the file, so
+# a re-extraction gives a DIFFERENT digest for the SAME layout; what reproduces is the card
+# census below and the scorecard.
+#
+# This is NOT the digest in the source repo's layout/ldo_ihp_capless/verify/rc_netlist.sha256.
+# That one (9c6c6d53...) is the independent VERIFIER's own re-extraction on the platform fix at
+# feat/harness-spec-v2 @6c07a02, which contracts all 3101 zero-ohm [Pin] edges; this one still
+# carries the two the stitcher of that round left behind, which pex_sim.floor_zero_r() floors at
+# 1 mOhm. The two runs agree on every spec metric to <= 1.5e-7 relative (SIGNOFF.md section 3.2)
+# — but only THIS file reproduces out/scorecard_post_rc.json to the last digit, which is why it
+# is the one named here.
+#
+# cards: 5463 Rext + 21 rhigh primitives, 5484 R total, 186 C;
+#        zero-valued Rext cards: 2 (floored at 1 mOhm by pex_sim.floor_zero_r).
+#
+# netlist: $SX_SCRATCH/ldo-fix/w5/pex_rc/ldo_ihp_capless_pex__ldo_ihp_capless/ldo_ihp_capless_k25d_pex_netlist_stitched.spice
+cf18d06f9c0a8c4fc309605cbf3c9146f9f3d4fc4d6c16a53a45cff85e25eeb3  ldo_ihp_capless_k25d_pex_netlist_stitched.spice

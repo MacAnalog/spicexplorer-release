@@ -1,6 +1,6 @@
 """P6 — end-to-end ``transfer_function`` one-liner + the R1 acceptance bar.
 
-The R1 bar (plan §10 / plan_next_steps §R1): a library API + README quickstart + deterministic
+The R1 bar: a library API + README quickstart + deterministic
 tracked-fixture tests + a single Pydantic contract. Solved end to end on real OTA-core topologies;
 the committed enable-bearing subckts are also exercised through ingest→model→build (a full solve of
 those needs the DC-input stimulus overlay — P7).
@@ -57,8 +57,9 @@ def test_one_liner_ota_validated_numeric_gain():
 def test_one_liner_simplify_bundle():
     # Opt into reduction: the 'ideal' bundle drops dominated terms, validated against exact.
     op = {f"gm_m{i}": 1e-3 for i in (1, 2, 3, 4)} | {f"ro_m{i}": 1e5 for i in (1, 2, 3, 4)}
-    res = transfer_function(_OTA, ("outp", "0"), ("vinp", "vinn"),
-                            assumptions="ideal", operating_point=op)
+    res = transfer_function(
+        _OTA, ("outp", "0"), ("vinp", "vinn"), assumptions="ideal", operating_point=op
+    )
     assert res.validation is not None and res.validation.passed
     # the simplified form is no longer than the exact (terms were dropped or it's unchanged)
     assert len(res.tf_simplified_expr) <= len(res.tf_exact_expr)
@@ -94,12 +95,15 @@ def test_pipeline_accepts_netlistview_source():
 def test_full_fidelity_ota_has_poles():
     # FULL fidelity over a 4-transistor OTA is past the fully-symbolic ceiling, so numericize via
     # subs (the selective-numericization lever) — fast, and still exercises the full cap set → poles.
-    subs = ({f"gm_m{i}": 1e-3 for i in (1, 2, 3, 4)}
-            | {f"ro_m{i}": 1e5 for i in (1, 2, 3, 4)}
-            | {f"{c}_m{i}": 1e-14 for i in (1, 2, 3, 4) for c in ("cgs", "cgd", "cdb", "csb")}
-            | {"gmb_m%d" % i: 2e-4 for i in (1, 2, 3, 4)})
-    res = transfer_function(_OTA, ("outp", "0"), ("vinp", "vinn"),
-                            level=Fidelity.FULL, subs=subs, operating_point=subs)
+    subs = (
+        {f"gm_m{i}": 1e-3 for i in (1, 2, 3, 4)}
+        | {f"ro_m{i}": 1e5 for i in (1, 2, 3, 4)}
+        | {f"{c}_m{i}": 1e-14 for i in (1, 2, 3, 4) for c in ("cgs", "cgd", "cdb", "csb")}
+        | {"gmb_m%d" % i: 2e-4 for i in (1, 2, 3, 4)}
+    )
+    res = transfer_function(
+        _OTA, ("outp", "0"), ("vinp", "vinn"), level=Fidelity.FULL, subs=subs, operating_point=subs
+    )
     assert len(res.poles) >= 1  # caps now create finite poles
     assert res.model_level == "full"
     assert res.solve_path == "selectively_numericized"

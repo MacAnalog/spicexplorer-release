@@ -1,0 +1,26 @@
+# Corner bundles for ihp-sg13g2 — LV MOS family (sg13_lv_*, 1.5 V thin oxide): the target family
+# of the challenge. Model libs stay out of repo (referenced by bare name through the PDK's
+# .spiceinit sourcepath); the corner sections are the PDK's own mos_tt|ss|ff|sf|fs.
+pdk: ihp-sg13g2
+corners:
+  tt:
+    - {lib_file: cornerMOSlv.lib, section: mos_tt}
+    - {lib_file: cornerRES.lib, section: res_typ}
+    - {lib_file: cornerCAP.lib, section: cap_typ}
+  ss:
+    - {lib_file: cornerMOSlv.lib, section: mos_ss}
+    - {lib_file: cornerRES.lib, section: res_wcs}
+    - {lib_file: cornerCAP.lib, section: cap_wcs}
+  ff:
+    - {lib_file: cornerMOSlv.lib, section: mos_ff}
+    - {lib_file: cornerRES.lib, section: res_bcs}
+    - {lib_file: cornerCAP.lib, section: cap_bcs}
+  sf:
+    - {lib_file: cornerMOSlv.lib, section: mos_sf}
+    - {lib_file: cornerRES.lib, section: res_typ}
+    - {lib_file: cornerCAP.lib, section: cap_typ}
+  fs:
+    - {lib_file: cornerMOSlv.lib, section: mos_fs}
+    - {lib_file: cornerRES.lib, section: res_typ}
+    - {lib_file: cornerCAP.lib, section: cap_typ}
+default_corner: tt

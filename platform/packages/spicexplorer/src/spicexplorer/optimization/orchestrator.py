@@ -1,13 +1,14 @@
 """This Module implements the user endpoint for selecting optimizers types based on an input project_setup yaml file and optimization engine type"""
+
 import logging
 import os
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 
 # Third-party imports
 from enum import Enum
 from pathlib import Path
 from time import perf_counter
-from typing import Callable, Dict, List, Type
 
 from spicexplorer.core.domains import OptimizerType, Project_Setup
 
@@ -18,7 +19,6 @@ from .base import Base_Optimizer, Spice_Base_Optimizer
 from .sim_benchmark import SimTimeReport, TestbenchSimTiming, benchmark_simulators
 from .simulator_factory import build_simulator, resolve_engine
 from .stochastic.nevergrad import (
-    Nevergrad_Spice_Bode_Optimizer,
     Nevergrad_Spice_Constraint_Satisfaction,
     Nevergrad_Spice_Single_Objective,
 )
@@ -28,7 +28,7 @@ from .stochastic.nevergrad import (
 logger = logging.getLogger("spicexplorer.optimization.orchestrator")
 
 
-def _load_ax_optimizer_classes() -> tuple[Type[Spice_Base_Optimizer], Type[Spice_Base_Optimizer]]:
+def _load_ax_optimizer_classes() -> tuple[type[Spice_Base_Optimizer], type[Spice_Base_Optimizer]]:
     """Import Ax-backed optimizers only when the Ax extra is installed."""
     try:
         from .stochastic.bayesian_ax import (
@@ -47,14 +47,15 @@ def _load_ax_optimizer_classes() -> tuple[Type[Spice_Base_Optimizer], Type[Spice
 class Optimizer_Type_Enum(Enum):
     BAYESIAN = "bayesian"
     EVOLUTIONARY = "evolutionary"
-    NEVERGRAD_BODE = "nevergrad_bode"
     NEVERGRAD_CONSTRAINT = "nevergrad_constraint"
     NEVERGRAD_SINGLE = "nevergrad_single"
     AX_CONSTRAINT = "ax_constraint"
     AX_SINGLE = "ax_single"
 
-SPICE_OPTIMIZER_CLASSES : Dict[Optimizer_Type_Enum, Callable[[], Type[Spice_Base_Optimizer]] | Type[Spice_Base_Optimizer]] = {
-    Optimizer_Type_Enum.NEVERGRAD_BODE: Nevergrad_Spice_Bode_Optimizer,
+
+SPICE_OPTIMIZER_CLASSES: dict[
+    Optimizer_Type_Enum, Callable[[], type[Spice_Base_Optimizer]] | type[Spice_Base_Optimizer]
+] = {
     Optimizer_Type_Enum.NEVERGRAD_CONSTRAINT: Nevergrad_Spice_Constraint_Satisfaction,
     Optimizer_Type_Enum.NEVERGRAD_SINGLE: Nevergrad_Spice_Single_Objective,
     Optimizer_Type_Enum.AX_CONSTRAINT: lambda: _load_ax_optimizer_classes()[0],
@@ -67,60 +68,87 @@ SPICE_OPTIMIZER_CLASSES : Dict[Optimizer_Type_Enum, Callable[[], Type[Spice_Base
 # swaps the engine in every lane. `name` stays the backend-specific algorithm knob
 # (Nevergrad: NGOpt/TinyCMA/…). Both engines default to the single-objective endpoint (the
 # constraint-satisfaction landscape plus the satisfied-spec reward — the shipped convention).
-_ENGINE_TO_OPTIMIZER: Dict[OptimizerType, Optimizer_Type_Enum] = {
+_ENGINE_TO_OPTIMIZER: dict[OptimizerType, Optimizer_Type_Enum] = {
     OptimizerType.NEVERGRAD: Optimizer_Type_Enum.NEVERGRAD_SINGLE,
     OptimizerType.BAYESIAN_AX: Optimizer_Type_Enum.AX_SINGLE,
+}
+
+# Engines the DSL once named and no longer ships, with the reason a stale YAML should see
+# instead of a bare "unknown engine". `reinforcement_learning` was unused (never runnable as
+# shipped) and was retired with `optimization/rl/` by owner ruling 2026-09-25. `nevergrad_bode`
+# (the Bode transfer-function fitter, once an `Optimizer_Type_Enum` member) could not run as
+# shipped either and was retired with its Bode-only helpers on 2026-09-26.
+_RETIRED_ENGINES: dict[str, str] = {
+    "reinforcement_learning": "the RL optimizer backend was retired (owner ruling 2026-09-25)",
+    "nevergrad_bode": "the Bode transfer-function optimizer was retired 2026-09-26 (it could not run as shipped)",
 }
 
 
 def optimizer_type_from_config(project_setup: Project_Setup) -> Optimizer_Type_Enum:
     """Resolve a project's `optimizer_config.type` to the optimizer backend to construct.
 
-    Fails loud on an unknown/unsupported engine (a bad `type:`, or `reinforcement_learning`
-    which is still dormant) so a typo surfaces at load, not as a silent Nevergrad fallback."""
+    Raises ValueError on an unknown/unsupported engine (a bad `type:`, or a retired one such as
+    `reinforcement_learning`). `Project_Setup.from_yaml` loads such a YAML without error; the
+    orchestrator constructor calls this and raises, so a typo stops the run before any simulation
+    instead of falling back to Nevergrad."""
     raw = str(getattr(project_setup.optimizer_config, "type", "") or "").strip().lower()
+    valid = [t.value for t in OptimizerType]
+    if raw in _RETIRED_ENGINES:
+        raise ValueError(
+            f"optimizer_config.type={raw!r} is no longer supported: {_RETIRED_ENGINES[raw]}; "
+            f"choose one of {valid}."
+        )
     try:
         engine = OptimizerType(raw)
     except ValueError as exc:
-        valid = [t.value for t in OptimizerType]
         raise ValueError(
             f"optimizer_config.type={raw!r} is not a known engine; choose one of {valid}."
         ) from exc
     backend = _ENGINE_TO_OPTIMIZER.get(engine)
     if backend is None:
         raise ValueError(
-            f"optimizer_config.type={engine.value!r} has no optimizer backend wired "
-            f"(the RL backend is dormant); choose 'nevergrad' or 'bayesian_ax'."
+            f"optimizer_config.type={engine.value!r} has no optimizer backend wired; "
+            f"choose one of {[e.value for e in _ENGINE_TO_OPTIMIZER]}."
         )
     return backend
 
+
 # ------------------ Classes ------------------
 
+
 class Circuit_Optimizer_Orchestrator_Base(ABC):
-    def __init__(self, project_setup_path: str | Path, optimizer_type: Optimizer_Type_Enum | None = None, auto_load: bool = True,verbose: bool = False):
+    def __init__(
+        self,
+        project_setup_path: str | Path,
+        optimizer_type: Optimizer_Type_Enum | None = None,
+        auto_load: bool = True,
+        verbose: bool = False,
+    ):
         self.project_setup_path = project_setup_path
         self.verbose = verbose
 
-        self.project_setup:     Project_Setup   = self.read_project_setup()
+        self.project_setup: Project_Setup = self.read_project_setup()
         logger.debug(f"created the project setup for {self.project_setup.name}")
 
         # Engine selection: an explicit `optimizer_type` wins (back-compat with callers that
         # pass one), otherwise resolve the DSL's `optimizer_config.type` — so a YAML
         # carrying `type: bayesian_ax` launches Ax with no code change.
         self.optimizer_type: Optimizer_Type_Enum = (
-            optimizer_type if optimizer_type is not None
+            optimizer_type
+            if optimizer_type is not None
             else optimizer_type_from_config(self.project_setup)
         )
-        logger.info(f"engine resolved to {self.optimizer_type.value} "
-                    f"(optimizer_config.type={self.project_setup.optimizer_config.type!r})")
+        logger.info(
+            f"engine resolved to {self.optimizer_type.value} "
+            f"(optimizer_config.type={self.project_setup.optimizer_config.type!r})"
+        )
 
         if auto_load:
             self.initialize()
 
-    def initialize(self):
-        self.spicelib_wrappers:  Dict[str, Simulator] = self.create_spicelib_wrappers()
+    def initialize(self) -> None:
+        self.spicelib_wrappers: dict[str, Simulator] = self.create_spicelib_wrappers()
         logger.debug("created the spicelib_wrapper.")
-
 
     def read_project_setup(self) -> Project_Setup:
         # Load the project setup information
@@ -136,13 +164,15 @@ class Circuit_Optimizer_Orchestrator_Base(ABC):
             ) from e
         return PROJECT_SETUP
 
-    def create_spicelib_wrappers(self) -> Dict[str, Simulator]:
+    def create_spicelib_wrappers(self) -> dict[str, Simulator]:
         PROJECT_SETUP = self.project_setup
 
         netlist_filename = Path(PROJECT_SETUP.ws_root) / Path(PROJECT_SETUP.netlist)
-        output_folder    = Path(PROJECT_SETUP.ws_root) / Path(PROJECT_SETUP.outdir)
-        sim_execution_t  = Sim_Execution_Type.RUN_AND_WAIT  # only RUN_AND_WAIT is supported as of now...
-        path_to_simulator=Path(PROJECT_SETUP.simulator)
+        output_folder = Path(PROJECT_SETUP.ws_root) / Path(PROJECT_SETUP.outdir)
+        sim_execution_t = (
+            Sim_Execution_Type.RUN_AND_WAIT
+        )  # only RUN_AND_WAIT is supported as of now...
+        path_to_simulator = Path(PROJECT_SETUP.simulator)
 
         # P4: dispatch on the project's engine selector (default 'ngspice', fully
         # backward-compatible). The optimizer loop consumes the `Simulator` protocol,
@@ -157,24 +187,29 @@ class Circuit_Optimizer_Orchestrator_Base(ABC):
         vb_env_file = os.environ.get("SPICEXPLORER_VB_ENV_FILE") if is_spectre else None
 
         logger.info("=============================================================================")
-        logger.info(f"project: {PROJECT_SETUP.name} has ({len(PROJECT_SETUP.testbenches)}) testbenches.")
+        logger.info(
+            f"project: {PROJECT_SETUP.name} has ({len(PROJECT_SETUP.testbenches)}) testbenches."
+        )
         logger.info(f"\tsim_engine {engine.value}")
         logger.debug(f"\tpath_to_simulator {PROJECT_SETUP.simulator}")
         logger.debug(f"\tDUT netlist {netlist_filename}")
         logger.debug(f"\toutput_folder {output_folder}")
 
-
         # Create the Spice Simulator Wrapper for each testbench
         logger.debug("Creating spicelib_wrappers for each testbench...")
-        logger.debug("-----------------------------------------------------------------------------")
-        spicelib_wrappers : Dict[str, Simulator] = {}
+        logger.debug(
+            "-----------------------------------------------------------------------------"
+        )
+        spicelib_wrappers: dict[str, Simulator] = {}
 
         for i, tb in enumerate(PROJECT_SETUP.testbenches):
             if not tb.enable:
-                logger.info(f"({i+1}) Skipping disabled testbench: {tb.name} - {tb.description}")
+                logger.info(f"({i + 1}) Skipping disabled testbench: {tb.name} - {tb.description}")
                 continue
 
-            logger.debug(f"({i+1}) Creating spicelib_wrapper for testbench: {tb.name} - {tb.description}")
+            logger.debug(
+                f"({i + 1}) Creating spicelib_wrapper for testbench: {tb.name} - {tb.description}"
+            )
             logger.debug("\tspicelib_wrapper will use the following configs:")
             logger.debug(f"\t- testbench_name {tb.name}")
             logger.debug(f"\t- netlist_filename {tb.netlist}")
@@ -204,15 +239,19 @@ class Circuit_Optimizer_Orchestrator_Base(ABC):
             )
             spicelib_wrappers[tb.name] = wrapper
             logger.debug(f"Created spicelib_wrapper for testbench: {tb.name}")
-        logger.debug("-----------------------------------------------------------------------------")
-        logger.info(f"Created ({len(spicelib_wrappers)}) spicelib_wrappers for project: {PROJECT_SETUP.name}")
+        logger.debug(
+            "-----------------------------------------------------------------------------"
+        )
+        logger.info(
+            f"Created ({len(spicelib_wrappers)}) spicelib_wrappers for project: {PROJECT_SETUP.name}"
+        )
         logger.info("=============================================================================")
         return spicelib_wrappers
 
     def get_project_setup(self) -> Project_Setup:
         return self.project_setup
 
-    def get_spicelib_wrapper(self) -> Dict[str, Simulator]:
+    def get_spicelib_wrapper(self) -> dict[str, Simulator]:
         return self.spicelib_wrappers
 
     @abstractmethod
@@ -224,19 +263,22 @@ class Circuit_Optimizer_Orchestrator_with_SPICE(Circuit_Optimizer_Orchestrator_B
     def get_optimizer(self) -> Spice_Base_Optimizer:
         logger.info(f"creating the circuit_optimizer of type {self.optimizer_type.value}")
         optimizer_factory = SPICE_OPTIMIZER_CLASSES[self.optimizer_type]
-        optimizer_cls = optimizer_factory() if callable(optimizer_factory) and not isinstance(optimizer_factory, type) else optimizer_factory
+        optimizer_cls = (
+            optimizer_factory()
+            if callable(optimizer_factory) and not isinstance(optimizer_factory, type)
+            else optimizer_factory
+        )
         circuit_optimizer = optimizer_cls(
-            spicelib_wrappers=self.spicelib_wrappers,
-            setup_obj=self.project_setup
+            spicelib_wrappers=self.spicelib_wrappers, setup_obj=self.project_setup
         )
         logger.info(f"created the circuit_optimizer; type {type(circuit_optimizer)}")
         return circuit_optimizer
 
-    def run_sanity_on_spicelib_wrapper(self, use_editor: bool = True)-> bool:
+    def run_sanity_on_spicelib_wrapper(self, use_editor: bool = True) -> bool:
         # Per-testbench sanity sim times land here (and in the log) so a project's
         # sim-cost profile is visible from the health check — the follow-on
         # sim-gating feature reads this to order cheap benches before long ones.
-        self.last_sanity_timings: List[TestbenchSimTiming] = []
+        self.last_sanity_timings: list[TestbenchSimTiming] = []
         report = SimTimeReport(timings=self.last_sanity_timings)
         all_passed = True
         for tb_name, spicelib_wrapper in self.spicelib_wrappers.items():
@@ -250,8 +292,9 @@ class Circuit_Optimizer_Orchestrator_with_SPICE(Circuit_Optimizer_Orchestrator_B
             t0 = perf_counter()
             ok = bool(checker(use_editor=use_editor, sim_execution_t=Sim_Execution_Type.RUN_NOW))
             elapsed_s = perf_counter() - t0
-            self.last_sanity_timings.append(TestbenchSimTiming(
-                testbench=tb_name, elapsed_s=elapsed_s, ok=ok, mode="sanity"))
+            self.last_sanity_timings.append(
+                TestbenchSimTiming(testbench=tb_name, elapsed_s=elapsed_s, ok=ok, mode="sanity")
+            )
             logger.info(f"⏱️  sanity sim time for testbench '{tb_name}': {elapsed_s:.3f} s")
             if not ok:
                 logger.warning(f"sanity check failed for spicelib_wrapper for testbench: {tb_name}")
@@ -289,9 +332,11 @@ class Circuit_Optimizer_Orchestrator_with_SPICE(Circuit_Optimizer_Orchestrator_B
             parallel = bool(getattr(self.project_setup, "parallel_sim", False))
         logger.info(
             f"⏱️  benchmarking {len(self.spicelib_wrappers)} testbench(es), "
-            f"runs={runs}, parallel={parallel}")
+            f"runs={runs}, parallel={parallel}"
+        )
         report = benchmark_simulators(
-            self.spicelib_wrappers, runs=runs, parallel=parallel, timeout_s=timeout_s)
+            self.spicelib_wrappers, runs=runs, parallel=parallel, timeout_s=timeout_s
+        )
         logger.info("⏱️  per-testbench sim-time benchmark:\n" + report.format_table())
         if save_path is not None:
             report.save(save_path)

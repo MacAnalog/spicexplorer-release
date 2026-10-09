@@ -53,9 +53,7 @@ def test_parses_labels_and_ports_distinctly(sym_lib):
     assert all(not c.is_device for c in sch.components if c.is_label or c.is_port)
     # Devices, labels and ports partition the non-title components.
     real = [c for c in sch.components if c.symref.rsplit("/", 1)[-1] != "title.sym"]
-    assert len(real) == len(sch.devices) + sum(
-        1 for c in real if c.is_label or c.is_port
-    )
+    assert len(real) == len(sch.devices) + sum(1 for c in real if c.is_label or c.is_port)
 
 
 def test_multiline_property_block_is_kept_whole():
@@ -112,3 +110,26 @@ def test_parses_analog_db_block_templates(rel):
     if "diff_pair" in rel:
         flips = sorted(c.flip for c in mos)
         assert flips == [0, 1]
+
+
+def test_unquote_restores_escaped_braces():
+    """The parser is the mirror of `emit._fmt_value`: an escaped brace comes back as a brace.
+
+    Without this the .sch we write no longer parses to the value we put in — `dc {vref_val}` read
+    back as `dc \\{vref_val\\}`, so every consumer of `parse_sch` (the stamping placer, the UI
+    viewer) saw stray backslashes in a `.param` reference.
+    """
+    from spicexplorer_netlist2xschem.sch_parser import _unquote
+
+    assert _unquote(r'"dc \{vref_val\}"') == "dc {vref_val}"
+    assert _unquote(r'"a \"q\" b"') == 'a "q" b'
+    assert _unquote("1p") == "1p"
+
+
+def test_parse_sch_round_trips_a_braced_attribute_value():
+    from spicexplorer_netlist2xschem import from_string
+    from spicexplorer_netlist2xschem.emit import build_sch as _build
+
+    doc = _build(from_string("* v\nVREF vref vss dc {vref_val}\n.end\n", name="v"))
+    comp = next(c for c in parse_sch(doc.text).components if c.attrs.get("name") == "VREF")
+    assert comp.attrs["value"] == "dc {vref_val}"

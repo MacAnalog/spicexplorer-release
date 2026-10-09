@@ -59,6 +59,25 @@ Browser (localhost:4000)
 > repo (see its README for the route/service map and the Python test suite). **This
 > repo is frontend-only**; every path in the file table below is relative to its root.
 
+### Surface, and the decision not to refactor it yet
+
+Measured 2026-09-11 (platform issue #177, finding UI-INFL): **140 TS/TSX files, 24,846 lines**
+excluding the generated `src/types/api.gen.ts` (6,405 more), with the two largest hand-written
+files being `src/stores/waveviewStore.ts` (1,036) and `src/components/tabs/ExplorerTab.tsx` (830).
+
+That is an architecture observation, not a defect — nothing about it is broken, and the review
+that raised it classified it as *"real but inert: no runtime trigger"*.
+
+**The decision: no refactor before launch.** A split of the waveview store or the Explorer
+component would touch the two surfaces every live-run view reads, with no test that fails first
+and no user-visible improvement — the shape of change most likely to introduce the bug it was
+meant to prevent. It is recorded here rather than left implicit so the next reader does not
+re-open the question from scratch, and so a deliberate split later starts from a measurement.
+
+**What would change the decision:** a second consumer of the waveview store outside the studio
+shell, a third tab duplicating Explorer's data plumbing, or a measured render cost traceable to
+either file. Re-measure with the command above before re-opening it.
+
 ### Shell anatomy
 
 The app is one persistent workspace. `app/page.tsx` redirects to `/setup`; all real views live under the `app/(studio)/` route group. `(studio)/layout.tsx` renders the shell once and only the center segment swaps on navigation, so the rails and the live SSE stream persist across views:
@@ -102,7 +121,7 @@ Overlays: CommandPalette (⌘K) · WizardOverlay (+ New project) · ProjectsOver
 | `src/config/ui.json` | Central user-facing copy/branding (imported as `UI` from `@/config`); `src/config/colors.ts` holds the `ACCENT` color tokens |
 | `src/lib/xschem/` | Xschem `.sch`/symbol parsing + resolution helpers |
 | `src/types/api.ts` | TypeScript mirrors of FastAPI response shapes (+ generated `api.gen.ts`; see `types/README.md`) |
-| `.env.local` | `NEXT_PUBLIC_API_URL=` — empty (same-origin; the `/api/*` rewrite in `next.config.mjs` proxies to the backend). `src/lib/api.ts` falls back to `http://localhost:8000` when unset; set a direct backend origin here only when the browser runs on a different host than the backend (VS Code Remote, network IP). |
+| `.env.local` | `NEXT_PUBLIC_API_URL=` — empty (same-origin; the `/api/*` rewrite in `next.config.mjs` proxies to the backend). `src/lib/api.ts` falls back to `http://localhost:8000` when the var is *unset* (empty is not unset — `??` keeps the empty string). Leave it empty: same-origin is the mode that survives a forwarded port. See [Reaching the UI from another host](#reaching-the-ui-from-another-host) before setting a direct backend origin — it does not do what it looks like it does. |
 
 ---
 
@@ -158,7 +177,8 @@ Navigate views via the activity-bar icons, the activity bar, or **⌘0–⌘9** 
 - **Central UI config** — user-facing copy/branding in `src/config/ui.json`; accent color tokens in `src/config/colors.ts` (imported by the Tailwind theme and all chart/chip palettes).
 - **UI primitives** — `Button`, `Badge`, `Panel`, `Select` + `selectCn()`, `Table`, `EmptyState`, `SpecChip`, `Stat`, `Sparkline`, `Segmented`, `Slider`, `ResizeHandle`/`useRailSize`, `SpiceEditor`, `Lightbox`.
 - **Logging** — `setup_loggers(console_level=...)`; backend reads `LOG_LEVEL`. Files in `logs/SpiceXplorer_<timestamp>.log`.
-- **CORS** — Allows any `localhost:<port>`.
+- **CORS** — Allows any `localhost`/`127.0.0.1` port over `http`, and nothing else — not a LAN
+  address, not `https`. See [Reaching the UI from another host](#reaching-the-ui-from-another-host).
 
 ---
 
@@ -189,12 +209,13 @@ npm run typecheck    # tsc --noEmit
 npm run lint         # eslint src — zero warnings allowed
 npm run build        # production build (delete .next before restarting dev)
 npm run gen:types    # regenerate src/types/api.gen.ts from openapi.json
-npm test             # vitest — unit tests for lib/library pure logic (adapt, selectors)
+npm test             # vitest — unit tests in Node, no DOM (src/**/*.test.ts[x])
 npm run test:watch   # vitest watch mode
 ```
 
-> The CI workflow (`.github/workflows/ci.yml`) covers `typecheck`, `lint`, vitest
-> (`npm test`), and `build`.
+> The workflow `.github/workflows/ci.yml` runs `typecheck`, `lint`, vitest (`npm test`)
+> and `build`, but it is disabled on GitHub, so these four checks run only when someone
+> runs them locally.
 
 The Python library + backend test suite — fast smoke tests and slow real-ngspice
 simulation tests (`uv run pytest [-m slow]`) — lives in the
@@ -210,11 +231,51 @@ simulation tests (`uv run pytest [-m slow]`) — lives in the
 
 **Fix:** Make sure both processes are running, then **hard-refresh** the page (`Ctrl+Shift+R`).
 
-### App loads but backend calls fail (CORS error in browser console)
+### Reaching the UI from another host
 
-**Cause:** Next.js landed on a different port than the backend's CORS allowlist.
+**Symptoms:** a CORS error in the browser console — or, if the backend is bound to
+loopback, a plain connection failure instead; or the app works but a live run shows no
+trial events and the Analyze log tail never fills.
 
-**Fix:** The CORS config uses `allow_origin_regex` matching any `localhost:<port>`. If you still see this after the fix, restart the backend.
+**Cause — the API's CORS policy is loopback-only.** The backend mounts
+(`spicexplorer-platform/packages/spicexplorer-api/src/spicexplorer_api/main.py`):
+
+```python
+allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?"
+```
+
+Any **port** is fine, so a Next.js fallback to `:4001` is *not* the problem. But only
+`http`, and only the two loopback names: a page served from a LAN address
+(`http://192.168.1.50:4000`, `http://somehost:4000`) or over `https` gets no
+`Access-Control-Allow-Origin` back.
+
+**What actually breaks on a LAN address** (with `NEXT_PUBLIC_API_URL` empty, the default,
+*and* the backend actually reachable at `<page-host>:8000` — neither `run_dev.sh` nor the
+manual block above passes `--host`, and uvicorn defaults to `127.0.0.1`, so from a LAN page
+the images and both streams simply fail to connect and CORS is never consulted):
+
+| | Works? | Why |
+|---|---|---|
+| Regular API calls | ✅ | same-origin `/api/*`, proxied server-side by the `next.config.mjs` rewrite — CORS never applies |
+| Schematic / template images | ✅ | `<img>` loads are not CORS-gated |
+| Live SSE streams (optimize progress, Analyze log tail) | ❌ | they bypass the proxy and hit the backend origin directly, because the proxy buffers `text/event-stream` (see the note in `src/lib/api.ts`) |
+
+So the failure is partial and quiet: SSE reports a CORS block only as an opaque
+`EventSource` `onerror`. `src/lib/api.ts` logs a `[api]` console warning naming the
+policy when it detects this, so check the console before hunting elsewhere.
+
+**Fix — forward a port, don't repoint the API.** Reach the UI through `ssh -L
+4000:localhost:4000 …` or VS Code Remote's port forwarding, so the browser's own
+origin is `localhost` and everything passes.
+
+> **Do not "fix" this with `NEXT_PUBLIC_API_URL=http://<lan-host>:8000`.** CORS judges
+> the *page* origin, not the target, so that does not unblock the streams — and it
+> pulls the regular API calls out of the proxy and off same-origin, breaking the half
+> that currently works.
+
+Widening the policy to serve a real LAN deployment is a **platform-side** decision
+(the API repo's `CLAUDE.md` explicitly forbids swapping the regex for a static origin
+list); raise it as an issue on `spicexplorer-platform` rather than patching it here.
 
 ### Port 4000 already in use / Next.js falls back to 4001
 

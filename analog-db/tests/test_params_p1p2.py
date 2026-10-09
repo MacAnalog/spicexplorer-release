@@ -75,7 +75,14 @@ def _doc(graph, groups=None, ratios=None):
 def test_refresh_preserves_authored_groups_and_ratios(five_t_graph):
     authored = _doc(
         five_t_graph,
-        groups=[{"name": "input_pair", "kind": "matched_pair", "members": ["XM1", "XM2"], "tie": ["w", "l", "m"]}],
+        groups=[
+            {
+                "name": "input_pair",
+                "kind": "matched_pair",
+                "members": ["XM1", "XM2"],
+                "tie": ["w", "l", "m"],
+            }
+        ],
         ratios=[{"param": "m", "ref": "XM5", "of": "XM6", "ratio": "17/3"}],
     )
     authored["devices"] = {"stale": {"w": "gone"}}  # a stale inventory must be regenerated …
@@ -119,9 +126,7 @@ class _FakeCircuit:
         self.pdks = list(pdks)
         (tmp_path / "abstract").mkdir(parents=True, exist_ok=True)
         (tmp_path / "abstract" / "topology.cgraph.json").write_text(json.dumps(graph))
-        (tmp_path / "abstract" / "params.yaml").write_text(
-            yaml.safe_dump(doc, sort_keys=False)
-        )
+        (tmp_path / "abstract" / "params.yaml").write_text(yaml.safe_dump(doc, sort_keys=False))
         self._sizing = {"variables": [{"name": n, "default": 1} for n in sizing_vars]}
         for pdk in self.pdks:
             (tmp_path / "pdk" / pdk).mkdir(parents=True, exist_ok=True)
@@ -145,8 +150,18 @@ def test_tier1_all_green_with_untied_warning(tmp_path, five_t_graph):
     doc = _doc(
         five_t_graph,
         groups=[
-            {"name": "input_pair", "kind": "matched_pair", "members": ["XM1", "XM2"], "tie": ["w", "l", "m"]},
-            {"name": "load_pair", "kind": "matched_pair", "members": ["XM3", "XM4"], "tie": ["w", "l", "m"]},
+            {
+                "name": "input_pair",
+                "kind": "matched_pair",
+                "members": ["XM1", "XM2"],
+                "tie": ["w", "l", "m"],
+            },
+            {
+                "name": "load_pair",
+                "kind": "matched_pair",
+                "members": ["XM3", "XM4"],
+                "tie": ["w", "l", "m"],
+            },
         ],
     )
     c = _FakeCircuit(tmp_path, five_t_graph, doc, _free_sizing(doc))
@@ -163,7 +178,14 @@ def test_tier1_all_green_with_untied_warning(tmp_path, five_t_graph):
 def test_tier1_missing_member_and_tie_field_fail(tmp_path, five_t_graph):
     doc = _doc(
         five_t_graph,
-        groups=[{"name": "ghost", "kind": "shared_geometry", "members": ["XM1", "XM9"], "tie": ["w", "ng"]}],
+        groups=[
+            {
+                "name": "ghost",
+                "kind": "shared_geometry",
+                "members": ["XM1", "XM9"],
+                "tie": ["w", "ng"],
+            }
+        ],
         ratios=[{"param": "m", "ref": "XM8", "of": "XM6", "ratio": 2}],
     )
     c = _FakeCircuit(tmp_path, five_t_graph, doc, _free_sizing(doc))
@@ -176,7 +198,10 @@ def test_tier1_missing_member_and_tie_field_fail(tmp_path, five_t_graph):
     "group,why",
     [
         # three members can't be a matched_pair
-        ({"name": "g", "kind": "matched_pair", "members": ["XM1", "XM2", "XM5"], "tie": ["w"]}, "exactly 2"),
+        (
+            {"name": "g", "kind": "matched_pair", "members": ["XM1", "XM2", "XM5"], "tie": ["w"]},
+            "exactly 2",
+        ),
         # NMOS+PMOS is not a pair
         ({"name": "g", "kind": "matched_pair", "members": ["XM1", "XM3"], "tie": ["w"]}, "polarit"),
         # distinct source nets (XM1 on tail, XM6 on vss)
@@ -184,7 +209,10 @@ def test_tier1_missing_member_and_tie_field_fail(tmp_path, five_t_graph):
         # input pair claimed as a mirror: no diode-connected member
         ({"name": "g", "kind": "mirror_length", "members": ["XM1", "XM2"], "tie": ["l"]}, "GATE"),
         # mirror halves on different gates
-        ({"name": "g", "kind": "mirror_length", "members": ["XM3", "XM6"], "tie": ["l"]}, "polarit"),
+        (
+            {"name": "g", "kind": "mirror_length", "members": ["XM3", "XM6"], "tie": ["l"]},
+            "polarit",
+        ),
     ],
 )
 def test_tier1_kind_incoherence_fails(tmp_path, five_t_graph, group, why):
@@ -197,7 +225,14 @@ def test_tier1_kind_incoherence_fails(tmp_path, five_t_graph, group, why):
 def test_tier1_mirror_kind_coherent(tmp_path, five_t_graph):
     doc = _doc(
         five_t_graph,
-        groups=[{"name": "tail_mirror", "kind": "mirror_length", "members": ["XM6", "XM5"], "tie": ["l"]}],
+        groups=[
+            {
+                "name": "tail_mirror",
+                "kind": "mirror_length",
+                "members": ["XM6", "XM5"],
+                "tie": ["l"],
+            }
+        ],
     )
     c = _FakeCircuit(tmp_path, five_t_graph, doc, _free_sizing(doc))
     res = _by_check(verify._tier1_params_checks(c))
@@ -215,7 +250,14 @@ def test_tier1_symbol_closure_catches_uninventoried_netlist_symbol(tmp_path, fiv
 def test_tier1_sizing_closure_failures(tmp_path, five_t_graph):
     doc = _doc(
         five_t_graph,
-        groups=[{"name": "input_pair", "kind": "matched_pair", "members": ["XM1", "XM2"], "tie": ["w", "l", "m"]}],
+        groups=[
+            {
+                "name": "input_pair",
+                "kind": "matched_pair",
+                "members": ["XM1", "XM2"],
+                "tie": ["w", "l", "m"],
+            }
+        ],
     )
     free = _free_sizing(doc)
     # missing free symbol → the deck's .param would be undefined → FAIL
@@ -247,7 +289,12 @@ def test_tie_param_lines_groups_and_ratios(five_t_graph):
     doc = _doc(
         five_t_graph,
         groups=[
-            {"name": "input_pair", "kind": "matched_pair", "members": ["XM1", "XM2"], "tie": ["w", "l", "m"]},
+            {
+                "name": "input_pair",
+                "kind": "matched_pair",
+                "members": ["XM1", "XM2"],
+                "tie": ["w", "l", "m"],
+            },
             {"name": "mirror_l", "kind": "mirror_length", "members": ["XM6", "XM5"], "tie": ["l"]},
         ],
         ratios=[{"param": "m", "ref": "XM5", "of": "XM6", "ratio": "17/3"}],
@@ -261,7 +308,11 @@ def test_tie_param_lines_groups_and_ratios(five_t_graph):
         ".param x_dut_xm5_m = {x_dut_xm6_m*17/3}",
     ]
     assert params.tied_symbols(doc) == {
-        "x_dut_xm2_w", "x_dut_xm2_l", "x_dut_xm2_m", "x_dut_xm5_l", "x_dut_xm5_m",
+        "x_dut_xm2_w",
+        "x_dut_xm2_l",
+        "x_dut_xm2_m",
+        "x_dut_xm5_l",
+        "x_dut_xm5_m",
     }
     # free = first members + untied atomics; sizing keys on exactly these
     free = params.free_symbols(doc)
@@ -273,7 +324,9 @@ def test_tie_param_lines_groups_and_ratios(five_t_graph):
 def test_tie_lines_skip_frozen_literals(five_t_graph):
     doc = _doc(
         five_t_graph,
-        groups=[{"name": "p", "kind": "matched_pair", "members": ["XM1", "XM2"], "tie": ["w", "m"]}],
+        groups=[
+            {"name": "p", "kind": "matched_pair", "members": ["XM1", "XM2"], "tie": ["w", "m"]}
+        ],
     )
     doc["devices"]["XM1"]["m"] = 1  # frozen literal anchor → no m tie emitted
     doc["devices"]["XM2"]["m"] = 1
@@ -316,14 +369,20 @@ _UM = 1e-6
 _OLD_GEOMETRY = {
     # pdk: {device: (w, l, m)} — resolved values in the deck's own unit convention
     "ihp-sg13g2": {  # gm/ID re-size (2026-07-22): sizing.yaml defaults, XM2/XM4 tied
-        "XM1": (10.0 * _UM, 10.0 * _UM, 1), "XM2": (10.0 * _UM, 10.0 * _UM, 1),
-        "XM3": (10.0 * _UM, 7.0 * _UM, 1), "XM4": (10.0 * _UM, 7.0 * _UM, 1),
-        "XM5": (3.8 * _UM, 1.0 * _UM, 1), "XM6": (3.8 * _UM, 1.0 * _UM, 1),
+        "XM1": (10.0 * _UM, 10.0 * _UM, 1),
+        "XM2": (10.0 * _UM, 10.0 * _UM, 1),
+        "XM3": (10.0 * _UM, 7.0 * _UM, 1),
+        "XM4": (10.0 * _UM, 7.0 * _UM, 1),
+        "XM5": (3.8 * _UM, 1.0 * _UM, 1),
+        "XM6": (3.8 * _UM, 1.0 * _UM, 1),
     },
     "sky130": {  # bare-µm convention (.option scale=1u decks)
-        "XM1": (1.0, 2.0, 1), "XM2": (1.0, 2.0, 1),
-        "XM3": (2.0, 2.0, 1), "XM4": (2.0, 2.0, 1),
-        "XM5": (3.0, 2.0, 1), "XM6": (3.0, 2.0, 1),
+        "XM1": (1.0, 2.0, 1),
+        "XM2": (1.0, 2.0, 1),
+        "XM3": (2.0, 2.0, 1),
+        "XM4": (2.0, 2.0, 1),
+        "XM5": (3.0, 2.0, 1),
+        "XM6": (3.0, 2.0, 1),
     },
     "gf180mcu": {  # refreshed 2026-08-03: honest-gf-round winner committed as defaults
         "XM1": (0.5 * _UM, 5 * _UM, 1),
@@ -402,9 +461,7 @@ def test_classify_symbols_and_counts_line(five_t_graph):
     from spicexplorer_analog_db import params as par
 
     doc = par.propose_params_doc(five_t_graph)
-    sizing_vars = [
-        {"name": sym, "freeze": sym.endswith("_m")} for sym in par.free_symbols(doc)
-    ]
+    sizing_vars = [{"name": sym, "freeze": sym.endswith("_m")} for sym in par.free_symbols(doc)]
     cls = par.classify_symbols(doc, sizing_vars)
     all_syms = {s for v in cls.values() for s in v}
     assert all_syms == par.free_symbols(doc) | par.tied_symbols(doc)

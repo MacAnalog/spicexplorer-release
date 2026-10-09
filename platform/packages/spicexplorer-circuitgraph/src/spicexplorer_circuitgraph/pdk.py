@@ -21,8 +21,18 @@ from dataclasses import dataclass
 from .model.nodes import DeviceType, MosPolarityType
 
 __all__ = [
-    "PdkDevice", "Pdk", "IHP_SG13G2", "SKYWATER_SKY130", "GF180MCU", "ANALOGGYM_REF",
-    "GENERIC_N65", "PDKS", "get_pdk", "mos_flavor", "model_flavor", "split_flavor",
+    "PdkDevice",
+    "Pdk",
+    "IHP_SG13G2",
+    "SKYWATER_SKY130",
+    "GF180MCU",
+    "ANALOGGYM_REF",
+    "GENERIC_N65",
+    "PDKS",
+    "get_pdk",
+    "mos_flavor",
+    "model_flavor",
+    "split_flavor",
     "THRESHOLD_FLAVORS",
 ]
 
@@ -129,8 +139,8 @@ class Pdk:
 
     name: str
     devices: tuple[PdkDevice, ...]
-    finger_param: str = "ng"          # the instance param naming the finger/gate count
-    width_per_finger: bool = False    # True: device `w` is per-finger (total = w*fingers), not total
+    finger_param: str = "ng"  # the instance param naming the finger/gate count
+    width_per_finger: bool = False  # True: device `w` is per-finger (total = w*fingers), not total
 
     def classify(self, model_name: str | None) -> PdkDevice | None:
         """Resolve a model name to its :class:`PdkDevice` (case-insensitive); ``None`` if unknown."""
@@ -244,8 +254,12 @@ SKYWATER_SKY130 = Pdk(
         PdkDevice("sky130_fd_pr__pfet_01v8", DeviceType.MOS, MosPolarityType.PMOS),
         # The 5 V IO pair is this PDK's high-voltage class — declared, so an `hv` source device
         # retargets onto it instead of onto the 1.8 V core model.
-        PdkDevice("sky130_fd_pr__nfet_g5v0d10v5", DeviceType.MOS, MosPolarityType.NMOS, flavor="hv"),
-        PdkDevice("sky130_fd_pr__pfet_g5v0d10v5", DeviceType.MOS, MosPolarityType.PMOS, flavor="hv"),
+        PdkDevice(
+            "sky130_fd_pr__nfet_g5v0d10v5", DeviceType.MOS, MosPolarityType.NMOS, flavor="hv"
+        ),
+        PdkDevice(
+            "sky130_fd_pr__pfet_g5v0d10v5", DeviceType.MOS, MosPolarityType.PMOS, flavor="hv"
+        ),
         PdkDevice("sky130_fd_pr__res_high_po", DeviceType.RES),
         PdkDevice("sky130_fd_pr__cap_mim_m3_1", DeviceType.CAP),
     ),

@@ -1,0 +1,12 @@
+# DC load sweep 0.1 -> 10 mA at Vin 1.5 V; delta-Vout (S2).
+schema: spicexplorer/analysis@1
+id: load_regulation
+template: load_regulation
+description: "DC load sweep 0.1 -> 10 mA at Vin 1.5 V; delta-Vout (S2)."
+params:
+  VDD: 1.5
+  ILOAD_START: 0.1m
+  ILOAD_STOP: 10m
+  ILOAD_STEP: 0.1m
+flags: []
+produces: [load_reg]

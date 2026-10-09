@@ -58,6 +58,7 @@ errors) with only minor per-circuit adjustments to the `dropout` analysis: the
 class-default `dropout.yaml` (copied from `ldo_007_pmos`) sweeps at a 10 mA load,
 which this circuit's much smaller default pass device (`x_dut_xmp_w=10u, x_dut_xmp_m=20`)
 cannot regulate through at all — a probe DC sweep showed `vout` capping out well
-below the ldo_007_pmos-era `VOUT_THRESH` across the entire `VDD_START..VDD_STOP`
-range. Lowered to a 1 mA sweep + a threshold re-derived from an empirical probe
-(see the comment in `analyses/dropout.yaml`).
+below its regulation target across the entire `VDD_START..VDD_STOP` range (~1.17 V
+at 10 mA even at VDD = 1.8 V). Lowered to a 1 mA sweep (see the `NOTE:` comment in
+`analyses/dropout.yaml`). The in-regulation criterion itself is the class default —
+the output at its target AND not following Vin — not a per-circuit threshold.

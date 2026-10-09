@@ -1,0 +1,12 @@
+# DC Vin sweep 1.4 -> 1.65 V at 1 mA; delta-Vout (S3).
+schema: spicexplorer/analysis@1
+id: line_regulation
+template: line_regulation
+description: "DC Vin sweep 1.4 -> 1.65 V at 1 mA; delta-Vout (S3)."
+params:
+  ILOAD: 1m
+  VDD_START: 1.4
+  VDD_STOP: 1.65
+  VDD_STEP: 0.005
+flags: []
+produces: [line_reg]

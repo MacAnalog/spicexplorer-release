@@ -14,12 +14,15 @@ import dataclasses
 import hashlib
 import importlib.util
 import json
+import logging
 import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
 from typing import Any, cast
+
+log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -35,7 +38,7 @@ class Generator:
     def default_params(self) -> Any:
         return self.params_cls()
 
-    def build(self, params: Any = None, sizing: dict | None = None):
+    def build(self, params: Any = None, sizing: dict | None = None) -> Any:
         import inspect
 
         params = params if params is not None else self.default_params()
@@ -64,6 +67,34 @@ def load_generator(path_or_module: str | Path, name: str | None = None) -> Gener
         raise AttributeError(f"{source}: a generator must expose LayoutParams and build()")
     if not dataclasses.is_dataclass(mod.LayoutParams):
         raise TypeError(f"{source}: LayoutParams must be a dataclass")
+    # The README advertises a FROZEN dataclass whose every field is a knob with a default, but the
+    # loader checked only `is_dataclass`, so the rest of the contract was advisory (Codex review,
+    # item LAY-02). Both halves are load-bearing, and both fail far from their cause:
+    #   * not frozen -> an optimizer trial that mutates params in place desyncs the built GDS from
+    #     the parameters recorded for it, and "a layout of record is code" stops being true;
+    #   * a field with no default -> `default_params()` raises TypeError deep in a sweep, and
+    #     `params_schema()` reports `default: None`, which a UI renders as a real value.
+    # `getattr` rather than the attribute: `__dataclass_params__` is a runtime-only dunder that
+    # type checkers do not model on the DataclassInstance protocol.
+    dc_params = getattr(mod.LayoutParams, "__dataclass_params__", None)
+    if dc_params is None or not dc_params.frozen:
+        raise TypeError(
+            f"{source}: LayoutParams must be frozen — an optimizer holds these while it builds, "
+            "and a trial that mutates them in place no longer matches the GDS recorded for it. "
+            "Use @dataclasses.dataclass(frozen=True)."
+        )
+    missing = [
+        f.name
+        for f in dataclasses.fields(mod.LayoutParams)
+        if f.default is dataclasses.MISSING and f.default_factory is dataclasses.MISSING
+    ]
+    if missing:
+        raise TypeError(
+            f"{source}: every LayoutParams field is a knob and needs a default; "
+            f"{', '.join(missing)} ha{'s' if len(missing) == 1 else 've'} none. Without one "
+            "`default_params()` raises inside a sweep and `params_schema()` advertises the knob "
+            "with a default of None."
+        )
     return Generator(
         name=name or getattr(mod, "CELL", p.stem),
         module=mod,
@@ -139,8 +170,8 @@ def build_gds(
     if cell and getattr(comp, "name", None) != cell:
         try:
             comp.name = cell
-        except Exception:
-            pass
+        except Exception as exc:  # a locked component keeps its own name; best-effort rename
+            log.debug("could not rename component to %r: %s", cell, exc)
     # gdsfactory stamps a timestamp into GDS headers unless told otherwise
     try:
         comp.write_gds(str(out), with_metadata=False, timestamp=None)
@@ -244,7 +275,9 @@ class GdsBuilder:
                     d = cand
                     break
         if d is None:
-            raise RuntimeError(f"generator produced no build record on stdout:\n{r.stdout[-2000:]}\n{r.stderr[-1000:]}")
+            raise RuntimeError(
+                f"generator produced no build record on stdout:\n{r.stdout[-2000:]}\n{r.stderr[-1000:]}"
+            )
         d["bbox_um"] = tuple(d["bbox_um"])
         self.last = GdsBuild(**d)
         return Path(self.last.gds)

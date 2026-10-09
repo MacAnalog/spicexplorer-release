@@ -5,6 +5,7 @@ testbench is billed its OWN sim time — in sequential mode by timing the blocki
 ``run()``, in parallel mode by pairing each handle's submit stamp with its
 ``is_done()`` flip — so a fast bench is never billed for a slow sibling's wall time.
 """
+
 from __future__ import annotations
 
 import logging
@@ -84,6 +85,7 @@ def _bare_orchestrator(wrappers) -> Circuit_Optimizer_Orchestrator_with_SPICE:
 # wait_for_handles_timed
 # ---------------------------------------------------------------------------
 
+
 def test_wait_records_a_done_stamp_per_handle():
     t0 = monotonic()
     handles = {"fast": _TimedHandle(FAST_S), "slow": _TimedHandle(SLOW_S)}
@@ -106,6 +108,7 @@ def test_wait_timeout_returns_pending_without_stamps():
 # ---------------------------------------------------------------------------
 # benchmark_simulators
 # ---------------------------------------------------------------------------
+
 
 def test_sequential_benchmark_times_each_testbench():
     sims = {"tb_fast": _FakeSimulator(FAST_S), "tb_slow": _FakeSimulator(SLOW_S)}
@@ -158,11 +161,14 @@ def test_sequential_benchmark_run_exception_is_not_ok():
 # SimTimeReport
 # ---------------------------------------------------------------------------
 
+
 def test_report_table_and_dict_roundtrip(tmp_path):
-    report = SimTimeReport(timings=[
-        TestbenchSimTiming("ac", 0.5, True, mode="sanity"),
-        TestbenchSimTiming("tran", 5.0, True, mode="sanity"),
-    ])
+    report = SimTimeReport(
+        timings=[
+            TestbenchSimTiming("ac", 0.5, True, mode="sanity"),
+            TestbenchSimTiming("tran", 5.0, True, mode="sanity"),
+        ]
+    )
     table = report.format_table()
     # Slowest first, with a share column and total.
     assert table.index("tran") < table.index("ac")
@@ -177,11 +183,14 @@ def test_report_table_and_dict_roundtrip(tmp_path):
 # Orchestrator surface: sanity timing + benchmark_testbenches
 # ---------------------------------------------------------------------------
 
+
 def test_sanity_run_logs_and_stores_per_testbench_times(caplog):
-    orch = _bare_orchestrator({
-        "tb_ac": _SanityWrapper(FAST_S),
-        "tb_tran": _SanityWrapper(SLOW_S),
-    })
+    orch = _bare_orchestrator(
+        {
+            "tb_ac": _SanityWrapper(FAST_S),
+            "tb_tran": _SanityWrapper(SLOW_S),
+        }
+    )
     with caplog.at_level(logging.INFO, logger="spicexplorer.optimization.orchestrator"):
         assert orch.run_sanity_on_spicelib_wrapper(use_editor=False) is True
     timings = {t.testbench: t for t in orch.last_sanity_timings}
@@ -194,11 +203,13 @@ def test_sanity_run_logs_and_stores_per_testbench_times(caplog):
 
 
 def test_sanity_run_failure_still_records_the_failed_bench(caplog):
-    orch = _bare_orchestrator({
-        "tb_good": _SanityWrapper(0.0, ok=True),
-        "tb_bad": _SanityWrapper(0.0, ok=False),
-        "tb_never_run": _SanityWrapper(0.0, ok=True),
-    })
+    orch = _bare_orchestrator(
+        {
+            "tb_good": _SanityWrapper(0.0, ok=True),
+            "tb_bad": _SanityWrapper(0.0, ok=False),
+            "tb_never_run": _SanityWrapper(0.0, ok=True),
+        }
+    )
     with caplog.at_level(logging.INFO, logger="spicexplorer.optimization.orchestrator"):
         assert orch.run_sanity_on_spicelib_wrapper(use_editor=False) is False
     by_tb = {t.testbench: t for t in orch.last_sanity_timings}
@@ -214,13 +225,92 @@ def test_sanity_run_skips_backends_without_checker():
 
 
 def test_orchestrator_benchmark_testbenches(tmp_path):
-    orch = _bare_orchestrator({
-        "tb_fast": _FakeSimulator(FAST_S),
-        "tb_slow": _FakeSimulator(SLOW_S),
-    })
+    orch = _bare_orchestrator(
+        {
+            "tb_fast": _FakeSimulator(FAST_S),
+            "tb_slow": _FakeSimulator(SLOW_S),
+        }
+    )
     # No project_setup on the bare instance — pass parallel explicitly.
-    report = orch.benchmark_testbenches(
-        runs=1, parallel=True, save_path=tmp_path / "bench")
+    report = orch.benchmark_testbenches(runs=1, parallel=True, save_path=tmp_path / "bench")
     assert (tmp_path / "bench.json").exists()
     means = report.mean_elapsed_s()
     assert means["tb_fast"] < SLOW_S <= means["tb_slow"] + 1e-9
+
+
+class _FailedResult:
+    raw = None  # ngspice signals a failed/diverged sim with a None RAW
+
+
+class _FailedHandle:
+    """Finishes promptly, but the sim inside it diverged."""
+
+    def is_done(self) -> bool:
+        return True
+
+    def result(self) -> _FailedResult:
+        return _FailedResult()
+
+
+class _RaisingHandle:
+    """Finishes, but collecting the result raises (a crashed worker)."""
+
+    def is_done(self) -> bool:
+        return True
+
+    def result(self):
+        raise RuntimeError("simulator process died")
+
+
+class _HandleSimulator:
+    """Protocol-shaped fake that hands out a caller-supplied handle."""
+
+    def __init__(self, handle):
+        self._handle = handle
+
+    def update_params(self, params, /) -> bool:
+        return True
+
+    def apply_corner(self, corner, /, *, model_lib_root=None) -> None:
+        pass
+
+    def run(self, *, label=None):
+        return self._handle.result()
+
+    def submit(self, *, label=None):
+        return self._handle
+
+
+def test_parallel_failed_sim_is_not_recorded_as_success():
+    """A handle that COMPLETED is not a handle that SUCCEEDED (SIM-03).
+
+    The parallel branch recorded ok=True for every handle that was neither a failed submit nor
+    timed out, so a diverged sim was billed as a passing benchmark run. The sequential branch
+    always applied the ngspice probe (`result.raw is not None`); parallel now applies the same one.
+    """
+    report = benchmark_simulators(
+        {
+            "good": _HandleSimulator(_TimedHandle(FAST_S)),
+            "diverged": _HandleSimulator(_FailedHandle()),
+        },  # type: ignore[arg-type]
+        parallel=True,
+    )
+    ok = {t.testbench: t.ok for t in report.timings}
+    assert ok["good"] is True
+    assert ok["diverged"] is False, "a diverged sim was recorded as a successful benchmark run"
+
+
+def test_parallel_result_that_raises_is_not_recorded_as_success():
+    report = benchmark_simulators(
+        {"crashed": _HandleSimulator(_RaisingHandle())},  # type: ignore[arg-type]
+        parallel=True,
+    )
+    assert [t.ok for t in report.timings] == [False]
+
+
+def test_parallel_and_sequential_agree_on_the_same_failure():
+    """The two modes must not disagree about whether a run passed."""
+    sims = {"diverged": _HandleSimulator(_FailedHandle())}
+    seq = benchmark_simulators(sims, parallel=False).timings[0].ok  # type: ignore[arg-type]
+    par = benchmark_simulators(sims, parallel=True).timings[0].ok  # type: ignore[arg-type]
+    assert seq == par is False

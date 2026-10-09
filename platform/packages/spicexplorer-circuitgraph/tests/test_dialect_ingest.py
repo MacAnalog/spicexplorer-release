@@ -64,7 +64,9 @@ def test_find_subcircuits_on_foreign_dialect_amp():
     try:
         groups = annotate_subcircuits(g)
     except FileNotFoundError:
-        pytest.skip("subcircuit template catalogue not present (analog-db examples not checked out)")
+        pytest.skip(
+            "subcircuit template catalogue not present (analog-db examples not checked out)"
+        )
     classes = {(grp.mirror_class, grp.polarity) for grp in groups}
     assert any(cls == "simple" and pol == "pmos" for cls, pol in classes), classes
     assert any("pair" in cls or "diff" in cls for cls, _ in classes), classes
@@ -73,9 +75,53 @@ def test_find_subcircuits_on_foreign_dialect_amp():
 def test_foreign_graph_reemits_in_every_dialect():
     g = _cell_graph(AMP_SP, dialect="hspice")
     for dialect in ("spice", "spectre", "hspice"):
-        text = to_netlist(g, dialect=dialect, subckt="smcnr_amp",
-                          ports=["vdda", "gnda", "vin", "vip", "vout"])
+        text = to_netlist(
+            g, dialect=dialect, subckt="smcnr_amp", ports=["vdda", "gnda", "vin", "vip", "vout"]
+        )
         wrapped = NetlistView.from_string(text, dialect=dialect).get_subcircuit_named("smcnr_amp")
         assert wrapped is not None
         g2 = CircuitGraph.from_netlist(wrapped, name="reparse")
         assert graphs_equivalent(g, g2), dialect
+
+
+# ----------------------------------------------------------------------
+# CG-02 — the graph side of DIA-01
+# ----------------------------------------------------------------------
+# The HSPICE reader used to merge every conditional branch before a graph was ever built, so a
+# round-trip equivalence test passed while faithfully reproducing a WRONG graph: the two branches'
+# devices sitting in parallel. The reader now refuses at the source, which is where the defect is —
+# there is nothing circuitgraph could have detected downstream, because by then the branches are
+# indistinguishable from an ordinary parallel circuit.
+
+_CONDITIONAL_SUBCKT = """* hspice cell with a conditional branch
+.subckt divider in out
+.if (hi_z == 1)
+r1 in out 1meg
+.else
+r1 in out 1k
+.endif
+r2 out 0 1k
+.ends divider
+.end
+"""
+
+
+def test_conditional_branches_never_reach_the_graph():
+    from spicexplorer_core.spice_engine import DialectSyntaxError
+
+    with pytest.raises(DialectSyntaxError, match="conditional"):
+        NetlistView.from_string(_CONDITIONAL_SUBCKT, dialect="hspice")
+
+
+def test_the_wrong_graph_it_used_to_build_is_the_point():
+    """Documents what the old behaviour produced, so the reason for refusing stays legible.
+
+    Both arms declare a device called `r1`. Merging them emitted `r1` twice with different values —
+    a duplicate instance name, which is not a circuit any tool can interpret consistently — and the
+    graph built from it looked perfectly ordinary.
+    """
+    from spicexplorer_core.spice_engine import DialectSyntaxError
+
+    with pytest.raises(DialectSyntaxError) as exc:
+        NetlistView.from_string(_CONDITIONAL_SUBCKT, dialect="hspice")
+    assert "r1" in str(exc.value)

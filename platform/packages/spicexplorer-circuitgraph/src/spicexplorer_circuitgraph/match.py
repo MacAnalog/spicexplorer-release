@@ -79,7 +79,7 @@ from ._signatures import (
     signature_graph,
 )
 from .graph import CircuitGraph, OnUnknown
-from .model.nodes import MosfetNode, StructuralRole
+from .model.nodes import DETERMINISTIC_ROLES, MosfetNode, StructuralRole
 from .pdk import Pdk
 from .templates import SubcircuitTemplate, TemplateLibrary, default_subcircuit_library
 
@@ -136,10 +136,14 @@ _MIRROR_OUT_PORT = "out"
 # carries the family's role (there is no reference/output/cascode anatomy to distinguish — a
 # pseudo-resistor cell or a pass gate is a symmetric two-terminal block), and the mirror-position
 # logic in `_assign_roles` would otherwise mislabel them (their sources sit on signal nets, which
-# reads as "cascode"). Extend by mapping a new family name to its per-device role.
+# reads as "cascode"). The inverter's rail-sourced pair would read as a current mirror and the
+# cross-coupled pair (it declares `CM_tail`) as a differential pair — both wrong, and both
+# DETERMINISTIC_ROLES a consumer may not override. Extend by mapping a new family name to its role.
 _FAMILY_ROLES: dict[str, StructuralRole] = {
     "pseudo_resistor": StructuralRole.MOS_PSEUDO_RESISTOR,
     "transmission_gate": StructuralRole.MOS_ANALOG_SWITCH,
+    "inverter": StructuralRole.MOS_INVERTER,
+    "cross_coupled": StructuralRole.MOS_CROSS_COUPLED,
 }
 
 
@@ -211,7 +215,9 @@ class _Anatomy:
     output_devs: tuple[str, ...]  # devices whose drain is the `out` port net
 
 
-def _mos_terminals(graph: CircuitGraph, comp: MosfetNode) -> tuple[str | None, str | None, str | None]:
+def _mos_terminals(
+    graph: CircuitGraph, comp: MosfetNode
+) -> tuple[str | None, str | None, str | None]:
     """(drain, gate, source) net names for a MOS, from the live graph wiring."""
     conn = graph.connections(comp)
     return conn.get("DRAIN"), conn.get("GATE"), conn.get("SOURCE")
@@ -279,7 +285,11 @@ def _as_graph(host: HostLike, *, pdk: Pdk | None, on_unknown: OnUnknown) -> Circ
     elif isinstance(host, Path):
         view = NetlistView.from_file(host)
     elif isinstance(host, str):
-        view = NetlistView.from_string(host, dialect="auto") if "\n" in host else NetlistView.from_file(host)
+        view = (
+            NetlistView.from_string(host, dialect="auto")
+            if "\n" in host
+            else NetlistView.from_file(host)
+        )
     else:
         raise TypeError(f"cannot build a CircuitGraph from a {type(host).__name__}")
     graph = CircuitGraph.from_netlist(view, name="host", pdk=pdk, on_unknown=on_unknown)
@@ -321,7 +331,9 @@ def _resolve_options(
     )
 
 
-def _population_covers(host_graph: CircuitGraph, template: CircuitGraph, opts: MatchOptions) -> bool:
+def _population_covers(
+    host_graph: CircuitGraph, template: CircuitGraph, opts: MatchOptions
+) -> bool:
     """Cheap necessary condition: the host must contain ≥ the template's count of each device kind.
 
     Lets us skip the (worst-case exponential) VF2 enumeration for templates that cannot possibly
@@ -335,9 +347,7 @@ def _population_covers(host_graph: CircuitGraph, template: CircuitGraph, opts: M
 # ---------------------------------------------------------------------------
 # Core matching
 # ---------------------------------------------------------------------------
-def _internal_net_degrees(
-    template: SubcircuitTemplate, g_tpl: nx.MultiGraph
-) -> dict[str, int]:
+def _internal_net_degrees(template: SubcircuitTemplate, g_tpl: nx.MultiGraph) -> dict[str, int]:
     """Required signature-graph degree of each *internal* template net.
 
     Internal = not a declared port and not a supply rail; those are the nodes that must stay private
@@ -419,13 +429,30 @@ def find_template_matches(
     its identity. One-way: the flag can only add the constraint, never relax a global
     ``match_bulk=True``. Every other template in the same run stays bulk-blind.
     """
+    return _find_template_matches(host_graph, template, opts, {})
+
+
+def _find_template_matches(
+    host_graph: CircuitGraph,
+    template: SubcircuitTemplate,
+    opts: MatchOptions,
+    host_projections: dict[MatchOptions, nx.MultiGraph],
+) -> list[SubcircuitMatch]:
+    """:func:`find_template_matches` with a cache of host signature projections the caller passes.
+
+    The host projection depends only on the (effective) options, never on the template, so a
+    :func:`find_subcircuits` run builds it once per distinct ``opts`` — a per-template
+    ``match_bulk`` opt-in is what yields a second one — instead of once per template.
+    """
     if template.match_bulk and not opts.match_bulk:
         opts = replace(opts, match_bulk=True)
     tg = template.graph
     if not _population_covers(host_graph, tg, opts):
         return []
 
-    g_host = signature_graph(host_graph, opts, {})
+    g_host = host_projections.get(opts)
+    if g_host is None:
+        g_host = host_projections[opts] = signature_graph(host_graph, opts, {})
     g_tpl = signature_graph(tg, opts, {})
     matcher = MultiGraphMatcher(g_host, g_tpl, node_match=node_match, edge_match=edge_match)
 
@@ -459,9 +486,7 @@ def find_template_matches(
 
         device_map = {t: h for h, t in dev_h2t.items()}
         net_map = {t: h for h, t in net_h2t.items()}
-        ports = {
-            role: net_map[tnet] for role, tnet in template.ports.items() if tnet in net_map
-        }
+        ports = {role: net_map[tnet] for role, tnet in template.ports.items() if tnet in net_map}
         key = frozenset(dev_h2t)
         canon = tuple(sorted(ports.items()))
         if key in best and canon >= best[key][0]:
@@ -476,9 +501,7 @@ def find_template_matches(
             ref = _bias_reference(host_graph, bias_net, template.polarity) if bias_net else None
             if ref is not None and ref not in dev_h2t:
                 reference_device, recovered = ref, (ref,)
-        output_devices = tuple(
-            sorted(device_map[d] for d in anat.output_devs if d in device_map)
-        )
+        output_devices = tuple(sorted(device_map[d] for d in anat.output_devs if d in device_map))
         best[key] = (
             canon,
             SubcircuitMatch(
@@ -564,7 +587,11 @@ def _admit_anchored(
         if tail is None:
             continue
         allowed_ids = tail_sources.get(m.template_id) or ()
-        valid = set().union(*(out_by_source.get(s, set()) for s in allowed_ids)) if allowed_ids else any_out
+        valid = (
+            set().union(*(out_by_source.get(s, set()) for s in allowed_ids))
+            if allowed_ids
+            else any_out
+        )
         if tail in valid:
             admitted.append(m)
             continue
@@ -611,8 +638,9 @@ def find_subcircuits(
 
     ``host`` may be a :class:`CircuitGraph`, a
     :class:`~spicexplorer_core.spice_engine.NetlistView`, a path, or raw netlist text. ``library``
-    defaults to the full shipped catalogue (current mirrors + miscellaneous). Pass ``options`` to
-    override the booleans with a full :class:`~spicexplorer_circuitgraph._signatures.MatchOptions`.
+    defaults to the full shipped catalogue (current mirrors + miscellaneous + pseudo-resistors +
+    transmission gates). Pass ``options`` to override the booleans with a full
+    :class:`~spicexplorer_circuitgraph._signatures.MatchOptions`.
     Use :func:`group_matches` to resolve these raw matches into multi-output groups.
 
     **Dependent templates.** A template that declares a :data:`TAIL_BIAS_PORT` (``CM_tail``) port is
@@ -641,12 +669,14 @@ def find_subcircuits(
     independent: list[SubcircuitMatch] = []
     dependent: list[SubcircuitMatch] = []
     tail_sources: dict[str, tuple[str, ...]] = {}
+    # The host projection is built once per effective opts and shared across templates.
+    host_projections: dict[MatchOptions, nx.MultiGraph] = {}
     for template in lib:
         if TAIL_BIAS_PORT in template.ports:
-            dependent.extend(find_template_matches(host_graph, template, opts))
+            dependent.extend(_find_template_matches(host_graph, template, opts, host_projections))
             tail_sources[template.id] = tuple(template.tail_sources)
         else:
-            independent.extend(find_template_matches(host_graph, template, opts))
+            independent.extend(_find_template_matches(host_graph, template, opts, host_projections))
     _warn_unknown_tail_sources(tail_sources, {t.id for t in lib})
     return independent + _admit_anchored(dependent, independent, tail_sources, host_graph)
 
@@ -795,9 +825,13 @@ def annotate_subcircuits(
     ``graph.subcircuit_matches``, and (when ``set_roles``) tags the matched MOS devices'
     ``structural_role``: in a current mirror, a device whose source sits on a supply rail →
     :attr:`StructuralRole.MOS_CURRENT_MIRROR`, a stacked device (source on an internal net) →
-    :attr:`StructuralRole.MOS_CASCODE_DEVICE`; in a tail-biased differential pair, both devices →
-    :attr:`StructuralRole.MOS_DIFFERENTIAL_PAIR` and the device biasing the tail →
-    :attr:`StructuralRole.MOS_TAIL_CURRENT_SOURCE`. Returns the groups.
+    :attr:`StructuralRole.MOS_CASCODE_DEVICE`; in a tail-biased differential pair, the two devices
+    with their source on the tail net → :attr:`StructuralRole.MOS_DIFFERENTIAL_PAIR`, a cascoded
+    pair's cascodes → :attr:`StructuralRole.MOS_CASCODE_DEVICE`, and the device biasing the tail →
+    :attr:`StructuralRole.MOS_TAIL_CURRENT_SOURCE`; in a family-role group (pseudo-resistor,
+    transmission gate, inverter, cross-coupled pair) every device → the family's role. Roles a
+    previous run wrote (any :data:`~spicexplorer_circuitgraph.model.nodes.DETERMINISTIC_ROLES`
+    member) are cleared first, so a re-run reflects only this library. Returns the groups.
 
     The graph is mutated in place; pass a copy (``CircuitGraphDoc.from_graph(g).to_graph()``) first
     if you need to keep the original pristine.
@@ -829,20 +863,32 @@ def _assign_roles(graph: CircuitGraph, groups: list[MirrorGroup]) -> None:
       → :attr:`StructuralRole.MOS_CURRENT_MIRROR_REFERENCE` (the one a sizer solves first);
     * the mirror's **output copy/copies** (also rail-sourced) → :attr:`StructuralRole.MOS_CURRENT_MIRROR`;
     * a **stacked** device whose source sits on an internal node → :attr:`StructuralRole.MOS_CASCODE_DEVICE`;
-    * both devices of a tail-biased **differential pair** → :attr:`StructuralRole.MOS_DIFFERENTIAL_PAIR`;
+    * the two devices of a tail-biased **differential pair** (source on the ``CM_tail`` net) →
+      :attr:`StructuralRole.MOS_DIFFERENTIAL_PAIR`; a cascoded pair's cascodes (source on a pair
+      device's drain) → :attr:`StructuralRole.MOS_CASCODE_DEVICE`;
     * the device **biasing the pair's tail** (drain on the ``CM_tail`` net) →
       :attr:`StructuralRole.MOS_TAIL_CURRENT_SOURCE` (overriding a plain mirror-output label, but not a
       cascode — see the second pass below);
     * every device of a **family-role** group — a whole-block role keyed off the template's family
       (:data:`_FAMILY_ROLES`): a pseudo-resistor cell → :attr:`StructuralRole.MOS_PSEUDO_RESISTOR`, a
-      transmission gate → :attr:`StructuralRole.MOS_ANALOG_SWITCH`. These families are neither mirrors
-      nor tail-anchored pairs, so the mirror-position logic below would mislabel them (their sources
-      sit on signal nets, which reads as "cascode").
+      transmission gate → :attr:`StructuralRole.MOS_ANALOG_SWITCH`, an inverter / push-pull stage →
+      :attr:`StructuralRole.MOS_INVERTER`, a cross-coupled pair →
+      :attr:`StructuralRole.MOS_CROSS_COUPLED`. These families are not mirrors (and the
+      cross-coupled pair, though tail-anchored, is not a differential pair), so the mirror-position
+      logic below would mislabel them.
+
+    Every role this function writes (:data:`DETERMINISTIC_ROLES`) is cleared first: a re-run with
+    another library must not leave the previous run's labels on devices no group claims any more.
+    Residue roles (an LLM's, which the matcher never writes) are left alone.
     """
     comp_by_name = {c.name: c for c in graph.get_components()}
     net_by_name = {n.name: n for n in graph.get_nets()}
+    for comp in comp_by_name.values():
+        if comp.structural_role in DETERMINISTIC_ROLES:
+            comp.structural_role = None
     for group in groups:
-        # A tail-biased group (the differential pair) is not a mirror — its devices are the pair.
+        # A tail-biased group (the differential pair) is not a mirror: its devices are the pair and,
+        # in a cascoded pair, the pair's cascodes.
         is_diff_pair = TAIL_BIAS_PORT in group.ports
         family_role = _FAMILY_ROLES.get(group.family)
         for dev_name in group.devices:
@@ -852,10 +898,16 @@ def _assign_roles(graph: CircuitGraph, groups: list[MirrorGroup]) -> None:
             if family_role is not None:
                 comp.structural_role = family_role
                 continue
-            if is_diff_pair:
-                comp.structural_role = StructuralRole.MOS_DIFFERENTIAL_PAIR
-                continue
             source_net = graph.connections(comp).get("SOURCE")
+            if is_diff_pair:
+                # The pair devices have their source on the tail net; the cascodes of a cascoded
+                # pair have theirs on a pair device's drain.
+                comp.structural_role = (
+                    StructuralRole.MOS_DIFFERENTIAL_PAIR
+                    if source_net == group.ports[TAIL_BIAS_PORT]
+                    else StructuralRole.MOS_CASCODE_DEVICE
+                )
+                continue
             net = net_by_name.get(source_net) if source_net else None
             on_rail = net is not None and net.is_supply
             if not on_rail:

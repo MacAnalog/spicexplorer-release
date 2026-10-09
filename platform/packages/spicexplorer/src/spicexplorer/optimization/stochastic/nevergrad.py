@@ -1,14 +1,15 @@
-"""This Module implements the nevergrad-based (evolutionary algorithms) optimizers """
+"""This Module implements the nevergrad-based (evolutionary algorithms) optimizers"""
+
 import logging
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import nevergrad as ng
 import numpy as np
-from spicexplorer.core.domains import Project_Setup
+from spicexplorer.core.domains import OptimizationLogEntry, Project_Setup
 from spicexplorer.optimization.base import (
     Base_Optimizer,
-    Spice_Bode_Optimizer,
     Spice_Constraint_Satisfaction,
     Spice_Single_Objective,
 )
@@ -18,7 +19,7 @@ from spicexplorer.optimization.stochastic.nevergrad_compat import apply_numpy2_m
 from spicexplorer_core.spice_engine import Simulator
 
 logger = logging.getLogger("spicexplorer.optimization.stochastic.nevergrad")
-logger.debug(f'imported {__name__}')
+logger.debug(f"imported {__name__}")
 
 # nevergrad <= 1.0.12 (the newest release) crashes with a numpy-2 `TypeError` the first time its
 # metamodel engages -- for NGOpt a few hundred trials into a run, i.e. hours of SPICE thrown away
@@ -38,12 +39,13 @@ apply_numpy2_metamodel_patch()
 # --- Function Definitions ---
 # ---------------------------
 
+
 def create_optimizer(
     optimizer_name: str,
     parametrization: ng.p.Dict,
     budget: int,
-    optimizer_kwargs: Optional[Dict[str, Any]] = None,
-    random_seed: Optional[int] = None
+    optimizer_kwargs: dict[str, Any] | None = None,
+    random_seed: int | None = None,
 ) -> ng.optimizers.base.Optimizer:
     """
     Factory function to instantiate a Nevergrad optimizer from configuration.
@@ -67,10 +69,10 @@ def create_optimizer(
     # `batch_size` is an Ax-only knob (candidates per generation call); Nevergrad has no batched
     # generation, and its registry PRESETS (e.g. NGOpt) reject unknown kwargs — so drop it here.
     # A YAML shared between backends can carry `optimizer_kwargs.batch_size` without breaking this one.
-    kwargs.pop('batch_size', None)
+    kwargs.pop("batch_size", None)
 
     # Extract 'num_workers' (common to all, defaults to 1)
-    num_workers = kwargs.pop('num_workers', 1)
+    num_workers = kwargs.pop("num_workers", 1)
 
     # -------------------------------------------------------------------------
     # CASE A: CONFIGURABLE FAMILIES
@@ -125,7 +127,7 @@ def create_optimizer(
                 parametrization=parametrization,
                 budget=budget,
                 num_workers=num_workers,
-                **kwargs # Passing remaining kwargs (rarely used for registry items)
+                **kwargs,  # Passing remaining kwargs (rarely used for registry items)
             )
             logger.info(f"Initialized Registry Optimizer '{optimizer_name}'")
             return optimizer
@@ -157,18 +159,21 @@ def create_optimizer(
         f"Available Families: {[x for x in dir(ng.families) if not x.startswith('_')]}\n"
     )
 
+
 # ----------------------------
 # --- Class Definitions ---
 # ----------------------------
+
 
 # ------------------------------------------------
 # A [ABSTRACT] Nevergrad-based Optimizers
 # ------------------------------------------------
 class NevergradMixin(Base_Optimizer):
     """Reusable mixin for all Nevergrad-based optimizers."""
+
     # --- Overwriting Some Abstract Methods ---
     def parameterize(self) -> ng.p.Dict:
-        parameters: Dict[str, ng.p.Scalar] = {}
+        parameters: dict[str, ng.p.Scalar] = {}
         # Frozen params are excluded from the search space and injected at their fixed value
         # during evaluation via the shared base seam — same contract in every backend.
         self._reset_frozen_params()
@@ -177,19 +182,19 @@ class NevergradMixin(Base_Optimizer):
             if self._register_frozen_param(param):
                 continue
             if param.is_integer:
-                p_obj = ng.p.Scalar(
-                    lower=param.min_val,
-                    upper=param.max_val)
+                p_obj = ng.p.Scalar(lower=param.min_val, upper=param.max_val)
                 p_obj.set_integer_casting()
 
             elif param.log_scale:
-                 p_obj = ng.p.Log(
+                p_obj = ng.p.Log(
                     lower=self.optimizer_config.log_variable_bounds.min,
-                    upper=self.optimizer_config.log_variable_bounds.max)
+                    upper=self.optimizer_config.log_variable_bounds.max,
+                )
             else:
                 p_obj = ng.p.Scalar(
                     lower=self.optimizer_config.lin_variable_bounds.min,
-                    upper=self.optimizer_config.lin_variable_bounds.max)
+                    upper=self.optimizer_config.lin_variable_bounds.max,
+                )
 
             parameters[param.name] = p_obj
 
@@ -207,7 +212,7 @@ class NevergradMixin(Base_Optimizer):
                 parametrization=self.parametrization,
                 budget=self.optimizer_config.budget,
                 optimizer_kwargs=self.optimizer_config.optimizer_kwargs,
-                random_seed=self.optimizer_config.random_seed
+                random_seed=self.optimizer_config.random_seed,
             )
 
             # Optional: seed the search with the dut_params' `init` point (opt-in via
@@ -234,7 +239,7 @@ class NevergradMixin(Base_Optimizer):
         cfg = self.optimizer_config
         lin, log = cfg.lin_variable_bounds, cfg.log_variable_bounds
         assert lin is not None and log is not None  # defaulted in OptimizerConfig.__post_init__
-        point: Dict[str, Any] = dict(self.parametrization.value)
+        point: dict[str, Any] = dict(self.parametrization.value)
         n_seeded = 0
         for param in self.setup_obj.dut_params:
             if param.name not in point or param.init is None:
@@ -245,8 +250,11 @@ class NevergradMixin(Base_Optimizer):
             if param.is_integer:
                 point[param.name] = int(round(init))
             elif param.log_scale:
+                # In decades: the inverse of `denormalize_params`' log-box coordinate
+                # (OPT-03), so the suggested point denormalizes back to exactly `init`.
                 x = (np.log10(init) - np.log10(lo)) / (np.log10(hi) - np.log10(lo))
-                point[param.name] = float(log.min + x * (log.max - log.min))
+                log_lo, log_hi = np.log10(log.min), np.log10(log.max)
+                point[param.name] = float(10.0 ** (log_lo + x * (log_hi - log_lo)))
             else:
                 x = (init - lo) / (hi - lo)
                 point[param.name] = float(lin.min + x * (lin.max - lin.min))
@@ -255,17 +263,42 @@ class NevergradMixin(Base_Optimizer):
             self.optimizer.suggest(point)
             logger.info(f"seed_from_init: suggested the `init` point for {n_seeded} dut_param(s)")
 
-    def optimization_step(self) -> Tuple[Dict[str, np.floating] , np.floating , Dict[str, Any]]:
+    def _tell_prior_trials(self, prior_trials: Sequence[OptimizationLogEntry]) -> int:
+        """Tell Nevergrad each prior trial as a point it did not ask for (tell-not-asked): the
+        point's coordinates (`normalize_params`) as a child of the parametrization, with the loss
+        `-score` the loop tells. An algorithm that refuses such a tell is told nothing more, and
+        the log says so; the run goes on."""
+        told = 0
+        for coords, score, _entry in self._prior_coords(prior_trials):
+            try:
+                child = self.optimizer.parametrization.spawn_child(new_value=coords)
+                self.optimizer.tell(child, -1 * score)
+            except ng.errors.TellNotAskedNotSupportedError:
+                logger.info(
+                    f"'{self.optimizer_config.name}' cannot be told a point it did not "
+                    f"ask for; {len(prior_trials) - told} prior trial(s) not told"
+                )
+                break
+            except ValueError as exc:  # a value the parametrization cannot hold
+                logger.warning(f"a prior trial was not told: {exc}")
+                continue
+            told += 1
+        return told
+
+    def optimization_step(self) -> tuple[dict[str, np.floating], np.floating, dict[str, Any]]:
         # Get a new candidate
-        candidate : ng.p.Parameter = self.optimizer.ask()
+        candidate: ng.p.Parameter = self.optimizer.ask()
         # Evaluate function
-        denorm_params: Dict[str, float] = self.denormalize_params(parameterization=candidate.value)
+        denorm_params: dict[str, float] = self.denormalize_params(parameterization=candidate.value)
         # A non-finite candidate is ALWAYS a config bug (broken bounds, a sampler
         # edge case, …) — injected into a deck it becomes `w=nan`, every bench
         # fails, and the trial silently scores as an all-penalty point. Fail the
         # run loudly instead.
-        bad = [k for k, v in denorm_params.items()
-               if isinstance(v, (int, float, np.floating)) and not np.isfinite(v)]
+        bad = [
+            k
+            for k, v in denorm_params.items()
+            if isinstance(v, (int, float, np.floating)) and not np.isfinite(v)
+        ]
         if bad:
             raise RuntimeError(
                 f"optimizer '{self.optimizer_config.name}' produced non-finite values for "
@@ -279,34 +312,38 @@ class NevergradMixin(Base_Optimizer):
         self.optimizer.tell(candidate, -1 * curr_score)
         return candidate.value, curr_score, metadata
 
-# ------------------------------------------------
-# B [USER-ENDPOINT] Nevergrad-based Bode Fitter
-# ------------------------------------------------
-class Nevergrad_Spice_Bode_Optimizer(NevergradMixin, Spice_Bode_Optimizer):
-    pass
 
 # ------------------------------------------------
 # B [USER-ENDPOINT] Nevergrad-based Constraint Satisfaction
 # ------------------------------------------------
 class Nevergrad_Spice_Constraint_Satisfaction(NevergradMixin, Spice_Constraint_Satisfaction):
-    def __init__(self,
-                 setup_obj: Project_Setup,
-                 spicelib_wrappers : Dict[str, Simulator],
-                 output_root: Path | None = None):
+    def __init__(
+        self,
+        setup_obj: Project_Setup,
+        spicelib_wrappers: dict[str, Simulator],
+        output_root: Path | None = None,
+    ):
         # Accept + forward output_root so per-run checkpoint isolation works for this endpoint too,
         # matching Nevergrad_Spice_Single_Objective (BUG-B26).
-        super().__init__(setup_obj = setup_obj, spicelib_wrappers = spicelib_wrappers,
-                         output_root = output_root)
+        super().__init__(
+            setup_obj=setup_obj, spicelib_wrappers=spicelib_wrappers, output_root=output_root
+        )
         self.parametrization: ng.p.Dict | None = None
         logger.info(f"started the {__class__} optimizer class")
+
+
 # ------------------------------------------------
 # B [USER-ENDPOINT] Nevergrad-based Single Objective Optimizer
 # ------------------------------------------------
 class Nevergrad_Spice_Single_Objective(NevergradMixin, Spice_Single_Objective):
-    def __init__(self,
-                 setup_obj: Project_Setup,
-                 spicelib_wrappers : Dict[str, Simulator],
-                 output_root: Path | None = None):
-        super().__init__(setup_obj = setup_obj, spicelib_wrappers = spicelib_wrappers, output_root = output_root)
+    def __init__(
+        self,
+        setup_obj: Project_Setup,
+        spicelib_wrappers: dict[str, Simulator],
+        output_root: Path | None = None,
+    ):
+        super().__init__(
+            setup_obj=setup_obj, spicelib_wrappers=spicelib_wrappers, output_root=output_root
+        )
         self.parametrization: ng.p.Dict | None = None
         logger.info(f"started the {__class__} optimizer class")

@@ -1,0 +1,19 @@
+# Load step 0.1 -> 10 mA with a 100 ns edge into the on-chip Cout; undershoot (S7) + recovery.
+schema: spicexplorer/analysis@1
+id: tran_load_step
+template: tran_load_step
+description: "Load step 0.1 -> 10 mA with a 100 ns edge into the on-chip Cout; undershoot (S7) + recovery."
+params:
+  VDD: 1.5
+  COUT: 1p
+  ILOAD_LO: 0.1m
+  ILOAD_HI: 10m
+  TSTART: 1u
+  TEDGE: 100n
+  TPULSE: 10u
+  TPER: 20u
+  TSTEP: 1n
+  TSTOP: 8u
+  VTOL: 1m
+flags: []
+produces: [v_undershoot, t_transient]

@@ -79,7 +79,11 @@ def test_mosfet_carries_model_and_params():
 
 def test_pdk_classify_and_reverse_lookup():
     dev = IHP_SG13G2.classify("sg13_lv_pmos")
-    assert dev is not None and dev.device_type is DeviceType.MOS and dev.polarity is MosPolarityType.PMOS
+    assert (
+        dev is not None
+        and dev.device_type is DeviceType.MOS
+        and dev.polarity is MosPolarityType.PMOS
+    )
     assert IHP_SG13G2.classify("sky130_fd_pr__nfet_01v8") is None  # not an IHP device
     # reverse direction (drives Phase-4 emission)
     assert IHP_SG13G2.model_for(DeviceType.MOS, MosPolarityType.NMOS) == "sg13_lv_nmos"

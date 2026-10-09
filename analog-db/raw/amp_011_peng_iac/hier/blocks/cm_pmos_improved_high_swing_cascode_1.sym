@@ -1,6 +1,6 @@
 v {xschem version=3.4.6 file_version=1.2}
 G {type=subcircuit
-format="@name @pinlist @symname"
+format="@name @pinlist @symname @params"
 template="name=x1"}
 V {}
 S {}
@@ -11,22 +11,22 @@ L 4 170 140 -170 140 {}
 L 4 -170 140 -170 -140 {}
 B 5 187.5 -102.5 192.5 -97.5 {name=VB1 dir=out}
 L 4 170 -100 190 -100 {}
-T {ref_in} 158 -100 0 0 0.16 0.16 {layer=4}
+T {ref_in} 128 -100 0 0 0.16 0.16 {layer=4}
 B 5 187.5 -62.5 192.5 -57.5 {name=VB2 dir=out}
 L 4 170 -60 190 -60 {}
-T {ref_in2} 158 -60 0 0 0.16 0.16 {layer=4}
+T {ref_in2} 123 -60 0 0 0.16 0.16 {layer=4}
 B 5 187.5 -22.5 192.5 -17.5 {name=VB3 dir=out}
 L 4 170 -20 190 -20 {}
-T {out_2} 158 -20 0 0 0.16 0.16 {layer=4}
+T {out_2} 133 -20 0 0 0.16 0.16 {layer=4}
 B 5 187.5 17.5 192.5 22.5 {name=VB4 dir=out}
 L 4 170 20 190 20 {}
-T {out} 158 20 0 0 0.16 0.16 {layer=4}
+T {out} 143 20 0 0 0.16 0.16 {layer=4}
 B 5 187.5 57.5 192.5 62.5 {name=net10 dir=out}
 L 4 170 60 190 60 {}
-T {out_3} 158 60 0 0 0.16 0.16 {layer=4}
+T {out_3} 133 60 0 0 0.16 0.16 {layer=4}
 B 5 187.5 97.5 192.5 102.5 {name=net7 dir=out}
 L 4 170 100 190 100 {}
-T {out_4} 158 100 0 0 0.16 0.16 {layer=4}
+T {out_4} 133 100 0 0 0.16 0.16 {layer=4}
 B 5 -2.5 -162.5 2.5 -157.5 {name=vdd dir=inout}
 L 4 0 -140 0 -160 {}
 T {supply} 0 -140 0 0 0.16 0.16 {layer=4}

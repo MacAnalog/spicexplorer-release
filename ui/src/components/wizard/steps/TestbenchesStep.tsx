@@ -67,24 +67,24 @@ export function TestbenchesStep() {
           </Button>
         </div>
 
-        {errMsg && <div className="rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-700">{errMsg}</div>}
+        {errMsg && <div className="rounded-md border border-red-200 bg-danger-soft p-2 text-xs text-red-700">{errMsg}</div>}
 
         {tbs.length === 0 && (
-          <div className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4 text-center text-xs text-zinc-500">
+          <div className="rounded-md border border-dashed border-zinc-300 bg-bg p-4 text-center text-xs text-muted">
             No testbenches yet — at least one is required.
           </div>
         )}
 
         {tbs.map((tb, i) => (
-          <div key={i} className="rounded-lg border border-zinc-200 bg-white">
-            <div className="flex items-center justify-between border-b border-zinc-100 px-3 py-2">
+          <div key={i} className="rounded-lg border border-border bg-panel">
+            <div className="flex items-center justify-between border-b border-hairline px-3 py-2">
               <div className="flex items-center gap-2 text-xs font-semibold text-zinc-800">
                 Testbench #{i + 1}
                 {tb.enable ? <Badge variant="pass">enabled</Badge> : <Badge variant="neutral">disabled</Badge>}
               </div>
               <button
                 type="button"
-                className="rounded-md border border-zinc-200 px-2 py-1 text-zinc-400 hover:bg-red-50 hover:text-red-600"
+                className="rounded-md border border-border px-2 py-1 text-faint hover:bg-danger-soft hover:text-danger"
                 onClick={() => removeTb(i)}
                 aria-label="Remove testbench"
               >
@@ -101,7 +101,7 @@ export function TestbenchesStep() {
               </label>
             </div>
 
-            <div className="border-t border-zinc-100 p-3">
+            <div className="border-t border-hairline p-3">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-medium text-zinc-600">Params ({tb.params.length})</span>
                 <div className="flex gap-2">
@@ -112,7 +112,7 @@ export function TestbenchesStep() {
                       className="hidden"
                       onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadTbNetlist(i, f); e.target.value = ""; }}
                     />
-                    <span className="inline-flex items-center gap-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-50">
+                    <span className="inline-flex items-center gap-1 rounded-md border border-zinc-300 bg-panel px-2 py-1 text-xs text-zinc-700 hover:bg-bg">
                       <Upload className="h-3 w-3" /> {parsingIdx === i ? "Parsing…" : "Upload netlist"}
                     </span>
                   </label>
@@ -123,12 +123,12 @@ export function TestbenchesStep() {
               </div>
 
               {tb.params.length === 0 ? (
-                <div className="rounded-md border border-dashed border-zinc-200 bg-zinc-50 p-3 text-center text-xs text-zinc-500">
+                <div className="rounded-md border border-dashed border-border bg-bg p-3 text-center text-xs text-muted">
                   No params yet (e.g. CL, V_CM, F_AC_START).
                 </div>
               ) : (
                 <div className="space-y-1">
-                  <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1.6fr)_auto] gap-2 text-[10px] font-medium uppercase tracking-wide text-zinc-400">
+                  <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1.6fr)_auto] gap-2 text-[10px] font-medium uppercase tracking-wide text-faint">
                     <div>Name</div><div>Value</div><div>Description</div><div></div>
                   </div>
                   {tb.params.map((p, pi) => (
@@ -141,7 +141,7 @@ export function TestbenchesStep() {
                       <TextInput value={p.description ?? ""} onChange={(e) => updateParam(i, pi, { description: e.target.value })} placeholder="load capacitance" />
                       <button
                         type="button"
-                        className="rounded-md border border-zinc-200 px-2 py-1 text-zinc-400 hover:bg-red-50 hover:text-red-600"
+                        className="rounded-md border border-border px-2 py-1 text-faint hover:bg-danger-soft hover:text-danger"
                         onClick={() => removeParam(i, pi)}
                         aria-label="Remove param"
                       >

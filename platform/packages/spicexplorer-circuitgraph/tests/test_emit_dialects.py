@@ -103,7 +103,9 @@ def test_subckt_wrapper_requires_ports_and_reparses():
     with pytest.raises(ValueError, match="ports"):
         to_netlist(g, dialect="spectre", subckt="ota")
     for dialect, opener in (("spice", ".subckt ota"), ("spectre", "subckt ota")):
-        text = to_netlist(g, dialect=dialect, subckt="ota", ports=["vdd", "vss", "vin", "vip", "outn"])
+        text = to_netlist(
+            g, dialect=dialect, subckt="ota", ports=["vdd", "vss", "vin", "vip", "outn"]
+        )
         assert any(line.startswith(opener) for line in text.splitlines())
         v = NetlistView.from_string(text, dialect=dialect)
         assert "ota" in v.get_subcircuit_names()
@@ -162,7 +164,9 @@ def test_spectre_net_sanitization_keeps_a_differential_pair_distinct() -> None:
     formals = header.split()[2:]
     assert len(set(formals)) == len(ports), header  # no duplicated formal port
 
-    gates = {ln.split("(", 1)[1].split()[1] for ln in scs.splitlines() if ln.startswith(("XM1 ", "XM2 "))}
+    gates = {
+        ln.split("(", 1)[1].split()[1] for ln in scs.splitlines() if ln.startswith(("XM1 ", "XM2 "))
+    }
     assert gates == {"vin_p", "vin_m"}, scs
 
 
@@ -207,3 +211,90 @@ def test_spectre_emits_brace_expressions_as_bare_spectre_expressions() -> None:
     scs = to_netlist(g, dialect="spectre")
     assert "capacitor c=CL" in scs
     assert "{" not in scs
+
+
+def test_spectre_bare_symbolic_passive_is_an_expression_not_a_phantom_master() -> None:
+    # LEAF-F15: `R1 a b rload` names a VALUE (ngspice needs `l=` before a passive's token can be a
+    # model), so Spectre must get `resistor r=rload` — not an instance of a master called `rload`.
+    # The check used to be only in `translate.py`; a direct `to_netlist` caller got the phantom.
+    net = "\n".join(
+        [
+            "* symbolic passive fixture",
+            "R1 a b rload",
+            "C1 b 0 CL m=1",
+            "L1 a c lval",
+            "R2 c 0 rupolym l=10u w=1u",
+            "V1 a 0 1",
+            ".end",
+        ]
+    )
+    g = CircuitGraph.from_netlist(NetlistView.from_string(net, dialect="spice"))
+    scs = to_netlist(g, dialect="spectre")
+    assert "R1 (a b) resistor r=rload" in scs
+    assert "C1 (b 0) capacitor c=CL m=1" in scs
+    assert "L1 (a c) inductor l=lval" in scs
+    # a model-named passive carries its geometry — there the token IS the master (unchanged)
+    assert "R2 (c 0) rupolym l=1e-05 w=1e-06" in scs
+
+
+def test_spectre_symbolic_passive_roundtrips_back_to_spectre() -> None:
+    # `resistor r=rload` read from a Spectre deck re-emits as itself, and a model-mastered passive
+    # (kept as an X-instance by the reader) keeps its master.
+    scs_in = "\n".join(
+        [
+            "simulator lang=spectre",
+            "parameters rload=1k",
+            "R1 (a b) resistor r=rload",
+            "R2 (b 0) rppd w=1u l=2u",
+            "V1 (a 0) vsource dc=1",
+        ]
+    )
+    g = CircuitGraph.from_netlist(NetlistView.from_string(scs_in, dialect="spectre"))
+    scs = to_netlist(g, dialect="spectre")
+    assert "R1 (a b) resistor r=rload" in scs
+    assert "XR2 (b 0) rppd l=2e-06 w=1e-06" in scs
+
+
+# How the Spectre emitter reads a passive's value token — a VALUE (`resistor r=<token>`) or the
+# MASTER (a model / PDK subcircuit) — one rule per row; each card sits alone in a two-line deck.
+@pytest.mark.parametrize(
+    ("card", "line"),
+    [
+        # geometry marks a model whatever its key's case (the reader keeps `L=`/`W=` as spelled)
+        ("R2 c 0 rupolym L=10u W=1u", "R2 (c 0) rupolym L=1e-05 W=1e-06"),
+        # either geometry key alone is enough
+        ("R3 c 0 rupolym w=1u", "R3 (c 0) rupolym w=1e-06"),
+        ("C4 c 0 cmim l=10u", "C4 (c 0) cmim l=1e-05"),
+        # an X-prefixed passive is a PDK subcircuit: its token is the master even with no geometry
+        ("XR5 c 0 rppd", "XR5 (c 0) rppd"),
+        # a non-geometry parameter does not turn a symbol into a model
+        ("R6 c 0 rload m=2", "R6 (c 0) resistor r=rload m=2"),
+        # a number or a brace expression stays a value even on a card that carries geometry
+        ("R7 c 0 1k w=2u", "R7 (c 0) resistor r=1000 w=2e-06"),
+        ("R8 c 0 {rload} l=10u", "R8 (c 0) resistor r=rload l=1e-05"),
+    ],
+    ids=[
+        "upper-case-geometry",
+        "w-only",
+        "l-only",
+        "x-prefix",
+        "m-is-not-geometry",
+        "number-with-geometry",
+        "brace-with-geometry",
+    ],
+)
+def test_spectre_passive_token_is_a_value_unless_the_card_names_a_model(
+    card: str, line: str
+) -> None:
+    g = CircuitGraph.from_netlist(
+        NetlistView.from_string(f"* passive card\n{card}\nV1 c 0 1\n.end", dialect="spice")
+    )
+    assert line in to_netlist(g, dialect="spectre").splitlines()
+
+
+def test_spectre_unknown_master_passive_without_geometry_keeps_its_master() -> None:
+    # The Spectre reader keeps an unknown-master passive as an X-instance (`R2 (b 0) rppd` → XR2);
+    # with no geometry to go on, only the X prefix says `rppd` is a master, not `r=rppd`.
+    scs_in = "simulator lang=spectre\nR2 (b 0) rppd\nV1 (b 0) vsource dc=1\n"
+    g = CircuitGraph.from_netlist(NetlistView.from_string(scs_in, dialect="spectre"))
+    assert "XR2 (b 0) rppd" in to_netlist(g, dialect="spectre").splitlines()

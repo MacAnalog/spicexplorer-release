@@ -6,6 +6,7 @@ never edit the rendered document. :func:`render_project_md` derives
 derived/rebuildable contract as ``index.db`` (regenerate to heal). One place an agent
 reads to learn "where is this design at", instead of globbing a dozen racing files.
 """
+
 from __future__ import annotations
 
 import json
@@ -21,7 +22,10 @@ PROJECT_MD_REL = "context/PROJECT.md"
 
 
 def append_decision(
-    project_dir: Path, event: dict[str, Any], *, now: datetime | None = None,
+    project_dir: Path,
+    event: dict[str, Any],
+    *,
+    now: datetime | None = None,
 ) -> dict[str, Any]:
     """Append ONE decision event to ``context/decisions.ndjson`` (O_APPEND — the
     contested-state-is-append-only rule). Stamps ``at`` if absent. Agents call
@@ -61,7 +65,11 @@ def _pass_glyph(v: Any) -> str:
 
 
 def render_project_md(
-    project_dir: Path, *, recent: int = 12, write: bool = True, now: datetime | None = None,
+    project_dir: Path,
+    *,
+    recent: int = 12,
+    write: bool = True,
+    now: datetime | None = None,
 ) -> str:
     """Derive ``context/PROJECT.md`` from ``state.json`` + the decision log and return the
     markdown. ``write=True`` (default) persists it atomically; pass ``write=False`` for a
@@ -77,21 +85,31 @@ def render_project_md(
     ]
 
     summary = state["compliance_summary"]
-    lines += ["## Compliance",
-              f"- {summary['checked']} spec(s) checked, **{summary['passing']} passing**"
-              f" (all pass: {summary['all_pass']})"]
+    lines += [
+        "## Compliance",
+        f"- {summary['checked']} spec(s) checked, **{summary['passing']} passing**"
+        f" (all pass: {summary['all_pass']})",
+    ]
     for sid, c in state["compliance"].items():
         tgt = f" (target {c['target']})" if c.get("target") else ""
         val = "—" if c["value"] is None else c["value"]
-        lines.append(f"  - {_pass_glyph(c['pass'])} `{sid}` = {val}{tgt}"
-                     f" [{c['aggregate']} over {c['n_points']} pt(s)]")
+        lines.append(
+            f"  - {_pass_glyph(c['pass'])} `{sid}` = {val}{tgt}"
+            f" [{c['aggregate']} over {c['n_points']} pt(s)]"
+        )
     lines.append("")
 
     best = state["best_runs"]["overall"]
-    lines += ["## Best run",
-              (f"- `{best['run_id']}` — best_score {best['best_score']} ({best['kind']})"
-               if best else "- (none yet)"),
-              f"  - election: {state['best_runs']['election_rule']}", ""]
+    lines += [
+        "## Best run",
+        (
+            f"- `{best['run_id']}` — best_score {best['best_score']} ({best['kind']})"
+            if best
+            else "- (none yet)"
+        ),
+        f"  - election: {state['best_runs']['election_rule']}",
+        "",
+    ]
 
     lines.append("## Cells")
     if state["cells"]:

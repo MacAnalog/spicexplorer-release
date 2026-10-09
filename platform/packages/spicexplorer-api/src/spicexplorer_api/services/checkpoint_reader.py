@@ -1,4 +1,5 @@
 """Read and normalize checkpoint data from both JSON (OptimizationLog) and CSV trace files."""
+
 from __future__ import annotations
 
 import math
@@ -10,6 +11,7 @@ import pandas as pd
 from spicexplorer_api.services.num import safe_float as _safe_float
 
 # ---------- JSON checkpoint reader ----------
+
 
 def read_json_checkpoint(path: Path, limit: int | None = None) -> dict[str, Any]:
     from spicexplorer.viz.plotting import Optimization_Log_Visualizer
@@ -48,8 +50,8 @@ def read_json_checkpoint(path: Path, limit: int | None = None) -> dict[str, Any]
 
         fs = entry.fit_summary or {}
         for metric, vals in fs.items():
-            # Some optimizers (e.g. the Bode path) store bare scalars in fit_summary
-            # rather than {"curr_val": ...} dicts — skip those instead of crashing.
+            # An old checkpoint may hold bare scalars in fit_summary rather than
+            # {"curr_val": ...} dicts — skip those instead of crashing.
             if not isinstance(vals, dict):
                 continue
             series = per_metric.setdefault(metric, [])
@@ -102,10 +104,12 @@ def read_csv_checkpoint(path: Path, limit: int | None = None) -> dict[str, Any]:
     params_out: dict[str, list[float | None]] = {}
     best = -math.inf
 
-    metric_cols = [c for c in df.columns if c.startswith(METRIC_PREFIX) and c.endswith(METRIC_VALUE_SUFFIX)]
+    metric_cols = [
+        c for c in df.columns if c.startswith(METRIC_PREFIX) and c.endswith(METRIC_VALUE_SUFFIX)
+    ]
     param_cols = [c for c in df.columns if c.startswith(PARAM_PREFIX)]
-    metric_names = [c[len(METRIC_PREFIX):-len(METRIC_VALUE_SUFFIX)] for c in metric_cols]
-    param_names = [c[len(PARAM_PREFIX):] for c in param_cols]
+    metric_names = [c[len(METRIC_PREFIX) : -len(METRIC_VALUE_SUFFIX)] for c in metric_cols]
+    param_names = [c[len(PARAM_PREFIX) :] for c in param_cols]
 
     for i, row in df.iterrows():
         s = _safe_float(row.get("point.score"))
@@ -145,6 +149,7 @@ def read_csv_checkpoint(path: Path, limit: int | None = None) -> dict[str, Any]:
 
 # ---------- unified loader ----------
 
+
 def read_checkpoint(path: Path, limit: int | None = None) -> dict[str, Any]:
     if path.suffix == ".json":
         return read_json_checkpoint(path, limit=limit)
@@ -152,6 +157,7 @@ def read_checkpoint(path: Path, limit: int | None = None) -> dict[str, Any]:
 
 
 # ---------- envelope ----------
+
 
 def compute_envelope(
     data: dict[str, Any],
@@ -199,17 +205,20 @@ def compute_envelope(
             else:  # exact
                 passes = abs(best_ever - target) <= tol
 
-        results.append({
-            "metric": metric,
-            "best_ever": best_ever,
-            "target": target,
-            "goal": goal,
-            "passes": passes,
-        })
+        results.append(
+            {
+                "metric": metric,
+                "best_ever": best_ever,
+                "target": target,
+                "goal": goal,
+                "passes": passes,
+            }
+        )
     return results
 
 
 # ---------- scatter ----------
+
 
 def _populated_at(series: list[float | None] | None) -> set[int]:
     """Trial indices where ``series`` holds a value (not None)."""
@@ -241,8 +250,12 @@ def _resolve_scatter_axes(
     def _corner(k: str) -> str | None:
         return k.split("::")[0] if "::" in k else None
 
-    x_cands = [k for k in per_metric if _bare(k) == _bare(metric_x) and _populated_at(per_metric[k])]
-    y_cands = [k for k in per_metric if _bare(k) == _bare(metric_y) and _populated_at(per_metric[k])]
+    x_cands = [
+        k for k in per_metric if _bare(k) == _bare(metric_x) and _populated_at(per_metric[k])
+    ]
+    y_cands = [
+        k for k in per_metric if _bare(k) == _bare(metric_y) and _populated_at(per_metric[k])
+    ]
 
     best: tuple[tuple[int, bool], str, str] | None = None
     for xk in x_cands or [metric_x]:
@@ -345,8 +358,8 @@ def compute_scatter(
             v = vals[i] if i < len(vals) else None
             if v is None:
                 if _ran(mn, i):
-                    return False   # recorded but NaN → a real violation
-                continue           # never simulated this trial → skip
+                    return False  # recorded but NaN → a real violation
+                continue  # never simulated this trial → skip
             if _fails_spec(spec, target, v):
                 return False
         return True
@@ -357,11 +370,13 @@ def compute_scatter(
         xv, yv = xs[i], ys[i]
         if xv is None or yv is None:
             continue
-        points.append({
-            "x": xv,
-            "y": yv,
-            "feasible": _is_feasible(i),
-            "score": scores[i] if i < len(scores) else None,
-            "iter": i,
-        })
+        points.append(
+            {
+                "x": xv,
+                "y": yv,
+                "feasible": _is_feasible(i),
+                "score": scores[i] if i < len(scores) else None,
+                "iter": i,
+            }
+        )
     return points

@@ -1,44 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Dict, Tuple
-
-import numpy as np
-
-# torch / control / sympy are OPTIONAL. They are needed ONLY by the Bode / AC
-# transfer-function-fitting helpers in this module; the common numpy scoring path
-# (compute_error / compute_reward / compute_relative_*) used by the constraint and
-# single-objective optimizers never touches them. Keeping the import lazy lets the
-# api's score path import this module without the heavy torch wheel. Install the
-# Bode/RL features with:  pip install 'spicexplorer[torch]'.
-#
-# The TYPE_CHECKING branch is what a static checker sees: the real modules, so
-# `torch.Tensor` stays a usable ANNOTATION and `torch.mean(...)` stays a call on a
-# module. The `... = None` fallbacks below are a RUNTIME sentinel for "extra not
-# installed" — typing them as `Module | None` made every annotation in this file a
-# `reportInvalidTypeForm` and every call a `reportOptionalMemberAccess`, which is
-# noise about an import guard, not about the code. The guard itself is unchanged:
-# the runtime behaviour, including the `if torch is not None:` checks below, is
-# byte-for-byte what it was.
-if TYPE_CHECKING:
-    import control as ctrl
-    import sympy as sp
-    import torch
-else:
-    try:
-        import torch
-    except ModuleNotFoundError:
-        torch = None
-    try:
-        import control as ctrl
-    except ModuleNotFoundError:
-        ctrl = None
-    try:
-        import sympy as sp
-    except ModuleNotFoundError:
-        sp = None
-
 import logging
 import warnings
+from collections.abc import Callable
+from typing import Any
+
+# torch-free since 2026-09-07 (owner ruling: torch ships only with the Ax optimizer, whose
+# ax-platform/botorch stack brings it). The frequency-response helpers below are numpy; the
+# symbolic `Transfer_Func_Helper.eval_tf` (the last sympy import) left with the Bode fitter (#307).
+import numpy as np
 
 # Plotting Tools
 import plotly.graph_objects as go
@@ -47,171 +17,18 @@ from spicexplorer.core.domains import Error_Types, OptimizationGoalType, Reward_
 
 logger = logging.getLogger("spicexplorer.designer_tools.utils")
 
-UNIT_DICT: Dict[str, float] ={
-    'p' : 1e-12,
-    'n' : 1e-9,
-    'u' : 1e-6,
-    'k' : 1e3
-}
+UNIT_DICT: dict[str, float] = {"p": 1e-12, "n": 1e-9, "u": 1e-6, "k": 1e3}
 
-# Preserve the original global torch config when torch is available (no-op without it).
-if torch is not None:
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    dtype  = torch.double
-    torch.set_default_dtype(dtype)
-    torch.set_default_device(device)
-else:
-    device = None
-    dtype  = None
-
-# ----------------------------
-# Loss Functions Helpers
-# ----------------------------
-def weighted_mse_loss(
-    response: torch.Tensor,
-    target_response: torch.Tensor,
-    weights: torch.Tensor,
-    normalize_method: str = None,
-    epsilon: float = 1e-10
-) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
-
-    """Computes the weighted mean squared error loss between the response and the target response."""
-
-    norm_params = {}
-
-    if normalize_method is None:
-        norm_params = None
-        loss = torch.mean(weights * (response - target_response) ** 2)
-
-    elif normalize_method == "z-score":
-        mean = torch.mean(target_response)
-        std = torch.std(target_response)
-
-        # Avoid division by zero
-        std = torch.clamp(std, min=epsilon)
-
-        target_response_norm = (target_response - mean) / std
-        response_norm = (response - mean) / std
-
-        norm_params = {"mean": mean, "std": std}
-        loss = torch.mean(weights * (response_norm - target_response_norm) ** 2)
-
-    elif normalize_method == "min-max":
-        min_val = torch.min(target_response)
-        max_val = torch.max(target_response)
-
-        norm_params = {"min": min_val, "max": max_val}
-
-        # Avoid division by zero (a FLAT target response has max == min) — the same clamp
-        # the z-score branch applies to `std`; unclamped this returned inf/NaN and poisoned
-        # the ranking of every candidate scored against that target.
-        span = (max_val - min_val).clamp(min=epsilon)
-        loss = torch.mean(weights * (response - target_response) ** 2 / (span ** 0.5))
-
-    else:
-        raise ValueError("Invalid normalization method. Choose 'z-score' or 'min-max' or None.")
-
-    return loss, norm_params
-
-def weighted_mae_loss(
-    response: torch.Tensor,
-    target_response: torch.Tensor,
-    weights: torch.Tensor,
-    normalize_method: str = None,
-    epsilon: float = 1e-10
-) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
-
-    """Computes the weighted absolute error loss between the response and the target response."""
-
-    norm_params = {}
-
-    if normalize_method is None:
-        return torch.mean(weights * torch.abs(response - target_response)), norm_params
-
-    elif normalize_method == "z-score":
-        mean = torch.mean(target_response)
-        std = torch.std(target_response)
-
-        # Avoid division by zero
-        std = torch.clamp(std, min=epsilon)
-
-        target_response_norm = (target_response - mean) / std
-        response_norm = (response - mean) / std
-
-        norm_params = {"mean": mean, "std": std}
-        loss = torch.mean(weights * torch.abs(response_norm - target_response_norm))
-
-    elif normalize_method == "min-max":
-        min_val = torch.min(target_response)
-        max_val = torch.max(target_response)
-
-        norm_params = {"min": min_val, "max": max_val}
-        # Avoid division by zero (a FLAT target response has max == min) — see
-        # `weighted_mse_loss`; unclamped this returned inf/NaN.
-        span = (max_val - min_val).clamp(min=epsilon)
-        loss = torch.mean(weights * torch.abs(response - target_response) / (span ** 0.5))
-
-    else:
-        raise ValueError("Invalid normalization method. Choose 'z-score' or 'min-max' or None.")
-
-    return loss, norm_params
-
-def get_bode_fitness_loss( current_complex_response: torch.Tensor, target_complex_response: torch.Tensor, freq_weights: torch.Tensor | None = None, loss_type: str = 'mae',norm_method: str = "min-max", rescale:bool = True, epsilon: float = 1e-10) -> Dict[str, torch.Tensor]:
-    # Ensure inputs are tensors
-    if not isinstance(current_complex_response, torch.Tensor):
-        current_complex_response = torch.tensor(current_complex_response, dtype=torch.cfloat)
-    if not isinstance(target_complex_response, torch.Tensor):
-        target_complex_response = torch.tensor(target_complex_response, dtype=torch.cfloat)
-
-    # Set freq_weights to an array of ones if not provided, matching the dtype of current_complex_response
-    if freq_weights is None:
-        freq_weights = torch.ones_like(current_complex_response, dtype=torch.float64)
-
-    helper = Transfer_Func_Helper()
-
-    # Extract magnitude and phase
-    curr_mag, curr_phase     = helper.get_mag_phase_from_complex_response(current_complex_response)
-    target_mag, target_phase = helper.get_mag_phase_from_complex_response(target_complex_response)
-
-    fit_summary = {}
-
-
-    # --- Compute gain ---
-    curr_max_mag    = torch.max(curr_mag)
-    target_max_mag  = torch.max(target_mag)
-    # log in the summary
-    fit_summary['curr_max_mag'] = curr_max_mag
-    fit_summary['target_max_mag'] = target_max_mag
-    if rescale:  # mag is in dB so we normalize to
-        curr_mag   -= curr_max_mag
-        target_mag -= target_max_mag
-
-    # --- Compute 3dB cutoff ---
-    # TODO
-
-
-    # Compute losses
-    if loss_type == 'mae':
-        mag_loss, _   = weighted_mae_loss(curr_mag, target_mag, freq_weights, norm_method, epsilon=epsilon)
-        phase_loss, _ = weighted_mae_loss(curr_phase, target_phase, freq_weights, norm_method, epsilon=epsilon)
-    elif loss_type == 'mse':
-        mag_loss, _   = weighted_mse_loss(curr_mag, target_mag, freq_weights, norm_method, epsilon=epsilon)
-        phase_loss, _ = weighted_mse_loss(curr_phase, target_phase, freq_weights, norm_method, epsilon=epsilon)
-    else:
-        raise KeyError(f"{loss_type} is a loss type option... choose from: ['mae', 'mse']")
-
-    fit_summary['mag_loss']   = mag_loss
-    fit_summary['phase_loss'] = phase_loss
-
-    return fit_summary
 
 def convert_linear_to_log(val: np.ndarray | float | np.float64) -> np.ndarray | np.float64:
     """Converts a value from linear scale to (log10)."""
     return np.log10(val)
 
+
 def convert_log_to_linear(val: np.ndarray | float | np.float64) -> np.ndarray | np.float64:
     """Converts a value from (log10) to linear scale."""
     return np.power(10, val)
+
 
 # ----------------------------
 # Decade-space transforms for `log_scale` specs (SHARED — one implementation)
@@ -311,13 +128,14 @@ def log_space_range_coeff(target_val, range_val):
     hi = np.float64(convert_linear_to_log(target_val + range_val))
     return np.float64(abs(hi - lt))
 
+
 # ----------------------------
 # Constraints function
 # ----------------------------
 # Numerical guards for the error/reward kernels (opt-in error/reward types — the shipped
 # examples use relative-sigmoid/relative-absolute, but these must not produce inf/nan):
-_EXP_ARG_CAP = np.float64(50.0)       # cap exp() argument so a large error can't overflow to inf
-_LOG_REWARD_EPS = np.float64(1e-12)   # floor for log-reward operands so an exact match isn't -inf
+_EXP_ARG_CAP = np.float64(50.0)  # cap exp() argument so a large error can't overflow to inf
+_LOG_REWARD_EPS = np.float64(1e-12)  # floor for log-reward operands so an exact match isn't -inf
 
 #: Feasibility threshold: a total penalty within one EPSILON of zero counts as FEASIBLE, so float
 #: dust in a satisfied spec cannot suppress the reward landscape. Defined here (next to the
@@ -325,20 +143,35 @@ _LOG_REWARD_EPS = np.float64(1e-12)   # floor for log-reward operands so an exac
 #: scorer and the aggregators can never drift apart on what "feasible" means.
 EPSILON = np.float64(1e-12)
 
+
 # A - Normalized Error Functions
-def compute_relative_absolute_error(curr_val: np.float64, target_val: np.float64, normalizing_coeff: np.float64) -> np.float64:
+def compute_relative_absolute_error(
+    curr_val: np.float64, target_val: np.float64, normalizing_coeff: np.float64
+) -> np.float64:
     return np.float64(np.abs(curr_val - target_val) / normalizing_coeff)
+
+
 # -----------------------------------------------------------------------------------------------------------------------------------------------
-def compute_relative_squared_error(curr_val: np.float64, target_val: np.float64, normalizing_coeff: np.float64) -> np.float64:
+def compute_relative_squared_error(
+    curr_val: np.float64, target_val: np.float64, normalizing_coeff: np.float64
+) -> np.float64:
     return np.float64(((curr_val - target_val) / normalizing_coeff) ** 2)
+
+
 # -----------------------------------------------------------------------------------------------------------------------------------------------
-def compute_relative_exponential_error(curr_val: np.float64, target_val: np.float64, normalizing_coeff: np.float64) -> np.float64:
+def compute_relative_exponential_error(
+    curr_val: np.float64, target_val: np.float64, normalizing_coeff: np.float64
+) -> np.float64:
     # Clamp the exponent so a large (e.g. raw-SI-magnitude) error doesn't overflow to inf
     # and flatten the optimizer's gradient to a saturated penalty (BUG-B22).
     arg = np.minimum(np.abs(curr_val - target_val) / normalizing_coeff, _EXP_ARG_CAP)
     return np.float64(np.exp(arg) - 1)
+
+
 # -----------------------------------------------------------------------------------------------------------------------------------------------
-def compute_relative_sigmoid_error(curr_val: np.float64, target_val: np.float64, normalizing_coeff: np.float64, alpha: float = 1.0) -> np.float64:
+def compute_relative_sigmoid_error(
+    curr_val: np.float64, target_val: np.float64, normalizing_coeff: np.float64, alpha: float = 1.0
+) -> np.float64:
     """Bounded [0,1) squashed penalty: 2 / (1 + exp(-alpha * d)) - 1, with d the normalized error.
 
     `alpha` is the SATURATION RATE: a larger alpha reaches the bound sooner, so the penalty
@@ -361,8 +194,12 @@ def compute_relative_sigmoid_error(curr_val: np.float64, target_val: np.float64,
     # exp(-cap) ~ 0 and the penalty saturates at 1 instead of overflowing.
     arg = np.minimum(alpha * diff, _EXP_ARG_CAP)
     return 2.0 / (1.0 + np.exp(-arg)) - 1.0
+
+
 # -----------------------------------------------------------------------------------------------------------------------------------------------
-def compute_relative_gaussian_error(curr_val: np.float64, target_val: np.float64, normalizing_coeff: np.float64, sigma: float = 1.0) -> np.float64:
+def compute_relative_gaussian_error(
+    curr_val: np.float64, target_val: np.float64, normalizing_coeff: np.float64, sigma: float = 1.0
+) -> np.float64:
     """Inverted-Gaussian penalty: 1 - exp(-d^2 / (2*sigma^2)), with d the normalized error.
 
     Bounded on [0, 1] like relative-sigmoid, so the two are directly comparable and one far-off
@@ -392,19 +229,23 @@ def compute_relative_gaussian_error(curr_val: np.float64, target_val: np.float64
     # underflows to exp(-cap) ~ 0 and the penalty saturates at 1 instead of overflowing.
     arg = np.minimum((diff * diff) / (2.0 * sigma * sigma), _EXP_ARG_CAP)
     return np.float64(1.0 - np.exp(-arg))
+
+
 # -----------------------------------------------------------------------------------------------------------------------------------------------
 def compute_log_cosh_error(curr, target, normalizing_coeff=1.0):
     """Log-Cosh loss, smooth and robust"""
     diff = (curr - target) / normalizing_coeff
     return np.log(np.cosh(diff))
+
+
 # -----------------------------------------------------------------------------------------------------------------------------------------------
 #: Running-scale strategies `relative-adaptive` accepts.
-ADAPTIVE_STRATEGIES: Tuple[str, ...] = ("running_mean", "ema", "running_max")
+ADAPTIVE_STRATEGIES: tuple[str, ...] = ("running_mean", "ema", "running_max")
 
 #: What the synthetic "past sample" that primes the statistic is derived from. Resolved to a
 #: NUMBER by `TargetSpec` at load, because only the spec knows its target, range and `log_scale`
 #: (a log-scale spec's samples are in DECADES, so the seed has to be too).
-ADAPTIVE_SEED_BASES: Tuple[str, ...] = ("target", "range", "none")
+ADAPTIVE_SEED_BASES: tuple[str, ...] = ("target", "range", "none")
 
 
 class AdaptiveNormalizer:
@@ -450,11 +291,30 @@ class AdaptiveNormalizer:
     satisfied from the first trial never leaves its seed — both intended.
     """
 
-    __slots__ = ("strategy", "ema_beta", "warmup", "window", "seed", "seed_weight",
-                 "frozen", "n", "_samples", "_sum", "_max", "_ema")
+    __slots__ = (
+        "strategy",
+        "ema_beta",
+        "warmup",
+        "window",
+        "seed",
+        "seed_weight",
+        "frozen",
+        "n",
+        "_samples",
+        "_sum",
+        "_max",
+        "_ema",
+    )
 
-    def __init__(self, strategy: str = "running_mean", ema_beta: float = 0.9, warmup: int = 0,
-                 window: int | None = None, seed: float | None = None, seed_weight: int = 1):
+    def __init__(
+        self,
+        strategy: str = "running_mean",
+        ema_beta: float = 0.9,
+        warmup: int = 0,
+        window: int | None = None,
+        seed: float | None = None,
+        seed_weight: int = 1,
+    ):
         strategy = str(strategy).strip().lower()
         if strategy not in ADAPTIVE_STRATEGIES:
             raise ValueError(
@@ -464,13 +324,17 @@ class AdaptiveNormalizer:
         # A beta at either endpoint degenerates: 0 makes the EMA the last error alone (no memory,
         # so the scale rattles trial to trial), 1 freezes it at the first observation forever.
         if not np.isfinite(beta) or not (0.0 < beta < 1.0):
-            raise ValueError(f"relative-adaptive ema_beta must be finite and in (0, 1). Got: {ema_beta!r}.")
+            raise ValueError(
+                f"relative-adaptive ema_beta must be finite and in (0, 1). Got: {ema_beta!r}."
+            )
         warm = int(warmup)
         if warm < 0:
             raise ValueError(f"relative-adaptive warmup must be >= 0. Got: {warmup!r}.")
         win = None if window is None else int(window)
         if win is not None and win < 0:
-            raise ValueError(f"relative-adaptive window must be >= 0 (0/None = unbounded). Got: {window!r}.")
+            raise ValueError(
+                f"relative-adaptive window must be >= 0 (0/None = unbounded). Got: {window!r}."
+            )
         if win == 0:
             win = None
         sw = int(seed_weight)
@@ -478,12 +342,15 @@ class AdaptiveNormalizer:
             raise ValueError(f"relative-adaptive seed_weight must be >= 0. Got: {seed_weight!r}.")
         sd = None if seed is None else float(seed)
         if sd is not None and (not np.isfinite(sd) or sd <= 0):
-            raise ValueError(f"relative-adaptive seed must be finite and > 0 (or None). Got: {seed!r}.")
+            raise ValueError(
+                f"relative-adaptive seed must be finite and > 0 (or None). Got: {seed!r}."
+            )
         if sd is not None and win is not None and sw > win:
             # Otherwise the window is entirely seed and no real observation can ever influence it.
             raise ValueError(
                 f"relative-adaptive seed_weight ({sw}) must not exceed window ({win}) — the "
-                "window would hold nothing but the seed and the scale could never adapt.")
+                "window would hold nothing but the seed and the scale could never adapt."
+            )
         self.strategy = strategy
         self.ema_beta = beta
         self.warmup = warm
@@ -504,13 +371,13 @@ class AdaptiveNormalizer:
 
         Use before re-scoring a logged run, so the replay starts where the original run did rather
         than inheriting whatever scale the live run ended on."""
-        self.n = 0                                   # REAL observations only (drives `warmup`)
+        self.n = 0  # REAL observations only (drives `warmup`)
         self._samples: list[np.float64] = []
         self._ema: np.float64 | None = None
         if self.seed is not None and self.seed_weight > 0:
             seed = np.float64(self.seed)
             self._samples = [seed] * self.seed_weight
-            self._ema = seed                         # the EMA starts AT the prior, not below it
+            self._ema = seed  # the EMA starts AT the prior, not below it
         self._recompute_windowed()
 
     def observe(self, raw_error: np.float64 | float) -> None:
@@ -533,10 +400,13 @@ class AdaptiveNormalizer:
         if self.window is not None and len(self._samples) > self.window:
             # Oldest-out. The seed occupies the oldest slots, so it is the FIRST thing evicted —
             # the prior fades exactly as real evidence accumulates, which is what a prior is for.
-            del self._samples[:len(self._samples) - self.window]
+            del self._samples[: len(self._samples) - self.window]
         self._recompute_windowed()
-        self._ema = err if self._ema is None else np.float64(
-            self.ema_beta * self._ema + (1.0 - self.ema_beta) * err)
+        self._ema = (
+            err
+            if self._ema is None
+            else np.float64(self.ema_beta * self._ema + (1.0 - self.ema_beta) * err)
+        )
 
     def scale(self, fallback: np.float64 | float) -> np.float64:
         """The current ``S_i``, or ``fallback`` (the spec's static normalizer) during warmup.
@@ -552,8 +422,7 @@ class AdaptiveNormalizer:
         if self.n < self.warmup:
             return fb
         if self.strategy == "running_mean":
-            stat = (np.float64(self._sum / len(self._samples)) if self._samples
-                    else np.float64(0.0))
+            stat = np.float64(self._sum / len(self._samples)) if self._samples else np.float64(0.0)
         elif self.strategy == "running_max":
             stat = np.float64(self._max)
         else:  # "ema"
@@ -562,16 +431,26 @@ class AdaptiveNormalizer:
             return fb
         return stat
 
-    def describe(self) -> Dict[str, Any]:
+    def describe(self) -> dict[str, Any]:
         """Config + live state, for logging a run's shaping provenance."""
-        return {"strategy": self.strategy, "ema_beta": self.ema_beta, "warmup": self.warmup,
-                "window": self.window, "seed": self.seed, "seed_weight": self.seed_weight,
-                "n_observed": self.n, "n_retained": len(self._samples), "frozen": self.frozen}
+        return {
+            "strategy": self.strategy,
+            "ema_beta": self.ema_beta,
+            "warmup": self.warmup,
+            "window": self.window,
+            "seed": self.seed,
+            "seed_weight": self.seed_weight,
+            "n_observed": self.n,
+            "n_retained": len(self._samples),
+            "frozen": self.frozen,
+        }
 
     def __repr__(self) -> str:  # pragma: no cover - diagnostic only
-        return (f"AdaptiveNormalizer(strategy={self.strategy!r}, ema_beta={self.ema_beta}, "
-                f"warmup={self.warmup}, window={self.window}, seed={self.seed}, "
-                f"seed_weight={self.seed_weight}, n={self.n}, frozen={self.frozen})")
+        return (
+            f"AdaptiveNormalizer(strategy={self.strategy!r}, ema_beta={self.ema_beta}, "
+            f"warmup={self.warmup}, window={self.window}, seed={self.seed}, "
+            f"seed_weight={self.seed_weight}, n={self.n}, frozen={self.frozen})"
+        )
 
 
 #: One-shot guard so an unwired `relative-adaptive` seam shouts once rather than per evaluation.
@@ -600,7 +479,7 @@ def compute_relative_adaptive_error(
     window: int | None = None,
     seed: float | None = None,
     seed_weight: int = 1,
-    state: "AdaptiveNormalizer | None" = None,
+    state: AdaptiveNormalizer | None = None,
 ) -> np.float64:
     """Absolute error divided by an ADAPTIVE scale: ``|curr - target| / S_i``.
 
@@ -631,31 +510,50 @@ def compute_relative_adaptive_error(
         return np.float64(diff / normalizing_coeff)
     state.observe(diff)
     return np.float64(diff / state.scale(normalizing_coeff))
+
+
 # -----------------------------------------------------------------------------------------------------------------------------------------------
+
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------
 # B - Unnormalized Error Functions
 def compute_absolute_error(curr_val: np.float64, target_val: np.float64) -> np.float64:
     return np.float64(np.abs(curr_val - target_val))
+
+
 # -----------------------------------------------------------------------------------------------------------------------------------------------
 def compute_squared_error(curr_val: np.float64, target_val: np.float64) -> np.float64:
     return np.float64((curr_val - target_val) ** 2)
+
+
 # -----------------------------------------------------------------------------------------------------------------------------------------------
 def compute_exponential_error(curr_val: np.float64, target_val: np.float64) -> np.float64:
     arg = np.minimum(np.abs(curr_val - target_val), _EXP_ARG_CAP)  # avoid inf overflow (BUG-B22)
     return np.float64(np.exp(arg) - 1)
+
+
 # -----------------------------------------------------------------------------------------------------------------------------------------------
+
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------
 # C - Normalized Reward Functions
-def compute_relative_absolute_reward(curr_val: np.float64, target_val: np.float64, normalizing_coeff : np.float64) -> np.float64:
-    return np.float64(np.abs(curr_val - target_val) /  normalizing_coeff)
+def compute_relative_absolute_reward(
+    curr_val: np.float64, target_val: np.float64, normalizing_coeff: np.float64
+) -> np.float64:
+    return np.float64(np.abs(curr_val - target_val) / normalizing_coeff)
+
+
 # -----------------------------------------------------------------------------------------------------------------------------------------------
-def compute_relative_log_reward(curr_val: np.float64, target_val: np.float64, normalizing_coeff : np.float64) -> np.float64:
+def compute_relative_log_reward(
+    curr_val: np.float64, target_val: np.float64, normalizing_coeff: np.float64
+) -> np.float64:
     # Floor the difference so an exact match (curr == target) doesn't take log10(0) = -inf (BUG-B21).
     diff = np.maximum(np.abs(curr_val - target_val), _LOG_REWARD_EPS)
     return np.abs(np.log10(diff / normalizing_coeff))
+
+
 # -----------------------------------------------------------------------------------------------------------------------------------------------
+
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------
 # D - Unnormalized Reward Functions
@@ -664,34 +562,36 @@ def compute_log_reward(curr_val: np.float64, target_val: np.float64) -> np.float
     num = np.maximum(np.abs(curr_val), _LOG_REWARD_EPS)
     den = np.maximum(np.abs(target_val), _LOG_REWARD_EPS)
     return np.abs(np.log10(num / den))
+
+
 # -----------------------------------------------------------------------------------------------------------------------------------------------
 
 
 # Dictionary to map error types to functions
-ERROR_COMPUTE_FUNCTIONS : Dict[Error_Types, Callable]= {
+ERROR_COMPUTE_FUNCTIONS: dict[Error_Types, Callable] = {
     # Unnormalized Errors
-    Error_Types.ABSOLUTE:     compute_absolute_error,
-    Error_Types.SQUARED:      compute_squared_error,
-    Error_Types.EXPONENTIAL:  compute_exponential_error,
+    Error_Types.ABSOLUTE: compute_absolute_error,
+    Error_Types.SQUARED: compute_squared_error,
+    Error_Types.EXPONENTIAL: compute_exponential_error,
     # Relative Errors
-    Error_Types.RELATIVE_ABSOLUTE:      compute_relative_absolute_error,
-    Error_Types.RELATIVE_SQUARED:       compute_relative_squared_error,
-    Error_Types.RELATIVE_EXPONENTIAL:   compute_relative_exponential_error,
-    Error_Types.RELATIVE_SIGMOID :      compute_relative_sigmoid_error,
-    Error_Types.RELATIVE_GAUSSIAN:      compute_relative_gaussian_error,
-    Error_Types.RELATIVE_ADAPTIVE:      compute_relative_adaptive_error,
+    Error_Types.RELATIVE_ABSOLUTE: compute_relative_absolute_error,
+    Error_Types.RELATIVE_SQUARED: compute_relative_squared_error,
+    Error_Types.RELATIVE_EXPONENTIAL: compute_relative_exponential_error,
+    Error_Types.RELATIVE_SIGMOID: compute_relative_sigmoid_error,
+    Error_Types.RELATIVE_GAUSSIAN: compute_relative_gaussian_error,
+    Error_Types.RELATIVE_ADAPTIVE: compute_relative_adaptive_error,
 }
 
 #: Error types whose kernel carries mutable state across evaluations. The scorer must hand each of
 #: these the owning spec's own state object (`TargetSpec.error_state`); every other error type is a
 #: pure function of (curr, target, coeff) and ignores it.
-STATEFUL_ERROR_TYPES: Tuple[Error_Types, ...] = (Error_Types.RELATIVE_ADAPTIVE,)
+STATEFUL_ERROR_TYPES: tuple[Error_Types, ...] = (Error_Types.RELATIVE_ADAPTIVE,)
 
 #: Shape parameters an error type accepts beyond (curr, target, coeff), and their defaults.
 #: An error type absent here takes none, so `error_params` is ignored for it — which keeps every
 #: existing error type byte-for-byte unchanged. Used to validate spec.error_params at LOAD time
 #: rather than discovering a typo as a TypeError thousands of evaluations into a run.
-ERROR_SHAPE_PARAMS: Dict[Error_Types, Dict[str, Any]] = {
+ERROR_SHAPE_PARAMS: dict[Error_Types, dict[str, Any]] = {
     # The saturation rate. 1.0 is the value this kernel was hardcoded at before it became a
     # parameter, so an existing spec that names no `error_params:` is unchanged.
     Error_Types.RELATIVE_SIGMOID: {"alpha": 1.0},
@@ -704,22 +604,29 @@ ERROR_SHAPE_PARAMS: Dict[Error_Types, Dict[str, Any]] = {
     # decades. Defaults: seed from the target magnitude and adapt from evaluation one, which is
     # why `warmup` defaults to 0 (seeding supersedes burning in on the static range).
     Error_Types.RELATIVE_ADAPTIVE: {
-        "strategy": "running_mean", "ema_beta": 0.9, "warmup": 0,
-        "window": None, "seed": "target", "seed_weight": 1,
+        "strategy": "running_mean",
+        "ema_beta": 0.9,
+        "warmup": 0,
+        "window": None,
+        "seed": "target",
+        "seed_weight": 1,
     },
 }
 
 
 # Dictionary to map error types to functions
-REWARD_COMPUTE_FUNCTIONS : Dict[Reward_Types, Callable]= {
-    Reward_Types.RELATIVE_ABSOLUTE:  compute_relative_absolute_reward,
-    Reward_Types.RELATIVE_LOG:       compute_relative_log_reward,
-    Reward_Types.LOG:       compute_log_reward,
+REWARD_COMPUTE_FUNCTIONS: dict[Reward_Types, Callable] = {
+    Reward_Types.RELATIVE_ABSOLUTE: compute_relative_absolute_reward,
+    Reward_Types.RELATIVE_LOG: compute_relative_log_reward,
+    Reward_Types.LOG: compute_log_reward,
 }
+
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------
 # [Endpint] - Compute Error
-def resolve_error_params(error_type: Error_Types | str, error_params: Dict[str, Any] | None) -> Dict[str, Any]:
+def resolve_error_params(
+    error_type: Error_Types | str, error_params: dict[str, Any] | None
+) -> dict[str, Any]:
     """Merge a spec's `error_params` over the error type's defaults; reject unknown keys.
 
     Returns {} for error types that take no shape parameters, so the call path for every
@@ -730,19 +637,32 @@ def resolve_error_params(error_type: Error_Types | str, error_params: Dict[str, 
     defaults = ERROR_SHAPE_PARAMS.get(error_type)
     if not defaults:
         if error_params:
-            logger.warning(f"error_params {sorted(error_params)} ignored: error type '{error_type.value}' takes none.")
+            logger.warning(
+                f"error_params {sorted(error_params)} ignored: error type '{error_type.value}' takes none."
+            )
         return {}
     if not error_params:
         return dict(defaults)
     unknown = set(error_params) - set(defaults)
     if unknown:
-        logger.error(f"Unknown error_params {sorted(unknown)} for '{error_type.value}'. Valid: {sorted(defaults)}.")
-        raise ValueError(f"Unknown error_params {sorted(unknown)} for '{error_type.value}'. Valid: {sorted(defaults)}.")
+        logger.error(
+            f"Unknown error_params {sorted(unknown)} for '{error_type.value}'. Valid: {sorted(defaults)}."
+        )
+        raise ValueError(
+            f"Unknown error_params {sorted(unknown)} for '{error_type.value}'. Valid: {sorted(defaults)}."
+        )
     return {**defaults, **error_params}
 
 
 # [Endpint] - Compute Error
-def compute_error(curr_val: np.float64, target_val: np.float64, error_type: Error_Types | str, normalizing_coeff: np.float64 | None = None, error_params: Dict[str, Any] | None = None, error_state: "AdaptiveNormalizer | None" = None) -> np.float64:
+def compute_error(
+    curr_val: np.float64,
+    target_val: np.float64,
+    error_type: Error_Types | str,
+    normalizing_coeff: np.float64 | None = None,
+    error_params: dict[str, Any] | None = None,
+    error_state: AdaptiveNormalizer | None = None,
+) -> np.float64:
     """Computes the error between curr_val and target_val based on the specified error_type.
 
     `error_params` carries shape parameters for error types that take them (relative-gaussian's
@@ -760,14 +680,28 @@ def compute_error(curr_val: np.float64, target_val: np.float64, error_type: Erro
     if error_type in STATEFUL_ERROR_TYPES:
         shape = {**shape, "state": error_state}
     if "relative" in error_type.value:
-        if normalizing_coeff is None or not np.isfinite(normalizing_coeff) or normalizing_coeff <= 0:
-            logger.error(f"Normalizing coefficient must be provided, finite and > 0 for relative error types. Got: {normalizing_coeff}")
-            raise ValueError(f"Normalizing coefficient must be provided, finite and > 0 for relative error types. Got: {normalizing_coeff}")
+        if (
+            normalizing_coeff is None
+            or not np.isfinite(normalizing_coeff)
+            or normalizing_coeff <= 0
+        ):
+            logger.error(
+                f"Normalizing coefficient must be provided, finite and > 0 for relative error types. Got: {normalizing_coeff}"
+            )
+            raise ValueError(
+                f"Normalizing coefficient must be provided, finite and > 0 for relative error types. Got: {normalizing_coeff}"
+            )
         return ERROR_COMPUTE_FUNCTIONS[error_type](curr_val, target_val, normalizing_coeff, **shape)
     return ERROR_COMPUTE_FUNCTIONS[error_type](curr_val, target_val, **shape)
 
+
 # [Endpint] - Compute Reward
-def compute_reward(curr_val: np.float64, target_val: np.float64, reward_type: Reward_Types | str, normalizing_coeff: np.float64 | None = None, goal: OptimizationGoalType = OptimizationGoalType.EXCEED) -> np.float64:
+def compute_reward(
+    curr_val: np.float64,
+    target_val: np.float64,
+    reward_type: Reward_Types | str,
+    normalizing_coeff: np.float64 | None = None,
+) -> np.float64:
     """Computes the reward for the spec"""
     if isinstance(reward_type, str):
         reward_type = Reward_Types(reward_type)
@@ -776,9 +710,17 @@ def compute_reward(curr_val: np.float64, target_val: np.float64, reward_type: Re
         return np.float64(0)
 
     if "relative" in reward_type.value:
-        if normalizing_coeff is None or not np.isfinite(normalizing_coeff) or normalizing_coeff <= 0:
-            logger.error(f"Normalizing coefficient must be provided, finite and > 0 for relative reward types. Got: {normalizing_coeff}")
-            raise ValueError(f"Normalizing coefficient must be provided, finite and > 0 for relative reward types. Got: {normalizing_coeff}")
+        if (
+            normalizing_coeff is None
+            or not np.isfinite(normalizing_coeff)
+            or normalizing_coeff <= 0
+        ):
+            logger.error(
+                f"Normalizing coefficient must be provided, finite and > 0 for relative reward types. Got: {normalizing_coeff}"
+            )
+            raise ValueError(
+                f"Normalizing coefficient must be provided, finite and > 0 for relative reward types. Got: {normalizing_coeff}"
+            )
         return REWARD_COMPUTE_FUNCTIONS[reward_type](curr_val, target_val, normalizing_coeff)
     return REWARD_COMPUTE_FUNCTIONS[reward_type](curr_val, target_val)
 
@@ -787,15 +729,15 @@ def compute_reward(curr_val: np.float64, target_val: np.float64, reward_type: Re
 # Keyed by the CANONICAL strategy names validated at YAML-load time by
 # spicexplorer_core.pvt.normalize_score_aggregation ("add"→sum, "average"→mean,
 # "worst_case"→min), so this registry never needs to know the aliases.
-CORNER_SCORE_AGGREGATORS: Dict[str, Any] = {
-    "sum":  np.sum,   # add per-corner scores  — average-case bias, can mask one bad corner
+CORNER_SCORE_AGGREGATORS: dict[str, Any] = {
+    "sum": np.sum,  # add per-corner scores  — average-case bias, can mask one bad corner
     "mean": np.mean,  # average them           — magnitude comparable to a single-corner run
-                      #   (always over the TOTAL corner count — see AGG-2 below)
-    "min":  np.min,   # worst case             — classic PVT sign-off; any failing corner dominates
+    #   (always over the TOTAL corner count — see AGG-2 below)
+    "min": np.min,  # worst case             — classic PVT sign-off; any failing corner dominates
 }
 
 
-def aggregate_corner_scores(corner_scores: Dict[str, np.float64], strategy: str) -> np.float64:
+def aggregate_corner_scores(corner_scores: dict[str, np.float64], strategy: str) -> np.float64:
     """Collapse per-corner total scores {corner_name: score} into one scalar objective.
 
     **Constraint-first.** A per-corner total ``< 0`` means that corner *fails* a
@@ -854,8 +796,8 @@ PER_SPEC_CORNER_AGGREGATION = "worst_spec"
 
 
 def aggregate_corner_spec_scores(
-    per_corner_spec_scores: Dict[str, Dict[str, np.float64]],
-) -> Tuple[Dict[str, np.float64], Dict[str, str]]:
+    per_corner_spec_scores: dict[str, dict[str, np.float64]],
+) -> tuple[dict[str, np.float64], dict[str, str]]:
     """Collapse ``{corner: {spec: score}}`` onto the SPEC axis by keeping each spec's WORST corner.
 
     Returns ``({spec: worst_score}, {spec: binding_corner_name})``.
@@ -880,8 +822,8 @@ def aggregate_corner_spec_scores(
     """
     if not per_corner_spec_scores:
         raise ValueError("aggregate_corner_spec_scores needs at least one corner.")
-    worst: Dict[str, np.float64] = {}
-    binding: Dict[str, str] = {}
+    worst: dict[str, np.float64] = {}
+    binding: dict[str, str] = {}
     for corner_name, spec_scores in per_corner_spec_scores.items():
         for spec_name, score in (spec_scores or {}).items():
             value = np.float64(score)
@@ -892,13 +834,13 @@ def aggregate_corner_spec_scores(
 
 
 def aggregate_corner_spec_margins(
-    per_corner_spec_margins: Dict[str, Dict[str, Any]],
-) -> Dict[str, np.float64]:
+    per_corner_spec_margins: dict[str, dict[str, Any]],
+) -> dict[str, np.float64]:
     """The margin twin of :func:`aggregate_corner_spec_scores`: each spec's SMALLEST margin over
     the corners it was measured at, so the opt-in margin reward pays for worst-CORNER headroom
     rather than nominal headroom. ``None``/non-finite entries are dropped (see
     :func:`normalized_spec_margin`); a spec with no finite margin anywhere is omitted."""
-    worst: Dict[str, np.float64] = {}
+    worst: dict[str, np.float64] = {}
     for spec_margins in per_corner_spec_margins.values():
         for spec_name, margin in (spec_margins or {}).items():
             if margin is None:
@@ -912,7 +854,7 @@ def aggregate_corner_spec_margins(
 
 
 #: Closed vocabulary for `optimizer_config.unmeasured_policy` (see `resolve_unmeasured_policy`).
-UNMEASURED_POLICIES: Tuple[str, ...] = ("penalty", "fail")
+UNMEASURED_POLICIES: tuple[str, ...] = ("penalty", "fail")
 
 #: Default policy — EXACTLY today's behaviour, and the historical one.
 DEFAULT_UNMEASURED_POLICY: str = "penalty"
@@ -951,20 +893,20 @@ def resolve_unmeasured_policy(policy: str | None) -> str:
 
 #: Shape parameters an aggregation strategy accepts, and their defaults. A strategy absent here
 #: takes none. Mirrors ERROR_SHAPE_PARAMS so both axes validate the same way at load.
-AGGREGATION_SHAPE_PARAMS: Dict[str, Dict[str, Any]] = {
+AGGREGATION_SHAPE_PARAMS: dict[str, dict[str, Any]] = {
     "chebyshev": {"rho": 1.0e-3},
 }
 
 #: Canonical spec-axis strategies. `feasibility_reward` is the DEFAULT and reproduces the
 #: historical hardcoded behaviour exactly, so an existing project that names none is unchanged.
-SPEC_SCORE_AGGREGATORS: Tuple[str, ...] = ("feasibility_reward", "weighted_sum", "chebyshev")
+SPEC_SCORE_AGGREGATORS: tuple[str, ...] = ("feasibility_reward", "weighted_sum", "chebyshev")
 
 #: OPT-IN tie-breakers for the spec axis, selected by `optimizer_config.tie_breaker`. `None` (the
 #: default) is today's behaviour to the bit. The only member, `objective`, exists because the
 #: reward-less strategies (`weighted_sum`, `chebyshev`) are *exactly flat at 0* across the whole
 #: feasible region: every feasible design scores the same, so the "best" one a run reports is
 #: search-order noise rather than a design decision. See `aggregate_spec_scores`.
-SPEC_TIE_BREAKERS: Tuple[str, ...] = ("objective",)
+SPEC_TIE_BREAKERS: tuple[str, ...] = ("objective",)
 
 #: Weight on the tie-breaking objective term. Cosmetic, NOT semantic: see `aggregate_spec_scores`
 #: — the base score is identically 0 wherever the term applies, so every positive weight induces
@@ -1043,7 +985,7 @@ def normalized_spec_margin(curr_val, target_spec) -> np.float64 | None:
     return None
 
 
-def resolve_margin_reward(weight: float | None, clip: float | None) -> Tuple[float, float]:
+def resolve_margin_reward(weight: float | None, clip: float | None) -> tuple[float, float]:
     """Normalize + validate the opt-in margin-reward knobs; `None`/`0` weight means OFF.
 
     Kept next to :func:`resolve_tie_breaker` so every spec-axis knob validates the same way, at
@@ -1056,14 +998,12 @@ def resolve_margin_reward(weight: float | None, clip: float | None) -> Tuple[flo
             f"margin_reward_weight must be a finite number >= 0 (0 disables it), got {weight!r}."
         )
     if not np.isfinite(c) or c <= 0:
-        raise ValueError(
-            f"margin_reward_clip must be a finite positive number, got {clip!r}."
-        )
+        raise ValueError(f"margin_reward_clip must be a finite positive number, got {clip!r}.")
     return w, c
 
 
 def margin_reward_term(
-    spec_margins: Dict[str, Any] | None,
+    spec_margins: dict[str, Any] | None,
     weight: float = DEFAULT_MARGIN_REWARD_WEIGHT,
     clip: float = DEFAULT_MARGIN_REWARD_CLIP,
 ) -> np.float64 | None:
@@ -1079,8 +1019,9 @@ def margin_reward_term(
     return its base score object untouched and keep the default path bit-identical."""
     if weight <= 0 or not spec_margins:
         return None
-    margins = [np.float64(m) for m in spec_margins.values()
-               if m is not None and np.isfinite(np.float64(m))]
+    margins = [
+        np.float64(m) for m in spec_margins.values() if m is not None and np.isfinite(np.float64(m))
+    ]
     if not margins:
         return None
     worst = np.float64(min(margins))
@@ -1105,12 +1046,14 @@ def resolve_tie_breaker(tie_breaker: str | None) -> str | None:
     return name
 
 
-def resolve_aggregation_params(strategy: str, params: Dict[str, Any] | None) -> Dict[str, Any]:
+def resolve_aggregation_params(strategy: str, params: dict[str, Any] | None) -> dict[str, Any]:
     """Merge `params` over a strategy's defaults; reject unknown keys. `{}` for strategies with none."""
     defaults = AGGREGATION_SHAPE_PARAMS.get(strategy)
     if not defaults:
         if params:
-            logger.warning(f"aggregation_params {sorted(params)} ignored: strategy '{strategy}' takes none.")
+            logger.warning(
+                f"aggregation_params {sorted(params)} ignored: strategy '{strategy}' takes none."
+            )
         return {}
     if not params:
         return dict(defaults)
@@ -1123,12 +1066,12 @@ def resolve_aggregation_params(strategy: str, params: Dict[str, Any] | None) -> 
 
 
 def aggregate_spec_scores(
-    spec_scores: Dict[str, np.float64],
+    spec_scores: dict[str, np.float64],
     strategy: str = "feasibility_reward",
-    params: Dict[str, Any] | None = None,
+    params: dict[str, Any] | None = None,
     tie_breaker: str | None = None,
     tie_breaker_weight: float = DEFAULT_TIE_BREAKER_WEIGHT,
-    spec_margins: Dict[str, Any] | None = None,
+    spec_margins: dict[str, Any] | None = None,
     margin_reward_weight: float = DEFAULT_MARGIN_REWARD_WEIGHT,
     margin_reward_clip: float = DEFAULT_MARGIN_REWARD_CLIP,
 ) -> np.float64:
@@ -1277,6 +1220,7 @@ def log_normalize(p, pmin, pmax) -> float:
     result = (log_p - log_min) / (log_max - log_min)
     return float(np.asarray(result, dtype=np.float64))
 
+
 def log_denormalize(x, pmin, pmax) -> float:
     """
     Map normalized x in [0, 1] back to physical parameter using log scaling.
@@ -1289,8 +1233,9 @@ def log_denormalize(x, pmin, pmax) -> float:
     log_min = np.log10(pmin)
     log_max = np.log10(pmax)
     log_p = x * (log_max - log_min) + log_min
-    result = 10.0 ** log_p
+    result = 10.0**log_p
     return float(np.asarray(result, dtype=np.float64))
+
 
 def linear_normalize(p, pmin, pmax) -> float:
     """
@@ -1304,6 +1249,7 @@ def linear_normalize(p, pmin, pmax) -> float:
     result = (p - pmin) / (pmax - pmin)
     return float(np.asarray(result, dtype=np.float64))
 
+
 def linear_denormalize(x, pmin, pmax) -> float:
     """
     Map normalized x in [0, 1] back to physical parameter linearly.
@@ -1316,49 +1262,21 @@ def linear_denormalize(x, pmin, pmax) -> float:
     result = pmin + x * (pmax - pmin)
     return float(np.asarray(result, dtype=np.float64))
 
+
 # ----------------------------
 # Plotting
 # ----------------------------
-def plot_ac_response(frequencies: torch.Tensor, mag_list: list, phase_list: list, labels: list = None, title: str = "Frequency Response"):
-    """(Deprecated) Plots multiple AC responses on the same plot using Plotly for interactivity.
-
-    Args:
-        frequencies: A PyTorch tensor of frequencies (shared by all responses).
-        H_f_list: A list of PyTorch tensors, each representing the complex frequency response (H_f) of a circuit.
-        phase_list: A list of PyTorch tensors, each representing the phase response of a circuit.
-        labels: A list of strings, each representing the label for a circuit's response.
-        title: The title of the plot.
-    """
-
-    if labels is None:
-        labels = [f"Series {i}" for i in range(len(mag_list))]
-
-    fig = make_subplots(rows=2, cols=1, subplot_titles=("Gain (dB)", "Phase (deg)"))
-    helper = Transfer_Func_Helper()
-    for H_f, phase, label in zip(mag_list, phase_list, labels):
-        fig.add_trace(go.Scatter(x=frequencies.tolist(), y=helper.convert_to_dB(H_f).tolist(), mode='lines', name=f"{label}-mag"), row=1, col=1)  # Gain
-        fig.add_trace(go.Scatter(x=frequencies.tolist(), y=phase.tolist(), mode='lines', name=f"{label}-phase"), row=2, col=1)  # Phase
-
-    fig.update_layout(
-        title=title,
-        xaxis_type="log",  # Logarithmic frequency axis
-        xaxis_title="Frequency (Hz)",
-        yaxis_title="Gain (dB)",
-        xaxis2_type="log", # Logarithmic frequency axis for phase plot
-        xaxis2_title="Frequency (Hz)",
-        yaxis2_title="Phase (deg)",
-        height=800,  # Set the height (in pixels) - Increase this value
-        width=1000   # Set the width (in pixels)
-    )
-
-    fig.show()
-
-def plot_complex_response(frequencies: torch.Tensor, complex_response_list: list, labels: list = None, title: str = "Frequency Response"):
+def plot_complex_response(
+    frequencies: np.ndarray,
+    complex_response_list: list,
+    labels: list = None,
+    title: str = "Frequency Response",
+):
     """Plots multiple AC responses on the same plot using Plotly for interactivity.
 
     Args:
-        frequencies: A PyTorch tensor of frequencies (shared by all responses).
-        complex_response_list: A list of PyTorch tensors, each representing the complex frequency response (H_f) of a circuit.
+        frequencies: A numpy array of frequencies (shared by all responses).
+        complex_response_list: A list of numpy arrays, each representing the complex frequency response (H_f) of a circuit.
         labels: A list of strings, each representing the label for a circuit's response.
         title: The title of the plot.
     """
@@ -1371,24 +1289,25 @@ def plot_complex_response(frequencies: torch.Tensor, complex_response_list: list
     helper = Transfer_Func_Helper()
 
     for complex_response, label in zip(complex_response_list, labels):
-
         magnitude_dB, phase_deg = helper.get_mag_phase_from_complex_response(complex_response)
 
         # Plot magnitude response
-        fig.add_trace(go.Scatter(
-            x=frequencies.tolist(),
-            y=magnitude_dB.tolist(),
-            mode='lines',
-            name=f"{label}-mag"
-        ), row=1, col=1)
+        fig.add_trace(
+            go.Scatter(
+                x=frequencies.tolist(), y=magnitude_dB.tolist(), mode="lines", name=f"{label}-mag"
+            ),
+            row=1,
+            col=1,
+        )
 
         # Plot phase response
-        fig.add_trace(go.Scatter(
-            x=frequencies.tolist(),
-            y=phase_deg.tolist(),
-            mode='lines',
-            name=f"{label}-phase"
-        ), row=2, col=1)
+        fig.add_trace(
+            go.Scatter(
+                x=frequencies.tolist(), y=phase_deg.tolist(), mode="lines", name=f"{label}-phase"
+            ),
+            row=2,
+            col=1,
+        )
 
     fig.update_layout(
         title=title,
@@ -1399,17 +1318,11 @@ def plot_complex_response(frequencies: torch.Tensor, complex_response_list: list
         xaxis2_title="Frequency (Hz)",
         yaxis2_title="Phase (deg)",
         height=800,  # Set the height (in pixels)
-        width=1000   # Set the width (in pixels)
+        width=1000,  # Set the width (in pixels)
     )
 
     fig.show()
 
-# Helper Functions
-def _linear_interpolate(x1, y1, x2, y2, target_y):
-        """Interpolates x for a given target_y using two known points (x1, y1) and (x2, y2)."""
-        if y1 == y2:  # Avoid division by zero
-            return x1
-        return x1 + (x2 - x1) * ((target_y - y1) / (y2 - y1))
 
 # ----------------------------
 # Classes
@@ -1418,173 +1331,22 @@ class Transfer_Func_Helper:
     def __init__(self):
         pass
 
-    def convert_from_dB(self, val: torch.Tensor) -> torch.Tensor:
-        return torch.pow(10, val / 20)
+    def convert_from_dB(self, val) -> np.ndarray:
+        return np.power(10.0, np.asarray(val) / 20)
 
-    def convert_to_dB(self, val: torch.Tensor) -> torch.Tensor:
-        return 20 * torch.log10(val)
+    def convert_to_dB(self, val) -> np.ndarray:
+        return 20 * np.log10(np.asarray(val))
 
-    def convert_to_omega(self, f: torch.Tensor) -> torch.Tensor:
-        return 2 * torch.pi * f
+    def convert_to_omega(self, f) -> np.ndarray:
+        return 2 * np.pi * np.asarray(f)
 
-    def convert_to_f(self, omega: torch.Tensor) -> torch.Tensor:
-        return omega / (2 * torch.pi)
+    def convert_to_f(self, omega) -> np.ndarray:
+        return np.asarray(omega) / (2 * np.pi)
 
-    def eval_tf(self, tf: sp.Expr, f_val: torch.Tensor) -> torch.Tensor:
-        s = sp.symbols("s")
-
-        # Convert torch tensor to NumPy before passing to lambdify
-        H_f = sp.lambdify(s, tf, "numpy")
-        f_numpy = f_val.cpu().numpy()  # Ensure f_val is a NumPy array
-
-        # Evaluate transfer function
-        H_result = H_f(f_numpy * 2 * np.pi * 1j)  # Keep NumPy operations
-
-        # Convert back to PyTorch tensor using torch.from_numpy
-        return torch.from_numpy(np.asarray(H_result, dtype=np.complex64)).to(f_val.device)
-
-    def get_mag_phase_from_complex_response(self, complex_response_array: torch.Tensor, epsilon: float = 1e-12) -> Tuple[torch.Tensor, torch.Tensor]:
-        mag   = 20 * torch.log10(torch.clamp(torch.abs(complex_response_array), min=epsilon))
-        phase = torch.tensor(np.unwrap(torch.angle(complex_response_array)) * 180.0 / np.pi)
+    def get_mag_phase_from_complex_response(
+        self, complex_response_array, epsilon: float = 1e-12
+    ) -> tuple[np.ndarray, np.ndarray]:
+        h = np.asarray(complex_response_array, dtype=np.complex128)
+        mag = 20 * np.log10(np.maximum(np.abs(h), epsilon))
+        phase = np.unwrap(np.angle(h)) * 180.0 / np.pi
         return mag, phase
-
-    def get_ac_response_from_symbolic(self, tf: sp.Expr, frequencies: torch.Tensor, epsilon: float = 1e-12) -> Tuple[torch.Tensor, torch.Tensor]:
-        complex_response_array = self.eval_tf(tf, frequencies)
-        mag, phase  = self.get_mag_phase_from_complex_response(complex_response_array=complex_response_array, epsilon=epsilon)
-        return mag, phase
-
-    def control_tf_to_sympy(self, tf_sys):
-        """
-        Converts a control.TransferFunction to a sympy symbolic transfer function.
-
-        Parameters:
-        tf_sys (control.TransferFunction): The transfer function from the control module.
-
-        Returns:
-        sympy.Expr: The symbolic transfer function H(s).
-        """
-        s = sp.symbols('s')  # Define the Laplace variable
-
-        # Extract numerator and denominator coefficients
-        num_coeffs = tf_sys.num[0][0]  # Extract numerator coefficients
-        den_coeffs = tf_sys.den[0][0]  # Extract denominator coefficients
-
-        # Construct symbolic numerator and denominator polynomials
-        num_expr = sum(c * s**i for i, c in enumerate(reversed(num_coeffs)))
-        den_expr = sum(c * s**i for i, c in enumerate(reversed(den_coeffs)))
-
-        # Construct and return the symbolic transfer function
-        return num_expr / den_expr
-
-    def sympy_tf_to_control(self, H_s):
-        """
-        Converts a sympy symbolic transfer function to a control.TransferFunction.
-
-        Parameters:
-        H_s (sympy.Expr): The symbolic transfer function.
-        s (sympy.Symbol): The Laplace variable.
-
-        Returns:
-        control.TransferFunction: Equivalent transfer function in the control module.
-        """
-        s = sp.symbols("s")
-
-        # Get numerator and denominator
-        num_expr, den_expr = sp.fraction(H_s)  # Extract numerator and denominator
-
-        # Convert to polynomials
-        num_poly = sp.Poly(num_expr, s)
-        den_poly = sp.Poly(den_expr, s)
-
-        # Get coefficients in order of decreasing powers
-        num_coeffs = [float(c) for c in num_poly.all_coeffs()]
-        den_coeffs = [float(c) for c in den_poly.all_coeffs()]
-
-        # Create control.TransferFunction
-        return ctrl.TransferFunction(num_coeffs, den_coeffs)
-
-    def compute_cutoff(self, freq: torch.Tensor, mag_db: torch.Tensor, drop_by: float = 3.0) -> Tuple[Tuple[torch.Tensor], int]:
-        """
-        Computes the 3dB (can be changed) cutoff frequencies for a Low-Pass or Band-Pass filter.
-
-        Args:
-            freq (torch.Tensor): Frequency vector (1D tensor).
-            mag_db (torch.Tensor): Magnitude response (1D tensor in dB).
-            drop_by (float): The dB drop defining the cutoff.
-        """
-        # Find max gain and cutoff level
-        curr_max_mag = torch.max(mag_db)
-        cutoff_level = curr_max_mag - drop_by
-
-        # Find transitions where mag_db crosses the cutoff level
-        crossings = []
-        for i in range(1, len(mag_db)):
-            if (mag_db[i-1] > cutoff_level and mag_db[i] <= cutoff_level) or \
-            (mag_db[i-1] < cutoff_level and mag_db[i] >= cutoff_level):
-                # Interpolate for more accurate cutoff frequency
-                f_c = _linear_interpolate(freq[i-1].item(), mag_db[i-1].item(),
-                                        freq[i].item(), mag_db[i].item(),
-                                        cutoff_level)
-                crossings.append(f_c)
-
-        if len(crossings) == 0:
-            return None, 0  # No valid cutoff found
-
-        elif len(crossings) == 1:
-            # Single cutoff -> LPF or HPF
-            return (crossings[0],), 1
-
-        elif len(crossings) >= 2:
-            # Two cutoffs -> BPF
-            return (crossings[0], crossings[-1]), 2
-
-        return None, 0  # Fallback case
-
-class Frequency_Weight:
-    def __init__(self, lower: float, upper: float, frequency_array: torch.Tensor = None, bias: float = 10):
-        """
-        Initializes the Frequency_Weight object.
-
-        Args:
-            lower (float): The lower bound of the frequency range to get the bias.
-            upper (float): The upper bound of the frequency range to get the bias.
-            frequency_array (torch.Tensor): The input tensor of frequencies.
-            bias (float, optional): The weight assigned to frequencies within the bounds. Default is 10.
-        """
-        self.lower = lower
-        self.upper = upper
-        self.bias  = bias
-        self.parent_frequency_array = frequency_array
-        if frequency_array is not None:
-            self.weights = torch.where((frequency_array >= lower) & (frequency_array <= upper), bias, torch.tensor(1.0))
-        else:
-            self.weights = None
-
-    def compute_weights(self) -> torch.Tensor:
-        if self.parent_frequency_array is not None:
-            self.weights = torch.where((self.parent_frequency_array >= self.lower) & (self.parent_frequency_array <= self.upper), self.bias, torch.tensor(1.0))
-            return self.weights
-        return None
-
-    def __add__(self, other):
-        """
-        Takes the element-wise maximum of the weight tensors of two Frequency_Weight objects.
-
-        Args:
-            other (Frequency_Weight): Another Frequency_Weight object.
-
-        Returns:
-            Frequency_Weight: A new object with the maximum weights at each index.
-        """
-        if not isinstance(other, Frequency_Weight):
-            raise TypeError("Can only add Frequency_Weight objects.")
-
-        if self.parent_frequency_array is None:
-            return other
-
-        new_obj = Frequency_Weight(frequency_array=self.parent_frequency_array, lower=-1, upper=-1)  # Dummy instance
-        new_obj.weights = torch.maximum(self.weights, other.weights)
-        return new_obj
-
-    def __repr__(self):
-        return f"Frequency_Weight(weights={self.weights})"

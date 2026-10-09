@@ -10,12 +10,12 @@
       "inverter": 3
     },
     "structural_roles": {
-      "XMB1N": "current_mirror",
-      "XMB1P": "current_mirror",
-      "XMB2N": "current_mirror",
-      "XMB2P": "current_mirror",
-      "XMB3N": "current_mirror",
-      "XMB3P": "current_mirror",
+      "XMB1N": "inverter",
+      "XMB1P": "inverter",
+      "XMB2N": "inverter",
+      "XMB2P": "inverter",
+      "XMB3N": "inverter",
+      "XMB3P": "inverter",
       "XMPLD": "current_mirror_reference",
       "XMPLM": "current_mirror"
     }

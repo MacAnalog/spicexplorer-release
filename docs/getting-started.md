@@ -58,8 +58,8 @@ Notes specific to this repo:
   `analog-db` is its own component (not a workspace member), so `uv sync` does not
   pull it; the API's `/api/library` routes need it importable. `--no-deps` keeps
   it from dragging extra dependencies in.
-- On Linux, `torch` (pulled by the optimizer's `[torch]` extra) resolves to the
-  **CPU** wheel — the workspace pins the PyTorch CPU index, so no CUDA download.
+- torch is not installed by default; `spicexplorer[ax]` (the Ax optimizer) pulls it, and on
+  Linux it resolves to the **CPU** wheel — the workspace pins the PyTorch CPU index, so no CUDA download.
 
 ## 2. Run the API
 

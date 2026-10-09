@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import logging
 import re
-import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
@@ -50,8 +49,8 @@ class NetlistViewLike(Protocol):
     def get_component_parameters(self, reference: str) -> dict: ...
     def get_parameters(self) -> dict[str, str]: ...
     def get_subcircuit_names(self) -> list[str]: ...
-    def get_subcircuit_named(self, name: str) -> "NetlistViewLike | None": ...
-    def get_subcircuit(self, instance_name: str) -> "NetlistViewLike": ...
+    def get_subcircuit_named(self, name: str) -> NetlistViewLike | None: ...
+    def get_subcircuit(self, instance_name: str) -> NetlistViewLike: ...
     def get_subcircuit_ports(self, instance_name: str) -> list[str] | None: ...
 
 
@@ -62,11 +61,12 @@ def _read_text_tolerant(path: Path) -> str:
     except UnicodeDecodeError:
         return path.read_text(encoding="latin-1")
 
+
 # `.SUBCKT <name> <port> <port> … [params…]` — capture the tokens after the name.
 _SUBCKT_HEADER = re.compile(r"^\s*\.subckt\s+\S+\s+(?P<ports>.*)$", re.IGNORECASE)
 
 
-def _parse_subckt_ports(circuit: "SpiceCircuit") -> list[str] | None:
+def _parse_subckt_ports(circuit: SpiceCircuit) -> list[str] | None:
     """Extract the ordered port names from a subcircuit's ``.SUBCKT`` header line."""
     for line in circuit.netlist:
         if not isinstance(line, str):
@@ -82,6 +82,48 @@ def _parse_subckt_ports(circuit: "SpiceCircuit") -> list[str] | None:
     return None
 
 
+def _editor_from_text(netlist: str) -> SpiceEditor:
+    """Build a spicelib editor over netlist TEXT, with no file anywhere (Codex review, DIA-02).
+
+    `from_string` is documented parse-only and every foreign-dialect parse funnels through it, but
+    it used to spool the text to a `NamedTemporaryFile` purely so spicelib could read it back. On a
+    shared host that put netlist text — kit-adjacent, on the Spectre lane — into a world-readable
+    temp dir on every parse, and `delete=False` left a window in which a killed process leaked it.
+
+    No file was ever needed: spicelib's parser consumes an ITERATOR of lines, so it is handed one
+    directly. `create_blank=True` is what skips the read of `netlist_file`; the placeholder lines it
+    seeds are cleared before the real text goes in.
+
+    This reaches for `_add_lines`, which spicelib marks internal. That is deliberate and is the
+    reason the version pin in pyproject.toml is tight (`spicelib>=1.5,<1.6`): if the internals move,
+    the tests below fail loudly on the next bump rather than silently reverting to a file. Note the
+    behaviour here is no *worse* than before on spicelib's own `reset_netlist()`, which re-reads
+    `netlist_file` — the temp file was already unlinked before the view was returned, so a view
+    built from a string has never survived a reset.
+    """
+    # The title-line rule, made explicit. A SPICE deck's first line is its TITLE and the simulator
+    # ignores it, so a deck starting with a device silently loses that device. The file path caught
+    # this only as a SIDE EFFECT of spicelib's encoding sniffer, which searches for `^\*` — a
+    # load-bearing accident that vanishes the moment the file does. It is a rule about netlists,
+    # not about encodings, so it is enforced here on its own terms and with a message that says
+    # what is wrong.
+    netlist = netlist.lstrip("\ufeff")  # bind once: the BOM must not reach spicelib's parser either
+    first = netlist.splitlines()
+    if not first or not first[0].lstrip().startswith("*"):
+        lost = first[0][:40] if first else ""
+        empty = "" if netlist.strip() else " (this deck is empty)"
+        raise SyntaxError(
+            "a SPICE netlist's first line is its title and is ignored by the simulator"
+            + (f", so this deck would silently lose {lost!r}" if lost else empty)
+            + ". Start the netlist with a `*` comment line."
+        )
+    editor = SpiceEditor(netlist_file="<string>.cir", create_blank=True)
+    editor.netlist.clear()
+    if not editor._add_lines(iter(netlist.splitlines(keepends=True))):
+        raise SyntaxError("Netlist with missing .END or .ENDS statements")
+    return editor
+
+
 class NetlistView:
     """Read-only view of a netlist's topology (nodes, components, subcircuits).
 
@@ -89,7 +131,7 @@ class NetlistView:
     wraps an already-parsed spicelib circuit and is used internally by :meth:`get_subcircuit`.
     """
 
-    def __init__(self, circuit: "SpiceEditor | SpiceCircuit") -> None:
+    def __init__(self, circuit: SpiceEditor | SpiceCircuit) -> None:
         self._circuit = circuit
         # Dialect metadata — populated by the constructors for foreign-dialect sources and
         # propagated on step-in; the classic SPICE path keeps these defaults.
@@ -102,8 +144,8 @@ class NetlistView:
     # ------------------------------------------------------------------
     @classmethod
     def from_file(
-        cls, netlist_file: str | Path, *, dialect: "NetlistDialect | str" = "auto"
-    ) -> "NetlistView":
+        cls, netlist_file: str | Path, *, dialect: NetlistDialect | str = "auto"
+    ) -> NetlistView:
         """Parse a netlist file (``.cir`` / ``.net`` / ``.sp`` / ``.spice`` / ``.scs``) into a view.
 
         ``dialect`` selects the source syntax: ``"auto"`` (default) sniffs via
@@ -123,33 +165,25 @@ class NetlistView:
             resolved = NetlistDialect.coerce(dialect)
         if resolved is NetlistDialect.SPICE:
             return cls(SpiceEditor(netlist_file=str(path)))
-        return cls._from_deck(get_reader(resolved).read(_read_text_tolerant(path)), source=str(path))
+        return cls._from_deck(
+            get_reader(resolved).read(_read_text_tolerant(path)), source=str(path)
+        )
 
     @classmethod
-    def from_string(
-        cls, netlist: str, *, dialect: "NetlistDialect | str" = "spice"
-    ) -> "NetlistView":
+    def from_string(cls, netlist: str, *, dialect: NetlistDialect | str = "spice") -> NetlistView:
         """Parse raw netlist text into a view (``dialect="auto"`` sniffs the text).
 
         For self-contained netlists: ``.lib``/``.include`` directives are **not** resolved
         relative to any source directory here (there is none). The text is parsed eagerly, so
         topology accessors work without the backing file.
         """
-        resolved = (
-            detect_dialect(netlist) if dialect == "auto" else NetlistDialect.coerce(dialect)
-        )
+        resolved = detect_dialect(netlist) if dialect == "auto" else NetlistDialect.coerce(dialect)
         if resolved is not NetlistDialect.SPICE:
             return cls._from_deck(get_reader(resolved).read(netlist), source="<string>")
-        with tempfile.NamedTemporaryFile("w", suffix=".cir", delete=False, encoding="utf-8") as fh:
-            fh.write(netlist)
-            tmp_path = Path(fh.name)
-        try:
-            return cls(SpiceEditor(netlist_file=str(tmp_path)))
-        finally:
-            tmp_path.unlink(missing_ok=True)
+        return cls(_editor_from_text(netlist))
 
     @classmethod
-    def _from_deck(cls, deck: ParsedDeck, *, source: str) -> "NetlistView":
+    def _from_deck(cls, deck: ParsedDeck, *, source: str) -> NetlistView:
         """Build a view over a dialect reader's canonical text, carrying its metadata."""
         for warning in deck.warnings:
             logger.warning("%s [%s]: %s", deck.dialect.value, source, warning)
@@ -180,7 +214,7 @@ class NetlistView:
         """
         return self._name_map.get(reference.upper(), reference)
 
-    def _propagate_metadata(self, child: "NetlistView") -> "NetlistView":
+    def _propagate_metadata(self, child: NetlistView) -> NetlistView:
         child._dialect = self._dialect
         child._directives = self._directives
         child._name_map = self._name_map
@@ -216,18 +250,21 @@ class NetlistView:
         callers parse them. spicelib upper-cases parameter names, so a consumer matching these
         against device-card references should normalize case.
         """
-        return {name: self._circuit.get_parameter(name) for name in self._circuit.get_all_parameter_names()}
+        return {
+            name: self._circuit.get_parameter(name)
+            for name in self._circuit.get_all_parameter_names()
+        }
 
     def get_subcircuit_names(self) -> list[str]:
         """Names of ``.subckt`` definitions present at this level."""
         return self._circuit.get_subcircuit_names()
 
-    def get_subcircuit_named(self, name: str) -> "NetlistView | None":
+    def get_subcircuit_named(self, name: str) -> NetlistView | None:
         """The definition of a ``.subckt`` by name, as a view (``None`` if not found)."""
         sub = self._circuit.get_subcircuit_named(name)
         return None if sub is None else self._propagate_metadata(NetlistView(sub))
 
-    def _definition_for_truncated_name(self, referenced: str) -> "SpiceCircuit | None":
+    def _definition_for_truncated_name(self, referenced: str) -> SpiceCircuit | None:
         """Work around spicelib's subckt-name regex (``[\\w.]+`` — no hyphen): a definition
         ``.subckt ota-improved …`` is registered under the truncated name ``ota``, so an instance
         referencing ``ota-improved`` can't be resolved directly. Match the referenced name against
@@ -236,7 +273,8 @@ class NetlistView:
         if referenced in names:
             return self._circuit.get_subcircuit_named(referenced)
         candidates = [
-            n for n in names
+            n
+            for n in names
             if len(n) < len(referenced)
             and referenced.startswith(n)
             and not (referenced[len(n)].isalnum() or referenced[len(n)] == "_")
@@ -245,7 +283,7 @@ class NetlistView:
             return None
         return self._circuit.get_subcircuit_named(max(candidates, key=len))
 
-    def get_subcircuit(self, instance_name: str) -> "NetlistView":
+    def get_subcircuit(self, instance_name: str) -> NetlistView:
         """Step into an ``X…`` subckt *instance*: return its definition as a new view.
 
         Supports spicelib's ``parent:child`` instance paths and lookup of definitions inside
@@ -253,7 +291,9 @@ class NetlistView:
         names like ``ota-improved``) is resolved by truncated-prefix fallback.
         """
         try:
-            return self._propagate_metadata(NetlistView(self._circuit.get_subcircuit(instance_name)))
+            return self._propagate_metadata(
+                NetlistView(self._circuit.get_subcircuit(instance_name))
+            )
         except Exception:
             if ":" not in instance_name:  # fallback is single-level only
                 referenced = str(self._circuit.get_component_value(instance_name))

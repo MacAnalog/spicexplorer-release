@@ -493,7 +493,9 @@ def thd_from_waveform(
     :func:`harmonic_amplitudes`.
     """
     amps = harmonic_amplitudes(
-        t, v, f0,
+        t,
+        v,
+        f0,
         n_harmonics=n_harmonics,
         n_periods=n_periods,
         samples_per_period=samples_per_period,

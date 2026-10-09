@@ -22,8 +22,9 @@ this module only groups the recipes and feeds them the candidate params.
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Mapping, Optional
+from typing import TYPE_CHECKING, Any
 
 from spicexplorer_core.measurements import area as _area
 from spicexplorer_core.measurements import derived as _derived
@@ -48,8 +49,8 @@ class DerivedMetricContext:
 
     def __init__(
         self,
-        recipes: Dict[str, Dict[str, Any]],
-        netlist_path: "Optional[Path]" = None,
+        recipes: dict[str, dict[str, Any]],
+        netlist_path: Path | None = None,
     ) -> None:
         self._recipes = recipes  # spec name → validated recipe dict
         # The DUT deck (resolved under ws_root) that netlist-driven recipes are walked over. A
@@ -60,10 +61,10 @@ class DerivedMetricContext:
     @classmethod
     def build(
         cls,
-        target_specs: "ListTargetSpec",
-        netlist_path: "Optional[Path]" = None,
-    ) -> "DerivedMetricContext | None":
-        recipes: Dict[str, Dict[str, Any]] = {}
+        target_specs: ListTargetSpec,
+        netlist_path: Path | None = None,
+    ) -> DerivedMetricContext | None:
+        recipes: dict[str, dict[str, Any]] = {}
         for target in target_specs.enabled_targets():
             if not target.has_derived_measurement():
                 continue
@@ -91,25 +92,32 @@ class DerivedMetricContext:
     def spec_names(self) -> frozenset[str]:
         return frozenset(self._recipes)
 
-    def compute(self, params: Mapping[str, float]) -> Dict[str, float]:
+    def compute(self, params: Mapping[str, float]) -> dict[str, float]:
         """Evaluate every derived recipe against ``params`` → ``{spec_name: value}``. A
         recipe that raises degrades to NaN (→ a scorer penalty) so one bad derived metric
-        never crashes the loop, mirroring the sim-fed measurement path."""
-        out: Dict[str, float] = {}
+        never crashes the loop, mirroring the sim-fed measurement path. So does a netlist walk
+        whose coverage is incomplete: its sum silently omits the unresolved devices, and a
+        MINIMIZE-area spec would reward exactly that undercount."""
+        out: dict[str, float] = {}
         for name, recipe in self._recipes.items():
             try:
                 if _is_netlist_driven(recipe):
-                    out[name] = float(self._netlist_report(recipe, params)["active_area"])
+                    report = self._netlist_report(recipe, params)
+                    if not report["coverage"]["complete"]:
+                        raise ValueError(
+                            f"area walk incomplete ({report['coverage']['transistors_unresolved']} "
+                            f"transistor(s) unresolved; first warning: "
+                            f"{(report['warnings'] or ['-'])[0]})"
+                        )
+                    out[name] = float(report["active_area"])
                 else:
                     out[name] = float(_derived.compute_derived(recipe, params))
             except Exception as exc:  # bad recipe / missing param → NaN (graceful degradation)
-                logger.warning(
-                    "Derived metric %r failed (%s); metric stays NaN", name, exc
-                )
+                logger.warning("Derived metric %r failed (%s); metric stays NaN", name, exc)
                 out[name] = float("nan")
         return out
 
-    def report(self, params: Mapping[str, float], spec_name: Optional[str] = None) -> Dict[str, Any]:
+    def report(self, params: Mapping[str, float], spec_name: str | None = None) -> dict[str, Any]:
         """Full active-area breakdown (per-device + coverage tally) for a netlist-driven spec —
         for the JSON verification surface and debug logging. ``spec_name`` defaults to the sole
         netlist-driven spec; pass it explicitly when more than one exists."""
@@ -122,7 +130,9 @@ class DerivedMetricContext:
             spec_name = next(iter(driven))
         return self._netlist_report(driven[spec_name], params)
 
-    def _netlist_report(self, recipe: Mapping[str, Any], params: Mapping[str, float]) -> Dict[str, Any]:
+    def _netlist_report(
+        self, recipe: Mapping[str, Any], params: Mapping[str, float]
+    ) -> dict[str, Any]:
         if self._netlist_path is None:
             raise ValueError(
                 "netlist-driven active_area needs a resolved DUT deck (none provided to build())"
@@ -133,7 +143,7 @@ class DerivedMetricContext:
     def close(self) -> None:  # symmetry with the sim-fed contexts — nothing to release
         return None
 
-    def __enter__(self) -> "DerivedMetricContext":
+    def __enter__(self) -> DerivedMetricContext:
         return self
 
     def __exit__(self, *exc: Any) -> None:

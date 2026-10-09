@@ -3,6 +3,7 @@
 Pure dict/function transforms — no ngspice / PDK / live sim needed. Skipped unless the
 `ui` extra (FastAPI) is installed, since these import the backend package.
 """
+
 import sys
 
 import pytest
@@ -15,6 +16,7 @@ pytest.importorskip("fastapi", reason="ui extra not installed")
 
 
 # ---------- EXP-2: compute_envelope exact-goal best = closest-to-target ----------
+
 
 def test_compute_envelope_exact_goal_picks_closest_not_max():
     from spicexplorer_api.services.checkpoint_reader import compute_envelope
@@ -46,11 +48,12 @@ def test_compute_envelope_minimize_and_exceed_unchanged():
         {"name": "gain", "goal": "exceed", "target": 50.0, "tolerance": 1.0},
     ]
     rows = {r["metric"]: r for r in compute_envelope(data, specs)}
-    assert rows["power"]["best_ever"] == 1.0   # min
-    assert rows["gain"]["best_ever"] == 55.0   # max
+    assert rows["power"]["best_ever"] == 1.0  # min
+    assert rows["gain"]["best_ever"] == 55.0  # max
 
 
 # ---------- WIZ-1: yaml_generator emits freeze:true (not the inverted false) ----------
+
 
 def test_frozen_dut_param_serializes_freeze_true():
     from spicexplorer_api.services.yaml_generator import _build_dut_param
@@ -68,6 +71,7 @@ def test_unfrozen_dut_param_omits_freeze():
 
 # ---------- ENV-1: PDK fast-path covers the real tech-prefixed models/ layout ----------
 
+
 def test_pdk_fastpath_includes_tech_prefixed_models_layout():
     from spicexplorer_api.services.env_probe import (
         _PDK_LIB_SUBPATHS,
@@ -79,6 +83,7 @@ def test_pdk_fastpath_includes_tech_prefixed_models_layout():
 
 
 # ---------- BUG-A1: xschem resolver finds the PDK without the singular PDK env ----------
+
 
 def test_pdk_xschem_dir_resolves_with_pdk_root_only(tmp_path, monkeypatch):
     """PDK_ROOT points at the parent of <tech>/; PDK is unset (the broken deployment)."""

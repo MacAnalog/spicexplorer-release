@@ -44,9 +44,15 @@ def _mk_run(base, name, run_json):
 def multi_tb_run(work):
     """One finished unscoped run with an ac and a tran testbench raw."""
     rd = _mk_run(
-        work / "runs", "20260719-010000_simulate_aaaaaaaa",
-        {"run_id": "20260719-010000_simulate_aaaaaaaa", "project_id": None,
-         "status": "done", "started": "2026-07-19T01:00:00", "keep_raw": True},
+        work / "runs",
+        "20260719-010000_simulate_aaaaaaaa",
+        {
+            "run_id": "20260719-010000_simulate_aaaaaaaa",
+            "project_id": None,
+            "status": "done",
+            "started": "2026-07-19T01:00:00",
+            "keep_raw": True,
+        },
     )
     ac = rd / "sim" / "run_1_tb_ac"
     ac.mkdir(parents=True)
@@ -59,8 +65,7 @@ def multi_tb_run(work):
 
 # --- open_run merge -------------------------------------------------------------
 def test_open_run_merge_combines_testbench_raws(client, multi_tb_run):
-    res = client.post("/api/waveview/open_run",
-                      json={"run_id": multi_tb_run.name, "merge": True})
+    res = client.post("/api/waveview/open_run", json={"run_id": multi_tb_run.name, "merge": True})
     assert res.status_code == 200, res.text
     body = res.json()
     keys = {a["analysis"] for a in body["analyses"]}
@@ -72,20 +77,26 @@ def test_open_run_merge_combines_testbench_raws(client, multi_tb_run):
     # the run's own run.log is the merged log
     assert body["log_path"].endswith("run.log")
     # idempotent: same members → same merged dataset id
-    res2 = client.post("/api/waveview/open_run",
-                       json={"run_id": multi_tb_run.name, "merge": True})
+    res2 = client.post("/api/waveview/open_run", json={"run_id": multi_tb_run.name, "merge": True})
     assert res2.json()["dataset_id"] == body["dataset_id"]
     # merged /wave serves the suffix-free primary analysis
-    wave = client.get(f"/api/waveview/datasets/{body['dataset_id']}/wave",
-                      params={"analysis": "tran", "signals": "v(vout)"})
+    wave = client.get(
+        f"/api/waveview/datasets/{body['dataset_id']}/wave",
+        params={"analysis": "tran", "signals": "v(vout)"},
+    )
     assert wave.status_code == 200, wave.text
 
 
 def test_open_run_merge_suffixes_colliding_analyses(client, work):
     rd = _mk_run(
-        work / "runs", "20260719-020000_simulate_bbbbbbbb",
-        {"run_id": "20260719-020000_simulate_bbbbbbbb", "project_id": None,
-         "status": "done", "started": "2026-07-19T02:00:00"},
+        work / "runs",
+        "20260719-020000_simulate_bbbbbbbb",
+        {
+            "run_id": "20260719-020000_simulate_bbbbbbbb",
+            "project_id": None,
+            "status": "done",
+            "started": "2026-07-19T02:00:00",
+        },
     )
     for trial in ("run_1_tb_ac", "run_2_tb_ac"):
         d = rd / "sim" / trial
@@ -99,9 +110,14 @@ def test_open_run_merge_suffixes_colliding_analyses(client, work):
 
 def test_open_run_merge_single_artifact_is_plain_open(client, work):
     rd = _mk_run(
-        work / "runs", "20260719-030000_simulate_cccccccc",
-        {"run_id": "20260719-030000_simulate_cccccccc", "project_id": None,
-         "status": "done", "started": "2026-07-19T03:00:00"},
+        work / "runs",
+        "20260719-030000_simulate_cccccccc",
+        {
+            "run_id": "20260719-030000_simulate_cccccccc",
+            "project_id": None,
+            "status": "done",
+            "started": "2026-07-19T03:00:00",
+        },
     )
     d = rd / "sim" / "run_1_tb_ac"
     d.mkdir(parents=True)
@@ -113,10 +129,10 @@ def test_open_run_merge_single_artifact_is_plain_open(client, work):
 
 # --- run prune ------------------------------------------------------------------
 def test_prune_dry_run_then_prune_evicts_datasets(client, multi_tb_run):
-    opened = client.post("/api/waveview/open_run",
-                         json={"run_id": multi_tb_run.name, "merge": True}).json()
-    dry = client.post(f"/api/waveview/runs/{multi_tb_run.name}/prune",
-                      params={"dry_run": "true"})
+    opened = client.post(
+        "/api/waveview/open_run", json={"run_id": multi_tb_run.name, "merge": True}
+    ).json()
+    dry = client.post(f"/api/waveview/runs/{multi_tb_run.name}/prune", params={"dry_run": "true"})
     assert dry.status_code == 200, dry.text
     body = dry.json()
     assert body["dry_run"] is True and body["pruned"] is False
@@ -140,9 +156,14 @@ def test_prune_dry_run_then_prune_evicts_datasets(client, multi_tb_run):
 
 def test_prune_refuses_running_run(client, work):
     rd = _mk_run(
-        work / "runs", "20260719-040000_optimize_dddddddd",
-        {"run_id": "20260719-040000_optimize_dddddddd", "project_id": None,
-         "status": "running", "started": "2026-07-19T04:00:00"},
+        work / "runs",
+        "20260719-040000_optimize_dddddddd",
+        {
+            "run_id": "20260719-040000_optimize_dddddddd",
+            "project_id": None,
+            "status": "running",
+            "started": "2026-07-19T04:00:00",
+        },
     )
     (rd / "sim").mkdir()
     res = client.post(f"/api/waveview/runs/{rd.name}/prune")
@@ -156,9 +177,10 @@ def test_prune_refuses_running_run(client, work):
 def test_uploads_list_and_delete(client, work, tmp_path):
     src = tmp_path / "tb_ac.raw"
     synth_ac_raw(src)
-    up = client.post("/api/waveview/upload",
-                     files={"file": ("tb_ac.raw", src.read_bytes(),
-                                     "application/octet-stream")}).json()
+    up = client.post(
+        "/api/waveview/upload",
+        files={"file": ("tb_ac.raw", src.read_bytes(), "application/octet-stream")},
+    ).json()
     listing = client.get("/api/waveview/uploads").json()["uploads"]
     mine = [u for u in listing if u["upload_id"] == up["upload_id"]]
     assert len(mine) == 1
@@ -192,8 +214,7 @@ def test_sweep_removes_stale_keeps_fresh_and_open(client, work):
     held = uploads / "cccccccccccc"
     held.mkdir()
     synth_ac_raw(held / "tb_ac.raw")
-    opened = client.post("/api/waveview/open",
-                         json={"path": str(held / "tb_ac.raw")})
+    opened = client.post("/api/waveview/open", json={"path": str(held / "tb_ac.raw")})
     assert opened.status_code == 200, opened.text
     os.utime(held, (old, old))
 

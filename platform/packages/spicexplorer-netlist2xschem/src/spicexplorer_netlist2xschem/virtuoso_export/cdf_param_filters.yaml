@@ -1,0 +1,65 @@
+# xvport's FALLBACK copy of the bridge's CDF read filter.
+# ------------------------------------------------------
+# `virtuoso_bridge.virtuoso.schematic.reader.read_schematic()` defaults `param_filters` to a
+# YAML that lives beside it in the bridge's SOURCE tree but is NOT declared as package data in
+# the bridge's `pyproject.toml`, so every installed (wheel) copy of the bridge lacks it and the
+# reader dies with `FileNotFoundError` — taking `xvport --verify` down with it, after a port
+# that was already correct (platform#240, doc/bridge_limits.md §8).
+#
+# `runner.verify_schematic` therefore passes the bridge's own file when it is present and THIS
+# file when it is not. The bridge is third-party and read-only from here; this is a workaround.
+#
+# Scope, deliberately: the filter only decides which CDF parameters `read_schematic` RETURNS.
+# `verify_schematic` diffs instances, terminal→net bindings and interface pins — it never reads
+# a parameter — so the choice of filter cannot change a verify verdict. The rows below are the
+# vendor-neutral ones (`analogLib`, `basic`); the bridge's kit-specific rows are deliberately
+# NOT copied here (no commercial kit or device-flavour name belongs in this repo), and
+# `fallback: all` means a kit device simply comes back unfiltered.
+
+filters:
+  # --- analogLib passive devices ---
+  - match: {lib: "analogLib", cell: "cap"}
+    params: [c, model, w, l, m, ic]
+  - match: {lib: "analogLib", cell: "res"}
+    params: [r, model, w, l, m]
+  - match: {lib: "analogLib", cell: "ind"}
+    params: [l, model, r, m]
+
+  # --- analogLib sources ---
+  - match: {lib: "analogLib", cell: "vsource"}
+    params: [vdc, srcType, freq, va, sinephase, sinedc]
+  - match: {lib: "analogLib", cell: "vdc"}
+    params: [vdc, srcType]
+  - match: {lib: "analogLib", cell: "isource"}
+    params: [idc, srcType, freq, ia]
+  - match: {lib: "analogLib", cell: "idc"}
+    params: [idc]
+  - match: {lib: "analogLib", cell: "vsin"}
+    params: [vdc, ampl, freq, sinephase]
+  - match: {lib: "analogLib", cell: "vpulse"}
+    params: [v1, v2, period, rise, fall, width, delay]
+  - match: {lib: "analogLib", cell: "vpwl"}
+    params: [fileName]
+  - match: {lib: "analogLib", cell: "isin"}
+    params: [idc, ampl, freq]
+  - match: {lib: "analogLib", cell: "ipulse"}
+    params: [i1, i2, period, rise, fall, width, delay]
+
+  # --- analogLib other ---
+  - match: {lib: "analogLib", cell: "diode"}
+    params: [model, area, pj, m]
+  - match: {lib: "analogLib", cell: "switch"}
+    params: [model, vt1, vh]
+  - match: {lib: "analogLib", cell: "vbit"}
+    params: [v0, v1, period, rise, fall, width, delay]
+  - match: {lib: "analogLib", cell: "gnd"}
+    params: []
+  - match: {lib: "analogLib", cell: "vdd"}
+    params: []
+
+  # --- basic library (pins, noConn, …) ---
+  - match: {lib: "basic", cell: "*"}
+    params: []
+
+# No rule matched: return every parameter (the reader truncates values at 120 chars).
+fallback: all

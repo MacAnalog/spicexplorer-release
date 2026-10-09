@@ -48,9 +48,7 @@ def test_traces_roundtrip_is_faithful(spectre_ds, tmp_path: Path) -> None:
 
 
 def test_traces_selection_keeps_the_sweep(spectre_ds, tmp_path: Path) -> None:
-    out = save_traces(
-        spectre_ds, tmp_path / "sel.npz", analyses=["ac"], signals={"ac": ["vout"]}
-    )
+    out = save_traces(spectre_ds, tmp_path / "sel.npz", analyses=["ac"], signals={"ac": ["vout"]})
     back = load_traces(out)
     assert set(back.analyses) == {"ac"}
     an = back.analyses["ac"]
@@ -85,9 +83,7 @@ def test_export_pngs_covers_every_swept_kind_and_skips_point_data(
     spectre_ds, tmp_path: Path
 ) -> None:
     skipped: list[tuple[str, str]] = []
-    written = export_pngs(
-        spectre_ds, tmp_path / "png", on_skip=lambda a, r: skipped.append((a, r))
-    )
+    written = export_pngs(spectre_ds, tmp_path / "png", on_skip=lambda a, r: skipped.append((a, r)))
     names = {p.name for p in written}
     for kind in ("ac", "dc", "tran", "noise", "pss", "stb", "pac"):
         assert any(kind in n for n in names), f"no PNG for {kind}: {names}"
@@ -122,9 +118,7 @@ def test_per_signal_breakouts_and_combined(spectre_ds, tmp_path: Path) -> None:
     names = sorted(p.name for p in written)
     assert "dc.png" in names, names
     assert "dc.vin.png" in names and "dc.vout.png" in names, names
-    combined_only = export_pngs(
-        spectre_ds, tmp_path / "single", analyses=["dc"], per_signal=False
-    )
+    combined_only = export_pngs(spectre_ds, tmp_path / "single", analyses=["dc"], per_signal=False)
     assert [p.name for p in combined_only] == ["dc.png"]
 
 
@@ -145,9 +139,19 @@ def test_zero_traces_are_dropped(tmp_path: Path) -> None:
     d = tmp_path / "dead-raw"
     d.mkdir()
     f = np.logspace(0, 6, 21)
-    _write_swept(d / "ac.ac", "ac", "ac", "freq", "Hz", f,
-                 {"vout": (100.0 / (1 + 1j * f / 1e3)), "vmid": (1.0 / (1 + 1j * f / 1e3)),
-                  "vdd": np.zeros(21, dtype=complex)})
+    _write_swept(
+        d / "ac.ac",
+        "ac",
+        "ac",
+        "freq",
+        "Hz",
+        f,
+        {
+            "vout": (100.0 / (1 + 1j * f / 1e3)),
+            "vmid": (1.0 / (1 + 1j * f / 1e3)),
+            "vdd": np.zeros(21, dtype=complex),
+        },
+    )
     written = export_pngs(load_result(d), tmp_path / "png")
     names = {p.name for p in written}
     assert "ac.vout.png" in names and "ac.vmid.png" in names, names
@@ -161,15 +165,24 @@ def test_ngspice_derived_vectors_currents_and_osdi_internals_excluded(tmp_path: 
     from spicexplorer_waveview.testing import write_ngspice_ascii_raw
 
     f = np.logspace(0, 6, 21)
-    h = (100.0 / (1 + 1j * f / 1e3))
+    h = 100.0 / (1 + 1j * f / 1e3)
     p = tmp_path / "derived.raw"
     write_ngspice_ascii_raw(
         p,
-        [("AC Analysis",
-          [("frequency", "frequency"), ("v(vout)", "voltage"), ("v(vmid)", "voltage"),
-           ("dcgain", "voltage"), ("i(vdd)", "current"),
-           ("v(n.xdut.xm0.nsg13_lv_pmos#di)", "voltage")],
-          [f.astype(complex), h, h / 10.0, np.full(21, 40.0 + 0j), h / 1e6, h / 1e3])],
+        [
+            (
+                "AC Analysis",
+                [
+                    ("frequency", "frequency"),
+                    ("v(vout)", "voltage"),
+                    ("v(vmid)", "voltage"),
+                    ("dcgain", "voltage"),
+                    ("i(vdd)", "current"),
+                    ("v(n.xdut.xm0.nsg13_lv_pmos#di)", "voltage"),
+                ],
+                [f.astype(complex), h, h / 10.0, np.full(21, 40.0 + 0j), h / 1e6, h / 1e3],
+            )
+        ],
     )
     written = export_pngs(load_result(p), tmp_path / "png")
     names = {p2.name for p2 in written}
@@ -193,7 +206,9 @@ def test_export_htmls_covers_kinds_and_shares_plotlyjs(spectre_ds, tmp_path: Pat
 def test_annotations_are_stamped(spectre_ds, tmp_path: Path) -> None:
     plain = export_pngs(spectre_ds, tmp_path / "plain", analyses=["ac"])
     annotated = export_pngs(
-        spectre_ds, tmp_path / "anno", analyses=["ac"],
+        spectre_ds,
+        tmp_path / "anno",
+        analyses=["ac"],
         annotations={"ac": {"dcgain [dB]": 40.0, "ugf [Hz]": 1.8e7}},
     )
     assert annotated[0].stat().st_size != plain[0].stat().st_size  # the box drew something

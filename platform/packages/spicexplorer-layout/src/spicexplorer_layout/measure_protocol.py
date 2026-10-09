@@ -43,12 +43,13 @@ import json
 import math
 import sys
 import traceback
-from typing import Any, Callable, Mapping
+from collections.abc import Callable, Mapping
+from typing import Any, TextIO
 
 RESULT_MARK = "@@layout-measure@@"
 
 
-def read_request(stream=None) -> dict[str, Any]:
+def read_request(stream: TextIO | None = None) -> dict[str, Any]:
     """Parse the JSON request from ``stream`` (default stdin)."""
     text = (stream or sys.stdin).read()
     req = json.loads(text) if text.strip() else {}
@@ -74,7 +75,7 @@ def write_result(
     *,
     status: str = "ok",
     error: str | None = None,
-    stream=None,
+    stream: TextIO | None = None,
 ) -> None:
     """Emit the one-line JSON reply (marked so it is unambiguous amid other stdout noise)."""
     payload: dict[str, Any] = {"scalars": _clean(scalars or {}), "status": status}
@@ -90,7 +91,7 @@ def parse_result(stdout: str) -> dict[str, Any] | None:
     for line in reversed(stdout.splitlines()):
         line = line.strip()
         if line.startswith(RESULT_MARK):
-            return json.loads(line[len(RESULT_MARK):])
+            return json.loads(line[len(RESULT_MARK) :])
     # tolerate an unmarked bare-JSON last line (hand-written scripts)
     for line in reversed(stdout.splitlines()):
         line = line.strip()

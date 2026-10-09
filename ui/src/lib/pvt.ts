@@ -8,9 +8,14 @@ export function cornerSummary(c: PVTCornerDef): string {
   return sup ? `${t} · ${sup}` : t;
 }
 
-/** Process model-include summary, e.g. "cornerMOSlv.lib:mos_ss, cornerRES.lib:res_wcs". */
+/**
+ * Process model-include summary, e.g. "cornerMOSlv.lib:mos_ss, cornerRES.lib:res_wcs".
+ * An include with no section (a plain `.include <file>`, which gf180mcu corner
+ * bundles start with) prints as the bare file name: "design.ngspice, sm141064.ngspice:typical".
+ * The API sends `section: null` for it; a missing or empty section means the same.
+ */
 export function cornerIncludes(c: PVTCornerDef): string {
-  return c.model_includes.map((m) => `${m.lib_file}:${m.section}`).join(", ");
+  return c.model_includes.map((m) => (m.section ? `${m.lib_file}:${m.section}` : m.lib_file)).join(", ");
 }
 
 /** A dropdown-friendly label: "ss_125C_1V62 — 125°C · VDD 1.62V". */

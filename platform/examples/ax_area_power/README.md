@@ -11,7 +11,7 @@ Both on `ihp-sg13g2` / ngspice.
 
 1. **Engine swap** — the same `project_setup.yaml` runs under either optimizer, chosen by
    `optimizer_config.type` (`nevergrad` → evolutionary, `bayesian_ax` → Ax Bayesian). The Ax
-   backend is revived per `doc/plan_ax_sprint.md`.
+   backend is revived per `doc/archive/plan_ax_sprint.md`.
 2. **Area + power as first-class metrics** — the `*_area_power.yaml` files add two target specs on
    top of the amplifier ones (gain / UGF / PM):
    - **`power`** — a Tier-1 op-point measurement `|I_supply|·VDD` (µW), `{meas: power_uw, probe: i(i_supply), vdd: …}`.

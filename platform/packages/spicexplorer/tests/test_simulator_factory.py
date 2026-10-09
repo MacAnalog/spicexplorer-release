@@ -154,7 +154,9 @@ def test_target_spec_analysis_string_round_trips_every_simtype() -> None:
     p = Project_Setup.from_yaml(EXAMPLE_YAML)
     for spec in p.optimizer_config.target_specs.targets:
         analysis = spec.get_analysis()
-        assert resolve_ngspice_plot_type(analysis) is spec.get_equivalent_ngspice_plot_type(), spec.name
+        assert resolve_ngspice_plot_type(analysis) is spec.get_equivalent_ngspice_plot_type(), (
+            spec.name
+        )
 
     for st, pt in SIMTYPE_TO_NGSPICE_PLOTTYPE.items():
         assert resolve_ngspice_plot_type(st.value) is pt, st
@@ -174,7 +176,9 @@ def test_orchestrator_routes_ngspice_through_factory(tmp_path: Path) -> None:
     assert all(isinstance(w, NGSpice_Wrapper) for w in wrappers.values())
 
 
-def test_orchestrator_hands_any_protocol_backend_to_the_loop(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_orchestrator_hands_any_protocol_backend_to_the_loop(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     # auto_load=False: build wrappers manually with build_simulator stubbed to return a
     # non-ngspice (but protocol-conformant) backend. The loop is engine-neutral now, so
     # the orchestrator hands it through instead of raising (the old NGSpice-only guard).

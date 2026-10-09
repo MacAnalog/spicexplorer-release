@@ -17,8 +17,12 @@ score a large penalty, so the optimizer only ever trades *legal* layouts.
 
     python optimize_layout.py --dut lsb --budget 20 --out-dir opt_out
 
-Same pattern as examples/layout/ihp-sg13g2/5t_ota_gf/optimize_layout.py
-(the 5T-OTA lane), retargeted at the HBT driver and its bandwidth metric.
+The loop is the layout-in-the-loop pattern the platform now ships as its
+layout-flow optimizer backend (``spicexplorer.backends.layout``, selected
+by ``sim_engine: layout``: spicexplorer-layout builds the cell,
+spicexplorer-signoff gates DRC/LVS and extracts PEX), retargeted here at
+the HBT driver and its bandwidth metric. It was first modelled on a
+standalone 5T-OTA prototype script, which that backend superseded.
 """
 from __future__ import annotations
 

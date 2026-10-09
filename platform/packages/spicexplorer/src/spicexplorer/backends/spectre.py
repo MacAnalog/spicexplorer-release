@@ -35,11 +35,18 @@ this module post-parses the run's `*.info` files from `metadata["output_dir"]` i
 merges `<inst>:<param>` keys into the result, keeping the upstream submodule pristine.
 `tran` signals merge bare (no prefix); a `noise` sweep's densities aren't in the bridge's
 flat dict at all — they're read from the swept `noise.noise` PSF (`read_swept_psf`, below).
+
+**The bridge's verdict decides whether there is a result at all** (`_result_of`). A run the
+bridge reports as fatal or partial (`ok=False`), or whose process exited nonzero, still hands
+back whatever PSF it managed to write; that is NOT data. Such a run becomes an empty
+`SpectreSimResult` — scalars read NaN, waves raise — so the optimizer scores it MAX_PENALTY
+exactly as it does an ngspice run that wrote no RAW (BUG-B28).
 """
 
 from __future__ import annotations
 
 import itertools
+import logging
 import os
 import re
 import tempfile
@@ -48,6 +55,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+from spicexplorer_core.spice_engine import psfascii as _psf
 
 from .spectre_deck import SpectreDeckSpec, render_native_scs, render_spectre_deck
 
@@ -56,10 +64,12 @@ if TYPE_CHECKING:  # keep this module import-cheap and Cadence-free
 
     from spicexplorer_core.pvt import Corner
 
+logger = logging.getLogger(__name__)
+
 
 # analysis (engine-neutral string) → ordered PSF-key prefix chain, live-validated
 # against real licensed-kit psfascii (2026-07-05). Per-MOS op scalars (`M0:gm`) are merged in
-# bare by our own info-file post-parse below; op-point NODE voltages come from `dcOp.dc`
+# bare by the core info-file post-parse (`psfascii.read_oppoint_info`); op-point NODE voltages come from `dcOp.dc`
 # under `dc_`, hence op's two-step chain. `tran` merges bare in the bridge parser (no
 # prefix); `noise_` is a flat-dict fallback, but a noise sweep's `out`/`in` densities come
 # from the swept `noise.noise` PSF (`read_swept_psf`), not the bridge's flat dict.
@@ -82,222 +92,21 @@ def _resolve_prefixes(analysis: str) -> tuple[str, ...]:
     return _ANALYSIS_PREFIXES.get(str(analysis).strip().lower(), ("",))
 
 
-# ADE-standard `info` dumps that are NOT operating-point data. Skipping them keeps the
-# result dict lean — and, for `modelParameter` (`info what=models`), keeps NDA foundry
-# model-card values from ever entering result data. Never emit those in a deck anyway.
-_INFO_SKIP_STEMS: frozenset[str] = frozenset(
-    {"modelParameter", "designParamVals", "outputParameter", "primitives", "subckts", "element"}
-)
-
-_STRUCT_DEF_RE = re.compile(r'^"([^"]+)"\s+STRUCT\(')
-_STRUCT_MEMBER_RE = re.compile(r'^"([^"]+)"\s+(?:FLOAT|INT|DOUBLE|BYTE)\b')
-_STRUCT_VALUE_OPEN_RE = re.compile(r'^"([^"]+)"\s+"([^"]+)"\s+\(\s*$')
-
-
-def _parse_info_structs(text: str) -> dict[str, float]:
-    """Extract `<inst>:<param>` scalars from one psfascii `info` file's STRUCT data.
-
-    psfascii op-point files define per-model STRUCTs in the TYPE section (member names in
-    order, e.g. bsim4's `ids`/`vgs`/…/`gm`/`region`) and emit, per instance, a VALUE entry
-    `"X0.M0" "bsim4" (` followed by one number per member. The bridge's parser drops these
-    (it only handles `"name" value` lines) — this fills the gap on our side of the seam.
-    """
-    lines = text.splitlines()
-
-    # TYPE section: struct member names, in declaration order, per struct type.
-    structs: dict[str, list[str]] = {}
-    section = ""
-    i = 0
-    while i < len(lines):
-        stripped = lines[i].strip()
-        if stripped in ("HEADER", "TYPE", "SWEEP", "TRACE", "VALUE", "END"):
-            section = stripped
-            i += 1
-            continue
-        if section == "TYPE":
-            m_def = _STRUCT_DEF_RE.match(stripped)
-            if m_def:
-                members: list[str] = []
-                depth = stripped.count("(") - stripped.count(")")
-                i += 1
-                while i < len(lines) and depth > 0:
-                    inner = lines[i].strip()
-                    if depth == 1:
-                        m_member = _STRUCT_MEMBER_RE.match(inner)
-                        if m_member:
-                            members.append(m_member.group(1))
-                    depth += inner.count("(") - inner.count(")")
-                    i += 1
-                structs[m_def.group(1)] = members
-                continue
-        elif section == "VALUE":
-            break
-        i += 1
-
-    # VALUE section: zip each instance's number block with its struct's member names.
-    out: dict[str, float] = {}
-    while i < len(lines):
-        stripped = lines[i].strip()
-        if stripped == "END":
-            break
-        m_open = _STRUCT_VALUE_OPEN_RE.match(stripped)
-        if m_open:
-            inst, type_name = m_open.group(1), m_open.group(2)
-            values: list[float | None] = []
-            i += 1
-            while i < len(lines):
-                inner = lines[i].strip()
-                # the numeric block ends at ")" — or ") PROP(" when the instance carries
-                # a trailing PROP annotation (real kit output: `"model" "nmos_lvt.10"`)
-                if inner.startswith(")"):
-                    break
-                try:
-                    values.append(float(inner))
-                except ValueError:
-                    values.append(None)
-                i += 1
-            members = structs.get(type_name, [])
-            if members and len(members) == len(values):
-                for member, value in zip(members, values):
-                    if value is not None:
-                        out[f"{inst}:{member}"] = value
-        i += 1
-    return out
-
-
-def parse_psfascii_oppoint(output_dir: Path | str) -> dict[str, float]:
-    """Per-instance op-point scalars (`X0.M0:gm`, …) from a run's psfascii `*.info` files.
-
-    Complements the bridge's own directory parser (which drops STRUCT values). Skips the
-    ADE model/parameter dumps in `_INFO_SKIP_STEMS`; unreadable or malformed files degrade
-    to "no keys", never an exception — a missing op-point scalar then scores as NaN.
-    """
-    out: dict[str, float] = {}
-    root = Path(output_dir)
-    if not root.is_dir():
-        return out
-    for info_file in sorted(root.rglob("*.info")):
-        if info_file.stem in _INFO_SKIP_STEMS:
-            continue
-        try:
-            text = info_file.read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            continue
-        out.update(_parse_info_structs(text))
-    return out
-
-
-# Swept analyses (AC / tran / noise) land in their OWN psfascii PSF file (`ac.ac`,
-# `tran.tran`, `noise.noise`) — NOT in the bridge's flat scalar dict, which carries only
-# op-point / dc node values (so an op-point run looks fine while the AC sweep is silently
-# absent). `SpectreSimResult` reads them lazily from the persisted `-raw` dir (mirroring the
-# op-point `*.info` post-parse) so the engine-neutral measurement registry can pull an AC
-# transfer / transient / noise-spectrum wave uniformly for ngspice AND Spectre.
-_SWEEP_EXT: dict[str, str] = {
-    "ac": ".ac",
-    # a DC *sweep* (`dc dc dev=… start=… stop=… step=…`, e.g. the linearity/ICMR transfer).
-    # The op-point analysis (`dcOp dc`) also writes a `.dc` PSF — `read_swept_psf` prefers
-    # the exact `dc.dc` file so the sweep wins when both are present.
-    "dc": ".dc",
-    "tran": ".tran",
-    "transient": ".tran",
-    "noise": ".noise",
-    "noise_spectrum": ".noise",
-    "noise_spectral": ".noise",
-    # PSS harmonics: the frequency-domain fd-PSF (`<name>.fd.pss`) IS a swept PSF — sweep
-    # `freq` = harmonic frequencies [0, f0, 2·f0, …], each signal a COMPLEX per-harmonic
-    # phasor array. (The sibling `<name>.td.pss` is the time-domain steady state; not read here.)
-    "pss": ".fd.pss",
-    # periodic noise riding a PSS solution (`pnoise ( out ref ) pnoise …`): a plain swept
-    # PSF `pnoise.pnoise` — sweep `freq` (the noise offset band), top-level `out`/`in`
-    # V/√Hz densities + `gain`, plus per-device `INST:src` V²/Hz contributions (discovered
-    # live on the closed lane, 2026-07-11). Spectre also leaves a `pnoise.pnoise.cache` sibling,
-    # which the `*{ext}` glob correctly ignores (it ends `.cache`). NOTE `*.noise` does
-    # NOT match `pnoise.pnoise` (the char before `noise` is `p`, not `.`), so a deck with
-    # both analyses keeps them cleanly separate.
-    "pnoise": ".pnoise",
-    # periodic AC riding a PSS solution (`pac pac …`): Spectre writes ONE PSF per sideband
-    # — `pac.<k>.pac` is harmonic k (the response observed at sideband k of the input's
-    # small signal), plus a metadata-only `pac.pac` "pac parent" index (types Tau/Alpha/…,
-    # no node data). The signal-band transfer of a chopper/SC circuit is the BASEBAND
-    # response, harmonic 0, so `pac` pins to `.0.pac` (the `*.0.pac` glob matches only
-    # `pac.0.pac`, never `pac.10.pac`/`pac.pac`) — the same "pick the meaningful sibling"
-    # rule that pins `pss` to `.fd.pss`. Higher sidebands stay reachable by reading
-    # `pac.<k>.pac` directly. Live-validated on an ideal chopper, 2026-07-17.
-    "pac": ".0.pac",
-    # loop-gain (stability) sweep: the `loopGain` complex-vs-freq wave the pm_loop /
-    # gain-margin recipes read (the stb bench's payload).
-    "stb": ".stb",
-}
-# Sideband selection: the analysis spelling `pac.<k>` reads the k-th sideband PSF
-# (`pac.<k>.pac`) instead of the baseband — conversion-gain / ripple analysis
-# (`wave("out", "pac.1")`). `pac` alone stays the baseband (`pac.0.pac`).
-_PAC_SIDEBAND_RE = re.compile(r"pac\.(-?\d+)")
-# The canonical abscissa name the registry looks up per analysis kind (recipe defaults:
-# `frequency` for ac/noise, `time` for tran), aliased onto the PSF sweep vector so a recipe
-# needn't know Spectre spells it `freq`.
-_SWEEP_ABSCISSA: dict[str, tuple[str, ...]] = {
-    "ac": ("frequency", "freq"),
-    "dc": ("dc", "sweep"),  # the swept-source value; recipes usually read the input NET trace
-    "tran": ("time",),
-    "transient": ("time",),
-    "noise": ("frequency", "freq"),
-    "noise_spectrum": ("frequency", "freq"),
-    "noise_spectral": ("frequency", "freq"),
-    "pnoise": ("frequency", "freq"),
-    "pss": ("frequency", "freq"),  # harmonic frequencies as the abscissa (index k → k·f0)
-    "pac": ("frequency", "freq"),  # the baseband small-signal sweep of the periodic OP
-    "stb": ("frequency", "freq"),
-}
-
-
-def read_swept_psf(output_dir: Path | str | None, analysis: str) -> dict[str, np.ndarray]:
-    """Signals from a run's swept psfascii PSF (`ac.ac`/`tran.tran`/`noise.noise`) as arrays.
-
-    Returns ``{signal_name: ndarray}`` — every trace plus the sweep vector, the latter also
-    aliased to the registry's canonical abscissa name (`frequency`/`time`). Empty when the
-    analysis is not swept, no matching PSF exists, or ``output_dir`` is unset — a missing wave
-    then raises in :meth:`SpectreSimResult.wave` exactly as a missing flat signal does.
-
-    The analysis spelling ``pac.<k>`` selects the k-th sideband of a periodic-AC run
-    (the ``pac.<k>.pac`` PSF) instead of the baseband — the conversion-gain / ripple
-    read; plain ``pac`` stays harmonic 0.
-    """
-    key = str(analysis).strip().lower()
-    sideband = _PAC_SIDEBAND_RE.fullmatch(key)
-    if sideband:
-        key, ext = "pac", f".{sideband.group(1)}.pac"
-    else:
-        ext = _SWEEP_EXT.get(key)
-    root = Path(output_dir) if output_dir else None
-    if ext is None or root is None or not root.is_dir():
-        return {}
-    files = sorted(p for p in root.rglob(f"*{ext}") if p.is_file())
-    if not files:
-        return {}
-    # Prefer the contract-named PSF when siblings share the extension (e.g. a deck with both
-    # a `dc` sweep and a `dcOp` op-point leaves `dc.dc` AND `dcOp.dc`; alphabetical order is
-    # luck, not a contract — same reasoning that pins `pss` to `.fd.pss` over `.td.pss`).
-    files.sort(key=lambda p: (p.name != f"{key}{ext}", str(p)))
-    try:
-        from psf_utils import PSF
-    except ImportError as exc:  # pragma: no cover - psf_utils is a declared dependency
-        raise ImportError(
-            "reading a Spectre swept PSF (AC/tran/noise) needs 'psf_utils' "
-            "(a declared dependency of spicexplorer; `uv sync` installs it)."
-        ) from exc
-
-    psf = PSF(str(files[0]))
-    out: dict[str, np.ndarray] = {}
-    sweep = psf.get_sweep()
-    if sweep is not None:
-        absc = np.asarray(sweep.abscissa)
-        out[str(sweep.name)] = absc
-        for alias in _SWEEP_ABSCISSA.get(key, ()):
-            out.setdefault(alias, absc)
-    for sig in psf.all_signals():
-        out[str(sig.name)] = np.asarray(sig.ordinate)
-    return out
+# The psfascii CONTRACT — per-instance `*.info` STRUCT op-points, the analysis → file table
+# (`ac.ac`, `noise.noise`, `<n>.fd.pss`, `pac.<k>.pac`, `stb.stb`, …), the abscissa aliases and the
+# swept-file reader — lives in core (`spicexplorer_core.spice_engine.psfascii`) since it is shared with
+# the viewer (peer tools never import each other; core is what both import). The names below are the
+# adapter's historical spellings, kept so callers and tests keep working.
+_INFO_SKIP_STEMS = _psf.INFO_SKIP_STEMS
+_STRUCT_DEF_RE = _psf.STRUCT_DEF_RE
+_STRUCT_MEMBER_RE = _psf.STRUCT_MEMBER_RE
+_STRUCT_VALUE_OPEN_RE = _psf.STRUCT_VALUE_OPEN_RE
+_parse_info_structs = _psf.parse_info_structs
+parse_psfascii_oppoint = _psf.read_oppoint_info
+_SWEEP_EXT = _psf.SWEEP_EXT
+_PAC_SIDEBAND_RE = _psf.PAC_SIDEBAND_RE
+_SWEEP_ABSCISSA = _psf.SWEEP_ABSCISSA
+read_swept_psf = _psf.read_swept_psf
 
 
 def _data_of(sim_result: Any) -> dict[str, Any]:
@@ -327,6 +136,57 @@ def _raw_dir_of(sim_result: Any) -> str | None:
     return str(output_dir) if output_dir else None
 
 
+def _verdict_of(sim_result: Any) -> tuple[bool, str, list[str], int | None]:
+    """``(ok, status, errors, returncode)`` from a bridge `SimulationResult` (duck-typed).
+
+    The rule is the one `spicexplorer_spectre.lane._finish` applies (Codex SPC-01): the
+    returncode and the bridge's own verdict are EACH sufficient to fail a run. A nonzero exit
+    fails it whatever `ok` says, and `ok=False` fails it even at rc 0 (the bridge flags a fatal
+    or convergence error the exit status does not carry, and keeps the partial PSF). One
+    difference: a result that carries NEITHER (a duck-typed stand-in with only `.data`) has no
+    verdict to give and is read as before; the real bridge always sets `ok`.
+    """
+    verdict = getattr(sim_result, "ok", None)
+    metadata = getattr(sim_result, "metadata", None)
+    rc = metadata.get("returncode") if isinstance(metadata, dict) else None
+    raw_status = getattr(sim_result, "status", None)
+    status = str(getattr(raw_status, "value", raw_status) or "")
+    errors = [str(e) for e in (getattr(sim_result, "errors", None) or [])]
+    ok = verdict is not False and (rc is None or rc == 0)
+    if not ok and status in ("", "success"):  # `_finish`'s wording for a run failed on rc alone
+        status = f"failed (rc={rc})"
+    return ok, status or "success", errors, rc
+
+
+def _result_of(sim_result: Any, *, label: str | None = None) -> SpectreSimResult:
+    """The adapter's `SimResult` for one bridge run — EMPTY when the bridge says it failed.
+
+    A failed run keeps its verdict (`ok`/`status`/`errors`/`returncode`) but none of its PSF:
+    no flat data and no `raw_dir`, so a scalar reads NaN, a wave raises, and nothing downstream
+    (the OCEAN merge, a waveview snapshot) evaluates the partly-written results.
+    """
+    ok, status, errors, rc = _verdict_of(sim_result)
+    if ok:
+        return SpectreSimResult(
+            _data_of(sim_result),
+            raw_dir=_raw_dir_of(sim_result),
+            ok=True,
+            status=status,
+            errors=errors,
+            returncode=rc,
+        )
+    logger.warning(
+        "Spectre run %s failed (status=%s, rc=%s): %s — its metrics score as failures; "
+        "the partial results in %s are not read.",
+        label or "",
+        status,
+        rc,
+        "; ".join(errors)[:400] or "no error text",
+        _raw_dir_of(sim_result) or "(no raw dir)",
+    )
+    return SpectreSimResult(None, ok=False, status=status, errors=errors, returncode=rc)
+
+
 class SpectreSimResult:
     """`SimResult` over the bridge's flat PSF numeric dict.
 
@@ -334,10 +194,27 @@ class SpectreSimResult:
     and per-MOS op-point keys like `M0:gm` which carry no prefix). A missing scalar
     degrades to NaN — mirroring the ngspice result — so one absent metric never crashes
     the scorer; a missing wave raises (a wave is a hard request).
+
+    `ok` / `status` / `errors` / `returncode` are the bridge's verdict on the run (see
+    `_verdict_of`). A failed run is built with no data and no `raw_dir` (`_result_of`), so it
+    reads like the ngspice no-RAW result: NaN scalars, raising waves.
     """
 
-    def __init__(self, data: dict[str, Any] | None, *, raw_dir: str | None = None) -> None:
+    def __init__(
+        self,
+        data: dict[str, Any] | None,
+        *,
+        raw_dir: str | None = None,
+        ok: bool = True,
+        status: str = "",
+        errors: Iterable[str] = (),
+        returncode: int | None = None,
+    ) -> None:
         self._data: dict[str, Any] = dict(data or {})
+        self.ok: bool = ok
+        self.status: str = status
+        self.errors: list[str] = list(errors)
+        self.returncode: int | None = returncode
         # Post-sim canonical scalars (OCEAN measurements keyed by target-spec name), kept
         # SEPARATE from the raw PSF dict and consulted FIRST in `_lookup` so a canonical
         # metric wins even when its spec name collides with an analysis-prefixed PSF key
@@ -421,8 +298,22 @@ class SpectreSimResult:
 # `ids` on some kits and `id` on others, and not every kit emits every capacitance — so
 # missing members are simply skipped rather than forced to NaN in the result.
 _OP_PARAM_NAMES: tuple[str, ...] = (
-    "ids", "id", "gm", "gds", "gmbs", "vgs", "vds", "vbs", "vsb",
-    "vth", "vdsat", "cgg", "cgs", "cgd", "cdd", "region",
+    "ids",
+    "id",
+    "gm",
+    "gds",
+    "gmbs",
+    "vgs",
+    "vds",
+    "vbs",
+    "vsb",
+    "vth",
+    "vdsat",
+    "cgg",
+    "cgs",
+    "cgd",
+    "cdd",
+    "region",
 )
 
 
@@ -468,8 +359,9 @@ def operating_points(
 class SpectreSimHandle:
     """`SimHandle` over the bridge's `concurrent.futures.Future[SimulationResult]`."""
 
-    def __init__(self, future: "Future[Any]") -> None:
+    def __init__(self, future: Future[Any], *, label: str | None = None) -> None:
         self._future = future
+        self._label = label
         self._result: SpectreSimResult | None = None
 
     def is_done(self) -> bool:
@@ -477,10 +369,7 @@ class SpectreSimHandle:
 
     def result(self) -> SpectreSimResult:
         if self._result is None:
-            sim_result = self._future.result()
-            self._result = SpectreSimResult(
-                _data_of(sim_result), raw_dir=_raw_dir_of(sim_result)
-            )
+            self._result = _result_of(self._future.result(), label=self._label)
         return self._result
 
 
@@ -525,9 +414,7 @@ class SpectreSimulator:
         # A rendered (native/composed) run needs a dir for the per-candidate `.scs`.
         if deck_spec is not None or native_scs is not None:
             self._deck_dir = Path(
-                deck_dir
-                if deck_dir is not None
-                else tempfile.mkdtemp(prefix="spicexplorer-scs-")
+                deck_dir if deck_dir is not None else tempfile.mkdtemp(prefix="spicexplorer-scs-")
             )
             self._deck_dir.mkdir(parents=True, exist_ok=True)
         else:
@@ -548,12 +435,13 @@ class SpectreSimulator:
             design[key] = float(value)
         return True
 
-    def apply_corner(self, corner: "Corner", *, model_lib_root: str | None = None) -> None:
+    def apply_corner(self, corner: Corner, *, model_lib_root: str | None = None) -> None:
         """Emit the Spectre corner selection (`include "<file>" section=<sec>`) + rails.
 
         The ngspice seam strips `.lib`/injects `.lib …`/sets `.options temp=`; the Spectre
         equivalent is `include "<lib_file>" section=<section>` per model include, plus
-        supply `parameters` and `temp`. Idempotent: re-applying replaces, never accumulates.
+        supply `parameters` and `temp` (with `tnom` beside it — `corner.options["tnom"]`, else
+        the renderer's `DEFAULT_TNOM`). A second call replaces the last corner, never adds to it.
         A relative `lib_file` is resolved against `model_lib_root` (same contract as the
         ngspice wrapper's `apply_corner`); an absolute one is used as-is.
         """
@@ -566,11 +454,20 @@ class SpectreSimulator:
                 return str(Path(model_lib_root) / p)
             return str(p)
 
+        # a sectionless include (section=None) is a library pulled in whole — no `section=`
         self._params["corner_includes"] = [
-            f'include "{_resolve(inc.lib_file)}" section={inc.section}'
+            f'include "{_resolve(inc.lib_file)}"'
+            + (f" section={inc.section}" if inc.section else "")
             for inc in corner.model_includes
         ]
         self._params["temp"] = corner.temp
+        # `tnom` comes from the corner's engine-neutral `options` (ngspice writes the same key as
+        # `.options tnom=`); without it the renderer writes `DEFAULT_TNOM` next to `temp`.
+        tnom = (corner.options or {}).get("tnom")
+        if tnom is not None:
+            self._params["tnom"] = float(tnom)
+        else:
+            self._params.pop("tnom", None)
         supplies: dict[str, float] = {s.node: float(s.value) for s in corner.supplies}
         supplies.update({k: float(v) for k, v in corner.params.items()})
         self._params["corner_params"] = supplies
@@ -602,6 +499,7 @@ class SpectreSimulator:
                 parameters=injected,
                 corner_includes=self._params.get("corner_includes"),
                 temp=self._params.get("temp"),
+                tnom=self._params.get("tnom"),
                 source=self._native_scs,  # names the deck if the injection is ambiguous
             )
         else:
@@ -611,6 +509,7 @@ class SpectreSimulator:
                 parameters=injected,
                 corner_includes=self._params.get("corner_includes"),
                 temp=self._params.get("temp"),
+                tnom=self._params.get("tnom"),
             )
         assert self._deck_dir is not None  # set with deck_spec/native_scs in __init__
         safe_label = re.sub(r"[^A-Za-z0-9_.-]", "_", label) if label else "run"
@@ -622,12 +521,12 @@ class SpectreSimulator:
         """Blocking run → `SimResult` (bridge `run_simulation`)."""
         netlist = self._netlist_for_run(label)
         sim_result = self._bridge.run_simulation(netlist, self._params_for(label))
-        return SpectreSimResult(_data_of(sim_result), raw_dir=_raw_dir_of(sim_result))
+        return _result_of(sim_result, label=label)
 
     def submit(self, *, label: str | None = None) -> SpectreSimHandle:
         """Non-blocking submit → `SimHandle` (bridge `submit` → `Future`)."""
         future = self._bridge.submit(self._netlist_for_run(label), self._params_for(label))
-        return SpectreSimHandle(future)
+        return SpectreSimHandle(future, label=label)
 
     # -- inspection (used by tests / debugging) -----------------------------
     @property
@@ -672,6 +571,7 @@ def create_spectre_simulator(
         # server); the guard below is the whole point, so a missing import is expected —
         # the bare `# type: ignore` keeps a bridge-less checkout pyright-clean.
         import virtuoso_bridge.spectre.runner as _vbr  # type: ignore
+
         _BridgeSpectre = _vbr.SpectreSimulator
     except ImportError as exc:  # pragma: no cover - exercised only without the bridge
         raise ImportError(

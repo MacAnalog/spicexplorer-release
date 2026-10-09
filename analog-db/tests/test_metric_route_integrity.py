@@ -86,8 +86,12 @@ _NOISE_IPROBE = {True: "VAC", False: "VINP"}
 #: ``CircuitRun._measure_metric``: ngspice has no PSS, so the closed lane runs a native ``pss``
 #: on the thd/iip3 benches and the registry recipe is swapped for its harmonic-phasor twin.
 _SPECTRE_PSS_SWAP = {
-    "thd": "thd_pss", "thd_pct": "thd_pss_pct", "thd_db": "thd_pss_db",
-    "iip3": "iip3_pss", "iip3_dbv": "iip3_pss_dbv", "im3_dbc": "im3_pss_dbc",
+    "thd": "thd_pss",
+    "thd_pct": "thd_pss_pct",
+    "thd_db": "thd_pss_db",
+    "iip3": "iip3_pss",
+    "iip3_dbv": "iip3_pss_dbv",
+    "im3_dbc": "im3_pss_dbc",
 }
 
 #: calculator rows gated on context keys that ``_spectre_context`` sets ONLY for a
@@ -98,9 +102,17 @@ _FD_ONLY_CONTEXT = {"CM_OUTP", "CM_OUTN"}
 #: registry addresses its result by (``kind_default_analysis()``). The bench's ``analyses:``
 #: list therefore says which KINDS of result a Tier-1 fallback can possibly read.
 _TEMPLATE_RESULT = {
-    "dc_op": "op", "ac": "ac", "dc_sweep": "dc", "dc_sweep_down": "dc", "temp_sweep": "dc",
+    "dc_op": "op",
+    "ac": "ac",
+    "dc_sweep": "dc",
+    "dc_sweep_down": "dc",
+    "temp_sweep": "dc",
     "dc_param_points": "dc",
-    "noise": "noise", "tran": "tran", "pss": "pss", "stb": "stb", "pac": "pac",
+    "noise": "noise",
+    "tran": "tran",
+    "pss": "pss",
+    "stb": "stb",
+    "pac": "pac",
     "pnoise": "pnoise",
 }
 
@@ -115,7 +127,9 @@ def _emitted_measures(template: Path) -> set[str]:
             continue
         printed = _PRINT_STMT.match(line)
         if printed:
-            names.update(tok.lower() for tok in re.split(r"[\s,]+", printed.group(1).strip()) if tok)
+            names.update(
+                tok.lower() for tok in re.split(r"[\s,]+", printed.group(1).strip()) if tok
+            )
     return names
 
 
@@ -227,9 +241,12 @@ def _route_violations(circuit, pdk: str) -> set[str]:
         # that recipe reads. `gain_cl` is an AC transfer; asking for it off a clocked
         # transient bench resolves the NAME and then reads an `ac` result that the run never
         # produced.
-        wants = str((spec.get("extract") or {}).get("analysis")
-                    or kind_analysis.get(table[fallback][0], ""))
-        composed = {_TEMPLATE_RESULT.get(str(e.get("template", ""))) for e in (bench.get("analyses") or [])}
+        wants = str(
+            (spec.get("extract") or {}).get("analysis") or kind_analysis.get(table[fallback][0], "")
+        )
+        composed = {
+            _TEMPLATE_RESULT.get(str(e.get("template", ""))) for e in (bench.get("analyses") or [])
+        }
         if wants and wants not in composed:
             out.add(
                 f"{tag}: the registry recipe reads a {wants!r} result but the {aid!r} bench "
@@ -307,9 +324,18 @@ _KNOWN_GAPS: dict[tuple[str, str], set[str]] = {
     ("drv_001_pam4_sige_dac", "ihp-sg13g2"): {
         f"{m}(meas={m}): extract.meas declared but no analysis to run it on"
         for m in (
-            "msb_gain_lf_db", "lsb_gain_lf_db", "msb_gain_50g_rel_db", "lsb_gain_50g_rel_db",
-            "s11_msb_32g_db", "s22_50g_db", "power_mw", "i_supply", "ic_msb_ma",
-            "swing_vpp_diff", "rlm", "eye_height_v",
+            "msb_gain_lf_db",
+            "lsb_gain_lf_db",
+            "msb_gain_50g_rel_db",
+            "lsb_gain_50g_rel_db",
+            "s11_msb_32g_db",
+            "s22_50g_db",
+            "power_mw",
+            "i_supply",
+            "ic_msb_ma",
+            "swing_vpp_diff",
+            "rlm",
+            "eye_height_v",
         )
     },
 }
@@ -326,7 +352,10 @@ def _bindings():
         if circuit.is_reference_only:
             continue
         for pdk_dir in sorted((circuit.dir / "pdk").glob("*")):
-            if pdk_dir.is_dir() and (paths.shared_root() / "pdk" / f"{pdk_dir.name}.yaml").is_file():
+            if (
+                pdk_dir.is_dir()
+                and (paths.shared_root() / "pdk" / f"{pdk_dir.name}.yaml").is_file()
+            ):
                 yield circuit, pdk_dir.name
 
 

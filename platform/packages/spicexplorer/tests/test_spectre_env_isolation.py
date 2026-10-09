@@ -58,8 +58,7 @@ def test_bridge_construction_env_and_logging_isolation(tmp_path: Path, monkeypat
         assert os.environ.get("HARMLESS_CANARY") != "decoy"
         # (b) no non-VB_* env key changed or appeared
         changed = {
-            k for k in env_before
-            if os.environ.get(k) != env_before[k] and not k.startswith("VB_")
+            k for k in env_before if os.environ.get(k) != env_before[k] and not k.startswith("VB_")
         }
         grew = {k for k in os.environ if k not in env_before and not k.startswith("VB_")}
         assert not changed and not grew, f"bridge construction leaked env: {sorted(changed | grew)}"

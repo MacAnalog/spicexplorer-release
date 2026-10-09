@@ -26,6 +26,14 @@ from .annotation import (
     BlockAnnotationSet,
     annotation_lines,
 )
+from .collapse import (
+    CollapseCheck,
+    CollapsedResult,
+    CollapseGroup,
+    build_collapsed_sch,
+    check_collapsed,
+    parse_collapse,
+)
 from .connectivity import Route, Seg, Terminal, conflicting_routes, contaminated_nets
 from .contract import XschemFromNetlistRequest, XschemSchematicResult, result_from
 from .emit import SchDocument, build_sch, to_sch
@@ -44,7 +52,7 @@ from .ingest import (
     from_string,
     ingest,
 )
-from .mapping import LABEL_SYMREF, align_pins, port_symref, symref_for
+from .mapping import LABEL_SYMREF, align_pins, body_pin, port_symref, symref_for
 from .placement import (
     GridPlacer,
     PhasedPlacer,
@@ -53,6 +61,7 @@ from .placement import (
     TopologyPlacer,
 )
 from .render import RenderResult, render, xschem_available
+from .report import check_report, collapse_report, sheet_report
 from .sch_parser import (
     SchBox,
     SchComponent,
@@ -69,12 +78,21 @@ from .stamp import (
     resolve_template_sch,
 )
 from .sym_library import Symbol, SymLibrary, SymPin, parse_symbol
-from .symbol_gen import clean_symbol
+from .symbol_gen import (
+    BlockPin,
+    BlockSymbol,
+    clean_symbol,
+    generate_block_symbol,
+    generate_icon_symbol,
+)
+from .symbols import analog_icons
+from .title_block import TitleBlock, add_title_block, title_block_date
 from .wiring import (
     ConnectionPlan,
     NetLabel,
     PlacedDevice,
     PortPin,
+    RouterMode,
     Wire,
     build_labels,
     plan_connections,
@@ -109,6 +127,7 @@ __all__ = [
     # mapping
     "symref_for",
     "align_pins",
+    "body_pin",
     "port_symref",
     "LABEL_SYMREF",
     # analysis
@@ -135,7 +154,24 @@ __all__ = [
     "build_hierarchical_sch",
     "write_hierarchy",
     "HierarchicalResult",
+    # repeated cells moved one drawing level down (issue #264)
+    "CollapseGroup",
+    "CollapsedResult",
+    "CollapseCheck",
+    "parse_collapse",
+    "build_collapsed_sch",
+    "check_collapsed",
+    # the measurements an agent reads after a sheet is drawn (issues #243, #264)
+    "sheet_report",
+    "check_report",
+    "collapse_report",
     "clean_symbol",
+    # generated block symbols + the functional-icon library
+    "BlockPin",
+    "BlockSymbol",
+    "generate_block_symbol",
+    "generate_icon_symbol",
+    "analog_icons",
     "NetLabel",
     "Wire",
     "PortPin",
@@ -143,10 +179,15 @@ __all__ = [
     "ConnectionPlan",
     "build_labels",
     "plan_connections",
+    "RouterMode",
     # emit
     "build_sch",
     "to_sch",
     "SchDocument",
+    # title block (drawn, date as an input — issue #265)
+    "TitleBlock",
+    "add_title_block",
+    "title_block_date",
     # functional-block annotation overlay
     "BlockAnnotation",
     "BlockAnnotationSet",

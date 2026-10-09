@@ -5,67 +5,67 @@ V {}
 S {}
 E {}
 T {ia_003_fan_chopper_pf} -3730 -200 0 0 0.4 0.4 {}
-C {devices/capa_np.sym} 885 520 0 0 {name=CFB1 value='x_dut_cfb1_value'}
-C {devices/capa_np.sym} 1105 520 0 0 {name=CFB2 value='x_dut_cfb2_value'}
-C {devices/capa_np.sym} 1325 520 0 0 {name=CIN1 value='x_dut_cin1_value'}
-C {devices/capa_np.sym} 1545 520 0 0 {name=CIN2 value='x_dut_cin2_value'}
-C {devices/capa_np.sym} -350 520 0 0 {name=CM1 value='x_dut_cm1_value'}
-C {devices/capa_np.sym} 1765 520 0 0 {name=CM2 value='x_dut_cm2_value'}
-C {devices/capa_np.sym} -570 520 0 0 {name=CPF1 value='x_dut_cpf1_value'}
-C {devices/capa_np.sym} 1980 520 0 0 {name=CPF2 value='x_dut_cpf2_value'}
-C {devices/res_np.sym} -785 520 0 0 {name=RB1 value='x_dut_rb1_value'}
-C {devices/res_np.sym} 2200 520 0 0 {name=RB2 value='x_dut_rb2_value'}
-C {devices/vsource_np.sym} -3690 780 0 0 {name=VB1 value="dc {vb1}"}
-C {devices/vsource_np.sym} -3690 520 0 0 {name=VB2 value="dc {vb2}"}
-C {devices/vsource_np.sym} -3690 260 0 0 {name=VB3 value="dc {vb3}"}
-C {devices/vsource_np.sym} -3690 0 0 0 {name=VB4 value="dc {vb4}"}
-C {devices/sg13_lv_pmos_np.sym} 540 0 0 0 {name=M1 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m}
-C {devices/sg13_lv_pmos_np.sym} 340 260 0 1 {name=M10 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm10_w l=x_dut_xm10_l m=x_dut_xm10_m}
-C {devices/sg13_lv_pmos_np.sym} 735 260 0 0 {name=M11 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm11_w l=x_dut_xm11_l m=x_dut_xm11_m}
-C {devices/sg13_lv_nmos_np.sym} 4665 520 0 0 {name=M12 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm12_w l=x_dut_xm12_l m=x_dut_xm12_m}
-C {devices/sg13_lv_nmos_np.sym} 340 520 0 1 {name=M13 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm13_w l=x_dut_xm13_l m=x_dut_xm13_m}
-C {devices/sg13_lv_nmos_np.sym} 540 260 0 0 {name=M14 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm14_w l=x_dut_xm14_l m=x_dut_xm14_m}
-C {devices/sg13_lv_nmos_np.sym} 1105 260 0 0 {name=M15 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm15_w l=x_dut_xm15_l m=x_dut_xm15_m}
-C {devices/sg13_lv_nmos_np.sym} 530 520 0 1 {name=M16 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm16_w l=x_dut_xm16_l m=x_dut_xm16_m}
-C {devices/sg13_lv_pmos_np.sym} 150 520 0 1 {name=M17 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm17_w l=x_dut_xm17_l m=x_dut_xm17_m}
-C {devices/sg13_lv_nmos_np.sym} 4855 520 0 0 {name=M18 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm18_w l=x_dut_xm18_l m=x_dut_xm18_m}
-C {devices/sg13_lv_pmos_np.sym} 5040 520 0 0 {name=M19 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm19_w l=x_dut_xm19_l m=x_dut_xm19_m}
-C {devices/sg13_lv_pmos_np.sym} -25 260 0 0 {name=M2 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm2_w l=x_dut_xm2_l m=x_dut_xm2_m}
-C {devices/sg13_lv_nmos_np.sym} -970 520 0 0 {name=M20 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm20_w l=x_dut_xm20_l m=x_dut_xm20_m}
-C {devices/sg13_lv_pmos_np.sym} 2410 520 0 0 {name=M21 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm21_w l=x_dut_xm21_l m=x_dut_xm21_m}
-C {devices/sg13_lv_nmos_np.sym} -1160 520 0 0 {name=M22 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm22_w l=x_dut_xm22_l m=x_dut_xm22_m}
-C {devices/sg13_lv_pmos_np.sym} 2600 520 0 0 {name=M23 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm23_w l=x_dut_xm23_l m=x_dut_xm23_m}
-C {devices/sg13_lv_nmos_np.sym} -1350 520 0 0 {name=M24 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm24_w l=x_dut_xm24_l m=x_dut_xm24_m}
-C {devices/sg13_lv_pmos_np.sym} 2785 520 0 0 {name=M25 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm25_w l=x_dut_xm25_l m=x_dut_xm25_m}
-C {devices/sg13_lv_nmos_np.sym} -1535 520 0 0 {name=M26 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm26_w l=x_dut_xm26_l m=x_dut_xm26_m}
-C {devices/sg13_lv_pmos_np.sym} 2975 520 0 0 {name=M27 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm27_w l=x_dut_xm27_l m=x_dut_xm27_m}
-C {devices/sg13_lv_nmos_np.sym} -1725 520 0 0 {name=M28 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm28_w l=x_dut_xm28_l m=x_dut_xm28_m}
-C {devices/sg13_lv_pmos_np.sym} 3160 520 0 0 {name=M29 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm29_w l=x_dut_xm29_l m=x_dut_xm29_m}
-C {devices/sg13_lv_pmos_np.sym} 1325 260 0 0 {name=M3 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm3_w l=x_dut_xm3_l m=x_dut_xm3_m}
-C {devices/sg13_lv_nmos_np.sym} -1910 520 0 0 {name=M30 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm30_w l=x_dut_xm30_l m=x_dut_xm30_m}
-C {devices/sg13_lv_pmos_np.sym} 3350 520 0 0 {name=M31 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm31_w l=x_dut_xm31_l m=x_dut_xm31_m}
-C {devices/sg13_lv_nmos_np.sym} 715 520 0 1 {name=M32 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm32_w l=x_dut_xm32_l m=x_dut_xm32_m}
-C {devices/sg13_lv_pmos_np.sym} -35 520 0 1 {name=M33 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm33_w l=x_dut_xm33_l m=x_dut_xm33_m}
+C {devices/capa_np.sym} 1645 520 0 0 {name=CFB1 value='x_dut_cfb1_value'}
+C {devices/capa_np.sym} 1905 520 0 0 {name=CFB2 value='x_dut_cfb2_value'}
+C {devices/capa_np.sym} 2160 520 0 0 {name=CIN1 value='x_dut_cin1_value'}
+C {devices/capa_np.sym} 2420 520 0 0 {name=CIN2 value='x_dut_cin2_value'}
+C {devices/capa_np.sym} 180 520 0 0 {name=CM1 value='x_dut_cm1_value'}
+C {devices/capa_np.sym} 2680 520 0 0 {name=CM2 value='x_dut_cm2_value'}
+C {devices/capa_np.sym} -80 520 0 0 {name=CPF1 value='x_dut_cpf1_value'}
+C {devices/capa_np.sym} 2930 520 0 0 {name=CPF2 value='x_dut_cpf2_value'}
+C {devices/res_np.sym} -330 520 0 0 {name=RB1 value='x_dut_rb1_value'}
+C {devices/res_np.sym} 3185 520 0 0 {name=RB2 value='x_dut_rb2_value'}
+C {devices/vsource_np.sym} -3690 780 0 0 {name=VB1 value="dc \{vb1\}" savecurrent=false}
+C {devices/vsource_np.sym} -3690 520 0 0 {name=VB2 value="dc \{vb2\}" savecurrent=false}
+C {devices/vsource_np.sym} -3690 260 0 0 {name=VB3 value="dc \{vb3\}" savecurrent=false}
+C {devices/vsource_np.sym} -3690 0 0 0 {name=VB4 value="dc \{vb4\}" savecurrent=false}
+C {devices/sg13_lv_pmos_np.sym} 1260 0 0 0 {name=M1 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m}
+C {devices/sg13_lv_pmos_np.sym} 1025 260 0 1 {name=M10 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm10_w l=x_dut_xm10_l m=x_dut_xm10_m}
+C {devices/sg13_lv_pmos_np.sym} 1495 260 0 0 {name=M11 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm11_w l=x_dut_xm11_l m=x_dut_xm11_m}
+C {devices/sg13_lv_nmos_np.sym} 6150 520 0 0 {name=M12 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm12_w l=x_dut_xm12_l m=x_dut_xm12_m}
+C {devices/sg13_lv_nmos_np.sym} 1025 520 0 1 {name=M13 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm13_w l=x_dut_xm13_l m=x_dut_xm13_m}
+C {devices/sg13_lv_nmos_np.sym} 1260 260 0 0 {name=M14 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm14_w l=x_dut_xm14_l m=x_dut_xm14_m}
+C {devices/sg13_lv_nmos_np.sym} 1905 260 0 0 {name=M15 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm15_w l=x_dut_xm15_l m=x_dut_xm15_m}
+C {devices/sg13_lv_nmos_np.sym} 1250 520 0 1 {name=M16 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm16_w l=x_dut_xm16_l m=x_dut_xm16_m}
+C {devices/sg13_lv_pmos_np.sym} 800 520 0 1 {name=M17 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm17_w l=x_dut_xm17_l m=x_dut_xm17_m}
+C {devices/sg13_lv_nmos_np.sym} 6375 520 0 0 {name=M18 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm18_w l=x_dut_xm18_l m=x_dut_xm18_m}
+C {devices/sg13_lv_pmos_np.sym} 6600 520 0 0 {name=M19 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm19_w l=x_dut_xm19_l m=x_dut_xm19_m}
+C {devices/sg13_lv_pmos_np.sym} 580 260 0 0 {name=M2 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm2_w l=x_dut_xm2_l m=x_dut_xm2_m}
+C {devices/sg13_lv_nmos_np.sym} -555 520 0 0 {name=M20 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm20_w l=x_dut_xm20_l m=x_dut_xm20_m}
+C {devices/sg13_lv_pmos_np.sym} 3435 520 0 0 {name=M21 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm21_w l=x_dut_xm21_l m=x_dut_xm21_m}
+C {devices/sg13_lv_nmos_np.sym} -780 520 0 0 {name=M22 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm22_w l=x_dut_xm22_l m=x_dut_xm22_m}
+C {devices/sg13_lv_pmos_np.sym} 3660 520 0 0 {name=M23 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm23_w l=x_dut_xm23_l m=x_dut_xm23_m}
+C {devices/sg13_lv_nmos_np.sym} -1005 520 0 0 {name=M24 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm24_w l=x_dut_xm24_l m=x_dut_xm24_m}
+C {devices/sg13_lv_pmos_np.sym} 3890 520 0 0 {name=M25 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm25_w l=x_dut_xm25_l m=x_dut_xm25_m}
+C {devices/sg13_lv_nmos_np.sym} -1230 520 0 0 {name=M26 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm26_w l=x_dut_xm26_l m=x_dut_xm26_m}
+C {devices/sg13_lv_pmos_np.sym} 4115 520 0 0 {name=M27 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm27_w l=x_dut_xm27_l m=x_dut_xm27_m}
+C {devices/sg13_lv_nmos_np.sym} -1460 520 0 0 {name=M28 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm28_w l=x_dut_xm28_l m=x_dut_xm28_m}
+C {devices/sg13_lv_pmos_np.sym} 4340 520 0 0 {name=M29 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm29_w l=x_dut_xm29_l m=x_dut_xm29_m}
+C {devices/sg13_lv_pmos_np.sym} 2160 260 0 0 {name=M3 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm3_w l=x_dut_xm3_l m=x_dut_xm3_m}
+C {devices/sg13_lv_nmos_np.sym} -1685 520 0 0 {name=M30 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm30_w l=x_dut_xm30_l m=x_dut_xm30_m}
+C {devices/sg13_lv_pmos_np.sym} 4565 520 0 0 {name=M31 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm31_w l=x_dut_xm31_l m=x_dut_xm31_m}
+C {devices/sg13_lv_nmos_np.sym} 1475 520 0 1 {name=M32 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm32_w l=x_dut_xm32_l m=x_dut_xm32_m}
+C {devices/sg13_lv_pmos_np.sym} 570 520 0 1 {name=M33 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm33_w l=x_dut_xm33_l m=x_dut_xm33_m}
 C {devices/sg13_lv_nmos_np.sym} -3350 520 0 0 {name=M34 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm34_w l=x_dut_xm34_l m=x_dut_xm34_m}
-C {devices/sg13_lv_pmos_np.sym} 5230 520 0 0 {name=M35 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm35_w l=x_dut_xm35_l m=x_dut_xm35_m}
-C {devices/sg13_lv_nmos_np.sym} -2100 520 0 0 {name=M36 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm36_w l=x_dut_xm36_l m=x_dut_xm36_m}
-C {devices/sg13_lv_pmos_np.sym} 3540 520 0 0 {name=M37 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm37_w l=x_dut_xm37_l m=x_dut_xm37_m}
-C {devices/sg13_lv_nmos_np.sym} -2290 520 0 0 {name=M38 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm38_w l=x_dut_xm38_l m=x_dut_xm38_m}
-C {devices/sg13_lv_pmos_np.sym} 3725 520 0 0 {name=M39 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm39_w l=x_dut_xm39_l m=x_dut_xm39_m}
-C {devices/sg13_lv_nmos_np.sym} 540 780 0 0 {name=M4 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm4_w l=x_dut_xm4_l m=x_dut_xm4_m}
-C {devices/sg13_lv_nmos_np.sym} -2475 520 0 0 {name=M40 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm40_w l=x_dut_xm40_l m=x_dut_xm40_m}
-C {devices/sg13_lv_pmos_np.sym} 3915 520 0 0 {name=M41 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm41_w l=x_dut_xm41_l m=x_dut_xm41_m}
-C {devices/sg13_lv_nmos_np.sym} -2665 520 0 0 {name=M42 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm42_w l=x_dut_xm42_l m=x_dut_xm42_m}
-C {devices/sg13_lv_pmos_np.sym} 4100 520 0 0 {name=M43 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm43_w l=x_dut_xm43_l m=x_dut_xm43_m}
-C {devices/sg13_lv_nmos_np.sym} -2850 520 0 0 {name=M44 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm44_w l=x_dut_xm44_l m=x_dut_xm44_m}
-C {devices/sg13_lv_pmos_np.sym} 4290 520 0 0 {name=M45 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm45_w l=x_dut_xm45_l m=x_dut_xm45_m}
+C {devices/sg13_lv_pmos_np.sym} 6825 520 0 0 {name=M35 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm35_w l=x_dut_xm35_l m=x_dut_xm35_m}
+C {devices/sg13_lv_nmos_np.sym} -1910 520 0 0 {name=M36 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm36_w l=x_dut_xm36_l m=x_dut_xm36_m}
+C {devices/sg13_lv_pmos_np.sym} 4790 520 0 0 {name=M37 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm37_w l=x_dut_xm37_l m=x_dut_xm37_m}
+C {devices/sg13_lv_nmos_np.sym} -2135 520 0 0 {name=M38 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm38_w l=x_dut_xm38_l m=x_dut_xm38_m}
+C {devices/sg13_lv_pmos_np.sym} 5020 520 0 0 {name=M39 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm39_w l=x_dut_xm39_l m=x_dut_xm39_m}
+C {devices/sg13_lv_nmos_np.sym} 1260 780 0 0 {name=M4 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm4_w l=x_dut_xm4_l m=x_dut_xm4_m}
+C {devices/sg13_lv_nmos_np.sym} -2360 520 0 0 {name=M40 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm40_w l=x_dut_xm40_l m=x_dut_xm40_m}
+C {devices/sg13_lv_pmos_np.sym} 5245 520 0 0 {name=M41 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm41_w l=x_dut_xm41_l m=x_dut_xm41_m}
+C {devices/sg13_lv_nmos_np.sym} -2590 520 0 0 {name=M42 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm42_w l=x_dut_xm42_l m=x_dut_xm42_m}
+C {devices/sg13_lv_pmos_np.sym} 5470 520 0 0 {name=M43 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm43_w l=x_dut_xm43_l m=x_dut_xm43_m}
+C {devices/sg13_lv_nmos_np.sym} -2815 520 0 0 {name=M44 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm44_w l=x_dut_xm44_l m=x_dut_xm44_m}
+C {devices/sg13_lv_pmos_np.sym} 5695 520 0 0 {name=M45 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm45_w l=x_dut_xm45_l m=x_dut_xm45_m}
 C {devices/sg13_lv_nmos_np.sym} -3040 520 0 0 {name=M46 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm46_w l=x_dut_xm46_l m=x_dut_xm46_m}
-C {devices/sg13_lv_pmos_np.sym} 4480 520 0 0 {name=M47 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm47_w l=x_dut_xm47_l m=x_dut_xm47_m}
-C {devices/sg13_lv_nmos_np.sym} 725 780 0 0 {name=M5 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm5_w l=x_dut_xm5_l m=x_dut_xm5_m}
-C {devices/sg13_lv_pmos_np.sym} 340 0 0 1 {name=M6 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm6_w l=x_dut_xm6_l m=x_dut_xm6_m}
-C {devices/sg13_lv_pmos_np.sym} 735 0 0 0 {name=M7 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm7_w l=x_dut_xm7_l m=x_dut_xm7_m}
-C {devices/sg13_lv_pmos_np.sym} 1105 0 0 0 {name=M8 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm8_w l=x_dut_xm8_l m=x_dut_xm8_m}
-C {devices/sg13_lv_pmos_np.sym} -25 0 0 0 {name=M9 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm9_w l=x_dut_xm9_l m=x_dut_xm9_m}
+C {devices/sg13_lv_pmos_np.sym} 5920 520 0 0 {name=M47 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm47_w l=x_dut_xm47_l m=x_dut_xm47_m}
+C {devices/sg13_lv_nmos_np.sym} 1485 780 0 0 {name=M5 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm5_w l=x_dut_xm5_l m=x_dut_xm5_m}
+C {devices/sg13_lv_pmos_np.sym} 1025 0 0 1 {name=M6 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm6_w l=x_dut_xm6_l m=x_dut_xm6_m}
+C {devices/sg13_lv_pmos_np.sym} 1495 0 0 0 {name=M7 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm7_w l=x_dut_xm7_l m=x_dut_xm7_m}
+C {devices/sg13_lv_pmos_np.sym} 1905 0 0 0 {name=M8 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm8_w l=x_dut_xm8_l m=x_dut_xm8_m}
+C {devices/sg13_lv_pmos_np.sym} 580 0 0 0 {name=M9 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm9_w l=x_dut_xm9_l m=x_dut_xm9_m}
 N -3690 -90 -3690 -30 {}
 N -3690 30 -3690 90 {}
 N -3690 170 -3690 230 {}
@@ -74,513 +74,471 @@ N -3690 430 -3690 490 {}
 N -3690 550 -3690 610 {}
 N -3690 690 -3690 750 {}
 N -3690 810 -3690 870 {}
-N -3330 430 -3330 490 {}
+N -3330 460 -3330 490 {}
 N -3330 550 -3330 610 {}
 N -3270 520 -3270 614 {}
-N -3060 460 -3060 520 {}
 N -3020 430 -3020 490 {}
 N -3020 550 -3020 610 {}
 N -2960 520 -2960 614 {}
-N -2870 460 -2870 520 {}
-N -2830 430 -2830 490 {}
-N -2830 550 -2830 610 {}
-N -2770 520 -2770 614 {}
-N -2685 460 -2685 520 {}
-N -2645 430 -2645 490 {}
-N -2645 550 -2645 610 {}
-N -2585 520 -2585 614 {}
-N -2495 460 -2495 520 {}
-N -2455 430 -2455 490 {}
-N -2455 550 -2455 610 {}
-N -2395 520 -2395 614 {}
-N -2310 460 -2310 520 {}
-N -2270 430 -2270 490 {}
-N -2270 550 -2270 610 {}
-N -2210 520 -2210 614 {}
-N -2120 460 -2120 520 {}
-N -2080 430 -2080 490 {}
-N -2080 550 -2080 610 {}
-N -2020 520 -2020 614 {}
-N -1930 460 -1930 520 {}
+N -2795 430 -2795 490 {}
+N -2795 550 -2795 610 {}
+N -2735 520 -2735 614 {}
+N -2570 430 -2570 490 {}
+N -2570 550 -2570 610 {}
+N -2510 520 -2510 614 {}
+N -2340 430 -2340 490 {}
+N -2340 550 -2340 610 {}
+N -2280 520 -2280 614 {}
+N -2115 430 -2115 490 {}
+N -2115 550 -2115 610 {}
+N -2055 520 -2055 614 {}
 N -1890 430 -1890 490 {}
 N -1890 550 -1890 610 {}
 N -1830 520 -1830 614 {}
-N -1745 460 -1745 520 {}
-N -1705 430 -1705 490 {}
-N -1705 550 -1705 610 {}
-N -1645 520 -1645 614 {}
-N -1555 460 -1555 520 {}
-N -1515 430 -1515 490 {}
-N -1515 550 -1515 610 {}
-N -1455 520 -1455 614 {}
-N -1370 460 -1370 520 {}
-N -1330 430 -1330 490 {}
-N -1330 550 -1330 610 {}
-N -1270 520 -1270 614 {}
-N -1180 460 -1180 520 {}
-N -1140 430 -1140 490 {}
-N -1140 550 -1140 610 {}
-N -1080 520 -1080 614 {}
-N -990 460 -990 520 {}
-N -950 430 -950 490 {}
-N -950 550 -950 610 {}
-N -890 520 -890 614 {}
-N -785 430 -785 490 {}
-N -785 550 -785 610 {}
-N -570 430 -570 490 {}
-N -570 550 -570 610 {}
-N -350 430 -350 490 {}
-N -350 550 -350 610 {}
-N -115 520 -115 614 {}
-N -55 430 -55 490 {}
-N -55 550 -55 610 {}
-N -15 520 -15 580 {}
-N -5 -140 -5 -30 {}
-N -5 30 -5 90 {}
-N -5 170 -5 230 {}
-N -5 290 -5 350 {}
-N 55 0 55 94 {}
-N 55 260 55 354 {}
-N 70 520 70 614 {}
-N 130 430 130 490 {}
-N 130 550 130 610 {}
-N 170 520 170 580 {}
-N 260 0 260 94 {}
-N 260 260 260 354 {}
-N 260 520 260 614 {}
-N 320 -140 320 -30 {}
-N 320 30 320 90 {}
-N 320 170 320 230 {}
-N 320 290 320 350 {}
-N 320 430 320 490 {}
-N 320 550 320 610 {}
-N 360 520 360 580 {}
-N 450 520 450 614 {}
-N 510 430 510 490 {}
-N 510 550 510 610 {}
-N 550 520 550 580 {}
-N 560 -140 560 -30 {}
-N 560 30 560 90 {}
-N 560 170 560 230 {}
-N 560 290 560 350 {}
-N 560 690 560 750 {}
-N 560 810 560 920 {}
-N 620 0 620 94 {}
-N 620 260 620 354 {}
-N 620 780 620 874 {}
-N 635 520 635 614 {}
-N 695 430 695 490 {}
-N 695 550 695 610 {}
-N 705 720 705 780 {}
-N 715 -60 715 0 {}
-N 715 200 715 260 {}
-N 735 520 735 580 {}
-N 745 690 745 750 {}
-N 745 810 745 920 {}
-N 755 -140 755 -30 {}
-N 755 30 755 90 {}
-N 755 170 755 230 {}
-N 755 290 755 350 {}
-N 805 780 805 874 {}
-N 815 0 815 94 {}
-N 815 260 815 354 {}
-N 885 430 885 490 {}
-N 885 550 885 610 {}
-N 1105 430 1105 490 {}
-N 1105 550 1105 610 {}
-N 1125 -140 1125 -30 {}
-N 1125 30 1125 90 {}
-N 1125 170 1125 230 {}
-N 1125 290 1125 920 {}
-N 1185 0 1185 94 {}
-N 1185 260 1185 354 {}
-N 1305 200 1305 260 {}
-N 1325 430 1325 490 {}
-N 1325 550 1325 610 {}
-N 1345 170 1345 230 {}
-N 1345 290 1345 350 {}
-N 1405 260 1405 354 {}
-N 1545 430 1545 490 {}
-N 1545 550 1545 610 {}
-N 1765 430 1765 490 {}
-N 1765 550 1765 610 {}
-N 1980 430 1980 490 {}
-N 1980 550 1980 610 {}
-N 2200 430 2200 490 {}
-N 2200 550 2200 610 {}
-N 2390 460 2390 520 {}
-N 2430 430 2430 490 {}
-N 2430 550 2430 610 {}
-N 2490 520 2490 614 {}
-N 2580 460 2580 520 {}
-N 2620 430 2620 490 {}
-N 2620 550 2620 610 {}
-N 2680 520 2680 614 {}
-N 2765 460 2765 520 {}
-N 2805 430 2805 490 {}
-N 2805 550 2805 610 {}
-N 2865 520 2865 614 {}
-N 2955 460 2955 520 {}
-N 2995 430 2995 490 {}
-N 2995 550 2995 610 {}
-N 3055 520 3055 614 {}
-N 3140 460 3140 520 {}
-N 3180 430 3180 490 {}
-N 3180 550 3180 610 {}
-N 3240 520 3240 614 {}
-N 3330 460 3330 520 {}
-N 3370 430 3370 490 {}
-N 3370 550 3370 610 {}
-N 3430 520 3430 614 {}
-N 3520 460 3520 520 {}
-N 3560 430 3560 490 {}
-N 3560 550 3560 610 {}
-N 3620 520 3620 614 {}
-N 3705 460 3705 520 {}
-N 3745 430 3745 490 {}
-N 3745 550 3745 610 {}
-N 3805 520 3805 614 {}
-N 3895 460 3895 520 {}
-N 3935 430 3935 490 {}
-N 3935 550 3935 610 {}
-N 3995 520 3995 614 {}
-N 4080 460 4080 520 {}
-N 4120 430 4120 490 {}
-N 4120 550 4120 610 {}
-N 4180 520 4180 614 {}
-N 4270 460 4270 520 {}
-N 4310 430 4310 490 {}
-N 4310 550 4310 610 {}
-N 4370 520 4370 614 {}
-N 4460 460 4460 520 {}
-N 4500 430 4500 490 {}
-N 4500 550 4500 610 {}
-N 4560 520 4560 614 {}
-N 4645 460 4645 520 {}
-N 4685 430 4685 490 {}
-N 4685 550 4685 610 {}
-N 4745 520 4745 614 {}
-N 4875 460 4875 490 {}
-N 4875 550 4875 610 {}
-N 4935 520 4935 614 {}
-N 5060 460 5060 490 {}
-N 5060 550 5060 610 {}
-N 5120 520 5120 614 {}
-N 5250 460 5250 490 {}
-N 5250 550 5250 610 {}
-N 5310 520 5310 614 {}
-N -3750 -140 5445 -140 {}
-N -105 0 -45 0 {}
-N -5 0 55 0 {}
-N 260 0 320 0 {}
-N 360 0 520 0 {}
-N 560 0 620 0 {}
-N 685 0 715 0 {}
-N 755 0 815 0 {}
-N 1025 0 1085 0 {}
-N 1125 0 1185 0 {}
-N -105 260 -45 260 {}
-N -5 260 55 260 {}
-N 260 260 320 260 {}
-N 360 260 420 260 {}
-N 460 260 520 260 {}
-N 560 260 620 260 {}
-N 685 260 715 260 {}
-N 755 260 815 260 {}
-N 1025 260 1085 260 {}
-N 1125 260 1185 260 {}
-N 1275 260 1305 260 {}
-N 1345 260 1405 260 {}
-N 4685 460 5250 460 {}
-N -3430 520 -3370 520 {}
+N -1665 430 -1665 490 {}
+N -1665 550 -1665 610 {}
+N -1605 520 -1605 614 {}
+N -1440 430 -1440 490 {}
+N -1440 550 -1440 610 {}
+N -1380 520 -1380 614 {}
+N -1210 430 -1210 490 {}
+N -1210 550 -1210 610 {}
+N -1150 520 -1150 614 {}
+N -985 430 -985 490 {}
+N -985 550 -985 610 {}
+N -925 520 -925 614 {}
+N -760 430 -760 490 {}
+N -760 550 -760 610 {}
+N -700 520 -700 614 {}
+N -535 430 -535 490 {}
+N -535 550 -535 610 {}
+N -475 520 -475 614 {}
+N -330 430 -330 490 {}
+N -330 550 -330 610 {}
+N -80 430 -80 490 {}
+N -80 550 -80 610 {}
+N 180 430 180 490 {}
+N 180 550 180 610 {}
+N 490 520 490 614 {}
+N 530 -60 530 0 {}
+N 550 430 550 490 {}
+N 550 550 550 610 {}
+N 600 -140 600 -30 {}
+N 600 30 600 60 {}
+N 600 200 600 230 {}
+N 600 290 600 350 {}
+N 660 0 660 94 {}
+N 660 260 660 354 {}
+N 720 520 720 614 {}
+N 780 430 780 490 {}
+N 780 550 780 610 {}
+N 945 0 945 94 {}
+N 945 260 945 354 {}
+N 945 520 945 614 {}
+N 1005 -140 1005 -30 {}
+N 1005 30 1005 90 {}
+N 1005 290 1005 350 {}
+N 1005 430 1005 490 {}
+N 1005 550 1005 610 {}
+N 1065 30 1065 230 {}
+N 1075 -60 1075 0 {}
+N 1170 520 1170 614 {}
+N 1210 -60 1210 0 {}
+N 1210 260 1210 610 {}
+N 1210 780 1210 840 {}
+N 1220 30 1220 200 {}
+N 1230 430 1230 490 {}
+N 1280 -140 1280 -30 {}
+N 1280 30 1280 90 {}
+N 1280 170 1280 230 {}
+N 1280 290 1280 350 {}
+N 1280 690 1280 750 {}
+N 1280 810 1280 920 {}
+N 1340 30 1340 200 {}
+N 1340 260 1340 354 {}
+N 1340 780 1340 874 {}
+N 1395 520 1395 614 {}
+N 1435 780 1435 840 {}
+N 1445 -60 1445 0 {}
+N 1455 320 1455 460 {}
+N 1455 550 1455 610 {}
+N 1495 520 1495 580 {}
+N 1505 690 1505 750 {}
+N 1505 810 1505 920 {}
+N 1515 -140 1515 -30 {}
+N 1515 30 1515 90 {}
+N 1515 170 1515 230 {}
+N 1515 290 1515 320 {}
+N 1515 320 1515 350 {}
+N 1565 780 1565 874 {}
+N 1575 0 1575 94 {}
+N 1575 320 1575 460 {}
+N 1645 430 1645 490 {}
+N 1645 550 1645 610 {}
+N 1905 550 1905 610 {}
+N 1925 -140 1925 -30 {}
+N 1925 30 1925 90 {}
+N 1925 170 1925 230 {}
+N 1925 290 1925 920 {}
+N 1985 0 1985 94 {}
+N 1985 260 1985 354 {}
+N 2160 550 2160 610 {}
+N 2180 200 2180 230 {}
+N 2180 290 2180 350 {}
+N 2240 260 2240 354 {}
+N 2420 550 2420 610 {}
+N 2680 550 2680 610 {}
+N 2930 550 2930 610 {}
+N 3185 550 3185 610 {}
+N 3455 430 3455 490 {}
+N 3455 550 3455 610 {}
+N 3515 520 3515 614 {}
+N 3680 430 3680 490 {}
+N 3680 550 3680 610 {}
+N 3740 520 3740 614 {}
+N 3910 430 3910 490 {}
+N 3910 550 3910 610 {}
+N 3970 520 3970 614 {}
+N 4135 430 4135 490 {}
+N 4135 550 4135 610 {}
+N 4195 520 4195 614 {}
+N 4360 430 4360 490 {}
+N 4360 550 4360 610 {}
+N 4420 520 4420 614 {}
+N 4585 430 4585 490 {}
+N 4585 550 4585 610 {}
+N 4645 520 4645 614 {}
+N 4810 430 4810 490 {}
+N 4810 550 4810 610 {}
+N 4870 520 4870 614 {}
+N 5040 430 5040 490 {}
+N 5040 550 5040 610 {}
+N 5100 520 5100 614 {}
+N 5265 430 5265 490 {}
+N 5265 550 5265 610 {}
+N 5325 520 5325 614 {}
+N 5490 430 5490 490 {}
+N 5490 550 5490 610 {}
+N 5550 520 5550 614 {}
+N 5715 430 5715 490 {}
+N 5715 550 5715 610 {}
+N 5775 520 5775 614 {}
+N 5940 430 5940 490 {}
+N 5940 550 5940 610 {}
+N 6000 520 6000 614 {}
+N 6170 460 6170 490 {}
+N 6170 550 6170 610 {}
+N 6230 520 6230 614 {}
+N 6395 460 6395 490 {}
+N 6395 550 6395 610 {}
+N 6455 520 6455 614 {}
+N 6620 460 6620 490 {}
+N 6620 550 6620 610 {}
+N 6680 520 6680 614 {}
+N 6845 460 6845 490 {}
+N 6845 550 6845 610 {}
+N 6905 520 6905 614 {}
+N -3750 -140 7325 -140 {}
+N 530 -60 1075 -60 {}
+N 1210 -60 1445 -60 {}
+N 500 0 560 0 {}
+N 600 0 660 0 {}
+N 945 0 1005 0 {}
+N 1045 0 1240 0 {}
+N 1445 0 1475 0 {}
+N 1515 0 1575 0 {}
+N 1825 0 1885 0 {}
+N 1925 0 1985 0 {}
+N 1005 30 1065 30 {}
+N 1220 30 1340 30 {}
+N 600 200 2180 200 {}
+N 1005 230 1065 230 {}
+N 500 260 560 260 {}
+N 600 260 660 260 {}
+N 945 260 1005 260 {}
+N 1045 260 1105 260 {}
+N 1180 260 1240 260 {}
+N 1280 260 1340 260 {}
+N 1415 260 1475 260 {}
+N 1825 260 1885 260 {}
+N 1925 260 1985 260 {}
+N 2080 260 2140 260 {}
+N 2180 260 2240 260 {}
+N 1455 320 1575 320 {}
+N 1645 430 3455 430 {}
+N -3330 460 6845 460 {}
+N 1170 490 1455 490 {}
+N -3460 520 -3370 520 {}
 N -3330 520 -3270 520 {}
-N -3090 520 -3060 520 {}
+N -3150 520 -3060 520 {}
 N -3020 520 -2960 520 {}
-N -2900 520 -2870 520 {}
-N -2830 520 -2770 520 {}
-N -2715 520 -2685 520 {}
-N -2645 520 -2585 520 {}
-N -2525 520 -2495 520 {}
-N -2455 520 -2395 520 {}
-N -2340 520 -2310 520 {}
-N -2270 520 -2210 520 {}
-N -2150 520 -2120 520 {}
-N -2080 520 -2020 520 {}
-N -1960 520 -1930 520 {}
+N -2895 520 -2835 520 {}
+N -2795 520 -2735 520 {}
+N -2700 520 -2610 520 {}
+N -2570 520 -2510 520 {}
+N -2440 520 -2380 520 {}
+N -2340 520 -2280 520 {}
+N -2245 520 -2155 520 {}
+N -2115 520 -2055 520 {}
+N -1990 520 -1930 520 {}
 N -1890 520 -1830 520 {}
-N -1775 520 -1745 520 {}
-N -1705 520 -1645 520 {}
-N -1585 520 -1555 520 {}
-N -1515 520 -1455 520 {}
-N -1400 520 -1370 520 {}
-N -1330 520 -1270 520 {}
-N -1210 520 -1180 520 {}
-N -1140 520 -1080 520 {}
-N -1020 520 -990 520 {}
-N -950 520 -890 520 {}
-N -115 520 -55 520 {}
-N -15 520 15 520 {}
-N 70 520 130 520 {}
-N 170 520 200 520 {}
-N 260 520 320 520 {}
-N 360 520 390 520 {}
-N 450 520 510 520 {}
-N 550 520 580 520 {}
-N 635 520 695 520 {}
-N 735 520 765 520 {}
-N 2360 520 2390 520 {}
-N 2430 520 2490 520 {}
-N 2550 520 2580 520 {}
-N 2620 520 2680 520 {}
-N 2735 520 2765 520 {}
-N 2805 520 2865 520 {}
-N 2925 520 2955 520 {}
-N 2995 520 3055 520 {}
-N 3110 520 3140 520 {}
-N 3180 520 3240 520 {}
-N 3300 520 3330 520 {}
-N 3370 520 3430 520 {}
-N 3490 520 3520 520 {}
-N 3560 520 3620 520 {}
-N 3675 520 3705 520 {}
-N 3745 520 3805 520 {}
-N 3865 520 3895 520 {}
-N 3935 520 3995 520 {}
-N 4050 520 4080 520 {}
-N 4120 520 4180 520 {}
-N 4240 520 4270 520 {}
-N 4310 520 4370 520 {}
-N 4430 520 4460 520 {}
-N 4500 520 4560 520 {}
-N 4615 520 4645 520 {}
-N 4685 520 4745 520 {}
-N 4805 520 4835 520 {}
-N 4875 520 4935 520 {}
-N 4990 520 5020 520 {}
-N 5060 520 5120 520 {}
-N 5180 520 5210 520 {}
-N 5250 520 5310 520 {}
-N 460 780 520 780 {}
-N 560 780 620 780 {}
-N 675 780 705 780 {}
-N 745 780 805 780 {}
-N -3750 920 5445 920 {}
-C {devices/lab_wire.sym} -3750 -140 0 0 {name=l0 lab=vdd}
-C {devices/lab_wire.sym} -3750 920 0 0 {name=l1 lab=vss}
-C {devices/lab_wire.sym} 320 90 2 0 {name=l2 lab=casc_src_n}
-C {devices/lab_wire.sym} 320 170 0 1 {name=l3 lab=casc_src_n}
-C {devices/lab_wire.sym} 755 90 2 0 {name=l4 lab=casc_src_p}
-C {devices/lab_wire.sym} 755 170 0 1 {name=l5 lab=casc_src_p}
-C {devices/lab_wire.sym} -1180 460 0 1 {name=l6 lab=clk_chfb}
-C {devices/lab_wire.sym} -990 460 0 1 {name=l7 lab=clk_chfb}
-C {devices/lab_wire.sym} 3895 460 0 1 {name=l8 lab=clk_chfb}
-C {devices/lab_wire.sym} 4080 460 0 1 {name=l9 lab=clk_chfb}
-C {devices/lab_wire.sym} -2685 460 0 1 {name=l10 lab=clk_chfb_not}
-C {devices/lab_wire.sym} -2495 460 0 1 {name=l11 lab=clk_chfb_not}
-C {devices/lab_wire.sym} 2390 460 0 1 {name=l12 lab=clk_chfb_not}
-C {devices/lab_wire.sym} 2580 460 0 1 {name=l13 lab=clk_chfb_not}
-C {devices/lab_wire.sym} -1555 460 0 1 {name=l14 lab=clk_chin}
-C {devices/lab_wire.sym} -1370 460 0 1 {name=l15 lab=clk_chin}
-C {devices/lab_wire.sym} 3520 460 0 1 {name=l16 lab=clk_chin}
-C {devices/lab_wire.sym} 3705 460 0 1 {name=l17 lab=clk_chin}
-C {devices/lab_wire.sym} -2310 460 0 1 {name=l18 lab=clk_chin_not}
-C {devices/lab_wire.sym} -2120 460 0 1 {name=l19 lab=clk_chin_not}
-C {devices/lab_wire.sym} 2765 460 0 1 {name=l20 lab=clk_chin_not}
-C {devices/lab_wire.sym} 2955 460 0 1 {name=l21 lab=clk_chin_not}
-C {devices/lab_wire.sym} -15 580 2 0 {name=l22 lab=clk_chout}
-C {devices/lab_wire.sym} 550 580 2 0 {name=l23 lab=clk_chout}
-C {devices/lab_wire.sym} 4835 520 0 0 {name=l24 lab=clk_chout}
-C {devices/lab_wire.sym} 5210 520 0 0 {name=l25 lab=clk_chout}
-C {devices/lab_wire.sym} -3430 520 0 0 {name=l26 lab=clk_chout_not}
-C {devices/lab_wire.sym} 170 580 2 0 {name=l27 lab=clk_chout_not}
-C {devices/lab_wire.sym} 735 580 2 0 {name=l28 lab=clk_chout_not}
-C {devices/lab_wire.sym} 5020 520 0 0 {name=l29 lab=clk_chout_not}
-C {devices/lab_wire.sym} -1930 460 0 1 {name=l30 lab=clk_chpf}
-C {devices/lab_wire.sym} -1745 460 0 1 {name=l31 lab=clk_chpf}
-C {devices/lab_wire.sym} 4270 460 0 1 {name=l32 lab=clk_chpf}
-C {devices/lab_wire.sym} 4460 460 0 1 {name=l33 lab=clk_chpf}
-C {devices/lab_wire.sym} -3060 460 0 1 {name=l34 lab=clk_chpf_not}
-C {devices/lab_wire.sym} -2870 460 0 1 {name=l35 lab=clk_chpf_not}
-C {devices/lab_wire.sym} 3140 460 0 1 {name=l36 lab=clk_chpf_not}
-C {devices/lab_wire.sym} 3330 460 0 1 {name=l37 lab=clk_chpf_not}
-C {devices/lab_wire.sym} -2645 430 0 1 {name=l38 lab=fbch_n}
-C {devices/lab_wire.sym} -1140 430 0 1 {name=l39 lab=fbch_n}
-C {devices/lab_wire.sym} 1105 430 0 1 {name=l40 lab=fbch_n}
-C {devices/lab_wire.sym} 2620 430 0 1 {name=l41 lab=fbch_n}
-C {devices/lab_wire.sym} 4120 430 0 1 {name=l42 lab=fbch_n}
-C {devices/lab_wire.sym} -2455 430 0 1 {name=l43 lab=fbch_p}
-C {devices/lab_wire.sym} -950 430 0 1 {name=l44 lab=fbch_p}
-C {devices/lab_wire.sym} 885 430 0 1 {name=l45 lab=fbch_p}
-C {devices/lab_wire.sym} 2430 430 0 1 {name=l46 lab=fbch_p}
-C {devices/lab_wire.sym} 3935 430 0 1 {name=l47 lab=fbch_p}
-C {devices/lab_wire.sym} 320 610 2 0 {name=l48 lab=fold_n}
-C {devices/lab_wire.sym} 745 690 0 1 {name=l49 lab=fold_n}
-C {devices/lab_wire.sym} 1345 350 2 0 {name=l50 lab=fold_n}
-C {devices/lab_wire.sym} -5 350 2 0 {name=l51 lab=fold_p}
-C {devices/lab_wire.sym} 560 690 0 1 {name=l52 lab=fold_p}
-C {devices/lab_wire.sym} 4685 610 2 0 {name=l53 lab=fold_p}
-C {devices/lab_wire.sym} -3330 610 2 0 {name=l54 lab=g2_n}
-C {devices/lab_wire.sym} 130 610 2 0 {name=l55 lab=g2_n}
-C {devices/lab_wire.sym} 510 610 2 0 {name=l56 lab=g2_n}
-C {devices/lab_wire.sym} 1025 260 0 0 {name=l57 lab=g2_n}
-C {devices/lab_wire.sym} 1765 430 0 1 {name=l58 lab=g2_n}
-C {devices/lab_wire.sym} 5250 610 2 0 {name=l59 lab=g2_n}
-C {devices/lab_wire.sym} -350 430 0 1 {name=l60 lab=g2_p}
-C {devices/lab_wire.sym} -55 610 2 0 {name=l61 lab=g2_p}
-C {devices/lab_wire.sym} 460 260 0 0 {name=l62 lab=g2_p}
-C {devices/lab_wire.sym} 695 610 2 0 {name=l63 lab=g2_p}
-C {devices/lab_wire.sym} 4875 610 2 0 {name=l64 lab=g2_p}
-C {devices/lab_wire.sym} 5060 610 2 0 {name=l65 lab=g2_p}
-C {devices/lab_wire.sym} -2270 610 2 0 {name=l66 lab=inch_n}
-C {devices/lab_wire.sym} -1330 610 2 0 {name=l67 lab=inch_n}
-C {devices/lab_wire.sym} 1325 610 2 0 {name=l68 lab=inch_n}
-C {devices/lab_wire.sym} 1980 610 2 0 {name=l69 lab=inch_n}
-C {devices/lab_wire.sym} 2805 610 2 0 {name=l70 lab=inch_n}
-C {devices/lab_wire.sym} 3745 610 2 0 {name=l71 lab=inch_n}
-C {devices/lab_wire.sym} -2080 610 2 0 {name=l72 lab=inch_p}
-C {devices/lab_wire.sym} -1515 610 2 0 {name=l73 lab=inch_p}
-C {devices/lab_wire.sym} -570 610 2 0 {name=l74 lab=inch_p}
-C {devices/lab_wire.sym} 1545 610 2 0 {name=l75 lab=inch_p}
-C {devices/lab_wire.sym} 2995 610 2 0 {name=l76 lab=inch_p}
-C {devices/lab_wire.sym} 3560 610 2 0 {name=l77 lab=inch_p}
-C {devices/lab_wire.sym} -55 430 0 1 {name=l78 lab=out1_n}
-C {devices/lab_wire.sym} 130 430 0 1 {name=l79 lab=out1_n}
-C {devices/lab_wire.sym} 320 350 2 0 {name=l80 lab=out1_n}
-C {devices/lab_wire.sym} 320 430 0 1 {name=l81 lab=out1_n}
-C {devices/lab_wire.sym} 510 430 0 1 {name=l82 lab=out1_n}
-C {devices/lab_wire.sym} 695 430 0 1 {name=l83 lab=out1_n}
-C {devices/lab_wire.sym} -3330 430 0 1 {name=l84 lab=out1_p}
-C {devices/lab_wire.sym} 755 350 2 0 {name=l85 lab=out1_p}
-C {devices/lab_wire.sym} 4685 430 0 1 {name=l86 lab=out1_p}
-C {devices/lab_wire.sym} -3020 430 0 1 {name=l87 lab=pfch_n}
-C {devices/lab_wire.sym} -1890 430 0 1 {name=l88 lab=pfch_n}
-C {devices/lab_wire.sym} 1980 430 0 1 {name=l89 lab=pfch_n}
-C {devices/lab_wire.sym} 3370 430 0 1 {name=l90 lab=pfch_n}
-C {devices/lab_wire.sym} 4500 430 0 1 {name=l91 lab=pfch_n}
-C {devices/lab_wire.sym} -2830 430 0 1 {name=l92 lab=pfch_p}
-C {devices/lab_wire.sym} -1705 430 0 1 {name=l93 lab=pfch_p}
-C {devices/lab_wire.sym} -570 430 0 1 {name=l94 lab=pfch_p}
-C {devices/lab_wire.sym} 3180 430 0 1 {name=l95 lab=pfch_p}
-C {devices/lab_wire.sym} 4310 430 0 1 {name=l96 lab=pfch_p}
-C {devices/lab_wire.sym} -5 170 0 1 {name=l97 lab=tail}
-C {devices/lab_wire.sym} 560 90 2 0 {name=l98 lab=tail}
-C {devices/lab_wire.sym} 1345 170 0 1 {name=l99 lab=tail}
-C {devices/lab_wire.sym} 460 780 0 0 {name=l100 lab=vb1}
-C {devices/lab_wire.sym} 705 720 0 1 {name=l101 lab=vb1}
-C {devices/lab_wire.sym} 360 580 2 0 {name=l102 lab=vb2}
-C {devices/lab_wire.sym} 4645 460 0 1 {name=l103 lab=vb2}
-C {devices/lab_wire.sym} 420 260 0 1 {name=l104 lab=vb3}
-C {devices/lab_wire.sym} 715 200 0 1 {name=l105 lab=vb3}
-C {devices/lab_wire.sym} -105 0 0 0 {name=l106 lab=vb4}
-C {devices/lab_wire.sym} 420 0 0 1 {name=l107 lab=vb4}
-C {devices/lab_wire.sym} 715 -60 0 1 {name=l108 lab=vb4}
-C {devices/lab_wire.sym} 1025 0 0 0 {name=l109 lab=vb4}
-C {devices/lab_wire.sym} -2080 430 0 1 {name=l110 lab=vinn}
-C {devices/lab_wire.sym} -1330 430 0 1 {name=l111 lab=vinn}
-C {devices/lab_wire.sym} 2805 430 0 1 {name=l112 lab=vinn}
-C {devices/lab_wire.sym} 3560 430 0 1 {name=l113 lab=vinn}
-C {devices/lab_wire.sym} -2270 430 0 1 {name=l114 lab=vinp}
-C {devices/lab_wire.sym} -1515 430 0 1 {name=l115 lab=vinp}
-C {devices/lab_wire.sym} 2995 430 0 1 {name=l116 lab=vinp}
-C {devices/lab_wire.sym} 3745 430 0 1 {name=l117 lab=vinp}
-C {devices/lab_wire.sym} -2830 610 2 0 {name=l118 lab=voutn}
-C {devices/lab_wire.sym} -2455 610 2 0 {name=l119 lab=voutn}
-C {devices/lab_wire.sym} -1890 610 2 0 {name=l120 lab=voutn}
-C {devices/lab_wire.sym} -1140 610 2 0 {name=l121 lab=voutn}
-C {devices/lab_wire.sym} -5 90 2 0 {name=l122 lab=voutn}
-C {devices/lab_wire.sym} 1125 170 0 1 {name=l123 lab=voutn}
-C {devices/lab_wire.sym} 1765 610 2 0 {name=l124 lab=voutn}
-C {devices/lab_wire.sym} 2620 610 2 0 {name=l125 lab=voutn}
-C {devices/lab_wire.sym} 3370 610 2 0 {name=l126 lab=voutn}
-C {devices/lab_wire.sym} 3935 610 2 0 {name=l127 lab=voutn}
-C {devices/lab_wire.sym} 4310 610 2 0 {name=l128 lab=voutn}
-C {devices/lab_wire.sym} -3020 610 2 0 {name=l129 lab=voutp}
-C {devices/lab_wire.sym} -2645 610 2 0 {name=l130 lab=voutp}
-C {devices/lab_wire.sym} -1705 610 2 0 {name=l131 lab=voutp}
-C {devices/lab_wire.sym} -950 610 2 0 {name=l132 lab=voutp}
-C {devices/lab_wire.sym} -350 610 2 0 {name=l133 lab=voutp}
-C {devices/lab_wire.sym} 560 170 0 1 {name=l134 lab=voutp}
-C {devices/lab_wire.sym} 1125 90 2 0 {name=l135 lab=voutp}
-C {devices/lab_wire.sym} 2430 610 2 0 {name=l136 lab=voutp}
-C {devices/lab_wire.sym} 3180 610 2 0 {name=l137 lab=voutp}
-C {devices/lab_wire.sym} 4120 610 2 0 {name=l138 lab=voutp}
-C {devices/lab_wire.sym} 4500 610 2 0 {name=l139 lab=voutp}
-C {devices/lab_wire.sym} -785 610 2 0 {name=l140 lab=vref}
-C {devices/lab_wire.sym} 2200 610 2 0 {name=l141 lab=vref}
-C {devices/lab_wire.sym} -785 430 0 1 {name=l142 lab=vsum_n}
-C {devices/lab_wire.sym} 885 610 2 0 {name=l143 lab=vsum_n}
-C {devices/lab_wire.sym} 1305 200 0 1 {name=l144 lab=vsum_n}
-C {devices/lab_wire.sym} 1325 430 0 1 {name=l145 lab=vsum_n}
-C {devices/lab_wire.sym} -105 260 0 0 {name=l146 lab=vsum_p}
-C {devices/lab_wire.sym} 1105 610 2 0 {name=l147 lab=vsum_p}
-C {devices/lab_wire.sym} 1545 430 0 1 {name=l148 lab=vsum_p}
-C {devices/lab_wire.sym} 2200 430 0 1 {name=l149 lab=vsum_p}
-C {devices/lab_wire.sym} 620 94 2 0 {name=l150 lab=vdd}
-C {devices/lab_wire.sym} 260 354 2 0 {name=l151 lab=vdd}
-C {devices/lab_wire.sym} 815 354 2 0 {name=l152 lab=vdd}
-C {devices/lab_wire.sym} 70 614 2 0 {name=l153 lab=vdd}
-C {devices/lab_wire.sym} 5120 614 2 0 {name=l154 lab=vdd}
-C {devices/lab_wire.sym} 55 354 2 0 {name=l155 lab=vdd}
-C {devices/lab_wire.sym} 2490 614 2 0 {name=l156 lab=vdd}
-C {devices/lab_wire.sym} 2680 614 2 0 {name=l157 lab=vdd}
-C {devices/lab_wire.sym} 2865 614 2 0 {name=l158 lab=vdd}
-C {devices/lab_wire.sym} 3055 614 2 0 {name=l159 lab=vdd}
-C {devices/lab_wire.sym} 3240 614 2 0 {name=l160 lab=vdd}
-C {devices/lab_wire.sym} 1405 354 2 0 {name=l161 lab=vdd}
-C {devices/lab_wire.sym} 3430 614 2 0 {name=l162 lab=vdd}
-C {devices/lab_wire.sym} -115 614 2 0 {name=l163 lab=vdd}
-C {devices/lab_wire.sym} 5310 614 2 0 {name=l164 lab=vdd}
-C {devices/lab_wire.sym} 3620 614 2 0 {name=l165 lab=vdd}
-C {devices/lab_wire.sym} 3805 614 2 0 {name=l166 lab=vdd}
-C {devices/lab_wire.sym} 3995 614 2 0 {name=l167 lab=vdd}
-C {devices/lab_wire.sym} 4180 614 2 0 {name=l168 lab=vdd}
-C {devices/lab_wire.sym} 4370 614 2 0 {name=l169 lab=vdd}
-C {devices/lab_wire.sym} 4560 614 2 0 {name=l170 lab=vdd}
-C {devices/lab_wire.sym} 260 94 2 0 {name=l171 lab=vdd}
-C {devices/lab_wire.sym} 815 94 2 0 {name=l172 lab=vdd}
-C {devices/lab_wire.sym} 1185 94 2 0 {name=l173 lab=vdd}
-C {devices/lab_wire.sym} 55 94 2 0 {name=l174 lab=vdd}
-C {devices/lab_wire.sym} 4745 614 2 0 {name=l175 lab=vss}
-C {devices/lab_wire.sym} 260 614 2 0 {name=l176 lab=vss}
-C {devices/lab_wire.sym} 620 354 2 0 {name=l177 lab=vss}
-C {devices/lab_wire.sym} 1185 354 2 0 {name=l178 lab=vss}
-C {devices/lab_wire.sym} 450 614 2 0 {name=l179 lab=vss}
-C {devices/lab_wire.sym} 4935 614 2 0 {name=l180 lab=vss}
-C {devices/lab_wire.sym} -890 614 2 0 {name=l181 lab=vss}
-C {devices/lab_wire.sym} -1080 614 2 0 {name=l182 lab=vss}
-C {devices/lab_wire.sym} -1270 614 2 0 {name=l183 lab=vss}
-C {devices/lab_wire.sym} -1455 614 2 0 {name=l184 lab=vss}
-C {devices/lab_wire.sym} -1645 614 2 0 {name=l185 lab=vss}
-C {devices/lab_wire.sym} -1830 614 2 0 {name=l186 lab=vss}
-C {devices/lab_wire.sym} 635 614 2 0 {name=l187 lab=vss}
-C {devices/lab_wire.sym} -3270 614 2 0 {name=l188 lab=vss}
-C {devices/lab_wire.sym} -2020 614 2 0 {name=l189 lab=vss}
-C {devices/lab_wire.sym} -2210 614 2 0 {name=l190 lab=vss}
-C {devices/lab_wire.sym} 620 874 2 0 {name=l191 lab=vss}
-C {devices/lab_wire.sym} -2395 614 2 0 {name=l192 lab=vss}
-C {devices/lab_wire.sym} -2585 614 2 0 {name=l193 lab=vss}
-C {devices/lab_wire.sym} -2770 614 2 0 {name=l194 lab=vss}
-C {devices/lab_wire.sym} -2960 614 2 0 {name=l195 lab=vss}
-C {devices/lab_wire.sym} 805 874 2 0 {name=l196 lab=vss}
-C {devices/lab_wire.sym} -3690 690 0 1 {name=l197 lab=vb1}
-C {devices/lab_wire.sym} -3690 870 2 0 {name=l198 lab=vss}
-C {devices/lab_wire.sym} -3690 610 2 0 {name=l199 lab=vss}
-C {devices/lab_wire.sym} -3690 350 2 0 {name=l200 lab=vss}
-C {devices/lab_wire.sym} -3690 90 2 0 {name=l201 lab=vss}
-C {devices/lab_wire.sym} -3690 430 0 1 {name=l202 lab=vb2}
-C {devices/lab_wire.sym} -3690 170 0 1 {name=l203 lab=vb3}
-C {devices/lab_wire.sym} -3690 -90 0 1 {name=l204 lab=vb4}
-C {devices/lab_wire.sym} 560 350 2 0 {name=l205 lab=vss}
-C {devices/ipin.sym} -3890 520 0 0 {name=p0 lab=clk_chout_not}
-C {devices/ipin.sym} -3890 640 0 0 {name=p1 lab=clk_chpf_not}
-C {devices/ipin.sym} -3890 760 0 0 {name=p2 lab=clk_chfb_not}
-C {devices/ipin.sym} -3890 880 0 0 {name=p3 lab=clk_chin_not}
-C {devices/ipin.sym} -3890 1000 0 0 {name=p4 lab=clk_chpf}
-C {devices/ipin.sym} -3890 1120 0 0 {name=p5 lab=clk_chin}
-C {devices/ipin.sym} -3890 1240 0 0 {name=p6 lab=clk_chfb}
-C {devices/ipin.sym} -3890 1360 0 0 {name=p7 lab=clk_chout}
-C {devices/iopin.sym} -785 1060 0 0 {name=p8 lab=vref}
-C {devices/opin.sym} 5585 30 0 0 {name=p9 lab=voutn}
-C {devices/opin.sym} 5585 150 0 0 {name=p10 lab=voutp}
-C {devices/opin.sym} 5585 490 0 0 {name=p11 lab=vinp}
-C {devices/opin.sym} 5585 610 0 0 {name=p12 lab=vinn}
+N -1795 520 -1705 520 {}
+N -1665 520 -1605 520 {}
+N -1540 520 -1480 520 {}
+N -1440 520 -1380 520 {}
+N -1340 520 -1250 520 {}
+N -1210 520 -1150 520 {}
+N -1085 520 -1025 520 {}
+N -985 520 -925 520 {}
+N -890 520 -800 520 {}
+N -760 520 -700 520 {}
+N -635 520 -575 520 {}
+N -535 520 -475 520 {}
+N 490 520 550 520 {}
+N 590 520 620 520 {}
+N 720 520 780 520 {}
+N 820 520 880 520 {}
+N 945 520 1005 520 {}
+N 1045 520 1105 520 {}
+N 1170 520 1230 520 {}
+N 1270 520 1330 520 {}
+N 1395 520 1455 520 {}
+N 1495 520 1525 520 {}
+N 3355 520 3415 520 {}
+N 3455 520 3515 520 {}
+N 3580 520 3640 520 {}
+N 3680 520 3740 520 {}
+N 3810 520 3870 520 {}
+N 3910 520 3970 520 {}
+N 4035 520 4095 520 {}
+N 4135 520 4195 520 {}
+N 4260 520 4320 520 {}
+N 4360 520 4420 520 {}
+N 4485 520 4545 520 {}
+N 4585 520 4645 520 {}
+N 4710 520 4770 520 {}
+N 4810 520 4870 520 {}
+N 4940 520 5000 520 {}
+N 5040 520 5100 520 {}
+N 5165 520 5225 520 {}
+N 5265 520 5325 520 {}
+N 5390 520 5450 520 {}
+N 5490 520 5550 520 {}
+N 5615 520 5675 520 {}
+N 5715 520 5775 520 {}
+N 5840 520 5900 520 {}
+N 5940 520 6000 520 {}
+N 6070 520 6130 520 {}
+N 6170 520 6230 520 {}
+N 6295 520 6355 520 {}
+N 6395 520 6455 520 {}
+N 6520 520 6580 520 {}
+N 6620 520 6680 520 {}
+N 6745 520 6805 520 {}
+N 6845 520 6905 520 {}
+N 1210 610 1455 610 {}
+N 1180 780 1240 780 {}
+N 1280 780 1340 780 {}
+N 1435 780 1465 780 {}
+N 1505 780 1565 780 {}
+N 1210 840 1435 840 {}
+N -3750 920 7325 920 {}
+C {devices/lab_wire.sym} 1005 90 2 0 {name=l0 lab=casc_src_n}
+C {devices/lab_wire.sym} 1515 90 2 0 {name=l1 lab=casc_src_p}
+C {devices/lab_wire.sym} 1515 170 0 1 {name=l2 lab=casc_src_p}
+C {devices/lab_wire.sym} -635 520 0 0 {name=l3 lab=clk_chfb}
+C {devices/lab_wire.sym} 5165 520 0 0 {name=l4 lab=clk_chfb}
+C {devices/lab_wire.sym} 5390 520 0 0 {name=l5 lab=clk_chfb}
+C {devices/lab_wire.sym} -2440 520 0 0 {name=l6 lab=clk_chfb_not}
+C {devices/lab_wire.sym} 3355 520 0 0 {name=l7 lab=clk_chfb_not}
+C {devices/lab_wire.sym} 3580 520 0 0 {name=l8 lab=clk_chfb_not}
+C {devices/lab_wire.sym} -1085 520 0 0 {name=l9 lab=clk_chin}
+C {devices/lab_wire.sym} 4710 520 0 0 {name=l10 lab=clk_chin}
+C {devices/lab_wire.sym} 4940 520 0 0 {name=l11 lab=clk_chin}
+C {devices/lab_wire.sym} -1990 520 0 0 {name=l12 lab=clk_chin_not}
+C {devices/lab_wire.sym} 3810 520 0 0 {name=l13 lab=clk_chin_not}
+C {devices/lab_wire.sym} 4035 520 0 0 {name=l14 lab=clk_chin_not}
+C {devices/lab_wire.sym} 1330 520 0 1 {name=l15 lab=clk_chout}
+C {devices/lab_wire.sym} 6295 520 0 0 {name=l16 lab=clk_chout}
+C {devices/lab_wire.sym} 6745 520 0 0 {name=l17 lab=clk_chout}
+C {devices/lab_wire.sym} 880 520 0 1 {name=l18 lab=clk_chout_not}
+C {devices/lab_wire.sym} 1495 580 2 0 {name=l19 lab=clk_chout_not}
+C {devices/lab_wire.sym} 6520 520 0 0 {name=l20 lab=clk_chout_not}
+C {devices/lab_wire.sym} -1540 520 0 0 {name=l21 lab=clk_chpf}
+C {devices/lab_wire.sym} 5615 520 0 0 {name=l22 lab=clk_chpf}
+C {devices/lab_wire.sym} 5840 520 0 0 {name=l23 lab=clk_chpf}
+C {devices/lab_wire.sym} -2895 520 0 0 {name=l24 lab=clk_chpf_not}
+C {devices/lab_wire.sym} 4260 520 0 0 {name=l25 lab=clk_chpf_not}
+C {devices/lab_wire.sym} 4485 520 0 0 {name=l26 lab=clk_chpf_not}
+C {devices/lab_wire.sym} -2570 430 0 1 {name=l27 lab=fbch_n}
+C {devices/lab_wire.sym} -760 430 0 1 {name=l28 lab=fbch_n}
+C {devices/lab_wire.sym} 1905 490 0 0 {name=l29 lab=fbch_n}
+C {devices/lab_wire.sym} 3680 430 0 1 {name=l30 lab=fbch_n}
+C {devices/lab_wire.sym} 5490 430 0 1 {name=l31 lab=fbch_n}
+C {devices/lab_wire.sym} -2340 430 0 1 {name=l32 lab=fbch_p}
+C {devices/lab_wire.sym} -535 430 0 1 {name=l33 lab=fbch_p}
+C {devices/lab_wire.sym} 1645 430 0 1 {name=l34 lab=fbch_p}
+C {devices/lab_wire.sym} 5265 430 0 1 {name=l35 lab=fbch_p}
+C {devices/lab_wire.sym} 1005 610 2 0 {name=l36 lab=fold_n}
+C {devices/lab_wire.sym} 1505 690 0 1 {name=l37 lab=fold_n}
+C {devices/lab_wire.sym} 2180 350 2 0 {name=l38 lab=fold_n}
+C {devices/lab_wire.sym} 600 350 2 0 {name=l39 lab=fold_p}
+C {devices/lab_wire.sym} 1280 690 0 1 {name=l40 lab=fold_p}
+C {devices/lab_wire.sym} 6170 610 2 0 {name=l41 lab=fold_p}
+C {devices/lab_wire.sym} -3330 610 2 0 {name=l42 lab=g2_n}
+C {devices/lab_wire.sym} 780 610 2 0 {name=l43 lab=g2_n}
+C {devices/lab_wire.sym} 1230 550 0 0 {name=l44 lab=g2_n}
+C {devices/lab_wire.sym} 1825 260 0 0 {name=l45 lab=g2_n}
+C {devices/lab_wire.sym} 2680 490 0 0 {name=l46 lab=g2_n}
+C {devices/lab_wire.sym} 6845 610 2 0 {name=l47 lab=g2_n}
+C {devices/lab_wire.sym} 180 430 0 1 {name=l48 lab=g2_p}
+C {devices/lab_wire.sym} 550 610 2 0 {name=l49 lab=g2_p}
+C {devices/lab_wire.sym} 1180 260 0 0 {name=l50 lab=g2_p}
+C {devices/lab_wire.sym} 6395 610 2 0 {name=l51 lab=g2_p}
+C {devices/lab_wire.sym} 6620 610 2 0 {name=l52 lab=g2_p}
+C {devices/lab_wire.sym} -2115 610 2 0 {name=l53 lab=inch_n}
+C {devices/lab_wire.sym} -985 610 2 0 {name=l54 lab=inch_n}
+C {devices/lab_wire.sym} 2160 610 2 0 {name=l55 lab=inch_n}
+C {devices/lab_wire.sym} 2930 610 2 0 {name=l56 lab=inch_n}
+C {devices/lab_wire.sym} 3910 610 2 0 {name=l57 lab=inch_n}
+C {devices/lab_wire.sym} 5040 610 2 0 {name=l58 lab=inch_n}
+C {devices/lab_wire.sym} -1890 610 2 0 {name=l59 lab=inch_p}
+C {devices/lab_wire.sym} -1210 610 2 0 {name=l60 lab=inch_p}
+C {devices/lab_wire.sym} -80 610 2 0 {name=l61 lab=inch_p}
+C {devices/lab_wire.sym} 2420 610 2 0 {name=l62 lab=inch_p}
+C {devices/lab_wire.sym} 4135 610 2 0 {name=l63 lab=inch_p}
+C {devices/lab_wire.sym} 4810 610 2 0 {name=l64 lab=inch_p}
+C {devices/lab_wire.sym} 550 430 0 1 {name=l65 lab=out1_n}
+C {devices/lab_wire.sym} 780 430 0 1 {name=l66 lab=out1_n}
+C {devices/lab_wire.sym} 1005 350 2 0 {name=l67 lab=out1_n}
+C {devices/lab_wire.sym} 1005 430 0 1 {name=l68 lab=out1_n}
+C {devices/lab_wire.sym} 1230 430 0 1 {name=l69 lab=out1_n}
+C {devices/lab_wire.sym} 1515 350 2 0 {name=l70 lab=out1_p}
+C {devices/lab_wire.sym} -3020 430 0 1 {name=l71 lab=pfch_n}
+C {devices/lab_wire.sym} -1665 430 0 1 {name=l72 lab=pfch_n}
+C {devices/lab_wire.sym} 2930 490 0 0 {name=l73 lab=pfch_n}
+C {devices/lab_wire.sym} 4585 430 0 1 {name=l74 lab=pfch_n}
+C {devices/lab_wire.sym} 5940 430 0 1 {name=l75 lab=pfch_n}
+C {devices/lab_wire.sym} -2795 430 0 1 {name=l76 lab=pfch_p}
+C {devices/lab_wire.sym} -1440 430 0 1 {name=l77 lab=pfch_p}
+C {devices/lab_wire.sym} -80 430 0 1 {name=l78 lab=pfch_p}
+C {devices/lab_wire.sym} 4360 430 0 1 {name=l79 lab=pfch_p}
+C {devices/lab_wire.sym} 5715 430 0 1 {name=l80 lab=pfch_p}
+C {devices/lab_wire.sym} 1280 90 2 0 {name=l81 lab=tail}
+C {devices/lab_wire.sym} 1180 780 0 0 {name=l82 lab=vb1}
+C {devices/lab_wire.sym} 1105 520 0 1 {name=l83 lab=vb2}
+C {devices/lab_wire.sym} 6070 520 0 0 {name=l84 lab=vb2}
+C {devices/lab_wire.sym} 1105 260 0 1 {name=l85 lab=vb3}
+C {devices/lab_wire.sym} 1415 260 0 0 {name=l86 lab=vb3}
+C {devices/lab_wire.sym} 500 0 0 0 {name=l87 lab=vb4}
+C {devices/lab_wire.sym} 1825 0 0 0 {name=l88 lab=vb4}
+C {devices/lab_wire.sym} -1890 430 0 1 {name=l89 lab=vinn}
+C {devices/lab_wire.sym} -985 430 0 1 {name=l90 lab=vinn}
+C {devices/lab_wire.sym} 3910 430 0 1 {name=l91 lab=vinn}
+C {devices/lab_wire.sym} 4810 430 0 1 {name=l92 lab=vinn}
+C {devices/lab_wire.sym} -2115 430 0 1 {name=l93 lab=vinp}
+C {devices/lab_wire.sym} -1210 430 0 1 {name=l94 lab=vinp}
+C {devices/lab_wire.sym} 4135 430 0 1 {name=l95 lab=vinp}
+C {devices/lab_wire.sym} 5040 430 0 1 {name=l96 lab=vinp}
+C {devices/lab_wire.sym} -2795 610 2 0 {name=l97 lab=voutn}
+C {devices/lab_wire.sym} -2340 610 2 0 {name=l98 lab=voutn}
+C {devices/lab_wire.sym} -1665 610 2 0 {name=l99 lab=voutn}
+C {devices/lab_wire.sym} -760 610 2 0 {name=l100 lab=voutn}
+C {devices/lab_wire.sym} 1925 170 0 1 {name=l101 lab=voutn}
+C {devices/lab_wire.sym} 2680 610 2 0 {name=l102 lab=voutn}
+C {devices/lab_wire.sym} 3680 610 2 0 {name=l103 lab=voutn}
+C {devices/lab_wire.sym} 4585 610 2 0 {name=l104 lab=voutn}
+C {devices/lab_wire.sym} 5265 610 2 0 {name=l105 lab=voutn}
+C {devices/lab_wire.sym} 5715 610 2 0 {name=l106 lab=voutn}
+C {devices/lab_wire.sym} -3020 610 2 0 {name=l107 lab=voutp}
+C {devices/lab_wire.sym} -2570 610 2 0 {name=l108 lab=voutp}
+C {devices/lab_wire.sym} -1440 610 2 0 {name=l109 lab=voutp}
+C {devices/lab_wire.sym} -535 610 2 0 {name=l110 lab=voutp}
+C {devices/lab_wire.sym} 180 610 2 0 {name=l111 lab=voutp}
+C {devices/lab_wire.sym} 1280 170 0 1 {name=l112 lab=voutp}
+C {devices/lab_wire.sym} 1925 90 2 0 {name=l113 lab=voutp}
+C {devices/lab_wire.sym} 3455 610 2 0 {name=l114 lab=voutp}
+C {devices/lab_wire.sym} 4360 610 2 0 {name=l115 lab=voutp}
+C {devices/lab_wire.sym} 5490 610 2 0 {name=l116 lab=voutp}
+C {devices/lab_wire.sym} 5940 610 2 0 {name=l117 lab=voutp}
+C {devices/lab_wire.sym} -330 610 2 0 {name=l118 lab=vref}
+C {devices/lab_wire.sym} 3185 610 2 0 {name=l119 lab=vref}
+C {devices/lab_wire.sym} -330 430 0 1 {name=l120 lab=vsum_n}
+C {devices/lab_wire.sym} 1645 610 2 0 {name=l121 lab=vsum_n}
+C {devices/lab_wire.sym} 2080 260 0 0 {name=l122 lab=vsum_n}
+C {devices/lab_wire.sym} 2160 490 0 0 {name=l123 lab=vsum_n}
+C {devices/lab_wire.sym} 500 260 0 0 {name=l124 lab=vsum_p}
+C {devices/lab_wire.sym} 1905 610 2 0 {name=l125 lab=vsum_p}
+C {devices/lab_wire.sym} 2420 490 0 0 {name=l126 lab=vsum_p}
+C {devices/lab_wire.sym} 3185 490 0 0 {name=l127 lab=vsum_p}
+C {devices/lab_wire.sym} 1280 0 0 0 {name=l128 lab=vdd}
+C {devices/lab_wire.sym} 945 354 2 0 {name=l129 lab=vdd}
+C {devices/lab_wire.sym} 1515 260 0 0 {name=l130 lab=vdd}
+C {devices/lab_wire.sym} 720 614 2 0 {name=l131 lab=vdd}
+C {devices/lab_wire.sym} 6680 614 2 0 {name=l132 lab=vdd}
+C {devices/lab_wire.sym} 660 354 2 0 {name=l133 lab=vdd}
+C {devices/lab_wire.sym} 3515 614 2 0 {name=l134 lab=vdd}
+C {devices/lab_wire.sym} 3740 614 2 0 {name=l135 lab=vdd}
+C {devices/lab_wire.sym} 3970 614 2 0 {name=l136 lab=vdd}
+C {devices/lab_wire.sym} 4195 614 2 0 {name=l137 lab=vdd}
+C {devices/lab_wire.sym} 4420 614 2 0 {name=l138 lab=vdd}
+C {devices/lab_wire.sym} 2240 354 2 0 {name=l139 lab=vdd}
+C {devices/lab_wire.sym} 4645 614 2 0 {name=l140 lab=vdd}
+C {devices/lab_wire.sym} 490 614 2 0 {name=l141 lab=vdd}
+C {devices/lab_wire.sym} 6905 614 2 0 {name=l142 lab=vdd}
+C {devices/lab_wire.sym} 4870 614 2 0 {name=l143 lab=vdd}
+C {devices/lab_wire.sym} 5100 614 2 0 {name=l144 lab=vdd}
+C {devices/lab_wire.sym} 5325 614 2 0 {name=l145 lab=vdd}
+C {devices/lab_wire.sym} 5550 614 2 0 {name=l146 lab=vdd}
+C {devices/lab_wire.sym} 5775 614 2 0 {name=l147 lab=vdd}
+C {devices/lab_wire.sym} 6000 614 2 0 {name=l148 lab=vdd}
+C {devices/lab_wire.sym} 945 94 2 0 {name=l149 lab=vdd}
+C {devices/lab_wire.sym} 1575 94 2 0 {name=l150 lab=vdd}
+C {devices/lab_wire.sym} 1985 94 2 0 {name=l151 lab=vdd}
+C {devices/lab_wire.sym} 660 94 2 0 {name=l152 lab=vdd}
+C {devices/lab_wire.sym} 6230 614 2 0 {name=l153 lab=vss}
+C {devices/lab_wire.sym} 945 614 2 0 {name=l154 lab=vss}
+C {devices/lab_wire.sym} 1340 354 2 0 {name=l155 lab=vss}
+C {devices/lab_wire.sym} 1985 354 2 0 {name=l156 lab=vss}
+C {devices/lab_wire.sym} 1170 614 2 0 {name=l157 lab=vss}
+C {devices/lab_wire.sym} 6455 614 2 0 {name=l158 lab=vss}
+C {devices/lab_wire.sym} -475 614 2 0 {name=l159 lab=vss}
+C {devices/lab_wire.sym} -700 614 2 0 {name=l160 lab=vss}
+C {devices/lab_wire.sym} -925 614 2 0 {name=l161 lab=vss}
+C {devices/lab_wire.sym} -1150 614 2 0 {name=l162 lab=vss}
+C {devices/lab_wire.sym} -1380 614 2 0 {name=l163 lab=vss}
+C {devices/lab_wire.sym} -1605 614 2 0 {name=l164 lab=vss}
+C {devices/lab_wire.sym} 1395 614 2 0 {name=l165 lab=vss}
+C {devices/lab_wire.sym} -3270 614 2 0 {name=l166 lab=vss}
+C {devices/lab_wire.sym} -1830 614 2 0 {name=l167 lab=vss}
+C {devices/lab_wire.sym} -2055 614 2 0 {name=l168 lab=vss}
+C {devices/lab_wire.sym} 1340 874 2 0 {name=l169 lab=vss}
+C {devices/lab_wire.sym} -2280 614 2 0 {name=l170 lab=vss}
+C {devices/lab_wire.sym} -2510 614 2 0 {name=l171 lab=vss}
+C {devices/lab_wire.sym} -2735 614 2 0 {name=l172 lab=vss}
+C {devices/lab_wire.sym} -2960 614 2 0 {name=l173 lab=vss}
+C {devices/lab_wire.sym} 1565 874 2 0 {name=l174 lab=vss}
+C {devices/lab_wire.sym} -3690 690 0 1 {name=l175 lab=vb1}
+C {devices/lab_wire.sym} -3690 870 2 0 {name=l176 lab=vss}
+C {devices/lab_wire.sym} -3690 610 2 0 {name=l177 lab=vss}
+C {devices/lab_wire.sym} -3690 350 2 0 {name=l178 lab=vss}
+C {devices/lab_wire.sym} -3690 90 2 0 {name=l179 lab=vss}
+C {devices/lab_wire.sym} -3690 430 0 1 {name=l180 lab=vb2}
+C {devices/lab_wire.sym} -3690 170 0 1 {name=l181 lab=vb3}
+C {devices/lab_wire.sym} -3690 -90 0 1 {name=l182 lab=vb4}
+C {devices/lab_wire.sym} 1280 350 2 0 {name=l183 lab=vss}
+C {devices/ipin.sym} -3460 520 0 0 {name=p0 lab=clk_chout_not}
+C {devices/ipin.sym} -3150 520 0 0 {name=p1 lab=clk_chpf_not}
+C {devices/ipin.sym} -2700 520 0 0 {name=p2 lab=clk_chfb_not}
+C {devices/ipin.sym} -2245 520 0 0 {name=p3 lab=clk_chin_not}
+C {devices/ipin.sym} -1795 520 0 0 {name=p4 lab=clk_chpf}
+C {devices/ipin.sym} -1340 520 0 0 {name=p5 lab=clk_chin}
+C {devices/ipin.sym} -890 520 0 0 {name=p6 lab=clk_chfb}
+C {devices/ipin.sym} 620 520 0 0 {name=p7 lab=clk_chout}
+C {devices/iopin.sym} -3750 -140 0 0 {name=p8 lab=vdd}
+C {devices/iopin.sym} -3750 920 0 0 {name=p9 lab=vss}
+C {devices/opin.sym} 600 60 0 0 {name=p10 lab=voutn}
+C {devices/iopin.sym} -330 1060 0 0 {name=p11 lab=vref}
+C {devices/opin.sym} 7465 30 0 0 {name=p12 lab=voutp}
+C {devices/opin.sym} 7465 490 0 0 {name=p13 lab=vinp}
+C {devices/opin.sym} 7465 610 0 0 {name=p14 lab=vinn}

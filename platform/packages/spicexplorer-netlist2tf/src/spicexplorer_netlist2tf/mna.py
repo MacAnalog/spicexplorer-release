@@ -17,10 +17,16 @@ Two physical conventions are baked in here (decided once at ingestion, plan §4)
 from __future__ import annotations
 
 import logging
+import random
+from collections.abc import Collection
+from dataclasses import replace
 from typing import cast
 
 import sympy as sp
+from sympy.polys.domains import QQ
+from sympy.polys.matrices import DomainMatrix
 
+from .ingest import _as_number
 from .model.ir import GROUND_NAMES, PortPair
 from .model.primitives import (
     VCCS,
@@ -37,7 +43,9 @@ from .tf import S, canonical_tf, cramer_numerator, determinant
 logger = logging.getLogger(__name__)
 
 __all__ = [
+    "SingularSystemError",
     "build_system",
+    "check_solvable",
     "detect_ac_input",
     "extract_tf",
     "driving_point_impedance",
@@ -73,13 +81,29 @@ class _DSU:
 
 
 def _apply_subs(expr: sp.Expr, subs: dict[str, float]) -> sp.Expr:
-    """Substitute numeric values by *name* (assumption-insensitive) for selective numericization."""
+    """Substitute numeric values by *name* (assumption-insensitive) for selective numericization.
+
+    Each value goes in as an exact ``Rational`` (the ingestion rule, :func:`.ingest._as_number`),
+    never a ``Float``: the determinant and ``cancel`` run after this, and with ``Float`` entries
+    their round-off gave a passive RC ladder a degree-3 numerator and right-half-plane zeros.
+    """
     if not subs:
         return expr
     repl: dict[sp.Basic, sp.Basic] = {
-        sym: sp.Float(subs[str(sym)]) for sym in expr.free_symbols if str(sym) in subs
+        sym: _as_number(float(subs[str(sym)])) for sym in expr.free_symbols if str(sym) in subs
     }
     return expr.xreplace(repl) if repl else expr
+
+
+def _match_net(net: str, known: Collection[str]) -> str:
+    """``net`` as the circuit spells it. SPICE net names are case-insensitive: an exact match wins,
+    then the one known net equal to it ignoring case. Otherwise ``net`` comes back unchanged for
+    the caller's own not-found check; two known nets that differ only in case (possible in an IR
+    built by hand) are not guessed between."""
+    if net in known:
+        return net
+    folded = [k for k in known if k.lower() == net.lower()]
+    return folded[0] if len(folded) == 1 else net
 
 
 def _is_ac_ground(ssir: SmallSignalIR, net: str) -> bool:
@@ -90,22 +114,43 @@ def _is_ac_ground(ssir: SmallSignalIR, net: str) -> bool:
 
 
 def detect_ac_input(ssir: SmallSignalIR) -> tuple[str, str]:
-    """The netlist's own AC stimulus as an input port: the unique V source with ``ac != 0``.
+    """The netlist's own AC stimulus as an input port.
 
-    This is the stimulus-overlay base case — a *testbench-level* netlist (``Vin in 0 dc VCM ac 1``)
-    names its own input, so the caller doesn't have to. Raises ``ValueError`` when the netlist has
-    no AC source, more than one, or only an AC *current* source (drive that port explicitly, or via
+    This is the stimulus-overlay base case — a *testbench-level* netlist names its own input, so
+    the caller doesn't have to. Two shapes are recognised:
+
+    * the unique V source with ``ac != 0`` (``Vin in 0 dc VCM ac 1``) → ``(np, nn)``;
+    * a differential pair: exactly two AC V sources whose ``ac`` values are ``+a`` and ``−a`` and
+      whose negative nodes are the same net (``Vinp vinp vcm ac 0.5`` / ``Vinn vinn vcm ac -0.5``)
+      → ``(np of +a, np of −a)``. The DM drive of :func:`extract_tf` (``±½``) is that stimulus
+      scaled to a unit difference.
+
+    Raises ``ValueError`` in every other case: no AC source, more than one that is not such a
+    pair, or an AC *current* source (drive that port explicitly, or via
     :func:`driving_point_impedance`, instead).
     """
     v_ac = [p for p in ssir.primitives if isinstance(p, IndependentV) and p.ac != 0]
     i_ac = [p for p in ssir.primitives if isinstance(p, IndependentI) and p.ac != 0]
     if len(v_ac) == 1 and not i_ac:
         return (v_ac[0].np, v_ac[0].nn)
+    if len(v_ac) == 2 and not i_ac:
+        a, b = v_ac
+        if a.nn == b.nn and sp.simplify(a.ac + b.ac) == 0:
+            pos, neg = (a, b) if _is_positive(a.ac) else (b, a)
+            return (pos.np, neg.np)
     found = ", ".join(p.name for p in (*v_ac, *i_ac)) or "none"
     raise ValueError(
         f"cannot auto-detect the input port: expected exactly one AC voltage source in the "
         f"netlist, found {found}. Pass input=(pos, neg) explicitly."
     )
+
+
+def _is_positive(value: sp.Expr) -> bool:
+    """Whether an ``ac`` magnitude is the ``+a`` half of a pair: a positive number, or a
+    symbolic ``a`` written without a leading minus sign."""
+    if value.is_number:
+        return bool(value > 0)
+    return not value.could_extract_minus_sign()
 
 
 # ------------------------------------------------------------------------
@@ -134,14 +179,16 @@ def build_system(
     analyzed with all excitations off.
     """
     subs = subs or {}
-    extra = extra_grounds or set()
-    excl = exclude_grounds or set()
+    known: set[str] = set(ssir.nets)
+    for p in ssir.primitives:
+        known.update(p.nets)
+    # the caller's net names, matched case-insensitively like every port name
+    extra = {_match_net(n, known) for n in extra_grounds or ()}
+    excl = {_match_net(n, known) for n in exclude_grounds or ()}
     dsu = _DSU()
 
     # All nets a primitive or the SSIR knows about (deterministic order).
-    all_nets: set[str] = set(ssir.nets) | set(extra)
-    for p in ssir.primitives:
-        all_nets.update(p.nets)
+    all_nets: set[str] = known | extra
     for net in sorted(all_nets):
         dsu.find(net)
 
@@ -210,9 +257,11 @@ def build_system(
         _parent=dict(dsu.parent),
         ground_rep=ground_rep,
         name=ssir.name,
+        ground=ssir.ground,
         ports=dict(ssir.ports),
         params=dict(ssir.params),
         free_symbols=free,
+        unmodelled=tuple(ssir.unmodelled),
     )
 
 
@@ -232,16 +281,41 @@ def _stamp_vccs(Y: sp.Matrix, row, p: VCCS, subs: dict[str, float]) -> None:  # 
 # ------------------------------------------------------------------------
 # Extract
 # ------------------------------------------------------------------------
-def _as_pair(port: object, system: MnaSystem) -> PortPair:
+def _as_pair(port: object, system: MnaSystem, role: str = "port") -> PortPair:
     if isinstance(port, PortPair):
-        return port
-    if isinstance(port, str):
-        if port in system.ports:
-            return system.ports[port]
-        raise KeyError(f"unknown named port {port!r}; known: {sorted(system.ports)}")
-    if isinstance(port, (tuple, list)) and len(port) == 2:
-        return PortPair(str(port[0]), str(port[1]))
-    raise TypeError(f"port must be a name, (pos, neg) pair, or PortPair; got {port!r}")
+        pair = port
+    elif isinstance(port, str):
+        if port not in system.ports:
+            raise KeyError(f"unknown named port {port!r}; known: {sorted(system.ports)}")
+        pair = system.ports[port]
+    elif isinstance(port, (tuple, list)) and len(port) == 2:
+        pair = PortPair(str(port[0]), str(port[1]))
+    else:
+        raise TypeError(f"port must be a name, (pos, neg) pair, or PortPair; got {port!r}")
+    # SPICE net names are case-insensitive: ("OUT", "0") and ("out", "0") name the same port
+    known = {*system._parent, system.ground, system.ground_rep}
+    pair = PortPair(_match_net(pair.pos, known), _match_net(pair.neg, known))
+    _check_known(system, pair, role)
+    return pair
+
+
+def _check_known(system: MnaSystem, pair: PortPair, role: str) -> None:
+    """Raise on a net the system has never seen. ``row_of`` reads any unknown name as AC ground, so
+    a typo'd output net gave ``H(s) = 0`` and a typo'd ``in+`` flipped the sign (audit LEAF-F05).
+    A reference name (``0``/``gnd``…), and the ground the circuit declares, are ground whether or
+    not the netlist spells them."""
+    known = system._parent  # every net build_system registered (the union-find's domain)
+    for net in (pair.pos, pair.neg):
+        if (
+            net in known
+            or net == system.ground_rep
+            or net == system.ground
+            or net.lower() in GROUND_NAMES
+        ):
+            continue
+        nets = sorted(known)
+        shown = ", ".join(nets[:20]) + (f", … ({len(nets)} nets)" if len(nets) > 20 else "")
+        raise ValueError(f"{role} net {net!r} is not in the circuit; known nets: {shown}")
 
 
 def _augment(system: MnaSystem, inp: PortPair, drive: str) -> tuple[sp.Matrix, sp.Matrix]:
@@ -283,6 +357,94 @@ def _augment(system: MnaSystem, inp: PortPair, drive: str) -> tuple[sp.Matrix, s
     return A, rhs
 
 
+class SingularSystemError(ValueError):
+    """The driven MNA system has no unique solution; ``nets`` names the nets where it fails."""
+
+    def __init__(self, message: str, nets: tuple[str, ...]) -> None:
+        super().__init__(message)
+        self.nets = nets
+
+
+def _rational_instance(A: sp.Matrix, rng: random.Random) -> DomainMatrix | None:
+    """``A`` over the rationals with every symbol, ``s`` included, set to a random positive
+    rational; ``None`` when an entry is then not a rational number (an irrational function of a
+    symbol, or a division by zero)."""
+    values = {
+        x: sp.Rational(rng.randint(1, 2**31), rng.randint(1, 2**31))
+        for x in sorted(A.free_symbols, key=sp.srepr)
+    }
+    M = A.xreplace(values).applyfunc(lambda e: sp.Rational(e) if e.is_Float else e)
+    if not all(e.is_Rational for e in M):
+        return None
+    return DomainMatrix.from_Matrix(M).convert_to(QQ)
+
+
+def _check_augmented(system: MnaSystem, A: sp.Matrix) -> None:
+    """Raise :class:`SingularSystemError` when ``det(A)`` is identically zero, naming the nets.
+
+    The rank is exact, over the rationals, at random values of the symbols and ``s`` (fixed seed):
+    full rank at one point proves ``det(A) ≢ 0``, and a singular verdict must hold at two points,
+    which a nonzero determinant of degree d meets with probability below (d/2³¹)². When an entry
+    is not rational at the point, nothing is decided here and the symbolic determinant decides.
+    """
+    rng = random.Random(0)
+    M: DomainMatrix | None = None
+    for _ in range(2):
+        M = _rational_instance(A, rng)
+        if M is None or M.rank() == A.shape[0]:
+            return
+    assert M is not None
+    dense = M.to_Matrix()
+    name = {i: rep for rep, i in system.index.items()}  # source-branch unknowns have no net
+
+    def nets(idx: Collection[int]) -> list[str]:
+        return sorted(name[i] for i in idx if i in name)
+
+    def shown(found: list[str]) -> str:
+        return ", ".join(found[:10]) + (f", … ({len(found)} nets)" if len(found) > 10 else "")
+
+    n = A.shape[0]
+    rows = nets([i for i in range(n) if all(e == 0 for e in dense.row(i))])
+    cols = nets([j for j in range(n) if all(e == 0 for e in dense.col(j))])
+    why: list[str] = []
+    if cols:
+        why.append(
+            f"no current depends on the voltage of net(s) {shown(cols)}, so it is not determined "
+            "(a net met only by MOS drains is one at Fidelity.IDEAL, which leaves out ro)"
+        )
+    if rows:
+        why.append(
+            f"no element carries current into net(s) {shown(rows)} (a net met only by MOS gates "
+            "is one below Fidelity.FULL, which adds the gate capacitances)"
+        )
+    found = sorted({*cols, *rows})
+    if not found:
+        null = M.nullspace().to_Matrix()
+        found = nets({j for i in range(null.rows) for j in range(null.cols) if null[i, j] != 0})
+        why.append(f"the voltages of net(s) {shown(found)} are not determined by the circuit")
+    raise SingularSystemError(
+        "MNA system is singular (no unique solution): "
+        + "; ".join(why)
+        + ". Check the netlist topology or the fidelity level.",
+        tuple(found),
+    )
+
+
+def check_solvable(
+    system: MnaSystem,
+    input,  # noqa: ANN001 — PortLike
+    *,
+    drive: str = "dm",
+) -> None:
+    """Raise :class:`SingularSystemError` when ``system``, driven at ``input``, has no unique
+    solution, naming the nets that cause it.
+
+    The check :func:`extract_tf` makes before its symbolic determinant: an exact rank at random
+    values (milliseconds on a 26-node amplifier bench, where the determinant can take minutes).
+    """
+    _check_augmented(system, _augment(system, _as_pair(input, system, "input"), drive)[0])
+
+
 def extract_tf(
     system: MnaSystem,
     output,  # noqa: ANN001 — PortLike
@@ -305,9 +467,10 @@ def extract_tf(
     """
     if drive not in ("dm", "cm"):
         raise ValueError(f"drive must be 'dm' or 'cm', got {drive!r}")
-    out = _as_pair(output, system)
-    inp = _as_pair(input, system)
+    out = _as_pair(output, system, "output")
+    inp = _as_pair(input, system, "input")
     A, rhs = _augment(system, inp, drive)
+    _check_augmented(system, A)  # a singular system is refused before the determinant, nets named
 
     detA = determinant(A)
     if detA == 0:
@@ -331,6 +494,7 @@ def extract_tf(
         drive=drive,
         solve_path="selectively_numericized" if subs else "fully_symbolic",
         numeric_subs=dict(subs),
+        unmodelled=tuple(system.unmodelled),
     )
 
 
@@ -385,9 +549,15 @@ def loop_gain_from_system(
     subs = numeric_subs or {}
     port = PortPair(probe_symbol, "0")  # provenance only — T is portless
     return RawTransferFunction(
-        expr=t, s=S, output=port, input=port, name=system.name, analysis="loop_gain",
+        expr=t,
+        s=S,
+        output=port,
+        input=port,
+        name=system.name,
+        analysis="loop_gain",
         solve_path="selectively_numericized" if subs else "fully_symbolic",
         numeric_subs=dict(subs),
+        unmodelled=tuple(system.unmodelled),
     )
 
 
@@ -412,8 +582,8 @@ def gain_decomposition(
     ideal-feedback gain (probe → ∞, e.g. the 1/β of a buffer), ``ρ`` the direct transmission.
     Returns ``{"gain", "loop_gain", "asymptotic_gain", "direct_transmission"}`` as raw TFs.
     """
-    out = _as_pair(output, system)
-    inp = _as_pair(input, system)
+    out = _as_pair(output, system, "output")
+    inp = _as_pair(input, system, "input")
     k = next((x for x in system.Y.free_symbols if str(x) == probe_symbol), None)
     if k is None:
         raise ValueError(
@@ -449,8 +619,16 @@ def gain_decomposition(
 
     def raw(expr: sp.Expr, analysis: str) -> RawTransferFunction:
         return RawTransferFunction(
-            expr=canonical_tf(expr), s=S, output=out, input=inp, name=system.name,
-            analysis=analysis, drive=drive, solve_path=solve_path, numeric_subs=dict(subs),
+            expr=canonical_tf(expr),
+            s=S,
+            output=out,
+            input=inp,
+            name=system.name,
+            analysis=analysis,
+            drive=drive,
+            solve_path=solve_path,
+            numeric_subs=dict(subs),
+            unmodelled=tuple(system.unmodelled),
         )
 
     return {
@@ -481,8 +659,8 @@ def transimpedance(
     ``injection`` is the ``(from, to)`` node pair the current is pushed *into* at ``from`` and
     pulled *out of* at ``to``; an AC-ground member is simply dropped (a single-ended injection).
     """
-    out = _as_pair(output, system)
-    inj = _as_pair(injection, system)
+    out = _as_pair(output, system, "output")
+    inj = _as_pair(injection, system, "injection")
     r_p, r_n = system.row_of(inj.pos), system.row_of(inj.neg)
     if r_p is None and r_n is None:
         raise ValueError(
@@ -506,10 +684,43 @@ def transimpedance(
     z = canonical_tf(node_voltage(out.pos) - node_voltage(out.neg))
     subs = numeric_subs or {}
     return RawTransferFunction(
-        expr=z, s=S, output=out, input=inj, name=system.name, analysis=analysis,
+        expr=z,
+        s=S,
+        output=out,
+        input=inj,
+        name=system.name,
+        analysis=analysis,
         solve_path="selectively_numericized" if subs else "fully_symbolic",
         numeric_subs=dict(subs),
+        unmodelled=tuple(system.unmodelled),
     )
+
+
+def _drop_port_stimulus(
+    ssir: SmallSignalIR,
+    system: MnaSystem,
+    port,  # noqa: ANN001 — PortLike
+    subs: dict[str, float] | None = None,
+) -> SmallSignalIR:
+    """``ssir`` minus every AC-bearing V source that drives ``port`` — the stimulus a driving-point
+    test current replaces. ``system`` is the default build of ``ssir``, where those sources are
+    open. A source drives the port when one of its nets maps to a port row and the other to AC
+    ground or the other port row: the source across the port, and each half of a ground- or
+    vcm-referenced DM pair (``Vinp vinp vcm ac 0.5`` / ``Vinn vinn vcm ac -0.5`` at ``(vinp, vinn)``).
+    Any other AC source (the input, for a ``Z_out``) stays, to be shorted."""
+    p = _as_pair(port, system)
+    port_rows = {system.row_of(p.pos), system.row_of(p.neg)} - {None}
+
+    def drives(q: IndependentV) -> bool:
+        rows = {system.row_of(q.np), system.row_of(q.nn)}
+        return bool(rows & port_rows) and rows <= port_rows | {None}
+
+    keep = tuple(
+        q
+        for q in ssir.primitives
+        if not (isinstance(q, IndependentV) and _apply_subs(q.ac, subs or {}) != 0 and drives(q))
+    )
+    return replace(ssir, primitives=keep)
 
 
 def driving_point_impedance(
@@ -522,10 +733,14 @@ def driving_point_impedance(
     """Driving-point impedance ``Z(s) = V_x / I_x`` at ``port`` (the test-source-injection primitive).
 
     A **unit test current** is injected into the port (a nodal RHS — no extra branch) with all
-    independent sources off (already the case in the homogeneous matrix); the resulting port voltage
-    *is* the impedance. For an open-loop ``Z_out`` the caller grounds the input port via
-    ``build_system(extra_grounds=...)`` first (source-zeroing). A port with no admittance path (an
-    ideal MOS gate at SOME_PARASITIC) is infinite impedance → a clean, explicit error.
+    independent sources off; the resulting port voltage *is* the impedance. The caller turns the
+    sources off: the default homogeneous matrix leaves an AC-bearing V source OPEN (it is an
+    excitation for :func:`extract_tf`), which drops its branch. Build with
+    ``short_all_sources=True`` over ``_drop_port_stimulus(ssir, ...)``, as ``analyses._impedance``
+    does: it removes the stimulus driving ``port`` (the source across it, or both halves of a DM
+    pair), which the test current replaces. For an open-loop ``Z_out`` the caller also grounds the
+    input port via ``build_system(extra_grounds=...)`` (source-zeroing). A port with no admittance
+    path (an ideal MOS gate at SOME_PARASITIC) is infinite impedance → a clean, explicit error.
     """
     p = _as_pair(port, system)
     rp, rn = system.row_of(p.pos), system.row_of(p.neg)
@@ -553,7 +768,13 @@ def driving_point_impedance(
     z = canonical_tf(node_voltage(p.pos) - node_voltage(p.neg))
     subs = numeric_subs or {}
     return RawTransferFunction(
-        expr=z, s=S, output=p, input=p, name=system.name, analysis=analysis,
+        expr=z,
+        s=S,
+        output=p,
+        input=p,
+        name=system.name,
+        analysis=analysis,
         solve_path="selectively_numericized" if subs else "fully_symbolic",
         numeric_subs=dict(subs),
+        unmodelled=tuple(system.unmodelled),
     )

@@ -33,14 +33,24 @@ def test_db_present_and_circuit_registered():
 @pytest.mark.corpus
 def test_tier0_is_fully_green(tier0_results):
     failures = [r for r in tier0_results if r.status == "fail"]
-    assert not failures, "Tier 0 failures:\n" + "\n".join(f"{r.circuit} {r.check}: {r.reason}" for r in failures)
+    assert not failures, "Tier 0 failures:\n" + "\n".join(
+        f"{r.circuit} {r.check}: {r.reason}" for r in failures
+    )
     # at least the amp_001_5t checks ran
     assert any(r.circuit == CIRCUIT and r.status == "pass" for r in tier0_results)
 
 
 @pytest.mark.corpus
-def test_derived_status_is_generated(tier0_results):
-    assert verify.derive_status(CIRCUIT, tier0_results) == "generated"
+def test_derived_status_is_generated(tier0_results, tier1_results, tier2_results):
+    assert (
+        verify.derive_status(CIRCUIT, tier0_results + tier1_results + tier2_results) == "generated"
+    )
+
+
+@pytest.mark.corpus
+def test_tier0_alone_backs_no_rung(tier0_results):
+    """``generated`` is T0-T2 (plan §6); a T0-only run used to report it."""
+    assert verify.derive_status(CIRCUIT, tier0_results) == "draft"
 
 
 def test_catalog_determinism_and_membership():

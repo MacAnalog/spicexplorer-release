@@ -17,7 +17,7 @@ Stage spine (each a pure function over one immutable artifact):
     4. simplify  — exact H(s)    -> readable H(s) + validated assumption ledger    [P5]
     5. describe  — H(s)          -> DC gain / poles / zeros / ZPK / LaTeX          [P4]
 
-See the meta-repo ``doc/plan_netlist2tf.md`` (architecture) and ``doc/todo_netlist2tf.md`` (phases).
+See the meta-repo ``doc/archive/plan_netlist2tf.md`` (architecture) and ``doc/archive/todo_netlist2tf.md`` (phases).
 """
 
 from .analyses import (
@@ -73,6 +73,7 @@ from .models import (
     register_model,
     small_signal_model,
 )
+from .op_map import operating_point_from
 from .pencil import poles_zeros
 from .pipeline import transfer_function
 from .simplify import simplify_tf, validate_simplification
@@ -131,6 +132,8 @@ __all__ = [
     "inband",
     # end-to-end
     "transfer_function",
+    # a simulator operating point → the minted symbols
+    "operating_point_from",
     # P7 derived analyses
     "open_loop_gain",
     "input_impedance",

@@ -43,10 +43,11 @@ atomic granularity is *availability*, not the default search space.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from fractions import Fraction
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 import yaml
 from spicexplorer_core.eng import parse_value
@@ -168,9 +169,7 @@ def load_params_file(path: str | Path) -> CircuitParams:
     if not isinstance(data, dict):
         raise ParamsError(f"malformed params file (not a mapping): {p}")
     if data.get("schema") != PARAMS_SCHEMA:
-        raise ParamsError(
-            f"{p}: schema is {data.get('schema')!r}, expected {PARAMS_SCHEMA!r}"
-        )
+        raise ParamsError(f"{p}: schema is {data.get('schema')!r}, expected {PARAMS_SCHEMA!r}")
     devices_raw = data.get("devices")
     if not isinstance(devices_raw, dict) or not devices_raw:
         raise ParamsError(f"{p}: devices: must be a non-empty mapping (the atomic inventory)")
@@ -191,7 +190,9 @@ def load_params_file(path: str | Path) -> CircuitParams:
                 description=g.get("description"),
             )
         except (KeyError, TypeError) as exc:
-            raise ParamsError(f"{p}: groups[{i}] is malformed (needs name/kind/members/tie): {exc}") from exc
+            raise ParamsError(
+                f"{p}: groups[{i}] is malformed (needs name/kind/members/tie): {exc}"
+            ) from exc
         if len(group.members) < 2:
             raise ParamsError(f"{p}: group {group.name!r} needs at least 2 members")
         for member in group.members:
@@ -223,10 +224,14 @@ def load_params_file(path: str | Path) -> CircuitParams:
                 description=r.get("description"),
             )
         except (KeyError, TypeError) as exc:
-            raise ParamsError(f"{p}: ratios[{i}] is malformed (needs param/ref/of/ratio): {exc}") from exc
+            raise ParamsError(
+                f"{p}: ratios[{i}] is malformed (needs param/ref/of/ratio): {exc}"
+            ) from exc
         for inst in (ratio.ref, ratio.of):
             if inst not in devices:
-                raise ParamsError(f"{p}: ratios[{i}] instance {inst!r} is not in the devices: inventory")
+                raise ParamsError(
+                    f"{p}: ratios[{i}] instance {inst!r} is not in the devices: inventory"
+                )
             if ratio.param not in devices[inst]:
                 raise ParamsError(
                     f"{p}: ratios[{i}] instance {inst!r} has no field {ratio.param!r}"
@@ -281,7 +286,7 @@ def select_ungroup(
     for raw in selectors:
         sel = str(raw).strip()
         if sel.startswith("kind:"):
-            kind = sel[len("kind:"):].strip()
+            kind = sel[len("kind:") :].strip()
             matched = cp.groups_of_kind(kind)
             if not matched:
                 raise ParamsError(
@@ -290,7 +295,7 @@ def select_ungroup(
                 )
             groups.extend(g for g in matched if g not in groups)
         elif sel.startswith("ratio:"):
-            ref = sel[len("ratio:"):].strip()
+            ref = sel[len("ratio:") :].strip()
             matched_r = [r for r in cp.ratios if r.ref == ref]
             if not matched_r:
                 raise ParamsError(
@@ -399,7 +404,7 @@ def netlist_param_defaults(path: str | Path, *, _seen: set[Path] | None = None) 
             continue
         if not line.lower().startswith(".param"):
             continue
-        card = line[len(".param"):]
+        card = line[len(".param") :]
         while i < len(lines) and lines[i].lstrip().startswith("+"):
             card += " " + lines[i].lstrip()[1:]
             i += 1

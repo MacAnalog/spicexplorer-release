@@ -10,14 +10,27 @@ One call loads any result artifact into an engine-neutral dataset::
     measure_dataset(ds, {"meas": "ugf", "out": "v(vout)"})    # any Tier-1 recipe
     bode_figure(ds, "v(vout)").show()                          # interactive plot
 
+    # a data eye: the bench's stimulus (`Data`/`pwl`) is what the eye groups samples by
+    measure_dataset(ds, {"meas": "vecp_db", "out": "v(pout)", "fmt": "pam4", "rate_gbd": 10})
+
 Layering: a leaf tool over ``spicexplorer-core`` only (protocol + measurement registry);
 the REST surface lives in ``spicexplorer-api``'s ``/api/waveview/*`` routes.
 """
 
 from .dataset import DatasetResult, WaveAnalysis, WaveDataset, WaveSignal, merge_datasets
 from .downsample import downsample_indices, lttb_indices, minmax_indices
+from .eye import eye_metrics, fold, rx_bandwidth
 from .loaders import load_result, sniff_engine
-from .logs import LogLine, LogSummary, classify_line, discover_log, parse_log_text, parse_sim_log
+from .logs import (
+    LogLine,
+    LogSummary,
+    classify_line,
+    discover_log,
+    fatal_lines,
+    parse_log_text,
+    parse_measures,
+    parse_sim_log,
+)
 from .measure import measure_dataset, measure_many, measurement_catalog
 from .ngspice_loader import load_ngspice_raw
 from .plotting import (
@@ -40,6 +53,7 @@ from .snapshot import (
     snapshot,
 )
 from .spectre_loader import load_spectre_raw_dir
+from .stimulus import Data, ideal_waveform, prbs, pwl, symbols
 
 __all__ = [
     # dataset model
@@ -72,6 +86,17 @@ __all__ = [
     "parse_log_text",
     "classify_line",
     "discover_log",
+    "parse_measures",
+    "fatal_lines",
+    # data stimulus + the symbol-aware eye (registered as the `eye` measurement kind)
+    "Data",
+    "prbs",
+    "symbols",
+    "pwl",
+    "ideal_waveform",
+    "eye_metrics",
+    "fold",
+    "rx_bandwidth",
     # downsampling
     "downsample_indices",
     "minmax_indices",

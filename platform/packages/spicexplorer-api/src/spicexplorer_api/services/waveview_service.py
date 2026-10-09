@@ -31,7 +31,7 @@ from spicexplorer_api.services import project_service
 _MAX_OPEN_DATASETS = 32  # LRU-evicted beyond this (bounds resident numpy memory)
 
 _lock = threading.Lock()
-_datasets: dict[str, "OpenDataset"] = {}
+_datasets: dict[str, OpenDataset] = {}
 
 
 @dataclass
@@ -81,9 +81,7 @@ def _dataset_id(path: Path) -> str:
     return hashlib.sha1(f"{path}:{mtime}".encode()).hexdigest()[:12]
 
 
-def open_dataset(
-    path: str, engine: str | None = None, log_path: str | None = None
-) -> OpenDataset:
+def open_dataset(path: str, engine: str | None = None, log_path: str | None = None) -> OpenDataset:
     """Load (or return the already-loaded) dataset for an artifact path."""
     resolved = validate_under_allowed(path)
     if not resolved.exists():
@@ -133,7 +131,9 @@ def get_dataset(dataset_id: str) -> OpenDataset:
     with _lock:
         entry = _datasets.get(dataset_id)
         if entry is None:
-            raise HTTPException(404, f"No open dataset {dataset_id!r} (open it via POST /waveview/open)")
+            raise HTTPException(
+                404, f"No open dataset {dataset_id!r} (open it via POST /waveview/open)"
+            )
         entry.last_used = time()
         return entry
 
@@ -153,7 +153,8 @@ def open_dataset_ids_under(root: Path) -> list[str]:
     rr = root.resolve()
     with _lock:
         return [
-            did for did, e in _datasets.items()
+            did
+            for did, e in _datasets.items()
             if rr == Path(e.dataset.source).resolve()
             or rr in Path(e.dataset.source).resolve().parents
         ]
@@ -169,7 +170,8 @@ def close_datasets_under(root: Path) -> int:
     rr = root.resolve()
     with _lock:
         doomed = [
-            did for did, e in _datasets.items()
+            did
+            for did, e in _datasets.items()
             if rr == Path(e.dataset.source).resolve()
             or rr in Path(e.dataset.source).resolve().parents
         ]
@@ -188,8 +190,10 @@ def classify_artifact(p: Path) -> ArtifactKind | None:
     if p.is_dir():
         try:
             for f in p.iterdir():
-                if f.is_file() and not f.name.endswith(".cache") and any(
-                    f.name.lower().endswith(ext) for ext in SWEEP_EXT_TO_ANALYSIS
+                if (
+                    f.is_file()
+                    and not f.name.endswith(".cache")
+                    and any(f.name.lower().endswith(ext) for ext in SWEEP_EXT_TO_ANALYSIS)
                 ):
                     return "spectre_raw_dir"
         except OSError:
@@ -221,7 +225,8 @@ def list_runs(project_id: str | None = None) -> list[dict[str, Any]]:
     if project_id is not None and not project_service.project_exists(project_id):
         raise HTTPException(404, f"project {project_id!r} not found")
     scopes: list[str | None] = (
-        [project_id] if project_id is not None
+        [project_id]
+        if project_id is not None
         else [None, *(p["id"] for p in project_service.list_projects())]
     )
     out: list[dict[str, Any]] = []
@@ -249,7 +254,8 @@ def find_run(run_id: str, project_id: str | None = None) -> dict[str, Any]:
     if project_id is not None and not project_service.project_exists(project_id):
         raise HTTPException(404, f"project {project_id!r} not found")
     scopes: list[str | None] = (
-        [project_id] if project_id is not None
+        [project_id]
+        if project_id is not None
         else [None, *(p["id"] for p in project_service.list_projects())]
     )
     for pid in scopes:
@@ -261,8 +267,9 @@ def find_run(run_id: str, project_id: str | None = None) -> dict[str, Any]:
                 info = {}
             if isinstance(info, dict):
                 return {**info, "run_dir": str(rd)}
-    raise HTTPException(404, f"No run {run_id!r}"
-                             + (f" in project {project_id!r}" if project_id else ""))
+    raise HTTPException(
+        404, f"No run {run_id!r}" + (f" in project {project_id!r}" if project_id else "")
+    )
 
 
 def list_run_artifacts(run_dir: Path) -> list[dict[str, Any]]:
@@ -298,13 +305,15 @@ def list_run_artifacts(run_dir: Path) -> list[dict[str, Any]]:
                 st = child.stat()
             except OSError:
                 continue
-            artifacts.append({
-                "name": child.relative_to(run_dir).as_posix(),
-                "path": str(child),
-                "type": kind,
-                "mtime": st.st_mtime,
-                "size": st.st_size if child.is_file() else None,
-            })
+            artifacts.append(
+                {
+                    "name": child.relative_to(run_dir).as_posix(),
+                    "path": str(child),
+                    "type": kind,
+                    "mtime": st.st_mtime,
+                    "size": st.st_size if child.is_file() else None,
+                }
+            )
     artifacts.sort(key=lambda a: a["mtime"], reverse=True)
     return artifacts
 

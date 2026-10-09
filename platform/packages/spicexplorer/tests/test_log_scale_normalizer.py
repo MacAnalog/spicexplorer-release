@@ -9,6 +9,7 @@ decade error by the decade span of the range (``log10(target+range) - log10(targ
 The penalty/reward methods use no instance state, so they're invoked with ``self=None`` — no SPICE,
 PDK, or optimizer construction required.
 """
+
 from __future__ import annotations
 
 from typing import cast
@@ -26,12 +27,14 @@ from spicexplorer.optimization.base import (
 # with a None self — cast keeps that intentional and pyright-clean.
 def _penalty(curr_val, spec):
     return Spice_Constraint_Satisfaction.compute_constraint_violation_penalty_for_spec(
-        cast("Spice_Constraint_Satisfaction", None), np.float64(curr_val), spec)
+        cast("Spice_Constraint_Satisfaction", None), np.float64(curr_val), spec
+    )
 
 
 def _reward(curr_val, spec):
     return Spice_Single_Objective.compute_reward_for_spec(
-        cast("Spice_Single_Objective", None), np.float64(curr_val), spec)
+        cast("Spice_Single_Objective", None), np.float64(curr_val), spec
+    )
 
 
 def test_log_scale_penalty_normalized_in_decade_space():
@@ -45,11 +48,12 @@ def test_log_scale_penalty_normalized_in_decade_space():
     The miss is exactly 1.000 decade because tolerance now defaults to 0 (the target IS the
     constraint). Under the old 5 %-of-target default it was 0.978 and the penalty 3.25.
     """
-    spec = TargetSpec(name="gbw", testbench="ac_tb", target=1e8, goal="exceed",
-                      sim_type="ac", log_scale=True)  # range→1e8, tolerance→0 (defaults)
+    spec = TargetSpec(
+        name="gbw", testbench="ac_tb", target=1e8, goal="exceed", sim_type="ac", log_scale=True
+    )  # range→1e8, tolerance→0 (defaults)
 
     penalty = _penalty(1e7, spec)
-    assert penalty == pytest.approx(1.0 / 0.30103, rel=0.02)   # = 3.32
+    assert penalty == pytest.approx(1.0 / 0.30103, rel=0.02)  # = 3.32
     assert penalty > 1.0  # material — the whole point (was ~9.8e-9 before the fix)
 
     # the linear-range normalizer the bug used (range defaults to the 1e8 target) was ~8 orders of
@@ -67,8 +71,15 @@ def test_log_scale_reward_normalized_in_decade_space():
     The EXCEED reward is measured from the tolerance-adjusted boundary (target - tol) the
     penalty uses, in decade space — so the grace band earns a smooth reward rather than a dead-zone.
     """
-    spec = TargetSpec(name="gbw", testbench="ac_tb", target=1e8, goal="exceed", sim_type="ac",
-                      log_scale=True, reward_type=Reward_Types.RELATIVE_ABSOLUTE)
+    spec = TargetSpec(
+        name="gbw",
+        testbench="ac_tb",
+        target=1e8,
+        goal="exceed",
+        sim_type="ac",
+        log_scale=True,
+        reward_type=Reward_Types.RELATIVE_ABSOLUTE,
+    )
     # curr 1e9 (one decade over): decade distance from the boundary (log10(1e8) - 0.0223 ≈ 7.9777)
     # is 9 - 7.9777 = 1.0223, over decade range 0.301 → ≈ 3.40 (was 1.0/1e8 ≈ 1e-8 before the fix).
     reward = _reward(1e9, spec)

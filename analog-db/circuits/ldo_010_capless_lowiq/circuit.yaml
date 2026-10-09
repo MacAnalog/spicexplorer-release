@@ -1,0 +1,36 @@
+# ★ SUPER-DSL manifest (plan D-3). Validated against _shared/schema/circuit.schema.json.
+# PORTED from an agent-first design repo @ 40cad45
+# (branch feat/001-reference), where the same cell is the local circuit `ldo_ihp_capless`.
+# That repo carries the design's own certification lane (frozen decks + a signed ledger);
+# this entry is the catalogued, drift-guarded, layout-bearing form of the SAME design point.
+#
+# Topology of record (design repo experiment 002): a DOUBLE-MIRROR flipped-voltage-follower (FVF)
+# output stage — pass PMOS XMP; control PMOS XMC whose source IS the output; XMC's current folded
+# through an NMOS 1:1 mirror (XMA/XMB) and a PMOS 1:1 mirror (XMCP/XMD) onto the pass gate as a
+# pull-up; constant sink XMS pulling the gate down — under a slow, high-gain outer loop: a
+# two-stage PMOS-input error amplifier (5T OTA + Miller-compensated common source) compares the
+# divided output with the (ideal) reference and sets the FVF control voltage. The FVF's local loop
+# is the fast transient path; the outer loop sets DC accuracy, PSRR and load/line regulation. The
+# fold (not a plain FVF) is what lets the gate reach vdd so the pass device turns OFF at hot/fast
+# corners. Bias is resistor-referenced (no ideal current sources): one NMOS diode behind a poly
+# resistor from the rail, mirrored to the sink and, via a PMOS diode, to the error-amp tail.
+schema: spicexplorer/circuit@1
+id: ldo_010_capless_lowiq
+class: ldo
+display_name: "Capless low-Iq LDO: double-mirror FVF output stage + two-stage error amp, resistor-referenced bias (IHP SG13G2, 1.5 V lv devices)"
+compensation: "Miller cap across error-amp stage 2 (dominant pole at ea_o1); nothing at the pass gate (any C there is paid at the sink slew)"
+stages: 3                        # error amp stage 1 + stage 2 + FVF output stage (control device, fold, pass device)
+ports: [vdd, vout, vss]          # reference (ideal VREF) + bias generated INTERNALLY
+provenance:
+  source: "an agent-first design repo @ 40cad45 (feat/001-reference), circuits/ldo_ihp_capless"
+  aliases: [ldo_ihp_capless, ldo_fvf, capless_ldo]
+  designer: "Danial Noori Zadeh"
+artifacts:
+  abstract_netlist: abstract/netlist.spice
+  graph: abstract/topology.cgraph.json
+  datasheet: datasheet.yaml
+  schematic: pdk/ihp-sg13g2/schematic/ldo_ihp_capless.sch
+pdks: [ihp-sg13g2]
+analyses: [dc_op, load_regulation, line_regulation, dropout, psrr, psrr_1m, tran_load_step,
+           ac_loopgain, ac_loopgain_lo, ac_loopgain_hi, loop_stability, noise, tran_line_step]
+status: draft

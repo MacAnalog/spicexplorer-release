@@ -1,4 +1,5 @@
 """Regression tests for fixes from the 2026-06 functional audit (no SPICE needed)."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -13,10 +14,7 @@ from spicexplorer.core.domains import (
 from spicexplorer.core.utils import compute_error
 from spicexplorer_core import project_root
 
-EXAMPLE_YAML = (
-    project_root()
-    / "examples/OTA/folded_cascode/ihp-sg13g2/sizing/project_setup.yaml"
-)
+EXAMPLE_YAML = project_root() / "examples/OTA/folded_cascode/ihp-sg13g2/sizing/project_setup.yaml"
 
 
 # --- BUG-32: OptimizationLog mutable-default aliasing -------------------------

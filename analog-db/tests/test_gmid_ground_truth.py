@@ -51,12 +51,17 @@ PAIRS = [
 ]
 
 
-@pytest.mark.skipif(GT is None, reason="iic-jku analog-circuit-design/gmid ground-truth not present")
+@pytest.mark.skipif(
+    GT is None, reason="iic-jku analog-circuit-design/gmid ground-truth not present"
+)
 @pytest.mark.parametrize("device,matfile", PAIRS)
 def test_ihp_lut_matches_iic_jku_ground_truth(device: str, matfile: str):
     assert GT is not None  # narrowed by skipif
     from spicexplorer_analog_db import gmid
-    ours_path = gmid.find_lut_path("ihp-sg13g2", device, "tt")  # out-of-repo store, then in-repo fallback
+
+    ours_path = gmid.find_lut_path(
+        "ihp-sg13g2", device, "tt"
+    )  # out-of-repo store, then in-repo fallback
     if not ours_path.is_file():
         pytest.skip(f"{ours_path.name} not present (run tools/regen_gmid_luts.py --pdk ihp-sg13g2)")
     ours, ref = Lookup(str(ours_path)), Lookup(str(GT / matfile))
@@ -78,8 +83,10 @@ def test_ihp_lut_matches_iic_jku_ground_truth(device: str, matfile: str):
                     if not all(np.isfinite([jr, jo, ar, ao, fr, fo, vr, vo])):
                         continue
                     for key, dev in (
-                        ("jd", abs(jo / jr - 1)), ("av0", abs(ao / ar - 1)),
-                        ("ft", abs(fo / fr - 1)), ("vgs", abs(vo - vr)),
+                        ("jd", abs(jo / jr - 1)),
+                        ("av0", abs(ao / ar - 1)),
+                        ("ft", abs(fo / fr - 1)),
+                        ("vgs", abs(vo - vr)),
                     ):
                         if dev > worst[key]:
                             worst[key], where[key] = dev, kw

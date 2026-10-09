@@ -1,4 +1,5 @@
 """Pencil-based poles/zeros — agreement with the symbolic path, and the cancellation it fixes."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -77,22 +78,27 @@ def test_dm_and_cm_drive_are_both_accepted():
         poles_zeros(sysm, ("n1", "n2"), ("vip", "vin"), drive="sideways")
 
 
-# ------------------------------------------------- the regression that matters
+# ------------------------------------ nine decades of RC: both paths find the roots
 
 
-def test_pencil_survives_the_dynamic_range_that_breaks_np_roots():
-    """The lesson, encoded: expanded-coefficient rooting loses roots; the pencil does not.
+def test_pencil_and_exact_expansion_agree_across_nine_decades():
+    """An RC ladder whose sections span nine decades: the pencil and the expanded path agree.
 
-    An RC ladder whose sections span nine decades gives a denominator whose coefficients
-    span far more. ``np.roots`` on those coefficients returns numbers that are not roots of
-    the system at all — the residual test below is what catches it — while every pencil
-    eigenvalue satisfies det(G + sC) = 0 to machine precision.
+    The denominator's coefficients span 1e24. This test used to assert that ``np.roots`` on them
+    returns numbers that are not roots of the system — but that failure was Float ingestion,
+    not rooting: ``cancel`` over ``Float`` values left the coefficients wrong (``4.12e27`` for
+    the exact ``4.003002001e27``) and the numerator a phantom degree 4 (audit LEAF-F06). With
+    exact-Rational ingestion the coefficients are exact, and every root from either path
+    satisfies det(G + sC) = 0 to machine precision — the residual test is what checks it.
     """
-    net = "\n".join(
-        f"r{k} {'vin' if k == 0 else f'n{k}'} n{k + 1} {1e3 * 10 ** (3 * k):g}\n"
-        f"c{k} n{k + 1} 0 {1e-9 / 10 ** (3 * k):g}"
-        for k in range(4)
-    ) + "\n.end"
+    net = (
+        "\n".join(
+            f"r{k} {'vin' if k == 0 else f'n{k}'} n{k + 1} {1e3 * 10 ** (3 * k):g}\n"
+            f"c{k} n{k + 1} 0 {1e-9 / 10 ** (3 * k):g}"
+            for k in range(4)
+        )
+        + "\n.end"
+    )
     sysm = _system(net)
     out = ("n4", "0")
 
@@ -104,17 +110,19 @@ def test_pencil_survives_the_dynamic_range_that_breaks_np_roots():
     assert max(pencil_res) < 1e-12, f"pencil roots are not roots: {pencil_res}"
 
     # the expanded-polynomial path, on the same system
-    den = sp.Poly(sp.expand(sp.fraction(sp.together(
-        extract_tf(sysm, out, ("vin", "0")).expr))[1]), S)
+    num, den = (
+        sp.Poly(sp.expand(x), S)
+        for x in sp.fraction(sp.together(extract_tf(sysm, out, ("vin", "0")).expr))
+    )
+    assert (num.degree(), den.degree()) == (0, 4)  # Float ingestion gave a degree-4 numerator
     coeffs = [complex(c) for c in den.all_coeffs()]
     mags = [abs(c) for c in coeffs if c != 0]
     assert max(mags) / min(mags) > 1e20, "test circuit is not ill-conditioned enough"
 
-    poly_res = [_residual(G, C, complex(z)) for z in np.roots(coeffs)]
-    assert max(poly_res) > 1e3 * max(pencil_res), (
-        "expected the expanded-coefficient path to lose roots the pencil keeps; "
-        f"poly residuals {poly_res}, pencil residuals {pencil_res}"
-    )
+    poly_roots = sorted(np.roots(coeffs), key=abs)
+    poly_res = [_residual(G, C, complex(z)) for z in poly_roots]
+    assert max(poly_res) < 1e-12, f"expanded-path roots are not roots: {poly_res}"
+    assert poly_roots == pytest.approx(sorted(_roots_of(pz.poles), key=abs), rel=1e-9)
 
 
 # ----------------------------------------------------------------- refusals
@@ -139,6 +147,30 @@ def test_unbound_symbols_are_named():
     del sysm
 
 
+def test_numeric_subs_binds_the_minted_symbols():
+    """``gm_m1``/``ro_m1`` are minted ``positive=True``; ``numeric_subs`` keyed them as plain
+    ``Symbol(name)``, which is a different symbol, so they stayed unbound."""
+    deck = "M1 out in 0 0 nmos\nRL out 0 10k\nCL out 0 1p\n.end"
+    ops = {
+        "gm_m1": 1e-3,
+        "ro_m1": 1e5,
+        "cgs_m1": 1e-14,
+        "cgd_m1": 2e-15,
+        "cdb_m1": 3e-15,
+        "csb_m1": 1e-15,
+        "gmb_m1": 1e-4,
+    }
+    ir = from_string(deck, name="t")
+    symbolic = build_system(small_signal_model(ir, level=Fidelity.FULL))
+    stamped = build_system(small_signal_model(ir, level=Fidelity.FULL), subs=ops)
+    got = poles_zeros(symbolic, ("out", "0"), ("in", "0"), numeric_subs=ops)
+    want = poles_zeros(stamped, ("out", "0"), ("in", "0"))
+    assert got.n_states == want.n_states == 1
+    assert _roots_of(got.poles) == pytest.approx(_roots_of(want.poles), rel=1e-12)
+    assert _roots_of(got.zeros) == pytest.approx(_roots_of(want.zeros), rel=1e-12)
+    assert got.dc_gain == pytest.approx(want.dc_gain, rel=1e-12)
+
+
 def test_grounded_output_port_is_refused():
     sysm = _system("r1 vin vout 1e3\nc1 vout 0 1e-9\n.end")
     with pytest.raises(ValueError, match="entirely at AC ground"):
@@ -155,13 +187,15 @@ def test_no_capacitance_means_no_finite_pole():
 def test_unmodelled_devices_are_inspectable_not_just_logged():
     """A device no model can expand is absent from the MNA — expose it as a field."""
     ir = from_string(
-        "xq1 vout vin 0 0 some_unknown_pdk_thing w=1u l=1u\n"
-        "r1 vout 0 1e6\nc1 vout 0 1e-12\n.end", name="t")
+        "xq1 vout vin 0 0 some_unknown_pdk_thing w=1u l=1u\nr1 vout 0 1e6\nc1 vout 0 1e-12\n.end",
+        name="t",
+    )
     ssir = small_signal_model(ir, level=Fidelity.FULL)
     assert ssir.unmodelled == ("XQ1",)
 
     clean = small_signal_model(
-        from_string("r1 vin vout 1e3\nc1 vout 0 1e-9\n.end", name="t"), level=Fidelity.FULL)
+        from_string("r1 vin vout 1e3\nc1 vout 0 1e-9\n.end", name="t"), level=Fidelity.FULL
+    )
     assert clean.unmodelled == ()
 
 
@@ -176,19 +210,136 @@ def test_identically_zero_transfer_reports_no_zeros_like_extract_tf():
     assert pz.n_states == 2  # the poles are still the system's natural frequencies
 
 
+# --------------------------------------- zeros: only where the bordered matrix is singular
+
+_LADDER_3 = (
+    "R1 in n1 1.3k\nC1 n1 0 2.7p\nR2 n1 n2 4.7k\nC2 n2 0 1.1p\nR3 n2 out 3.3k\nC3 out 0 0.47p\n.end"
+)
+
+
+def test_a_constant_numerator_reports_no_zeros():
+    """An RC ladder's numerator is a constant, so it has no finite zero. The bordered pencil's
+    eigenvalues are then all infinite, and the solver returned two of them as zeros at
+    -2.06e8 ± 3.0e16j."""
+    sysm = _system(_LADDER_3)
+    num, _ = sp.fraction(sp.together(extract_tf(sysm, ("out", "0"), ("in", "0")).expr))
+    assert sp.Poly(sp.expand(num), S).degree() == 0  # the premise: nothing to report
+    pz = poles_zeros(sysm, ("out", "0"), ("in", "0"))
+    assert pz.zeros == []
+    assert len(pz.poles) == 3
+    assert pz.dc_gain == pytest.approx(1.0, rel=1e-12)
+
+
+@pytest.mark.parametrize(
+    ("deck", "zero"),
+    [
+        # lead: the input cap feeds in straight to out, one zero at -1/(R1·C1) = -1e6 rad/s
+        ("r1 in out 1k\nc1 in out 1n\nr2 out 0 1k\n.end", -1e6),
+        # high-pass: the series cap puts the zero at s = 0
+        ("c1 in out 1n\nr1 out 0 1k\n.end", 0.0),
+    ],
+    ids=["lead_feedthrough", "highpass_dc_zero"],
+)
+def test_a_real_finite_zero_is_kept(deck, zero):
+    pz = poles_zeros(_system(deck), ("out", "0"), ("in", "0"))
+    assert len(pz.zeros) == 1
+    got = complex(_roots_of(pz.zeros)[0])
+    assert got == pytest.approx(zero, abs=1.0)  # 1 rad/s: 1e-6 of the lead's 1e6 rad/s zero
+
+
+def _wide_ladder(n: int, step: int, extra: str = "") -> str:
+    """``n`` RC sections, R stepping up ``step`` decades per section from 1 Ω, every C 1 pF:
+    time constants from 1 ps over ``n·step`` decades."""
+    return (
+        "\n".join(
+            f"r{k} {'in' if k == 0 else f'n{k}'} {'out' if k == n - 1 else f'n{k + 1}'} "
+            f"{10 ** (step * k):g}\nc{k} {'out' if k == n - 1 else f'n{k + 1}'} 0 1e-12"
+            for k in range(n)
+        )
+        + extra
+        + "\n.end"
+    )
+
+
+def _exact_roots(poly_expr) -> list[complex]:  # noqa: ANN001
+    roots = sp.Poly(sp.expand(poly_expr), S).nroots(n=30, maxsteps=200)
+    return sorted((complex(z) for z in roots), key=lambda z: (abs(z), z.imag))
+
+
+@pytest.mark.parametrize(
+    ("deck", "n_zeros"),
+    [
+        # numerator s²: the singularity probe at |s| ≈ 1 rad/s read it as H ≡ 0
+        ("c1 in n1 1n\nr1 n1 0 1k\nc2 n1 out 1n\nr2 out 0 1k\n.end", 2),
+        # 12 decades of conductance plus a feed-through cap (zeros from 1.1e3 to 1e12 rad/s): the
+        # same probe read H ≡ 0 again
+        (_wide_ladder(4, 4, "\ncf in out 1e-15"), 4),
+    ],
+    ids=["double_dc_zero", "twelve_decade_spread"],
+)
+def test_zeros_survive_a_numerator_that_is_small_near_1_rad_s(deck, n_zeros):
+    sysm = _system(deck)
+    num, _ = sp.fraction(sp.together(extract_tf(sysm, ("out", "0"), ("in", "0")).expr))
+    want = _exact_roots(num)
+    assert len(want) == n_zeros  # the premise
+    pz = poles_zeros(sysm, ("out", "0"), ("in", "0"))
+    got = sorted(
+        (z for r in pz.zeros for z in [complex(_roots_of([r])[0])] * r.multiplicity),
+        key=lambda z: (abs(z), z.imag),
+    )
+    assert got == pytest.approx(want, rel=1e-6, abs=1.0)  # abs: DC zeros land within 1 rad/s
+
+
+@pytest.mark.parametrize(("n", "step"), [(5, 3), (4, 4)])
+def test_poles_over_more_than_twelve_decades_are_all_reported(n, step):
+    """Time constants from 1 ps to 1 s: the eigenvalue cut at 1e-12 of the largest |λ| dropped
+    the fastest pole (4 of 5, 3 of 4 reported)."""
+    sysm = _system(_wide_ladder(n, step))
+    _, den = sp.fraction(sp.together(extract_tf(sysm, ("out", "0"), ("in", "0")).expr))
+    want = _exact_roots(den)
+    pz = poles_zeros(sysm, ("out", "0"), ("in", "0"))
+    got = sorted(_roots_of(pz.poles), key=lambda z: (abs(z), z.imag))
+    assert pz.n_states == len(want) == n
+    assert got == pytest.approx(want, rel=1e-4)  # measured 8.2e-11 (5, 3) and 4.9e-8 (4, 4)
+
+
+def test_poles_over_fourteen_decades_are_solved_unshifted():
+    """Eight sections, R stepping 2 decades from 1 Ω, every C 1 pF: cond(G) = 2.3e14. Without
+    equilibration σ = 0 failed the 1e14 condition test, the shift ‖G‖/‖C‖ put the slowest pole
+    at -9.766e-3 rad/s against the exact -9.899e-3 (1.3 %), and the bordered pencil for the
+    zeros found no usable shift, so ``poles_zeros`` raised (MacAnalog/spicexplorer-platform#303).
+    """
+    sysm = _system(_wide_ladder(8, 2))
+    _, den = sp.fraction(sp.together(extract_tf(sysm, ("out", "0"), ("in", "0")).expr))
+    want = _exact_roots(den)
+    A, _ = _augment(sysm, _as_pair(("in", "0"), sysm), "dm")
+    G, C = _affine_split(A, None)
+    assert np.linalg.cond(G) > 1e14  # the premise: σ = 0 is refused without equilibration
+    pencil = sorted(_finite_eigenvalues(G, C), key=lambda z: (abs(z), z.imag))
+    assert pencil == pytest.approx(want, rel=1e-4)  # measured 2.0e-7
+
+    pz = poles_zeros(sysm, ("out", "0"), ("in", "0"))
+    assert pz.n_states == len(want) == 8
+    got = sorted(_roots_of(pz.poles), key=lambda z: (abs(z), z.imag))
+    assert got == pytest.approx(want, rel=1e-4)
+    assert pz.zeros == []  # a ladder's numerator is a constant
+    assert pz.dc_gain == pytest.approx(1.0, rel=1e-9)
+
+
 def test_every_returned_root_is_actually_a_root():
     """Each root must sit far below the residual a *non*-root shows for the same pencil.
 
     σ_min/σ_max of ``G + sC`` is ~0 exactly at a root. Comparing against a floor probed at
     generic points is what separates a real root from an eigenvalue the shift-and-invert
-    merely produced — checked here rather than filtered at runtime, because on real
-    circuits (including deliberately capacitance-ablated ones) the margin is ~1e4 or
-    better and a runtime filter would be complexity with nothing to catch.
+    merely produced. ``poles_zeros`` applies that test to every candidate pole and zero at
+    runtime (a constant numerator otherwise reports the solver's infinite eigenvalues as
+    zeros); this test checks the result against a wider margin, 100x below the floor.
     """
     # a feedforward cap across the series R puts a zero in H as well as a pole
     sysm = _system(
         "r1 vin n1 1e3\ncf vin n1 1e-12\nc1 n1 0 1e-9\n"
-        "r2 n1 vout 1e5\ncf2 n1 vout 1e-13\nc2 vout 0 1e-11\n.end")
+        "r2 n1 vout 1e5\ncf2 n1 vout 1e-13\nc2 vout 0 1e-11\n.end"
+    )
     out, inp = ("vout", "0"), ("vin", "0")
     pz = poles_zeros(sysm, out, inp)
 
@@ -206,10 +357,14 @@ def test_every_returned_root_is_actually_a_root():
         rs = [complex(r.value_real, r.value_imag) for r in roots]
         assert rs, f"expected at least one {kind} in this circuit"
         scale = float(np.median([abs(z) for z in rs]))
-        floor = float(np.median([
-            _residual(Gx, Cx, scale * z)
-            for z in (0.37 + 0.93j, -1.7 + 0.41j, 0.11 - 2.3j, 3.1 + 1.7j)
-        ]))
+        floor = float(
+            np.median(
+                [
+                    _residual(Gx, Cx, scale * z)
+                    for z in (0.37 + 0.93j, -1.7 + 0.41j, 0.11 - 2.3j, 3.1 + 1.7j)
+                ]
+            )
+        )
         worst = max(_residual(Gx, Cx, z) for z in rs)
         assert worst < floor / 100, (
             f"{kind} residual {worst:.2e} is not clearly below the non-root floor {floor:.2e}"

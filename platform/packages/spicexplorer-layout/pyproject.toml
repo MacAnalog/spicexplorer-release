@@ -5,6 +5,9 @@ description = "SpiceXplorer layout generation — parameterized, generator-produ
 requires-python = ">=3.10"
 dependencies = [
     "spicexplorer-core",   # env/eng/paths seams shared across the suite; never a peer tool
+    "pyyaml>=6.0",         # review files, the iterations log, cli validate-review, em tech/sim specs
+    "pillow",              # review.annotate + iterations.diff_png PNG renders
+    "scipy>=1.11",         # rail: connected-component label + sparse sheet-resistance solve
 ]
 
 [project.optional-dependencies]
@@ -16,7 +19,7 @@ dependencies = [
 gds = [
     "gdsfactory>=9; python_version >= '3.11'",
     "ihp-gdsfactory>=0.2.7; python_version >= '3.11'",
-    "klayout>=0.30",
+    "klayout>=0.30.12",
 ]
 
 # EM verification lane (spicexplorer_layout.em): net cutting needs `gds`; the
@@ -24,10 +27,14 @@ gds = [
 # is a from-source install (no wheel) and is NOT a dependency — em_sparams()
 # raises with the build-recipe pointer when it is absent.
 em = [
-    "scikit-rf>=1.0",
+    # <2.0 is forced by the gds extra: ihp-gdsfactory 2.0 -> gplugins[sax]>=2.1 -> scikit-rf<2.0.
+    # A scikit-rf 2.x bump silently downgrades ihp-gdsfactory to 0.2.8 (dependabot #123); lift the
+    # cap only when gplugins allows 2.x. Our own use (Network, VectorFitting) runs on 2.1 unchanged.
+    "scikit-rf>=1.0,<2.0",
 ]
 
-# NOTE: a leaf tool — depends on spicexplorer-core only. It MUST NOT import a peer tool
+# NOTE: a leaf tool — spicexplorer-core is its only SpiceXplorer dependency (pyyaml, pillow
+# and scipy above are third-party). It MUST NOT import a peer tool
 # (`spicexplorer_signoff`, the optimizer `spicexplorer`). Composition (build → drc → lvs →
 # pex → measure) is done by handing `spicexplorer_signoff.run_flow` a `GdsBuilder` from here.
 

@@ -19,20 +19,21 @@ C {blocks/tg_pair_cmos_rail_bulk_9.sym} 1725 0 0 0 {name=xtg_pair_cmos_rail_bulk
 C {blocks/tg_pair_cmos_rail_bulk_10.sym} 2230 0 0 0 {name=xtg_pair_cmos_rail_bulk_10}
 C {blocks/tg_pair_cmos_rail_bulk_11.sym} 2740 0 0 0 {name=xtg_pair_cmos_rail_bulk_11}
 C {blocks/tg_pair_cmos_rail_bulk_12.sym} 3250 0 0 0 {name=xtg_pair_cmos_rail_bulk_12}
-C {devices/capa_np.sym} -1430 320 0 0 {name=CA1 value='Cu' m=x_dut_ca1_m}
-C {devices/capa_np.sym} -1210 320 0 0 {name=CA2 value='Cu' m=x_dut_ca2_m}
-C {devices/capa_np.sym} -990 320 0 0 {name=CA3 value='Cu' m=x_dut_ca3_m}
-C {devices/capa_np.sym} -770 320 0 0 {name=CA4 value='Cu' m=x_dut_ca4_m}
-C {devices/capa_np.sym} -550 320 0 0 {name=CB1 value='Cu' m=x_dut_cb1_m}
-C {devices/capa_np.sym} -330 320 0 0 {name=CB2 value='Cu' m=x_dut_cb2_m}
-C {devices/capa_np.sym} -110 320 0 0 {name=CB3 value='Cu' m=x_dut_cb3_m}
-C {devices/capa_np.sym} 110 320 0 0 {name=CB4 value='Cu' m=x_dut_cb4_m}
-C {devices/capa_np.sym} 330 320 0 0 {name=CF1 value='x_dut_cf1_value'}
-C {devices/capa_np.sym} 550 320 0 0 {name=CF2 value='x_dut_cf2_value'}
-C {devices/capa_np.sym} 770 320 0 0 {name=CIN value='cin_val'}
-C {devices/capa_np.sym} 990 320 0 0 {name=COUT value='cout_val'}
-C {devices/res_np.sym} 1210 320 0 0 {name=RIN value='rin_val'}
-C {devices/res_np.sym} 1430 320 0 0 {name=ROUT value='rout_val'}
+C {devices/capa_np.sym} -1540 320 0 0 {name=CA1 value='Cu' m=x_dut_ca1_m}
+C {devices/capa_np.sym} -1320 320 0 0 {name=CA2 value='Cu' m=x_dut_ca2_m}
+C {devices/capa_np.sym} -1100 320 0 0 {name=CA3 value='Cu' m=x_dut_ca3_m}
+C {devices/capa_np.sym} -880 320 0 0 {name=CA4 value='Cu' m=x_dut_ca4_m}
+C {devices/capa_np.sym} -660 320 0 0 {name=CB1 value='Cu' m=x_dut_cb1_m}
+C {devices/capa_np.sym} -440 320 0 0 {name=CB2 value='Cu' m=x_dut_cb2_m}
+C {devices/capa_np.sym} -220 320 0 0 {name=CB3 value='Cu' m=x_dut_cb3_m}
+C {devices/capa_np.sym} 0 320 0 0 {name=CB4 value='Cu' m=x_dut_cb4_m}
+C {devices/capa_np.sym} 220 320 0 0 {name=CF1 value='x_dut_cf1_value'}
+C {devices/capa_np.sym} 440 320 0 0 {name=CF2 value='x_dut_cf2_value'}
+C {devices/capa_np.sym} 660 320 0 0 {name=CIN value='cin_val'}
+C {devices/capa_np.sym} 880 320 0 0 {name=COUT value='cout_val'}
+C {devices/vccs.sym} 1100 320 0 0 {name=GM value="\{gm_val\}"}
+C {devices/res_np.sym} 1320 320 0 0 {name=RIN value='rin_val'}
+C {devices/res_np.sym} 1540 320 0 0 {name=ROUT value='rout_val'}
 N -3125 -20 -3085 -20 {}
 C {devices/lab_wire.sym} -3085 -20 0 1 {name=l0 lab=sum_p}
 N -3125 20 -3085 20 {}
@@ -185,59 +186,67 @@ N 3250 -80 3250 -120 {}
 C {devices/lab_wire.sym} 3250 -120 0 1 {name=l74 lab=VDD}
 N 3250 80 3250 120 {}
 C {devices/lab_wire.sym} 3250 120 2 0 {name=l75 lab=VSS}
-N -1430 290 -1430 250 {}
-C {devices/lab_wire.sym} -1430 250 0 1 {name=l76 lab=sum_p}
-N -1430 350 -1430 390 {}
-C {devices/lab_wire.sym} -1430 390 2 0 {name=l77 lab=vinp}
-N -1210 290 -1210 250 {}
-C {devices/lab_wire.sym} -1210 250 0 1 {name=l78 lab=sum_p}
-N -1210 350 -1210 390 {}
-C {devices/lab_wire.sym} -1210 390 2 0 {name=l79 lab=bota0}
-N -990 290 -990 250 {}
-C {devices/lab_wire.sym} -990 250 0 1 {name=l80 lab=sum_p}
-N -990 350 -990 390 {}
-C {devices/lab_wire.sym} -990 390 2 0 {name=l81 lab=bota1}
-N -770 290 -770 250 {}
-C {devices/lab_wire.sym} -770 250 0 1 {name=l82 lab=sum_p}
-N -770 350 -770 390 {}
-C {devices/lab_wire.sym} -770 390 2 0 {name=l83 lab=bota2}
-N -550 290 -550 250 {}
-C {devices/lab_wire.sym} -550 250 0 1 {name=l84 lab=sum_n}
-N -550 350 -550 390 {}
-C {devices/lab_wire.sym} -550 390 2 0 {name=l85 lab=vinn}
-N -330 290 -330 250 {}
-C {devices/lab_wire.sym} -330 250 0 1 {name=l86 lab=sum_n}
-N -330 350 -330 390 {}
-C {devices/lab_wire.sym} -330 390 2 0 {name=l87 lab=botb0}
-N -110 290 -110 250 {}
-C {devices/lab_wire.sym} -110 250 0 1 {name=l88 lab=sum_n}
-N -110 350 -110 390 {}
-C {devices/lab_wire.sym} -110 390 2 0 {name=l89 lab=botb1}
-N 110 290 110 250 {}
-C {devices/lab_wire.sym} 110 250 0 1 {name=l90 lab=sum_n}
-N 110 350 110 390 {}
-C {devices/lab_wire.sym} 110 390 2 0 {name=l91 lab=botb2}
-N 330 290 330 250 {}
-C {devices/lab_wire.sym} 330 250 0 1 {name=l92 lab=voutp}
-N 330 350 330 390 {}
-C {devices/lab_wire.sym} 330 390 2 0 {name=l93 lab=sum_p}
-N 550 290 550 250 {}
-C {devices/lab_wire.sym} 550 250 0 1 {name=l94 lab=voutn}
-N 550 350 550 390 {}
-C {devices/lab_wire.sym} 550 390 2 0 {name=l95 lab=sum_n}
-N 770 290 770 250 {}
-C {devices/lab_wire.sym} 770 250 0 1 {name=l96 lab=sum_p}
-N 770 350 770 390 {}
-C {devices/lab_wire.sym} 770 390 2 0 {name=l97 lab=sum_n}
-N 990 290 990 250 {}
-C {devices/lab_wire.sym} 990 250 0 1 {name=l98 lab=voutp}
-N 990 350 990 390 {}
-C {devices/lab_wire.sym} 990 390 2 0 {name=l99 lab=voutn}
-N 1210 290 1210 250 {}
-C {devices/lab_wire.sym} 1210 250 0 1 {name=l100 lab=sum_p}
-N 1210 350 1210 390 {}
-C {devices/lab_wire.sym} 1210 390 2 0 {name=l101 lab=sum_n}
-N 1430 290 1430 250 {}
-C {devices/lab_wire.sym} 1430 250 0 1 {name=l102 lab=voutp}
-N 1430 350 1430 390 {}
-C {devices/lab_wire.sym} 1430 390 2 0 {name=l103 lab=voutn}
+N -1540 290 -1540 250 {}
+C {devices/lab_wire.sym} -1540 250 0 1 {name=l76 lab=sum_p}
+N -1540 350 -1540 390 {}
+C {devices/lab_wire.sym} -1540 390 2 0 {name=l77 lab=vinp}
+N -1320 290 -1320 250 {}
+C {devices/lab_wire.sym} -1320 250 0 1 {name=l78 lab=sum_p}
+N -1320 350 -1320 390 {}
+C {devices/lab_wire.sym} -1320 390 2 0 {name=l79 lab=bota0}
+N -1100 290 -1100 250 {}
+C {devices/lab_wire.sym} -1100 250 0 1 {name=l80 lab=sum_p}
+N -1100 350 -1100 390 {}
+C {devices/lab_wire.sym} -1100 390 2 0 {name=l81 lab=bota1}
+N -880 290 -880 250 {}
+C {devices/lab_wire.sym} -880 250 0 1 {name=l82 lab=sum_p}
+N -880 350 -880 390 {}
+C {devices/lab_wire.sym} -880 390 2 0 {name=l83 lab=bota2}
+N -660 290 -660 250 {}
+C {devices/lab_wire.sym} -660 250 0 1 {name=l84 lab=sum_n}
+N -660 350 -660 390 {}
+C {devices/lab_wire.sym} -660 390 2 0 {name=l85 lab=vinn}
+N -440 290 -440 250 {}
+C {devices/lab_wire.sym} -440 250 0 1 {name=l86 lab=sum_n}
+N -440 350 -440 390 {}
+C {devices/lab_wire.sym} -440 390 2 0 {name=l87 lab=botb0}
+N -220 290 -220 250 {}
+C {devices/lab_wire.sym} -220 250 0 1 {name=l88 lab=sum_n}
+N -220 350 -220 390 {}
+C {devices/lab_wire.sym} -220 390 2 0 {name=l89 lab=botb1}
+N 0 290 0 250 {}
+C {devices/lab_wire.sym} 0 250 0 1 {name=l90 lab=sum_n}
+N 0 350 0 390 {}
+C {devices/lab_wire.sym} 0 390 2 0 {name=l91 lab=botb2}
+N 220 290 220 250 {}
+C {devices/lab_wire.sym} 220 250 0 1 {name=l92 lab=voutp}
+N 220 350 220 390 {}
+C {devices/lab_wire.sym} 220 390 2 0 {name=l93 lab=sum_p}
+N 440 290 440 250 {}
+C {devices/lab_wire.sym} 440 250 0 1 {name=l94 lab=voutn}
+N 440 350 440 390 {}
+C {devices/lab_wire.sym} 440 390 2 0 {name=l95 lab=sum_n}
+N 660 290 660 250 {}
+C {devices/lab_wire.sym} 660 250 0 1 {name=l96 lab=sum_p}
+N 660 350 660 390 {}
+C {devices/lab_wire.sym} 660 390 2 0 {name=l97 lab=sum_n}
+N 880 290 880 250 {}
+C {devices/lab_wire.sym} 880 250 0 1 {name=l98 lab=voutp}
+N 880 350 880 390 {}
+C {devices/lab_wire.sym} 880 390 2 0 {name=l99 lab=voutn}
+N 1100 290 1100 250 {}
+C {devices/lab_wire.sym} 1100 250 0 1 {name=l100 lab=voutp}
+N 1100 350 1100 390 {}
+C {devices/lab_wire.sym} 1100 390 2 0 {name=l101 lab=voutn}
+N 1060 300 1020 300 {}
+C {devices/lab_wire.sym} 1020 300 0 0 {name=l102 lab=sum_p}
+N 1060 340 1020 340 {}
+C {devices/lab_wire.sym} 1020 340 0 0 {name=l103 lab=sum_n}
+N 1320 290 1320 250 {}
+C {devices/lab_wire.sym} 1320 250 0 1 {name=l104 lab=sum_p}
+N 1320 350 1320 390 {}
+C {devices/lab_wire.sym} 1320 390 2 0 {name=l105 lab=sum_n}
+N 1540 290 1540 250 {}
+C {devices/lab_wire.sym} 1540 250 0 1 {name=l106 lab=voutp}
+N 1540 350 1540 390 {}
+C {devices/lab_wire.sym} 1540 390 2 0 {name=l107 lab=voutn}

@@ -21,14 +21,21 @@ host device to the template device-slot it fills (the producer computed both —
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import logging
+from dataclasses import dataclass, field, replace
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .annotation import BlockAnnotationSet
 from .geometry import Transform, snap
 from .placement import PhasedPlacer, PlacementHints, Placer, place_with_hints
 from .sch_parser import parse_sch
 from .sym_library import SymLibrary
+
+if TYPE_CHECKING:
+    from .ingest import N2XCircuit
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "BlockStamp",
@@ -62,7 +69,9 @@ def resolve_template_sch(template_sch: str, root: Path | None = None) -> Path | 
 
         candidates.append(project_root() / template_sch)
     except Exception:  # pragma: no cover - root marker absent
-        pass
+        logger.debug(
+            "project_root() unavailable; template search skips the repo root", exc_info=True
+        )
     return next((c for c in candidates if c.is_file()), None)
 
 
@@ -154,9 +163,7 @@ def _build_one_stamp(
     min_x = min(t.x for t in raw.values())
     max_x = max(t.x for t in raw.values())
     mid_y = (min(t.y for t in raw.values()) + max(t.y for t in raw.values())) // 2
-    local = {
-        ref: Transform(t.x - min_x, t.y - mid_y, t.rot, t.flip) for ref, t in raw.items()
-    }
+    local = {ref: Transform(t.x - min_x, t.y - mid_y, t.rot, t.flip) for ref, t in raw.items()}
     return BlockStamp(block_id=block_id, local=local, width=(max_x - min_x) + _DEVICE_PAD)
 
 
@@ -221,7 +228,7 @@ class TemplateStampPlacer:
 
     def place(
         self,
-        circuit,
+        circuit: N2XCircuit,
         lib: SymLibrary | None = None,
         *,
         hints: PlacementHints | None = None,
@@ -229,6 +236,17 @@ class TemplateStampPlacer:
         # Run the base placer with block-cohesion hints so each block's baseline centroid is coherent
         # (its devices already clustered) — we only read the centroids to order the row.
         cluster_hints = PlacementHints(clusters=tuple(s.devices for s in self.stamps))
+        if cluster_hints and hints:
+            # Merge the caller's own hints with the stamps' (they used to be dropped whenever a
+            # stamp existed): its stage/role maps as given, its clusters after the stamps', minus
+            # any device already in a stamp cluster, since a device belongs to at most one cluster.
+            stamped = {ref for members in cluster_hints.clusters for ref in members}
+            extra = tuple(
+                kept
+                for members in hints.clusters
+                if (kept := tuple(r for r in members if r not in stamped))
+            )
+            cluster_hints = replace(hints, clusters=cluster_hints.clusters + extra)
         baseline = place_with_hints(self.base, circuit, lib, cluster_hints or hints)
         if not self.stamps:
             return baseline
@@ -247,8 +265,12 @@ class TemplateStampPlacer:
         for ref, t in baseline.items():
             if ref not in block_of:
                 units.append(
-                    _Unit(center=(t.x, t.y), local={ref: Transform(0, 0, t.rot, t.flip)},
-                          width=_DEVICE_PAD, key=ref)
+                    _Unit(
+                        center=(t.x, t.y),
+                        local={ref: Transform(0, 0, t.rot, t.flip)},
+                        width=_DEVICE_PAD,
+                        key=ref,
+                    )
                 )
 
         # Order left-to-right by the base placer's x (then y, then ref for determinism) and pack into a

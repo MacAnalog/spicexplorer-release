@@ -14,6 +14,7 @@ complete file, never a half-written one. The temp lives beside the target (not i
 ``/tmp``) so the rename is a same-filesystem operation; a cross-device rename
 would silently degrade to a non-atomic copy.
 """
+
 from __future__ import annotations
 
 import json
@@ -35,9 +36,7 @@ def atomic_write_text(path: str | Path, text: str, *, encoding: str = "utf-8") -
     path.parent.mkdir(parents=True, exist_ok=True)
 
     # mkstemp in the destination dir keeps os.replace on one filesystem (atomic).
-    fd, tmp_name = tempfile.mkstemp(
-        dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp"
-    )
+    fd, tmp_name = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
     tmp = Path(tmp_name)
     try:
         with os.fdopen(fd, "w", encoding=encoding) as f:
@@ -76,9 +75,7 @@ def atomic_write_bytes(path: str | Path, data: bytes) -> Path:
     """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp_name = tempfile.mkstemp(
-        dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp"
-    )
+    fd, tmp_name = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
     tmp = Path(tmp_name)
     try:
         with os.fdopen(fd, "wb") as f:

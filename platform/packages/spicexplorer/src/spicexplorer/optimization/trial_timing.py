@@ -31,12 +31,12 @@ Thresholds (all `None` = off, set from `optimizer_config`):
 A warning LATCHES: it fires on the crossing and stays quiet until the rolling median recovers back
 below the threshold, so a run that is simply slow does not emit one WARNING per trial.
 """
+
 from __future__ import annotations
 
 import statistics
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Deque, List, Optional
 
 #: Trials in the rolling window. Wide enough that a single slow trial cannot move the median,
 #: short enough to track growth within a few tens of trials.
@@ -54,19 +54,19 @@ DEFAULT_TRIAL_TIME_REPORT_EVERY: int = 25
 class TrialTimeVerdict:
     """What the monitor concluded after one trial. The loop turns this into log lines."""
 
-    trial: int                                   # 1-based count of trials recorded so far
-    elapsed_s: float                             # this trial's wall time
-    rolling_median_s: float                      # median over the last `window` trials
-    baseline_median_s: Optional[float] = None    # median over the first `baseline_trials`, once known
+    trial: int  # 1-based count of trials recorded so far
+    elapsed_s: float  # this trial's wall time
+    rolling_median_s: float  # median over the last `window` trials
+    baseline_median_s: float | None = None  # median over the first `baseline_trials`, once known
     #: A WARNING to emit, or None. Non-None only on the trial that CROSSES a threshold.
-    warning: Optional[str] = None
+    warning: str | None = None
     #: A periodic INFO line, or None on trials that are not a reporting cadence tick.
-    report: Optional[str] = None
+    report: str | None = None
     #: True once `trial_time_stop_s` is crossed — the loop should end the run gracefully.
     stop: bool = False
 
     @property
-    def growth_factor(self) -> Optional[float]:
+    def growth_factor(self) -> float | None:
         """Rolling median as a multiple of the baseline median; None until the baseline exists."""
         if not self.baseline_median_s:
             return None
@@ -81,17 +81,17 @@ class TrialTimeMonitor:
     to `None`, which is off. See the module docstring for the semantics of each.
     """
 
-    warn_s: Optional[float] = None
-    warn_factor: Optional[float] = None
-    stop_s: Optional[float] = None
+    warn_s: float | None = None
+    warn_factor: float | None = None
+    stop_s: float | None = None
     window: int = DEFAULT_TRIAL_TIME_WINDOW
     baseline_trials: int = DEFAULT_TRIAL_TIME_BASELINE
     report_every: int = DEFAULT_TRIAL_TIME_REPORT_EVERY
 
     n: int = field(default=0, init=False)
     _total_s: float = field(default=0.0, init=False, repr=False)
-    _recent: Deque[float] = field(init=False, repr=False)
-    _first: List[float] = field(default_factory=list, init=False, repr=False)
+    _recent: deque[float] = field(init=False, repr=False)
+    _first: list[float] = field(default_factory=list, init=False, repr=False)
     _warned_absolute: bool = field(default=False, init=False, repr=False)
     _warned_relative: bool = field(default=False, init=False, repr=False)
     stopped: bool = field(default=False, init=False)
@@ -106,12 +106,12 @@ class TrialTimeMonitor:
     # --- Read-only statistics ---
     # ----------------------------
     @property
-    def rolling_median_s(self) -> Optional[float]:
+    def rolling_median_s(self) -> float | None:
         """Median of the last `window` trials; None before any trial is recorded."""
         return statistics.median(self._recent) if self._recent else None
 
     @property
-    def baseline_median_s(self) -> Optional[float]:
+    def baseline_median_s(self) -> float | None:
         """Median of the first `baseline_trials` trials; None until that many are recorded.
 
         Withheld until the window is full on purpose: a baseline built from one or two trials is
@@ -150,32 +150,42 @@ class TrialTimeMonitor:
 
         report = None
         if self.report_every and self.n % self.report_every == 0:
-            report = (f"⏱️  trial {self.n}: {elapsed_s:.1f} s "
-                      f"(rolling median over the last {len(self._recent)} trial(s): "
-                      f"{rolling:.1f} s/trial{self._growth_suffix(rolling, baseline)})")
+            report = (
+                f"⏱️  trial {self.n}: {elapsed_s:.1f} s "
+                f"(rolling median over the last {len(self._recent)} trial(s): "
+                f"{rolling:.1f} s/trial{self._growth_suffix(rolling, baseline)})"
+            )
 
         return TrialTimeVerdict(
-            trial=self.n, elapsed_s=elapsed_s, rolling_median_s=rolling,
-            baseline_median_s=baseline, warning=warning, report=report, stop=stop)
+            trial=self.n,
+            elapsed_s=elapsed_s,
+            rolling_median_s=rolling,
+            baseline_median_s=baseline,
+            warning=warning,
+            report=report,
+            stop=stop,
+        )
 
     # ----------------------------
     # --- Helpers ---
     # ----------------------------
-    def _growth_suffix(self, rolling: float, baseline: Optional[float]) -> str:
+    def _growth_suffix(self, rolling: float, baseline: float | None) -> str:
         if not baseline:
             return ""
         return f", {rolling / baseline:.1f}x the first-{self.baseline_trials}-trial baseline"
 
-    def _check_thresholds(self, rolling: float, baseline: Optional[float]) -> Optional[str]:
+    def _check_thresholds(self, rolling: float, baseline: float | None) -> str | None:
         """One warning per crossing, re-armed when the rolling median recovers (see module doc)."""
         if self.warn_s is not None:
             if rolling > self.warn_s:
                 if not self._warned_absolute:
                     self._warned_absolute = True
-                    return (f"per-trial wall time has grown past the configured budget: rolling "
-                            f"median {rolling:.1f} s/trial > trial_time_warn_s={self.warn_s:.1f} s "
-                            f"at trial {self.n}. The search backend, not the simulation, is the "
-                            f"usual cause late in a run (GP refit cost — ledger E-049).")
+                    return (
+                        f"per-trial wall time has grown past the configured budget: rolling "
+                        f"median {rolling:.1f} s/trial > trial_time_warn_s={self.warn_s:.1f} s "
+                        f"at trial {self.n}. The search backend, not the simulation, is the "
+                        f"usual cause late in a run (GP refit cost — ledger E-049)."
+                    )
             else:
                 self._warned_absolute = False
 
@@ -183,10 +193,12 @@ class TrialTimeMonitor:
             if rolling > self.warn_factor * baseline:
                 if not self._warned_relative:
                     self._warned_relative = True
-                    return (f"per-trial wall time is growing: rolling median {rolling:.1f} s/trial "
-                            f"is {rolling / baseline:.1f}x this run's own first-"
-                            f"{self.baseline_trials}-trial baseline of {baseline:.1f} s "
-                            f"(trial_time_warn_factor={self.warn_factor:g}) at trial {self.n}.")
+                    return (
+                        f"per-trial wall time is growing: rolling median {rolling:.1f} s/trial "
+                        f"is {rolling / baseline:.1f}x this run's own first-"
+                        f"{self.baseline_trials}-trial baseline of {baseline:.1f} s "
+                        f"(trial_time_warn_factor={self.warn_factor:g}) at trial {self.n}."
+                    )
             else:
                 self._warned_relative = False
         return None

@@ -4,6 +4,7 @@ Every committed `examples/**/project_setup.yaml` is discovered once here, so add
 a new example automatically adds coverage (any test that takes an `example_yaml`
 parameter runs against all of them) without editing a hardcoded list per test file.
 """
+
 import pytest
 import yaml
 from spicexplorer_core import project_root

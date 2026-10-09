@@ -6,6 +6,7 @@ kwargs; a project YAML authored for a Family (``SamplingSearch`` +
 crash construction before a single trial ran. The factory now drops the kwargs
 with a warning and constructs the preset bare.
 """
+
 import nevergrad as ng
 import pytest
 from spicexplorer.optimization.stochastic.nevergrad import create_optimizer
@@ -18,7 +19,9 @@ def _param() -> ng.p.Dict:
 def test_registry_preset_drops_rejected_kwargs():
     # The exact kwargs the SamplingSearch-configured examples carry.
     opt = create_optimizer(
-        "LhsDE", _param(), budget=4,
+        "LhsDE",
+        _param(),
+        budget=4,
         optimizer_kwargs={"sampler": "Hammersley", "scrambled": True, "rescaled": True},
     )
     assert opt is not None
@@ -27,7 +30,9 @@ def test_registry_preset_drops_rejected_kwargs():
 
 def test_family_with_its_own_kwargs_still_constructs():
     opt = create_optimizer(
-        "SamplingSearch", _param(), budget=4,
+        "SamplingSearch",
+        _param(),
+        budget=4,
         optimizer_kwargs={"sampler": "Hammersley", "scrambled": True, "rescaled": True},
     )
     assert opt is not None
@@ -46,7 +51,9 @@ def test_rescaled_sampling_at_budget_1_yields_finite_candidates():
     import math
 
     opt = create_optimizer(
-        "SamplingSearch", _param(), budget=1,
+        "SamplingSearch",
+        _param(),
+        budget=1,
         optimizer_kwargs={"sampler": "Hammersley", "scrambled": True, "rescaled": True},
     )
     value = opt.ask().value

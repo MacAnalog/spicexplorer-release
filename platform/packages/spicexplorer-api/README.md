@@ -22,14 +22,12 @@ shared `.venv` with its dependencies. It is **not** a library you import symbols
 public surface is the **ASGI app** (`spicexplorer_api.main:app`) and its HTTP routes, not a
 Python API.
 
-Declared dependencies (`pyproject.toml`): `spicexplorer[torch]`, `spicexplorer-core`,
+Declared dependencies (`pyproject.toml`): `spicexplorer`, `spicexplorer-core`,
 `spicexplorer-netlist2xschem`, `fastapi>=0.115`, `uvicorn[standard]>=0.32`,
 `python-multipart>=0.0.12`.
 
-> The `[torch]` extra on `spicexplorer` keeps the deployed app's Bode / AC transfer-function
-> optimizer working. Dropping it (→ bare `spicexplorer`) makes the api/Docker image
-> torch-free — safe only if no project uses the Bode optimizer; the common
-> single-objective / constraint optimizers and all scoring are pure numpy.
+> torch is not a dependency of the api any more (2026-09-07): the Bode / AC transfer-function
+> optimizer is numpy. The Ax optimizer needs `spicexplorer[ax]`, which brings torch (CPU wheel on Linux).
 
 ## Routes surface
 
@@ -43,7 +41,7 @@ routed endpoints**, plus an un-prefixed `GET /health` liveness probe defined in 
 | `config` | 1 | `GET /api/config` — `app_config.json` with repo-relative paths resolved + preset checkpoints. |
 | `project` | 5 | Load / validate / generate / parse-to-form a project YAML (`/project/load`, `/yaml-text`, `/project/validate`, `/project/generate`, `/project/parse-to-form`). |
 | `score` | 1 | `POST /api/score` — sigmoid-vs-linear score shaping for a project's target specs. |
-| `optimize` | 4 | Start / stop a run and stream live progress: `/optimize/start` (ephemeral algorithm/budget/seed/corner overrides + opt-in `keep_raw` per-trial waveform retention), `/optimize/stop/{run_id}`, **SSE** `/optimize/stream/{run_id}`, and `GET /optimize/algorithms` — the selectable algorithms derived from the *installed* Nevergrad (`recommended` curated presets / `families` configurable kwargs-accepting classes / `registry` all 500+ presets), so the UI never hardcodes algorithm names. Guide: [`notebooks/run_launch_api_tour.ipynb`](notebooks/run_launch_api_tour.ipynb). |
+| `optimize` | 4 | Start / stop a run and stream live progress: `/optimize/start` (ephemeral algorithm/budget/seed/corner overrides + opt-in `keep_raw` per-trial waveform retention), `/optimize/stop/{run_id}`, **SSE** `/optimize/stream/{run_id}`, and `GET /optimize/algorithms` — the selectable algorithms derived from the *installed* Nevergrad (`recommended` curated presets / `families` configurable kwargs-accepting classes / `registry` all 500+ presets), so the UI never hardcodes algorithm names. Guide: [`notebooks/run_launch_api_tour.py`](notebooks/run_launch_api_tour.py). |
 | `checkpoint` | 6 | List / load / delete checkpoints + envelope / scatter / report analyses. |
 | `schematic` | 1 | `GET /api/schematic` — the project schematic SVG asset. |
 | `sanity` | 1 | `POST /api/sanity-check` — pre-flight testbench + single-trial sanity evaluation. |
@@ -104,7 +102,7 @@ For the full Docker / native lanes and running the API **with** the UI, see the
   (`EnvResponse` in `routes/env.py`). When `pdk_ok` / `live_runs_enabled` is false the UI
   shows the replay-only pill and disables live Start; score shaping, compare/explore on cached
   checkpoints, and the wizard all still work. PVT design + degradation rationale:
-  [`../../doc/PVT_plan.md`](../../doc/PVT_plan.md).
+  [`../../doc/archive/PVT_plan.md`](../../doc/archive/PVT_plan.md).
 - **CORS** — `main.py` uses `allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?"`
   (`allow_credentials=True`, all methods/headers), so any `localhost:<port>` dev origin is
   accepted. Do **not** replace it with a static origin list.
@@ -137,15 +135,17 @@ For the full Docker / native lanes and running the API **with** the UI, see the
 
 ## Notebooks
 
-Two, both **server-free** tours via FastAPI's `TestClient` (no uvicorn), committed executed:
+Two, both **server-free** tours via FastAPI's `TestClient` (no uvicorn). Each is a marimo notebook:
+open it with `uv run marimo edit packages/spicexplorer-api/notebooks/<name>.py`, or run all its
+cells with `uv run python packages/spicexplorer-api/notebooks/<name>.py`.
 
-- [`notebooks/library_api_tour.ipynb`](notebooks/library_api_tour.ipynb) — the `/api/library/*`
+- [`notebooks/library_api_tour.py`](notebooks/library_api_tour.py) — the `/api/library/*`
   Reference Library routes: catalog → circuit detail → bulk results → class registry →
   templates → the schematic SVG (rendered inline) → the graceful-degradation contract (needs
   the `examples/analog-db` submodule installed — see the Library contract below). The
   end-to-end feature guide is the meta-repo's
   [`doc/guide_library_catalog.md`](../../../doc/guide_library_catalog.md).
-- [`notebooks/run_launch_api_tour.ipynb`](notebooks/run_launch_api_tour.ipynb) — the run-launch
+- [`notebooks/run_launch_api_tour.py`](notebooks/run_launch_api_tour.py) — the run-launch
   surface: `GET /optimize/algorithms` (recommended/families/registry semantics + the
   preset-kwargs guards), the `examples/demos.yaml` curated demo registry (+ `assets.xschem`
   schematic seeding on `from-example`), and the `POST /simulate/once {monte_carlo}` launch
@@ -153,7 +153,7 @@ Two, both **server-free** tours via FastAPI's `TestClient` (no uvicorn), committ
 
 The rest of the api surface stays notebook-free by design (it is an HTTP edge adapter): the
 optimizer's worked notebooks live under `examples/OTA/...` (see
-[`../spicexplorer/README.md`](../spicexplorer/README.md)) and the kernel's `core_quickstart.ipynb`
+[`../spicexplorer/README.md`](../spicexplorer/README.md)) and the kernel's `core_quickstart.py`
 is referenced from [`../spicexplorer-core/README.md`](../spicexplorer-core/README.md).
 
 ## Tests

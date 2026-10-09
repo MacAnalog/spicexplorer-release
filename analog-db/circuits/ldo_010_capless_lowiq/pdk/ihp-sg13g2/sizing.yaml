@@ -1,0 +1,45 @@
+# Sizing for the ihp-sg13g2 binding of the capless candidate (sg13_lv_*, 1.5 V).
+# DEFAULTS = the DESIGN OF RECORD of experiments/003-sizing (the `spicexplorer-optimize`
+# winner, rounded onto a 10 nm device grid and with c_ff_w backed off its cliff). A bare
+# `ldo.dut.CANDIDATE` therefore renders the point of record; 002's hand point is recovered by
+# `git show 76eddd6:circuits/ldo_ihp_capless/pdk/ihp-sg13g2/sizing.yaml`.
+# The optimizer's search band is min..max; an optimizer rewrites these `.param` lines by name, so
+# every knob must be defined exactly once — a Design with NO overrides renders exactly one line
+# per knob.
+# Geometry in metres (analog-db unit convention); ihp lv min L = 0.13u, min W = 0.15u.
+schema: spicexplorer/sizing@1
+pdk: ihp-sg13g2
+variables:
+- {name: vref_val,      description: "Ideal internal reference (a real bandgap is out of scope)", default: 0.6, min: 0.6, max: 0.6, unit: V}
+- {name: r_w,           description: "rhigh poly width, shared by the three resistors (PDK minimum; fixed)", default: 0.5u, min: 0.5u, max: 0.5u, unit: m}
+- {name: r_fb_l,        description: "Feedback divider resistor length, each of XR1/XR2 (rhigh ~1.36 kohm/sq: 340u -> 1 Mohm); 1:1 -> vout = 2*vref", default: 340u, min: 100u, max: 1000u, unit: m}
+- {name: c_ff_w,        description: "Feed-forward MIM across the top divider resistor (square; 8u -> 0.1 pF, zero ~1.6 MHz). CLIFF between 9.4u and 9.5u: S7 jumps 107 -> 201 mV (003 §2). 8u is 19 % below it", default: 8u, min: 3u, max: 14u, unit: m}
+- {name: r_bias_l,      description: "Bias resistor length (100u -> ~300 kohm): I_ref = (VDD - Vgs(XMB0)) / R", default: 138.5u, min: 30u, max: 300u, unit: m}
+- {name: x_dut_xmb0_w,  description: "NMOS bias diode width (mirror unit; XMB1/XMS are ratios of it)", default: 1u, min: 0.5u, max: 4u, unit: m}
+- {name: x_dut_xmb0_l,  description: "NMOS bias-mirror length (shared by XMB0/XMB1)", default: 1u, min: 0.5u, max: 2u, unit: m}
+- {name: x_dut_xmb1_w,  description: "NMOS sink under the PMOS bias diode (sets the error-amp tail current)", default: 1.39u, min: 0.5u, max: 8u, unit: m}
+- {name: x_dut_xmbp_w,  description: "PMOS bias diode width (mirror unit for the error-amp tail)", default: 10u, min: 2u, max: 40u, unit: m}
+- {name: x_dut_xmbp_l,  description: "PMOS bias-mirror length (shared by XMBP/XMT)", default: 1u, min: 0.5u, max: 2u, unit: m}
+- {name: x_dut_xmt_w,   description: "Error-amp tail PMOS width", default: 10u, min: 2u, max: 40u, unit: m}
+- {name: x_dut_xm1_w,   description: "Error-amp input pair width (XM1/XM2 matched)", default: 9.53u, min: 2u, max: 40u, unit: m}
+- {name: x_dut_xm1_l,   description: "Error-amp input pair length", default: 0.5u, min: 0.2u, max: 2u, unit: m}
+- {name: x_dut_xm3_w,   description: "Error-amp NMOS mirror load width (XM3/XM4 matched)", default: 2.95u, min: 0.5u, max: 8u, unit: m}
+- {name: x_dut_xm3_l,   description: "Error-amp NMOS mirror load length", default: 1u, min: 0.3u, max: 2u, unit: m}
+- {name: x_dut_xm5_w,   description: "Error-amp stage-2 NMOS width", default: 2.42u, min: 0.5u, max: 16u, unit: m}
+- {name: x_dut_xm5_l,   description: "Error-amp stage-2 NMOS length", default: 0.5u, min: 0.2u, max: 2u, unit: m}
+- {name: x_dut_xm6_w,   description: "Error-amp stage-2 PMOS current-source width (ratio to XMBP)", default: 5.53u, min: 1u, max: 40u, unit: m}
+- {name: c_comp_w,      description: "Miller MIM side (square; 1.5 fF/um^2: 54u -> 4.4 pF)", default: 54u, min: 26u, max: 73u, unit: m}
+- {name: x_dut_xmc_w,   description: "FVF control PMOS width (source = vout)", default: 15.76u, min: 2u, max: 60u, unit: m}
+- {name: x_dut_xmc_l,   description: "FVF control PMOS length", default: 0.36u, min: 0.13u, max: 1u, unit: m}
+- {name: x_dut_xma_w,   description: "FVF fold NMOS mirror width (XMA diode / XMB, matched)", default: 5.79u, min: 0.5u, max: 16u, unit: m}
+- {name: x_dut_xma_l,   description: "FVF fold NMOS mirror length", default: 0.5u, min: 0.2u, max: 2u, unit: m}
+- {name: x_dut_xmcp_w,  description: "FVF fold PMOS mirror width (XMCP diode / XMD pull-up, matched)", default: 9.02u, min: 1u, max: 40u, unit: m}
+- {name: x_dut_xmcp_l,  description: "FVF fold PMOS mirror length", default: 0.5u, min: 0.2u, max: 2u, unit: m}
+- {name: x_dut_xms_w,   description: "Pass-gate sink NMOS width (I_B = ratio to XMB0; sets the pull-down slew)", default: 2.2u, min: 0.5u, max: 16u, unit: m}
+- {name: x_dut_xms_l,   description: "Pass-gate sink NMOS length (its ro sets the local-loop gain)", default: 0.95u, min: 0.2u, max: 2u, unit: m}
+- {name: x_dut_xmp_w,   description: "Pass PMOS unit width (total W = w*m)", default: 10u, min: 5u, max: 20u, unit: m}
+- {name: x_dut_xmp_l,   description: "Pass PMOS length (short = low dropout, less gate cap)", default: 0.13u, min: 0.13u, max: 0.3u, unit: m}
+- {name: x_dut_xmp_m,   description: "Pass PMOS unit count: total W = x_dut_xmp_w * this", default: 19, min: 10, max: 100, unit: count, is_integer: true}
+- {name: x_dut_xmp_nf_mult, description: "Drawn fingers per unit: the pass array is m*this unit fingers of w/this. It sets the Metal1 current per shared source/drain column (4 -> 0.263 mA of a 0.36 mA limit) and the gate-bar length (5.8 fF per unit on `gate`), so it is a sizing knob, not a layout knob. Legal set {2,4} at w=10u: w/this must land on the 0.01u device grid", default: 4, min: 2, max: 8, unit: count, is_integer: true}
+- {name: c_out_w,       description: "Output MIM unit side (square; 58u -> 5 pF)", default: 58u, min: 40u, max: 75u, unit: m}   # 75u = the cap model's validated side (review-002 m10)
+- {name: c_out_m,       description: "Output MIM units in parallel (C1: c_out_m * C(c_out_w) + the bench 1 pF <= 100 pF; 4 x 5 pF of record)", default: 4, min: 1, max: 16, unit: count, is_integer: true}

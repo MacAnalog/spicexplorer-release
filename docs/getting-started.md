@@ -25,13 +25,15 @@ Every step below has a `make` shortcut (left) and the raw command it runs
 │   └── .spicexplorer-root      # workspace-root marker (do not remove)
 ├── ui/           # Next.js "Studio" front-end (see ui/README.md)
 ├── analog-db/    # circuit corpus the API's /api/library routes read
-├── agentic-design-example/     # worked agent-driven design (git submodule)
+├── agentic-design-example/     # two worked agent-driven designs (git submodules)
+│   ├── agentic-design-pam4-driver-ihp130/  # PAM-4 current-steering DAC driver
+│   └── dn-003-afe-lpf-250hz-ihp130/        # 250 Hz low-pass filter analog front end
 └── .claude/      # agent definitions + skills (see .claude/README.md)
 ```
 
-`agentic-design-example/` is a submodule: clone with `--recurse-submodules`, or
-run `git submodule update --init --recursive` afterwards. Nothing below needs
-it.
+Both designs under `agentic-design-example/` are submodules: clone with
+`--recurse-submodules`, or run `git submodule update --init --recursive`
+afterwards. Nothing below needs them.
 
 `platform/` is a **virtual uv workspace** (no root package): the packages under
 `packages/*` are its members, wired together via `[tool.uv.sources]`. One

@@ -15,12 +15,12 @@ def test_env_override_is_honored_verbatim_even_if_nonexistent(tmp_path, monkeypa
     ghost = tmp_path / "not" / "a" / "db"
     monkeypatch.setenv(paths.ENV_VAR, str(ghost))
     assert paths.db_root() == ghost.resolve()
-    assert model.list_circuit_ids() == []          # missing circuits/ → empty, not raise
+    assert model.list_circuit_ids() == []  # missing circuits/ → empty, not raise
 
 
 def test_env_override_expands_user_and_resolves_relative(tmp_path, monkeypatch):
     monkeypatch.setenv(paths.ENV_VAR, str(tmp_path / "sub" / ".." / "db"))
-    assert paths.db_root() == (tmp_path / "db").resolve()   # `..` collapsed by resolve()
+    assert paths.db_root() == (tmp_path / "db").resolve()  # `..` collapsed by resolve()
 
 
 # ── model: unknown circuit is a clear error ───────────────────────────────────────────────────
@@ -42,13 +42,16 @@ def test_circuit_netlist_and_pdk_dir_accessors():
 
 
 # ── runner: measure-line formats ──────────────────────────────────────────────────────────────
-@pytest.mark.parametrize("line,name,value", [
-    ("dcgain = 29.78", "dcgain", 29.78),
-    ("ugf = 1e7", "ugf", 1e7),                  # exponent without sign
-    ("ugf = 1.5e+07", "ugf", 1.5e7),            # signed exponent
-    ("vos = -1.2e-3", "vos", -1.2e-3),          # negative mantissa
-    ("  pm   =   61.4  ", "pm", 61.4),          # whitespace variants
-])
+@pytest.mark.parametrize(
+    "line,name,value",
+    [
+        ("dcgain = 29.78", "dcgain", 29.78),
+        ("ugf = 1e7", "ugf", 1e7),  # exponent without sign
+        ("ugf = 1.5e+07", "ugf", 1.5e7),  # signed exponent
+        ("vos = -1.2e-3", "vos", -1.2e-3),  # negative mantissa
+        ("  pm   =   61.4  ", "pm", 61.4),  # whitespace variants
+    ],
+)
 def test_parse_measures_numeric_formats(line, name, value):
     measures, failed = runner.parse_measures(line)
     assert measures == {name: pytest.approx(value)} and failed == []

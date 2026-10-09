@@ -133,7 +133,7 @@ Scale mirror COPIES by the current ratio: W_copy = W_diode * (ID_copy / ID_diode
 
 ## 10. Practical sizing idioms (from the worked notebooks)
 
-Patterns the repo `gmid_sizing_demo.ipynb` and the iic-jku notebooks use; they make
+Patterns the repo `gmid_sizing_demo.py` and the iic-jku notebooks use; they make
 the per-device flow concrete and PVT-aware. Numbers in parentheses are sg13/sky130
 design choices (anchors), NOT universal constants.
 

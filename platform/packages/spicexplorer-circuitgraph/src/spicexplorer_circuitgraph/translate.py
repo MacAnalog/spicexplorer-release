@@ -10,8 +10,10 @@ handling the semantics the per-line emitters cannot know:
   UPPERCASE while device values keep the source's spelling; SPICE is case-insensitive,
   Spectre is case-sensitive, so every parameter symbol is folded to lowercase wherever
   it appears (definitions and references);
-- **bare symbolic passive values** (``C1 a b CL``) — the emitter would render the token
-  as a model master; they are brace-wrapped so the Spectre emitter renders ``c=cl``;
+- **bare symbolic passive values** (``C1 a b CL``) — the Spectre emitter itself renders a
+  bare symbol as an expression (``c=cl``) unless geometry marks the token a model; deck
+  parameters are additionally brace-wrapped here, so a known parameter is an expression
+  even on a card the emitter would read as model-named;
 - **ground aliasing** — ngspice treats ``GND`` as node 0, Spectre does not: matching
   top-level nets get an explicit 0 V tie source to node ``0``;
 - **numeric-normalized parameter defaults** — SPICE eng-suffix case is a Spectre
@@ -29,9 +31,9 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Sequence
 
 from spicexplorer_core.eng import parse_value
 from spicexplorer_core.spice_engine import NetlistView

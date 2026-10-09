@@ -19,7 +19,7 @@ Symbols introduced per instance (``gm_m1``, ``ro_m1``, …) are minted unique by
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 
 import sympy as sp
@@ -66,13 +66,45 @@ class SymbolMint:
 
     Tracks every symbol it has produced so a model never collides two devices, while leaving matched
     devices free to be tagged equal later (an EQUALITY assumption ``gm_m2 → gm_m1``, P5).
+
+    ``_label`` drops the ``X`` of a wrapped device, so ``M1`` and ``XM1`` both read as ``m1``;
+    minting both onto one symbol set gave two independent transistors the same symbols, with no
+    warning. Each label now belongs to ONE ref: a second ref with the same label mints under its
+    full ref instead (``gm_xm1``). Pass every ref up front (``refs``) so the bare device keeps the
+    short label whatever the netlist order; without them the first ref to mint keeps it.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, refs: Iterable[str] = ()) -> None:
         self._seen: set[str] = set()
+        self._label_of: dict[str, str] = {}  # ref -> the label its symbols carry
+        self._owner: dict[str, str] = {}  # label -> the ref it was assigned to
+        # bare refs (label == ref) claim first, so a collision always renames the X-wrapped one
+        for ref in sorted(refs, key=lambda r: _label(r) != r.lower()):
+            self._claim(ref)
+
+    def _claim(self, ref: str) -> str:
+        label = self._label_of.get(ref)
+        if label is not None:
+            return label
+        label = _label(ref)
+        if self._owner.get(label, ref) != ref:
+            other, label, n = self._owner[label], ref.lower(), 2
+            while label in self._owner:  # only without `refs`: a bare ref minting second
+                label, n = f"{ref.lower()}_{n}", n + 1
+            logger.warning(
+                "SymbolMint: %s and %s both read as %r; %s's symbols are minted as …_%s",
+                other,
+                ref,
+                _label(ref),
+                ref,
+                label,
+            )
+        self._label_of[ref] = label
+        self._owner[label] = ref
+        return label
 
     def sym(self, base: str, ref: str) -> sp.Symbol:
-        name = f"{base}_{_label(ref)}"
+        name = f"{base}_{self._claim(ref)}"
         self._seen.add(name)
         return sp.Symbol(name, positive=True)
 
@@ -196,8 +228,26 @@ def expand_inductor(
 ) -> tuple[list[Primitive], dict[str, sp.Symbol]]:
     p, n = _two_terminal_nets(dev)
     val = dev.params.get("value", mint.sym("l", dev.ref))
+    if val == 0 or getattr(val, "is_zero", False):
+        # 1/(s·0) would become sympy `zoo` and surface as a silent NaN transfer function
+        raise ValueError(
+            f"{dev.ref}: zero-inductance element — a hard short is not modelable; "
+            f"connect the two nets directly (or give the inductor a real value)"
+        )
     prims: list[Primitive] = [Inductor(name=f"l@{dev.ref}", n1=p, n2=n, value=val)]
     return prims, {}
+
+
+def expand_vccs(
+    dev: Device, mint: SymbolMint, fidelity: Fidelity
+) -> tuple[list[Primitive], dict[str, sp.Symbol]]:
+    """A ``G`` card: one VCCS at every fidelity. SPICE's ``G n+ n- nc+ nc- gm`` pushes
+    ``gm·(V[nc+] − V[nc−])`` from ``n+`` through the source to ``n−`` — the :class:`VCCS`
+    orientation, so the nets map one to one."""
+    np_, nn = dev.net_of(PinRole.PLUS) or "0", dev.net_of(PinRole.MINUS) or "0"
+    cp, cn = dev.net_of(PinRole.CONTROL_PLUS) or "0", dev.net_of(PinRole.CONTROL_MINUS) or "0"
+    val = dev.params.get("value", mint.sym("g", dev.ref))
+    return [VCCS(name=f"g@{dev.ref}", np=np_, nn=nn, cp=cp, cn=cn, value=val)], {}
 
 
 def _independent_source(dev: Device) -> Primitive:
@@ -210,14 +260,23 @@ def _independent_source(dev: Device) -> Primitive:
 
 
 def _register_builtins() -> None:
-    register_model(SmallSignalModel(
-        "mos.hybrid_pi",
-        frozenset({DeviceKind.NMOS, DeviceKind.PMOS, DeviceKind.MOS}),
-        expand_mosfet,
-    ))
-    register_model(SmallSignalModel("passive.resistor", frozenset({DeviceKind.RESISTOR}), expand_resistor))
-    register_model(SmallSignalModel("passive.capacitor", frozenset({DeviceKind.CAPACITOR}), expand_capacitor))
-    register_model(SmallSignalModel("passive.inductor", frozenset({DeviceKind.INDUCTOR}), expand_inductor))
+    register_model(
+        SmallSignalModel(
+            "mos.hybrid_pi",
+            frozenset({DeviceKind.NMOS, DeviceKind.PMOS, DeviceKind.MOS}),
+            expand_mosfet,
+        )
+    )
+    register_model(
+        SmallSignalModel("passive.resistor", frozenset({DeviceKind.RESISTOR}), expand_resistor)
+    )
+    register_model(
+        SmallSignalModel("passive.capacitor", frozenset({DeviceKind.CAPACITOR}), expand_capacitor)
+    )
+    register_model(
+        SmallSignalModel("passive.inductor", frozenset({DeviceKind.INDUCTOR}), expand_inductor)
+    )
+    register_model(SmallSignalModel("controlled.vccs", frozenset({DeviceKind.VCCS}), expand_vccs))
 
 
 _register_builtins()
@@ -246,7 +305,7 @@ def small_signal_model(
     registry = {**MODEL_REGISTRY, **(models or {})}
     primitives: list[Primitive] = []
     symbols: dict[str, dict[str, sp.Symbol]] = {}
-    mint = SymbolMint()
+    mint = SymbolMint(d.ref for d in ir.devices)
     skipped: list[str] = []
 
     for dev in ir.devices:
@@ -267,7 +326,8 @@ def small_signal_model(
             "small_signal_model: %d device(s) have no registered model and were skipped: %s. "
             "Their branches are ABSENT from the MNA, so any H(s) built from this model is "
             "missing them — check SmallSignalIR.unmodelled if this was not intended.",
-            len(skipped), ", ".join(skipped),
+            len(skipped),
+            ", ".join(skipped),
         )
 
     return SmallSignalIR(

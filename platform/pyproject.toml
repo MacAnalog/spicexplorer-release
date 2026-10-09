@@ -17,9 +17,8 @@ spicexplorer-gmid = { workspace = true }
 spicexplorer-netlist2tf = { workspace = true }
 spicexplorer-layout = { workspace = true }
 spicexplorer-signoff = { workspace = true }
-# CPU-only torch on Linux (no CUDA) — the api pulls spicexplorer[torch] for the
-# Bode / AC transfer-function optimizer; the CPU wheel keeps `uv sync` and the
-# Docker image lean. macOS/Windows use the normal PyPI wheels.
+# torch is not in the default set: only `spicexplorer[ax]` (the Ax optimizer's botorch stack) pulls it;
+# on Linux that extra takes the CPU-only wheel (no CUDA).
 torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
 
 [[tool.uv.index]]

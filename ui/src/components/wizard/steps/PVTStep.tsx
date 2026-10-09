@@ -100,7 +100,7 @@ export function PVTStep() {
               aria-label="Active PVT corner"
               value={pvt.active_corner}
               onChange={(e) => commit({ active_corner: e.target.value })}
-              className="w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+              className="w-full min-w-0 rounded-md border border-zinc-300 bg-panel px-2 py-1 text-sm focus:outline-hidden focus:ring-1 focus:ring-primary"
             >
               {corners.map((c) => (
                 <option key={c.name} value={c.name}>
@@ -125,14 +125,14 @@ export function PVTStep() {
         )}
 
         {corners.map((c, i) => (
-          <div key={i} className="space-y-2 rounded-md border border-zinc-200 p-3">
+          <div key={i} className="space-y-2 rounded-md border border-border p-3">
             <div className="flex items-center gap-2">
               {pvt.active_corner === c.name && <Badge variant="pass">active</Badge>}
               {!c.enabled && <Badge variant="neutral">disabled</Badge>}
               <span className="ml-auto" />
               <button
                 type="button"
-                className="rounded-md border border-zinc-200 px-2 py-1 text-zinc-400 hover:bg-red-50 hover:text-red-600"
+                className="rounded-md border border-border px-2 py-1 text-faint hover:bg-danger-soft hover:text-danger"
                 onClick={() => removeCorner(i)}
                 aria-label="Remove corner"
               >
@@ -144,7 +144,7 @@ export function PVTStep() {
               <Field label="Name">
                 <TextInput value={c.name} placeholder="tt_27C_1V8" onChange={(e) => updateCorner(i, { name: e.target.value })} />
                 {dupNames.has(c.name.trim()) && (
-                  <span className="text-[10px] text-red-600">Duplicate name — must be unique.</span>
+                  <span className="text-[10px] text-danger">Duplicate name — must be unique.</span>
                 )}
               </Field>
               <Field label="Temp (°C)">
@@ -164,21 +164,21 @@ export function PVTStep() {
             </label>
 
             {/* model includes — inline (file, section) directives */}
-            <div className="space-y-1.5 rounded-sm border border-zinc-100 bg-zinc-50 p-2">
+            <div className="space-y-1.5 rounded-sm border border-hairline bg-bg p-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+                <span className="text-[10px] font-medium uppercase tracking-wide text-muted">
                   process model includes ({c.includes.length})
                 </span>
                 <button
                   type="button"
-                  className="text-[11px] text-indigo-600 hover:underline"
+                  className="text-[11px] text-primary hover:underline"
                   onClick={() => addInclude(i)}
                 >
                   + add include
                 </button>
               </div>
               {c.includes.length === 0 && (
-                <div className="text-[10px] text-zinc-400">
+                <div className="text-[10px] text-faint">
                   None — corner sets only temp/supply (the netlist&apos;s <code>.lib</code> corner is kept).
                 </div>
               )}
@@ -188,7 +188,7 @@ export function PVTStep() {
                   <TextInput value={inc.section} placeholder="mos_tt" onChange={(e) => updateInclude(i, ii, { section: e.target.value })} />
                   <button
                     type="button"
-                    className="rounded-md border border-zinc-200 px-2 text-zinc-400 hover:bg-red-50 hover:text-red-600"
+                    className="rounded-md border border-border px-2 text-faint hover:bg-danger-soft hover:text-danger"
                     onClick={() => removeInclude(i, ii)}
                     aria-label="Remove include"
                   >
@@ -201,7 +201,7 @@ export function PVTStep() {
         ))}
 
         {corners.length === 0 && (
-          <div className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4 text-center text-xs text-zinc-500">
+          <div className="rounded-md border border-dashed border-zinc-300 bg-bg p-4 text-center text-xs text-muted">
             No PVT corners. The simulation uses whatever corner the netlist hardcodes.
             Add a corner to make process/temp/supply first-class.
           </div>

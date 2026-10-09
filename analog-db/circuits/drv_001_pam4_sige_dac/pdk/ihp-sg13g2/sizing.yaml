@@ -26,4 +26,4 @@ variables:
   - {name: x_dut_vcasc,    description: "Cascode bias (V) — SOA-critical vs BV_CEO",      default: 3.25, min: 2.8,  max: 3.6,  unit: V, testbench: true}    # testbench DC source on the vcasc port
   - {name: x_dut_vcm_in,   description: "Input common-mode / base-termination CM (V)",    default: 1.9,  min: 1.6,  max: 2.2,  unit: V, testbench: true}    # testbench DC source on the vcmb port
   # -- frozen fixtures (spec-fixed; kept out of the search space) --
-  - {name: x_dut_vcc,      description: "Supply rail (V) — fixed by spec",               default: 4.0,  min: 4.0,  max: 4.0,  unit: V, freeze: true, testbench: true}   # testbench supply source
+  - {name: x_dut_vcc,      description: "Supply rail (V) — fixed by spec",               default: 4.0, unit: V, freeze: true, testbench: true}   # testbench supply source

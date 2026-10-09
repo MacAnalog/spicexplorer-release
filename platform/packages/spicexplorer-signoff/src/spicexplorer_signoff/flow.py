@@ -8,9 +8,10 @@ optimizer trial. Stops at the first failing gate unless ``continue_on_fail``.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from .drc import run_drc
 from .lvs import run_lvs
@@ -48,14 +49,20 @@ def run_flow(
     pex_mode: str = "CC",
     do_pex: bool = True,
     continue_on_fail: bool = False,
+    no_density: bool = True,
+    halo_um: float | None = None,
 ) -> FlowResult:
+    """``no_density`` goes to :func:`run_drc`, whose default skips the chip-level density rules a
+    single cell cannot meet (a clean DRC is then conditional on density); ``halo_um`` goes to
+    :func:`run_pex` (``None`` keeps the tech file's sidewall halo). Report both with the numbers:
+    two extractions compare only at one halo."""
     run_dir = Path(run_dir).resolve()
     run_dir.mkdir(parents=True, exist_ok=True)
     try:
         gds = Path(build(params)).resolve()
     except Exception as e:  # builder bugs are a verdict, not a crash of the loop
         return FlowResult(None, None, None, None, "build", f"{type(e).__name__}: {e}")
-    drc = run_drc(gds, cell, run_dir / "drc", pdk=pdk)
+    drc = run_drc(gds, cell, run_dir / "drc", pdk=pdk, no_density=no_density)
     if not drc.passed and not continue_on_fail:
         return FlowResult(str(gds), drc, None, None, "drc", drc.reason)
     lvs = run_lvs(gds, netlist, cell, run_dir / "lvs", pdk=pdk)
@@ -63,7 +70,7 @@ def run_flow(
         return FlowResult(str(gds), drc, lvs, None, "lvs", lvs.reason)
     pex = None
     if do_pex:
-        pex = run_pex(gds, cell, netlist, run_dir / "pex", mode=pex_mode, pdk=pdk)
+        pex = run_pex(gds, cell, netlist, run_dir / "pex", mode=pex_mode, pdk=pdk, halo_um=halo_um)
         if not pex.ok:
             return FlowResult(str(gds), drc, lvs, pex, "pex", pex.reason)
     failed = None

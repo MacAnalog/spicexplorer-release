@@ -23,7 +23,9 @@ from spicexplorer_circuitgraph import (
     annotate_subcircuits,
     default_current_mirror_library,
     default_subcircuit_library,
+    export_subcircuit_annotations,
     find_subcircuits,
+    find_template_matches,
     graphs_equivalent,
     group_matches,
     netlists_equivalent,
@@ -127,7 +129,10 @@ def _cascode_only_lib(tmp_path) -> TemplateLibrary:
     return TemplateLibrary(
         [
             SubcircuitTemplate(
-                id="cm.nmos.cascode", netlist_path=casc, mirror_class="cascode", polarity="nmos",
+                id="cm.nmos.cascode",
+                netlist_path=casc,
+                mirror_class="cascode",
+                polarity="nmos",
                 ports={"supply": "VSS", "ref_in": "iin", "out": "iout"},
             )
         ]
@@ -141,16 +146,26 @@ def _diffpair_lib(tmp_path) -> TemplateLibrary:
     return TemplateLibrary(
         [
             SubcircuitTemplate(
-                id="cm.nmos.simple", netlist_path=mirror, mirror_class="simple", polarity="nmos",
+                id="cm.nmos.simple",
+                netlist_path=mirror,
+                mirror_class="simple",
+                polarity="nmos",
                 family="current_mirror",
                 ports={"supply": "VSS", "ref_in": "iin", "out": "iout"},
             ),
             SubcircuitTemplate(
-                id="dp.nmos.simple", netlist_path=pair, mirror_class="differential_pair",
-                polarity="nmos", family="differential_pair",
+                id="dp.nmos.simple",
+                netlist_path=pair,
+                mirror_class="differential_pair",
+                polarity="nmos",
+                family="differential_pair",
                 ports={
-                    "supply": "VSS", "in_p": "vinp", "in_n": "vinn",
-                    "CM_tail": "CM_tail", "out_n": "drain_n", "out_p": "drain_p",
+                    "supply": "VSS",
+                    "in_p": "vinp",
+                    "in_n": "vinn",
+                    "CM_tail": "CM_tail",
+                    "out_n": "drain_n",
+                    "out_p": "drain_p",
                 },
             ),
         ]
@@ -170,19 +185,35 @@ def _two_mirror_diffpair_lib(tmp_path, dp_tail_sources: list[str]) -> TemplateLi
     return TemplateLibrary(
         [
             SubcircuitTemplate(
-                id="cm.nmos.simple", netlist_path=mirror, mirror_class="simple", polarity="nmos",
-                family="current_mirror", ports={"supply": "VSS", "ref_in": "iin", "out": "iout"},
+                id="cm.nmos.simple",
+                netlist_path=mirror,
+                mirror_class="simple",
+                polarity="nmos",
+                family="current_mirror",
+                ports={"supply": "VSS", "ref_in": "iin", "out": "iout"},
             ),
             SubcircuitTemplate(
-                id="cm.nmos.cascode", netlist_path=casc, mirror_class="cascode", polarity="nmos",
-                family="current_mirror", ports={"supply": "VSS", "ref_in": "iin", "out": "iout"},
+                id="cm.nmos.cascode",
+                netlist_path=casc,
+                mirror_class="cascode",
+                polarity="nmos",
+                family="current_mirror",
+                ports={"supply": "VSS", "ref_in": "iin", "out": "iout"},
             ),
             SubcircuitTemplate(
-                id="dp.nmos.simple", netlist_path=pair, mirror_class="differential_pair",
-                polarity="nmos", family="differential_pair", tail_sources=dp_tail_sources,
+                id="dp.nmos.simple",
+                netlist_path=pair,
+                mirror_class="differential_pair",
+                polarity="nmos",
+                family="differential_pair",
+                tail_sources=dp_tail_sources,
                 ports={
-                    "supply": "VSS", "in_p": "vinp", "in_n": "vinn",
-                    "CM_tail": "CM_tail", "out_n": "drain_n", "out_p": "drain_p",
+                    "supply": "VSS",
+                    "in_p": "vinp",
+                    "in_n": "vinn",
+                    "CM_tail": "CM_tail",
+                    "out_n": "drain_n",
+                    "out_p": "drain_p",
                 },
             ),
         ]
@@ -208,11 +239,17 @@ def _cascode_lib(tmp_path) -> TemplateLibrary:
     return TemplateLibrary(
         [
             SubcircuitTemplate(
-                id="cm.nmos.simple", netlist_path=nmos, mirror_class="simple", polarity="nmos",
+                id="cm.nmos.simple",
+                netlist_path=nmos,
+                mirror_class="simple",
+                polarity="nmos",
                 ports={"supply": "VSS", "ref_in": "iin", "out": "iout"},
             ),
             SubcircuitTemplate(
-                id="cm.nmos.cascode", netlist_path=casc, mirror_class="cascode", polarity="nmos",
+                id="cm.nmos.cascode",
+                netlist_path=casc,
+                mirror_class="cascode",
+                polarity="nmos",
                 ports={"supply": "VSS", "ref_in": "iin", "out": "iout"},
             ),
         ]
@@ -371,11 +408,20 @@ def test_equal_set_collision_becomes_alternate(tmp_path):
     casc2 = _write_template(tmp_path, "b", CASCODE_NMOS)
     lib = TemplateLibrary(
         [
-            SubcircuitTemplate(id="cm.nmos.cascode", netlist_path=casc, mirror_class="cascode",
-                               polarity="nmos", ports={"supply": "VSS", "ref_in": "iin", "out": "iout"}),
-            SubcircuitTemplate(id="cm.nmos.improved_wilson", netlist_path=casc2,
-                               mirror_class="improved_wilson", polarity="nmos",
-                               ports={"supply": "VSS", "ref_in": "iin", "out": "iout"}),
+            SubcircuitTemplate(
+                id="cm.nmos.cascode",
+                netlist_path=casc,
+                mirror_class="cascode",
+                polarity="nmos",
+                ports={"supply": "VSS", "ref_in": "iin", "out": "iout"},
+            ),
+            SubcircuitTemplate(
+                id="cm.nmos.improved_wilson",
+                netlist_path=casc2,
+                mirror_class="improved_wilson",
+                polarity="nmos",
+                ports={"supply": "VSS", "ref_in": "iin", "out": "iout"},
+            ),
         ]
     )
     groups = group_matches(find_subcircuits(_g(CASCODE_NMOS), lib))
@@ -417,16 +463,17 @@ def test_polarity_default_vs_agnostic(tmp_path):
             SubcircuitTemplate(
                 id="cm.nmos.simple",
                 netlist_path=_write_template(tmp_path, "simple_nmos", SIMPLE_NMOS),
-                mirror_class="simple", polarity="nmos",
+                mirror_class="simple",
+                polarity="nmos",
                 ports={"supply": "VSS", "ref_in": "iin", "out": "iout"},
             )
         ]
     )
     assert find_subcircuits(pmos_host, nmos_only) == []
     # provisioned polarity-agnostic search (also drop supply anchoring so VSS↔vdd is allowed)
-    assert len(
-        find_subcircuits(pmos_host, nmos_only, match_polarity=False, match_supply=False)
-    ) == 1
+    assert (
+        len(find_subcircuits(pmos_host, nmos_only, match_polarity=False, match_supply=False)) == 1
+    )
 
 
 def test_bulk_ignored_by_default(tmp_path):
@@ -587,11 +634,18 @@ def _pair_only_lib(tmp_path) -> TemplateLibrary:
     return TemplateLibrary(
         [
             SubcircuitTemplate(
-                id="dp.nmos.simple", netlist_path=pair, mirror_class="differential_pair",
-                polarity="nmos", family="differential_pair",
+                id="dp.nmos.simple",
+                netlist_path=pair,
+                mirror_class="differential_pair",
+                polarity="nmos",
+                family="differential_pair",
                 ports={
-                    "supply": "VSS", "in_p": "vinp", "in_n": "vinn",
-                    "CM_tail": "CM_tail", "out_n": "drain_n", "out_p": "drain_p",
+                    "supply": "VSS",
+                    "in_p": "vinp",
+                    "in_n": "vinn",
+                    "CM_tail": "CM_tail",
+                    "out_n": "drain_n",
+                    "out_p": "drain_p",
                 },
             )
         ]
@@ -711,9 +765,7 @@ def test_external_isolated_breaks_active_loaded_pair(tmp_path):
     # otherwise-valid pair, while the (un-bridged) mirrors survive.
     host = _g(OTA_5T_NMOS_INPUT)
     lib = _diffpair_lib(tmp_path)
-    assert any(
-        g.family == "differential_pair" for g in group_matches(find_subcircuits(host, lib))
-    )
+    assert any(g.family == "differential_pair" for g in group_matches(find_subcircuits(host, lib)))
     strict = group_matches(find_subcircuits(host, lib, match_external_isolated=True))
     assert all(g.family != "differential_pair" for g in strict)
     assert any(g.family == "current_mirror" for g in strict)  # the mirrors are still found
@@ -749,12 +801,20 @@ def _tg_split_lib(tmp_path) -> TemplateLibrary:
     return TemplateLibrary(
         [
             SubcircuitTemplate(
-                id="tg.pair.cmos", netlist_path=blind, mirror_class="pass_gate",
-                polarity="complementary", family="transmission_gate", ports=dict(_TG_PORTS),
+                id="tg.pair.cmos",
+                netlist_path=blind,
+                mirror_class="pass_gate",
+                polarity="complementary",
+                family="transmission_gate",
+                ports=dict(_TG_PORTS),
             ),
             SubcircuitTemplate(
-                id="tg.pair.cmos_rail_bulk", netlist_path=rail, mirror_class="pass_gate",
-                polarity="complementary", family="transmission_gate", ports=dict(_TG_PORTS),
+                id="tg.pair.cmos_rail_bulk",
+                netlist_path=rail,
+                mirror_class="pass_gate",
+                polarity="complementary",
+                family="transmission_gate",
+                ports=dict(_TG_PORTS),
                 match_bulk=True,
             ),
         ]
@@ -813,7 +873,9 @@ def test_annotate_writes_overlay_and_roles(tmp_path):
     roles = {c.name: c.structural_role for c in host.get_components()}
     # base pair sits on the rail → current-mirror; the stacked cascode devices → cascode device.
     # The diode reference (XM2) is tagged distinctly from its output copy (XM1).
-    assert roles["XM2"] == StructuralRole.MOS_CURRENT_MIRROR_REFERENCE  # diode on VSS — the reference
+    assert (
+        roles["XM2"] == StructuralRole.MOS_CURRENT_MIRROR_REFERENCE
+    )  # diode on VSS — the reference
     assert roles["XM1"] == StructuralRole.MOS_CURRENT_MIRROR  # mirror output dev on VSS
     assert roles["XM3"] == StructuralRole.MOS_CASCODE_DEVICE  # source on internal net1
     assert roles["XM4"] == StructuralRole.MOS_CASCODE_DEVICE  # source on internal net2
@@ -841,7 +903,9 @@ def cm_library():
     try:
         return default_current_mirror_library()
     except FileNotFoundError:
-        pytest.skip("current-mirror template catalogue not present (packaged install without examples)")
+        pytest.skip(
+            "current-mirror template catalogue not present (packaged install without examples)"
+        )
 
 
 def test_real_library_has_expected_templates(cm_library):
@@ -861,7 +925,9 @@ def test_real_library_has_expected_templates(cm_library):
 
 
 def test_real_folded_cascode_multi_output(cm_library):
-    path = _example_netlist("examples/analog-db/circuits/amp_004_folded_cascode/abstract/netlist.spice")
+    path = _example_netlist(
+        "examples/analog-db/circuits/amp_004_folded_cascode/abstract/netlist.spice"
+    )
     if path is None:
         pytest.skip("folded_cascode example netlist not present")
     g = CircuitGraph.from_netlist(NetlistView.from_file(path), name="folded_cascode")
@@ -958,7 +1024,9 @@ def test_pmos_cascode_template_is_polarity_twin_of_nmos(subckt_library, stem, mi
 def test_real_telescopic_detects_pmos_cascode(subckt_library):
     """Integration: the gate-biased PMOS cascode load of the telescopic OTA — invisible before the
     PMOS cascode twins existed — is now detected as a low-voltage cascode current source."""
-    path = _example_netlist("examples/analog-db/circuits/amp_018_telescopic_cascode/abstract/netlist.spice")
+    path = _example_netlist(
+        "examples/analog-db/circuits/amp_018_telescopic_cascode/abstract/netlist.spice"
+    )
     if path is None:
         pytest.skip("amp_018_telescopic_cascode example netlist not present")
     g = CircuitGraph.from_netlist(NetlistView.from_file(path), name="telescopic")
@@ -966,11 +1034,36 @@ def test_real_telescopic_detects_pmos_cascode(subckt_library):
     pmos_cascodes = [
         grp
         for grp in groups
-        if grp.polarity == "pmos" and grp.family == "current_mirror" and grp.mirror_class != "simple"
+        if grp.polarity == "pmos"
+        and grp.family == "current_mirror"
+        and grp.mirror_class != "simple"
     ]
     assert len(pmos_cascodes) == 1
     assert pmos_cascodes[0].mirror_class == "low_voltage_cascode"
     assert "XM4C" in pmos_cascodes[0].output_devices
+
+
+def test_real_telescopic_cascoded_pair_roles(subckt_library):
+    """Regression (B-PF-11): in the cascoded input pair of the telescopic OTA, only the devices
+    whose source is on the tail net are the differential pair; the NMOS cascodes above them (source
+    on ``d1``/``d2``) are cascode devices, like their PMOS twins in the load."""
+    path = _example_netlist(
+        "examples/analog-db/circuits/amp_018_telescopic_cascode/abstract/netlist.spice"
+    )
+    if path is None:
+        pytest.skip("amp_018_telescopic_cascode example netlist not present")
+    g = CircuitGraph.from_netlist(NetlistView.from_file(path), name="telescopic")
+    groups = annotate_subcircuits(g, subckt_library)
+    dp = next(grp for grp in groups if grp.family == "differential_pair")
+    assert set(dp.devices) == {"XM1", "XM2", "XM1C", "XM2C"}
+    roles = {c.name: c.structural_role for c in g.get_components()}
+    assert roles["XM1"] == StructuralRole.MOS_DIFFERENTIAL_PAIR
+    assert roles["XM2"] == StructuralRole.MOS_DIFFERENTIAL_PAIR
+    assert roles["XM1C"] == StructuralRole.MOS_CASCODE_DEVICE
+    assert roles["XM2C"] == StructuralRole.MOS_CASCODE_DEVICE
+    assert roles["XM3C"] == StructuralRole.MOS_CASCODE_DEVICE
+    assert roles["XM4C"] == StructuralRole.MOS_CASCODE_DEVICE
+    assert roles["XM5"] == StructuralRole.MOS_TAIL_CURRENT_SOURCE
 
 
 def test_cascode_and_improved_wilson_are_distinguishable(subckt_library):
@@ -1034,9 +1127,7 @@ _PR_SERIES_CELLS = [
 
 @pytest.mark.parametrize(("stem", "template_id"), _PR_SERIES_CELLS)
 def test_real_pseudo_resistor_cell_self_matches(subckt_library, stem, template_id):
-    path = _example_netlist(
-        f"examples/analog-db/templates/pseudo_resistor/simulation/{stem}.spice"
-    )
+    path = _example_netlist(f"examples/analog-db/templates/pseudo_resistor/simulation/{stem}.spice")
     if path is None:
         pytest.skip("pseudo-resistor template netlists not present")
     g = CircuitGraph.from_netlist(NetlistView.from_file(str(path)), name=stem)
@@ -1177,12 +1268,257 @@ def test_detection_over_an_incomplete_host_says_the_host_was_incomplete(caplog, 
 
 
 def test_a_fully_typed_host_is_not_flagged(caplog, tmp_path):
-    host = (
-        "* mirror\n"
-        "M1 ref ref vss vss sg13_lv_nmos\n"
-        "M2 out ref vss vss sg13_lv_nmos\n"
-        ".end\n"
-    )
+    host = "* mirror\nM1 ref ref vss vss sg13_lv_nmos\nM2 out ref vss vss sg13_lv_nmos\n.end\n"
     with caplog.at_level(logging.WARNING, logger="spicexplorer_circuitgraph.match"):
         find_subcircuits(host, library=_simple_lib(tmp_path))
     assert "invisible to subcircuit detection" not in caplog.text
+
+
+# ------------------------------------------------------------------------------------------------
+# Role taxonomy — whole-block family roles for the inverter + cross-coupled pair; stale-role reset
+# ------------------------------------------------------------------------------------------------
+# The complementary CMOS inverter / push-pull stage (analog-db `inv.cmos.stack`) and the tail-biased
+# cross-coupled NMOS pair (`xc.nmos.simple`), authored inline so these run without the corpus.
+INVERTER_CMOS = """\
+** complementary cmos inverter / push-pull stage
+XM1 vout vin VSS VSS sg13_lv_nmos
+XM2 vout vin VDD VDD sg13_lv_pmos
+.end
+"""
+
+CROSS_COUPLED_NMOS = """\
+** cross-coupled nmos pair (gates cross to the opposite drains, shared tail)
+XM1 vinn vinp CM_tail VSS sg13_lv_nmos
+XM2 vinp vinn CM_tail VSS sg13_lv_nmos
+.end
+"""
+
+
+def _inverter_lib(tmp_path) -> TemplateLibrary:
+    inv = _write_template(tmp_path, "inverter_stack", INVERTER_CMOS)
+    return TemplateLibrary(
+        [
+            SubcircuitTemplate(
+                id="inv.cmos.stack",
+                netlist_path=inv,
+                mirror_class="inverter",
+                polarity="complementary",
+                family="inverter",
+                ports={"supply_n": "VSS", "supply_p": "VDD", "in": "vin", "out": "vout"},
+            )
+        ]
+    )
+
+
+def _cross_coupled_lib(tmp_path) -> TemplateLibrary:
+    """A simple NMOS mirror + the cross-coupled NMOS pair anchored (`CM_tail`) to its output."""
+    mirror = _write_template(tmp_path, "simple_nmos", SIMPLE_NMOS)
+    xc = _write_template(tmp_path, "cross_coupled_nmos", CROSS_COUPLED_NMOS)
+    return TemplateLibrary(
+        [
+            SubcircuitTemplate(
+                id="cm.nmos.simple",
+                netlist_path=mirror,
+                mirror_class="simple",
+                polarity="nmos",
+                family="current_mirror",
+                ports={"supply": "VSS", "ref_in": "iin", "out": "iout"},
+            ),
+            SubcircuitTemplate(
+                id="xc.nmos.simple",
+                netlist_path=xc,
+                mirror_class="cross_coupled",
+                polarity="nmos",
+                family="cross_coupled",
+                ports={"supply": "VSS", "in_p": "vinp", "in_n": "vinn", "CM_tail": "CM_tail"},
+            ),
+        ]
+    )
+
+
+def test_inverter_devices_get_the_inverter_role_not_current_mirror(tmp_path):
+    # LEAF-F11: an inverter is not a current mirror, and `current_mirror` is a DETERMINISTIC role
+    # the LLM layer may not override — so the mis-tag was unfixable downstream.
+    host = _g(
+        """\
+        XMN out in vss vss sg13_lv_nmos
+        XMP out in vdd vdd sg13_lv_pmos
+        .end
+        """
+    )
+    (grp,) = annotate_subcircuits(host, _inverter_lib(tmp_path))
+    assert grp.family == "inverter"
+    roles = {c.name: c.structural_role for c in host.get_components()}
+    assert roles == {"XMN": StructuralRole.MOS_INVERTER, "XMP": StructuralRole.MOS_INVERTER}
+    assert StructuralRole.MOS_INVERTER in DETERMINISTIC_ROLES
+
+
+def test_cross_coupled_devices_get_the_cross_coupled_role_not_differential_pair(tmp_path):
+    host = _g(
+        """\
+        XM1 outn outp tail vss sg13_lv_nmos
+        XM2 outp outn tail vss sg13_lv_nmos
+        XM5 tail ibias vss vss sg13_lv_nmos
+        XM6 ibias ibias vss vss sg13_lv_nmos
+        .end
+        """
+    )
+    groups = annotate_subcircuits(host, _cross_coupled_lib(tmp_path))
+    assert {g.family for g in groups} == {"current_mirror", "cross_coupled"}
+    roles = {c.name: c.structural_role for c in host.get_components()}
+    assert roles["XM1"] == roles["XM2"] == StructuralRole.MOS_CROSS_COUPLED
+    # The pair is still tail-anchored, so the mirror output feeding its tail keeps the tail role.
+    assert roles["XM5"] == StructuralRole.MOS_TAIL_CURRENT_SOURCE
+    assert roles["XM6"] == StructuralRole.MOS_CURRENT_MIRROR_REFERENCE
+    assert StructuralRole.MOS_CROSS_COUPLED in DETERMINISTIC_ROLES
+
+
+def test_reannotating_clears_stale_deterministic_roles_but_keeps_residue_roles(tmp_path):
+    # LEAF-F11 (CG-2): a re-run with a different library must not leave the first run's roles on
+    # devices that are no longer in any group; an LLM-assigned residue role is not the matcher's
+    # to clear.
+    host = _g(
+        """\
+        XM1 iin iin VSS VSS sg13_lv_nmos
+        XM2 iout iin VSS VSS sg13_lv_nmos
+        XM3 x iout VSS VSS sg13_lv_nmos
+        .end
+        """
+    )
+    annotate_subcircuits(host, _simple_lib(tmp_path))
+    comps = {c.name: c for c in host.get_components()}
+    assert comps["XM1"].structural_role == StructuralRole.MOS_CURRENT_MIRROR_REFERENCE
+    comps["XM3"].structural_role = StructuralRole.BIAS_DEVICE  # a residue (LLM) role
+
+    assert annotate_subcircuits(host, TemplateLibrary([])) == []
+    roles = {name: c.structural_role for name, c in comps.items()}
+    assert roles == {"XM1": None, "XM2": None, "XM3": StructuralRole.BIAS_DEVICE}
+
+
+# ------------------------------------------------------------------------------------------------
+# Host projection — built once per find_subcircuits run
+# ------------------------------------------------------------------------------------------------
+def _host_projections(monkeypatch) -> list[str]:
+    """Record the graph name of every `signature_graph` projection `match` builds from now on."""
+    import spicexplorer_circuitgraph.match as match_mod
+
+    projected: list[str] = []
+    real = match_mod.signature_graph
+
+    def counting(graph, opts, io_labels):
+        projected.append(graph.name)
+        return real(graph, opts, io_labels)
+
+    monkeypatch.setattr(match_mod, "signature_graph", counting)
+    return projected
+
+
+def test_host_projection_is_built_once_per_find_subcircuits(tmp_path, monkeypatch):
+    # LEAF-F15 (CG-1): the host signature projection depends only on the run options, so one
+    # `find_subcircuits` builds it once (plus one projection per template), not once per template.
+    projected = _host_projections(monkeypatch)
+    lib = _cascode_lib(tmp_path)  # two bulk-blind templates, both populated by the host
+    assert len(find_subcircuits(_g(CASCODE_NMOS), lib)) == 2
+    assert projected.count("host") == 1
+    assert len(projected) == len(lib) + 1
+
+
+def test_host_projection_is_built_once_per_distinct_effective_options(tmp_path, monkeypatch):
+    # A per-template `match_bulk` opt-in changes the effective options, so that template needs its
+    # own bulk-keeping host projection: one per distinct options, and both templates still match.
+    projected = _host_projections(monkeypatch)
+    matches = find_subcircuits(_g(TG_RAIL_BULK), _tg_split_lib(tmp_path))
+    assert {m.template_id for m in matches} == {"tg.pair.cmos", "tg.pair.cmos_rail_bulk"}
+    assert projected.count("host") == 2
+
+
+# Two NMOS devices on the rail and neither diode-connected: they pass the population pre-check of
+# the simple NMOS template (so a projection is built) but hold no mirror.
+TWO_UNRELATED_NMOS = """\
+XM1 a b VSS VSS sg13_lv_nmos
+XM2 c d VSS VSS sg13_lv_nmos
+.end
+"""
+
+
+def test_each_find_subcircuits_run_projects_its_own_host(tmp_path, monkeypatch):
+    # The projection cache lasts one run: a second run over another host (same graph name, same
+    # options) projects that host afresh instead of answering from the first run's graph.
+    lib = _simple_lib(tmp_path)
+    projected = _host_projections(monkeypatch)
+    assert len(find_subcircuits(_g(SIMPLE_NMOS), lib)) == 1
+    assert find_subcircuits(_g(TWO_UNRELATED_NMOS), lib) == []
+    assert projected.count("host") == 2
+
+
+def test_public_find_template_matches_matches_the_host_it_is_given(tmp_path):
+    # The public single-template entry point keeps its signature, agrees with `find_subcircuits`,
+    # and projects each host it is handed (no cache outlives a call).
+    lib = _simple_lib(tmp_path)
+    tpl = lib.get("cm.nmos.simple")
+    opts = MatchOptions(match_supply=True, match_polarity=True, match_bulk=False)
+    (m,) = find_template_matches(_g(SIMPLE_NMOS), tpl, opts)
+    assert m.template_id == "cm.nmos.simple"
+    assert (m.devices, m.reference_device) == (("XM1", "XM2"), "XM1")
+    assert [m] == find_subcircuits(_g(SIMPLE_NMOS), lib, options=opts)
+    assert find_template_matches(_g(TWO_UNRELATED_NMOS), tpl, opts) == []
+
+
+# The hosts the two family-role tests above annotate.
+_INVERTER_HOST = """\
+XMN out in vss vss sg13_lv_nmos
+XMP out in vdd vdd sg13_lv_pmos
+.end
+"""
+
+_CROSS_COUPLED_HOST = """\
+XM1 outn outp tail vss sg13_lv_nmos
+XM2 outp outn tail vss sg13_lv_nmos
+XM5 tail ibias vss vss sg13_lv_nmos
+XM6 ibias ibias vss vss sg13_lv_nmos
+.end
+"""
+
+
+def test_exported_roles_carry_the_inverter_and_cross_coupled_values(tmp_path):
+    # The role VALUES are what consumers read: the `@1` annotation JSON, analog-db's structural.json
+    # and the LLM layer match on `"inverter"` / `"cross_coupled"`, not on the enum member names.
+    inv = _g(_INVERTER_HOST)
+    annotate_subcircuits(inv, _inverter_lib(tmp_path))
+    (block,) = export_subcircuit_annotations(inv)["blocks"]
+    assert block["roles"] == {"XMN": "inverter", "XMP": "inverter"}
+
+    xc = _g(_CROSS_COUPLED_HOST)
+    annotate_subcircuits(xc, _cross_coupled_lib(tmp_path))
+    blocks = export_subcircuit_annotations(xc)["blocks"]
+    roles = {d: r for b in blocks for d, r in b["roles"].items()}
+    assert roles["XM1"] == roles["XM2"] == "cross_coupled"
+
+
+def test_rerun_with_the_same_library_is_idempotent(tmp_path):
+    host = _g(_CROSS_COUPLED_HOST)
+    lib = _cross_coupled_lib(tmp_path)
+    first = annotate_subcircuits(host, lib)
+    before = {c.name: c.structural_role for c in host.get_components()}
+    assert annotate_subcircuits(host, lib) == first
+    assert {c.name: c.structural_role for c in host.get_components()} == before
+
+
+def test_rerun_with_another_library_clears_the_new_family_roles(tmp_path):
+    # The inverter / cross-coupled roles are the matcher's own (DETERMINISTIC), so a re-run that no
+    # longer finds those blocks must clear them — and the ex-tail device reverts to a plain output.
+    inv = _g(_INVERTER_HOST)
+    annotate_subcircuits(inv, _inverter_lib(tmp_path))
+    annotate_subcircuits(inv, TemplateLibrary([]))
+    assert {c.name: c.structural_role for c in inv.get_components()} == {"XMN": None, "XMP": None}
+
+    xc = _g(_CROSS_COUPLED_HOST)
+    annotate_subcircuits(xc, _cross_coupled_lib(tmp_path))
+    (grp,) = annotate_subcircuits(xc, _simple_lib(tmp_path))
+    assert grp.template_id == "cm.nmos.simple"
+    assert {c.name: c.structural_role for c in xc.get_components()} == {
+        "XM1": None,
+        "XM2": None,
+        "XM5": StructuralRole.MOS_CURRENT_MIRROR,
+        "XM6": StructuralRole.MOS_CURRENT_MIRROR_REFERENCE,
+    }

@@ -10,7 +10,7 @@ import sympy as sp
 from .ir import PortPair
 
 if TYPE_CHECKING:
-    from ..contract import AssumptionApplied, ValidationReport
+    from ..contract import AssumptionApplied, SolvePath, ValidationReport
 
 __all__ = ["MnaSystem", "RawTransferFunction", "SimplifiedTransferFunction"]
 
@@ -30,9 +30,16 @@ class MnaSystem:
     _parent: dict[str, str]  # union-find parent map (net name -> parent)
     ground_rep: str
     name: str = "circuit"
+    #: the reference net the circuit declares (``SmallSignalIR.ground``). A port on it is the
+    #: reference even when no device in the netlist names it (a deck wired on ``0`` whose plan
+    #: calls its ground ``vss``).
+    ground: str = "0"
     ports: dict[str, PortPair] = field(default_factory=dict)
     params: dict[str, sp.Expr] = field(default_factory=dict)
     free_symbols: frozenset[str] = frozenset()
+    #: refs of devices no model could expand, carried from the SSIR so every downstream
+    #: result can say the H(s) is missing their branches (Codex review, item TF-02).
+    unmodelled: tuple[str, ...] = ()
 
     def rep(self, net: str) -> str:
         """The net-class representative of ``net`` (path-compressed lookup)."""
@@ -58,8 +65,8 @@ class RawTransferFunction:
     """The exact symbolic transfer function between two ports — the Stage-3 output.
 
     ``expr`` is ``H(s)`` in canonical ``N(s)/D(s)`` form. ``solve_path`` records the regime that
-    produced it (``fully_symbolic`` / ``selectively_numericized`` / ``numeric_refit``) so the result
-    never overstates how symbolic it is; ``kept_symbolic`` is the surviving free-symbol set.
+    produced it (``fully_symbolic`` / ``selectively_numericized``) so the result never overstates
+    how symbolic it is; ``kept_symbolic`` is the surviving free-symbol set.
     """
 
     expr: sp.Expr
@@ -69,8 +76,10 @@ class RawTransferFunction:
     name: str = "circuit"
     analysis: str = "transfer_function"
     drive: str = "dm"  # excitation mode at a two-node input pair: "dm" (±½) | "cm" (both +1)
-    solve_path: str = "fully_symbolic"
+    solve_path: SolvePath = "fully_symbolic"
     numeric_subs: dict[str, float] = field(default_factory=dict)
+    #: refs of devices no model could expand (see MnaSystem.unmodelled).
+    unmodelled: tuple[str, ...] = ()
 
     @property
     def kept_symbolic(self) -> tuple[str, ...]:
@@ -96,4 +105,3 @@ class SimplifiedTransferFunction:
     ledger: list[AssumptionApplied] = field(default_factory=list)
     validation: ValidationReport | None = None
     unreduced: bool = False
-

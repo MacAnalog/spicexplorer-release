@@ -1,4 +1,5 @@
 """Sanity check route — verifies SPICE simulator and runs one trial evaluation."""
+
 from __future__ import annotations
 
 import asyncio
@@ -104,7 +105,9 @@ def _run_sanity(yaml_path: str, active_corner: str | None = None) -> dict[str, A
         project = Project_Setup.from_yaml(yaml_path)
     except Exception as e:
         return {
-            "ok": False, "testbenches": [], "trial": None,
+            "ok": False,
+            "testbenches": [],
+            "trial": None,
             "error": f"Failed to load project: {e}",
             "elapsed_ms_total": (time.perf_counter() - t_start) * 1000,
             "pdk_ok": pdk["pdk_ok"],
@@ -119,7 +122,9 @@ def _run_sanity(yaml_path: str, active_corner: str | None = None) -> dict[str, A
     engine = resolve_engine(getattr(project, "sim_engine", None))
     if engine.value != "ngspice":
         return {
-            "ok": False, "testbenches": [], "trial": None,
+            "ok": False,
+            "testbenches": [],
+            "trial": None,
             "error": (
                 f"sanity-check drives the ngspice lane only; this project selects "
                 f"sim_engine='{engine.value}'. Verify it with a live run (POST "
@@ -145,7 +150,8 @@ def _run_sanity(yaml_path: str, active_corner: str | None = None) -> dict[str, A
             if project.pvt.is_multi():
                 warnings.append(
                     f"Corner '{active_corner}' requested explicitly — the trial step ran "
-                    f"single-corner (project default is mode: multi).")
+                    f"single-corner (project default is mode: multi)."
+                )
                 project.pvt.mode = "single"
         elif active_corner:
             # Requested a corner the project doesn't define — surface it instead of silently
@@ -153,11 +159,13 @@ def _run_sanity(yaml_path: str, active_corner: str | None = None) -> dict[str, A
             if project.pvt.is_multi():
                 warnings.append(
                     f"Requested corner '{active_corner}' is not defined; the trial step ran "
-                    f"all {len(project.pvt.enabled_corners())} enabled corners (mode: multi).")
+                    f"all {len(project.pvt.enabled_corners())} enabled corners (mode: multi)."
+                )
             else:
                 warnings.append(
                     f"Requested corner '{active_corner}' is not defined; using "
-                    f"'{project.pvt.active_corner}'.")
+                    f"'{project.pvt.active_corner}'."
+                )
         if project.pvt.is_multi():
             # No single corner drove the trial — report the sweep instead of pretending
             # the active_corner was honored.
@@ -165,14 +173,16 @@ def _run_sanity(yaml_path: str, active_corner: str | None = None) -> dict[str, A
             warnings.append(
                 f"Per-testbench checks run the netlist's hardcoded corner; the trial step "
                 f"sweeps the enabled PVT corners {corner_names} (mode: multi, "
-                f"score_aggregation: {project.pvt.score_aggregation}).")
+                f"score_aggregation: {project.pvt.score_aggregation})."
+            )
         else:
             active_corner_used = project.pvt.active_corner
             # The per-testbench checks below run the netlist as-is (use_editor=False), so the PVT
             # corner is applied ONLY to the trial step — make that explicit (BUG-B33).
             warnings.append(
                 f"Per-testbench checks run the netlist's hardcoded corner; the active PVT corner "
-                f"'{active_corner_used}' is applied only to the trial step.")
+                f"'{active_corner_used}' is applied only to the trial step."
+            )
 
     # Own subdir so the per-wrapper rmtree (NGSpice_Wrapper._validate) can't delete a
     # concurrent live run's outdir/live tree (BUG-A8 / OPT-2).
@@ -190,40 +200,47 @@ def _run_sanity(yaml_path: str, active_corner: str | None = None) -> dict[str, A
             # P4: constructed through the engine factory (identical NGSpice_Wrapper —
             # the non-ngspice engines early-returned above, so the cast is sound and
             # the ngspice-specific `run_sanity_check` below stays valid).
-            wrapper = cast(NGSpice_Wrapper, build_simulator(
-                engine,
-                testbench_name=tb.name,
-                netlist_filename=Path(project.ws_root) / Path(tb.netlist),
-                output_folder=output_folder,
-                sim_execution_t=Sim_Execution_Type.RUN_AND_WAIT,
-                path_to_simulator=path_to_simulator,
-            ))
+            wrapper = cast(
+                NGSpice_Wrapper,
+                build_simulator(
+                    engine,
+                    testbench_name=tb.name,
+                    netlist_filename=Path(project.ws_root) / Path(tb.netlist),
+                    output_folder=output_folder,
+                    sim_execution_t=Sim_Execution_Type.RUN_AND_WAIT,
+                    path_to_simulator=path_to_simulator,
+                ),
+            )
             sim_ok = wrapper.run_sanity_check(
                 use_editor=False, sim_execution_t=Sim_Execution_Type.RUN_NOW
             )
             wrappers[tb.name] = wrapper
             tail, size = _tail_log(wrapper.curr_log)
-            tb_results.append({
-                "name": tb.name,
-                "ok": sim_ok,
-                "error": None,
-                "elapsed_ms": (time.perf_counter() - tb_t0) * 1000,
-                "log_path": str(wrapper.curr_log) if wrapper.curr_log else None,
-                "log_tail": tail,
-                "log_size_bytes": size,
-            })
+            tb_results.append(
+                {
+                    "name": tb.name,
+                    "ok": sim_ok,
+                    "error": None,
+                    "elapsed_ms": (time.perf_counter() - tb_t0) * 1000,
+                    "log_path": str(wrapper.curr_log) if wrapper.curr_log else None,
+                    "log_tail": tail,
+                    "log_size_bytes": size,
+                }
+            )
             if not sim_ok:
                 all_ok = False
         except Exception as e:
-            tb_results.append({
-                "name": tb.name,
-                "ok": False,
-                "error": str(e),
-                "elapsed_ms": (time.perf_counter() - tb_t0) * 1000,
-                "log_path": None,
-                "log_tail": None,
-                "log_size_bytes": None,
-            })
+            tb_results.append(
+                {
+                    "name": tb.name,
+                    "ok": False,
+                    "error": str(e),
+                    "elapsed_ms": (time.perf_counter() - tb_t0) * 1000,
+                    "log_path": None,
+                    "log_tail": None,
+                    "log_size_bytes": None,
+                }
+            )
             all_ok = False
 
     if not all_ok:
@@ -299,8 +316,15 @@ def _run_sanity(yaml_path: str, active_corner: str | None = None) -> dict[str, A
             "log_tails": log_tails,
         }
     except Exception as e:
-        trial = {"ok": False, "score": None, "metrics": {}, "error": str(e),
-                 "elapsed_ms": None, "log_files": {}, "log_tails": {}}
+        trial = {
+            "ok": False,
+            "score": None,
+            "metrics": {},
+            "error": str(e),
+            "elapsed_ms": None,
+            "log_files": {},
+            "log_tails": {},
+        }
         return {
             "ok": False,
             "testbenches": tb_results,

@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import logging
 import weakref
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from spicexplorer.core.domains import ListTargetSpec
@@ -46,7 +46,7 @@ def _close_quietly(session: Any) -> None:
 #: `backends.ocean_metrics` constructor + its required argument keys. Kept here (not in
 #: `core.domains`) so the DSL stays decoupled from the OCEAN backend; `core.domains` only
 #: validates the recipe *shape*, this module validates builder name + args.
-_BUILDER_ARGS: Dict[str, tuple[str, ...]] = {
+_BUILDER_ARGS: dict[str, tuple[str, ...]] = {
     "ac_gain_db_at": ("signal", "freq_hz"),
     "ac_bandwidth_3db": ("signal",),
     "ac_gain_bw_product": ("signal",),
@@ -56,7 +56,7 @@ _BUILDER_ARGS: Dict[str, tuple[str, ...]] = {
 }
 
 
-def build_ocean_measurement(name: str, recipe: Dict[str, Any]) -> Any:
+def build_ocean_measurement(name: str, recipe: dict[str, Any]) -> Any:
     """One validated `measurement` recipe → an `OceanMeasurement` named `name`.
 
     `recipe` is either `{result, expr}` (raw OCEAN) or `{builder, ...args}` (a named
@@ -90,12 +90,10 @@ def build_ocean_measurement(name: str, recipe: Dict[str, Any]) -> Any:
         return fn(name, str(recipe["instance"]), str(recipe["param"]))
 
     # raw form — shape already validated in TargetSpec._validate_measurement
-    return om.OceanMeasurement(
-        name=name, result=str(recipe["result"]), expr=str(recipe["expr"])
-    )
+    return om.OceanMeasurement(name=name, result=str(recipe["result"]), expr=str(recipe["expr"]))
 
 
-def build_recipes(target_specs: "ListTargetSpec") -> Dict[str, List[Any]]:
+def build_recipes(target_specs: ListTargetSpec) -> dict[str, list[Any]]:
     """Group enabled targets that carry an OCEAN measurement into `{testbench: [OceanMeasurement]}`.
 
     Only enabled specs are included (the scorer scores `enabled_targets()`), and only the ones
@@ -106,7 +104,7 @@ def build_recipes(target_specs: "ListTargetSpec") -> Dict[str, List[Any]]:
     key (both are engine-agnostic and handled by their own contexts). An empty result means no
     OCEAN wiring is needed at all.
     """
-    recipes: Dict[str, List[Any]] = {}
+    recipes: dict[str, list[Any]] = {}
     for target in target_specs.enabled_targets():
         recipe = target.measurement
         if recipe is None or not target.has_ocean_measurement():
@@ -127,7 +125,7 @@ class OceanMergeContext:
     ``try/finally``) to release the OCEAN license token.
     """
 
-    def __init__(self, recipes: Dict[str, List[Any]], *, vb_env_file: str | None = None) -> None:
+    def __init__(self, recipes: dict[str, list[Any]], *, vb_env_file: str | None = None) -> None:
         self._recipes = recipes
         self._vb_env_file = vb_env_file
         self._session: Any | None = None  # lazily spawned on first measure
@@ -140,8 +138,8 @@ class OceanMergeContext:
 
     @classmethod
     def build(
-        cls, target_specs: "ListTargetSpec", *, vb_env_file: str | None = None
-    ) -> "OceanMergeContext | None":
+        cls, target_specs: ListTargetSpec, *, vb_env_file: str | None = None
+    ) -> OceanMergeContext | None:
         """Construct from the project's target specs, or `None` if none carry a recipe."""
         recipes = build_recipes(target_specs)
         if not recipes:
@@ -165,7 +163,7 @@ class OceanMergeContext:
             self._finalizer = weakref.finalize(self, _close_quietly, self._session)
         return self._session
 
-    def merge(self, results: "Dict[str, SimResult]", *, label: str | None = None) -> None:
+    def merge(self, results: dict[str, SimResult], *, label: str | None = None) -> None:
         """For each OCEAN-backed testbench in `results`, evaluate its measurements on that
         run's raw dir and merge the scalars into the result under each spec's name.
 
@@ -204,7 +202,7 @@ class OceanMergeContext:
             finally:
                 self._session = None
 
-    def __enter__(self) -> "OceanMergeContext":
+    def __enter__(self) -> OceanMergeContext:
         return self
 
     def __exit__(self, *exc: Any) -> None:

@@ -124,12 +124,22 @@ def test_finger_convention_retargeted_for_gf180():
     """gf180 is also BSIM4 with `nf` → ng→nf, width stays TOTAL (same as sky130), device renamed."""
     src = "* fingers\nXM1 d g s b sg13_lv_nmos w=10u l=0.5u ng=4 m=1\n.end\n"
     gf = to_netlist(_regraph(src, pdk=IHP_SG13G2), pdk=GF180MCU)
-    assert "nfet_03v3" in gf and "nf=4" in gf and "w=10u" in gf and "/(4)" not in gf and "ng=" not in gf
+    assert (
+        "nfet_03v3" in gf
+        and "nf=4" in gf
+        and "w=10u" in gf
+        and "/(4)" not in gf
+        and "ng=" not in gf
+    )
 
 
 def test_pdk_reverse_lookup_for_skywater():
-    assert SKYWATER_SKY130.model_for(DeviceType.MOS, MosPolarityType.NMOS) == "sky130_fd_pr__nfet_01v8"
-    assert SKYWATER_SKY130.model_for(DeviceType.MOS, MosPolarityType.PMOS) == "sky130_fd_pr__pfet_01v8"
+    assert (
+        SKYWATER_SKY130.model_for(DeviceType.MOS, MosPolarityType.NMOS) == "sky130_fd_pr__nfet_01v8"
+    )
+    assert (
+        SKYWATER_SKY130.model_for(DeviceType.MOS, MosPolarityType.PMOS) == "sky130_fd_pr__pfet_01v8"
+    )
 
 
 # --- subckt instance emission --------------------------------------------------------------
@@ -145,7 +155,9 @@ def test_subckt_instance_emitted_as_instance_line():
     g2 = _regraph(nl, pdk=IHP_SG13G2)
     x1, x1b = g._comp_map["X1"], g2._comp_map["X1"]
     assert isinstance(x1b, SubcktInstanceNode) and x1b.subckt_name == "opamp"
-    assert list(g.connections(x1).values()) == list(g2.connections(x1b).values())  # same nets, in order
+    assert list(g.connections(x1).values()) == list(
+        g2.connections(x1b).values()
+    )  # same nets, in order
 
 
 # --- hardening: don't silently corrupt on incomplete/programmatic graphs -------------------
@@ -153,7 +165,9 @@ def _mos_graph(*, spice_model, polarity=MosPolarityType.NMOS, connect_bulk=True)
     g = CircuitGraph("x")
     nets = {n: g.add_net(NetNode(n)) for n in ("d", "g", "s", "b")}
     m = g.add_component(
-        MosfetNode(name="M1", device_type=DeviceType.MOS, polarity=polarity, spice_model=spice_model)
+        MosfetNode(
+            name="M1", device_type=DeviceType.MOS, polarity=polarity, spice_model=spice_model
+        )
     )
     g.connect(m, nets["d"], PinTypeMOSFET.DRAIN)
     g.connect(m, nets["g"], PinTypeMOSFET.GATE)

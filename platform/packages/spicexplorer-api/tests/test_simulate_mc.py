@@ -5,6 +5,7 @@ The MC lane clones the active corner into mc1..mcN statistical samples
 and runs them through the existing multi-corner fan-out. These tests cover the
 fail paths that must reject BEFORE any simulation.
 """
+
 import sys
 
 import pytest
@@ -23,6 +24,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("WORK_ROOT", str(tmp_path / "work"))
     from fastapi.testclient import TestClient
     from spicexplorer_api.main import app
+
     return TestClient(app)
 
 

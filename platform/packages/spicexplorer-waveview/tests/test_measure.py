@@ -52,14 +52,24 @@ def test_catalog_covers_registry():
 def test_ac_family_ngspice(ngspice_ac):
     ds, truth = ngspice_ac
     out = truth["out"]
-    assert measure_dataset(ds, {"meas": "dcgain", "out": out}) == pytest.approx(truth["dcgain_db"], abs=0.01)
-    assert measure_dataset(ds, {"meas": "ugf", "out": out}) == pytest.approx(truth["ugf_hz"], rel=0.02)
-    assert measure_dataset(ds, {"meas": "pm", "out": out}) == pytest.approx(truth["pm_deg"], abs=0.5)
-    assert measure_dataset(ds, {"meas": "f3db", "out": out}) == pytest.approx(truth["f3db_hz"], rel=0.05)
+    assert measure_dataset(ds, {"meas": "dcgain", "out": out}) == pytest.approx(
+        truth["dcgain_db"], abs=0.01
+    )
+    assert measure_dataset(ds, {"meas": "ugf", "out": out}) == pytest.approx(
+        truth["ugf_hz"], rel=0.02
+    )
+    assert measure_dataset(ds, {"meas": "pm", "out": out}) == pytest.approx(
+        truth["pm_deg"], abs=0.5
+    )
+    assert measure_dataset(ds, {"meas": "f3db", "out": out}) == pytest.approx(
+        truth["f3db_hz"], rel=0.05
+    )
     gbw = measure_dataset(ds, {"meas": "gbw", "out": out})
     assert np.isfinite(gbw) and gbw > 0
     # bare signal name resolves through the v(...) wrap tolerance
-    assert measure_dataset(ds, {"meas": "dcgain", "out": "vout"}) == pytest.approx(truth["dcgain_db"], abs=0.01)
+    assert measure_dataset(ds, {"meas": "dcgain", "out": "vout"}) == pytest.approx(
+        truth["dcgain_db"], abs=0.01
+    )
 
 
 def test_tran_family_ngspice(ngspice_tran):
@@ -74,8 +84,12 @@ def test_tran_family_ngspice(ngspice_tran):
 def test_ac_family_spectre(spectre):
     ds, truth = spectre
     out = truth["ac_out"]
-    assert measure_dataset(ds, {"meas": "dcgain", "out": out}) == pytest.approx(truth["dcgain_db"], abs=0.01)
-    assert measure_dataset(ds, {"meas": "ugf", "out": out}) == pytest.approx(truth["ugf_hz"], rel=0.02)
+    assert measure_dataset(ds, {"meas": "dcgain", "out": out}) == pytest.approx(
+        truth["dcgain_db"], abs=0.01
+    )
+    assert measure_dataset(ds, {"meas": "ugf", "out": out}) == pytest.approx(
+        truth["ugf_hz"], rel=0.02
+    )
     assert measure_dataset(ds, {"meas": "pm", "out": out}) == pytest.approx(90.0, abs=1.0)
 
 
@@ -95,17 +109,27 @@ def test_noise_spectre(spectre):
     total = measure_dataset(ds, {"meas": "onoise_total", "out": "out"})
     assert total == pytest.approx(truth["onoise_total"], rel=0.02)
     # the registry's noise_spectrum alias reads the same sweep on Spectre
-    total2 = measure_dataset(ds, {"meas": "onoise_total", "out": "out", "analysis": "noise_spectrum"})
+    total2 = measure_dataset(
+        ds, {"meas": "onoise_total", "out": "out", "analysis": "noise_spectrum"}
+    )
     assert total2 == pytest.approx(total, rel=1e-9)
 
 
 def test_pss_distortion_spectre(spectre):
     ds, truth = spectre
     out = "vout"
-    assert measure_dataset(ds, {"meas": "thd_pss", "out": out}) == pytest.approx(truth["thd_pss"], rel=0.01)
-    assert measure_dataset(ds, {"meas": "thd_pss_pct", "out": out}) == pytest.approx(100 * truth["thd_pss"], rel=0.01)
-    assert measure_dataset(ds, {"meas": "hd2_db", "out": out}) == pytest.approx(truth["hd2_db"], abs=0.05)
-    assert measure_dataset(ds, {"meas": "hd3_db", "out": out}) == pytest.approx(truth["hd3_db"], abs=0.05)
+    assert measure_dataset(ds, {"meas": "thd_pss", "out": out}) == pytest.approx(
+        truth["thd_pss"], rel=0.01
+    )
+    assert measure_dataset(ds, {"meas": "thd_pss_pct", "out": out}) == pytest.approx(
+        100 * truth["thd_pss"], rel=0.01
+    )
+    assert measure_dataset(ds, {"meas": "hd2_db", "out": out}) == pytest.approx(
+        truth["hd2_db"], abs=0.05
+    )
+    assert measure_dataset(ds, {"meas": "hd3_db", "out": out}) == pytest.approx(
+        truth["hd3_db"], abs=0.05
+    )
     assert measure_dataset(ds, {"meas": "hd", "out": out, "n": 2}) == pytest.approx(0.01, rel=0.01)
     sfdr = measure_dataset(ds, {"meas": "sfdr_db", "out": out})
     assert sfdr == pytest.approx(40.0, abs=0.1)
@@ -127,19 +151,29 @@ def test_pnoise_spectre(spectre):
 
 def test_stb_family_spectre(spectre):
     ds, truth = spectre
-    assert measure_dataset(ds, {"meas": "loopgain_db", "out": "loopGain"}) == pytest.approx(truth["loopgain_db"], abs=0.01)
-    assert measure_dataset(ds, {"meas": "pm_loop", "out": "loopGain"}) == pytest.approx(90.0, abs=1.0)
+    assert measure_dataset(ds, {"meas": "loopgain_db", "out": "loopGain"}) == pytest.approx(
+        truth["loopgain_db"], abs=0.01
+    )
+    assert measure_dataset(ds, {"meas": "pm_loop", "out": "loopGain"}) == pytest.approx(
+        90.0, abs=1.0
+    )
 
 
 def test_op_scalar_spectre(spectre):
     ds, truth = spectre
-    assert measure_dataset(ds, {"meas": "i_supply", "probe": "Vdd:p"}) == pytest.approx(truth["i_supply"])
-    assert measure_dataset(ds, {"meas": "i_supply", "probe": "Vdd:p", "signed": True}) == pytest.approx(-truth["i_supply"])
+    assert measure_dataset(ds, {"meas": "i_supply", "probe": "Vdd:p"}) == pytest.approx(
+        truth["i_supply"]
+    )
+    assert measure_dataset(
+        ds, {"meas": "i_supply", "probe": "Vdd:p", "signed": True}
+    ) == pytest.approx(-truth["i_supply"])
 
 
 def test_t_settle_spectre(spectre):
     ds, truth = spectre
-    ts = measure_dataset(ds, {"meas": "t_settle", "out": "vout", "tol_frac": 0.01, "analysis": "tran"})
+    ts = measure_dataset(
+        ds, {"meas": "t_settle", "out": "vout", "tol_frac": 0.01, "analysis": "tran"}
+    )
     assert ts == pytest.approx(-np.log(0.01) * truth["tau"], rel=0.05)
 
 

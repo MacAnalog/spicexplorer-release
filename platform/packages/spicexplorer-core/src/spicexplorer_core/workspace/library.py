@@ -6,6 +6,7 @@ project with an ``imported_from`` record. Copy-on-import (NOT a live reference):
 an agent always inspects concrete files, and a published version is immutable — the
 publisher refuses to overwrite an existing ``<cell>/<version>``.
 """
+
 from __future__ import annotations
 
 import json
@@ -50,8 +51,12 @@ def _copy_cell(src: Path, dst: Path) -> list[str]:
 
 
 def publish_cell(
-    project_dir: Path, cell: str, *, version: str,
-    root: Path | None = None, source: dict[str, Any] | None = None,
+    project_dir: Path,
+    cell: str,
+    *,
+    version: str,
+    root: Path | None = None,
+    source: dict[str, Any] | None = None,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     """Copy a project cell's accepted files to ``shared/lib/<cell>/<version>/`` with a
@@ -71,9 +76,12 @@ def publish_cell(
     try:
         captured = _copy_cell(src, staging)
         record = {
-            "cell": cell, "version": version,
+            "cell": cell,
+            "version": version,
             "published_at": (now or datetime.now()).isoformat(timespec="seconds"),
-            "source_project": project_dir.name, "captured": captured, "source": source or {},
+            "source_project": project_dir.name,
+            "captured": captured,
+            "source": source or {},
         }
         atomic_write_json(staging / LIB_META, record, indent=2)
         dst.parent.mkdir(parents=True, exist_ok=True)
@@ -85,9 +93,14 @@ def publish_cell(
 
 
 def import_cell(
-    cell: str, version: str, project_dir: Path, *,
-    root: Path | None = None, as_name: str | None = None,
-    overwrite: bool = False, now: datetime | None = None,
+    cell: str,
+    version: str,
+    project_dir: Path,
+    *,
+    root: Path | None = None,
+    as_name: str | None = None,
+    overwrite: bool = False,
+    now: datetime | None = None,
 ) -> dict[str, Any]:
     """Copy a published ``<cell>/<version>`` into a project's ``design/cells/`` with an
     ``imported_from`` marker (copy-on-import). ``as_name`` renames the local cell.
@@ -102,10 +115,13 @@ def import_cell(
     dst = project_dir / "design" / "cells" / local
     if dst.exists() and not overwrite:
         raise FileExistsError(
-            f"cell {local!r} already exists in the project — pass overwrite=True to replace it")
+            f"cell {local!r} already exists in the project — pass overwrite=True to replace it"
+        )
     _copy_cell(src, dst)
     marker = {
-        "cell": cell, "version": version, "imported_as": local,
+        "cell": cell,
+        "version": version,
+        "imported_as": local,
         "imported_at": (now or datetime.now()).isoformat(timespec="seconds"),
         "source": str(src),
     }

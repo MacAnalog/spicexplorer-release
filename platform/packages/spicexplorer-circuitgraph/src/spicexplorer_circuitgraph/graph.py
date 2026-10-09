@@ -104,7 +104,7 @@ class CircuitGraph:
         detect_supply: bool = True,
         recurse: bool = False,
         _seen: frozenset[str] = frozenset(),
-    ) -> "CircuitGraph":
+    ) -> CircuitGraph:
         """Build a graph from a :class:`~spicexplorer_core.spice_engine.NetlistViewLike` view (one hierarchy level).
 
         Subcircuit instances are modeled as black-box :class:`SubcktInstanceNode`s with named,
@@ -243,11 +243,17 @@ class CircuitGraph:
             if not isinstance(comp, SubcktInstanceNode):
                 continue
             sub_name = comp.subckt_name
-            if not sub_name:  # no resolved definition name — can't key the cycle guard, don't recurse
-                logger.warning("subckt instance %s has no definition name; skipping expansion", comp.name)
+            if (
+                not sub_name
+            ):  # no resolved definition name — can't key the cycle guard, don't recurse
+                logger.warning(
+                    "subckt instance %s has no definition name; skipping expansion", comp.name
+                )
                 continue
             if sub_name in seen:  # cyclic .subckt reference down this path — stop descending
-                logger.warning("cyclic subckt reference at %s (%s); not expanding", comp.name, sub_name)
+                logger.warning(
+                    "cyclic subckt reference at %s (%s); not expanding", comp.name, sub_name
+                )
                 continue
             try:
                 child_view = view.get_subcircuit(comp.name)
@@ -309,9 +315,7 @@ class CircuitGraph:
         shapes: list[tuple[str, int, tuple[int, ...]]] = []
         for ref in self.skipped_components:
             nets = self._skipped_nets.get(ref, ())
-            degrees = sorted(
-                self._G.degree(self._net_map[n]) for n in nets if n in self._net_map
-            )
+            degrees = sorted(self._G.degree(self._net_map[n]) for n in nets if n in self._net_map)
             shapes.append((ref[:1].upper(), len(nets), tuple(degrees)))
         return shapes
 

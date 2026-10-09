@@ -2,6 +2,7 @@
 
 Fast, NO SPICE. Uses a temp WORK_ROOT so nothing touches the real ./work.
 """
+
 import json
 import sys
 from pathlib import Path
@@ -18,6 +19,7 @@ pytest.importorskip("fastapi", reason="ui extra not installed")
 def ps(tmp_path, monkeypatch):
     monkeypatch.setenv("WORK_ROOT", str(tmp_path / "work"))
     from spicexplorer_api.services import project_service as _ps
+
     return _ps
 
 
@@ -46,6 +48,7 @@ def test_copy_example_registers_loadable_project(ps):
     assert data["project"]["ws_root"] == "."
     # The copied subtree resolves — the project parses from its new home.
     from spicexplorer.core.domains import Project_Setup
+
     Project_Setup.from_yaml(pd / "project.yaml")
     assert ps.read_manifest(pid)["source"]["kind"] == "example"
 
@@ -110,8 +113,8 @@ def test_fork_copies_everything_except_runs(ps):
     assert new_id != pid
     npd = ps.project_dir(new_id)
     assert (npd / "project.yaml").exists()
-    assert (npd / "spice" / "amp.cir").exists()           # design copied
-    assert list((npd / "runs").glob("*")) == []           # run history NOT copied
+    assert (npd / "spice" / "amp.cir").exists()  # design copied
+    assert list((npd / "runs").glob("*")) == []  # run history NOT copied
     assert ps.read_manifest(new_id)["source"] == {"kind": "fork", "ref": pid}
     assert ps.list_runs(new_id) == []
 
@@ -215,6 +218,7 @@ def test_delete_run_trash_id_uses_full_run_id(ps):
 
 # ---------- demos.yaml manifest (curated demo registry) ----------
 
+
 def _unresolvable_demos() -> list[str]:
     """demos.yaml entries whose project_setup.yaml is not on disk.
 
@@ -259,11 +263,11 @@ def test_manifest_examples_skips_invalid_entries(ps, tmp_path):
     (root / "b" / "project_setup.yaml").write_text("project:\n  name: B\n")
     (root / "demos.yaml").write_text(
         "demos:\n"
-        "  - b/project_setup.yaml\n"          # order: b before a
+        "  - b/project_setup.yaml\n"  # order: b before a
         "  - a/project_setup.yaml\n"
-        "  - missing/project_setup.yaml\n"    # nonexistent → skipped
+        "  - missing/project_setup.yaml\n"  # nonexistent → skipped
         "  - ../escape/project_setup.yaml\n"  # traversal → skipped
-        "  - a/not_a_setup.yaml\n"            # wrong filename family → skipped
+        "  - a/not_a_setup.yaml\n"  # wrong filename family → skipped
     )
     rows = ps._manifest_examples(root)
     assert [r["key"] for r in rows] == ["b/project_setup.yaml", "a/project_setup.yaml"]

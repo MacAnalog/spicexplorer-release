@@ -46,7 +46,7 @@ export function TemplatePreview({
     />
   );
   const frame = cn(
-    "flex items-center justify-center overflow-hidden rounded-md border border-hairline bg-white",
+    "flex items-center justify-center overflow-hidden rounded-md border border-hairline bg-panel",
     heightClass,
     className,
   );

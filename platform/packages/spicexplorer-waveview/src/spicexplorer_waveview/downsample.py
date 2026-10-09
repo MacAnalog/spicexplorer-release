@@ -75,9 +75,7 @@ def lttb_indices(x: np.ndarray, y: np.ndarray, n_out: int) -> np.ndarray:
         seg_x = x[lo:hi]
         seg_y = y[lo:hi]
         # triangle areas vs (a, candidate, avg)
-        area = np.abs(
-            (x[a] - avg_x) * (seg_y - y[a]) - (x[a] - seg_x) * (avg_y - y[a])
-        )
+        area = np.abs((x[a] - avg_x) * (seg_y - y[a]) - (x[a] - seg_x) * (avg_y - y[a]))
         a = lo + int(np.argmax(area))
         keep[i + 1] = a
     keep[-1] = n - 1

@@ -47,7 +47,7 @@
         "noise": {
           "measures": {
             "onoise_total": 9.234382e-05,
-            "vn_out_rms": 0.009609569
+            "vn_out_rms": 9.234382e-05
           },
           "status": "ok"
         },
@@ -122,7 +122,7 @@
       },
       "vn_out_rms": {
         "spec": "pass",
-        "value": 0.009609569
+        "value": 9.234382e-05
       },
       "zout_peak_db": {
         "spec": "fail",
@@ -133,7 +133,7 @@
   "parameters": {
     "sizing": {
       "x_ccomp": "160e-12",
-      "x_ibias_val": "20e-6",
+      "x_dut_rt_value": 9000,
       "x_dut_xmdr_l": 0.3,
       "x_dut_xmdr_w": 6,
       "x_dut_xmld_l": 0.5,
@@ -142,8 +142,8 @@
       "x_dut_xmnb_w": 8,
       "x_dut_xmp_l": 0.2,
       "x_dut_xmp_w": 8,
+      "x_ibias_val": "20e-6",
       "x_rcomp": 2000,
-      "x_dut_rt_value": 9000,
       "x_vref_val": 0.6
     }
   },

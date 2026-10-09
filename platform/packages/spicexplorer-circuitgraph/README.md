@@ -11,19 +11,38 @@ graph **back** to a netlist with PDK-specific device names.
   LLM role-annotation is a separate, provider-agnostic capability that lives in
   `spicexplorer-orchestration` and merely *consumes* this tool's output.
 
-## Status — deterministic core complete (frozen milestone)
+## Status — Phases 0–4 complete (2026-06-09); the package itself is not frozen
 
-Phases 0–4 are done and the deterministic core is **frozen** at this milestone (further changes are
-deferred until the downstream tools are built — see the meta-repo roadmap, `doc/plan_next_steps.md`).
+Phases 0–4 — the platform half of the meta-repo plan
+`doc/archive/plan_circuitgraph_langgraph_integration.md`; Phases 5–6 (the LLM annotation agent) are
+`spicexplorer-orchestration`'s and Phase 7 (surface adapters) stays deferred — are done, and that
+phased roadmap is closed. The **plan** is what closed, not the code: this README used to call the
+core *frozen*, and the dated sections below are the evidence against it. All of them landed after
+the milestone, and they were not all additive — the controlled-source work extended the graph model
+(`model/nodes.py`) and the round-trip contract (`contract.py`), the dialect and hierarchical work
+reworked emission, and flavor-aware retargeting turned a silent voltage-class swap into a
+`ValueError`. What drove it was *other* meta-repo plans — `doc/archive/plan_spectre_hspice_integration.md`,
+`doc/archive/plan_virtuoso_bridge.md` (P2), `doc/archive/plan_block_annotation.md` — and live decks, not this plan's
+phases; the genuinely deferred items are named at the end of this section.
+
 `CircuitGraph.from_netlist` builds a typed bipartite graph (MOS / R / C / L / V / I + linear
 controlled sources G = VCCS / E = VCVS + subcircuit
 instances) with a configurable skip-and-warn policy, name-based supply detection, a PDK device-name
-map (IHP `sg13g2`, Skywater `sky130`, GlobalFoundries `gf180mcu`), and a round-trippable
-`CircuitGraphDoc` contract. Cross-PDK retargeting is **voltage-class aware**: each `PdkDevice`
-declares a `flavor` (`""` = the core device, `"hv"` = the PDK's thick-oxide/IO part), the source
-device's class is read from its own PDK's declaration (`model_flavor`), and a class the target PDK
-does not declare is a `ValueError` — never a fall-back onto the core model, which used to land a
-3.3 V IHP device on sky130's 1.8 V `nfet_01v8` with no warning. Subcircuit
+map (`PDKS`: IHP `sg13g2`, Skywater `sky130`, GlobalFoundries `gf180mcu`, a licensed kit (`generic-n65`), plus the
+`analoggym-ref` table for the AnalogGym/ferrosim reference decks — device *names* only, no foundry
+model content), and a round-trippable `CircuitGraphDoc` contract. Cross-PDK retargeting is
+**flavor aware**, and the `flavor` a `PdkDevice` declares carries two vocabularies that
+`split_flavor` separates: a **voltage class** (`""` = the core device, `"hv"`/`"io"` = the PDK's
+thick-oxide/IO part) and a **threshold** bin (`lvt`/`ulvt`/`hvt`/`nvt`), joined by `_` when both
+apply (gf180's `hv_nvt`). The source device's class is read from its own PDK's declaration
+(`model_flavor`), and the two halves retarget differently (`Pdk.resolve_model`): a *voltage class*
+the target PDK does not declare is a `ValueError` — never a fall-back onto the core model, which
+used to land a 3.3 V IHP device on sky130's 1.8 V `nfet_01v8` with no warning — while a missing
+*threshold* bin falls back to the same voltage class's device and logs the substitution by name
+(raising there would make `nmos_lvt` un-retargetable to *every* table: none of the five declares an
+`lvt` device today — not even `generic-n65`, whose default NMOS is literally `nmos_lvt` yet is declared
+*unflavored*. The one threshold any table declares at all is gf180's `hv_nvt` part, and an exact
+hit always wins, so an `hv_nvt` source keeps that device when gf180 is the target). Subcircuit
 instances are modeled as black-box components with named, role-tagged ports and can be recursively
 expanded (`recurse=True` → `graph.subgraphs`). Serialization is a pluggable strategy set, and
 `to_netlist(graph, pdk=…, dialect=…)` emits a re-parseable netlist with per-PDK device names in a
@@ -36,7 +55,10 @@ the way out, `to_netlist(dialect="spectre"|"hspice", subckt=…, ports=…)` ren
 per-dialect emitter family (`SpiceEmitter` is byte-identical to the historical output; the Spectre
 emitter handles paren node lists, primitive masters, `subckt…ends`, full identifier
 sanitization — leading digits AND punctuation (`ota-5t` → `ota_5t`) — and SPICE
-`{expr}` braces → bare Spectre expressions). **Net** names get the stricter, *injective*
+`{expr}` braces → bare Spectre expressions; a bare symbolic passive value is a value too,
+`R1 a b rload` → `resistor r=rload` rather than a phantom master `rload`, and the token stays the
+master only when the card names a model: `l=`/`w=` geometry, or an `X`-prefixed PDK passive).
+**Net** names get the stricter, *injective*
 `sanitize_net`: each illegal character has its own code (`vin+` → `vin_p`, `vin-` → `vin_m`), because
 collapsing them all to `_` shorted every `+`/`-` differential pair — the house port convention
 (`.subckt opamp vin- vin+ …`) — onto one node in a deck that still parsed. Emission also enforces a
@@ -55,7 +77,7 @@ the real AnalogGym sensing-front-end decks — **including hierarchical ones**: 
 `recurse=True` emits a `.subckt`/`subckt…ends` **definition** per referenced master (deduped, nested
 masters first) alongside the instance line, so a deck whose DUT lives in a subcircuit re-parses into
 an isomorphic graph. A black-box graph (`recurse=False`) has no definition body and emits instance
-lines only, as before. Design: meta `doc/plan_spectre_hspice_integration.md`.
+lines only, as before. Design: meta `doc/archive/plan_spectre_hspice_integration.md`.
 
 **Whole-deck translation (2026-07-05, virtuoso-bridge P2 syntax half):**
 `translate_ngspice_to_spectre(netlist, pdk="generic-n65", source_pdk="ihp-sg13g2")` turns an
@@ -84,15 +106,26 @@ skip-and-warn — never a mis-pinned node. (spicelib parses G/E as two-node devi
 controlling pair inside the value token; `device_factory.wired_nets` splits them back out, and the
 graph registers control-only nets itself.)
 
-On top of the frozen core, two analysis capabilities build purely on the public graph API:
-**comparison** (whole-netlist equivalence via labeled graph isomorphism) and **functional-subcircuit
-detection** (overlay pre-defined templates — current mirrors and tail-biased differential pairs — via
+Layered on the graph model, two analysis capabilities build on its public API alone (neither
+`compare.py` nor `match.py` reaches into a private `CircuitGraph` attribute; `paths.py` does):
+**comparison** (whole-netlist equivalence via labeled
+graph isomorphism) and **functional-subcircuit detection** (overlay pre-defined templates via
 labeled subgraph monomorphism, with per-family YAML template catalogues under
-`examples/analog-db/templates/`).
+`examples/analog-db/templates/`). The library `find_subcircuits` loads by default merges **four**
+families — current mirrors, miscellaneous (tail-biased differential pairs and the like),
+pseudo-resistors and transmission gates — in one pass, so a dependent template resolves against an
+independently-detected one (a differential pair is reported only when its `CM_tail` lands on a
+detected mirror output). The last two are loaded *tolerantly*: a checkout whose analog-db
+manifest is still rules-only (an empty `templates:` list — the state those families were in before
+their first cells landed) gets a warning and the core catalogue instead of a crash.
 
-*Deferred (not part of the frozen core):* the matplotlib `[viz]` helpers, and surface adapters
-(MCP / REST / UI). Plan + task tracker live in the meta-repo
-`doc/plan_circuitgraph_langgraph_integration.md` and `doc/todo_circuitgraph.md`.
+*Still deferred:* the matplotlib `[viz]` helpers and the Phase-7 surface adapters (MCP / REST / UI).
+Both are checked, not asserted: `tests/test_status_claims.py` fails if `pyproject.toml` grows a
+`[viz]` extra or a matplotlib dependency, or if anything under `packages/spicexplorer-api/src/` imports
+this package (the API serves the analog-db template *catalogue*, but never runs the graph builder).
+Out of this repo's reach: the orchestration MCP server names `spicexplorer_circuitgraph` only in its
+dependency diagnostics, not as a tool. Plan + task tracker live in the meta-repo
+`doc/archive/plan_circuitgraph_langgraph_integration.md` and `doc/archive/todo_circuitgraph.md`.
 
 ## Install
 
@@ -102,7 +135,7 @@ uv sync   # base: networkx + pydantic  (a [viz] matplotlib extra will arrive wit
 
 ## Quickstart
 
-> **Runnable demo:** [`examples/OTA/cascode/circuitgraph/circuitgraph_demo.ipynb`](../../examples/OTA/cascode/circuitgraph/circuitgraph_demo.ipynb)
+> **Runnable demo:** [`notebooks/circuitgraph_demo.py`](notebooks/circuitgraph_demo.py)
 > walks the whole flow (build → inspect → serialize → compare → emit → round-trip → subcircuits) on a
 > tiny inline stage and the committed cascode OTA — no ngspice/PDK needed.
 
@@ -113,8 +146,13 @@ Library-first — everything below is pure parsing (no ngspice / PDK install nee
 from spicexplorer_core import project_root
 from spicexplorer_core.spice_engine import NetlistView
 from spicexplorer_circuitgraph import (
-    CircuitGraph, IHP_SG13G2, SKYWATER_SKY130,
-    serialize, list_strategies, evaluate_strategies, to_netlist,
+    CircuitGraph,
+    IHP_SG13G2,
+    SKYWATER_SKY130,
+    serialize,
+    list_strategies,
+    evaluate_strategies,
+    to_netlist,
 )
 
 # 1. netlist -> typed bipartite graph
@@ -127,18 +165,25 @@ m = g.get_components()[0]
 print(m.name, m.structural_role, g.connections(m))
 
 # 3. serialize for an LLM / analysis (pluggable strategies)
-print(list_strategies())                                   # flat, nested, net_centric, llm_description, ...
-view = serialize(g, "net_centric", include_params=True)    # -> dict (LLM-ready JSON)
+print(list_strategies())  # flat, nested, net_centric, llm_description, ...
+view = serialize(g, "net_centric", include_params=True)  # -> dict (LLM-ready JSON)
 # NDA-safe projection for a cloud LLM: omit the foundry model name (and params) by construction
 safe = serialize(g, "net_centric", include_params=False, include_spice_model=False)
-for row in evaluate_strategies(g):                          # deterministic comparison harness
+for row in evaluate_strategies(g):  # deterministic comparison harness
     print(row.name, row.token_estimate, row.component_coverage)
 
 # 4. graph -> netlist, optionally retargeting device names to another PDK (#3b)
-print(to_netlist(g))                                       # IHP names
-print(to_netlist(g, pdk=SKYWATER_SKY130))                  # sky130 nfet/pfet names
-print(to_netlist(g, pdk=SKYWATER_SKY130, dialect="spectre",
-                 subckt="ota", ports=["vdd", "vss", "vinp", "vinn", "vout"]))
+print(to_netlist(g))  # IHP names
+print(to_netlist(g, pdk=SKYWATER_SKY130))  # sky130 nfet/pfet names
+print(
+    to_netlist(
+        g,
+        pdk=SKYWATER_SKY130,
+        dialect="spectre",
+        subckt="ota",
+        ports=["vdd", "vss", "vinp", "vinn", "vout"],
+    )
+)
 # cross-PDK × cross-dialect: sky130 names, Spectre syntax, wrapped as one subckt definition
 
 # 4b. foreign-dialect ingest works the same way (Spectre/HSPICE via the core dialect readers)
@@ -146,13 +191,14 @@ scs = CircuitGraph.from_netlist(NetlistView.from_file("cell.scs"), name="dut")  
 
 # 5. round-trip: the contract is the serialize/deserialize + deep-copy seam
 from spicexplorer_circuitgraph import CircuitGraphDoc
-doc = CircuitGraphDoc.from_graph(g)                        # pydantic, JSON-dumpable
-g2 = doc.to_graph()                                        # independent rebuild
+
+doc = CircuitGraphDoc.from_graph(g)  # pydantic, JSON-dumpable
+g2 = doc.to_graph()  # independent rebuild
 ```
 
 ### Compare two netlists (are they the same circuit?)
 
-> **Runnable demo:** [`packages/spicexplorer-circuitgraph/notebooks/compare_demo.ipynb`](./notebooks/compare_demo.ipynb)
+> **Runnable demo:** [`packages/spicexplorer-circuitgraph/notebooks/compare_demo.py`](./notebooks/compare_demo.py)
 > walks every knob (name/order invariance, caught differences, passive symmetry, supply rails,
 > `match_params`/`match_models`, and differential `IOPort` anchoring) on the real cascode OTA and a
 > set of edge cases — no ngspice/PDK needed.
@@ -164,18 +210,23 @@ from spicexplorer_circuitgraph import compare_netlists, netlists_equivalent, IOP
 # equal up to net/instance renaming and line reordering, preserving device type, MOS polarity,
 # and pin-level wiring. Accepts netlist text, file paths, NetlistView, or CircuitGraph.
 res = compare_netlists(netlist_a, netlist_b, pdk=IHP_SG13G2)
-print(bool(res), res.reason)        # truthy when equivalent + a human-readable explanation
-print(res.component_mapping)        # on a match: one valid a→b name correspondence
+print(bool(res), res.reason)  # truthy when equivalent + a human-readable explanation
+print(res.component_mapping)  # on a match: one valid a→b name correspondence
 print(res.net_mapping)
 
-netlists_equivalent(netlist_a, netlist_b, pdk=IHP_SG13G2)   # bool shortcut
+netlists_equivalent(netlist_a, netlist_b, pdk=IHP_SG13G2)  # bool shortcut
 
 # Anchor named I/O so they can only map to the matching port (never an internal net):
-compare_netlists(netlist_a, netlist_b, pdk=IHP_SG13G2, io_ports=[
-    IOPort("vout"),                          # single-ended — maps by identity
-    IOPort("vinp", "vinn"),                  # differential — +/- halves swappable (default)
-    IOPort("voutp", "voutn", swappable=False),  # differential — polarity preserved
-])
+compare_netlists(
+    netlist_a,
+    netlist_b,
+    pdk=IHP_SG13G2,
+    io_ports=[
+        IOPort("vout"),  # single-ended — maps by identity
+        IOPort("vinp", "vinn"),  # differential — +/- halves swappable (default)
+        IOPort("voutp", "voutn", swappable=False),  # differential — polarity preserved
+    ],
+)
 # When the two sides use different I/O net names, pass io_ports_b=[...] (matched by position).
 ```
 
@@ -194,7 +245,7 @@ anchored net never maps to an internal one; use `io_ports_b` when the two sides 
 
 ### Trace & diff paths between nets
 
-> **Runnable demo:** [`packages/spicexplorer-circuitgraph/notebooks/paths_demo.ipynb`](./notebooks/paths_demo.ipynb)
+> **Runnable demo:** [`packages/spicexplorer-circuitgraph/notebooks/paths_demo.py`](./notebooks/paths_demo.py)
 > traces paths on the real cascode OTA, shows the supply-rail and pin-fan-out behavior, and walks all
 > four diff verdicts (plus the JSON / `describe()` output) — no ngspice/PDK needed.
 
@@ -204,24 +255,26 @@ from spicexplorer_circuitgraph import find_paths_between, shortest_paths_between
 # Walk the bipartite graph net -> device -> net -> …; each path is a chain of device traversals
 # rendered as device.pin touchpoints. Supply rails (VDD/VSS/GND) are NOT routed through by default.
 for p in shortest_paths_between(graph, "vinp", "vout"):
-    print(p.length, p.label)          # 3  XM1.gate->XM1.source->XM2.source->XM2.drain->XM2C.…
+    print(p.length, p.label)  # 3  XM1.gate->XM1.source->XM2.source->XM2.drain->XM2C.…
     print(p.touchpoints, p.components)
-    print(p.describe())               # prose for an LLM / reviewer
-    print(p.model_dump_json())        # JSON (pydantic) — labels/touchpoints included
+    print(p.describe())  # prose for an LLM / reviewer
+    print(p.model_dump_json())  # JSON (pydantic) — labels/touchpoints included
 
-find_paths_between(graph, "vinp", "vout", max_components=4)                 # all paths, capped length
-find_paths_between(graph, "vinp", "vout", through_supply=True)             # allow routing via rails
-find_paths_between(graph, "vinp", "vout", max_paths=50)                    # the 50 shortest
-find_paths_between(graph, "vinp", "vout", max_components=3, max_paths=None)  # unbounded (small graph)
+find_paths_between(graph, "vinp", "vout", max_components=4)  # all paths, capped length
+find_paths_between(graph, "vinp", "vout", through_supply=True)  # allow routing via rails
+find_paths_between(graph, "vinp", "vout", max_paths=50)  # the 50 shortest
+find_paths_between(
+    graph, "vinp", "vout", max_components=3, max_paths=None
+)  # unbounded (small graph)
 
 # diff_paths classifies how two paths differ — pin-only / device-only / device-pin — and splits them
 # into what is exclusive to each and what is common.
 d = diff_paths(path_a, path_b)
-print(d.kind.value, d.summary)        # "device_pin"  "pin-only on XM1; only in B: XM1C, XM2C"
-print(d.only_in_a.touchpoints)        # the device.pin label sequence exclusive to A
-print(d.only_in_b.touchpoints)        # …exclusive to B
-print(d.common.touchpoints)           # …shared
-print(d.describe())                   # each step tagged [pin_only] / [device_only]
+print(d.kind.value, d.summary)  # "device_pin"  "pin-only on XM1; only in B: XM1C, XM2C"
+print(d.only_in_a.touchpoints)  # the device.pin label sequence exclusive to A
+print(d.only_in_b.touchpoints)  # …exclusive to B
+print(d.common.touchpoints)  # …shared
+print(d.describe())  # each step tagged [pin_only] / [device_only]
 ```
 
 `find_paths_between(graph, a, b)` returns `GraphPath`s (sorted by length then label) connecting two
@@ -260,7 +313,7 @@ negative-Vth devices that can still conduct at Vgs=0. The underlying
 # subckt instances graph as black-box components with named, role-tagged ports
 tb = project_root() / "examples/OTA/folded_cascode/ihp-sg13g2/spice/cora_testbench_ac.spice"
 g = CircuitGraph.from_netlist(NetlistView.from_file(tb), pdk=IHP_SG13G2)
-x1 = g._comp_map["X1"]                                      # a SubcktInstanceNode
+x1 = g._comp_map["X1"]  # a SubcktInstanceNode
 print(x1.subckt_name, [(p.name, p.role) for p in x1.ports()])
 
 # ...or step in: build a child graph per X… instance (the parent black box stays in place)
@@ -268,7 +321,7 @@ g_rec = CircuitGraph.from_netlist(NetlistView.from_file(tb), pdk=IHP_SG13G2, rec
 print(g_rec.subgraphs.keys())
 
 # devices the build could not model at all (on_unknown="skip") stay visible here
-print(g.skipped_components)                                 # [] for a fully-typed deck
+print(g.skipped_components)  # [] for a fully-typed deck
 ```
 
 The `XM`/`XR`/`XC`/`XL` prefixes are only a *heuristic* over `X…` instances, so an arity mismatch
@@ -286,7 +339,7 @@ find, or rule out, what was typed.
 
 ### Detect functional sub-circuits (current mirrors + differential pairs)
 
-> **Runnable demo:** [`packages/spicexplorer-circuitgraph/notebooks/subcircuit_matching_demo.ipynb`](./notebooks/subcircuit_matching_demo.ipynb)
+> **Runnable demo:** [`packages/spicexplorer-circuitgraph/notebooks/subcircuit_matching_demo.py`](./notebooks/subcircuit_matching_demo.py)
 > overlays the current-mirror template catalogue on the 5T and folded-cascode OTAs, shows the
 > array-sharing-a-reference case, subsumption, and the match knobs — no ngspice/PDK needed.
 
@@ -310,23 +363,33 @@ current-mirror output, so the merged catalogue is matched in one pass.
 
 ```python
 from spicexplorer_circuitgraph import (
-    CircuitGraph, default_subcircuit_library,
-    find_subcircuits, group_matches, annotate_subcircuits,
+    CircuitGraph,
+    default_subcircuit_library,
+    find_subcircuits,
+    group_matches,
+    annotate_subcircuits,
 )
 from spicexplorer_core import project_root
 from spicexplorer_core.spice_engine import NetlistView
 
-lib = default_subcircuit_library()                     # 18 CM + 7 misc + 4 pr + 1 tg templates (the default)
+lib = default_subcircuit_library()  # 18 CM + 7 misc + 4 pr + 1 tg templates (the default)
 nl = project_root() / "examples/analog-db/circuits/amp_004_folded_cascode/abstract/netlist.spice"
 g = CircuitGraph.from_netlist(NetlistView.from_file(nl), name="folded_cascode")
 
 # one call: detect + resolve + tag the graph (mutates g in place, returns the resolved groups)
 for grp in annotate_subcircuits(g, lib):
-    print(grp.group_id, grp.mirror_class, grp.polarity,
-          "ref=", grp.reference_device, "outputs=", grp.output_devices)
+    print(
+        grp.group_id,
+        grp.mirror_class,
+        grp.polarity,
+        "ref=",
+        grp.reference_device,
+        "outputs=",
+        grp.output_devices,
+    )
 # cm.pmos.simple#1 simple pmos ref= XM11 outputs= ('XM0', 'XM12')   <- one diode, two copies
 # cm.nmos.simple#1 simple nmos ref= XM13 outputs= ('XM3', 'XM4')
-print(g.subcircuit_matches)                            # the overlay is stored on the graph
+print(g.subcircuit_matches)  # the overlay is stored on the graph
 print([(c.name, c.structural_role) for c in g.get_components() if c.structural_role])
 ```
 
@@ -344,9 +407,14 @@ the *same* device set are reported as `alternates` rather than silently dropped.
 `annotate_subcircuits(graph, …)` runs both, stores the groups on `graph.subcircuit_matches`, and tags
 each matched MOS's `structural_role` (in a current mirror: diode-reference device → `MOS_CURRENT_MIRROR_REFERENCE`,
 output-copy device → `MOS_CURRENT_MIRROR`, stacked cascode device → `MOS_CASCODE_DEVICE`,
-tail source → `MOS_TAIL_CURRENT_SOURCE`; in a tail-biased differential pair: both pair devices →
-`MOS_DIFFERENTIAL_PAIR`; in a *family-role* block, every matched MOS carries the family's role:
-pseudo-resistor cell → `MOS_PSEUDO_RESISTOR`, transmission gate → `MOS_ANALOG_SWITCH`).
+tail source → `MOS_TAIL_CURRENT_SOURCE`; in a tail-biased differential pair: both pair devices
+(source on the tail net) → `MOS_DIFFERENTIAL_PAIR`, a cascoded pair's cascodes → `MOS_CASCODE_DEVICE`;
+in a *family-role* block, every matched MOS carries the family's role:
+pseudo-resistor cell → `MOS_PSEUDO_RESISTOR`, transmission gate → `MOS_ANALOG_SWITCH`,
+inverter / push-pull stage → `MOS_INVERTER`, cross-coupled pair → `MOS_CROSS_COUPLED`, the device
+biasing a cross-coupled pair's tail still being `MOS_TAIL_CURRENT_SOURCE`). It first clears every
+`DETERMINISTIC_ROLES` label on the graph, so a re-run reflects only the current library; a residue
+(LLM-assigned) role is left alone.
 
 Detection is topological by default with three knobs (the booleans the design called for):
 **`match_supply=True`** anchors `VDD`/`VSS`/`GND` by class — a supply rail only ever maps to a rail
@@ -379,11 +447,15 @@ family's registered design-rule doc(s) (the manifest `rules:` block), so a downs
 symmetry/sizing/layout agent resolves "what do I do with this block" from data — and **`roles`** —
 the per-device deterministic `StructuralRole` values the annotation pass assigned (populated when
 exporting an *annotated* `CircuitGraph`; empty for a bare group list, where no role pass ran).
+Field set, ownership and the additive / `@2` policy: [the `@1` contract](../spicexplorer-netlist2xschem/README.md#the-1-contract).
 
 ```python
 from spicexplorer_circuitgraph import (
-    find_subcircuits, group_matches, write_subcircuit_annotations,
+    find_subcircuits,
+    group_matches,
+    write_subcircuit_annotations,
 )
+
 groups = group_matches(find_subcircuits(g))
 write_subcircuit_annotations(groups, "folded_cascode.blocks.json")
 # then: netlist2xschem <netlist> -o out.sch --annotations folded_cascode.blocks.json --render svg
@@ -391,14 +463,16 @@ write_subcircuit_annotations(groups, "folded_cascode.blocks.json")
 
 ## Notebooks
 
-All pure parsing — no ngspice / PDK needed. Under [`notebooks/`](./notebooks/):
+All pure parsing — no ngspice / PDK needed. Each is a marimo notebook: open it with
+`uv run marimo edit packages/spicexplorer-circuitgraph/notebooks/<name>.py`, or run all its cells
+from that folder with `uv run python <name>.py`. Under [`notebooks/`](./notebooks/):
 
-- [`circuitgraph_quickstart.ipynb`](./notebooks/circuitgraph_quickstart.ipynb) — the concise tour (build → inspect → serialize → emit → retarget PDK).
-- [`circuitgraph_demo.ipynb`](./notebooks/circuitgraph_demo.ipynb) — the full walkthrough (build → inspect → serialize → compare → emit → round-trip → subcircuits).
-- [`compare_demo.ipynb`](./notebooks/compare_demo.ipynb) — every comparison knob (name/order invariance, passive symmetry, supply rails, `match_params`/`match_models`, differential `IOPort` anchoring).
-- [`paths_demo.ipynb`](./notebooks/paths_demo.ipynb) — net-to-net path tracing, supply-rail / pin-fan-out behavior, the four `diff_paths` verdicts.
-- [`subcircuit_matching_demo.ipynb`](./notebooks/subcircuit_matching_demo.ipynb) — overlay the template catalogue on the 5T and folded-cascode OTAs (array-sharing-a-reference, subsumption, match knobs).
-- [`dialect_netlists_demo.ipynb`](./notebooks/dialect_netlists_demo.ipynb) — foreign-dialect netlists end-to-end: read a verbatim Spectre/HSPICE deck → detect structures → re-emit in any dialect (incl. cross-PDK × cross-dialect).
+- [`circuitgraph_quickstart.py`](./notebooks/circuitgraph_quickstart.py) — the concise tour (build → inspect → serialize → emit → retarget PDK).
+- [`circuitgraph_demo.py`](./notebooks/circuitgraph_demo.py) — the full walkthrough (build → inspect → serialize → compare → emit → round-trip → subcircuits).
+- [`compare_demo.py`](./notebooks/compare_demo.py) — every comparison knob (name/order invariance, passive symmetry, supply rails, `match_params`/`match_models`, differential `IOPort` anchoring).
+- [`paths_demo.py`](./notebooks/paths_demo.py) — net-to-net path tracing, supply-rail / pin-fan-out behavior, the four `diff_paths` verdicts.
+- [`subcircuit_matching_demo.py`](./notebooks/subcircuit_matching_demo.py) — overlay the template catalogue on the 5T and folded-cascode OTAs (array-sharing-a-reference, subsumption, match knobs).
+- [`dialect_netlists_demo.py`](./notebooks/dialect_netlists_demo.py) — foreign-dialect netlists end-to-end: read a verbatim Spectre/HSPICE deck → detect structures → re-emit in any dialect (incl. cross-PDK × cross-dialect).
 
 ## Public API
 

@@ -1,4 +1,5 @@
 """Netlist inspection + spec-library routes used by the Setup wizard."""
+
 from __future__ import annotations
 
 from typing import Any

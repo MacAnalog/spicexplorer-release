@@ -16,6 +16,7 @@ Two input modes:
 The active PVT corner (Phase 1) is applied automatically when the optimizer is
 constructed; `active_corner` optionally overrides it ephemerally (never rewrites YAML).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -86,7 +87,9 @@ class SimulateOnceResponse(BaseModel):
     pdk_detail: str | None = None
 
 
-def _resolve_params_from_checkpoint(checkpoint_id: str, point: int | None, warnings: list[str]) -> dict[str, float]:
+def _resolve_params_from_checkpoint(
+    checkpoint_id: str, point: int | None, warnings: list[str]
+) -> dict[str, float]:
     """Pull a single point's engineering-real param vector out of a stored checkpoint."""
     from spicexplorer_api.routes.checkpoint import _resolve_checkpoint_path
     from spicexplorer_api.services.checkpoint_reader import read_checkpoint
@@ -156,9 +159,13 @@ def _run_single_sim(req: SimulateOnceRequest) -> dict[str, Any]:
 
     def _fail(error: str, **extra) -> dict[str, Any]:
         return {
-            "ok": False, "error": error, "warnings": warnings,
+            "ok": False,
+            "error": error,
+            "warnings": warnings,
             "elapsed_ms": (perf_counter() - t_start) * 1000,
-            "pdk_ok": pdk["pdk_ok"], "pdk_detail": pdk["pdk_detail"], **extra,
+            "pdk_ok": pdk["pdk_ok"],
+            "pdk_detail": pdk["pdk_detail"],
+            **extra,
         }
 
     # 1 — load project
@@ -301,8 +308,10 @@ def _run_single_sim(req: SimulateOnceRequest) -> dict[str, Any]:
             wrappers = _build_spicelib_wrappers(project, output_folder=rdir / "sim")
         else:
             import uuid
+
             wrappers = _build_spicelib_wrappers(
-                project, output_subdir=f"manual_sim/{uuid.uuid4().hex[:8]}")
+                project, output_subdir=f"manual_sim/{uuid.uuid4().hex[:8]}"
+            )
         opt = Nevergrad_Spice_Single_Objective(setup_obj=project, spicelib_wrappers=wrappers)
         # Same retention flag the optimizer runner sets for keep_raw live runs —
         # evaluate()'s cleanup leaves the per-sim .raw files in place.
@@ -316,8 +325,12 @@ def _run_single_sim(req: SimulateOnceRequest) -> dict[str, Any]:
     except Exception as e:
         if rdir is not None:
             project_service.finalize_run(project_id, rdir, status="error", error=str(e))
-        return _fail(f"Simulation failed: {e}", params_used=params,
-                     active_corner=active_corner, run_id=run_id)
+        return _fail(
+            f"Simulation failed: {e}",
+            params_used=params,
+            active_corner=active_corner,
+            run_id=run_id,
+        )
 
     metrics: dict[str, dict] = {}
     for spec_name, entry in (fit_summary or {}).items():
@@ -328,10 +341,14 @@ def _run_single_sim(req: SimulateOnceRequest) -> dict[str, Any]:
             }
     if rdir is not None:
         # curr_val is already _safe_float'd (float | None); keep only the numeric ones.
-        flat = {name: float(m["curr_val"]) for name, m in metrics.items()
-                if isinstance(m["curr_val"], (int, float))}
+        flat = {
+            name: float(m["curr_val"])
+            for name, m in metrics.items()
+            if isinstance(m["curr_val"], (int, float))
+        }
         project_service.finalize_run(
-            project_id, rdir, status="done", score=_safe_float(score), metrics=flat)
+            project_id, rdir, status="done", score=_safe_float(score), metrics=flat
+        )
 
     # Prefer the evaluation's own per-run log map — in multi-corner mode it is keyed
     # "<tb>__<corner>" and covers EVERY corner, whereas wrapper.curr_log only retains
@@ -341,8 +358,11 @@ def _run_single_sim(req: SimulateOnceRequest) -> dict[str, Any]:
         log_files = {n: str(p) for n, p in eval_logs.items()}
     else:
         # getattr: the Spectre adapter has no `curr_log` (its logs live in the raw dir).
-        log_files = {n: str(log) for n, w in wrappers.items()
-                     if (log := getattr(w, "curr_log", None)) is not None}
+        log_files = {
+            n: str(log)
+            for n, w in wrappers.items()
+            if (log := getattr(w, "curr_log", None)) is not None
+        }
     log_tails = {n: (_tail_log(p)[0] or "") for n, p in log_files.items()}
 
     return {

@@ -1,0 +1,367 @@
+{
+ "schema": "spicexplorer/results@1",
+ "circuit": "ldo_010_capless_lowiq",
+ "pdk": "ihp-sg13g2",
+ "corner": "tt",
+ "pex_netlist": "<scratch>/w5/pex_rc/ldo_ihp_capless_pex__ldo_ihp_capless/ldo_ihp_capless_k25d_pex_netlist_stitched.spice",
+ "pex_netlist_kind": "stitched",
+ "pre": {
+  "v_out": {
+   "value": 1.199499,
+   "spec": "pass"
+  },
+  "i_q": {
+   "value": 3.380539e-05,
+   "spec": "pass"
+  },
+  "load_reg": {
+   "value": 2.6e-05,
+   "spec": "pass"
+  },
+  "line_reg": {
+   "value": 5.6e-05,
+   "spec": "pass"
+  },
+  "v_dropout": {
+   "value": 0.104671,
+   "spec": "pass"
+  },
+  "psrr_vdd_db": {
+   "value": 70.00703,
+   "spec": "pass"
+  },
+  "v_undershoot": {
+   "value": 0.115057,
+   "spec": "pass"
+  },
+  "pm_loop_deg": {
+   "value": 72.5064,
+   "spec": "pass"
+  },
+  "loopgain_db": {
+   "value": 50.22434,
+   "spec": "none"
+  },
+  "ugf_loop_hz": {
+   "value": 801499.9,
+   "spec": "none"
+  },
+  "gm_loop_db": {
+   "value": 6.13316,
+   "spec": "none"
+  },
+  "ms_peak_db": {
+   "value": 7.812823,
+   "spec": "none"
+  },
+  "tloop_ph_dc_deg": {
+   "value": 179.9738,
+   "spec": "none"
+  },
+  "zout_peak_db": {
+   "value": 98.03894,
+   "spec": "none"
+  },
+  "t_transient": {
+   "value": 1.56252e-07,
+   "spec": "none"
+  },
+  "v_line_pp": {
+   "value": 0.051445,
+   "spec": "none"
+  },
+  "vn_out_rms": {
+   "value": 0.0003729257,
+   "spec": "pass"
+  }
+ },
+ "pre_bench_status": {
+  "ac_loopgain": "ok",
+  "ac_loopgain_hi": "ok",
+  "ac_loopgain_lo": "ok",
+  "dc_op": "ok",
+  "dropout": "ok",
+  "line_regulation": "ok",
+  "load_regulation": "ok",
+  "loop_stability": "ok",
+  "noise": "ok",
+  "psrr": "ok",
+  "psrr_1m": "ok",
+  "tran_line_step": "ok",
+  "tran_load_step": "ok"
+ },
+ "post": {
+  "v_out": {
+   "value": 1.199498,
+   "spec": "pass"
+  },
+  "i_q": {
+   "value": 3.376923e-05,
+   "spec": "pass"
+  },
+  "load_reg": {
+   "value": 2.7e-05,
+   "spec": "pass"
+  },
+  "line_reg": {
+   "value": 5.6e-05,
+   "spec": "pass"
+  },
+  "v_dropout": {
+   "value": 0.1346635,
+   "spec": "pass"
+  },
+  "psrr_vdd_db": {
+   "value": 70.06213,
+   "spec": "pass"
+  },
+  "v_undershoot": {
+   "value": 0.129533,
+   "spec": "pass"
+  },
+  "pm_loop_deg": {
+   "value": 69.32791,
+   "spec": "pass"
+  },
+  "loopgain_db": {
+   "value": 50.21038,
+   "spec": "none"
+  },
+  "ugf_loop_hz": {
+   "value": 775509.5,
+   "spec": "none"
+  },
+  "gm_loop_db": {
+   "value": 7.729345,
+   "spec": "none"
+  },
+  "ms_peak_db": {
+   "value": 8.587552,
+   "spec": "none"
+  },
+  "tloop_ph_dc_deg": {
+   "value": 179.9737,
+   "spec": "none"
+  },
+  "zout_peak_db": {
+   "value": 107.065,
+   "spec": "none"
+  },
+  "t_transient": {
+   "value": 1.92375e-07,
+   "spec": "none"
+  },
+  "v_line_pp": {
+   "value": 0.056411,
+   "spec": "none"
+  },
+  "vn_out_rms": {
+   "value": 0.0003625353,
+   "spec": "pass"
+  }
+ },
+ "post_measures": {
+  "ac_loopgain": {
+   "loopgain_db": 50.21038,
+   "ugf_loop": 775509.5,
+   "pm_loop": 69.32791,
+   "gm_at_180": -7.729345,
+   "ms_peak": 8.587552,
+   "tloop_ph_dc": 179.9737,
+   "gm_loop_db": 7.729345
+  },
+  "ac_loopgain_hi": {
+   "loopgain_db": 50.19285,
+   "ugf_loop": 767968.0,
+   "pm_loop": 69.17303,
+   "gm_at_180": -7.832879,
+   "ms_peak": 4.52706,
+   "tloop_ph_dc": 179.9736,
+   "gm_loop_db": 7.832879
+  },
+  "ac_loopgain_lo": {
+   "loopgain_db": 50.19275,
+   "ugf_loop": 776083.6,
+   "pm_loop": 69.29749,
+   "gm_at_180": -7.210445,
+   "ms_peak": 9.760675,
+   "tloop_ph_dc": 179.9738,
+   "gm_loop_db": 7.210445
+  },
+  "dc_op": {
+   "i_supply": 3.376923e-05,
+   "vout_dc": 1.199498
+  },
+  "dropout": {
+   "vin_at": 1.334,
+   "vout_at": 1.199336,
+   "v_dropout": 0.1346635
+  },
+  "line_regulation": {
+   "vout_max": 1.199517,
+   "vout_min": 1.199461,
+   "line_reg": 5.6e-05
+  },
+  "load_regulation": {
+   "vout_max": 1.19949,
+   "vout_min": 1.199463,
+   "load_reg": 2.7e-05
+  },
+  "loop_stability": {
+   "zout_dc": -46.9977,
+   "zout_max": 60.06731,
+   "zout_peak_db": 107.065
+  },
+  "noise": {
+   "onoise_total": 0.0003625353,
+   "vn_out_rms": 0.0003625353
+  },
+  "psrr": {
+   "vout_db": -70.06213,
+   "psrr_vdd_db": 70.06213
+  },
+  "psrr_1m": {
+   "vout_db": -14.28153,
+   "psrr_vdd_db": 14.28153
+  },
+  "tran_line_step": {
+   "vout_max": 1.255434,
+   "vout_min": 1.199023,
+   "v_line_pp": 0.056411
+  },
+  "tran_load_step": {
+   "vout_min": 1.06993,
+   "vout_post": 1.199463,
+   "tcross": 1.192375e-06,
+   "v_undershoot": 0.129533,
+   "t_transient": 1.92375e-07
+  }
+ },
+ "bench_status": {
+  "ac_loopgain": "ok",
+  "ac_loopgain_hi": "ok",
+  "ac_loopgain_lo": "ok",
+  "dc_op": "ok",
+  "dropout": "ok",
+  "line_regulation": "ok",
+  "load_regulation": "ok",
+  "loop_stability": "ok",
+  "noise": "ok",
+  "psrr": "ok",
+  "psrr_1m": "ok",
+  "tran_line_step": "ok",
+  "tran_load_step": "ok"
+ },
+ "post_violations": [],
+ "vs_claim": [
+  {
+   "metric": "gm_loop_db",
+   "claim": 7.729345,
+   "measured": 7.729345,
+   "rel": 0.0
+  },
+  {
+   "metric": "i_q",
+   "claim": 3.376923e-05,
+   "measured": 3.376923e-05,
+   "rel": 0.0
+  },
+  {
+   "metric": "line_reg",
+   "claim": 5.6e-05,
+   "measured": 5.6e-05,
+   "rel": 0.0
+  },
+  {
+   "metric": "load_reg",
+   "claim": 2.7e-05,
+   "measured": 2.7e-05,
+   "rel": 0.0
+  },
+  {
+   "metric": "loopgain_db",
+   "claim": 50.21038,
+   "measured": 50.21038,
+   "rel": 0.0
+  },
+  {
+   "metric": "ms_peak_db",
+   "claim": 8.587552,
+   "measured": 8.587552,
+   "rel": 0.0
+  },
+  {
+   "metric": "pm_loop_deg",
+   "claim": 69.32791,
+   "measured": 69.32791,
+   "rel": 0.0
+  },
+  {
+   "metric": "psrr_1m_db",
+   "claim": 14.28153,
+   "measured": null,
+   "rel": null
+  },
+  {
+   "metric": "psrr_vdd_db",
+   "claim": 70.06213,
+   "measured": 70.06213,
+   "rel": 0.0
+  },
+  {
+   "metric": "t_transient",
+   "claim": 1.9237499999999997e-07,
+   "measured": 1.92375e-07,
+   "rel": 1.3759469578529898e-16
+  },
+  {
+   "metric": "tloop_ph_dc_deg",
+   "claim": 179.9737,
+   "measured": 179.9737,
+   "rel": 0.0
+  },
+  {
+   "metric": "ugf_loop_hz",
+   "claim": 775509.5,
+   "measured": 775509.5,
+   "rel": 0.0
+  },
+  {
+   "metric": "v_dropout",
+   "claim": 0.1346635,
+   "measured": 0.1346635,
+   "rel": 0.0
+  },
+  {
+   "metric": "v_line_pp",
+   "claim": 0.056411,
+   "measured": 0.056411,
+   "rel": 0.0
+  },
+  {
+   "metric": "v_out",
+   "claim": 1.199498,
+   "measured": 1.199498,
+   "rel": 0.0
+  },
+  {
+   "metric": "v_undershoot",
+   "claim": 0.129533,
+   "measured": 0.129533,
+   "rel": 0.0
+  },
+  {
+   "metric": "vn_out_rms",
+   "claim": 0.0003625352999999999,
+   "measured": 0.0003625353,
+   "rel": 1.4953056605598196e-16
+  },
+  {
+   "metric": "zout_peak_db",
+   "claim": 107.065,
+   "measured": 107.065,
+   "rel": 0.0
+  }
+ ],
+ "claim": "circuits/ldo_010_capless_lowiq/pdk/ihp-sg13g2/layout-001-fvf-strapped-pass-array/out/scorecard_post_rc.json"
+}

@@ -5,6 +5,7 @@ twins of the FS scans, reads self-heal against out-of-band FS changes, write-
 through keeps content fresh at the API's own mutation points, and any DB error
 degrades to the FS scan (never raises).
 """
+
 import json
 import sys
 
@@ -19,15 +20,23 @@ pytest.importorskip("fastapi", reason="ui extra not installed")
 def env(tmp_path, monkeypatch):
     monkeypatch.setenv("WORK_ROOT", str(tmp_path / "work"))
     from spicexplorer_api.services import index_db, project_service
+
     return project_service, index_db
 
 
 def _fake_run(ps, pid, name, **over):
     """Materialize a run dir with a run.json the way the canonical writer does."""
     rd = ps.run_dir(pid, name)
-    d = {"run_id": over.pop("run_id", name), "project_id": pid, "label": None,
-         "kind": "live", "status": "completed", "best_score": 1.0,
-         "started": "2026-07-14T00:00:00", "ended": "2026-07-14T00:01:00"}
+    d = {
+        "run_id": over.pop("run_id", name),
+        "project_id": pid,
+        "label": None,
+        "kind": "live",
+        "status": "completed",
+        "best_score": 1.0,
+        "started": "2026-07-14T00:00:00",
+        "ended": "2026-07-14T00:01:00",
+    }
     d.update(over)
     (rd / "run.json").write_text(json.dumps(d))
     return rd
@@ -83,6 +92,7 @@ def test_reads_self_heal_out_of_band_create_and_delete(env):
     idx.rebuild()
     # An agent/CLI creates a project + a run WITHOUT the API (FS is canonical).
     from spicexplorer_api.app_config import projects_root
+
     ghost = projects_root() / "ghost-12345678"
     (ghost / "runs").mkdir(parents=True)
     (ghost / "project.yaml").write_text("project:\n  ws_root: .\n")
@@ -92,6 +102,7 @@ def test_reads_self_heal_out_of_band_create_and_delete(env):
     assert len(idx.list_runs(pid)) == 1
     # Out-of-band delete heals the same way.
     import shutil
+
     shutil.rmtree(ghost)
     assert {p["id"] for p in idx.list_projects()} == {pid}
 

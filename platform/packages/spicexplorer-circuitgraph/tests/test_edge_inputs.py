@@ -35,8 +35,9 @@ def test_exotic_devices_skip_policy_keeps_the_rest():
 
 def test_exotic_devices_raise_policy_names_the_offender():
     with pytest.raises(ValueError, match="D1"):
-        CircuitGraph.from_netlist(NetlistView.from_string(EXOTIC), pdk=IHP_SG13G2,
-                                  on_unknown="raise")
+        CircuitGraph.from_netlist(
+            NetlistView.from_string(EXOTIC), pdk=IHP_SG13G2, on_unknown="raise"
+        )
 
 
 def test_unclosed_subckt_is_rejected_at_parse():
@@ -49,8 +50,10 @@ def test_unclosed_subckt_is_rejected_at_parse():
 def test_supply_detection_is_case_insensitive():
     """`VDD`, `Vdd` → supply VDD; `vss_a` → supply VSS (underscore-suffixed rail). (A literal
     `vdd!` global marker can't even reach the graph: spicelib rejects `!` in M-card node names.)"""
-    nl = ("* s\nM1 out in VDD VDD sg13_lv_pmos\nM2 out2 in Vdd Vdd sg13_lv_pmos\n"
-          "M3 out3 in vss_a vss_a sg13_lv_nmos\n.end\n")
+    nl = (
+        "* s\nM1 out in VDD VDD sg13_lv_pmos\nM2 out2 in Vdd Vdd sg13_lv_pmos\n"
+        "M3 out3 in vss_a vss_a sg13_lv_nmos\n.end\n"
+    )
     g = CircuitGraph.from_netlist(NetlistView.from_string(nl), pdk=IHP_SG13G2)
     roles = {n.name: (n.is_supply, n.supply_type) for n in g.get_nets()}
     assert roles["VDD"] == (True, "VDD")
@@ -63,8 +66,10 @@ def test_supply_detection_is_case_insensitive():
 def test_hyphenated_subckt_instance_emits_intact():
     """The known hyphenated-name limitation must not corrupt emission: the instance line keeps
     its `ota-5t` reference verbatim (the definition itself is black-box — caller's concern)."""
-    nl = ("* h\n.subckt ota-5t inp inn out vdd vss\nM1 out inp vss vss sg13_lv_nmos\n.ends\n"
-          "X1 a b c d e ota-5t\nR1 c 0 10k\n.end\n")
+    nl = (
+        "* h\n.subckt ota-5t inp inn out vdd vss\nM1 out inp vss vss sg13_lv_nmos\n.ends\n"
+        "X1 a b c d e ota-5t\nR1 c 0 10k\n.end\n"
+    )
     g = CircuitGraph.from_netlist(NetlistView.from_string(nl), pdk=IHP_SG13G2)
     out = to_netlist(g)
     assert "X1 a b c d e ota-5t" in out
@@ -76,8 +81,9 @@ def test_subckt_instance_params_roundtrip():
     g = CircuitGraph.from_netlist(NetlistView.from_string(nl), pdk=IHP_SG13G2)
     emitted = to_netlist(g)
     assert "gain=2" in emitted and "w=10u" in emitted
-    g2 = CircuitGraph.from_netlist(NetlistView.from_string("* t\n" + emitted.split("\n", 1)[1]),
-                                   pdk=IHP_SG13G2)
+    g2 = CircuitGraph.from_netlist(
+        NetlistView.from_string("* t\n" + emitted.split("\n", 1)[1]), pdk=IHP_SG13G2
+    )
     assert (g2.component_count, g2.net_count) == (g.component_count, g.net_count)
 
 
@@ -98,14 +104,16 @@ def test_finger_retarget_renames_count_any_param_case(w_key, ng_key):
 
 
 def test_finger_retarget_no_ng_unchanged_and_gf180_matches_sky130():
-    nl = ("* f\nM1 out in 0 0 sg13_lv_nmos w=10u l=0.5u ng=4\n"
-          "M2 o2 in 0 0 sg13_lv_nmos w=2u l=0.5u\n.end\n")
+    nl = (
+        "* f\nM1 out in 0 0 sg13_lv_nmos w=10u l=0.5u ng=4\n"
+        "M2 o2 in 0 0 sg13_lv_nmos w=2u l=0.5u\n.end\n"
+    )
     g = CircuitGraph.from_netlist(NetlistView.from_string(nl), pdk=IHP_SG13G2)
     for pdk in (SKYWATER_SKY130, GF180MCU):
         m1, m2 = _mos_lines(to_netlist(g, pdk=pdk))
-        assert "nf=4" in m1 and "w=10u" in m1 and "/(4)" not in m1   # total width, BSIM4 fingers it
-        assert "w=2u" in m2 and "nf=" not in m2       # single-finger device untouched
-    ihp_m1, _ = _mos_lines(to_netlist(g))             # IHP keeps the canonical convention
+        assert "nf=4" in m1 and "w=10u" in m1 and "/(4)" not in m1  # total width, BSIM4 fingers it
+        assert "w=2u" in m2 and "nf=" not in m2  # single-finger device untouched
+    ihp_m1, _ = _mos_lines(to_netlist(g))  # IHP keeps the canonical convention
     assert "ng=4" in ihp_m1 and "w=10u" in ihp_m1
 
 

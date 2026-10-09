@@ -9,7 +9,7 @@ C {devices/sg13_lv_nmos_np.sym} 240 240 0 0 {name=M1 model=sg13_lv_nmos spicepre
 C {devices/sg13_lv_pmos_np.sym} 480 240 0 0 {name=M2 model=sg13_lv_pmos spiceprefix=X w=2u l=0.13u}
 C {devices/res_np.sym} 480 0 0 0 {name=R1 value=10k}
 C {devices/capa_np.sym} 0 0 0 0 {name=C1 value=1p}
-C {devices/vsource_np.sym} 0 240 0 0 {name=V1 value=1.8}
+C {devices/vsource_np.sym} 0 240 0 0 {name=V1 value=1.8 savecurrent=false}
 C {devices/isource_np.sym} 240 0 0 0 {name=I1 value=10u}
 C {devices/lab_wire.sym} 260 210 0 0 {name=l0 lab=out}
 C {devices/lab_wire.sym} 220 240 0 0 {name=l1 lab=in}

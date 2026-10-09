@@ -1,5 +1,10 @@
 """PDK + tool discovery. Everything is a path lookup with an env override; nothing is imported.
 
+DRC deck: :func:`for_pdk` names the PDK's ``run_drc.py`` runner and, as a fallback, the KLayout
+``.lydrc`` rule decks. Some IHP SG13G2 checkouts (CHANGELOG "Unreleased - 2024-10-14") ship only
+``drc/sg13g2_maximal.lydrc`` and ``drc/sg13g2_minimal.lydrc``; :meth:`PdkPaths.drc_deck` returns
+the deck :func:`~spicexplorer_signoff.drc.run_drc` will run on this checkout.
+
 Env knobs (all optional):
 
 - ``PDK_ROOT``            dir containing ``<pdk>/`` (default ``~/local/pdks``)
@@ -35,9 +40,23 @@ class PdkPaths:
     lvs_runner: Path  # run_lvs.py
     lyp: Path  # layer properties (renders)
     ngspice_models: Path  # models dir (post-layout benches)
+    #: KLayout rule decks (``.lydrc``) run directly by ``klayout -b -r`` when ``drc_runner`` is
+    #: absent, in order of preference: the first one present is used.
+    drc_decks: tuple[Path, ...] = ()
+
+    def drc_deck(self) -> Path | None:
+        """The DRC deck ``run_drc`` runs: ``drc_runner`` when the file exists, else the first
+        existing ``drc_decks`` entry, else ``None`` (no DRC deck on this checkout)."""
+        for deck in (self.drc_runner, *self.drc_decks):
+            if deck.is_file():
+                return deck
+        return None
 
     def to_dict(self) -> dict[str, Any]:
-        return {k: str(v) for k, v in asdict(self).items()}
+        return {
+            k: [str(x) for x in v] if isinstance(v, tuple) else str(v)
+            for k, v in asdict(self).items()
+        }
 
 
 def pdk_root() -> Path:
@@ -56,6 +75,8 @@ def for_pdk(name: str = "ihp-sg13g2", root: Path | None = None) -> PdkPaths:
             lvs_runner=kl / "lvs" / "run_lvs.py",
             lyp=kl / "sg13g2.lyp",
             ngspice_models=root / "libs.tech" / "ngspice" / "models",
+            # the full rule set first; the minimal deck checks a subset of the same rules
+            drc_decks=(kl / "drc" / "sg13g2_maximal.lydrc", kl / "drc" / "sg13g2_minimal.lydrc"),
         )
     raise ValueError(f"unknown PDK {name!r} — add its paths in spicexplorer_signoff.pdk.for_pdk")
 
@@ -91,7 +112,7 @@ def kpex_klayout_exe() -> str | None:
 class ToolProbe:
     pdk: str
     pdk_ok: bool
-    drc_deck_ok: bool
+    drc_deck_ok: bool  # run_drc.py or one of the .lydrc decks is present (PdkPaths.drc_deck)
     lvs_deck_ok: bool
     klayout: str | None
     kpex: str | None
@@ -138,7 +159,7 @@ def probe(pdk: str = "ihp-sg13g2") -> ToolProbe:
     return ToolProbe(
         pdk=pdk,
         pdk_ok=p.root.is_dir(),
-        drc_deck_ok=p.drc_runner.is_file(),
+        drc_deck_ok=p.drc_deck() is not None,
         lvs_deck_ok=p.lvs_runner.is_file(),
         klayout=klayout_exe(),
         kpex=kpex_exe(),

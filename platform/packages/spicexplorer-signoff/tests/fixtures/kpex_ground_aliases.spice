@@ -1,0 +1,24 @@
+*********************************************************
+*** NGSPICE file created by KLayout-PEX 0.3.12
+*** -----------------------------------------------------
+***     Extraction Engine: KPEX/2.5D
+***     Technology: ihp_sg13g2
+*********************************************************
+* Cards shaped on recorded kpex CC output: a self-loop on the substrate PIN `sub` (both
+* terminals one net, e.g. `Cext_51 sub sub 23.0904f` in a PAM-4 driver cell), and ground C hung
+* on kpex's substrate node VSUBS (not a subckt pin) and on the vss rail. `GND`/`Vss` are the
+* case variants a hand-edited netlist carries.
+
+.SUBCKT cell sub inp outp vss
+XQ_1 outp inp \$6 sub npn13G2 Nx=3
+Cext_1 \$19 \$6 1.33716f
+Cext_2 outp sub 2.5f
+Cext_3 inp outp 0.5f
+Cext_51 sub sub 23.0904f
+Cext_7 inp vss 16.0676a
+Cext_8 inp VSUBS 895.995a
+Cext_9 outp GND 1f
+Cext_10 outp Vss 0.25f
+Cext_11 \$6 0 0.1f
+Cext_12 VSUBS vss 3f
+.ENDS cell

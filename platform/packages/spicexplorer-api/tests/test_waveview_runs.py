@@ -44,10 +44,17 @@ def populated(work):
     (proj / "project.yaml").write_text("project: {}\n")
 
     rd1 = _mk_run(
-        proj / "runs", "2026-07-12_10-00_NGOpt_11111111",
-        {"run_id": "1111-full-id", "project_id": "ota-abc12345", "label": "morning",
-         "algorithm": "NGOpt", "status": "done", "started": "2026-07-12T10:00:00",
-         "best_score": -1.5},
+        proj / "runs",
+        "2026-07-12_10-00_NGOpt_11111111",
+        {
+            "run_id": "1111-full-id",
+            "project_id": "ota-abc12345",
+            "label": "morning",
+            "algorithm": "NGOpt",
+            "status": "done",
+            "started": "2026-07-12T10:00:00",
+            "best_score": -1.5,
+        },
     )
     sim1 = rd1 / "sim" / "run_1_tb_ac__tt"
     sim1.mkdir(parents=True)
@@ -61,15 +68,29 @@ def populated(work):
     synth_tran_raw(sim2 / "tb_tran.raw")
 
     rd2 = _mk_run(
-        proj / "runs", "2026-07-12_11-00_TwoPointsDE_22222222",
-        {"run_id": "2222-full-id", "project_id": "ota-abc12345", "label": "later",
-         "algorithm": "TwoPointsDE", "status": "running", "started": "2026-07-12T11:00:00"},
+        proj / "runs",
+        "2026-07-12_11-00_TwoPointsDE_22222222",
+        {
+            "run_id": "2222-full-id",
+            "project_id": "ota-abc12345",
+            "label": "later",
+            "algorithm": "TwoPointsDE",
+            "status": "running",
+            "started": "2026-07-12T11:00:00",
+        },
     )
 
     rd3 = _mk_run(
-        work / "runs", "2026-07-11_09-00_NGOpt_33333333",
-        {"run_id": "3333-full-id", "project_id": None, "label": None,
-         "algorithm": "NGOpt", "status": "done", "started": "2026-07-11T09:00:00"},
+        work / "runs",
+        "2026-07-11_09-00_NGOpt_33333333",
+        {
+            "run_id": "3333-full-id",
+            "project_id": None,
+            "label": None,
+            "algorithm": "NGOpt",
+            "status": "done",
+            "started": "2026-07-11T09:00:00",
+        },
     )
     synth_spectre_raw_dir(rd3 / "sim" / "candidate-raw")
 
@@ -96,7 +117,9 @@ def test_list_runs_project_scope(client, populated):
 
 
 def test_list_runs_unknown_project_404(client, work):
-    assert client.get("/api/waveview/runs", params={"project_id": "nope-00000000"}).status_code == 404
+    assert (
+        client.get("/api/waveview/runs", params={"project_id": "nope-00000000"}).status_code == 404
+    )
 
 
 # --- artifacts ------------------------------------------------------------------
@@ -139,9 +162,7 @@ def test_open_run_delegates_to_open(client, populated):
 
 
 def test_open_run_match_filter(client, populated):
-    r = client.post(
-        "/api/waveview/open_run", json={"run_id": "1111-full-id", "match": "tb_ac"}
-    )
+    r = client.post("/api/waveview/open_run", json={"run_id": "1111-full-id", "match": "tb_ac"})
     assert r.status_code == 200, r.text
     meta = r.json()
     assert meta["path"].endswith("tb_ac.raw")
@@ -204,18 +225,14 @@ def test_snapshot_save_overwrite_and_fetch(client, populated):
     assert r2.status_code == 200 and r2.json()["rel"] == body["rel"]
 
     # and the existing id-addressed artifact route serves it back
-    f = client.get(
-        "/api/waveview/runs/1111-full-id/artifacts/file", params={"rel": body["rel"]}
-    )
+    f = client.get("/api/waveview/runs/1111-full-id/artifacts/file", params={"rel": body["rel"]})
     assert f.status_code == 200
     assert f.content == _PNG_BYTES
 
 
 def test_snapshot_rejects_bad_payloads(client, populated):
     # not base64 at all
-    r = client.post(
-        "/api/waveview/runs/1111-full-id/snapshot", json={"png_base64": "@@not-b64@@"}
-    )
+    r = client.post("/api/waveview/runs/1111-full-id/snapshot", json={"png_base64": "@@not-b64@@"})
     assert r.status_code == 400
     # valid base64, but not a PNG
     r = client.post(
@@ -224,9 +241,7 @@ def test_snapshot_rejects_bad_payloads(client, populated):
     )
     assert r.status_code == 415
     # unknown run
-    r = client.post(
-        "/api/waveview/runs/nope/snapshot", json={"png_base64": _PNG_B64}
-    )
+    r = client.post("/api/waveview/runs/nope/snapshot", json={"png_base64": _PNG_B64})
     assert r.status_code == 404
 
 
@@ -247,7 +262,8 @@ def test_run_netlist_happy_path(client, work, tmp_path, monkeypatch):
     raw_src = tmp_path / "src.raw"
     synth_ac_raw(raw_src)
     monkeypatch.setattr(
-        core_env, "probe_env",
+        core_env,
+        "probe_env",
         lambda: _stub_ngspice(tmp_path, f"cp {raw_src} out.raw\necho 'Note: ok' > run.log\n"),
     )
     r = client.post(
@@ -271,7 +287,8 @@ def test_run_netlist_happy_path(client, work, tmp_path, monkeypatch):
 
 def test_run_netlist_no_raw_is_422_and_run_kept(client, work, tmp_path, monkeypatch):
     monkeypatch.setattr(
-        core_env, "probe_env",
+        core_env,
+        "probe_env",
         lambda: _stub_ngspice(tmp_path, "echo 'Error: no circuit' > run.log\nexit 1\n"),
     )
     r = client.post("/api/waveview/run_netlist", json={"content": "* broken\n"})
@@ -286,9 +303,7 @@ def test_run_netlist_no_raw_is_422_and_run_kept(client, work, tmp_path, monkeypa
 
 def test_run_netlist_validation(client, work, monkeypatch):
     # wrong extension → 415 (before any run dir is minted)
-    r = client.post(
-        "/api/waveview/run_netlist", json={"content": "x", "filename": "results.raw"}
-    )
+    r = client.post("/api/waveview/run_netlist", json={"content": "x", "filename": "results.raw"})
     assert r.status_code == 415
     # ngspice absent → 503
     monkeypatch.setattr(core_env, "probe_env", lambda: {"ngspice_ok": False})

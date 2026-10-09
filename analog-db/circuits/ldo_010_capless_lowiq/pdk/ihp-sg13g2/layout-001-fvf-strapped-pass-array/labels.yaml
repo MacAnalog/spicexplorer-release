@@ -1,0 +1,252 @@
+# Layout annotation spec for `ldo_ihp_capless` (schema layout-annotation/1).
+#
+# KIND: REFERENCE.  What a reader is looking at in the layout render — matched groups and
+# the pattern each is drawn in, dummies, guard rings, power straps, the pin frame, and the
+# 10 mA load path.  Nothing here is drawn by hand, and no coordinate is eyeballed.
+#
+# VENDORED verbatim from the certified design repo (`layout/ldo_ihp_capless/labels.yaml`
+# @ 40cad45).  Here it is rendered by `analog-db layout run --step render`, which writes
+# `out/ldo_ihp_capless_labelled_scale.png`; the paths and `make` target named below are the
+# SOURCE repo's, kept so the two files stay diffable.
+#
+# ---------------------------------------------------------------------------------------
+# HOW THE `index:` RANGES MAP ONTO DEVICES (audit this before trusting a label)
+#
+# gdsfactory leaves top-level instances unnamed, so a device is addressed by its PLACEMENT
+# ORDINAL.  `layout/gen_ldo.py::_place_row` emits, per group: one dummy, then the group's
+# slots left to right, then one dummy (`n_dummy = 1`).  Rows are placed A then B, then the
+# pass array, then the resistors, then the MIM block.  That gives, for `ROW_A` / `ROW_B_*`
+# as declared in the generator:
+#
+#   idx  0.. 2  ea_stage2      d  XM5  d                                    (3)
+#   idx  3.. 8  ea_nmos_load   d  XM3 XM4 XM4 XM3  d                        (6)
+#   idx  9..12  fvf_fold_n     d  XMA XMB  d                                (4)
+#   idx 13..20  bias_n_group   d  XMS XMB1 XMB0 XMB0 XMB1 XMS  d            (8)   = row A, 21
+#   idx 21..25  bias_p_group   d  XMBP XMT XM6  d                           (5)
+#   idx 26..31  ea_in_pair     d  XM1 XM2 XM2 XM1  d                        (6)
+#   idx 32..34  fvf_ctrl       d  XMC  d                                    (3)
+#   idx 35..38  fvf_fold_p     d  XMCP XMD  d                               (4)   = row B, 18
+#   idx 39      pass array     XMP
+#   idx 40..    the `rhigh` and `cmim` PDK cells, addressed by cell name instead
+#
+# Cross-checked against the built GDS: the drawn finger heights inside each range are
+# symmetric about the group centre in exactly the order above (e.g. 13..20 reads
+# 1.46 1.46 1.06 0.86 0.86 1.06 1.46 1.46 µm — the A B B A A B B A of `bias_n_group`),
+# and the instance counts match the slot lists exactly (21 / 18 / 1).  If the generator's
+# `ROW_*` tables or `n_dummy` change, these ranges move — re-derive them with
+# `python -m spicexplorer_signoff.annotate <gds> x x --dump-instances`.
+#
+# Boxes given as explicit `bbox:` are merged-polygon extents read out of the GDS, not
+# typed from the plan: the five guard rings are the only `pSD`/`nSD` polygons that
+# ENCLOSE A HOLE (a closed ring; a row of point taps on a pitch has none), and the combs
+# and straps are the merged `Metal2` / `TopMetal1` polygons over the pass array.
+#
+# Findings are deliberately absent here — the layout reviewer owns `REVIEW.yaml`, and the
+# same renderer draws that overlay.
+# ---------------------------------------------------------------------------------------
+
+schema: layout-annotation/1
+cell: ldo_ihp_capless
+
+render:
+  px_per_um: 12          # 202.5 x 208.6 um cell -> ~2.5 kpx across; finger detail survives
+  margin_frac: 0.02
+  ground: dark           # `--ground white` gives the printable / reviewer variant
+  oversampling: 3
+  dpi: 300            # font-size reference: text is `fontsize` pt at this dpi on a fixed raster
+  pdk: ihp-sg13g2
+
+scale_bar:
+  length_um: 50
+  separate_output: true
+
+legend: true
+
+labels:
+
+  # ------------------------------------------------- row B (PMOS, sources on vdd) ------
+  - text: "EA input pair"
+    role: "$XM_1$/$XM_2$ · A B B A"
+    match: {index: [26, 31]}
+    anchor: above
+
+  - text: "Bias PMOS group"
+    role: "$XM_{BP}$ $XM_T$ $XM_6$ · same row"
+    match: {index: [21, 25]}
+    anchor: above
+
+  - text: "FVF control"
+    role: "$XM_C$"
+    match: {index: [32, 34]}
+    anchor: above
+
+  - text: "FVF fold (p)"
+    role: "$XM_{CP}$/$XM_D$"
+    match: {index: [35, 38]}
+    anchor: right
+
+  # ------------------------------------------------- row A (NMOS, sources on vss) ------
+  - text: "EA stage 2 $XM_5$"
+    match: {index: [0, 2]}
+    anchor: below
+
+  - text: "EA NMOS load"
+    role: "$XM_3$/$XM_4$ · A B B A common centroid"
+    match: {index: [3, 8]}
+    anchor: below
+
+  - text: "FVF fold (n)"
+    role: "$XM_A$/$XM_B$"
+    match: {index: [9, 12]}
+    anchor: below
+
+  - text: "Bias NMOS group"
+    role: "$XM_S$ $XM_{B1}$ $XM_{B0}$ · A B C C B A common centroid"
+    match: {index: [13, 20]}
+    anchor: below
+
+  - text: "Tied dummies"
+    role: "1 each end of every group — 16 in rows A/B, 2 on the divider"
+    match: {index: 0}
+    anchor: left
+    style: {fontsize: 7.0}
+
+  # ------------------------------------------------- pass device + power comb ----------
+  - text: "Pass array $XM_P$"
+    role: "76 fingers × 2.5 µm ($n_f$ ×4), shared diffusion"
+    match: {index: 39}
+    anchor: above          # a centred label would hide the 3.1 µm-tall finger row it names
+
+  - text: "$v_{dd}$ comb spine"
+    role: "Metal2, 6 µm"
+    bbox: [44.28, 64.33, 90.54, 72.55]
+    anchor: right
+    style: {fontsize: 7.5}
+
+  - text: "$v_{out}$ comb spine"
+    role: "Metal2, 6 µm · one 0.3 µm finger + 2 Via1 per shared column"
+    bbox: [44.28, 52.33, 90.54, 61.93]
+    anchor: left
+    style: {fontsize: 7.5}
+
+  # ------------------------------------------------- passive band ----------------------
+  - text: "Feedback divider $XR_1$/$XR_2$"
+    role: "16 serpentine segments, A B B A A B B A about the common centroid"
+    match: {cell: "^rhigh_D42p5"}
+    anchor: center
+
+  - text: "Bias resistor $XR_B$"
+    match: {cell: "^rhigh_D27p7"}
+    anchor: below
+    style: {fontsize: 7.5}
+
+  - text: "$C_{OUT}$ — 2 × 2 common centroid"
+    role: "4 × 58 µm MIM units, one orientation, bottom plate to $v_{ss}$"
+    match: {cell: "^cmim_W57p28"}
+    anchor: center
+
+  - text: "$C_C$ Miller (54 µm MIM)"
+    role: "bottom plate to $ea\\_out$"
+    match: {cell: "^cmim_W53p28"}
+    anchor: center
+    style: {fontsize: 7.5}
+
+  - text: "$C_{FF}$ feed-forward (8 µm MIM)"
+    match: {cell: "^cmim_W7p28"}
+    anchor: below
+    style: {fontsize: 7.0}
+
+  # ------------------------------------------------- wells, rings, taps ----------------
+  - text: "ntap ring — quiet nwell"
+    bbox: [-3.50, 22.22, 53.58, 46.83]
+    anchor: left
+    style: {fontsize: 6.5, edgecolor: "#009E73"}
+
+  - text: "ntap ring — FVF nwell"
+    bbox: [55.38, 22.22, 91.42, 46.83]
+    anchor: right
+    style: {fontsize: 6.5, edgecolor: "#009E73"}
+
+  - text: "ntap ring — pass-device nwell"
+    bbox: [44.78, 57.73, 90.04, 67.83]
+    anchor: left
+    style: {fontsize: 6.5, edgecolor: "#009E73"}
+
+  - text: "ptap ring — row A at $v_{ss}$"
+    bbox: [-3.50, -3.00, 105.68, 11.64]
+    anchor: left
+    style: {fontsize: 6.5, edgecolor: "#009E73"}
+
+  - text: "ptap ring — $XM_P$ isolation"
+    bbox: [42.97, 50.73, 91.85, 74.15]
+    anchor: right
+    style: {fontsize: 6.5, edgecolor: "#009E73"}
+
+  # ------------------------------------------------- pin frame ------------------------
+  # Positions are the GDS pin/label coordinates (TopMetal1.text 126/25, Metal1.text 8/25),
+  # not the plan's intent: `vref` / `fb` are drawn as channel tracks, not left-edge pins.
+  - text: "$v_{dd}$ pin — TopMetal1 strap, 2.0 µm, top edge"
+    bbox: [-69.50, 68.55, 133.00, 70.55]
+    anchor: above
+    style: {fontsize: 7.5}
+
+  - text: "$v_{out}$ pin — TopMetal1, right edge"
+    point: [131.00, 0.00]
+    anchor: left
+    style: {fontsize: 7.5}
+
+  - text: "$v_{ss}$ pin — Metal1 rail, bottom edge"
+    point: [31.75, -134.00]
+    anchor: above
+    style: {fontsize: 7.5}
+
+  - text: "Metal1 track channel — 13 nets"
+    role: "$gate$ on the top track (29.3 fF budget), $fb$ on the bottom"
+    bbox: [-3.0, 12.5, 105.0, 21.5]
+    anchor: right
+    style: {fontsize: 7.0}
+
+  - text: "$lp\\_brk$"
+    point: [-59.27, 14.23]
+    anchor: left
+    style: {fontsize: 6.5}
+
+  - text: "$fb$"
+    point: [-9.31, 12.83]
+    anchor: below
+    style: {fontsize: 6.5}
+
+  - text: "$v_{ref}$"
+    point: [37.70, 13.53]
+    anchor: below
+    style: {fontsize: 6.5}
+
+groups:
+  - name: "Pass device"
+    note: "$XM_P$ + Metal2 combs, 10 mA"
+    bbox: [42.5, 49.5, 92.5, 74.6]
+    color: "#D55E00"
+
+  - name: "Transistor stack"
+    note: "row A NMOS / row B PMOS + track channel"
+    bbox: [-4.5, -3.6, 106.5, 48.2]
+    color: "#0072B2"
+
+  - name: "Passive band"
+    note: "divider + MIM block"
+    bbox: [-67.0, -130.0, 130.0, -5.0]
+    color: "#009E73"
+
+paths:
+  # A reading aid, not a metal claim: where the 10.03 mA goes, rail to pin.
+  - name: "load path"
+    label: "10 mA load path"
+    color: "#CC79A7"
+    width: 2.4
+    points_um:
+      - [-56.0, 69.6]
+      - [67.4, 69.6]
+      - [67.4, 63.3]
+      - [67.4, 54.5]
+      - [128.0, 48.0]
+      - [131.0, 2.0]

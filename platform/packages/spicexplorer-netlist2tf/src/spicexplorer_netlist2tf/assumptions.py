@@ -91,8 +91,10 @@ def intrinsic_gain_large(dev: str) -> Assumption:
     """``gm·ro ≫ 1`` for ``dev`` (DOMINANCE): drop the additive ``1`` next to ``gm·ro``."""
     lb = _label(dev)
     return Assumption(
-        id=f"gm_ro_large:{dev}", kind=DOMINANCE,
-        payload={"dominant": f"gm_{lb}*ro_{lb}"}, scope="DEVICE",
+        id=f"gm_ro_large:{dev}",
+        kind=DOMINANCE,
+        payload={"dominant": f"gm_{lb}*ro_{lb}"},
+        scope="DEVICE",
         justification="intrinsic gain gm·ro >> 1 (strong inversion)",
     )
 
@@ -101,8 +103,10 @@ def transconductance_dominates(dev: str) -> Assumption:
     """``gm ≫ go`` for ``dev`` (DOMINANCE): in any sum with ``gm``, drop the conductance terms."""
     lb = _label(dev)
     return Assumption(
-        id=f"gm_dominates:{dev}", kind=DOMINANCE,
-        payload={"dominant": f"gm_{lb}"}, scope="DEVICE",
+        id=f"gm_dominates:{dev}",
+        kind=DOMINANCE,
+        payload={"dominant": f"gm_{lb}"},
+        scope="DEVICE",
         justification="transconductance dominates output conductance (gm >> gds)",
     )
 
@@ -111,8 +115,10 @@ def neglect_cap(dev: str, role: str) -> Assumption:
     """Neglect one capacitance of ``dev`` (SMALLNESS), e.g. ``role='cgd'`` → ``cgd_<dev> → 0``."""
     lb = _label(dev)
     return Assumption(
-        id=f"neglect_{role}:{dev}", kind=SMALLNESS,
-        payload={"symbol": f"{role}_{lb}"}, scope="DEVICE",
+        id=f"neglect_{role}:{dev}",
+        kind=SMALLNESS,
+        payload={"symbol": f"{role}_{lb}"},
+        scope="DEVICE",
         justification=f"{role} negligible in band",
     )
 
@@ -130,22 +136,34 @@ def neglect_overlap_caps(dev: str) -> list[Assumption]:
 def matched_pair(keep: str, replace: str) -> Assumption:
     """Matched devices (EQUALITY): replace every ``replace``-device symbol by ``keep``'s (lossless)."""
     return Assumption(
-        id=f"matched:{keep}={replace}", kind=EQUALITY,
-        payload={"a": _label(keep), "b": _label(replace)}, scope="DEVICE",
+        id=f"matched:{keep}={replace}",
+        kind=EQUALITY,
+        payload={"a": _label(keep), "b": _label(replace)},
+        scope="DEVICE",
         justification="matched pair / current-mirror symmetry",
     )
 
 
 def dominant_pole() -> Assumption:
     """Dominant-pole collapse (POLE_SEPARATION) on the denominator."""
-    return Assumption(id="dominant_pole", kind=POLE_SEPARATION, payload={}, scope="GLOBAL",
-                      justification="widely separated poles p1 << p2")
+    return Assumption(
+        id="dominant_pole",
+        kind=POLE_SEPARATION,
+        payload={},
+        scope="GLOBAL",
+        justification="widely separated poles p1 << p2",
+    )
 
 
 def inband(f_hi: float) -> Assumption:
     """Band-limit (BAND_LIMIT): drop ``s``-terms negligible up to ``f_hi`` Hz."""
-    return Assumption(id=f"inband:{f_hi:g}", kind=BAND_LIMIT, payload={"f_hi": float(f_hi)},
-                      scope="BAND", justification=f"in-band approximation up to {f_hi:g} Hz")
+    return Assumption(
+        id=f"inband:{f_hi:g}",
+        kind=BAND_LIMIT,
+        payload={"f_hi": float(f_hi)},
+        scope="BAND",
+        justification=f"in-band approximation up to {f_hi:g} Hz",
+    )
 
 
 # ------------------------------------------------------------------------
@@ -153,7 +171,7 @@ def inband(f_hi: float) -> Assumption:
 # ------------------------------------------------------------------------
 def _device_labels(symbol_names: set[str]) -> set[str]:
     """Device labels appearing as ``gm_<lbl>`` (the input-transconductance marker)."""
-    return {n[len("gm_"):] for n in symbol_names if n.startswith("gm_")}
+    return {n[len("gm_") :] for n in symbol_names if n.startswith("gm_")}
 
 
 def _bundle_low_freq(symbols: set[str]) -> list[Assumption]:
@@ -179,9 +197,7 @@ BUNDLES = {
 }
 
 
-def resolve(
-    spec: str | Assumption | list, symbol_names: set[str]
-) -> list[Assumption]:
+def resolve(spec: str | Assumption | list, symbol_names: set[str]) -> list[Assumption]:
     """Resolve a bundle name, a single :class:`Assumption`, or a list thereof into assumptions."""
     if isinstance(spec, str):
         if spec not in BUNDLES:

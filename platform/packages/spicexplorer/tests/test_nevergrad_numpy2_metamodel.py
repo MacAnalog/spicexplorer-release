@@ -20,6 +20,7 @@ TCAS-2026 campaign run, i.e. after hours of SPICE.
 
 No SPICE, no PDK — pure nevergrad on an analytic objective; the whole file runs in seconds.
 """
+
 from __future__ import annotations
 
 import inspect
@@ -45,8 +46,10 @@ def _sphere(x) -> float:
 
 
 # =========================================================== 1. the mechanism
-@pytest.mark.skipif(int(np.__version__.split(".")[0]) < 2,
-                    reason="numpy 1 only warns on the ndarray->scalar conversion")
+@pytest.mark.skipif(
+    int(np.__version__.split(".")[0]) < 2,
+    reason="numpy 1 only warns on the ndarray->scalar conversion",
+)
 def test_numpy2_rejects_the_conversion_nevergrad_performs():
     """`float(<1-element ndarray>)` — the exact expression at metamodel.py:177 in 1.0.12."""
     with pytest.raises(TypeError, match="0-dimensional"):
@@ -60,17 +63,20 @@ def test_the_shim_targets_a_bug_that_the_installed_nevergrad_actually_had():
 
 
 # =========================================================== 2. the reported failure
-@pytest.mark.parametrize("name, budget, dimension", [
-    # `MetaModel` forces the path immediately (archive >= (d(d-1)/2 + 2d + 1) entries).
-    ("MetaModel", 60, 5),
-    # `NGOpt` is the strategy the campaign ran; the wizard routes into the metamodel a few
-    # hundred asks in. Both of these raised TypeError within a second before the backport.
-    ("NGOpt", 300, 5),
-    ("NGOpt", 300, 8),
-])
+@pytest.mark.parametrize(
+    "name, budget, dimension",
+    [
+        # `MetaModel` forces the path immediately (archive >= (d(d-1)/2 + 2d + 1) entries).
+        ("MetaModel", 60, 5),
+        # `NGOpt` is the strategy the campaign ran; the wizard routes into the metamodel a few
+        # hundred asks in. Both of these raised TypeError within a second before the backport.
+        ("NGOpt", 300, 5),
+        ("NGOpt", 300, 8),
+    ],
+)
 def test_the_metamodel_path_survives_a_full_budget(name, budget, dimension):
     optimizer = ng.optimizers.registry[name](parametrization=dimension, budget=budget)
-    recommendation = optimizer.minimize(_sphere)          # used to raise TypeError here
+    recommendation = optimizer.minimize(_sphere)  # used to raise TypeError here
     value = np.asarray(recommendation.value, dtype=float)
     assert np.all(np.isfinite(value))
 
@@ -122,6 +128,7 @@ def test_the_patch_is_idempotent():
 
 def test_a_nevergrad_without_the_bug_is_left_alone(monkeypatch):
     """The day a fixed release lands, bumping the pin must disable the shim with no code change."""
+
     def already_fixed(archive, k, algorithm="quad", degree=2, shape=None, para=None):
         return np.zeros(1)
 
@@ -134,12 +141,16 @@ def test_a_nevergrad_without_the_bug_is_left_alone(monkeypatch):
 def test_the_shim_never_raises_when_the_source_is_unavailable(monkeypatch):
     """A zipped / stripped install has no source to rewrite. The shim must degrade to a logged
     no-op — a run that never reaches the metamodel must not be taken down by the shim itself."""
+
     def no_source(archive, k, algorithm="quad", degree=2, shape=None, para=None):
         return np.zeros(1)
 
     monkeypatch.setattr(metamodel, "learn_on_k_best", no_source)
-    monkeypatch.setattr(inspect, "getsource",
-                        lambda obj: (_ for _ in ()).throw(OSError("could not get source code")))
+    monkeypatch.setattr(
+        inspect,
+        "getsource",
+        lambda obj: (_ for _ in ()).throw(OSError("could not get source code")),
+    )
     assert apply_numpy2_metamodel_patch() is False
     assert is_numpy2_metamodel_patch_active() is False
 

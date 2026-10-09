@@ -24,6 +24,8 @@ from .contract import TransferFunctionResult
 from .describe import describe_tf
 from .mna import (
     _as_pair,
+    _drop_port_stimulus,
+    _match_net,
     build_system,
     detect_ac_input,
     driving_point_impedance,
@@ -33,6 +35,7 @@ from .mna import (
 )
 from .model.ir import Fidelity
 from .model.raw_tf import RawTransferFunction
+from .model.ssir import SmallSignalIR
 from .models import _label, small_signal_model
 from .pipeline import _to_ir
 from .simplify import DEFAULT_RATIO_FLOOR, DEFAULT_TOLERANCE, simplify_tf
@@ -78,10 +81,20 @@ def open_loop_gain(
     ir = _to_ir(source, name=name, ports=ports, ground=ground)
     system = build_system(small_signal_model(ir, level=level), subs=subs)
     raw = extract_tf(system, output, input, analysis="open_loop_gain", numeric_subs=subs)
-    simplified = simplify_tf(raw, assumptions, operating_point=operating_point,
-                            ratio_floor=ratio_floor, tolerance=tolerance)
-    return describe_tf(raw, simplified=simplified, operating_point=operating_point,
-                       model_level=level.value, ground=ir.ground)
+    simplified = simplify_tf(
+        raw,
+        assumptions,
+        operating_point=operating_point,
+        ratio_floor=ratio_floor,
+        tolerance=tolerance,
+    )
+    return describe_tf(
+        raw,
+        simplified=simplified,
+        operating_point=operating_point,
+        model_level=level.value,
+        ground=ir.ground,
+    )
 
 
 def _impedance(
@@ -104,12 +117,26 @@ def _impedance(
     extra: set[str] = set()
     for gp in ground_ports or ():
         extra |= _port_nets(gp, base)
-    system = build_system(ssir, subs=subs, extra_grounds=extra) if extra else base
+    # Every independent source OFF, an AC-bearing V source included: left open it dropped its
+    # branch (Z_out 1 kΩ with `ac 1` where `dc 1` gave 500 Ω). The stimulus driving the measured
+    # port (the source across it, or both halves of a DM pair) is the one the test current
+    # replaces, so it is removed rather than shorted.
+    system = build_system(
+        _drop_port_stimulus(ssir, base, port, subs),
+        subs=subs,
+        extra_grounds=extra,
+        short_all_sources=True,
+    )
     raw = driving_point_impedance(system, port, analysis=analysis, numeric_subs=subs)
     # Impedances default to exact (no DOMINANCE bundle); user can still pass assumptions via describe.
     simplified = simplify_tf(raw, "full", operating_point=operating_point)
-    return describe_tf(raw, simplified=simplified, operating_point=operating_point,
-                       model_level=level.value, ground=ir.ground)
+    return describe_tf(
+        raw,
+        simplified=simplified,
+        operating_point=operating_point,
+        model_level=level.value,
+        ground=ir.ground,
+    )
 
 
 def input_impedance(
@@ -125,8 +152,18 @@ def input_impedance(
     name: str | None = None,
 ) -> TransferFunctionResult:
     """Input impedance ``Z_in(s) = V_x / I_x`` at ``port`` (inject a unit test current, read V)."""
-    return _impedance(source, port, "input_impedance", ground_ports=ground_ports, level=level,
-                      operating_point=operating_point, subs=subs, ports=ports, ground=ground, name=name)
+    return _impedance(
+        source,
+        port,
+        "input_impedance",
+        ground_ports=ground_ports,
+        level=level,
+        operating_point=operating_point,
+        subs=subs,
+        ports=ports,
+        ground=ground,
+        name=name,
+    )
 
 
 def output_impedance(
@@ -141,11 +178,22 @@ def output_impedance(
     ground: str = "0",
     name: str | None = None,
 ) -> TransferFunctionResult:
-    """Output impedance ``Z_out(s)`` at ``port``. For an **open-loop** Z_out pass ``zero_input`` (the
-    input port) to ground it (source-zeroing); omit it for the input-active (closed-loop) variant."""
+    """Output impedance ``Z_out(s)`` at ``port``, every independent source off. An input driven by a
+    V source is already shorted (its AC stimulus included); ``zero_input`` (the input port) grounds
+    an input that is NOT driven by one, for an **open-loop** Z_out (source-zeroing)."""
     ground_ports = (zero_input,) if zero_input is not None else ()
-    return _impedance(source, port, "output_impedance", ground_ports=ground_ports, level=level,
-                      operating_point=operating_point, subs=subs, ports=ports, ground=ground, name=name)
+    return _impedance(
+        source,
+        port,
+        "output_impedance",
+        ground_ports=ground_ports,
+        level=level,
+        operating_point=operating_point,
+        subs=subs,
+        ports=ports,
+        ground=ground,
+        name=name,
+    )
 
 
 # ------------------------------------------------------------------------
@@ -163,18 +211,40 @@ def _finish(
     component_tfs: dict[str, str] | None = None,
 ) -> TransferFunctionResult:
     """simplify → describe, shared by every P9 analysis (the differentiator carries over)."""
-    simplified = simplify_tf(raw, assumptions, operating_point=operating_point,
-                             ratio_floor=ratio_floor, tolerance=tolerance)
-    return describe_tf(raw, simplified=simplified, operating_point=operating_point,
-                       model_level=level.value, ground=ground, component_tfs=component_tfs)
+    simplified = simplify_tf(
+        raw,
+        assumptions,
+        operating_point=operating_point,
+        ratio_floor=ratio_floor,
+        tolerance=tolerance,
+    )
+    return describe_tf(
+        raw,
+        simplified=simplified,
+        operating_point=operating_point,
+        model_level=level.value,
+        ground=ground,
+        component_tfs=component_tfs,
+    )
 
 
-def _ratio_raw(num: RawTransferFunction, den: RawTransferFunction, analysis: str) -> RawTransferFunction:
+def _ratio_raw(
+    num: RawTransferFunction, den: RawTransferFunction, analysis: str
+) -> RawTransferFunction:
     """A ratio metric (CMRR, PSRR) as one canonical expression — simplified+validated as a whole."""
     expr = canonical_tf(sp.cancel(num.expr / den.expr))
     return RawTransferFunction(
-        expr=expr, s=S, output=num.output, input=num.input, name=num.name, analysis=analysis,
-        drive=num.drive, solve_path=num.solve_path, numeric_subs=dict(num.numeric_subs),
+        expr=expr,
+        s=S,
+        output=num.output,
+        input=num.input,
+        name=num.name,
+        analysis=analysis,
+        drive=num.drive,
+        solve_path=num.solve_path,
+        numeric_subs=dict(num.numeric_subs),
+        # a ratio is missing a device if EITHER half is (Codex review, item TF-02)
+        unmodelled=tuple(sorted(set(num.unmodelled) | set(den.unmodelled))),
     )
 
 
@@ -194,10 +264,12 @@ def common_mode_gain(
     """Common-mode gain ``A_cm(s)``: both input nodes driven together (``drive="cm"``)."""
     ir = _to_ir(source, name=name, ports=ports, ground=ground)
     system = build_system(small_signal_model(ir, level=level), subs=subs)
-    raw = extract_tf(system, output, input, analysis="common_mode_gain", drive="cm",
-                     numeric_subs=subs)
-    return _finish(raw, assumptions=assumptions, operating_point=operating_point,
-                   level=level, ground=ir.ground)
+    raw = extract_tf(
+        system, output, input, analysis="common_mode_gain", drive="cm", numeric_subs=subs
+    )
+    return _finish(
+        raw, assumptions=assumptions, operating_point=operating_point, level=level, ground=ir.ground
+    )
 
 
 def cmrr(
@@ -219,17 +291,23 @@ def cmrr(
     ir = _to_ir(source, name=name, ports=ports, ground=ground)
     system = build_system(small_signal_model(ir, level=level), subs=subs)
     a_dm = extract_tf(system, output, input, analysis="differential_gain", numeric_subs=subs)
-    a_cm = extract_tf(system, output, input, analysis="common_mode_gain", drive="cm",
-                      numeric_subs=subs)
+    a_cm = extract_tf(
+        system, output, input, analysis="common_mode_gain", drive="cm", numeric_subs=subs
+    )
     if a_cm.expr == 0:
         raise ValueError(
             "A_cm is identically 0 (an ideal tail/current source makes CMRR infinite at this "
             "fidelity) — model the tail's finite output resistance or raise the fidelity level"
         )
     raw = _ratio_raw(a_dm, a_cm, "cmrr")
-    return _finish(raw, assumptions=assumptions, operating_point=operating_point, level=level,
-                   ground=ir.ground,
-                   component_tfs={"a_dm": str(a_dm.expr), "a_cm": str(a_cm.expr)})
+    return _finish(
+        raw,
+        assumptions=assumptions,
+        operating_point=operating_point,
+        level=level,
+        ground=ir.ground,
+        component_tfs={"a_dm": str(a_dm.expr), "a_cm": str(a_cm.expr)},
+    )
 
 
 def psrr(
@@ -257,7 +335,8 @@ def psrr(
     """
     ir = _to_ir(source, name=name, ports=ports, ground=ground)
     ssir = small_signal_model(ir, level=level)
-    if supply not in ssir.nets:
+    rail = _match_net(supply, ssir.nets)  # net names are case-insensitive
+    if rail not in ssir.nets:
         raise ValueError(f"supply net {supply!r} not found; nets: {sorted(ssir.nets)}")
 
     system_dm = build_system(ssir, subs=subs)
@@ -265,22 +344,32 @@ def psrr(
         input = detect_ac_input(ssir)
     a_dm = extract_tf(system_dm, output, input, analysis="differential_gain", numeric_subs=subs)
 
-    system_ps = build_system(ssir, subs=subs, exclude_grounds={supply}, short_all_sources=True)
-    a_ps = extract_tf(system_ps, output, (supply, ground), analysis="supply_gain",
-                      numeric_subs=subs)
+    system_ps = build_system(ssir, subs=subs, exclude_grounds={rail}, short_all_sources=True)
+    a_ps = extract_tf(system_ps, output, (rail, ground), analysis="supply_gain", numeric_subs=subs)
     if a_ps.expr == 0:
         raise ValueError(
             f"A_({supply}→out) is identically 0 at this fidelity — nothing couples the rail to "
             "the output (PSRR is infinite); raise the fidelity or check the supply name"
         )
     raw = _ratio_raw(a_dm, a_ps, "psrr")
-    return _finish(raw, assumptions=assumptions, operating_point=operating_point, level=level,
-                   ground=ir.ground,
-                   component_tfs={"a_dm": str(a_dm.expr), f"a_{supply}": str(a_ps.expr)})
+    return _finish(
+        raw,
+        assumptions=assumptions,
+        operating_point=operating_point,
+        level=level,
+        ground=ir.ground,
+        component_tfs={"a_dm": str(a_dm.expr), f"a_{supply}": str(a_ps.expr)},
+    )
 
 
-def _probe_symbol(probe: str) -> str:
-    """Resolve a device ref (``M1`` / ``XM1_XOTA``) to its minted gm symbol name."""
+def _probe_symbol(probe: str, ssir: SmallSignalIR) -> str:
+    """Resolve a device ref (``M1`` / ``XM1_XOTA``) to its minted gm symbol name.
+
+    Read from ``ssir.symbols``: when ``M1`` and ``XM1`` share a label, XM1's gm is
+    ``gm_xm1``, which the ``_label`` rule alone would miss (it gives M1's name)."""
+    for ref, syms in ssir.symbols.items():
+        if ref.upper() == probe.upper() and "gm" in syms:
+            return str(syms["gm"])
     return f"gm_{_label(probe)}"
 
 
@@ -306,12 +395,13 @@ def loop_gain(
     """
     ir = _to_ir(source, name=name, ports=ports, ground=ground)
     ssir = small_signal_model(ir, level=level)
-    k_name = _probe_symbol(probe)
+    k_name = _probe_symbol(probe, ssir)
     eff_subs = {n: v for n, v in (subs or {}).items() if n != k_name}
     system = build_system(ssir, subs=eff_subs, short_all_sources=True)
     raw = loop_gain_from_system(system, k_name, numeric_subs=eff_subs)
-    return _finish(raw, assumptions=assumptions, operating_point=operating_point,
-                   level=level, ground=ir.ground)
+    return _finish(
+        raw, assumptions=assumptions, operating_point=operating_point, level=level, ground=ir.ground
+    )
 
 
 def asymptotic_gain(
@@ -337,16 +427,21 @@ def asymptotic_gain(
     """
     ir = _to_ir(source, name=name, ports=ports, ground=ground)
     ssir = small_signal_model(ir, level=level)
-    k_name = _probe_symbol(probe)
+    k_name = _probe_symbol(probe, ssir)
     eff_subs = {n: v for n, v in (subs or {}).items() if n != k_name}
     system = build_system(ssir, subs=eff_subs)
     if input is None:
         input = detect_ac_input(ssir)
     parts = gain_decomposition(system, output, input, k_name, numeric_subs=eff_subs)
-    return _finish(parts["asymptotic_gain"], assumptions=assumptions,
-                   operating_point=operating_point, level=level, ground=ir.ground,
-                   component_tfs={
-                       "gain": str(parts["gain"].expr),
-                       "loop_gain": str(parts["loop_gain"].expr),
-                       "direct_transmission": str(parts["direct_transmission"].expr),
-                   })
+    return _finish(
+        parts["asymptotic_gain"],
+        assumptions=assumptions,
+        operating_point=operating_point,
+        level=level,
+        ground=ir.ground,
+        component_tfs={
+            "gain": str(parts["gain"].expr),
+            "loop_gain": str(parts["loop_gain"].expr),
+            "direct_transmission": str(parts["direct_transmission"].expr),
+        },
+    )

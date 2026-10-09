@@ -50,9 +50,10 @@ schematics/     dut_*.sch/svg/png            xschem schematics (see below)
 layout/         gen_layout.py + signoff/PEX  parameterized gdsfactory GDS
                                              (DRC+LVS PASS, kpex+sim loop —
                                              see layout/README.md)
-notebooks/      01_schematic_sizing          executed case-study notebooks
-                02_layout_in_the_loop        (jupytext .py sources + .ipynb):
-                03_signoff                   sizing, layout/electrical co-opt
+notebooks/      01_schematic_sizing          case-study marimo notebooks (.py;
+                02_layout_in_the_loop        lanes and recorded outputs in
+                03_signoff                   notebooks/README.md): sizing,
+                                             layout/electrical co-opt
                                              with DRC/LVS/PEX/spice in the
                                              loop, and full pre/post-layout
                                              signoff (DC/tran/AC/eye) vs the

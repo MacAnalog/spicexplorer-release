@@ -8,7 +8,8 @@ dependencies = [
     "spicelib>=1.5,<1.6",  # ngspice .raw reader (RawRead) — same pin as core
     "psf-utils>=1.9",      # Spectre psfascii swept-PSF reader — same lib the Spectre backend uses
     "numpy>=2.2",
-    "plotly>=6.9.0",         # interactive notebook figures (matches the UI's plotly.js)
+    "scipy>=1.11",         # eye.py: the Bessel-Thomson reference receiver + FFT latency search
+    "plotly>=7.0.0",         # interactive notebook figures (matches the UI's plotly.js)
     "matplotlib>=3.8",       # static PNG export (snapshot.py — OO/Agg only, no pyplot)
     "pydantic>=2",         # typed I/O contract — feeds the API's OpenAPI/TS codegen
 ]

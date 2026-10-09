@@ -37,9 +37,7 @@ def _find_root(start: Path) -> Path:
     if override:
         root = Path(override).expanduser().resolve()
         if not root.is_dir():
-            raise RuntimeError(
-                f"{ROOT_ENV_VAR}={override!r} does not point to a directory"
-            )
+            raise RuntimeError(f"{ROOT_ENV_VAR}={override!r} does not point to a directory")
         return root
 
     start = start.resolve()

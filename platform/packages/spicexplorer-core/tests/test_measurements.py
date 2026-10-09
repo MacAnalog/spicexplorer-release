@@ -207,12 +207,22 @@ def test_registry_measure_ac_and_op():
     h = _single_pole(freq, a0=1000.0, fp=1e3)
     res = _FakeResult({"frequency": freq, "vout": h}, {"i(vvdd)": -2.5e-4})
 
-    assert registry.measure(res, {"meas": "dcgain", "out": "vout"}, default_analysis="ac") == pytest.approx(60.0, abs=0.05)
-    assert registry.measure(res, {"meas": "ugf", "out": "vout"}, default_analysis="ac") == pytest.approx(1e6, rel=0.02)
-    assert registry.measure(res, {"meas": "pm", "out": "vout"}, default_analysis="ac") == pytest.approx(90.0, abs=1.0)
+    assert registry.measure(
+        res, {"meas": "dcgain", "out": "vout"}, default_analysis="ac"
+    ) == pytest.approx(60.0, abs=0.05)
+    assert registry.measure(
+        res, {"meas": "ugf", "out": "vout"}, default_analysis="ac"
+    ) == pytest.approx(1e6, rel=0.02)
+    assert registry.measure(
+        res, {"meas": "pm", "out": "vout"}, default_analysis="ac"
+    ) == pytest.approx(90.0, abs=1.0)
     # i_supply returns magnitude by default
-    assert registry.measure(res, {"meas": "i_supply", "probe": "i(vvdd)"}, default_analysis="op") == pytest.approx(2.5e-4)
-    assert registry.measure(res, {"meas": "i_supply", "probe": "i(vvdd)", "signed": True}, default_analysis="op") == pytest.approx(-2.5e-4)
+    assert registry.measure(
+        res, {"meas": "i_supply", "probe": "i(vvdd)"}, default_analysis="op"
+    ) == pytest.approx(2.5e-4)
+    assert registry.measure(
+        res, {"meas": "i_supply", "probe": "i(vvdd)", "signed": True}, default_analysis="op"
+    ) == pytest.approx(-2.5e-4)
 
 
 def test_registry_measure_thd_tran():
@@ -223,8 +233,12 @@ def test_registry_measure_thd_tran():
 
     r = registry.measure(res, {"meas": "thd", "out": "vout", "f0": f0}, default_analysis="tran")
     assert r == pytest.approx(expected, rel=2e-3)
-    assert registry.measure(res, {"meas": "thd_pct", "out": "vout", "f0": f0}, default_analysis="tran") == pytest.approx(expected * 100.0, rel=2e-3)
-    assert registry.measure(res, {"meas": "thd_db", "out": "vout", "f0": f0}, default_analysis="tran") == pytest.approx(20.0 * np.log10(expected), rel=1e-3)
+    assert registry.measure(
+        res, {"meas": "thd_pct", "out": "vout", "f0": f0}, default_analysis="tran"
+    ) == pytest.approx(expected * 100.0, rel=2e-3)
+    assert registry.measure(
+        res, {"meas": "thd_db", "out": "vout", "f0": f0}, default_analysis="tran"
+    ) == pytest.approx(20.0 * np.log10(expected), rel=1e-3)
 
 
 def test_harmonic_distortion_from_phasors():
@@ -247,22 +261,54 @@ def test_registry_measure_pss_harmonics():
     res = _FakeResult({"vout": H})
     thd_ref = np.sqrt(7.5e-3**2 + 1.0e-3**2 + 2.0e-4**2) / 0.1
 
-    assert registry.measure(res, {"meas": "thd_pss", "out": "vout"}, default_analysis="pss") == pytest.approx(thd_ref)
-    assert registry.measure(res, {"meas": "thd_pss_pct", "out": "vout"}, default_analysis="pss") == pytest.approx(thd_ref * 100.0)
-    assert registry.measure(res, {"meas": "thd_pss_db", "out": "vout"}, default_analysis="pss") == pytest.approx(20.0 * np.log10(thd_ref))
-    assert registry.measure(res, {"meas": "hd2", "out": "vout"}, default_analysis="pss") == pytest.approx(7.5e-3 / 0.1)
-    assert registry.measure(res, {"meas": "hd3", "out": "vout"}, default_analysis="pss") == pytest.approx(1.0e-3 / 0.1)
-    assert registry.measure(res, {"meas": "hd2_db", "out": "vout"}, default_analysis="pss") == pytest.approx(20.0 * np.log10(7.5e-3 / 0.1))
-    assert registry.measure(res, {"meas": "hd", "out": "vout", "n": 4}, default_analysis="pss") == pytest.approx(2.0e-4 / 0.1)
-    assert registry.measure(res, {"meas": "sfdr", "out": "vout"}, default_analysis="pss") == pytest.approx(0.1 / 7.5e-3)
-    assert registry.measure(res, {"meas": "sfdr_db", "out": "vout"}, default_analysis="pss") == pytest.approx(20.0 * np.log10(0.1 / 7.5e-3))
+    assert registry.measure(
+        res, {"meas": "thd_pss", "out": "vout"}, default_analysis="pss"
+    ) == pytest.approx(thd_ref)
+    assert registry.measure(
+        res, {"meas": "thd_pss_pct", "out": "vout"}, default_analysis="pss"
+    ) == pytest.approx(thd_ref * 100.0)
+    assert registry.measure(
+        res, {"meas": "thd_pss_db", "out": "vout"}, default_analysis="pss"
+    ) == pytest.approx(20.0 * np.log10(thd_ref))
+    assert registry.measure(
+        res, {"meas": "hd2", "out": "vout"}, default_analysis="pss"
+    ) == pytest.approx(7.5e-3 / 0.1)
+    assert registry.measure(
+        res, {"meas": "hd3", "out": "vout"}, default_analysis="pss"
+    ) == pytest.approx(1.0e-3 / 0.1)
+    assert registry.measure(
+        res, {"meas": "hd2_db", "out": "vout"}, default_analysis="pss"
+    ) == pytest.approx(20.0 * np.log10(7.5e-3 / 0.1))
+    assert registry.measure(
+        res, {"meas": "hd", "out": "vout", "n": 4}, default_analysis="pss"
+    ) == pytest.approx(2.0e-4 / 0.1)
+    assert registry.measure(
+        res, {"meas": "sfdr", "out": "vout"}, default_analysis="pss"
+    ) == pytest.approx(0.1 / 7.5e-3)
+    assert registry.measure(
+        res, {"meas": "sfdr_db", "out": "vout"}, default_analysis="pss"
+    ) == pytest.approx(20.0 * np.log10(0.1 / 7.5e-3))
     # n_harmonics caps the THD sum (HD2 only)
-    assert registry.measure(res, {"meas": "thd_pss", "out": "vout", "n_harmonics": 1}, default_analysis="pss") == pytest.approx(7.5e-3 / 0.1)
+    assert registry.measure(
+        res, {"meas": "thd_pss", "out": "vout", "n_harmonics": 1}, default_analysis="pss"
+    ) == pytest.approx(7.5e-3 / 0.1)
 
 
 def test_registry_pss_names_registered_and_validated():
     names = registry.known_measurements()
-    for m in ("thd_pss", "thd_pss_pct", "thd_pss_db", "hd2", "hd3", "hd2_db", "hd3_db", "hd", "hd_db", "sfdr", "sfdr_db"):
+    for m in (
+        "thd_pss",
+        "thd_pss_pct",
+        "thd_pss_db",
+        "hd2",
+        "hd3",
+        "hd2_db",
+        "hd3_db",
+        "hd",
+        "hd_db",
+        "sfdr",
+        "sfdr_db",
+    ):
         assert m in names, m
     registry.validate_recipe("dist", {"meas": "hd", "out": "vout", "n": 2})  # ok
     with pytest.raises(ValueError):
@@ -288,7 +334,7 @@ def test_registry_validate_recipe_rejects_unknown_and_missing():
 def test_band_edge_reads_are_grid_independent():
     """The PAM-4 instrument bug: a `dec 20` grid from 100 MHz never samples 32/50 GHz."""
     fp = 20e9
-    coarse = 1e8 * 10 ** (np.arange(0, 61) / 20.0)          # ac dec 20 100MHz..100GHz
+    coarse = 1e8 * 10 ** (np.arange(0, 61) / 20.0)  # ac dec 20 100MHz..100GHz
     fine = np.logspace(8, 11, 20001)
     h_c, h_f = _single_pole(coarse, a0=1.0, fp=fp), _single_pole(fine, a0=1.0, fp=fp)
     # |H| falls with f, so a "≥ level in band" spec's worst is at the edge — read on the
@@ -299,12 +345,13 @@ def test_band_edge_reads_are_grid_independent():
     assert wf.band_worst_db(coarse, h_c, 32e9, worst="min") == pytest.approx(exact, abs=0.01)
     assert wf.band_worst_db(fine, h_f, 32e9, worst="min") == pytest.approx(exact, abs=1e-3)
     naive = float(wf.magnitude_db(h_c)[coarse <= 32e9].min())
-    assert naive > exact + 0.03                          # the grid flatters the spec
+    assert naive > exact + 0.03  # the grid flatters the spec
     # max over a band on a rising curve (a reflection-like |1 - H|):
     r_c = 1.0 - h_c
     lo_edge = float(wf.magnitude_db(1.0 - _single_pole(np.array([1e9]), a0=1.0, fp=fp))[0])
     assert wf.band_worst_db(coarse, r_c, 32e9, f_start=1e9) == pytest.approx(
-        float(wf.magnitude_db(1.0 - _single_pole(np.array([32e9]), a0=1.0, fp=fp))[0]), abs=0.01)
+        float(wf.magnitude_db(1.0 - _single_pole(np.array([32e9]), a0=1.0, fp=fp))[0]), abs=0.01
+    )
     assert wf.band_worst_db(coarse, r_c, 1.05e9, f_start=1e9) >= lo_edge - 1e-9
     # the exact half-power level (−3.0103 dB) crosses at the pole
     half = float(-20.0 * np.log10(np.sqrt(2.0)))
@@ -316,19 +363,42 @@ def test_band_edge_reads_are_grid_independent():
     assert np.isnan(wf.level_crossing_freq(fine, h_f, +3.0))
     # registry recipes
     res = _FakeResult({"frequency": coarse, "vout": h_c}, {})
-    assert registry.measure(res, {"meas": "mag_at_db", "out": "vout", "f": 32e9}, default_analysis="ac") == pytest.approx(exact, abs=0.01)
-    assert registry.measure(res, {"meas": "band_min_db", "out": "vout", "f_edge": 32e9}, default_analysis="ac") == pytest.approx(exact, abs=0.01)
-    assert registry.measure(res, {"meas": "band_max_db", "out": "vout", "f_edge": 32e9, "f_start": 1e9}, default_analysis="ac") == pytest.approx(
-        float(wf.magnitude_db(_single_pole(np.array([1e9]), a0=1.0, fp=fp))[0]), abs=0.01)
-    assert registry.measure(res, {"meas": "level_cross_hz", "out": "vout", "level": half}, default_analysis="ac") == pytest.approx(fp, rel=0.02)
+    assert registry.measure(
+        res, {"meas": "mag_at_db", "out": "vout", "f": 32e9}, default_analysis="ac"
+    ) == pytest.approx(exact, abs=0.01)
+    assert registry.measure(
+        res, {"meas": "band_min_db", "out": "vout", "f_edge": 32e9}, default_analysis="ac"
+    ) == pytest.approx(exact, abs=0.01)
+    assert registry.measure(
+        res,
+        {"meas": "band_max_db", "out": "vout", "f_edge": 32e9, "f_start": 1e9},
+        default_analysis="ac",
+    ) == pytest.approx(
+        float(wf.magnitude_db(_single_pole(np.array([1e9]), a0=1.0, fp=fp))[0]), abs=0.01
+    )
+    assert registry.measure(
+        res, {"meas": "level_cross_hz", "out": "vout", "level": half}, default_analysis="ac"
+    ) == pytest.approx(fp, rel=0.02)
     with pytest.raises(ValueError):
-        registry.validate_recipe("s11", {"meas": "band_max_db", "out": "vout"})   # f_edge missing
+        registry.validate_recipe("s11", {"meas": "band_max_db", "out": "vout"})  # f_edge missing
 
 
 def test_known_measurements_stable():
     names = registry.known_measurements()
-    assert {"dcgain", "ugf", "pm", "f3db", "gbw", "t_settle", "slew",
-            "thd", "thd_pct", "thd_db", "i_supply", "inoise_total"} <= set(names)
+    assert {
+        "dcgain",
+        "ugf",
+        "pm",
+        "f3db",
+        "gbw",
+        "t_settle",
+        "slew",
+        "thd",
+        "thd_pct",
+        "thd_db",
+        "i_supply",
+        "inoise_total",
+    } <= set(names)
 
 
 def test_rejection_db_from_residual_transfer():
@@ -343,7 +413,9 @@ def test_rejection_db_from_residual_transfer():
         got = registry.measure(res, {"meas": meas, "out": "vout"}, default_analysis="ac")
         assert got == pytest.approx(expected, abs=1e-9)
     # the closed-loop gain is LINEAR (V/V — the buffer-spec convention), not dB
-    assert registry.measure(res, {"meas": "gain_cl", "out": "vout"}, default_analysis="ac") == pytest.approx(5e-3, abs=1e-12)
+    assert registry.measure(
+        res, {"meas": "gain_cl", "out": "vout"}, default_analysis="ac"
+    ) == pytest.approx(5e-3, abs=1e-12)
 
 
 def test_icmr_band_and_registry_recipes():
@@ -361,8 +433,12 @@ def test_icmr_band_and_registry_recipes():
     recipe = {"meas": "icmr_range", "out": "vout", "vin": "vinp", "vtrack": 0.005}
     rng = registry.measure(res, recipe, default_analysis="dc")
     assert rng == pytest.approx(hi - lo, abs=1e-9)
-    assert registry.measure(res, {**recipe, "meas": "icmr_min"}, default_analysis="dc") == pytest.approx(lo)
-    assert registry.measure(res, {**recipe, "meas": "icmr_max"}, default_analysis="dc") == pytest.approx(hi)
+    assert registry.measure(
+        res, {**recipe, "meas": "icmr_min"}, default_analysis="dc"
+    ) == pytest.approx(lo)
+    assert registry.measure(
+        res, {**recipe, "meas": "icmr_max"}, default_analysis="dc"
+    ) == pytest.approx(hi)
     # nothing tracks → NaN degradation, not a raise
     dead = _FakeResult({"vinp": vin, "vout": vin + 0.1})
     assert np.isnan(registry.measure(dead, recipe, default_analysis="dc"))
@@ -381,7 +457,7 @@ def test_icmr_band_rejects_rail_coincidence():
     vout = np.select(
         [vin < 0.05, vin < 0.15],
         [np.zeros_like(vin), (vin - 0.05) * 1.5],  # railed at 0, then catching up (slope 1.5)
-        default=vin,                               # genuinely tracking (slope 1)
+        default=vin,  # genuinely tracking (slope 1)
     )
     # Crucially |vout - vin| <= 50 mV EVERYWHERE, including the dead region — that is what makes
     # the artifact contiguous with the real band and invisible to a run-length scan.
@@ -406,12 +482,22 @@ def test_icmr_band_rejects_rail_coincidence():
 
 def test_new_measurements_registered_and_validated():
     known = registry.known_measurements()
-    for name in ("rejection_db", "cmrr_db", "psrr_vdd_db", "gain_cl", "bw_cl",
-                 "icmr_min", "icmr_max", "icmr_range"):
+    for name in (
+        "rejection_db",
+        "cmrr_db",
+        "psrr_vdd_db",
+        "gain_cl",
+        "bw_cl",
+        "icmr_min",
+        "icmr_max",
+        "icmr_range",
+    ):
         assert name in known
     registry.validate_recipe("cmrr", {"meas": "cmrr_db", "out": "vout"})
     with pytest.raises(ValueError, match="needs"):
-        registry.validate_recipe("icmr", {"meas": "icmr_range", "out": "vout"})  # missing vin/vtrack
+        registry.validate_recipe(
+            "icmr", {"meas": "icmr_range", "out": "vout"}
+        )  # missing vin/vtrack
 
 
 def test_iip3_two_tone_and_pss_routes_agree():
@@ -421,8 +507,12 @@ def test_iip3_two_tone_and_pss_routes_agree():
     assert (f0, n1, n2) == (pytest.approx(1e5), 9, 10)
     im3 = a_in * 10 ** (-60 / 20)
     t = np.linspace(0, 5 / f0, 40000, endpoint=False)
-    v = (a_in * np.sin(2 * np.pi * f1 * t) + a_in * np.sin(2 * np.pi * f2 * t)
-         + im3 * np.sin(2 * np.pi * (2 * f1 - f2) * t) + im3 * np.sin(2 * np.pi * (2 * f2 - f1) * t))
+    v = (
+        a_in * np.sin(2 * np.pi * f1 * t)
+        + a_in * np.sin(2 * np.pi * f2 * t)
+        + im3 * np.sin(2 * np.pi * (2 * f1 - f2) * t)
+        + im3 * np.sin(2 * np.pi * (2 * f2 - f1) * t)
+    )
     expect = a_in * np.sqrt(10 ** (60 / 20))
     assert wf.iip3_from_two_tone(t, v, f1, f2, ampl_in=a_in) == pytest.approx(expect, rel=1e-3)
 
@@ -435,17 +525,25 @@ def test_iip3_two_tone_and_pss_routes_agree():
     # registry: tran recipe + pss recipe + the derived dBc spelling
     res_t = _FakeResult({"time": t, "vout": v})
     tran_recipe = {"meas": "iip3_dbv", "out": "vout", "f1": f1, "f2": f2, "ampl_in": a_in}
-    assert registry.measure(res_t, tran_recipe, default_analysis="tran") == pytest.approx(20 * np.log10(expect), abs=0.05)
-    assert registry.measure(res_t, {**tran_recipe, "meas": "im3_dbc"}, default_analysis="tran") == pytest.approx(-60.0, abs=0.05)
+    assert registry.measure(res_t, tran_recipe, default_analysis="tran") == pytest.approx(
+        20 * np.log10(expect), abs=0.05
+    )
+    assert registry.measure(
+        res_t, {**tran_recipe, "meas": "im3_dbc"}, default_analysis="tran"
+    ) == pytest.approx(-60.0, abs=0.05)
     res_p = _FakeResult({"vout": phasors})
     pss_recipe = {"meas": "iip3_pss_dbv", "out": "vout", "n1": n1, "n2": n2, "ampl_in": a_in}
-    assert registry.measure(res_p, pss_recipe, default_analysis="pss") == pytest.approx(20 * np.log10(expect), abs=1e-6)
+    assert registry.measure(res_p, pss_recipe, default_analysis="pss") == pytest.approx(
+        20 * np.log10(expect), abs=1e-6
+    )
     # clean DUT: no measurable IM3 -> intercept +inf, dBc gap -inf
     clean = np.zeros(2 * n2, dtype=complex)
     clean[n1] = clean[n2] = a_in
     assert wf.iip3_from_harmonics(clean, n1, n2, ampl_in=a_in) == float("inf")
     res_c = _FakeResult({"vout": clean})
-    assert registry.measure(res_c, {**pss_recipe, "meas": "im3_pss_dbc"}, default_analysis="pss") == float("-inf")
+    assert registry.measure(
+        res_c, {**pss_recipe, "meas": "im3_pss_dbc"}, default_analysis="pss"
+    ) == float("-inf")
     registry.validate_recipe("iip3", tran_recipe)
     with pytest.raises(ValueError, match="needs"):
         registry.validate_recipe("iip3", {"meas": "iip3_pss", "out": "vout"})
@@ -512,17 +610,25 @@ def test_registry_pnoise_recipes():
     # white 100 nV/√Hz output / 25 nV/√Hz input-referred over 1 kHz..10 MHz
     freq = np.logspace(3, 7, 201)
     w_out, w_in = 100e-9, 25e-9
-    res = _FakeResult({
-        "frequency": freq,
-        "out": np.full_like(freq, w_out),
-        "in": np.full_like(freq, w_in),
-    })
-    onoise = registry.measure(res, {"meas": "onoise_pnoise_total", "out": "out"}, default_analysis="pnoise")
-    inoise = registry.measure(res, {"meas": "inoise_pnoise_total", "out": "in"}, default_analysis="pnoise")
+    res = _FakeResult(
+        {
+            "frequency": freq,
+            "out": np.full_like(freq, w_out),
+            "in": np.full_like(freq, w_in),
+        }
+    )
+    onoise = registry.measure(
+        res, {"meas": "onoise_pnoise_total", "out": "out"}, default_analysis="pnoise"
+    )
+    inoise = registry.measure(
+        res, {"meas": "inoise_pnoise_total", "out": "in"}, default_analysis="pnoise"
+    )
     band = np.sqrt(freq[-1] - freq[0])
     assert onoise == pytest.approx(w_out * band, rel=1e-6)
     assert inoise == pytest.approx(w_in * band, rel=1e-6)
-    spot = registry.measure(res, {"meas": "pnoise_spot", "out": "out", "f": 1e5}, default_analysis="pnoise")
+    spot = registry.measure(
+        res, {"meas": "pnoise_spot", "out": "out", "f": 1e5}, default_analysis="pnoise"
+    )
     assert spot == pytest.approx(w_out, rel=1e-9)
     l_f = registry.measure(
         res,
@@ -540,4 +646,6 @@ def test_registry_pnoise_names_registered_and_validated():
     with pytest.raises(ValueError, match="needs"):
         registry.validate_recipe("pn", {"meas": "pnoise_spot", "out": "out"})  # missing `f`
     with pytest.raises(ValueError, match="needs"):
-        registry.validate_recipe("pn", {"meas": "phase_noise_dbc", "out": "out", "f": 1e5})  # missing carrier_ampl
+        registry.validate_recipe(
+            "pn", {"meas": "phase_noise_dbc", "out": "out", "f": 1e5}
+        )  # missing carrier_ampl

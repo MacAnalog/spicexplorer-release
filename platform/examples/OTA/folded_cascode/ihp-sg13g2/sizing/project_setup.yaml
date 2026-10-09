@@ -208,7 +208,8 @@ project:
     # ------------------------
     - name : x_dut_IB
       # init : 34u  
-      freeze_to : 34u   # Freezes the parameter value to this value
+      freeze : true     # Freezes the parameter (not searched) ...
+      val : 34u         # ... at this value
       min_val: 1u
       max_val: 100u
       

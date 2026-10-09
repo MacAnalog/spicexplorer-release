@@ -6,10 +6,10 @@ S {}
 E {}
 T {ldo_005_buffered_ref} -1360 -560 0 0 0.4 0.4 {}
 C {blocks/cm_nmos_simple_1.sym} -880 0 0 0 {name=xcm_nmos_simple_1}
-C {blocks/cm_pmos_simple_1.sym} -440 0 0 0 {name=xcm_pmos_simple_1}
-C {blocks/cm_nmos_simple_2.sym} 0 0 0 0 {name=xcm_nmos_simple_2}
-C {blocks/dp_nmos_simple_1.sym} 440 0 0 0 {name=xdp_nmos_simple_1}
-C {blocks/dp_nmos_simple_2.sym} 880 0 0 0 {name=xdp_nmos_simple_2}
+C {blocks/cm_pmos_simple_1.sym} -430 0 0 0 {name=xcm_pmos_simple_1}
+C {blocks/cm_nmos_simple_2.sym} 10 0 0 0 {name=xcm_nmos_simple_2}
+C {blocks/dp_nmos_simple_1.sym} 450 0 0 0 {name=xdp_nmos_simple_1}
+C {blocks/dp_nmos_simple_2.sym} 890 0 0 0 {name=xdp_nmos_simple_2}
 C {devices/capa_np.sym} -1100 360 0 0 {name=C1 value='c_out_int'}
 C {devices/capa_np.sym} -880 360 0 0 {name=CEAC value='c_ea_comp'}
 C {devices/capa_np.sym} -660 360 0 0 {name=CRAC value='c_ra_comp'}
@@ -21,8 +21,8 @@ C {devices/res_np.sym} 440 360 0 0 {name=REAND value='r_ea_nd'}
 C {devices/res_np.sym} 660 360 0 0 {name=REAZ value='r_ea_z'}
 C {devices/res_np.sym} 880 360 0 0 {name=RRAZ value='r_ra_z'}
 C {devices/res_np.sym} 1100 360 0 0 {name=R_LPF value='r_lpf'}
-C {devices/vsource_np.sym} -1320 360 0 0 {name=VLP value="dc 0"}
-C {devices/vsource_np.sym} -1320 140 0 0 {name=VREF value="dc {vref_val}"}
+C {devices/vsource_np.sym} -1320 360 0 0 {name=VLP value="dc 0" savecurrent=false}
+C {devices/vsource_np.sym} -1320 140 0 0 {name=VREF value="dc \{vref_val\}" savecurrent=false}
 C {devices/sg13_lv_pmos_np.sym} -770 -360 0 0 {name=MEA_3 model=sg13_hv_pmos spiceprefix=X w=x_dut_xmea_3_w l=x_dut_xmea_3_l}
 C {devices/sg13_lv_pmos_np.sym} -550 -360 0 0 {name=MEA_4 model=sg13_hv_pmos spiceprefix=X w=x_dut_xmea_4_w l=x_dut_xmea_4_l}
 C {devices/sg13_lv_pmos_np.sym} -330 -360 0 0 {name=MEA_5 model=sg13_hv_pmos spiceprefix=X w=x_dut_xmea_5_w l=x_dut_xmea_5_l}
@@ -31,54 +31,54 @@ C {devices/sg13_lv_pmos_np.sym} 110 -360 0 0 {name=MEA_BP model=sg13_hv_pmos spi
 C {devices/sg13_lv_pmos_np.sym} 330 -360 0 0 {name=MP model=sg13_hv_pmos spiceprefix=X w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m}
 C {devices/sg13_lv_pmos_np.sym} 550 -360 0 0 {name=MRA_5 model=sg13_hv_pmos spiceprefix=X w=x_dut_xmra_5_w l=x_dut_xmra_5_l}
 C {devices/sg13_lv_pmos_np.sym} 770 -360 0 0 {name=MRA_BP model=sg13_hv_pmos spiceprefix=X w=x_dut_xmra_bp_w l=x_dut_xmra_bp_l}
-N -770 -60 -730 -60 {}
-C {devices/lab_wire.sym} -730 -60 0 1 {name=l0 lab=ea_ibias}
-N -770 -20 -730 -20 {}
-C {devices/lab_wire.sym} -730 -20 0 1 {name=l1 lab=ea_nlev}
-N -770 20 -730 20 {}
-C {devices/lab_wire.sym} -730 20 0 1 {name=l2 lab=ea_out}
-N -770 60 -730 60 {}
-C {devices/lab_wire.sym} -730 60 0 1 {name=l3 lab=ea_tail}
+N -760 -60 -720 -60 {}
+C {devices/lab_wire.sym} -720 -60 0 1 {name=l0 lab=ea_ibias}
+N -760 -20 -720 -20 {}
+C {devices/lab_wire.sym} -720 -20 0 1 {name=l1 lab=ea_nlev}
+N -760 20 -720 20 {}
+C {devices/lab_wire.sym} -720 20 0 1 {name=l2 lab=ea_out}
+N -760 60 -720 60 {}
+C {devices/lab_wire.sym} -720 60 0 1 {name=l3 lab=ea_tail}
 N -880 120 -880 160 {}
 C {devices/lab_wire.sym} -880 160 2 0 {name=l4 lab=vss}
-N -330 -20 -290 -20 {}
-C {devices/lab_wire.sym} -290 -20 0 1 {name=l5 lab=ra_na}
-N -330 20 -290 20 {}
-C {devices/lab_wire.sym} -290 20 0 1 {name=l6 lab=ra_nb}
-N -440 -80 -440 -120 {}
-C {devices/lab_wire.sym} -440 -120 0 1 {name=l7 lab=vdd}
-N 110 -40 150 -40 {}
-C {devices/lab_wire.sym} 150 -40 0 1 {name=l8 lab=ra_ibias}
-N 110 0 150 0 {}
-C {devices/lab_wire.sym} 150 0 0 1 {name=l9 lab=ra_tail}
-N 110 40 150 40 {}
-C {devices/lab_wire.sym} 150 40 0 1 {name=l10 lab=v_ref_out}
-N 0 100 0 140 {}
-C {devices/lab_wire.sym} 0 140 2 0 {name=l11 lab=vss}
-N 330 -20 290 -20 {}
-C {devices/lab_wire.sym} 290 -20 0 0 {name=l12 lab=lp_brk}
-N 330 20 290 20 {}
-C {devices/lab_wire.sym} 290 20 0 0 {name=l13 lab=v_lpf_out}
-N 550 -40 590 -40 {}
-C {devices/lab_wire.sym} 590 -40 0 1 {name=l14 lab=ea_na}
-N 550 0 590 0 {}
-C {devices/lab_wire.sym} 590 0 0 1 {name=l15 lab=ea_nb}
-N 550 40 590 40 {}
-C {devices/lab_wire.sym} 590 40 0 1 {name=l16 lab=ea_tail}
-N 440 100 440 140 {}
-C {devices/lab_wire.sym} 440 140 2 0 {name=l17 lab=vss}
-N 770 -20 730 -20 {}
-C {devices/lab_wire.sym} 730 -20 0 0 {name=l18 lab=v_ref_fb}
-N 770 20 730 20 {}
-C {devices/lab_wire.sym} 730 20 0 0 {name=l19 lab=vref}
-N 990 -40 1030 -40 {}
-C {devices/lab_wire.sym} 1030 -40 0 1 {name=l20 lab=ra_na}
-N 990 0 1030 0 {}
-C {devices/lab_wire.sym} 1030 0 0 1 {name=l21 lab=ra_nb}
-N 990 40 1030 40 {}
-C {devices/lab_wire.sym} 1030 40 0 1 {name=l22 lab=ra_tail}
-N 880 100 880 140 {}
-C {devices/lab_wire.sym} 880 140 2 0 {name=l23 lab=vss}
+N -320 -20 -280 -20 {}
+C {devices/lab_wire.sym} -280 -20 0 1 {name=l5 lab=ra_na}
+N -320 20 -280 20 {}
+C {devices/lab_wire.sym} -280 20 0 1 {name=l6 lab=ra_nb}
+N -430 -80 -430 -120 {}
+C {devices/lab_wire.sym} -430 -120 0 1 {name=l7 lab=vdd}
+N 120 -40 160 -40 {}
+C {devices/lab_wire.sym} 160 -40 0 1 {name=l8 lab=ra_ibias}
+N 120 0 160 0 {}
+C {devices/lab_wire.sym} 160 0 0 1 {name=l9 lab=ra_tail}
+N 120 40 160 40 {}
+C {devices/lab_wire.sym} 160 40 0 1 {name=l10 lab=v_ref_out}
+N 10 100 10 140 {}
+C {devices/lab_wire.sym} 10 140 2 0 {name=l11 lab=vss}
+N 340 -20 300 -20 {}
+C {devices/lab_wire.sym} 300 -20 0 0 {name=l12 lab=lp_brk}
+N 340 20 300 20 {}
+C {devices/lab_wire.sym} 300 20 0 0 {name=l13 lab=v_lpf_out}
+N 560 -40 600 -40 {}
+C {devices/lab_wire.sym} 600 -40 0 1 {name=l14 lab=ea_na}
+N 560 0 600 0 {}
+C {devices/lab_wire.sym} 600 0 0 1 {name=l15 lab=ea_nb}
+N 560 40 600 40 {}
+C {devices/lab_wire.sym} 600 40 0 1 {name=l16 lab=ea_tail}
+N 450 100 450 140 {}
+C {devices/lab_wire.sym} 450 140 2 0 {name=l17 lab=vss}
+N 780 -20 740 -20 {}
+C {devices/lab_wire.sym} 740 -20 0 0 {name=l18 lab=v_ref_fb}
+N 780 20 740 20 {}
+C {devices/lab_wire.sym} 740 20 0 0 {name=l19 lab=vref}
+N 1000 -40 1040 -40 {}
+C {devices/lab_wire.sym} 1040 -40 0 1 {name=l20 lab=ra_na}
+N 1000 0 1040 0 {}
+C {devices/lab_wire.sym} 1040 0 0 1 {name=l21 lab=ra_nb}
+N 1000 40 1040 40 {}
+C {devices/lab_wire.sym} 1040 40 0 1 {name=l22 lab=ra_tail}
+N 890 100 890 140 {}
+C {devices/lab_wire.sym} 890 140 2 0 {name=l23 lab=vss}
 N -1100 330 -1100 290 {}
 C {devices/lab_wire.sym} -1100 290 0 1 {name=l24 lab=vout}
 N -1100 390 -1100 430 {}

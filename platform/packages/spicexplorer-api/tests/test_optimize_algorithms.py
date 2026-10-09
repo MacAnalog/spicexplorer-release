@@ -5,6 +5,7 @@ client-side list, and picking a registry preset (LhsDE) on a project whose YAML
 configures a Family (SamplingSearch + sampler kwargs) crashed optimizer
 construction — with the dead run finalized as status "done".
 """
+
 import sys
 
 import pytest
@@ -23,6 +24,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("WORK_ROOT", str(tmp_path / "work"))
     from fastapi.testclient import TestClient
     from spicexplorer_api.main import app
+
     return TestClient(app)
 
 

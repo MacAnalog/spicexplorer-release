@@ -1,0 +1,12 @@
+# Vin swept 0.9 -> 1.6 V at 10 mA; dropout = Vin - Vout where the output first regulates (S4).
+schema: spicexplorer/analysis@1
+id: dropout
+template: dropout
+description: "Vin swept 0.9 -> 1.6 V at 10 mA; dropout = Vin - Vout where the output first regulates (S4)."
+params:
+  ILOAD: 10m
+  VDD_START: 0.9
+  VDD_STOP: 1.6
+  VDD_STEP: 0.002
+flags: []
+produces: [v_dropout]

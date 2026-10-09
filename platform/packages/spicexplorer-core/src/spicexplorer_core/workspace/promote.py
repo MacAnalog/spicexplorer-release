@@ -8,14 +8,16 @@ can't interleave a half-promotion. The pointer is a small JSON file (not a symli
 so it survives a Docker bind mount. History is append-only; rollback = promote an
 older snapshot again.
 """
+
 from __future__ import annotations
 
 import contextlib
 import shutil
 import uuid
+from collections.abc import Iterator
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 from spicexplorer_core.atomic_io import atomic_write_json
 
@@ -96,15 +98,20 @@ def promote(
                     shutil.copy2(f, dst / fname)
                     captured.append(f"{name}/{fname}")
         record = {
-            "id": hid, "at": stamp, "label": label,
-            "cells": names, "captured": captured, "payload": payload or {},
+            "id": hid,
+            "at": stamp,
+            "label": label,
+            "cells": names,
+            "captured": captured,
+            "payload": payload or {},
         }
         atomic_write_json(snap / "promotion.json", record, indent=2)
         # Swap the current pointer LAST — an atomic rename, so a reader sees either the
         # old snapshot or the new one, never a half-written pointer.
         atomic_write_json(
             project_dir / HISTORY_DIR / CURRENT_POINTER,
-            {"current": hid, "at": stamp, "label": label}, indent=2,
+            {"current": hid, "at": stamp, "label": label},
+            indent=2,
         )
     return record
 

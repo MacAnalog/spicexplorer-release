@@ -60,7 +60,9 @@ def test_dut_subckt_strips_comments_and_end(ota):
 
 
 def test_class_template_shadows_universal(ota, ldo):
-    """D-10: amplifier dc_op (ibias + inputs) shadows the supply-only universal dc_op."""
+    """D-10: each class resolves its OWN dc_op first — the amplifier one wires ibias + inputs, the
+    ldo one does not (the supply-only universal dc_op every such class used to shadow is retired;
+    tests/test_class_templates_resolve.py keeps the universal set free of shadowed templates)."""
     amp = assemble(ota, "dc_op", "ihp-sg13g2", "tt")
     stub = assemble(ldo, "dc_op", "ihp-sg13g2", "tt")
     assert "Ibias" in amp and "Vinp" in amp
@@ -79,7 +81,11 @@ tcross              =  failed
 """
     measures, failed = parse_measures(out)
     assert measures == {"dcgain": 29.77862, "ugf": 30148150.0}
-    assert failed == ["tcross"]
+    # BOTH failed-measure forms are reported: ngspice-45's `meas tran <name> … failed!` (tsettle)
+    # and the older `<name> = failed` line (tcross). The retired analog-db regex copy matched only
+    # the second, so `tsettle` used to vanish from this very fixture — neither measured nor
+    # reported. See tests/test_parse_measures_reuse.py.
+    assert failed == ["tsettle", "tcross"]
 
 
 # ---------------------------------------------------------------- symbolic cross-check plumbing
@@ -118,7 +124,11 @@ def test_symbolic_metric_evaluates_pdk_free(ota):
 
 def test_ldo_stub_proves_class_abstraction(ldo):
     assert ldo.klass == "ldo" and ldo.status == "incomplete"
-    results = verify.run_tier0(["ldo_006_stub"]) + verify.run_tier1(["ldo_006_stub"]) + verify.run_tier2(["ldo_006_stub"])
+    results = (
+        verify.run_tier0(["ldo_006_stub"])
+        + verify.run_tier1(["ldo_006_stub"])
+        + verify.run_tier2(["ldo_006_stub"])
+    )
     failures = [r for r in results if r.status == "fail"]
     assert not failures, "\n".join(f"{r.check}: {r.reason}" for r in failures)
     # its class-scoped template resolves from the ldo library, not amplifier's

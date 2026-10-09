@@ -1,4 +1,5 @@
 """POST /api/score — compute sigmoid vs. linear penalties for a project's specs."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException

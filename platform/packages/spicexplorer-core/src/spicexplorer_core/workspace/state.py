@@ -9,6 +9,7 @@ The rebuildable summary an agent reads instead of globbing a dozen racing files:
 Same contract as ``index.db``: derived, never hand-edited, ``rebuild`` heals. Pure
 FS derivation — it reads run records, it never runs a simulation.
 """
+
 from __future__ import annotations
 
 import json
@@ -48,7 +49,9 @@ def _terminal_runs(project_dir: Path) -> list[dict[str, Any]]:
     return out
 
 
-def _measured_for(spec_id: str, measurement: str, runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _measured_for(
+    spec_id: str, measurement: str, runs: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     """Pull (value, corner, run) points for a spec from run metrics — matching the
     metric key on either the spec id or its measurement name."""
     pts: list[dict[str, Any]] = []
@@ -59,11 +62,13 @@ def _measured_for(spec_id: str, measurement: str, runs: list[dict[str, Any]]) ->
         for key in (spec_id, measurement):
             if key in metrics and isinstance(metrics[key], (int, float)):
                 coords = r.get("coordinates") or {}
-                pts.append({
-                    "value": float(metrics[key]),
-                    "corner": coords.get("corner"),
-                    "run": r.get("run_id") or r.get("run_dir"),
-                })
+                pts.append(
+                    {
+                        "value": float(metrics[key]),
+                        "corner": coords.get("corner"),
+                        "run": r.get("run_id") or r.get("run_dir"),
+                    }
+                )
                 break
     return pts
 
@@ -107,8 +112,11 @@ def _best_runs(runs: list[dict[str, Any]]) -> dict[str, Any]:
             by_kind[k] = r
     return {
         "election_rule": ELECTION_RULE,
-        "overall": {"run_id": best.get("run_id") or best.get("run_dir"),
-                    "best_score": best.get("best_score"), "kind": best.get("kind")},
+        "overall": {
+            "run_id": best.get("run_id") or best.get("run_dir"),
+            "best_score": best.get("best_score"),
+            "kind": best.get("kind"),
+        },
         "by_kind": {k: (v.get("run_id") or v.get("run_dir")) for k, v in by_kind.items()},
     }
 
@@ -121,16 +129,25 @@ def _cells(project_dir: Path) -> list[dict[str, Any]]:
             has_netlist = (cell / "netlist.spice").is_file()
             has_sizing = (cell / "sizing.yaml").is_file()
             has_annotations = (cell / "annotations.yaml").is_file()
-            bindings = sorted(p.stem for p in (cell / "bindings").glob("*.yaml")) \
-                if (cell / "bindings").is_dir() else []
+            bindings = (
+                sorted(p.stem for p in (cell / "bindings").glob("*.yaml"))
+                if (cell / "bindings").is_dir()
+                else []
+            )
             # maturity: netlist(master) → sized → verified-ish by presence of curated data
             maturity = "empty"
             if has_netlist:
                 maturity = "sized" if has_sizing else "netlist"
-            cells.append({
-                "name": cell.name, "netlist": has_netlist, "sizing": has_sizing,
-                "annotations": has_annotations, "bindings": bindings, "maturity": maturity,
-            })
+            cells.append(
+                {
+                    "name": cell.name,
+                    "netlist": has_netlist,
+                    "sizing": has_sizing,
+                    "annotations": has_annotations,
+                    "bindings": bindings,
+                    "maturity": maturity,
+                }
+            )
     return cells
 
 
@@ -152,7 +169,8 @@ def build_state(project_dir: Path, *, now: datetime | None = None) -> dict[str, 
         },
         "compliance": compliance,
         "compliance_summary": {
-            "specs": len(compliance), "checked": len(checked),
+            "specs": len(compliance),
+            "checked": len(checked),
             "passing": len(passing),
             "all_pass": bool(checked) and len(passing) == len(checked),
         },

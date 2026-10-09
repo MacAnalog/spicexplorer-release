@@ -11,6 +11,8 @@ Statement disposition (see the plan's fail-loud rule):
 * structural → rewritten into canonical SPICE;
 * recognized non-structural (analyses, options, models, includes, libraries) → a verbatim
   :class:`~.base.Directive`;
+* a brace block → one verbatim ``unknown`` directive, unless it is a conditional
+  (``if (…) { … } else { … }``) holding device instances → :class:`~.base.DialectSyntaxError`;
 * unrecognized *structural-looking* lines → :class:`~.base.DialectSyntaxError` — a device is
   never silently dropped.
 """
@@ -66,12 +68,22 @@ _PRIMITIVES: dict[str, tuple[str, str | None]] = {
     "inductor": ("L", "l"),
     "vsource": ("V", None),  # value assembled from dc/mag
     "isource": ("I", None),
-    "iprobe": ("V", None),   # a 0 V ammeter — canonical `V… n1 n2 0`
+    "iprobe": ("V", None),  # a 0 V ammeter — canonical `V… n1 n2 0`
     # linear controlled sources — the read-side inverse of circuitgraph's SpectreEmitter
     # (which emits `vccs gm=…` / `vcvs gain=…`); canonical G/E cards
     "vccs": ("G", "gm"),
     "vcvs": ("E", "gain"),
 }
+
+# Heads that never start an instance statement (inside a brace block, where `_transform` does
+# not run, these are told apart from devices by `_device_name`).
+_NON_INSTANCE_HEADS = _CONTROL_HEADS | frozenset(
+    "if else subckt inline ends parameters global include ahdl_include model library endlibrary "
+    "section endsection real integer simulator".split()
+)
+
+# A conditional brace block: `if (…) {`, or an `else {` arm whose `}` closed the block before it.
+_CONDITIONAL_OPEN_RE = re.compile(r"^\s*(?:if\s*\(|else\b)")
 
 _LANG_RE = re.compile(r"^\s*simulator\s+lang\s*=\s*(spectre|spice)\b", re.IGNORECASE)
 # `name ( n1 n2 … ) rest` — the unambiguous paren-node-list instance form.
@@ -111,6 +123,49 @@ def _split_tokens(text: str) -> list[str]:
     if buf:
         tokens.append("".join(buf))
     return tokens
+
+
+def _split_braces(stmt: str) -> tuple[list[str], int, int]:
+    """Split ``stmt`` at every ``{`` / ``}`` outside quotes → (non-empty pieces, #opens, #closes).
+
+    Quote-aware so an ``include "${PDK_ROOT}/…"`` path is not mistaken for a block.
+    """
+    pieces: list[str] = []
+    buf: list[str] = []
+    quote: str | None = None
+    opens = closes = 0
+    for ch in stmt:
+        if quote is not None:
+            buf.append(ch)
+            if ch == quote:
+                quote = None
+            continue
+        if ch in ("'", '"'):
+            quote = ch
+            buf.append(ch)
+            continue
+        if ch in "{}":
+            opens += ch == "{"
+            closes += ch == "}"
+            pieces.append("".join(buf))
+            buf = []
+            continue
+        buf.append(ch)
+    pieces.append("".join(buf))
+    return [p.strip() for p in pieces if p.strip()], opens, closes
+
+
+def _conditional_refusal(opening: str, instances: list[str]) -> str:
+    """The message for device instances found inside an ``if``/``else`` brace block."""
+    return (
+        f"Spectre conditional blocks are not supported around netlist structure: instance(s) "
+        f"{', '.join(instances)} sit inside {opening[:60]!r}. Which branch is taken depends on "
+        "parameter values resolved at run time, so the reader cannot choose one; keeping the "
+        "block as an opaque directive (what it used to do) dropped these devices from the "
+        "circuit. Resolve the conditional before handing the deck over — expand the branch you "
+        "mean into a plain netlist, one deck per configuration. Conditionals that guard only "
+        "analyses or options are still accepted and kept as directives."
+    )
 
 
 class SpectreReader(BaseDialectReader):
@@ -154,21 +209,26 @@ class SpectreReader(BaseDialectReader):
                 out.extend(stmts)
                 continue
             for stmt in stmts:
-                if brace_depth > 0:
+                _, opens, closes = _split_braces(stmt)
+                # A block starts where a brace stays open, or at a one-line `if`/`else { … }`; a
+                # balanced `{…}` value on any other statement (`r={rval}`) is not a block.
+                opens_block = opens > closes or (
+                    opens > 0 and bool(_CONDITIONAL_OPEN_RE.match(stmt))
+                )
+                if brace_depth > 0 or opens_block:
                     brace_buf.append(stmt)
-                    brace_depth += stmt.count("{") - stmt.count("}")
+                    brace_depth += opens - closes
                     if brace_depth <= 0:
+                        self._check_conditional_block(brace_buf, subckt_names)
                         directives.append(Directive("unknown", " ".join(brace_buf)))
-                        warnings.append(f"brace block preserved as a directive: {brace_buf[0][:60]}…")
+                        warnings.append(
+                            f"brace block preserved as a directive: {brace_buf[0][:60]}…"
+                        )
                         brace_buf, brace_depth = [], 0
-                    continue
-                opened = stmt.count("{") - stmt.count("}")
-                if opened > 0:
-                    brace_depth = opened
-                    brace_buf = [stmt]
                     continue
                 self._transform(stmt, out, directives, warnings, name_map, subckt_names)
         if brace_buf:
+            self._check_conditional_block(brace_buf, subckt_names)
             directives.append(Directive("unknown", " ".join(brace_buf)))
             warnings.append("unterminated brace block preserved as a directive")
 
@@ -269,7 +329,9 @@ class SpectreReader(BaseDialectReader):
             return
         if head in ("real", "integer"):
             directives.append(Directive("unknown", stripped))
-            warnings.append(f"typed parameter declaration preserved as a directive: {stripped[:60]}")
+            warnings.append(
+                f"typed parameter declaration preserved as a directive: {stripped[:60]}"
+            )
             return
         if head in _CONTROL_HEADS:
             kind = "option" if head in ("save", "options", "set", "ic", "nodeset") else "analysis"
@@ -313,17 +375,48 @@ class SpectreReader(BaseDialectReader):
             prefix = "J"
         elif arity == 4:
             prefix = "M"
-            warnings.append(f"{name}: 4-terminal instance of unknown master {master!r} typed as MOS")
+            warnings.append(
+                f"{name}: 4-terminal instance of unknown master {master!r} typed as MOS"
+            )
         else:
             prefix = "X"
             warnings.append(f"{name}: instance of unknown master {master!r} kept as a black box")
         self._emit_instance(name, nodes, master, params, prefix, out, name_map)
 
     # ------------------------------------------------------------------
+    def _check_conditional_block(self, block: list[str], subckt_names: set[str]) -> None:
+        """Refuse an ``if``/``else`` brace block that holds device instances.
+
+        A brace block is kept whole as one directive, so every device inside it would leave the
+        circuit. That is harmless for what real decks put in braces (``statistics``, a
+        ``paramset`` table, the analyses of a ``montecarlo``/``sweep``, an ``if`` choosing an
+        analysis); for devices in a conditional it is the silent drop the fail-loud rule forbids.
+        """
+        if not _CONDITIONAL_OPEN_RE.match(block[0]):
+            return
+        pieces = [piece for stmt in block for piece in _split_braces(stmt)[0]]
+        names = [n for n in (self._device_name(p, subckt_names) for p in pieces) if n is not None]
+        if names:
+            raise DialectSyntaxError(
+                _conditional_refusal(block[0].strip(), list(dict.fromkeys(names)))
+            )
+
+    def _device_name(self, stmt: str, subckt_names: set[str]) -> str | None:
+        """The instance name when ``stmt`` would be emitted as a device by :meth:`_transform`,
+        else ``None`` (a keyword statement, an analysis, a node-less statement)."""
+        toks = _split_tokens(stmt)
+        if not toks or toks[0].lower() in _NON_INSTANCE_HEADS:
+            return None
+        name, nodes, master, _ = self._parse_instance(stmt, toks)
+        if master is None or not nodes:
+            return None
+        is_subckt = master.lower() in {s.lower() for s in subckt_names}
+        if not is_subckt and master.lower() in _ANALYSIS_MASTERS:
+            return None
+        return name
+
     @staticmethod
-    def _parse_instance(
-        stmt: str, toks: list[str]
-    ) -> tuple[str, list[str], str | None, list[str]]:
+    def _parse_instance(stmt: str, toks: list[str]) -> tuple[str, list[str], str | None, list[str]]:
         """Split an instance statement into (name, nodes, master, k=v params)."""
         m = _PAREN_INST_RE.match(stmt)
         if m:
@@ -402,7 +495,9 @@ class SpectreReader(BaseDialectReader):
             if value is None:
                 # A `resistor` with no r= (e.g. a model-based variant) — keep the master token as
                 # the value slot so nothing shifts on re-parse.
-                warnings.append(f"{name}: primitive {master!r} has no {value_key}= — master kept as value token")
+                warnings.append(
+                    f"{name}: primitive {master!r} has no {value_key}= — master kept as value token"
+                )
                 value = master
         elif master.lower() == "iprobe":
             value = "0"

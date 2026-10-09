@@ -1,0 +1,151 @@
+# Datasheet (plan D-3/D-5/D-12). Validated against _shared/schema/datasheet.schema.json.
+# LDO metric sheet (ldo class vocabulary), PORTED from an agent-first design repo @ 40cad45.
+#
+# TWO KINDS OF ROW, and the difference matters:
+#   * SPEC-BOUNDED — the eight rows of the design challenge's own target-spec box
+#     (that repo's doc/target-spec.md, carried verbatim in circuits/ldo_ihp_capless/
+#     datasheet.yaml). These are the limits the design was optimized and signed off against.
+#   * RECORDED-ONLY — the rest of the ldo class's canonical vocabulary. The design was never
+#     specified against them, so no limit is invented here (the convention ldo_009 states);
+#     they carry a `typ` so the catalogue and the scoreboard can report them.
+#
+# EVERY `typ` is the verifier-signed candidate scorecard of the design repo
+# (decks/candidate/scorecard.json, tag candidate_certify, corner tt, 27 C, native ngspice-45),
+# converted to the analog-db SI convention: that file reports mV / uA / kHz / us, this one
+# V / A / Hz / s. No number here is read out of REPORT.md prose.
+#
+# UNITS: load_reg / line_reg are a plain delta-Vout in VOLTS (analog-db LDO class convention).
+# vn_out_rms is the ngspice-integrated output noise in V rms — already RMS, no sqrt (PR #68).
+schema: spicexplorer/datasheet@1
+cace_format: "5.2"
+default_conditions:
+  supply: {unit: V, typical: 1.5}
+  vout:   {unit: V, typical: 1.2}
+  vref:   {unit: V, typical: 0.6}      # ideal internal reference (sizing var vref_val); divider 1:1
+  cout:   {unit: pF, typical: 1.0}     # the BENCH's external COUT: a 1 pF pad/wiring parasitic only.
+                                       # The real output capacitor is INSIDE the DUT (XCOUT, MIM),
+                                       # so it is laid out, extracted and counted once.
+  iload:  {unit: mA, typical: 1.0}
+  corner: {typical: tt}
+  temp:   {unit: degC, typical: 27}
+metrics:
+  # ---------------------------------------------------- spec-bounded (the target-spec box)
+  v_out:
+    display: "Regulated output voltage"
+    unit: V
+    analysis: dc_op
+    extract: {meas: vout_dc}
+    spec: {min: 1.176, typ: 1.199499, max: 1.224, unit: V}
+  i_q:
+    display: "Quiescent current"
+    unit: A
+    analysis: dc_op
+    extract: {meas: i_supply}
+    spec: {typ: 3.380539e-5, max: 50e-6, unit: A}
+  load_reg:
+    display: "Load regulation (delta-Vout, 0.1 -> 10 mA)"
+    unit: V
+    analysis: load_regulation
+    extract: {meas: load_reg}
+    spec: {typ: 2.6e-5, max: 5e-3, unit: V}
+  line_reg:
+    display: "Line regulation (delta-Vout, Vin 1.4 -> 1.65 V)"
+    unit: V
+    analysis: line_regulation
+    extract: {meas: line_reg}
+    spec: {typ: 5.6e-5, max: 2e-3, unit: V}
+  v_dropout:
+    display: "Dropout voltage at 10 mA"
+    unit: V
+    analysis: dropout
+    extract: {meas: v_dropout}
+    spec: {typ: 0.104671, max: 0.2, unit: V}
+  psrr_vdd_db:
+    display: "PSRR (Vdd -> Vout) at 1 kHz, 1 mA"
+    unit: dB
+    analysis: psrr
+    extract: {meas: psrr_vdd_db}
+    spec: {min: 40, typ: 70.00703, unit: dB}
+  v_undershoot:
+    display: "Load-step undershoot, 0.1 -> 10 mA in 100 ns"
+    unit: V
+    analysis: tran_load_step
+    extract: {meas: v_undershoot}
+    spec: {typ: 0.115057, max: 0.15, unit: V}
+  pm_loop_deg:
+    display: "Loop phase margin at 1 mA (voltage injection at Vlp)"
+    unit: deg
+    analysis: ac_loopgain
+    extract: {meas: pm_loop}
+    spec: {min: 60, typ: 72.5064, unit: deg}
+  # ---------------------------------------------------- recorded-only (no design limit)
+  loopgain_db:
+    display: "DC loop gain"
+    description: "Loop gain at FSTART. Sets the regulation accuracy floor: static load/line error
+      scales as 1/loop-gain."
+    unit: dB
+    analysis: ac_loopgain
+    extract: {meas: loopgain_db}
+    spec: {typ: 50.22434, unit: dB}
+  ugf_loop_hz:
+    display: "Loop unity-gain frequency"
+    description: "Regulation bandwidth: how fast the loop can correct a load step."
+    unit: Hz
+    analysis: ac_loopgain
+    extract: {meas: ugf_loop}
+    spec: {typ: 801499.9, unit: Hz}
+  gm_loop_db:
+    display: "Loop gain margin"
+    description: "Attenuation still in hand where the loop phase reaches 0. NaN would mean the
+      phase never gets there (unconditionally stable)."
+    unit: dB
+    analysis: ac_loopgain
+    extract: {meas: gm_loop_db}
+    spec: {typ: 6.13316, unit: dB}
+  ms_peak_db:
+    display: "Sensitivity peak"
+    description: "Peak of the sensitivity function |S| = |Zout_cl|/|Zout_ol|, in dB — the damping
+      figure zout_peak_db stands in for. Cross-check on every run: Ms >= 1/(2 sin(PM/2))."
+    unit: dB
+    analysis: ac_loopgain
+    extract: {meas: ms_peak}
+    spec: {typ: 7.812823, unit: dB}
+  tloop_ph_dc_deg:
+    display: "DC loop phase"
+    description: "Measured DC phase of the raw around-the-loop transfer. Guard, not a design
+      figure: ms_peak assumes the negative-feedback sign convention, which holds only when this
+      reads near +/-180 deg."
+    unit: deg
+    analysis: ac_loopgain
+    extract: {meas: tloop_ph_dc}
+    spec: {typ: 179.9738, unit: deg}
+  zout_peak_db:
+    display: "Closed-loop Zout peaking (stability proxy)"
+    description: "Proxy only — ms_peak_db above is the referenced figure. Recorded because the
+      class declares it."
+    unit: dB
+    analysis: loop_stability
+    extract: {meas: zout_peak_db}
+    spec: {typ: 98.03894, unit: dB}
+  t_transient:
+    display: "Load-step recovery time"
+    unit: s
+    analysis: tran_load_step
+    extract: {meas: t_transient}
+    spec: {typ: 1.56252e-7, unit: s}
+  v_line_pp:
+    display: "Line-step p2p output deviation (Vin 1.5 -> 1.65 V)"
+    unit: V
+    analysis: tran_line_step
+    extract: {meas: v_line_pp}
+    spec: {typ: 0.051445, unit: V}
+  vn_out_rms:
+    display: "Integrated output noise (V rms over the analysis band)"
+    description: "ngspice's onoise_total is ALREADY the integrated RMS — the deck binds
+      vn_out_rms to it with no second sqrt (PR #68). The bound below is the same PHYSICAL
+      guard PR #68 gave every other ldo entry (2x the worst measured value), not a design
+      target: this design was never specified against a noise limit."
+    unit: V
+    analysis: noise
+    extract: {meas: vn_out_rms}
+    spec: {typ: 3.729257e-4, max: 7.5e-4, unit: V}

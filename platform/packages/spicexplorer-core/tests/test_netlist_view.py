@@ -46,7 +46,7 @@ def test_from_string_top_level_is_single_level():
     v = NetlistView.from_string(_INLINE)
     comps = set(v.get_components())
     assert {"X1", "R1", "V1"} <= comps  # subckt instance + passives/sources
-    assert "XM1" not in comps          # primitives inside the subckt are NOT at this level
+    assert "XM1" not in comps  # primitives inside the subckt are NOT at this level
 
 
 def test_from_string_clean_name_step_in():
@@ -66,9 +66,7 @@ def test_example_fixtures_present():
     assert ALL_NETLISTS, "no example netlists found under examples/OTA — fixtures missing?"
 
 
-@pytest.mark.parametrize(
-    "path", ALL_NETLISTS, ids=lambda p: p.split("fixtures/")[-1]
-)
+@pytest.mark.parametrize("path", ALL_NETLISTS, ids=lambda p: p.split("fixtures/")[-1])
 def test_every_example_parses_and_enumerates(path):
     v = NetlistView.from_file(path)
     assert v.get_components(), f"{path} parsed to zero components"
@@ -92,8 +90,8 @@ def test_cascode_flat_enumeration():
 
 def test_cascode_flat_device_reads():
     v = NetlistView.from_file(CASCODE_FLAT)
-    assert v.get_component_value("XM1") == "sg13_lv_nmos"   # input pair n-fet
-    assert v.get_component_value("XM4") == "sg13_lv_pmos"   # p-load
+    assert v.get_component_value("XM1") == "sg13_lv_nmos"  # input pair n-fet
+    assert v.get_component_value("XM4") == "sg13_lv_pmos"  # p-load
     assert v.get_component_nodes("XM1") == ["net4", "vinp", "tail", "vss"]
     assert {"w", "l", "ng", "m"} <= {k.lower() for k in v.get_component_parameters("XM1")}
     assert {"vdd", "vss", "vout", "vinp", "vinn", "tail"} <= set(v.get_all_nodes())
@@ -114,18 +112,15 @@ def test_hyphenated_subckt_name_resolves_via_truncated_prefix_fallback():
     referenced name (``ota-5t``) falls back to the longest truncated-prefix match.
     """
     v = NetlistView.from_file(OTA5T_TB)
-    assert v.get_subcircuit_names() == ["ota"]          # truncated at the hyphen (spicelib fact)
-    inner = v.get_subcircuit("xota")                    # …but the instance still steps in
+    assert v.get_subcircuit_names() == ["ota"]  # truncated at the hyphen (spicelib fact)
+    inner = v.get_subcircuit("xota")  # …but the instance still steps in
     assert "XM1" in inner.get_components()
 
 
 def test_truncated_prefix_fallback_requires_a_separator():
     """The fallback must not mis-resolve a *different* subckt that happens to share a prefix:
     ``otabuf`` is not a truncation of ``ota`` (the next char is alphanumeric)."""
-    nl = (
-        "* c\n.subckt ota a b\nR1 a b 1k\n.ends\n"
-        "X1 1 2 otabuf\n.end\n"
-    )
+    nl = "* c\n.subckt ota a b\nR1 a b 1k\n.ends\nX1 1 2 otabuf\n.end\n"
     v = NetlistView.from_string(nl)
     with pytest.raises(Exception):
         v.get_subcircuit("X1")
@@ -140,7 +135,13 @@ def test_subcircuit_ports_resolvable_and_unresolvable():
     assert v.get_subcircuit_ports("X1") == ["vin-", "vin+", "vout", "vdd", "ib", "vss"]
     # hyphenated subckt resolves through the truncated-prefix fallback
     assert NetlistView.from_file(OTA5T_TB).get_subcircuit_ports("XOTA") == [
-        "vdd", "vout", "vinp", "vinn", "ibias_20u", "d_ena", "vss",
+        "vdd",
+        "vout",
+        "vinp",
+        "vinn",
+        "ibias_20u",
+        "d_ena",
+        "vss",
     ]
     # a genuinely missing definition is still None (callers fall back to positional)
     nl = "* c\nX1 1 2 3 nowhere\n.end\n"
@@ -181,8 +182,28 @@ def test_missing_end_raises_clear_syntax_error():
 
 
 def test_missing_star_title_line_raises():
-    """spicelib refuses a netlist whose first line doesn't match `^\\*` — a real-world trap
-    (ngspice itself would silently swallow the first line as a title). Pinned so the failure
-    mode stays a loud error, not silent device loss."""
-    with pytest.raises(Exception, match="pattern"):
+    """A netlist whose first line isn't a `*` title is a real-world trap — ngspice silently
+    swallows that line as the title, losing the device on it. Pinned so the failure mode stays a
+    loud error, not silent device loss.
+
+    Until DIA-02 this was enforced only as a side effect of spicelib's encoding sniffer, which
+    happens to search the file for `^\\*`; removing the temp file removed the guard with it. It is
+    a rule about netlists rather than encodings, so `from_string` now states it directly — and says
+    which device would have been lost.
+    """
+    with pytest.raises(SyntaxError, match="title"):
         NetlistView.from_string("R1 in out 1k\nC1 out 0 100p\n.end\n")
+
+
+def test_the_title_line_error_names_the_device_that_would_be_lost():
+    with pytest.raises(SyntaxError, match="R1 in out 1k"):
+        NetlistView.from_string("R1 in out 1k\nC1 out 0 100p\n.end\n")
+
+
+def test_a_bom_parses_and_a_blank_first_line_is_not_called_empty():
+    """The BOM strip guarded only the title check; the un-stripped text still went to spicelib, so
+    the tolerance was dead. And a deck whose first line is merely blank is not an empty deck."""
+    assert NetlistView.from_string("\ufeff* t\nR1 in out 1k\n.end\n").get_components() == ["R1"]
+    with pytest.raises(SyntaxError) as excinfo:
+        NetlistView.from_string("\n* t\nR1 in out 1k\n.end\n")
+    assert "empty" not in str(excinfo.value)

@@ -1,0 +1,19 @@
+# Logfile created on 2026-09-25 00:21:06 -0400 by logger.rb/v1.6.0
+2026-09-25 00:21:06 -0400: Memory Usage (128364K) : Starting running SG13G2 Klayout LVS runset on run/nmos_mirror.gds
+2026-09-25 00:21:06 -0400: Memory Usage (128364K) : Ruby Version for klayout: 3.3.8
+2026-09-25 00:21:06 -0400: Memory Usage (129492K) : Loading database to memory is complete.
+2026-09-25 00:21:06 -0400: Memory Usage (129620K) : Netlist file: run/broken.spice
+2026-09-25 00:21:06 -0400: Memory Usage (129620K) : LVS extracted netlist at: run/nmos_mirror_extracted.cir
+2026-09-25 00:21:06 -0400: Memory Usage (134580K) : Starting SG13G2 LVS runset
+2026-09-25 00:21:06 -0400: Memory Usage (138520K) : Starting SG13G2 LVS connectivity setup
+2026-09-25 00:21:06 -0400: Memory Usage (138520K) : Starting SG13G2 LVS connectivity setup (Inter-layer)
+2026-09-25 00:21:06 -0400: Memory Usage (138660K) : Starting SG13G2 LVS connectivity setup (Global)
+2026-09-25 00:21:06 -0400: Memory Usage (138660K) : Starting SG13G2 LVS DEVICES EXTRACTION
+2026-09-25 00:21:06 -0400: Memory Usage (139132K) : Starting SG13G2 LVS Options Preparations
+2026-09-25 00:21:06 -0400: Memory Usage (139132K) : Starting SG13G2 LVS Alignment
+2026-09-25 00:21:06 -0400: Memory Usage (139132K) : Starting SG13G2 LVS Simplification
+2026-09-25 00:21:06 -0400: Memory Usage (139132K) : Starting SG13G2 LVS Comparison
+2026-09-25 00:21:06 -0400: Memory Usage (139260K) : xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+2026-09-25 00:21:06 -0400: Memory Usage (139260K) : ERROR : Netlists don't match
+2026-09-25 00:21:06 -0400: Memory Usage (139260K) : xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+2026-09-25 00:21:06 -0400: Memory Usage (139260K) : LVS Total Run time 0.227809 seconds

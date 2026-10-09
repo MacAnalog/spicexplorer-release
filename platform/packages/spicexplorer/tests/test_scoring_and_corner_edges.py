@@ -38,7 +38,7 @@ def test_exponential_error_is_overflow_capped():
     the optimizer's gradient ordering."""
     huge = compute_relative_exponential_error(np.float64(1e9), np.float64(0.0), np.float64(1e-6))
     big = compute_relative_exponential_error(np.float64(1e6), np.float64(0.0), np.float64(1e-3))
-    assert np.isfinite(huge) and huge == big          # both hit the cap — same saturated penalty
+    assert np.isfinite(huge) and huge == big  # both hit the cap — same saturated penalty
 
 
 def test_sigmoid_error_bounded():
@@ -81,8 +81,10 @@ def test_apply_corner_same_corner_twice_byte_identical(tmp_path):
 
     work = tmp_path / "n.spice"
     work.write_text(netlist.read_text())
-    w = NGSpice_Wrapper(netlist_filename=work, output_folder=tmp_path / "runs",
-                        testbench_name="idem")
+    w = NGSpice_Wrapper(
+        netlist_filename=work, output_folder=tmp_path / "runs", testbench_name="idem"
+    )
+
     def joined() -> str:
         return "\n".join(ln for ln in w.editor.netlist if isinstance(ln, str))
 

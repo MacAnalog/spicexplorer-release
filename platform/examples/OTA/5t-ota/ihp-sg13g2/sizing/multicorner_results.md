@@ -66,7 +66,7 @@ large positive scores:
 That +27.95 → −0.008 gap is exactly the masking AGG-1 eliminates while keeping `mean` the
 default (range specs like phase margin are two-sided, so a blanket worst-corner
 scalarization is the wrong optimization objective — see
-[`doc/PVT_plan.md`](../../../../doc/PVT_plan.md) §"SPECIFIED FIX — constraint-first corner aggregation").
+[`doc/archive/PVT_plan.md`](../../../../../doc/archive/PVT_plan.md) §"SPECIFIED FIX — constraint-first corner aggregation").
 
 ## Reproduce
 

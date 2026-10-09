@@ -131,7 +131,11 @@ def render_deck(circuit: model.Circuit, analysis_id: str, pdk: str, corner: str 
     deck = assemble(circuit, analysis_id, pdk, corner)
     _, _, body = deck.partition("\n")  # drop assemble's `** ASSEMBLED …` first line
     rel = _rel(deck_path(circuit, analysis_id, pdk, corner))
-    return _deck_banner(circuit, analysis_id, pdk, corner, rel) + _params_line(circuit, pdk, body) + body
+    return (
+        _deck_banner(circuit, analysis_id, pdk, corner, rel)
+        + _params_line(circuit, pdk, body)
+        + body
+    )
 
 
 def _params_line(circuit: model.Circuit, pdk: str, body: str, tb: bool = True) -> str:
@@ -211,8 +215,11 @@ def render_annotated_sch(circuit: model.Circuit, aset) -> str:
     from spicexplorer_netlist2xschem import build_sch
 
     return build_sch(
-        _n2x_circuit(circuit), pdk=_SCH_PDK, title=circuit.id,
-        annotations=aset, placement_mode="block-aware",
+        _n2x_circuit(circuit),
+        pdk=_SCH_PDK,
+        title=circuit.id,
+        annotations=aset,
+        placement_mode="block-aware",
     ).text
 
 
@@ -334,7 +341,9 @@ def _generate_circuit(
             decks[_rel(structural_path(circuit))] = render_structural(circuit, graph, groups)
             decks.update(render_hier_files(circuit, aset))
         except ImportError:
-            skipped.append((f"{circuit.id} structural/annotated", "circuitgraph/netlist2xschem absent"))
+            skipped.append(
+                (f"{circuit.id} structural/annotated", "circuitgraph/netlist2xschem absent")
+            )
         except _SKIP_EXC as exc:
             skipped.append((f"{circuit.id} structural/annotated", f"{type(exc).__name__}: {exc}"))
     return decks, skipped
@@ -419,7 +428,9 @@ def render_svgs(circuit_ids: list[str] | None = None) -> tuple[list[str], bool]:
             (annotated_sch_path(circuit), None),
             (
                 hier_parent_path(circuit),
-                os.pathsep.join([*(str(p) for p in default_search_paths()), str(hier_dir(circuit))]),
+                os.pathsep.join(
+                    [*(str(p) for p in default_search_paths()), str(hier_dir(circuit))]
+                ),
             ),
         ]
         for sch, lib in targets:
@@ -428,7 +439,9 @@ def render_svgs(circuit_ids: list[str] | None = None) -> tuple[list[str], bool]:
             result = render(sch, fmt="svg", outdir=sch.parent, library_path=lib)
             if result.image_path is not None:
                 rendered.append(_rel(result.image_path))
-            (sch.parent / "xschemrc").unlink(missing_ok=True)  # render() drops a transient rc — tidy it
+            (sch.parent / "xschemrc").unlink(
+                missing_ok=True
+            )  # render() drops a transient rc — tidy it
     return sorted(rendered), True
 
 

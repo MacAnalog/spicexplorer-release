@@ -6,6 +6,7 @@ openEMS workflow, so it is exercised by a block's own EM lane, not here.
 NOTE for CI: the klayout importorskip below is MODULE level — without the
 ``gds`` extra every test here skips silently; ``scikit-rf`` (the ``em``
 extra) additionally gates the vector-fit test."""
+
 import os
 
 import numpy as np
@@ -14,10 +15,12 @@ from spicexplorer_layout import em
 
 klayout = pytest.importorskip("klayout.db", reason="needs the gds extra")
 
-TOY_TECH = em.EmTech(metals={"Metal1": 8, "Metal2": 10},
-                     vias={"Via1": 19},
-                     via_stack={"Via1": ("Metal1", "Metal2")},
-                     subgnd_layer=210)
+TOY_TECH = em.EmTech(
+    metals={"Metal1": 8, "Metal2": 10},
+    vias={"Via1": 19},
+    via_stack={"Via1": ("Metal1", "Metal2")},
+    subgnd_layer=210,
+)
 
 
 def _toy_gds(path: str) -> str:
@@ -44,17 +47,32 @@ def _toy_gds(path: str) -> str:
 def test_extract_net_gds_selects_traced_net(tmp_path):
     src = _toy_gds(str(tmp_path / "toy.gds"))
     out = str(tmp_path / "cut.gds")
-    ports = [dict(num=1, kind="via", rect=[0, 0, 0.5, 1], from_layer="Metal1",
-                  to_layer="Metal2", direction="z", subgnd=True)]
+    ports = [
+        dict(
+            num=1,
+            kind="via",
+            rect=[0, 0, 0.5, 1],
+            from_layer="Metal1",
+            to_layer="Metal2",
+            direction="z",
+            subgnd=True,
+        )
+    ]
     man = em.extract_net_gds(src, ["sig"], out, ports, tech=TOY_TECH)
     assert man["nets"]["sig"] == ["Metal1", "Metal2", "Via1"]
     ly = klayout.Layout()
     ly.read(out)
+
     def region(layer, dt):
         li = ly.find_layer(layer, dt)
-        return klayout.Region(ly.top_cell().begin_shapes_rec(ly.layer(layer, dt))) if li is not None else klayout.Region()
+        return (
+            klayout.Region(ly.top_cell().begin_shapes_rec(ly.layer(layer, dt)))
+            if li is not None
+            else klayout.Region()
+        )
+
     # the gnd strip (y 5..6) must NOT be in the cut
-    assert region(8, 0).bbox().top <= 1000    # dbu units: 1 um
+    assert region(8, 0).bbox().top <= 1000  # dbu units: 1 um
     # port rectangle on tech.port_layer_base+1 and its SUBGND twin on 210
     assert not region(TOY_TECH.port_layer_base + 1, 0).is_empty()
     assert not region(210, 0).is_empty()
@@ -71,8 +89,7 @@ def test_extract_net_gds_unknown_net_lists_labels(tmp_path):
 
 def test_em_sparams_needs_pdk_workflow(tmp_path, monkeypatch):
     monkeypatch.setenv("PDK_ROOT", str(tmp_path))
-    tech = em.EmTech(metals={}, vias={}, via_stack={},
-                     workflow="nope/libs.tech/openems/workflow")
+    tech = em.EmTech(metals={}, vias={}, via_stack={}, workflow="nope/libs.tech/openems/workflow")
     with pytest.raises(FileNotFoundError, match="openEMS workflow"):
         em.em_sparams("x.gds", [], str(tmp_path / "out"), tech=tech)
 
@@ -110,8 +127,7 @@ def test_em_to_subckt_rc_network(tmp_path):
     nw = skrf.Network(f=f, s=s, z0=z0, f_unit="hz")
     ts = str(tmp_path / "rc.s2p")
     nw.write_touchstone(ts[:-4])
-    out = em.em_to_subckt(ts, str(tmp_path / "rc.sub"), name="rc_fit",
-                          n_poles=2, dc_r={(1, 2): r})
+    out = em.em_to_subckt(ts, str(tmp_path / "rc.sub"), name="rc_fit", n_poles=2, dc_r={(1, 2): r})
     txt = open(out).read()
     assert ".subckt rc_fit" in txt.lower()
     assert os.path.getsize(out) > 200
@@ -124,7 +140,8 @@ def test_em_sim_from_yaml_combined_file(tmp_path):
         "tech: {metals: {Metal1: 8}, vias: {}, via_stack: {}}\n"
         "sim: {fstop: 50e9, numfreq: 101, cellsize_um: 0.4,\n"
         "      boundary: [PEC, PEC, PEC, PEC, PEC, MUR],\n"
-        "      excite_ports: [1, 2]}\n")
+        "      excite_ports: [1, 2]}\n"
+    )
     tech = em.EmTech.from_yaml(str(cfg))
     sim = em.EmSim.from_yaml(str(cfg))
     assert tech.metals == {"Metal1": 8}
@@ -141,11 +158,26 @@ def test_em_config_loading_is_loud_and_overridable(tmp_path, caplog):
     cfg.write_text("fstop: 50e9\n")
     with caplog.at_level(logging.WARNING, logger="spicexplorer_layout.em"):
         sim = em.EmSim.from_yaml(str(cfg), numfreq=101)
-    assert sim.fstop == 50e9 and sim.numfreq == 101     # override beats file
+    assert sim.fstop == 50e9 and sim.numfreq == 101  # override beats file
     msg = " ".join(r.message for r in caplog.records)
-    assert "DEFAULTS" in msg and "cellsize_um" in msg   # silent fallbacks named
-    assert "numfreq" not in msg.split("DEFAULTS")[1]    # overridden != defaulted
+    assert "DEFAULTS" in msg and "cellsize_um" in msg  # silent fallbacks named
+    assert "numfreq" not in msg.split("DEFAULTS")[1]  # overridden != defaulted
     with pytest.raises(ValueError, match="unknown keys.*cellsize"):
         cfg2 = tmp_path / "bad.yaml"
-        cfg2.write_text("cellsize: 0.4\n")             # wrong key name -> loud error
+        cfg2.write_text("cellsize: 0.4\n")  # wrong key name -> loud error
         em.EmSim.from_yaml(str(cfg2))
+
+
+def test_em_tech_from_yaml_tolerates_an_unknown_shared_section(tmp_path):
+    """The tech file is shared across lanes (core.Tech carries a `raw` catch-all
+    and tolerates a new section); EmTech must too, instead of denylisting the
+    sections that exist today (reuse review F1)."""
+    pytest.importorskip("yaml")
+    from spicexplorer_core.tech import Tech, techs_dir
+
+    src = techs_dir() / "ihp-sg13g2.yaml"
+    dst = tmp_path / "t.yaml"
+    dst.write_text(src.read_text() + "\ntools:\n  kpex: x\n")
+
+    Tech.from_yaml(str(dst))  # core already tolerates the new section
+    em.EmTech.from_yaml(str(dst))  # EmTech must not raise "unknown keys ['tools']"

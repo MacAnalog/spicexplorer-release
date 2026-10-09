@@ -17,8 +17,9 @@ point: a new backend is one entry.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict
+from typing import TYPE_CHECKING, Any
 
 from spicexplorer.core.domains import SpiceSimulatorType
 from spicexplorer_core.spice_engine import (
@@ -32,7 +33,7 @@ if TYPE_CHECKING:
 
 
 def resolve_engine(
-    value: "SpiceSimulatorType | Sim_Engines_Type | str | None",
+    value: SpiceSimulatorType | Sim_Engines_Type | str | None,
 ) -> SpiceSimulatorType:
     """Normalise any engine spelling to a `SpiceSimulatorType`.
 
@@ -65,7 +66,7 @@ def resolve_engine(
 # ---------------------------------------------------------------------------
 # Per-engine builders — each takes the normalised kwargs dict, returns a Simulator
 # ---------------------------------------------------------------------------
-def _build_ngspice(kw: Dict[str, Any]) -> "Simulator":
+def _build_ngspice(kw: dict[str, Any]) -> Simulator:
     return NGSpice_Wrapper(
         testbench_name=kw["testbench_name"],
         netlist_filename=kw["netlist_filename"],
@@ -76,7 +77,7 @@ def _build_ngspice(kw: Dict[str, Any]) -> "Simulator":
     )
 
 
-def _build_spectre(kw: Dict[str, Any]) -> "Simulator":
+def _build_spectre(kw: dict[str, Any]) -> Simulator:
     # A testbench is a native Spectre `.scs` file (the YAML `netlist:` key, exactly like
     # an ngspice `.spice`). It runs in NATIVE-FILE mode: every candidate rewrites the
     # deck's `parameters` line (design vars) + corner includes in place — the injection
@@ -109,7 +110,7 @@ def _build_spectre(kw: Dict[str, Any]) -> "Simulator":
     )
 
 
-def _build_layout(kw: Dict[str, Any]) -> "Simulator":
+def _build_layout(kw: dict[str, Any]) -> Simulator:
     # A layout-flow "testbench": the YAML `netlist:` is a `layout-flow/1` YAML spec (the
     # generator + DRC/LVS/PEX/measure recipe), NOT a SPICE deck. Reject a non-YAML BEFORE the
     # lazy import so the offline error is the actionable one. Artifacts land per testbench
@@ -139,15 +140,15 @@ def _build_layout(kw: Dict[str, Any]) -> "Simulator":
     )
 
 
-def _build_hspice(kw: Dict[str, Any]) -> "Simulator":
+def _build_hspice(kw: dict[str, Any]) -> Simulator:
     raise NotImplementedError(
         "The HSPICE backend is registered but not implemented yet "
-        "(see doc/plan_spectre_hspice_integration.md). Use sim_engine='ngspice'."
+        "(see doc/archive/plan_spectre_hspice_integration.md). Use sim_engine='ngspice'."
     )
 
 
 #: Engine → builder. The extension point: a new backend is one entry here.
-SIMULATOR_BUILDERS: Dict[SpiceSimulatorType, Callable[[Dict[str, Any]], "Simulator"]] = {
+SIMULATOR_BUILDERS: dict[SpiceSimulatorType, Callable[[dict[str, Any]], Simulator]] = {
     SpiceSimulatorType.NGSPICE: _build_ngspice,
     SpiceSimulatorType.SPECTRE: _build_spectre,
     SpiceSimulatorType.HSPICE: _build_hspice,
@@ -156,7 +157,7 @@ SIMULATOR_BUILDERS: Dict[SpiceSimulatorType, Callable[[Dict[str, Any]], "Simulat
 
 
 def build_simulator(
-    engine: "SpiceSimulatorType | Sim_Engines_Type | str | None",
+    engine: SpiceSimulatorType | Sim_Engines_Type | str | None,
     *,
     netlist_filename: Path,
     testbench_name: str = "DEFAULT",
@@ -164,11 +165,11 @@ def build_simulator(
     sim_execution_t: Sim_Execution_Type = Sim_Execution_Type.RUN_AND_WAIT,
     path_to_simulator: Path | None = None,
     verbose: bool = False,
-    vb_env: Dict[str, str] | None = None,
+    vb_env: dict[str, str] | None = None,
     work_dir: Path | None = None,
     deck_dir: Path | None = None,
     vb_env_file: Path | str | None = None,
-) -> "Simulator":
+) -> Simulator:
     """Construct the simulation backend for `engine`, returning a `Simulator`.
 
     The ngspice path returns a concrete `NGSpice_Wrapper` (identical to the previous
@@ -176,7 +177,7 @@ def build_simulator(
     kwargs below are ignored by `_build_ngspice`). Other engines dispatch through
     `SIMULATOR_BUILDERS`.
 
-    Spectre-only kwargs (native-first wiring, `doc/plan_virtuoso_bridge.md`): the
+    Spectre-only kwargs (native-first wiring, `doc/archive/plan_virtuoso_bridge.md`): the
     testbench `netlist:` is a native `.scs` run in native-file injection mode; `work_dir`
     persists the PSF raw dir (OCEAN input); `deck_dir` is where per-candidate `.scs` files
     land; `vb_env_file` pins the bridge/OCEAN profile.

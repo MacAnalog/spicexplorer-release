@@ -8,12 +8,19 @@ view sits on.
 
 ## Purpose & layering
 
-A **leaf tool**: depends on `spicexplorer-core` only (the `SimResult` protocol and the
-measurement registry), plus `spicelib`/`psf-utils`/`numpy`/`plotly`/`pydantic` from
-PyPI. It never imports a peer tool. The Spectre PSF-dir reading is a deliberate
-*sibling* of the optimizer's `backends/spectre.py` readers (peer packages can't import
-each other) — parity between the two is pinned by `tests/test_loaders.py::
-test_spectre_parity_with_backend_reader`, not by imports.
+A **leaf tool**: depends on `spicexplorer-core` only (the `SimResult` protocol, the
+measurement registry and the PSF parser), plus `spicelib`/`psf-utils`/`numpy`/`plotly`/
+`pydantic` from PyPI. It never imports a peer tool.
+
+The Spectre PSF-dir reading is **not** a duplicated parser. `spectre_loader.py` and the
+optimizer's `backends/spectre.py` both import the one reader in
+`spicexplorer_core.spice_engine.psfascii`; what differs is only the shaping of the result
+into this package's `WaveDataset`. An earlier version of this paragraph called the two
+"deliberate siblings" because peer packages cannot import each other — true of the peers,
+but the parsing moved into `core` (which both may depend on) and the justification went
+stale with it (Codex review, item WV-01). `tests/test_loaders.py::
+test_spectre_parity_with_backend_reader` still pins that the two agree, now as a guard on
+the shaping rather than on two independent parsers.
 
 The REST adapter (`spicexplorer-api`) mounts this as the `/api/waveview/*` routes.
 
@@ -21,32 +28,73 @@ The REST adapter (`spicexplorer-api`) mounts this as the `/api/waveview/*` route
 
 ```python
 from spicexplorer_waveview import (
-    load_result,            # path → WaveDataset (sniffs ngspice vs spectre)
-    load_ngspice_raw,       # .raw file → WaveDataset (all plots, incl. multi-plot)
-    load_spectre_raw_dir,   # psfascii -raw dir → WaveDataset (ac/dc/tran/noise/pss/pnoise/pac/stb + op + .info)
-    merge_datasets,         # N datasets → ONE (a run's testbenches as one tree; dup analyses suffixed #2…)
-    WaveDataset, DatasetResult,   # dataset model + its SimResult-protocol adapter
-    measure_dataset, measure_many, measurement_catalog,  # Tier-1 recipes on loaded data
-    parse_sim_log, discover_log, classify_line,          # log viewer backend
-    downsample_indices,     # minmax | lttb | stride display downsampling
+    # path → WaveDataset (sniffs ngspice vs spectre)
+    load_result,
+    # .raw file → WaveDataset (all plots, incl. multi-plot)
+    load_ngspice_raw,
+    # psfascii -raw dir → WaveDataset (ac/dc/tran/noise/pss/pnoise/pac/stb + op + .info)
+    load_spectre_raw_dir,
+    # N datasets → ONE (a run's testbenches as one tree; dup analyses suffixed #2…)
+    merge_datasets,
+    # dataset model + its SimResult-protocol adapter
+    WaveDataset,
+    DatasetResult,
+    # Tier-1 recipes on loaded data
+    measure_dataset,
+    measure_many,
+    measurement_catalog,
+    # log viewer backend
+    parse_sim_log,
+    discover_log,
+    classify_line,
+    # ngspice scalars / fatal lines (core's sim_log)
+    parse_measures,
+    fatal_lines,
+    # data stimulus (PRBS, NRZ/PAM4, PWL taps)
+    Data,
+    prbs,
+    symbols,
+    pwl,
+    ideal_waveform,
+    # symbol-aware eye behind a BT4 receiver
+    eye_metrics,
+    fold,
+    rx_bandwidth,
+    # minmax | lttb | stride display downsampling
+    downsample_indices,
     # Plotly builders (figures carry registry-measured annotations):
-    waveform_figure, bode_figure, tran_figure, dc_figure,
-    noise_figure, pss_spectrum_figure, fft_spectrum_figure, log_view_html,
+    waveform_figure,
+    bode_figure,
+    tran_figure,
+    dc_figure,
+    noise_figure,
+    pss_spectrum_figure,
+    fft_spectrum_figure,
+    log_view_html,
     # trace snapshots + static PNG / interactive HTML export (visual verification):
-    snapshot, save_traces, load_traces, export_pngs, export_htmls,
-    PlotTemplate, PLOT_TEMPLATES,
+    snapshot,
+    save_traces,
+    load_traces,
+    export_pngs,
+    export_htmls,
+    PlotTemplate,
+    PLOT_TEMPLATES,
 )
 
-ds = load_result("runs/tb_ac/run_1/netlist.raw")       # or a Spectre "…-raw" dir
+ds = load_result("runs/tb_ac/run_1/netlist.raw")  # or a Spectre "…-raw" dir
 measure_dataset(ds, {"meas": "ugf", "out": "v(vout)"})  # identical math to the optimizer
-bode_figure(ds, "v(vout)").show()                       # UGF/PM/f3dB drawn on the plot
+bode_figure(ds, "v(vout)").show()  # UGF/PM/f3dB drawn on the plot
 
 # store the KEY traces + auto-export PNGs and interactive HTMLs per analysis:
-snap = snapshot(run.artifact_path(), "verify/", label="amp022_ac",
-                annotations={"ac": {"dcgain [dB]": 48.0, "pm [deg]": 81.3}})
-snap["traces"]   # one compressed .npz (JSON manifest + arrays; complex survives)
-snap["pngs"]     # per-analysis PNGs: combined + one autoscaled breakout per trace
-snap["htmls"]    # interactive Plotly companions (one shared plotly.min.js rides along)
+snap = snapshot(
+    run.artifact_path(),
+    "verify/",
+    label="amp022_ac",
+    annotations={"ac": {"dcgain [dB]": 48.0, "pm [deg]": 81.3}},
+)
+snap["traces"]  # one compressed .npz (JSON manifest + arrays; complex survives)
+snap["pngs"]  # per-analysis PNGs: combined + one autoscaled breakout per trace
+snap["htmls"]  # interactive Plotly companions (one shared plotly.min.js rides along)
 load_traces(snap["traces"])  # round-trips to a WaveDataset — recipes/figures work on it
 ```
 
@@ -67,6 +115,43 @@ traces dropped (an AC-grounded rail is a −6000 dB floor line), noise-family pl
 show **density signals only** (Spectre's `gain` input-referral transfer stays out),
 and top-level nets rank before subcircuit-internal (`XDUT.*`) nodes. Pin exact traces
 via a template's `signals=`.
+
+### Stimulus and the data eye
+
+`stimulus.Data(fmt, rate_gbd, order=7, n_warm=8, seed=1, t0=8e-9, tr_ui=0.2)` describes one
+PRBS-driven stream (NRZ `{-1,+1}` or Gray-coded PAM4); `pwl(name, node, ref, data, vcm=,
+swing=, delay_ui=, invert=)` emits the source line, and an FFE tap is the same `Data` delayed
+`k` UI, exact by construction. `eye.eye_metrics(t, x, data, filtered=True, full_scale=1.0)`
+groups samples by the *transmitted* symbol (FFT latency search, sampling phase swept over one
+UI) behind a 4th-order Bessel-Thomson receiver (0.75 x baud NRZ, 0.5 x baud PAM4) and returns
+`eye_h_norm`, **two** eye widths, `vecp_db` (capped at 40 dB), `er_db` (unipolar inputs only, `nan`
+otherwise), `oma_db`/`oma_norm`, and for PAM4 `rlm` + `pam4_eye_heights`; a closed eye gives
+finite numbers, an inverting stage is detected (`polarity`). `fold()` gives eye-diagram
+coordinates for a plot.
+
+**The two eye widths, unambiguously named.** Both count the fraction of the swept sampling phases
+at which every adjacent level pair is strictly open, but over different windows: `eye_w_ui_1s`
+uses a **±one-sample** window (UI/`OVERSAMPLE`), `eye_w_ui_sample_window` the
+**±`SAMPLE_HALF_UI`** (0.1 UI) window the eye HEIGHT statistic is taken over. The second is the
+stricter, self-consistent one — an eye counts as open at a phase under the same window its height
+was measured with — and on an ideal eye it runs ~0.19 UI narrower. They are two measurements of
+one eye: a design scored on one and compared against the other looks like it changed when it did
+not, so both are reported under explicit names and neither is ever spelled bare `eye_w_ui` — that
+name has meant BOTH metrics at different points in this module's design lineage, silently
+disagreeing by ≈0.19 UI. The sampling-phase count is a parameter (`n_phases=`, default `PHASES`,
+the certified value) whose value rides in the result as `sample_phases`, alongside
+`sample_half_ui` (= `SAMPLE_HALF_UI`) — a re-run at a different phase count is visible in the row.
+
+The eye is a **registered measurement kind** (`register_measurements` in the core registry):
+`{meas: eye_h_norm | eye_w_ui_1s | eye_w_ui_sample_window | vecp_db | ecp_db | er_db | oma_db | oma_norm | rlm |
+eye_latency_ps, out, fmt, rate_gbd, order?, n_warm?, seed?, t0?, tr_ui?, full_scale?,
+filtered?, ref?, time?}` runs through `measure_dataset` / `measure_many` / the API's measure
+route and shows in `measurement_catalog()` like every built-in. The math lives here (scipy),
+the name in the shared catalog — importing `spicexplorer_waveview` registers it.
+
+The log helpers `parse_measures(text) -> (measures, failed)` and `fatal_lines(text)` are
+core's `spice_engine.sim_log`, re-exported beside `parse_log_text` (the same rules
+`run_deck` applies to its own log).
 
 Key semantics (mirroring the engines' own result adapters):
 
@@ -118,13 +203,24 @@ Spectre work dir outside the repo).
 
 ## Notebooks
 
-- [notebooks/waveform_viewer_ngspice.ipynb](notebooks/waveform_viewer_ngspice.ipynb) —
+Each is a marimo notebook: open it with
+`uv run marimo edit packages/spicexplorer-waveview/notebooks/<name>.py`, or run all its cells
+from that folder with `uv run python <name>.py`.
+
+- [notebooks/waveform_viewer_ngspice.py](notebooks/waveform_viewer_ngspice.py) —
   live-ngspice tour: load `.raw` artifacts, every analysis plotted interactively,
   measurements + log viewer.
-- [notebooks/waveform_viewer_spectre.ipynb](notebooks/waveform_viewer_spectre.ipynb) —
-  Spectre PSF tour (real raw dirs incl. PSS/stb), same API.
-- [notebooks/waveview_api_tour.ipynb](notebooks/waveview_api_tour.ipynb) — the REST
+- [notebooks/waveform_viewer_spectre.py](notebooks/waveform_viewer_spectre.py) —
+  Spectre PSF tour (real raw dirs incl. PSS/stb), same API. Runs only on the Spectre lane:
+  `virtuoso_bridge` importable, `SPICEXPLORER_SPECTRE_MODEL_ROOT` set to the closed-PDK model
+  wrapper directory and the bridge env file (`SPICEXPLORER_VB_ENV_FILE`); `tests/test_notebooks.py`
+  gates it as `live_spectre`. Its recorded outputs are not published (they hold licensed-lane
+  data).
+- [notebooks/waveview_api_tour.py](notebooks/waveview_api_tour.py) — the REST
   routes end-to-end against a live server, including the SSE log tail.
+- [notebooks/eye_and_stimulus.py](notebooks/eye_and_stimulus.py) — pure Python: a
+  PRBS/PAM4 stimulus, a synthetic channel, the BT4 eye metrics, the eye as a registered
+  `{meas: …}` recipe on a `WaveDataset`, and the fold plot.
 
 ## Testing
 

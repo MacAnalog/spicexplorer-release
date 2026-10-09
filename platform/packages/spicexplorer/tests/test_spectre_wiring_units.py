@@ -49,15 +49,15 @@ def test_native_scs_injects_params_swaps_corner_and_preserves_the_rest():
         temp=85.0,
     )
     assert "parameters vdd=1.2 vcm=0.7 w0=2e-06 l0=0.2u" in out  # merged over defaults
-    assert "section=ss_lvt" in out and "tt_lvt" not in out       # corner replaced
-    assert 'include "dut.scs"' in out                            # DUT include (no section) kept
-    assert "ac ac start=1 stop=1e8 dec=101" in out               # analyses verbatim
+    assert "section=ss_lvt" in out and "tt_lvt" not in out  # corner replaced
+    assert 'include "dut.scs"' in out  # DUT include (no section) kept
+    assert "ac ac start=1 stop=1e8 dec=101" in out  # analyses verbatim
     assert "tempOptions options temp=85" in out
 
 
 def test_native_scs_no_overrides_is_effectively_verbatim():
     out = render_native_scs(NATIVE_SCS)
-    for token in ('section=tt_lvt', 'include "dut.scs"', "ac ac start=1", "dcOp dc"):
+    for token in ("section=tt_lvt", 'include "dut.scs"', "ac ac start=1", "dcOp dc"):
         assert token in out
 
 
@@ -79,11 +79,14 @@ def test_native_scs_handles_backslash_continuation():
 # -- deck_spec_from_native (library composer, opt-in) -----------------------------
 def test_deck_spec_from_native_assembles_a_composable_spec():
     spec = deck_spec_from_native(
-        "tb_ac", 'xdut (v_out) dut', subckt_blocks=['include "dut.scs"'],
-        parameters={"vdd": 1.2}, analyses=["dcOp dc", 'ac ac start=1 stop=1e6 dec=10'],
+        "tb_ac",
+        "xdut (v_out) dut",
+        subckt_blocks=['include "dut.scs"'],
+        parameters={"vdd": 1.2},
+        analyses=["dcOp dc", "ac ac start=1 stop=1e6 dec=10"],
     )
     assert isinstance(spec, SpectreDeckSpec)
-    assert spec.analyses == ("dcOp dc", 'ac ac start=1 stop=1e6 dec=10')
+    assert spec.analyses == ("dcOp dc", "ac ac start=1 stop=1e6 dec=10")
     text = render_spectre_deck(spec, parameters={"vdd": 1.1})
     assert "parameters vdd=1.1" in text and 'include "dut.scs"' in text
 
@@ -105,9 +108,9 @@ def test_merge_scalars_are_authoritative_over_bare_and_prefixed_psf_keys():
     r = SpectreSimResult({"ac_v_out": 0.5, "ugf": 1.0, "ac_gain": 0.5}, raw_dir="/tmp/x.raw")
     assert r.raw_dir == "/tmp/x.raw"
     r.merge_scalars({"ugf": 42.0, "pm": 70.0, "gain": 30.0})
-    assert r.scalar("ugf", "ac") == pytest.approx(42.0)   # bare collision → OCEAN wins
+    assert r.scalar("ugf", "ac") == pytest.approx(42.0)  # bare collision → OCEAN wins
     assert r.scalar("gain", "ac") == pytest.approx(30.0)  # ac_ prefixed collision → OCEAN wins
-    assert r.scalar("pm", "ac") == pytest.approx(70.0)    # no collision
+    assert r.scalar("pm", "ac") == pytest.approx(70.0)  # no collision
     assert r.scalar("v_out", "ac") == pytest.approx(0.5)  # untouched PSF signal
 
 
@@ -138,13 +141,13 @@ def test_build_spectre_routes_scs_netlist_to_native_file_mode(spy_create, tmp_pa
         netlist_filename=deck,
         work_dir=tmp_path / "raw",
         deck_dir=tmp_path / "decks",
-        vb_env_file="/home/x/.virtuoso-bridge/local.env",
+        vb_env_file="/home/<user>/.virtuoso-bridge/local.env",
     )
     assert sim == "SENTINEL_SIM"
     assert spy_create["native_scs"] == deck
     assert spy_create["work_dir"] == tmp_path / "raw"
     assert spy_create["deck_dir"] == tmp_path / "decks"
-    assert spy_create["vb_env_file"] == "/home/x/.virtuoso-bridge/local.env"
+    assert spy_create["vb_env_file"] == "/home/<user>/.virtuoso-bridge/local.env"
     assert "deck_spec" not in spy_create and spy_create.get("netlist") is None
 
 

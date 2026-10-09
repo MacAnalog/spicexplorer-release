@@ -1,0 +1,14 @@
+# Loop margins at the LIGHT load, 0.1 mA (sign-off twin of S8; spec_notes).
+schema: spicexplorer/analysis@1
+id: ac_loopgain_lo
+template: ac_loopgain
+description: "Loop margins at the LIGHT load, 0.1 mA (sign-off twin of S8; spec_notes)."
+params:
+  VDD: 1.5
+  ILOAD: 0.1m
+  COUT: 1p
+  FSTART: 1
+  FSTOP: 1G
+  PPD: 20
+flags: []
+produces: [loopgain_db, ugf_loop, pm_loop, gm_loop_db, ms_peak, tloop_ph_dc]

@@ -12,10 +12,10 @@
     "structural_roles": {
       "XMINN": "differential_pair",
       "XMINP": "differential_pair",
-      "XMOBN1": "current_mirror",
-      "XMOBN2": "current_mirror",
-      "XMOBP1": "current_mirror",
-      "XMOBP2": "current_mirror",
+      "XMOBN1": "inverter",
+      "XMOBN2": "inverter",
+      "XMOBP1": "inverter",
+      "XMOBP2": "inverter",
       "XMTAIL": "tail_current_source"
     }
   },

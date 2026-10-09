@@ -53,7 +53,7 @@ metrics:
     spec: {max: 0.03, unit: V}
   v_dropout:
     display: "Dropout voltage"
-    description: "Vin - Vout at which Vout has fallen to VOUT_THRESH under heavy load."
+    description: "Vin - Vout at the first sweep point where the output is in regulation (at target AND not following Vin), 1 mA load."
     unit: V
     analysis: dropout
     extract: {meas: v_dropout}
@@ -96,7 +96,8 @@ metrics:
     unit: V
     analysis: noise
     extract: {meas: vn_out_rms}
-    spec: {max: 0.02, unit: V}          # ihp-sg13g2 measured 11.7 mVrms
+    spec: {max: 9.5e-5, unit: V}       # 2x the worst regenerated per-PDK value (ihp/sky/gf 29.4/47.7/42.6 uVrms).
+                                       # Pre-fix limit was 0.02 V, calibrated against the sqrt-inflated scale.
   v_line_pp:
     display: "Line-transient deviation"
     description: >-

@@ -62,13 +62,19 @@ def _g(netlist: str, **kw) -> CircuitGraph:
 
 
 def _cascode() -> CircuitGraph:
-    return CircuitGraph.from_netlist(NetlistView.from_file(CASCODE_FLAT), pdk=IHP_SG13G2, name="ota")
+    return CircuitGraph.from_netlist(
+        NetlistView.from_file(CASCODE_FLAT), pdk=IHP_SG13G2, name="ota"
+    )
 
 
 def _step(comp, in_pin, out_pin, in_net="x", out_net="y", device_type=DeviceType.MOS) -> PathStep:
     return PathStep(
-        component=comp, device_type=device_type, in_pin=in_pin, out_pin=out_pin,
-        in_net=in_net, out_net=out_net,
+        component=comp,
+        device_type=device_type,
+        in_pin=in_pin,
+        out_pin=out_pin,
+        in_net=in_net,
+        out_net=out_net,
     )
 
 
@@ -148,8 +154,9 @@ def test_results_are_deterministically_sorted():
     a = find_paths_between(g, "vinp", "vout", max_components=3)
     b = find_paths_between(g, "vinp", "vout", max_components=3)
     assert [p.label for p in a] == [p.label for p in b]
-    assert [p.label for p in a] == sorted([p.label for p in a]) or \
-        [(p.length, p.label) for p in a] == sorted((p.length, p.label) for p in a)
+    assert [p.label for p in a] == sorted([p.label for p in a]) or [
+        (p.length, p.label) for p in a
+    ] == sorted((p.length, p.label) for p in a)
 
 
 def test_diode_connected_device_fans_out_into_pin_level_paths():
@@ -158,8 +165,10 @@ def test_diode_connected_device_fans_out_into_pin_level_paths():
     paths = shortest_paths_between(_g(OTA_CORE), "out1", "vdd")
     m3 = {p.label for p in paths if p.components == ["M3"]}
     assert m3 == {
-        "M3.drain->M3.source", "M3.gate->M3.source",
-        "M3.drain->M3.bulk", "M3.gate->M3.bulk",
+        "M3.drain->M3.source",
+        "M3.gate->M3.source",
+        "M3.drain->M3.bulk",
+        "M3.gate->M3.bulk",
     }
 
 
@@ -197,11 +206,16 @@ def test_diff_device_only_disjoint_devices():
 
 def test_diff_device_pin_when_both_differences_present():
     a = _path([_step("M1", "GATE", "SOURCE"), _step("M2", "DRAIN", "SOURCE")])
-    b = _path([_step("M1", "GATE", "DRAIN"), _step("M9", "DRAIN", "SOURCE")])  # M1 pins differ + M2/M9
+    b = _path(
+        [_step("M1", "GATE", "DRAIN"), _step("M9", "DRAIN", "SOURCE")]
+    )  # M1 pins differ + M2/M9
     d = diff_paths(a, b)
     assert d.kind is DiffKind.DEVICE_PIN
     assert "M1" in d.only_in_a.devices and "M2" in d.only_in_a.devices
-    assert {s.diff_kind for s in d.only_in_a.steps} == {StepDiffKind.PIN_ONLY, StepDiffKind.DEVICE_ONLY}
+    assert {s.diff_kind for s in d.only_in_a.steps} == {
+        StepDiffKind.PIN_ONLY,
+        StepDiffKind.DEVICE_ONLY,
+    }
 
 
 def test_diff_direction_insensitive_is_common():
@@ -255,16 +269,20 @@ def test_respect_mosfet_state_drops_off_channel():
     g = _g(GS_SHORT)
     topo = {p.label for p in find_paths_between(g, "nmid", "nout")}
     cond = {p.label for p in find_paths_between(g, "nmid", "nout", respect_mosfet_state=True)}
-    assert "M2.drain->M2.source" in topo          # the channel hop is present topologically
-    assert "M2.drain->M2.source" not in cond       # …and removed when off
-    assert "M2.drain->M2.gate" in cond             # gate edge remains (channel-only scope)
+    assert "M2.drain->M2.source" in topo  # the channel hop is present topologically
+    assert "M2.drain->M2.source" not in cond  # …and removed when off
+    assert "M2.drain->M2.gate" in cond  # gate edge remains (channel-only scope)
 
 
 def test_depletion_assumption_keeps_the_channel():
     g = _g(GS_SHORT)
-    cond = {p.label for p in find_paths_between(
-        g, "nmid", "nout", respect_mosfet_state=True, gs_short_is_off=False)}
-    assert "M2.drain->M2.source" in cond           # depletion device can still conduct at Vgs=0
+    cond = {
+        p.label
+        for p in find_paths_between(
+            g, "nmid", "nout", respect_mosfet_state=True, gs_short_is_off=False
+        )
+    }
+    assert "M2.drain->M2.source" in cond  # depletion device can still conduct at Vgs=0
 
 
 def test_respect_mosfet_state_defaults_off_and_is_non_breaking():
@@ -278,13 +296,18 @@ def test_diode_connected_channel_is_kept_under_conduction():
     # a diode-connected device is always in saturation -> its channel stays a valid path
     core = _g(OTA_CORE)
     labels = {p.label for p in find_paths_between(core, "out1", "vdd", respect_mosfet_state=True)}
-    assert any(lbl.startswith("M3.drain->M3.source") or lbl == "M3.drain->M3.source" for lbl in labels)
+    assert any(
+        lbl.startswith("M3.drain->M3.source") or lbl == "M3.drain->M3.source" for lbl in labels
+    )
 
 
 def test_drain_source_short_detected_on_real_decoupling_devices():
     g = _cascode()
-    killed = [c.name for c in g.get_components()
-              if isinstance(c, MosfetNode) and c.is_drain_source_shorted(g._G)]
+    killed = [
+        c.name
+        for c in g.get_components()
+        if isinstance(c, MosfetNode) and c.is_drain_source_shorted(g._G)
+    ]
     assert "XMDECOUP1" in killed and "XMDECOUP3" in killed
 
 
@@ -302,7 +325,11 @@ def test_shortest_only_ignores_max_components():
 
 def test_diff_handles_a_device_visited_twice():
     # diff_paths accepts any GraphPath; a device traversed twice must not collapse the comparison.
-    twice = [_step("M1", "DRAIN", "GATE"), _step("M2", "DRAIN", "SOURCE"), _step("M1", "SOURCE", "BULK")]
+    twice = [
+        _step("M1", "DRAIN", "GATE"),
+        _step("M2", "DRAIN", "SOURCE"),
+        _step("M1", "SOURCE", "BULK"),
+    ]
     d = diff_paths(_path(list(twice)), _path(list(twice)))
     assert d.kind is DiffKind.IDENTICAL
     assert not d.only_in_a.steps and not d.only_in_b.steps
@@ -393,8 +420,9 @@ def test_diode_short_is_never_traversed_as_its_own_hop():
             for s in p.steps:
                 if s.component == "M3":
                     saw_m3 = True
-                    assert {s.in_pin, s.out_pin} != {"DRAIN", "GATE"}, \
+                    assert {s.in_pin, s.out_pin} != {"DRAIN", "GATE"}, (
                         f"diode short traversed as a hop: {s.label}"
+                    )
     assert saw_m3, "M3 never appeared on a traced path — the guard would be vacuous"
 
 
@@ -440,7 +468,7 @@ def test_voltage_source_is_traversed_by_default():
 def test_block_voltage_sources_drops_only_the_through_source_route():
     paths = find_paths_between(_g(VSRC_PARALLEL), "a", "b", block_voltage_sources=True)
     assert {tuple(p.components) for p in paths} == {("R1", "R2", "R3")}  # parallel route survives
-    assert all("V1" not in p.components for p in paths)                  # the source is never walked
+    assert all("V1" not in p.components for p in paths)  # the source is never walked
 
 
 def test_block_voltage_sources_can_remove_the_only_route():
@@ -460,7 +488,9 @@ def test_block_voltage_sources_defaults_off_and_is_a_noop_without_sources():
     # The flag defaults to False, and on a source-free graph (OTA_CORE) it changes nothing at all.
     g = _g(OTA_CORE)
     default = [p.label for p in find_paths_between(g, "out1", "vdd")]
-    explicit_off = [p.label for p in find_paths_between(g, "out1", "vdd", block_voltage_sources=False)]
+    explicit_off = [
+        p.label for p in find_paths_between(g, "out1", "vdd", block_voltage_sources=False)
+    ]
     blocked = [p.label for p in find_paths_between(g, "out1", "vdd", block_voltage_sources=True)]
     assert default == explicit_off == blocked
 

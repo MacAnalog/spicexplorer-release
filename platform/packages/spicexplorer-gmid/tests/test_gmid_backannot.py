@@ -50,7 +50,10 @@ def _run_op_deck(deck: str) -> dict[str, float]:
         sp.write_text(deck)
         result = subprocess.run(
             [shutil.which("ngspice"), "-b", str(sp)],  # type: ignore[arg-type]
-            capture_output=True, text=True, timeout=120, cwd=d,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=d,
         )
         vals: dict[str, float] = {}
         for line in result.stdout.splitlines():
@@ -62,10 +65,14 @@ def _run_op_deck(deck: str) -> dict[str, float]:
 
 # ── tests ─────────────────────────────────────────────────────────────────────────────────────────
 
-@pytest.mark.parametrize("gm_id_target,L,vds", [
-    (15.0, 0.5, 0.9),   # moderate inversion — the P3 golden point scaled to IHP VDD=1.5V
-    (10.0, 1.0, 0.9),   # stronger inversion (higher Av0, lower fT)
-])
+
+@pytest.mark.parametrize(
+    "gm_id_target,L,vds",
+    [
+        (15.0, 0.5, 0.9),  # moderate inversion — the P3 golden point scaled to IHP VDD=1.5V
+        (10.0, 1.0, 0.9),  # stronger inversion (higher Av0, lower fT)
+    ],
+)
 def test_gm_id_agrees_with_spice(gm_id_target: float, L: float, vds: float) -> None:
     """gm/ID predicted by the table agrees with an ngspice .op simulation to within TOLERANCE.
 

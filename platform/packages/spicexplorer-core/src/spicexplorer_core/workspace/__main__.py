@@ -7,6 +7,7 @@ Usage::
 Prints the JSON report. Safe to re-run (idempotent); ``--dry-run`` reports what
 would change without touching the filesystem.
 """
+
 from __future__ import annotations
 
 import argparse

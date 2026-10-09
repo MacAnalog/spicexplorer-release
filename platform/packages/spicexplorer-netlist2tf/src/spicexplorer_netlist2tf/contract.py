@@ -1,10 +1,12 @@
 """The single Pydantic I/O contract (`TransferFunctionResult`) + its sub-models.
 
 This is the *one* serializable source feeding OpenAPI→TS codegen and the MCP tool schema when the
-adapters land (deferred to orchestration). Symbols/expressions are canonical sympy **strings**;
-numerics are floats. The result carries BOTH the agent-structured fields (read `tf_simplified_expr`,
-`poles[].value_*`, `assumptions_applied[]`, `validation.passed` as data) AND the designer LaTeX/sympy
-views (computed lazily from the same canonical fields — not a second source of truth).
+adapters land (deferred to orchestration). Symbols/expressions are sympy **strings** in canonical
+``N(s)/D(s)`` form, except a POLE_SEPARATION ``tf_simplified_expr``, which keeps its two first-order
+denominator factors; numerics are floats. The result carries BOTH the agent-structured fields (read
+`tf_simplified_expr`, `poles[].value_*`, `assumptions_applied[]`, `validation.passed` as data) AND the
+designer LaTeX/sympy views (computed lazily from the same canonical fields — not a second source of
+truth).
 
 `AssumptionApplied` and `ValidationReport` live here too (the one-contract rule); they are populated
 by Stage 4 (P5) and remain empty/None on the exact-only path.
@@ -12,18 +14,24 @@ by Stage 4 (P5) and remain empty/None on the exact-only path.
 
 from __future__ import annotations
 
-from typing import cast
+from typing import Literal, cast
 
 import sympy as sp
 from pydantic import BaseModel, Field
 
 __all__ = [
+    "SolvePath",
     "SymbolicValue",
     "ComplexRoot",
     "AssumptionApplied",
     "ValidationReport",
     "TransferFunctionResult",
 ]
+
+#: The regime that produced an ``H(s)``: every symbol kept, or some substituted by number before the
+#: determinant. A third value, ``numeric_refit``, was reserved but never produced; it is retired so
+#: a consumer cannot branch on a case that does not occur.
+SolvePath = Literal["fully_symbolic", "selectively_numericized"]
 
 
 class SymbolicValue(BaseModel):
@@ -109,10 +117,12 @@ class TransferFunctionResult(BaseModel):
     conv_type: str = "se"  # "se" | "diff" | "cm" | "fully_diff"
     model_level: str = "some_parasitic"
     kept_symbolic: list[str] = Field(default_factory=list)
-    solve_path: str = "fully_symbolic"
+    solve_path: SolvePath = "fully_symbolic"
     free_symbols: list[str] = Field(default_factory=list)
     analysis: str = "transfer_function"
-    component_tfs: dict[str, str] = Field(default_factory=dict)  # ratio metrics: {"a_dm": "...", ...}
+    component_tfs: dict[str, str] = Field(
+        default_factory=dict
+    )  # ratio metrics: {"a_dm": "...", ...}
 
     # the transfer function, exact and simplified
     tf_exact_expr: str
@@ -130,6 +140,12 @@ class TransferFunctionResult(BaseModel):
     # S4 trust surface (P5)
     assumptions_applied: list[AssumptionApplied] = Field(default_factory=list)
     validation: ValidationReport | None = None
+    #: refs of devices no registered model could expand. They contribute NOTHING to the MNA, so
+    #: this H(s) is missing their branches entirely. `SmallSignalIR` recorded this all along and
+    #: Stage 2 logs a warning, but the result object carried no trace of it, so the convenience
+    #: API returned a silently incomplete transfer function indistinguishable from a complete one
+    #: (Codex review, item TF-02). Empty means nothing was dropped.
+    unmodelled: list[str] = Field(default_factory=list)
 
     # ---- designer convenience: computed from *_expr, not serialized ----
     def as_sympy(self) -> sp.Expr:

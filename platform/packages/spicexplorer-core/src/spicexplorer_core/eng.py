@@ -9,8 +9,6 @@ parse_value`` call sites keep working unchanged.
 
 from __future__ import annotations
 
-from typing import Dict, Union
-
 import numpy as np
 
 # ------------------ Constants ------------------
@@ -24,18 +22,26 @@ MULTIPLIERS = {
     "k": 1e3,
     "M": 1e6,
     "G": 1e9,
+    # Lowercase giga/tera: orchestration's design-agent value grammar admits lowercase suffixes
+    # only, and 'g'/'t' mean nothing else in the other case, unlike m (milli) / M (mega).
+    # Uppercase 'T' stays unlisted, like 'U' and 'K'.
+    "g": 1e9,
+    "t": 1e12,
 }
 
 # ------------------ Helpers ------------------
 
 
-def parse_value(val: Union[str, float, int]) -> np.float64:
+def parse_value(val: str | float | int) -> np.float64:
     """
     Parse numeric values with optional suffix multipliers.
-    Parses a string like '0.18u', '10u', '1.8', '5MEG', or a number into np.float64.
-    Single-char suffixes ('f' 'p' 'n' 'u' 'm' 'k' 'M' 'G') are case-SENSITIVE — 'm' is milli and
-    'M' is mega — while ngspice's multi-char mega spelling 'meg' is case-INSENSITIVE
-    ('MEG'/'meg'/'Meg' all → 1e6).
+    Parses a string like '0.18u', '10u', '1.8', '5MEG', '2g', or a number into np.float64.
+    Single-char suffixes ('f' 'p' 'n' 'u' 'm' 'k' 'M' 'G' 'g' 't') are case-SENSITIVE — 'm' is
+    milli and 'M' is mega; giga is 'G' or 'g', tera only 't' — while ngspice's multi-char mega
+    spelling 'meg' is case-INSENSITIVE ('MEG'/'meg'/'Meg' all → 1e6).
+
+    This is the YAML DSL's parser. A NETLIST token ('1M' is milli there, and every suffix is
+    case-insensitive) goes through :func:`spicexplorer_core.spice_eng.spice_number` instead.
     """
     if isinstance(val, (float, int)):
         return np.float64(val)
@@ -62,7 +68,7 @@ def parse_value(val: Union[str, float, int]) -> np.float64:
 
 
 def resolve_reference(
-    value: Union[str, float, int], constraints: Dict[str, np.float64 | float]
+    value: str | float | int, constraints: dict[str, np.float64 | float]
 ) -> np.float64:
     """If value is a reference to a constraint key, resolve it, else parse normally."""
     if isinstance(value, str) and value in constraints:

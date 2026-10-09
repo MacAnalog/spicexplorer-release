@@ -34,9 +34,9 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from collections.abc import Iterable, Iterator
 from enum import Enum
 from itertools import product
-from typing import Iterable, Iterator
 
 import networkx as nx
 from pydantic import BaseModel, Field, computed_field
@@ -121,7 +121,10 @@ class PathStep(BaseModel):
     @property
     def touchpoints(self) -> list[str]:
         """The two ``device.pin`` endpoints of this traversal (lower-cased)."""
-        return [f"{self.component}.{self.in_pin.lower()}", f"{self.component}.{self.out_pin.lower()}"]
+        return [
+            f"{self.component}.{self.in_pin.lower()}",
+            f"{self.component}.{self.out_pin.lower()}",
+        ]
 
     @computed_field
     @property
@@ -228,7 +231,12 @@ class PathDiff(BaseModel):
 
     def describe(self) -> str:
         return "\n\n".join(
-            [self.summary, self.only_in_a.describe(), self.only_in_b.describe(), self.common.describe()]
+            [
+                self.summary,
+                self.only_in_a.describe(),
+                self.only_in_b.describe(),
+                self.common.describe(),
+            ]
         )
 
 
@@ -423,7 +431,7 @@ class PathList(list["GraphPath"]):
 
     def __init__(
         self,
-        paths: Iterable["GraphPath"] = (),
+        paths: Iterable[GraphPath] = (),
         *,
         truncated: bool = False,
         cap: int | None = None,
@@ -563,7 +571,11 @@ def find_paths_between(
             "result is the %d shortest paths, NOT the complete set (ties within that last band are "
             "arbitrary); raise max_paths, or bound the search with "
             "max_components/through_supply=False",
-            na.name, nb.name, max_paths, paths[-1].length if paths else 0, len(paths),
+            na.name,
+            nb.name,
+            max_paths,
+            paths[-1].length if paths else 0,
+            len(paths),
         )
     return PathList(paths, truncated=truncated, cap=max_paths)
 

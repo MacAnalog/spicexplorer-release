@@ -1,4 +1,5 @@
 """Shared library + agent context surface: decisions → PROJECT.md."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -48,8 +49,8 @@ def test_published_versions_are_immutable(tmp_path: Path):
     _cell(proj, "ota")
     publish_cell(proj, "ota", version="v1", root=tmp_path)
     with pytest.raises(FileExistsError):
-        publish_cell(proj, "ota", version="v1", root=tmp_path)   # can't overwrite a version
-    publish_cell(proj, "ota", version="v2", root=tmp_path)       # a new version is fine
+        publish_cell(proj, "ota", version="v1", root=tmp_path)  # can't overwrite a version
+    publish_cell(proj, "ota", version="v2", root=tmp_path)  # a new version is fine
     lib = list_library(tmp_path)
     assert {(e["cell"], e["version"]) for e in lib} == {("ota", "v1"), ("ota", "v2")}
 
@@ -62,9 +63,9 @@ def test_import_refuses_to_clobber_existing_local_cell(tmp_path: Path):
 
     dst = tmp_path / "projects" / "dst-000000ff"
     dst.mkdir(parents=True)
-    _cell(dst, "ota", sizing="W: 99u (hand-tuned)\n")   # a precious local cell
+    _cell(dst, "ota", sizing="W: 99u (hand-tuned)\n")  # a precious local cell
     with pytest.raises(FileExistsError):
-        import_cell("ota", "v1", dst, root=tmp_path)     # must NOT silently clobber
+        import_cell("ota", "v1", dst, root=tmp_path)  # must NOT silently clobber
     assert (dst / "design" / "cells" / "ota" / "sizing.yaml").read_text() == "W: 99u (hand-tuned)\n"
     # explicit opt-in replaces it
     import_cell("ota", "v1", dst, root=tmp_path, overwrite=True)
@@ -78,7 +79,7 @@ def test_publish_leaves_no_partial_wedge(tmp_path: Path):
     _cell(proj, "ota")
     publish_cell(proj, "ota", version="v1", root=tmp_path)
     cell_dir = tmp_path / "shared" / "lib" / "ota"
-    assert [p.name for p in cell_dir.iterdir()] == ["v1"]          # no leftover .staging dir
+    assert [p.name for p in cell_dir.iterdir()] == ["v1"]  # no leftover .staging dir
     assert (cell_dir / "v1" / "lib_meta.json").is_file()
 
 
@@ -101,19 +102,21 @@ def test_project_md_is_generated_from_state_and_decisions(tmp_path: Path):
     (pdir / "verify").mkdir()
     (pdir / "verify" / "plan.yaml").write_text(
         "specs:\n  gain_db:\n    measurement: dcgain\n    corners: [tt]\n"
-        "    aggregate: min\n    target: \">= 40\"\n")
+        '    aggregate: min\n    target: ">= 40"\n'
+    )
     rd = pdir / "runs" / "20260715-100000_optimize_abcd1234"
     rd.mkdir(parents=True)
     (rd / "run.json").write_text(
         '{"run_id": "20260715-100000_optimize_abcd1234", "status": "done",'
         ' "best_score": -0.4, "kind": "optimize", "envelope": 1,'
-        ' "metrics": {"dcgain": 44.0}, "coordinates": {"corner": "tt"}}')
+        ' "metrics": {"dcgain": 44.0}, "coordinates": {"corner": "tt"}}'
+    )
     append_decision(pdir, {"summary": "accepted the 44 dB sizing", "by": "human"})
 
     md = render_project_md(pdir)
     assert (pdir / "context" / "PROJECT.md").is_file()
     assert "# Folded-Cascode OTA" in md
     assert "GENERATED" in md
-    assert "✅" in md and "gain_db" in md            # compliance rendered (44 >= 40)
-    assert "abcd1234" in md                          # best run
-    assert "accepted the 44 dB sizing" in md         # recent decision
+    assert "✅" in md and "gain_db" in md  # compliance rendered (44 >= 40)
+    assert "abcd1234" in md  # best run
+    assert "accepted the 44 dB sizing" in md  # recent decision

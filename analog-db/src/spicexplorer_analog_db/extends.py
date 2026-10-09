@@ -58,7 +58,11 @@ def _dut_params(sizing: dict[str, Any]) -> list[dict[str, Any]]:
     """sizing.yaml variables → the optimizer ``dut_params`` list."""
     params: list[dict[str, Any]] = []
     for var in sizing.get("variables", []):
-        p: dict[str, Any] = {"name": var["name"], "min_val": var.get("min"), "max_val": var.get("max")}
+        p: dict[str, Any] = {
+            "name": var["name"],
+            "min_val": var.get("min"),
+            "max_val": var.get("max"),
+        }
         if var.get("is_integer"):
             p["is_integer"] = True
         if var.get("freeze"):

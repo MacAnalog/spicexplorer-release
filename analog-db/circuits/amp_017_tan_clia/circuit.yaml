@@ -21,7 +21,7 @@ provenance:
   - tan_clia_pin_3
   paper: M. Tan & W.-H. Ki, IEEE JSSC 50(2):440-449, 2015
   license: BSD-3-Clause
-  note: "ngspice load error (model resolution) \u2014 under investigation"
+  note: "imported as incomplete (an ngspice load error, model resolution); since #55 every bound PDK has a recorded baseline whose analyses all run (scoreboard/baselines.yaml)"
 artifacts:
   abstract_netlist: abstract/netlist.spice
   graph: abstract/topology.cgraph.json
@@ -41,4 +41,4 @@ analyses:
 - thd
 - iip3
 - stb
-status: incomplete
+status: draft

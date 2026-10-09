@@ -71,7 +71,8 @@ metrics:
     unit: V
     analysis: noise
     extract: {meas: vn_out_rms}
-    spec: {max: 0.02, unit: V}
+    spec: {max: 1.6e-4, unit: V}       # 2x the worst regenerated per-PDK value (ihp/sky/gf 41.5/80.8/51.5 uVrms).
+                                       # Pre-fix limit was 0.02 V, calibrated against the sqrt-inflated scale.
   v_line_pp:
     display: "Line-step p2p deviation (1.6 -> 2.0 V)"
     unit: V

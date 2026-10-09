@@ -15,8 +15,11 @@ Resolution order:
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 ENV_VAR = "SPICEXPLORER_ANALOG_DB"
 
@@ -31,10 +34,12 @@ def _legacy_in_tree_root() -> Path | None:
     try:
         from spicexplorer_core import project_root  # optional; only present with the platform
     except Exception:
+        logger.debug("spicexplorer_core not importable; no in-tree DB root", exc_info=True)
         return None
     try:
         examples = project_root() / "examples"
     except Exception:
+        logger.debug("no platform project root; no in-tree DB root", exc_info=True)
         return None
     submodule = examples / "analog-db"
     if (submodule / "circuits").is_dir():
@@ -80,6 +85,11 @@ def shared_templates_root() -> Path:
 
 def catalog_path() -> Path:
     return db_root() / "catalog.json"
+
+
+def verify_status_path() -> Path:
+    """The committed verify report the catalog reads each circuit's derived rung from."""
+    return db_root() / "verify_status.json"
 
 
 def db_present() -> bool:

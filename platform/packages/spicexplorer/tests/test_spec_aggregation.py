@@ -22,9 +22,11 @@ composition.
 
 No SPICE, no PDK.
 """
+
 from __future__ import annotations
 
 from types import SimpleNamespace
+from typing import Any
 
 import numpy as np
 import pytest
@@ -56,11 +58,17 @@ def _agg(scores, strategy="feasibility_reward", params=None):
     return aggregate_spec_scores({k: F(v) for k, v in scores.items()}, strategy, params)
 
 
-def _tb(scores, strategy, params=None, tie_breaker=None,
-        tie_breaker_weight=DEFAULT_TIE_BREAKER_WEIGHT):
+def _tb(
+    scores, strategy, params=None, tie_breaker=None, tie_breaker_weight=DEFAULT_TIE_BREAKER_WEIGHT
+):
     """`_agg` with the opt-in tie-breaker wired through (section 8)."""
-    return aggregate_spec_scores({k: F(v) for k, v in scores.items()}, strategy, params,
-                                 tie_breaker=tie_breaker, tie_breaker_weight=tie_breaker_weight)
+    return aggregate_spec_scores(
+        {k: F(v) for k, v in scores.items()},
+        strategy,
+        params,
+        tie_breaker=tie_breaker,
+        tie_breaker_weight=tie_breaker_weight,
+    )
 
 
 def _legacy(scores):
@@ -71,24 +79,29 @@ def _legacy(scores):
 
 
 # =========================================================== 1. regression: the historical default
-@pytest.mark.parametrize("scores", [
-    {},                                            # degenerate: every spec disabled
-    {"a": 0.0},                                    # exactly met
-    {"a": 5.0, "b": 2.0},                          # all satisfied, rewards present
-    {"a": -3.0},                                   # one violation
-    {"a": -3.0, "b": -1.0},                        # several violations
-    {"a": -3.0, "b": 7.0},                         # mixed: reward must be masked
-    {"a": -1e-15},                                 # penalty dust below EPSILON -> feasible
-    {"a": -float(MAX_PENALTY)},                    # failed simulation
-    {"a": -float(MAX_PENALTY), "b": 9.0},
-])
+@pytest.mark.parametrize(
+    "scores",
+    [
+        {},  # degenerate: every spec disabled
+        {"a": 0.0},  # exactly met
+        {"a": 5.0, "b": 2.0},  # all satisfied, rewards present
+        {"a": -3.0},  # one violation
+        {"a": -3.0, "b": -1.0},  # several violations
+        {"a": -3.0, "b": 7.0},  # mixed: reward must be masked
+        {"a": -1e-15},  # penalty dust below EPSILON -> feasible
+        {"a": -float(MAX_PENALTY)},  # failed simulation
+        {"a": -float(MAX_PENALTY), "b": 9.0},
+    ],
+)
 def test_feasibility_reward_reproduces_the_old_inline_rule(scores):
     assert _agg(scores) == pytest.approx(_legacy(scores))
 
 
 def test_default_strategy_is_feasibility_reward():
     scores = {"a": -3.0, "b": 7.0}
-    assert aggregate_spec_scores({k: F(v) for k, v in scores.items()}) == pytest.approx(_agg(scores))
+    assert aggregate_spec_scores({k: F(v) for k, v in scores.items()}) == pytest.approx(
+        _agg(scores)
+    )
 
 
 def test_epsilon_dust_counts_as_feasible():
@@ -126,15 +139,17 @@ def test_augmentation_breaks_ties_the_pure_min_max_cannot_see():
     search cannot descend. Same worst spec, strictly better elsewhere, must score strictly better."""
     worse = {"a": -5.0, "b": -4.0}
     better = {"a": -5.0, "b": -0.1}
-    assert _agg(better, "chebyshev", {"rho": 0.0}) == pytest.approx(_agg(worse, "chebyshev", {"rho": 0.0}))
+    assert _agg(better, "chebyshev", {"rho": 0.0}) == pytest.approx(
+        _agg(worse, "chebyshev", {"rho": 0.0})
+    )
     assert _agg(better, "chebyshev") > _agg(worse, "chebyshev")
 
 
 def test_rho_stays_small_enough_that_the_worst_spec_still_dominates():
     """If rho were large, chebyshev would silently become a weighted sum."""
     rho = AGGREGATION_SHAPE_PARAMS["chebyshev"]["rho"]
-    many_small = {f"s{i}": -1.0 for i in range(20)}      # sum 20, worst 1
-    one_big = {"s": -5.0}                                # sum 5, worst 5
+    many_small = {f"s{i}": -1.0 for i in range(20)}  # sum 20, worst 1
+    one_big = {"s": -5.0}  # sum 5, worst 5
     assert _agg(one_big, "chebyshev") < _agg(many_small, "chebyshev")
     assert rho < 0.05
 
@@ -222,9 +237,16 @@ def test_params_on_a_strategy_that_takes_none_are_ignored():
 
 
 def _config(**kw):
-    base = dict(name="NGOpt", type="nevergrad", budget=10, optimizer_kwargs=None,
-                target_specs=SimpleNamespace(targets=[]), lin_variable_bounds=None,
-                log_variable_bounds=None, loss_function_config=None, random_seed=None)
+    base: dict[str, Any] = dict(
+        name="NGOpt",
+        type="nevergrad",
+        budget=10,
+        optimizer_kwargs=None,
+        target_specs=SimpleNamespace(targets=[]),
+        lin_variable_bounds=None,
+        log_variable_bounds=None,
+        random_seed=None,
+    )
     base.update(kw)
     return OptimizerConfig(**base)
 
@@ -261,12 +283,14 @@ class _Scorer:
         self.target_specs = SimpleNamespace(enabled_targets=lambda: specs)
         self.verbose = False
         self.optimizer_config = SimpleNamespace(
-            spec_aggregation=strategy, aggregation_params=params)
+            spec_aggregation=strategy, aggregation_params=params
+        )
 
     compute_fitness = Spice_Constraint_Satisfaction.compute_fitness
     compute_fitness_for_spec = Spice_Constraint_Satisfaction.compute_fitness_for_spec
     compute_constraint_violation_penalty_for_spec = (
-        Spice_Constraint_Satisfaction.compute_constraint_violation_penalty_for_spec)
+        Spice_Constraint_Satisfaction.compute_constraint_violation_penalty_for_spec
+    )
 
 
 def _spec(name, target, goal="exceed", **kw):
@@ -274,8 +298,16 @@ def _spec(name, target, goal="exceed", **kw):
     # replaced by 5 % of target (pinned in test_relative_gaussian_error), and the penalty is
     # measured from the band edge `target - tolerance`, not from the bare target. Leaving it at 0
     # would make every expected number below an accident of that substitution.
-    base = dict(name=name, testbench="tb", target=target, goal=goal, sim_type="ac",
-                range=10.0, tolerance=1.0, error_type="relative-absolute")
+    base: dict[str, Any] = dict(
+        name=name,
+        testbench="tb",
+        target=target,
+        goal=goal,
+        sim_type="ac",
+        range=10.0,
+        tolerance=1.0,
+        error_type="relative-absolute",
+    )
     base.update(kw)
     return TargetSpec(**base)
 
@@ -320,7 +352,7 @@ def test_fit_summary_is_unaffected_by_the_strategy():
 
 def test_a_missing_metric_still_scores_max_penalty_under_every_strategy():
     specs = [_spec("gain", 40.0), _spec("ugf", 100.0)]
-    perf = {"gain": np.float64(45.0)}                    # `ugf` never measured
+    perf = {"gain": np.float64(45.0)}  # `ugf` never measured
     for strategy in SPEC_SCORE_AGGREGATORS:
         total, summary = _Scorer(specs, strategy).compute_fitness(perf)
         assert summary["ugf"]["score"] == pytest.approx(-float(MAX_PENALTY))
@@ -379,15 +411,24 @@ def test_the_default_path_is_bit_identical_to_before_the_key_existed(strategy):
     """Not `approx`: a historical run's objective must reproduce to the last bit, and an omitted
     key and an explicit `tie_breaker=None` must be the same call."""
     rng = np.random.default_rng(20260816)
-    cases = [{}, {"a": 0.0}, {"a": 5.0, "b": 2.0}, {"a": -3.0, "b": 7.0},
-             {"a": -float(EPSILON) / 2, "b": 4.0}, {"a": -float(MAX_PENALTY), "b": 9.0}]
-    cases += [{f"s{i}": float(v) for i, v in enumerate(rng.uniform(-10, 10, size=5))}
-              for _ in range(100)]
+    cases = [
+        {},
+        {"a": 0.0},
+        {"a": 5.0, "b": 2.0},
+        {"a": -3.0, "b": 7.0},
+        {"a": -float(EPSILON) / 2, "b": 4.0},
+        {"a": -float(MAX_PENALTY), "b": 9.0},
+    ]
+    cases += [
+        {f"s{i}": float(v) for i, v in enumerate(rng.uniform(-10, 10, size=5))} for _ in range(100)
+    ]
     for scores in cases:
         expected = _pre_tie_breaker_oracle(scores, strategy)
         assert _agg(scores, strategy) == expected, (strategy, scores)
-        assert aggregate_spec_scores({k: F(v) for k, v in scores.items()}, strategy,
-                                     tie_breaker=None) == expected, (strategy, scores)
+        assert (
+            aggregate_spec_scores({k: F(v) for k, v in scores.items()}, strategy, tie_breaker=None)
+            == expected
+        ), (strategy, scores)
 
 
 @pytest.mark.parametrize("strategy", ("weighted_sum", "chebyshev"))
@@ -410,7 +451,7 @@ def test_the_tie_breaker_leaves_the_infeasible_region_untouched(strategy):
     rng = np.random.default_rng(20260817)
     for _ in range(200):
         scores = {f"s{i}": float(v) for i, v in enumerate(rng.uniform(-10, 10, size=4))}
-        scores["violated"] = -float(rng.uniform(0.5, 50.0))          # forces infeasibility
+        scores["violated"] = -float(rng.uniform(0.5, 50.0))  # forces infeasibility
         assert _tb(scores, strategy, tie_breaker="objective") == _agg(scores, strategy)
 
 
@@ -421,13 +462,19 @@ def test_the_weight_is_cosmetic_and_never_changes_the_ordering(strategy, weight)
     wherever the term applies, so EVERY positive weight induces the same ordering. Pinned over
     six decades so nobody has to reason about how small "small enough" is."""
     rng = np.random.default_rng(20260818)
-    points = [{f"s{i}": float(v) for i, v in enumerate(rng.uniform(0.0, 500.0, size=4))}
-              for _ in range(40)]
-    ref = sorted(range(len(points)),
-                 key=lambda i: float(_tb(points[i], strategy, tie_breaker="objective")))
-    got = sorted(range(len(points)),
-                 key=lambda i: float(_tb(points[i], strategy, tie_breaker="objective",
-                                         tie_breaker_weight=weight)))
+    points = [
+        {f"s{i}": float(v) for i, v in enumerate(rng.uniform(0.0, 500.0, size=4))}
+        for _ in range(40)
+    ]
+    ref = sorted(
+        range(len(points)), key=lambda i: float(_tb(points[i], strategy, tie_breaker="objective"))
+    )
+    got = sorted(
+        range(len(points)),
+        key=lambda i: float(
+            _tb(points[i], strategy, tie_breaker="objective", tie_breaker_weight=weight)
+        ),
+    )
     assert got == ref
 
 
@@ -437,8 +484,9 @@ def test_feasibility_still_strictly_dominates_with_the_tie_breaker_on(strategy):
     reaches it — the lexicographic ordering the flag must not be able to invert, even at w=1."""
     feasible = _tb({"a": 0.0, "b": 1e-9}, strategy, tie_breaker="objective", tie_breaker_weight=1.0)
     for penalty in (1e-9, 1.0, float(MAX_PENALTY)):
-        infeasible = _tb({"a": -penalty, "b": 1e9}, strategy, tie_breaker="objective",
-                         tie_breaker_weight=1.0)
+        infeasible = _tb(
+            {"a": -penalty, "b": 1e9}, strategy, tie_breaker="objective", tie_breaker_weight=1.0
+        )
         assert infeasible < 0 <= feasible, (strategy, penalty)
 
 
@@ -452,8 +500,10 @@ def test_monotone_non_decreasing_with_the_tie_breaker_on(strategy):
         for key in base:
             better = dict(base)
             better[key] = base[key] + float(rng.uniform(0.01, 3.0))
-            assert (_tb(better, strategy, tie_breaker="objective")
-                    >= _tb(base, strategy, tie_breaker="objective") - 1e-12), (strategy, key, base)
+            assert (
+                _tb(better, strategy, tie_breaker="objective")
+                >= _tb(base, strategy, tie_breaker="objective") - 1e-12
+            ), (strategy, key, base)
 
 
 def test_the_tie_breaker_is_a_no_op_under_feasibility_reward():
@@ -462,8 +512,9 @@ def test_the_tie_breaker_is_a_no_op_under_feasibility_reward():
     rng = np.random.default_rng(20260820)
     for _ in range(100):
         scores = {f"s{i}": float(v) for i, v in enumerate(rng.uniform(-10, 10, size=4))}
-        assert (_tb(scores, "feasibility_reward", tie_breaker="objective")
-                == _agg(scores, "feasibility_reward"))
+        assert _tb(scores, "feasibility_reward", tie_breaker="objective") == _agg(
+            scores, "feasibility_reward"
+        )
 
 
 def test_an_unknown_tie_breaker_is_rejected():
@@ -496,8 +547,7 @@ def test_optimizer_config_validates_the_tie_breaker_at_load():
 @pytest.mark.parametrize("weight", (0.0, -1.0, float("nan"), float("inf")))
 def test_optimizer_config_rejects_a_degenerate_tie_breaker_weight(weight):
     with pytest.raises(ValueError, match="tie_breaker_weight"):
-        _config(spec_aggregation="weighted_sum", tie_breaker="objective",
-                tie_breaker_weight=weight)
+        _config(spec_aggregation="weighted_sum", tie_breaker="objective", tie_breaker_weight=weight)
 
 
 def test_a_degenerate_weight_is_only_checked_when_the_tie_breaker_is_on():
@@ -506,8 +556,7 @@ def test_a_degenerate_weight_is_only_checked_when_the_tie_breaker_is_on():
 
 
 def test_optimizer_config_normalizes_the_tie_breaker_and_keeps_the_weight():
-    cfg = _config(spec_aggregation="chebyshev", tie_breaker=" Objective ",
-                  tie_breaker_weight=1e-3)
+    cfg = _config(spec_aggregation="chebyshev", tie_breaker=" Objective ", tie_breaker_weight=1e-3)
     assert cfg.tie_breaker == "objective"
     assert cfg.tie_breaker_weight == 1e-3
 
@@ -533,8 +582,10 @@ class _SingleObjectiveScorer(_Scorer):
 
 
 def _scorer(strategy, tie_breaker=None, weight=DEFAULT_TIE_BREAKER_WEIGHT):
-    specs = [_spec("gain", 40.0, reward_type="relative-absolute"),
-             _spec("ugf", 100.0, reward_type="relative-absolute")]
+    specs = [
+        _spec("gain", 40.0, reward_type="relative-absolute"),
+        _spec("ugf", 100.0, reward_type="relative-absolute"),
+    ]
     s = _SingleObjectiveScorer(specs, strategy)
     s.optimizer_config.tie_breaker = tie_breaker
     s.optimizer_config.tie_breaker_weight = weight
@@ -547,8 +598,12 @@ def test_the_scorer_default_is_unchanged_by_the_new_key(strategy):
     — the API's score preview builds one of those."""
     perf = {"gain": np.float64(55.0), "ugf": np.float64(140.0)}
     legacy = _SingleObjectiveScorer(
-        [_spec("gain", 40.0, reward_type="relative-absolute"),
-         _spec("ugf", 100.0, reward_type="relative-absolute")], strategy)
+        [
+            _spec("gain", 40.0, reward_type="relative-absolute"),
+            _spec("ugf", 100.0, reward_type="relative-absolute"),
+        ],
+        strategy,
+    )
     assert not hasattr(legacy.optimizer_config, "tie_breaker")
     assert legacy.compute_fitness(perf)[0] == _scorer(strategy).compute_fitness(perf)[0]
 
@@ -602,12 +657,26 @@ def test_the_fit_summary_is_unaffected_by_the_tie_breaker():
 _MW = dict(weight=0.5)
 
 
-def _mr(scores, strategy, margins=None, weight=0.0, clip=DEFAULT_MARGIN_REWARD_CLIP,
-        tie_breaker=None, tie_breaker_weight=DEFAULT_TIE_BREAKER_WEIGHT, params=None):
-    return aggregate_spec_scores({k: F(v) for k, v in scores.items()}, strategy, params,
-                                 tie_breaker=tie_breaker, tie_breaker_weight=tie_breaker_weight,
-                                 spec_margins=margins, margin_reward_weight=weight,
-                                 margin_reward_clip=clip)
+def _mr(
+    scores,
+    strategy,
+    margins=None,
+    weight=0.0,
+    clip=DEFAULT_MARGIN_REWARD_CLIP,
+    tie_breaker=None,
+    tie_breaker_weight=DEFAULT_TIE_BREAKER_WEIGHT,
+    params=None,
+):
+    return aggregate_spec_scores(
+        {k: F(v) for k, v in scores.items()},
+        strategy,
+        params,
+        tie_breaker=tie_breaker,
+        tie_breaker_weight=tie_breaker_weight,
+        spec_margins=margins,
+        margin_reward_weight=weight,
+        margin_reward_clip=clip,
+    )
 
 
 # ---- bit-identity of the default
@@ -616,10 +685,17 @@ def test_margin_reward_weight_zero_is_bit_identical_to_before_the_key_existed(st
     """Not `approx`. Weight 0 must reproduce the pre-key formulas exactly, and passing margins
     with weight 0 must be indistinguishable from passing none at all."""
     rng = np.random.default_rng(20260823)
-    cases = [{}, {"a": 0.0}, {"a": 5.0, "b": 2.0}, {"a": -3.0, "b": 7.0},
-             {"a": -float(EPSILON) / 2, "b": 4.0}, {"a": -float(MAX_PENALTY), "b": 9.0}]
-    cases += [{f"s{i}": float(v) for i, v in enumerate(rng.uniform(-10, 10, size=5))}
-              for _ in range(100)]
+    cases = [
+        {},
+        {"a": 0.0},
+        {"a": 5.0, "b": 2.0},
+        {"a": -3.0, "b": 7.0},
+        {"a": -float(EPSILON) / 2, "b": 4.0},
+        {"a": -float(MAX_PENALTY), "b": 9.0},
+    ]
+    cases += [
+        {f"s{i}": float(v) for i, v in enumerate(rng.uniform(-10, 10, size=5))} for _ in range(100)
+    ]
     for scores in cases:
         margins = {k: float(rng.uniform(-2, 2)) for k in scores}
         expected = _pre_tie_breaker_oracle(scores, strategy)
@@ -677,8 +753,9 @@ def test_the_reward_saturates_at_the_clip(strategy):
 def test_the_clip_bounds_the_term_far_below_max_reward(strategy):
     """The point of bounding it: a merely-roomy design must never approach the best score the
     scorer can emit, or it becomes a permanent global best."""
-    huge = _mr({"a": 2.0}, strategy, margins={"a": 1e9}, weight=1.0,
-               clip=DEFAULT_MARGIN_REWARD_CLIP)
+    huge = _mr(
+        {"a": 2.0}, strategy, margins={"a": 1e9}, weight=1.0, clip=DEFAULT_MARGIN_REWARD_CLIP
+    )
     assert float(huge) - float(_agg({"a": 2.0}, strategy)) <= DEFAULT_MARGIN_REWARD_CLIP
 
 
@@ -701,8 +778,9 @@ def test_an_infeasible_trial_is_unaffected_by_the_margin_reward(strategy):
 
 @pytest.mark.parametrize("strategy", SPEC_SCORE_AGGREGATORS)
 def test_margin_reward_cannot_lift_an_infeasible_trial_above_a_feasible_one(strategy):
-    infeasible = _mr({"a": -0.001, "b": 5.0}, strategy, margins={"a": 9.0, "b": 9.0},
-                     weight=1e3, clip=1e3)
+    infeasible = _mr(
+        {"a": -0.001, "b": 5.0}, strategy, margins={"a": 9.0, "b": 9.0}, weight=1e3, clip=1e3
+    )
     feasible = _mr({"a": 0.0, "b": 0.0}, strategy, margins={"a": 0.0, "b": 0.0}, **_MW)
     assert infeasible < 0 <= feasible
 
@@ -714,9 +792,11 @@ def test_the_margin_reward_is_NOT_a_no_op_under_feasibility_reward():
     pays for robustness geometry the objectives do not express, so it applies there too."""
     scores = {"a": 3.0, "b": 1.0}
     assert _tb(scores, "feasibility_reward", tie_breaker="objective") == _agg(
-        scores, "feasibility_reward")
+        scores, "feasibility_reward"
+    )
     assert _mr(scores, "feasibility_reward", margins={"a": 0.5, "b": 0.5}, **_MW) > _agg(
-        scores, "feasibility_reward")
+        scores, "feasibility_reward"
+    )
 
 
 @pytest.mark.parametrize("strategy", ("weighted_sum", "chebyshev"))
@@ -728,10 +808,12 @@ def test_both_terms_on_compose_additively_in_the_documented_order(strategy):
     base = _agg(scores, strategy)
     tb_only = _tb(scores, strategy, tie_breaker="objective", tie_breaker_weight=1e-6)
     m_only = _mr(scores, strategy, margins=margins, **_MW)
-    both = _mr(scores, strategy, margins=margins, tie_breaker="objective",
-               tie_breaker_weight=1e-6, **_MW)
-    assert float(both) == pytest.approx(float(base) + (float(tb_only) - float(base))
-                                        + (float(m_only) - float(base)))
+    both = _mr(
+        scores, strategy, margins=margins, tie_breaker="objective", tie_breaker_weight=1e-6, **_MW
+    )
+    assert float(both) == pytest.approx(
+        float(base) + (float(tb_only) - float(base)) + (float(m_only) - float(base))
+    )
 
 
 @pytest.mark.parametrize("strategy", SPEC_SCORE_AGGREGATORS)
@@ -766,8 +848,10 @@ def test_a_degenerate_margin_reward_clip_is_rejected(clip):
 
 
 def test_resolve_margin_reward_defaults_are_off_and_unit_clip():
-    assert resolve_margin_reward(None, None) == (DEFAULT_MARGIN_REWARD_WEIGHT,
-                                                 DEFAULT_MARGIN_REWARD_CLIP)
+    assert resolve_margin_reward(None, None) == (
+        DEFAULT_MARGIN_REWARD_WEIGHT,
+        DEFAULT_MARGIN_REWARD_CLIP,
+    )
     assert DEFAULT_MARGIN_REWARD_WEIGHT == 0.0
 
 
@@ -777,8 +861,13 @@ def test_optimizer_config_defaults_leave_the_margin_reward_off():
     assert cfg.margin_reward_clip == DEFAULT_MARGIN_REWARD_CLIP
 
 
-@pytest.mark.parametrize("bad,match", [({"margin_reward_weight": -1.0}, "margin_reward_weight"),
-                                       ({"margin_reward_clip": 0.0}, "margin_reward_clip")])
+@pytest.mark.parametrize(
+    "bad,match",
+    [
+        ({"margin_reward_weight": -1.0}, "margin_reward_weight"),
+        ({"margin_reward_clip": 0.0}, "margin_reward_clip"),
+    ],
+)
 def test_optimizer_config_validates_the_margin_reward_at_load(bad, match):
     with pytest.raises(ValueError, match=match):
         _config(**bad)
@@ -795,12 +884,12 @@ def test_normalized_margin_uses_the_reward_boundary_and_the_spec_range():
     """NOT `(value - target)/|target|`: the platform measures from the tolerance-adjusted boundary
     and normalizes by `range`. `/|target|` would divide by zero on a legitimate `target: 0` spec
     and collapse every `log_scale` spec."""
-    exceed = _spec("gain", 40.0, goal="exceed")          # range 10, tolerance 1 -> boundary 39
+    exceed = _spec("gain", 40.0, goal="exceed")  # range 10, tolerance 1 -> boundary 39
     assert float(normalized_spec_margin(49.0, exceed)) == pytest.approx(1.0)
     assert float(normalized_spec_margin(39.0, exceed)) == pytest.approx(0.0)
     assert float(normalized_spec_margin(29.0, exceed)) == pytest.approx(-1.0)
 
-    mini = _spec("power", 40.0, goal="minimize")          # boundary 41
+    mini = _spec("power", 40.0, goal="minimize")  # boundary 41
     assert float(normalized_spec_margin(31.0, mini)) == pytest.approx(1.0)
     assert float(normalized_spec_margin(41.0, mini)) == pytest.approx(0.0)
     assert float(normalized_spec_margin(51.0, mini)) == pytest.approx(-1.0)
@@ -827,8 +916,12 @@ def test_normalized_margin_is_none_for_an_unscoreable_reading(bad):
 
 
 def test_normalized_margin_is_none_for_a_non_positive_log_scale_reading():
-    assert normalized_spec_margin(0.0, _spec("power", 1e-3, goal="minimize", log_scale=True,
-                                             range=1e-3, tolerance=1e-4)) is None
+    assert (
+        normalized_spec_margin(
+            0.0, _spec("power", 1e-3, goal="minimize", log_scale=True, range=1e-3, tolerance=1e-4)
+        )
+        is None
+    )
 
 
 def test_normalized_margin_uses_decade_space_under_log_scale():
@@ -843,8 +936,10 @@ def test_normalized_margin_uses_decade_space_under_log_scale():
 
 # ---- through the real scorer
 def _margin_scorer(strategy, weight=0.0, clip=DEFAULT_MARGIN_REWARD_CLIP):
-    specs = [_spec("gain", 40.0, reward_type="relative-absolute"),
-             _spec("ugf", 100.0, reward_type="relative-absolute")]
+    specs = [
+        _spec("gain", 40.0, reward_type="relative-absolute"),
+        _spec("ugf", 100.0, reward_type="relative-absolute"),
+    ]
     s = _SingleObjectiveScorer(specs, strategy)
     s.optimizer_config.tie_breaker = None
     s.optimizer_config.tie_breaker_weight = DEFAULT_TIE_BREAKER_WEIGHT
@@ -858,8 +953,12 @@ def test_the_scorer_default_is_unchanged_by_the_margin_key(strategy):
     """A config stand-in predating the key (no attribute at all) must score exactly as before."""
     perf = {"gain": np.float64(55.0), "ugf": np.float64(140.0)}
     legacy = _SingleObjectiveScorer(
-        [_spec("gain", 40.0, reward_type="relative-absolute"),
-         _spec("ugf", 100.0, reward_type="relative-absolute")], strategy)
+        [
+            _spec("gain", 40.0, reward_type="relative-absolute"),
+            _spec("ugf", 100.0, reward_type="relative-absolute"),
+        ],
+        strategy,
+    )
     assert not hasattr(legacy.optimizer_config, "margin_reward_weight")
     assert legacy.compute_fitness(perf)[0] == _margin_scorer(strategy).compute_fitness(perf)[0]
 
@@ -891,11 +990,12 @@ def test_the_scorer_skips_the_margin_math_entirely_when_the_weight_is_zero(monke
     import spicexplorer.optimization.base as base_mod
 
     calls = []
-    monkeypatch.setattr(base_mod, "normalized_spec_margin",
-                        lambda *a, **k: calls.append(a) or 0.0)
+    monkeypatch.setattr(base_mod, "normalized_spec_margin", lambda *a, **k: calls.append(a) or 0.0)
     _margin_scorer("feasibility_reward").compute_fitness(
-        {"gain": np.float64(55.0), "ugf": np.float64(140.0)})
+        {"gain": np.float64(55.0), "ugf": np.float64(140.0)}
+    )
     assert calls == []
     _margin_scorer("feasibility_reward", weight=0.5).compute_fitness(
-        {"gain": np.float64(55.0), "ugf": np.float64(140.0)})
+        {"gain": np.float64(55.0), "ugf": np.float64(140.0)}
+    )
     assert len(calls) == 2

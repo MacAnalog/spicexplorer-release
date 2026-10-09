@@ -47,7 +47,7 @@ class NetlistDialect(str, Enum):
     HSPICE = "hspice"
 
     @classmethod
-    def coerce(cls, value: "NetlistDialect | str") -> "NetlistDialect":
+    def coerce(cls, value: NetlistDialect | str) -> NetlistDialect:
         """Accept an enum member or a (case-insensitive) string, with ``"ngspice"`` → SPICE."""
         if isinstance(value, cls):
             return value
@@ -69,7 +69,14 @@ class Directive:
 
     ``kind`` is a coarse classification for callers that want to filter:
     ``include`` | ``analysis`` | ``measure`` | ``option`` | ``model`` | ``alter`` |
-    ``library`` | ``unknown``.
+    ``library`` | ``conditional`` | ``unknown``.
+
+    ``conditional`` is an HSPICE ``.if``/``.elseif``/``.else``/``.endif`` card. Its presence means
+    the branch was NOT evaluated and everything it guards is in the deck unconditionally — the
+    reader refuses outright when a branch guards anything it RECOGNISES as defining the circuit (a
+    device line, ``.model``, ``.include``/``.lib``), so a ``conditional`` directive accompanies
+    guarded analyses, options, measures, ``.alter``, or cards this reader does not recognise (an
+    unrecognised card carries a warning of its own).
     """
 
     kind: str
@@ -84,13 +91,15 @@ class DialectSpec:
     """
 
     dialect: NetlistDialect
-    line_comment: tuple[str, ...]        # tokens opening a whole-line comment
-    inline_comment: tuple[str, ...]      # tokens opening a trailing comment (quote-aware)
-    continuation_leading: str | None     # SPICE/HSPICE: "+" at start of the next line
-    continuation_trailing: str | None    # Spectre: "\" at end of the continued line
-    subckt_open: str                     # "subckt" (Spectre) / ".subckt" (SPICE-family)
-    subckt_close: str                    # "ends" / ".ends"
-    param_aliases: dict[str, str] = field(default_factory=dict)  # canonical → dialect (e.g. m→multi)
+    line_comment: tuple[str, ...]  # tokens opening a whole-line comment
+    inline_comment: tuple[str, ...]  # tokens opening a trailing comment (quote-aware)
+    continuation_leading: str | None  # SPICE/HSPICE: "+" at start of the next line
+    continuation_trailing: str | None  # Spectre: "\" at end of the continued line
+    subckt_open: str  # "subckt" (Spectre) / ".subckt" (SPICE-family)
+    subckt_close: str  # "ends" / ".ends"
+    param_aliases: dict[str, str] = field(
+        default_factory=dict
+    )  # canonical → dialect (e.g. m→multi)
     identifier_leading_digit_ok: bool = True  # Spectre: False (`5t_ota` must be renamed)
 
 
@@ -101,7 +110,7 @@ class ParsedDeck:
     canonical_text: str
     dialect: NetlistDialect
     directives: tuple[Directive, ...]
-    name_map: dict[str, str]      # canonical ref (UPPERCASE, as spicelib reports) → original name
+    name_map: dict[str, str]  # canonical ref (UPPERCASE, as spicelib reports) → original name
     warnings: tuple[str, ...]
 
 
@@ -142,7 +151,13 @@ def detect_dialect(text: str, filename: str | Path | None = None) -> NetlistDial
         return NetlistDialect.SPECTRE
     spectre_score = sum(
         1
-        for pat in (_SPECTRE_SUBCKT, _SPECTRE_ENDS, _SPECTRE_PARAMETERS, _SPECTRE_COMMENT, _SPECTRE_PAREN_INST)
+        for pat in (
+            _SPECTRE_SUBCKT,
+            _SPECTRE_ENDS,
+            _SPECTRE_PARAMETERS,
+            _SPECTRE_COMMENT,
+            _SPECTRE_PAREN_INST,
+        )
         if pat.search(text)
     )
     # `subckt`+`ends` without dots, or any two independent markers, is decisive.
@@ -219,7 +234,7 @@ class BaseDialectReader:
         for line in lines:
             stripped = line.lstrip()
             if stripped.startswith(marker) and out:
-                out[-1] = f"{out[-1].rstrip()} {stripped[len(marker):].strip()}"
+                out[-1] = f"{out[-1].rstrip()} {stripped[len(marker) :].strip()}"
             else:
                 out.append(line)
         return out

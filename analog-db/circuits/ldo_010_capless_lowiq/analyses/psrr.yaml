@@ -1,0 +1,15 @@
+# AC PSRR Vdd -> Vout at 1 mA, on-chip Cout only; read at 1 kHz (S6).
+schema: spicexplorer/analysis@1
+id: psrr
+template: psrr
+description: "AC PSRR Vdd -> Vout at 1 mA, on-chip Cout only; read at 1 kHz (S6)."
+params:
+  VDD: 1.5
+  ILOAD: 1m
+  COUT: 1p
+  PPD: 20
+  FSTART: 10
+  FSTOP: 100meg
+  FMEAS: 1k
+flags: []
+produces: [psrr_vdd_db]

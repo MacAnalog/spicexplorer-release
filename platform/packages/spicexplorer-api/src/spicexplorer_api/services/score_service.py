@@ -1,4 +1,5 @@
 """Compute sigmoid vs. linear score penalties for a project's target specs."""
+
 from __future__ import annotations
 
 import logging
@@ -49,16 +50,18 @@ def apply_spec_overrides(
                 try:
                     setattr(spec, field, float(parse_value(patch[field])))
                 except (ValueError, TypeError):
-                    logger.warning("score override: bad %s for spec '%s': %r",
-                                   field, name, patch[field])
+                    logger.warning(
+                        "score override: bad %s for spec '%s': %r", field, name, patch[field]
+                    )
         if "enable" in patch and patch["enable"] is not None:
             spec.enable = bool(patch["enable"])
         if patch.get("goal"):
             try:
                 spec.goal = OptimizationGoalType(str(patch["goal"]).lower())
             except ValueError:
-                logger.warning("score override: unknown goal for spec '%s': %r",
-                               name, patch["goal"])
+                logger.warning(
+                    "score override: unknown goal for spec '%s': %r", name, patch["goal"]
+                )
 
 
 def _resolve_penalty_space(value: float, spec: Any) -> tuple[float, float, float, float]:
@@ -141,9 +144,14 @@ def compute_score(
             # and a uniform shape lets the response_model type `tolerance` as a required
             # float (matching the UI's SpecScore.tolerance) instead of conditionally absent.
             per_spec[spec.name] = {
-                "linear": None, "sigmoid": None,
-                "value": None, "target": target, "tolerance": tolerance,
-                "goal": spec.goal.value, "passes": None, "weight": weight,
+                "linear": None,
+                "sigmoid": None,
+                "value": None,
+                "target": target,
+                "tolerance": tolerance,
+                "goal": spec.goal.value,
+                "passes": None,
+                "weight": weight,
             }
             continue
 
@@ -170,7 +178,11 @@ def compute_score(
         if spec_obj:
             target = float(spec_obj.target)
             tolerance = float(spec_obj.tolerance) if spec_obj.tolerance is not None else 0.0
-            rang = float(spec_obj.range) if spec_obj.range and spec_obj.range > 0 else max(abs(target), 1.0)
+            rang = (
+                float(spec_obj.range)
+                if spec_obj.range and spec_obj.range > 0
+                else max(abs(target), 1.0)
+            )
             lo = target - 3 * rang
             hi = target + 3 * rang
             xs = np.linspace(lo, hi, n_curve_points).tolist()
@@ -179,8 +191,14 @@ def compute_score(
                 lin_p, sig_p, _ = _spec_penalties(x, spec_obj)
                 linears.append(lin_p)
                 sigmoids.append(sig_p)
-            curve = {"values": xs, "linear": linears, "sigmoid": sigmoids,
-                     "target": target, "tolerance": tolerance, "goal": spec_obj.goal.value}
+            curve = {
+                "values": xs,
+                "linear": linears,
+                "sigmoid": sigmoids,
+                "target": target,
+                "tolerance": tolerance,
+                "goal": spec_obj.goal.value,
+            }
 
     return {
         "per_spec": per_spec,

@@ -1,5 +1,6 @@
 """Crash-safety contract for ``spicexplorer_core.atomic_io`` — the checkpoint
 writer that must never leave a torn file for the next resume to choke on."""
+
 from __future__ import annotations
 
 import json

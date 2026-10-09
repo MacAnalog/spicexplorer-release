@@ -82,10 +82,18 @@ def test_artifact_path_reads_ngspice_raw_path(tmp_path):
     # a recorded path whose file is gone degrades to None, never a dangling Path
     raw_file.unlink()
     assert run.artifact_path() is None
-    assert CircuitRun(
-        _CIRCUIT, "ihp-sg13g2", "ngspice", "ac_open_loop", "tt",
-        NgspiceSimResult(None), [],
-    ).artifact_path() is None
+    assert (
+        CircuitRun(
+            _CIRCUIT,
+            "ihp-sg13g2",
+            "ngspice",
+            "ac_open_loop",
+            "tt",
+            NgspiceSimResult(None),
+            [],
+        ).artifact_path()
+        is None
+    )
 
 
 @_needs_marker
@@ -144,7 +152,10 @@ def test_build_ngspice_run_applies_sizing_overrides(monkeypatch, tmp_path):
 
     monkeypatch.setattr(se, "NGSpice_Wrapper", _StubWrapper)
     out = build_ngspice_run(
-        _CIRCUIT, "ihp-sg13g2", "ac_open_loop", output_dir=tmp_path,
+        _CIRCUIT,
+        "ihp-sg13g2",
+        "ac_open_loop",
+        output_dir=tmp_path,
         sizing_overrides={"x_dut_xm1_w": "9.9u", "no_such_knob": 1.0},
     )
     assert out == "stub-result"
@@ -171,6 +182,105 @@ def test_discovery_lists_circuit_pdks_and_analyses():
     assert "ac_open_loop" in circuit_analyses(_CIRCUIT)
 
 
+# DATA-F5: circuit_analyses lists what the raw export actually rendered — circuit.yaml's
+# declared `analyses:` in declared order, minus any `enabled: false` descriptor — not every
+# analyses/*.yaml on disk (an undeclared WIP bench, or a disabled one, has no raw deck).
+def _declared(circuit: str) -> list[str]:
+    import yaml
+
+    path = analog_db_root() / "circuits" / circuit / "circuit.yaml"
+    return list(yaml.safe_load(path.read_text()).get("analyses") or [])
+
+
+@_needs_marker
+def test_circuit_analyses_drops_a_disabled_analysis():
+    circuit = "amp_018_telescopic_cascode"  # analyses/linearity.yaml carries enabled: false
+    got = circuit_analyses(circuit)
+    assert "linearity" not in got
+    assert got == [a for a in _declared(circuit) if a != "linearity"]
+
+
+@_needs_marker
+def test_circuit_analyses_skips_an_undeclared_descriptor():
+    circuit = "amp_023_fer_fd2s"  # analyses/tran_cm_kick.yaml exists but is not declared
+    assert (analog_db_root() / "circuits" / circuit / "analyses" / "tran_cm_kick.yaml").is_file()
+    got = circuit_analyses(circuit)
+    assert "tran_cm_kick" not in got
+    assert got == _declared(circuit)
+
+
+@_needs_marker
+def test_every_listed_analysis_has_a_raw_deck_on_every_bound_pdk():
+    """Discovery × deck lookup has no gaps: the (circuit, pdk, analysis) grid built from
+    circuit_analyses × circuit_pdks resolves a committed raw deck for every cell."""
+    from spicexplorer.backends.analog_db import raw_deck_path
+
+    raw = analog_db_root() / "raw"
+    missing = []
+    for circuit in list_circuits():
+        if not (raw / circuit).is_dir():
+            continue  # no rendered decks at all (unbound / not verifiable)
+        for pdk in circuit_pdks(circuit):
+            for analysis in circuit_analyses(circuit):
+                try:
+                    raw_deck_path(circuit, pdk, analysis)
+                except AnalogDbUnavailable:
+                    missing.append(f"{circuit}/{pdk}/{analysis}")
+    assert missing == []
+
+
+# DATA-F5 offline: the gating rule on a tiny tmp analog-db tree, so it holds with the submodule
+# absent and independent of whatever order/dangling ids the real circuits happen to have.
+def _write(path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text)
+
+
+def test_circuit_analyses_offline_keeps_declared_order_and_drops_the_rest(tmp_path):
+    c = tmp_path / "circuits" / "c1"
+    # declared out of alphabetical order; `ghost` has no descriptor, `noise` is disabled (not
+    # `off`: YAML reads a bare `off` as the boolean False, which would test the wrong rule)
+    _write(c / "circuit.yaml", "id: c1\nanalyses: [tran, ac, ghost, noise, dc]\n")
+    _write(c / "analyses" / "tran.yaml", "template: t\n")
+    _write(c / "analyses" / "ac.yaml", "template: a\nenabled: true\n")
+    _write(c / "analyses" / "noise.yaml", "template: n\nenabled: false\n")
+    _write(c / "analyses" / "dc.yaml", "template: d\n")
+    _write(c / "analyses" / "wip.yaml", "template: w\n")  # on disk but never declared
+    assert circuit_analyses("c1", root=tmp_path) == ["tran", "ac", "dc"]
+    assert circuit_analyses("c1", root=str(tmp_path)) == ["tran", "ac", "dc"]
+
+
+@pytest.mark.parametrize(
+    "circuit_yaml",
+    [
+        pytest.param(None, id="no-circuit-yaml"),
+        pytest.param("id: c2\n", id="no-analyses-key"),
+        pytest.param("id: c2\nanalyses:\n", id="analyses-null"),
+        pytest.param("id: c2\nanalyses: []\n", id="analyses-empty"),
+    ],
+)
+def test_circuit_analyses_offline_is_empty_without_a_declaration(tmp_path, circuit_yaml):
+    """A descriptor on disk is not a declaration: with nothing declared the list is empty."""
+    c = tmp_path / "circuits" / "c2"
+    _write(c / "analyses" / "ac.yaml", "template: a\n")
+    if circuit_yaml is not None:
+        _write(c / "circuit.yaml", circuit_yaml)
+    assert circuit_analyses("c2", root=tmp_path) == []
+
+
+def test_circuit_analyses_offline_unknown_circuit_is_empty(tmp_path):
+    (tmp_path / "circuits").mkdir()
+    assert circuit_analyses("no_such_circuit", root=tmp_path) == []
+
+
+def test_circuit_analyses_offline_returns_str_ids(tmp_path):
+    """A YAML id that parses as a number still comes back as the str the deck name uses."""
+    c = tmp_path / "circuits" / "c3"
+    _write(c / "circuit.yaml", "analyses: [2024]\n")
+    _write(c / "analyses" / "2024.yaml", "template: t\n")
+    assert circuit_analyses("c3", root=tmp_path) == ["2024"]
+
+
 @_needs_marker
 def test_probe_engine_reports_engine_and_degrades_honestly():
     # open lane routes to ngspice; availability tracks the ngspice binary (engine is deterministic)
@@ -192,8 +302,11 @@ def test_run_circuit_refuses_an_unregistered_pdk():
     # deterministic offline: an unknown PDK is refused by the router, never crashed through
     with pytest.raises((EngineUnavailable, AnalogDbUnavailable)):
         run_circuit(
-            _CIRCUIT, "no-such-pdk", model_lib_root="/nonexistent/model/root",
-            deck_dir="/tmp/x", work_dir="/tmp/y",
+            _CIRCUIT,
+            "no-such-pdk",
+            model_lib_root="/nonexistent/model/root",
+            deck_dir="/tmp/x",
+            work_dir="/tmp/y",
         )
 
 
@@ -229,7 +342,11 @@ def test_evaluate_matches_metrics_by_analysis_id():
     class _Res:
         def wave(self, name, analysis):
             freq = np.logspace(3, 9, 31)
-            return freq if name == "v(frequency)" or name == "frequency" else np.full(31, 0.01, dtype=complex)
+            return (
+                freq
+                if name == "v(frequency)" or name == "frequency"
+                else np.full(31, 0.01, dtype=complex)
+            )
 
     metrics = [
         MetricTarget("cmrr_db", {"meas": "cmrr_db", "out": "vout"}, "ac", 20.0, None, "cmrr_vcm"),
@@ -287,10 +404,16 @@ def test_evaluate_swaps_fft_recipes_for_pss_twins_on_spectre():
             assert analysis == "pss"  # the swap must re-route the analysis too
             return phasors
 
-    metrics = [MetricTarget(
-        "iip3_dbv", {"meas": "iip3_dbv", "out": "vout", "f1": 0.9e6, "f2": 1.0e6, "ampl_in": a_in},
-        "tran", -10.0, None, "iip3",
-    )]
+    metrics = [
+        MetricTarget(
+            "iip3_dbv",
+            {"meas": "iip3_dbv", "out": "vout", "f1": 0.9e6, "f2": 1.0e6, "ampl_in": a_in},
+            "tran",
+            -10.0,
+            None,
+            "iip3",
+        )
+    ]
     run = CircuitRun("c", _CLOSED, "spectre", "iip3", "tt", _PssRes(), metrics)
     got = run.evaluate()["iip3_dbv"].value
     expect = 20 * np.log10(a_in * np.sqrt(1e3))

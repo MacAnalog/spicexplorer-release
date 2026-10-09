@@ -6,7 +6,8 @@ schema (:mod:`~spicexplorer_core.workspace.manifest`), the additive v1→v2
 migrator (:mod:`~spicexplorer_core.workspace.migrate`, CLI:
 ``python -m spicexplorer_core.workspace``), the generalized run envelope
 (:mod:`~spicexplorer_core.workspace.runs` — sortable dir==run_id minting, owner
-liveness/heartbeats, input provenance into ``.objects/``), and the run store's GC
+liveness/heartbeats, input provenance into ``.objects/``, the ``begin_run`` /
+``finalize_run`` open/close pair and the incremental ``RunWriter``), and the run store's GC
 (:mod:`~spicexplorer_core.workspace.retention` — artifact-tier pruning by age,
 CLI ``python -m spicexplorer_core.workspace.retention``).
 
@@ -49,8 +50,10 @@ from spicexplorer_core.workspace.library import (
 from spicexplorer_core.workspace.manifest import (
     MANIFEST_NAME,
     SCHEMA_VERSION,
+    ManifestConflict,
     new_manifest,
     read_manifest,
+    update_manifest,
     upgrade_manifest,
     write_manifest,
 )
@@ -78,7 +81,10 @@ from spicexplorer_core.workspace.retention import (
 )
 from spicexplorer_core.workspace.runs import (
     ENVELOPE_VERSION,
+    RunWriter,
+    begin_run,
     envelope_fields,
+    finalize_run,
     mint_run_dir,
     new_run_id,
     owner_is_dead,
@@ -114,15 +120,20 @@ __all__ = [
     "work_root",
     "MANIFEST_NAME",
     "SCHEMA_VERSION",
+    "ManifestConflict",
     "new_manifest",
     "read_manifest",
+    "update_manifest",
     "upgrade_manifest",
     "write_manifest",
     "is_project_dir",
     "migrate_project",
     "migrate_workspace",
     "ENVELOPE_VERSION",
+    "RunWriter",
+    "begin_run",
     "envelope_fields",
+    "finalize_run",
     "mint_run_dir",
     "new_run_id",
     "owner_is_dead",

@@ -75,10 +75,10 @@ from .paths import (
 )
 from .pdk import (
     ANALOGGYM_REF,
+    GENERIC_N65,
     GF180MCU,
     IHP_SG13G2,
     SKYWATER_SKY130,
-    GENERIC_N65,
     Pdk,
     PdkDevice,
     get_pdk,

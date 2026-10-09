@@ -53,14 +53,16 @@ def test_single_width_set_returns_exact(table: DeviceTable):
 def test_off_grid_finger_width_fails_loud(table: DeviceTable):
     fs = FingerWidthSet({5.0: table})
     with pytest.raises(OutOfGridError):
-        fs.at(15.0, 0.5, 0.9, 0.0, wf=1.0)          # 1 µm not characterised → no extrapolation
+        fs.at(15.0, 0.5, 0.9, 0.0, wf=1.0)  # 1 µm not characterised → no extrapolation
 
 
 def test_the_two_tables_really_differ(table: DeviceTable, narrow: DeviceTable):
     """Guard on the guard: if the companion ever collapses onto the fixture, the tests below go blind."""
     lo_op, hi_op = narrow.at(GM_ID, L, VDS, VSB), table.at(GM_ID, L, VDS, VSB)
     for field in _LERPED:
-        assert getattr(lo_op, field) != pytest.approx(getattr(hi_op, field), rel=1e-3, abs=0.0), field
+        assert getattr(lo_op, field) != pytest.approx(getattr(hi_op, field), rel=1e-3, abs=0.0), (
+            field
+        )
 
 
 def test_grid_point_returns_that_tables_operating_point(table: DeviceTable, narrow: DeviceTable):
@@ -71,11 +73,15 @@ def test_grid_point_returns_that_tables_operating_point(table: DeviceTable, narr
         op = fs.at(GM_ID, L, VDS, VSB, wf=wf)
         expected = ref.at(GM_ID, L, VDS, VSB)
         for field in _LERPED:
-            assert getattr(op, field) == pytest.approx(getattr(expected, field), rel=1e-12, abs=0.0), field
+            assert getattr(op, field) == pytest.approx(
+                getattr(expected, field), rel=1e-12, abs=0.0
+            ), field
 
 
 @pytest.mark.parametrize("wf", [1.5, 2.0, 3.0, 4.6])
-def test_interpolation_is_the_bracket_weighted_blend(table: DeviceTable, narrow: DeviceTable, wf: float):
+def test_interpolation_is_the_bracket_weighted_blend(
+    table: DeviceTable, narrow: DeviceTable, wf: float
+):
     """Every interpolated field is lo·(1−w) + hi·w with w = (wf − 1)/(5 − 1) — the exact arithmetic.
 
     This is what pins the direction of the weight: at wf=1.5 the answer must sit next to the 1 µm
@@ -94,7 +100,9 @@ def test_interpolation_is_the_bracket_weighted_blend(table: DeviceTable, narrow:
     assert span[0] < op.jd < span[1]
 
 
-def test_interpolation_moves_monotonically_with_finger_width(table: DeviceTable, narrow: DeviceTable):
+def test_interpolation_moves_monotonically_with_finger_width(
+    table: DeviceTable, narrow: DeviceTable
+):
     """Walking wf from 1 → 5 µm must walk jd monotonically from the 1 µm value to the 5 µm one."""
     fs = FingerWidthSet({1.0: narrow, 5.0: table})
     jds = [fs.at(GM_ID, L, VDS, VSB, wf=wf).jd for wf in (1.0, 2.0, 3.0, 4.0, 5.0)]
@@ -113,7 +121,7 @@ def test_gm_id_for_jd_interpolates_across_finger_width(table: DeviceTable, narro
     fs = FingerWidthSet({1.0: narrow, 5.0: table})
     jd = 3e-7
     lo, hi = narrow.gm_id_for_jd(jd, L, VDS, VSB), table.gm_id_for_jd(jd, L, VDS, VSB)
-    assert lo != pytest.approx(hi, rel=1e-3)          # the two tables disagree, as they must
+    assert lo != pytest.approx(hi, rel=1e-3)  # the two tables disagree, as they must
     assert fs.gm_id_for_jd(jd, L, VDS, VSB, wf=1.0) == pytest.approx(lo, rel=1e-12)
     assert fs.gm_id_for_jd(jd, L, VDS, VSB, wf=5.0) == pytest.approx(hi, rel=1e-12)
     assert fs.gm_id_for_jd(jd, L, VDS, VSB, wf=2.0) == pytest.approx(_lerp(lo, hi, 0.25), rel=1e-12)
@@ -138,7 +146,7 @@ def test_at_at_an_exact_upper_width_does_not_evaluate_the_zero_weight_table(
     assert fs._bracket(5.0) == (1.0, 5.0, 1.0)
     lo_band, hi_band = narrow.gm_id_band(L, VDS)[1], table.gm_id_band(L, VDS)[1]
     target = hi_band - 0.01
-    assert target > lo_band                      # reachable ONLY in the upper table
+    assert target > lo_band  # reachable ONLY in the upper table
     op = fs.at(target, L, VDS, VSB, wf=5.0)
     ref = table.at(target, L, VDS, VSB)
     for field in _LERPED:
@@ -185,7 +193,7 @@ def test_gm_id_for_jd_blend_that_misses_its_own_round_trip_raises(
         fs.gm_id_for_jd(2e-6, L, VDS, VSB, wf=2.0)
     msg = str(exc.value)
     assert "does not invert consistently" in msg
-    assert "2.14326e-06" in msg          # names the JD the blended gm/ID actually reads back
+    assert "2.14326e-06" in msg  # names the JD the blended gm/ID actually reads back
     assert "tolerance 5 %" in msg
 
 
@@ -198,6 +206,52 @@ def test_an_accepted_jd_inversion_round_trips_within_five_percent(
     jd = 3e-7
     gm_id = fs.gm_id_for_jd(jd, L, VDS, VSB, wf=wf)
     assert fs.at(gm_id, L, VDS, VSB, wf=wf).jd == pytest.approx(jd, rel=0.05)
+
+
+# 20·2⁻²⁶ A/µm (≈2.98e-7, inverts on both tables at the test slice) makes the 5 % boundary exact in
+# binary floating point: 0.05·jd rounds to exactly 2⁻²⁶, and 21·2⁻²⁶ / 19·2⁻²⁶ sit exactly on it.
+_JD_EXACT = 20 * 2.0**-26
+
+
+@pytest.mark.parametrize(
+    ("jd", "readback_jd", "accepted"),
+    [
+        pytest.param(3e-7, 1.049 * 3e-7, True, id="4.9%-high"),
+        pytest.param(3e-7, 1.052 * 3e-7, False, id="5.2%-high"),
+        pytest.param(_JD_EXACT, 21 * 2.0**-26, True, id="exactly-5%-high"),
+        pytest.param(_JD_EXACT, 19 * 2.0**-26, True, id="exactly-5%-low"),
+        pytest.param(3e-7, float("nan"), False, id="nan"),
+    ],
+)
+def test_the_blend_round_trip_tolerance_is_five_percent_of_the_target(
+    table: DeviceTable,
+    narrow: DeviceTable,
+    monkeypatch: pytest.MonkeyPatch,
+    jd: float,
+    readback_jd: float,
+    accepted: bool,
+):
+    """Same 5 % as ``DeviceTable.gm_id_for_jd``, relative to the REQUESTED jd, boundary included.
+
+    ``math.isclose(rel_tol=0.05)`` scales by the larger value, so a blend reading back 5.2 % high
+    was accepted. A NaN read-back is refused (the gate is written ``not <=`` for exactly that).
+    The per-table inversions are real; only the blend's read-back is set.
+    """
+    assert abs(21 * 2.0**-26 - _JD_EXACT) == 0.05 * _JD_EXACT  # the exact-boundary premise
+    fs = FingerWidthSet({1.0: narrow, 5.0: table})
+    real_at = fs.at
+
+    def skewed_at(
+        gm_id: float, L: float, vds: float, vsb: float = 0.0, *, wf: float
+    ) -> OperatingPoint:
+        return real_at(gm_id, L, vds, vsb, wf=wf).model_copy(update={"jd": readback_jd})
+
+    monkeypatch.setattr(fs, "at", skewed_at)
+    if accepted:
+        assert fs.gm_id_for_jd(jd, L, VDS, VSB, wf=2.0) > 0
+    else:
+        with pytest.raises(OutOfGridError, match="does not invert consistently"):
+            fs.gm_id_for_jd(jd, L, VDS, VSB, wf=2.0)
 
 
 def test_exact_table_at_grid_point(table: DeviceTable, narrow: DeviceTable):

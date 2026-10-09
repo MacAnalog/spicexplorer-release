@@ -9,7 +9,7 @@ dummies at both row ends so the outer members see the same etch/stress environme
 
 from __future__ import annotations
 
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
 
 
 def interdigitate_order(labels: Sequence[str], n_each: int, *, style: str = "ABBA") -> list[str]:
@@ -36,7 +36,13 @@ def common_centroid_order(
 ) -> list[list[str]]:
     """2-D common-centroid grid as a list of rows. Default 2×2 → [[A,B],[B,A]] (cross-quad);
     larger grids alternate ABBA / BAAB rows so every label's centroid is the grid centre.
-    ``n_each`` (if given) checks the grid holds exactly n_each of each label."""
+    ``n_each`` (if given) checks the grid holds exactly n_each of each label.
+
+    The centroids are VERIFIED, not assumed. The docstring's promise held only for some shapes:
+    2x3, 3x2, 3x3, 3x6 and 4x3 all come out with the two labels on different centroids, and 3x6
+    does so with nine of each — so the count check passed while the gradient cancellation this
+    pattern exists for did not happen (Codex review, item LAY-01). A grid this construction
+    cannot balance now raises instead of being returned as if it were."""
     labels = list(labels)
     k = len(labels)
     if k != 2:
@@ -56,7 +62,31 @@ def common_centroid_order(
             raise ValueError(
                 f"{rows}x{cols} grid holds {cnt} {a} / {rows * cols - cnt} {b}, not {n_each} each"
             )
+    ca, cb = _centroid(grid, a), _centroid(grid, b)
+    if ca is None or cb is None or not _same_point(ca, cb):
+        raise ValueError(
+            f"a {rows}x{cols} grid of {a}/{b} is not common-centroid: {a} sits at {ca} and {b} at "
+            f"{cb} (row, col). Equal counts are not a common centroid — the point of the pattern is "
+            "that both devices see the same 2-D gradient, which they do not here. Use an even "
+            "number of columns, and with an odd number of rows a multiple of 4 (2x2, 2x4, 4x2, "
+            "3x4, 3x8 work; this ABBA-by-columns construction does not balance 2x3, 3x2, 3x3, 3x6 "
+            "or 4x3)."
+        )
     return grid
+
+
+def _centroid(grid: Sequence[Sequence[str]], label: str) -> tuple[float, float] | None:
+    """Mean (row, col) of every cell carrying ``label``, or None when it appears nowhere."""
+    pts = [(r, c) for r, row in enumerate(grid) for c, v in enumerate(row) if v == label]
+    if not pts:
+        return None
+    return (sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts))
+
+
+def _same_point(p: tuple[float, float], q: tuple[float, float]) -> bool:
+    """Exact-enough equality: the coordinates are small rationals, so 1e-9 is far below any real
+    difference (the smallest genuine mismatch on a grid this size is 1/9)."""
+    return abs(p[0] - q[0]) < 1e-9 and abs(p[1] - q[1]) < 1e-9
 
 
 def with_dummies(order: Sequence[str], n_dummy: int = 1, label: str = "D") -> list[str]:

@@ -110,11 +110,7 @@ def test_doc_roundtrip_is_stable():
 
 def test_nonlinear_forms_degrade_to_skip(caplog):
     net = (
-        "* behavioral forms\n"
-        "G1 a 0 value={v(c)*2}\n"
-        "E1 x 0 POLY(2) c d e f 0 1 1\n"
-        "R1 a 0 1k\n"
-        ".end\n"
+        "* behavioral forms\nG1 a 0 value={v(c)*2}\nE1 x 0 POLY(2) c d e f 0 1 1\nR1 a 0 1k\n.end\n"
     )
     with caplog.at_level(logging.WARNING, logger="spicexplorer_circuitgraph"):
         g = _graph(net)

@@ -32,7 +32,8 @@ Two files describe the api contract:
 
 Most routes carry a `response_model` and emit a typed `$ref` 200 in `openapi.json`;
 the committed (drift-guarded) `openapi.json` is the source of truth for exact counts
-(see the **Regenerate** section below for the CI drift check that keeps it honest). The
+(see the **Regenerate** section below for the drift check that compares it with a fresh
+export from the platform's API). The
 deliberately-untyped routes are the non-JSON ones: PlainText (`GET /api/yaml-text`),
 FileResponse (`GET /api/schematic` and `GET /api/library/circuits/{id}/schematic` SVG,
 `GET /api/library/templates/{id}/image` PNG, `GET /api/library/circuits/{id}/reference-image`,
@@ -57,19 +58,26 @@ because they go through an adaptation layer.
 - `NetlistParam` / `MeasCandidate` / `SpecLibraryEntry` — small wizard-editing helpers
   still referenced directly by wizard components.
 
-## Regenerate (must stay in sync — see the CI drift check)
+## Regenerate (must stay in sync — see the drift check)
 
 ```bash
 # 1) dump the api OpenAPI (from the platform repo, offline — no running server):
-uv run python -c "import json; from spicexplorer_api.main import app; print(json.dumps(app.openapi(), indent=2))" > openapi.json
+uv run python -c "import json; from spicexplorer_api.main import app; print(json.dumps(app.openapi()))" > openapi.json
 # 2) generate the TS types:
 npm run gen:types
 ```
 
-`openapi.json` is a committed snapshot; CI fails if it (or `api.gen.ts`) drifts from the
-backend — see `scripts/check_openapi_drift.sh` and `.github/workflows/openapi-drift.yml`
-in the **meta-repo** (`spicexplorer-workspace`), not the platform `ci.yml`. Regenerate
-both whenever a route's request/response model changes.
+`openapi.json` is a committed snapshot; regenerate it and `api.gen.ts` whenever a route's
+request or response model changes. The drift check fails if either differs from what a fresh
+export of the platform's API (`spicexplorer_api.main`) gives:
+`scripts/check_openapi_drift.sh` (`make drift`) in the **meta-repo** (`spicexplorer-workspace`),
+not the platform `ci.yml`. Its GitHub workflow `.github/workflows/openapi-drift.yml` is
+disabled, so the check runs only when someone runs it locally.
+
+The committed `openapi.json` is this one-line dump, the same command the platform's
+`CLAUDE.md` and API `README.md` give. The meta-repo's `scripts/check_openapi_drift.sh` writes
+its dump in the same one-line layout and compares the two schemas as parsed JSON, so a
+difference in layout alone is not reported as drift (workspace PR #193).
 
 The end state: every JSON route typed, `api.gen.ts` the single source of truth, the
 remaining hand-written wizard interfaces retired once the editing types are reconciled.

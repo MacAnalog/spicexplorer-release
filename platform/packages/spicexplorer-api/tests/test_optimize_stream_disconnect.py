@@ -9,10 +9,12 @@ semantics that still preserve the None done-sentinel.
 These drive the route's async generator directly (via ``asyncio.run``) so no live SPICE, uvicorn,
 or pytest-asyncio is needed.
 """
+
 from __future__ import annotations
 
 import asyncio
-from typing import AsyncGenerator, cast
+from collections.abc import AsyncGenerator
+from typing import cast
 
 from spicexplorer_api.routes import optimize as optimize_route
 from spicexplorer_api.services import optimizer_runner as runner
@@ -74,6 +76,7 @@ async def _cancel_disconnect_flow() -> None:
     run_id = "test-stream-cancel"
     state = _register_run(run_id, loop)
     try:
+
         class _Req:
             async def is_disconnected(self) -> bool:
                 return False  # never self-reports; the ASGI server cancels the stream instead
@@ -104,6 +107,7 @@ async def _completes_flow() -> None:
     run_id = "test-stream-done"
     state = _register_run(run_id, loop)
     try:
+
         class _Req:
             async def is_disconnected(self) -> bool:
                 return False
@@ -143,6 +147,6 @@ def test_bounded_queue_drops_oldest_and_preserves_sentinel() -> None:
         drained.append(q.get_nowait())
 
     assert {"iter": 0} not in drained  # oldest evicted
-    assert {"iter": 99} in drained     # newest data event retained
-    assert None in drained             # sentinel preserved
+    assert {"iter": 99} in drained  # newest data event retained
+    assert None in drained  # sentinel preserved
     assert len(drained) == 3

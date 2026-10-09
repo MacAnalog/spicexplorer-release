@@ -63,7 +63,7 @@
         "noise": {
           "measures": {
             "onoise_total": 4.598041e-05,
-            "vn_out_rms": 0.006780886
+            "vn_out_rms": 4.598041e-05
           },
           "status": "ok"
         },
@@ -153,7 +153,7 @@
       },
       "vn_out_rms": {
         "spec": "pass",
-        "value": 0.006780886
+        "value": 4.598041e-05
       },
       "zout_peak_db": {
         "spec": "pass",
@@ -174,9 +174,6 @@
       "r_ref_bot": "100k",
       "r_ref_top": "100k",
       "vref_val": 0.8,
-      "x_dut_xmp_l": "0.6u",
-      "x_dut_xmp_m": 20,
-      "x_dut_xmp_w": "20u",
       "x_dut_xmea_1_l": "0.7u",
       "x_dut_xmea_1_w": "68.542u",
       "x_dut_xmea_3_l": "0.5u",
@@ -190,6 +187,9 @@
       "x_dut_xmea_bf_w": "5u",
       "x_dut_xmea_bp_l": "2u",
       "x_dut_xmea_bp_w": "6.3111u",
+      "x_dut_xmp_l": "0.6u",
+      "x_dut_xmp_m": 20,
+      "x_dut_xmp_w": "20u",
       "x_dut_xmra_1_l": "0.7u",
       "x_dut_xmra_1_w": "86.42u",
       "x_dut_xmra_3_l": "1u",

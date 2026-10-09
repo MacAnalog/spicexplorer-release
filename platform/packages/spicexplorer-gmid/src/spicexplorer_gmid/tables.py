@@ -13,19 +13,43 @@ from where the data lives (plan_gmid_sizing.md §2: data-driven, no DB import).
 
 from __future__ import annotations
 
+import itertools
+import logging
 import math
+import pickle
+import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from os import PathLike
 from pathlib import Path
 
 import numpy as np
+from pydantic import ValidationError
 from pygmid import Lookup
 
 from .contract import LUTManifest, OperatingPoint
 from .errors import OutOfGridError
 
+logger = logging.getLogger(__name__)
+
 TWO_PI = 2.0 * math.pi
+
+
+def _load_sidecar(path: Path) -> LUTManifest | None:
+    """Read a ``.manifest.json`` sidecar, or ``None`` — with a logged warning — if it is unreadable.
+
+    The table a sidecar describes stays usable without it, so an unreadable one does not fail the
+    caller; but it is reported, with its path and the reason. A bare ``except Exception: pass``
+    here turned a manifest schema-field rename into ``manifest=None`` on every load and an empty
+    :meth:`LUTRegistry.list_available`, with no warning. Only the failures of a corrupt *file* are
+    absorbed — I/O, undecodable bytes, JSON that does not validate (pydantic reports malformed JSON
+    as a ``ValidationError`` too); anything else is a bug and propagates.
+    """
+    try:
+        return LUTManifest.from_path(path)
+    except (OSError, UnicodeDecodeError, ValidationError) as exc:
+        logger.warning("ignoring unreadable LUT manifest sidecar %s: %s", path, exc)
+        return None
 
 
 def _scalar(value: object) -> float:
@@ -78,7 +102,8 @@ class DeviceTable:
         """Load a pygmid ``.pkl`` LUT from disk.
 
         If a ``<stem>.manifest.json`` sidecar exists next to the ``.pkl``, it is loaded
-        automatically and attached as :attr:`manifest` — no separate call needed.
+        automatically and attached as :attr:`manifest` — no separate call needed. An unreadable
+        sidecar does not fail the load: it is logged as a warning and :attr:`manifest` is ``None``.
         """
         p = Path(path)
         if not p.exists():
@@ -86,11 +111,44 @@ class DeviceTable:
         man: LUTManifest | None = None
         sidecar = p.parent / (p.stem + ".manifest.json")
         if sidecar.is_file():
-            try:
-                man = LUTManifest.from_path(sidecar)
-            except Exception:
-                pass  # corrupt sidecar → skip silently; don't fail the load
+            man = _load_sidecar(sidecar)  # corrupt sidecar → warned, not fatal to the load
         return cls(Lookup(str(p)), source=p, manifest=man)
+
+    @classmethod
+    def from_lut_dict(
+        cls,
+        data: Mapping[str, object],
+        *,
+        source: Path | None = None,
+        manifest: LUTManifest | None = None,
+    ) -> DeviceTable:
+        """Wrap an in-memory pygmid LUT dict — what an extractor's `assemble()` returns.
+
+        The Spectre lane (`spicexplorer_analog_db.gmid_spectre`) builds the table in memory and
+        then writes it; a caller that wants to size against a table it just extracted, or one it
+        fetched from somewhere that is not a file, had no way in. Two design agents hit that and
+        one re-implemented the interpolation — which is the part pygmid owns and the part worth
+        not having two of (issue #157).
+
+        pygmid's `Lookup` can only load from a path, so the dict is pickled into a temporary file
+        that exists for the duration of that load: `Lookup` reads the whole table into memory at
+        construction, so nothing refers to the file afterwards. `source` stays None (there is no
+        file this table came from) unless the caller names one.
+        """
+        keys = set(data)
+        missing = {"L", "VGS", "VDS", "VSB"} - keys
+        if missing:
+            raise ValueError(
+                f"not a pygmid LUT: bias axes {sorted(missing)} are absent (has: "
+                f"{', '.join(sorted(keys)) or 'nothing'}). A pygmid table carries the four "
+                "monotonic axes L/VGS/VDS/VSB plus one 4-D array per stored parameter."
+            )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "lut.pkl"
+            with path.open("wb") as fh:
+                pickle.dump(dict(data), fh)
+            lut = Lookup(str(path))
+        return cls(lut, source=source, manifest=manifest)
 
     @property
     def manifest(self) -> LUTManifest | None:
@@ -146,16 +204,61 @@ class DeviceTable:
         """Scalar lookup with NaN→error. ``out`` is a stored param or an ``'A_B'`` ratio.
 
         Raises :class:`OutOfGridError` when a bias axis is off-grid (pygmid would extrapolate
-        silently) or the result is NaN. **Caveat:** off the valid GM_ID branch pygmid returns
-        finite *garbage* (a printed warning, not a NaN), so isfinite alone is not enough — the
-        reachability contract is enforced in :meth:`at` / :meth:`sweep` via the gm/ID-branch gate
-        (:meth:`gm_id_band`). Use :meth:`at` for sizing; this passthrough is a raw escape hatch.
+        silently), when a ``GM_ID``-keyed request lies off its slice's invertible gm/ID branch
+        (:meth:`gm_id_band` — the same gate as :meth:`at` / :meth:`sweep`: off that branch pygmid
+        prints "Output is NaN" and then returns a finite pchip extrapolation, so isfinite alone is not
+        enough), or when the result is NaN. An ``ID_W``-keyed request is not range-gated here —
+        :meth:`gm_id_for_jd` is the checked JD inversion. Use :meth:`at` for sizing; this
+        passthrough is the low-level raw lookup.
         """
-        self._require_axes_in_grid(kwargs)  # fail loud on off-grid bias axes (no silent extrapolation)
-        val = _scalar(self._look_up_raw(out, kwargs))
+        self._require_axes_in_grid(
+            kwargs
+        )  # fail loud on off-grid bias axes (no silent extrapolation)
+        coords = self._require_gm_id_key_reachable(out, kwargs)
+        val = _scalar(self._look_up_raw(out, coords))
         if not math.isfinite(val):
             raise OutOfGridError(self._grid_msg(out, kwargs))
         return val
+
+    def _require_gm_id_key_reachable(
+        self, out: str, coords: Mapping[str, object]
+    ) -> dict[str, object]:
+        """Gate a ``GM_ID``-keyed lookup on its slice's gm/ID band; returns the coordinates to use.
+
+        pygmid keys a ratio lookup on the FIRST keyword, case-insensitively, and fills an absent
+        L / VDS / VSB with its own defaults (the shortest L, VDS at half the grid maximum, VSB=0).
+        Those defaults are written into the returned coordinates, so the slice whose band is checked
+        is the slice pygmid then reads. Any other lookup passes through unchanged. A slice carrying
+        no current keeps the degenerate-axis diagnosis (:meth:`_degenerate_msg`), which names the
+        axis to move, rather than the band gate's generic "no usable branch".
+        """
+        resolved = dict(coords)
+        if not resolved or next(iter(resolved)).upper() != "GM_ID":
+            return resolved
+        given = {k.upper(): v for k, v in resolved.items()}
+        defaults = {
+            "L": float(self.L_grid.min()),
+            "VDS": float(self.VDS_grid.max()) / 2.0,
+            "VSB": 0.0,
+        }
+        for name, value in defaults.items():
+            if name not in given:
+                resolved[name] = given[name] = value
+        self._require_axes_in_grid(given)  # the filled-in and lower-case axes, too
+        gm_id = np.asarray(given["GM_ID"], dtype=float)
+        axes = [
+            np.atleast_1d(np.asarray(given[k], dtype=float)).reshape(-1)
+            for k in ("L", "VDS", "VSB")
+        ]
+        for L, vds, vsb in itertools.product(*axes):
+            try:
+                self._require_gm_id_reachable(gm_id, float(L), float(vds), float(vsb))
+            except OutOfGridError as exc:
+                if not self._slice_carries_current(float(L), float(vds), float(vsb)):
+                    slice_coords = dict(given, L=float(L), VDS=float(vds), VSB=float(vsb))
+                    raise OutOfGridError(self._degenerate_msg(out, slice_coords)) from exc
+                raise
+        return resolved
 
     def _look_up_raw(self, out: str, coords: Mapping[str, object]) -> np.ndarray:
         """``Lookup.look_up`` with scipy's bare ``ValueError`` translated into ``OutOfGridError``.
@@ -171,7 +274,9 @@ class DeviceTable:
         except ValueError as exc:
             raise OutOfGridError(self._degenerate_msg(out, coords)) from exc
 
-    def _look_up_vgs_raw(self, gm_id: float | np.ndarray, L: float, vds: float, vsb: float) -> np.ndarray:
+    def _look_up_vgs_raw(
+        self, gm_id: float | np.ndarray, L: float, vds: float, vsb: float
+    ) -> np.ndarray:
         """``Lookup.look_upVGS`` with the same bare-``ValueError`` translation as :meth:`_look_up_raw`."""
         coords: dict[str, object] = dict(GM_ID=gm_id, VDS=vds, VSB=vsb, L=L)
         try:
@@ -317,9 +422,7 @@ class DeviceTable:
                 f"across the whole VGS grid — VDS=0 degenerates that way, ID→0). Re-grid the LUT "
                 f"or move the bias; values are never extrapolated/clamped."
             )
-        curve = self._look_up_raw(
-            "GM_ID", dict(VGS=self.VGS_grid, VDS=vds, VSB=vsb, L=L)
-        )
+        curve = self._look_up_raw("GM_ID", dict(VGS=self.VGS_grid, VDS=vds, VSB=vsb, L=L))
         finite = np.isfinite(curve)
         top = int(np.argmax(np.where(finite, curve, -np.inf))) if finite.any() else 0
         branch, vgs_branch = curve[top:], self.VGS_grid[top:]
@@ -447,16 +550,21 @@ class DeviceTable:
 
         The **weak-inversion entry point** — in weak inversion gm/ID plateaus (~25-30 1/V), so
         many densities map to nearly the same gm/ID and JD is the better-resolving knob. Validated
-        by a round trip: the gm/ID is rejected (``OutOfGridError``) if it does not re-produce ``jd``,
-        which catches an off-grid target where pygmid would otherwise hand back garbage.
+        by a round trip: the gm/ID is rejected (``OutOfGridError``) if it does not re-produce ``jd``
+        to within 5 % **of ``jd``** — which catches an off-grid target where pygmid would otherwise
+        return an extrapolated value.
         """
         self._require_in_grid("L", L, self.L_grid)
         self._require_in_grid("VDS", vds, self.VDS_grid)
         self._require_in_grid("VSB", vsb, self.VSB_grid)
         bias = dict(VDS=vds, VSB=vsb, L=L)
         gm_id = self.look_up("GM_ID", ID_W=jd, **bias)
-        jd_back = self.look_up("ID_W", GM_ID=gm_id, **bias)
-        if gm_id <= 0 or not math.isclose(jd_back, jd, rel_tol=0.05):
+        # The read-back bypasses look_up's gm/ID-band gate on purpose: an inversion that lands off
+        # the band is exactly what this round trip reports, in the caller's terms (the JD asked for).
+        jd_back = _scalar(self._look_up_raw("ID_W", dict(GM_ID=gm_id, **bias)))
+        # Relative to the TARGET, not math.isclose's max(|a|, |b|), which admitted a read-back up
+        # to 5.26 % high; written `not <=` so a NaN read-back is rejected too.
+        if gm_id <= 0 or not abs(jd_back - jd) <= 0.05 * abs(jd):
             raise OutOfGridError(
                 f"jd={jd:g} A/µm does not invert consistently at (L={L:g}, VDS={vds:g}, "
                 f"VSB={vsb:g}) — off the characterized current-density range. {self._grid_msg('GM_ID', bias)}"
@@ -482,7 +590,9 @@ class DeviceTable:
         lo, hi = gm_id
         grid = np.linspace(lo, hi, n)
         bias = dict(VDS=vds, VSB=vsb, L=L)
-        self._require_axes_in_grid(bias)  # fail loud on off-grid bias axes (no silent extrapolation)
+        self._require_axes_in_grid(
+            bias
+        )  # fail loud on off-grid bias axes (no silent extrapolation)
         self._require_gm_id_reachable(grid, L, vds, vsb)
         jd = self._look_up_raw("ID_W", dict(GM_ID=grid, **bias))
         av0 = self._look_up_raw("GM_GDS", dict(GM_ID=grid, **bias))
@@ -492,13 +602,7 @@ class DeviceTable:
         # linspace, so an end point landing a few ULP outside the VGS grid is the pchip inversion's
         # rounding, not an extrapolation. Untoleranced it rejected 28 of 73 band-edge sweeps.
         vgs, vgs_off_grid = self._snap_vgs_to_grid(vgs_raw)
-        bad = (
-            ~np.isfinite(jd)
-            | ~np.isfinite(av0)
-            | ~np.isfinite(wt)
-            | (jd <= 0.0)
-            | vgs_off_grid
-        )
+        bad = ~np.isfinite(jd) | ~np.isfinite(av0) | ~np.isfinite(wt) | (jd <= 0.0) | vgs_off_grid
         if bool(bad.any()):
             i = int(np.argmax(bad))
             raise OutOfGridError(

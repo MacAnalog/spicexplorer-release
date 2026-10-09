@@ -1,5 +1,6 @@
 """Tests for the power measurement (registry `op` kind) and the active-area param-derived
 metric — the two new figures of merit added for the area/power optimization flow."""
+
 import numpy as np
 import pytest
 from spicexplorer_core.measurements import derived, registry
@@ -26,24 +27,30 @@ class _FakeResult:
 
 # ── power (P = |I_supply|·VDD) ────────────────────────────────────────────────
 
+
 def test_power_measurement_watts_mw_uw():
     res = _FakeResult({"i_supply": -3.232978e-4})  # signed supply current, 1.5 V rail
     vdd = 1.5
     p_w = 3.232978e-4 * vdd
-    assert registry.measure(res, {"meas": "power", "probe": "i_supply", "vdd": vdd},
-                            default_analysis="op") == pytest.approx(p_w)
-    assert registry.measure(res, {"meas": "power_mw", "probe": "i_supply", "vdd": vdd},
-                            default_analysis="op") == pytest.approx(p_w * 1e3)
-    assert registry.measure(res, {"meas": "power_uw", "probe": "i_supply", "vdd": vdd},
-                            default_analysis="op") == pytest.approx(p_w * 1e6)
+    assert registry.measure(
+        res, {"meas": "power", "probe": "i_supply", "vdd": vdd}, default_analysis="op"
+    ) == pytest.approx(p_w)
+    assert registry.measure(
+        res, {"meas": "power_mw", "probe": "i_supply", "vdd": vdd}, default_analysis="op"
+    ) == pytest.approx(p_w * 1e3)
+    assert registry.measure(
+        res, {"meas": "power_uw", "probe": "i_supply", "vdd": vdd}, default_analysis="op"
+    ) == pytest.approx(p_w * 1e6)
 
 
 def test_power_is_positive_regardless_of_current_sign():
     # power uses |I|, so a sink vs source current gives the same magnitude
     for i in (2.0e-4, -2.0e-4):
-        assert registry.measure(_FakeResult({"i_supply": i}),
-                                {"meas": "power", "probe": "i_supply", "vdd": 1.2},
-                                default_analysis="op") == pytest.approx(2.0e-4 * 1.2)
+        assert registry.measure(
+            _FakeResult({"i_supply": i}),
+            {"meas": "power", "probe": "i_supply", "vdd": 1.2},
+            default_analysis="op",
+        ) == pytest.approx(2.0e-4 * 1.2)
 
 
 def test_power_requires_vdd_arg():
@@ -55,17 +62,20 @@ def test_power_requires_vdd_arg():
 
 def test_i_supply_unchanged_by_power_addition():
     res = _FakeResult({"i_supply": -2.5e-4})
-    assert registry.measure(res, {"meas": "i_supply", "probe": "i_supply"},
-                            default_analysis="op") == pytest.approx(2.5e-4)
+    assert registry.measure(
+        res, {"meas": "i_supply", "probe": "i_supply"}, default_analysis="op"
+    ) == pytest.approx(2.5e-4)
 
 
 # ── active area (Σ W·L·m) ─────────────────────────────────────────────────────
 
+
 def test_active_area_sum_of_gate_areas():
     params = {"w1": 2e-6, "l1": 0.5e-6, "w2": 4e-6, "l2": 0.5e-6, "m2": 2.0}
-    recipe = {"derived": "active_area",
-              "devices": [{"w": "w1", "l": "l1"},
-                          {"w": "w2", "l": "l2", "m": "m2"}]}
+    recipe = {
+        "derived": "active_area",
+        "devices": [{"w": "w1", "l": "l1"}, {"w": "w2", "l": "l2", "m": "m2"}],
+    }
     expected = 2e-6 * 0.5e-6 + 4e-6 * 0.5e-6 * 2.0
     assert derived.compute_derived(recipe, params) == pytest.approx(expected)
 
@@ -95,4 +105,6 @@ def test_derived_validation_rejects_unknown_but_allows_netlist_mode():
     # A devices-less active_area is now VALID — it is scored by the recursive netlist walk
     # (spicexplorer_core.measurements.area), which discovers every device from the deck.
     derived.validate_derived_recipe("t", {"derived": "active_area"})
-    derived.validate_derived_recipe("t", {"derived": "active_area", "devices": [{"w": "a", "l": "b"}]})
+    derived.validate_derived_recipe(
+        "t", {"derived": "active_area", "devices": [{"w": "a", "l": "b"}]}
+    )

@@ -1,0 +1,81 @@
+# Shared IHP SG13G2 process config -- packaged reference (Tech.builtin("ihp-sg13g2")). Read by
+# spicexplorer_core.tech (this file), spicexplorer_layout (routing + rail + EmTech.from_yaml),
+# and spicexplorer_signoff (current_density's electromigration table); a section unknown to one
+# reader is not an error there (EmTech.from_yaml keeps only the fields it declares).
+# GDS layer numbers = the PDK openEMS stackup XML "Layer" numbers.
+metals:
+  Metal1: 8
+  Metal2: 10
+  Metal3: 30
+  Metal4: 50
+  Metal5: 67
+  TopMetal1: 126
+  TopMetal2: 134
+vias:
+  Via1: 19
+  Via2: 29
+  Via3: 49
+  Via4: 66
+  TopVia1: 125
+  TopVia2: 133
+via_stack:            # via -> [metal below, metal above]
+  Via1: [Metal1, Metal2]
+  Via2: [Metal2, Metal3]
+  Via3: [Metal3, Metal4]
+  Via4: [Metal4, Metal5]
+  TopVia1: [Metal5, TopMetal1]
+  TopVia2: [TopMetal1, TopMetal2]
+subgnd_layer: 210     # stackup's idealized substrate-contact layer (SUBGND)
+gnd_contact_layers: [1, 6]  # Activ + Cont — tie gnd nets' Metal1 to the plane
+port_layer_base: 300  # port rects on 300+num — keep clear of every stackup layer
+text_datatype: 25     # net-label datatype on the metal layer number
+workflow: ihp-sg13g2/libs.tech/openems/openems_ihp_sg13g2/workflow  # rel. $PDK_ROOT
+stackup_xml: SG13G2.xml                                             # rel. workflow
+
+# --- shared sections (read by the signoff/layout lanes, not by the EM one) ---------------
+metal_datatype: 0     # drawing datatype on a metal layer number ((8, 0) = Metal1 drawing)
+
+# Sheet resistance, Ohm/square. SG13G2_os_process_spec.pdf section 2.15 (Rev. 1.2) --
+# the same table the electromigration limits below come from.
+sheet_ohm_sq:
+  Metal1: 0.110
+  Metal2: 0.088
+  Metal3: 0.088
+  Metal4: 0.088
+  Metal5: 0.088
+  TopMetal1: 0.018
+  TopMetal2: 0.011
+
+# Electromigration limits, section 2.15, 11 years @ 105 C.
+# A wire carries `per_um_ma` mA per um of drawn width at or above `wide_um`, and a flat
+# `narrow_ma` total in the qualified narrow band [narrow_um, wide_um). A via/contact layer
+# carries `per_via_ma` mA per cut and ignores width. `min_width_rule` is cited when the floor
+# comes from the rule deck rather than the EM spec.
+em_limits:
+  Metal1:    {per_um_ma: 1,  wide_um: 0.36, narrow_ma: 0.36, narrow_um: 0.16}
+  Metal2:    {per_um_ma: 2,  wide_um: 0.3,  narrow_ma: 0.6,  narrow_um: 0.2}
+  Metal3:    {per_um_ma: 2,  wide_um: 0.3,  narrow_ma: 0.6,  narrow_um: 0.2}
+  Metal4:    {per_um_ma: 2,  wide_um: 0.3,  narrow_ma: 0.6,  narrow_um: 0.2}
+  Metal5:    {per_um_ma: 2,  wide_um: 0.3,  narrow_ma: 0.6,  narrow_um: 0.2}
+  # 2.15 gives no width band for the thick top metals; the floor is the rule deck's own
+  # minimum width, so a scored width is a drawable width.
+  TopMetal1: {per_um_ma: 15, wide_um: 1.64, min_width_rule: "TM1.a, 5_22_topmetal1.drc"}
+  TopMetal2: {per_um_ma: 16, wide_um: 2.0,  min_width_rule: "TM2.a, 5_25_topmetal2.drc"}
+  Contact:   {per_via_ma: 0.3, cut: cnt}
+  Via1:      {per_via_ma: 0.4}
+  Via2:      {per_via_ma: 0.4}
+  Via3:      {per_via_ma: 0.4}
+  Via4:      {per_via_ma: 0.4}
+  TopVia1:   {per_via_ma: 1.4}
+  TopVia2:   {per_via_ma: 10}
+
+# Generator routing rules. Every number is a drawn-geometry rule of THIS process, so a
+# generator's obstacle map and column allocator read them rather than carrying them.
+routing:
+  grid_um: 0.005          # the manufacturing grid every coordinate snaps to
+  route_layer: Metal2     # the layer a column is drawn on unless the caller names another
+  stub_layer: Metal1      # the layer a stub bridges an x-shift on
+  stub_width_um: 0.2      # Metal1 stub width
+  stub_clear_x_um: 0.28   # clearance a stub and its via pad need in x
+  stub_clear_y_um: 0.22   # ... and in y
+  column_pitch_um: 0.6    # via pad 0.38 + Metal2 space 0.21, rounded to the grid

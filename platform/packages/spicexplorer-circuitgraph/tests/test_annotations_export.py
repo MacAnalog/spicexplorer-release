@@ -19,6 +19,7 @@ from spicexplorer_circuitgraph import (
     CircuitGraph,
     MirrorGroup,
     SubcircuitMatch,
+    SubcircuitTemplate,
     TemplateLibrary,
     annotate_subcircuits,
     export_subcircuit_annotations,
@@ -76,7 +77,9 @@ def test_export_empty_is_valid():
 
 
 def test_group_maps_to_one_top_level_block():
-    out = export_subcircuit_annotations([_group("cm.nmos.simple#1", "simple", "current_mirror", ["XM5", "XM6"])])
+    out = export_subcircuit_annotations(
+        [_group("cm.nmos.simple#1", "simple", "current_mirror", ["XM5", "XM6"])]
+    )
     (b,) = out["blocks"]
     assert b["block_id"] == "cm.nmos.simple#1"
     assert b["parent_id"] is None
@@ -108,7 +111,14 @@ def test_alternates_are_folded_into_the_block():
         "cascode",
         "current_mirror",
         ["XM1", "XM2", "XM3", "XM4"],
-        alternates=[_match("cm.nmos.improved_wilson", "improved_wilson", "current_mirror", ["XM1", "XM2", "XM3", "XM4"])],
+        alternates=[
+            _match(
+                "cm.nmos.improved_wilson",
+                "improved_wilson",
+                "current_mirror",
+                ["XM1", "XM2", "XM3", "XM4"],
+            )
+        ],
     )
     (b,) = export_subcircuit_annotations([grp])["blocks"]
     assert b["alternates"] == ["cm.nmos.improved_wilson"]
@@ -155,7 +165,14 @@ def test_real_5t_ota_port_names_are_functional():
     out = export_subcircuit_annotations(group_matches(find_subcircuits(g)))
     pair = next(b for b in out["blocks"] if b["family"] == "differential_pair")
     # the diff pair exposes its template port roles on real host nets (the join key into the schematic)
-    assert set(pair["port_names"].values()) >= {"supply", "in_p", "in_n", "out_p", "out_n", "CM_tail"}
+    assert set(pair["port_names"].values()) >= {
+        "supply",
+        "in_p",
+        "in_n",
+        "out_p",
+        "out_n",
+        "CM_tail",
+    }
     host_nets = {net for c in g.get_components() for net in g.connections(c).values()}
     assert set(pair["port_names"]) <= host_nets
 
@@ -253,6 +270,98 @@ def test_bare_group_export_keeps_rules_ref_but_cannot_know_roles(tmp_path):
     )["blocks"]
     assert b["roles"] == {}
     assert b["rules_ref"] == [str((tmp_path / "rules" / "current_mirror.md").resolve())]
+
+
+# The analog-db `cm.nmos.low_voltage_cascode` (4T, externally biased: the cascode gates sit on a
+# `bias` PORT, so the template itself carries no diode reference).
+_LVC_NMOS = """\
+** low-voltage cascode nmos current mirror (external VBIAS)
+XM1 net2 iin VSS VSS sg13_lv_nmos
+XM2 net1 iin VSS VSS sg13_lv_nmos
+XM3 iout VBIAS net1 VSS sg13_lv_nmos
+XM4 iin VBIAS net2 VSS sg13_lv_nmos
+.end
+"""
+
+
+def test_recovered_bias_reference_fills_a_device_slot(tmp_path):
+    # LEAF-F15 (CG-3): the matcher folds the on-rail diode that generates VBIAS (XMB) into the block
+    # as its reference, but that device fills no template slot — so `device_slots` (the renderer's
+    # device → slot map) used to omit a device the block's `devices` lists.
+    (tmp_path / "lvc.spice").write_text(_LVC_NMOS)
+    lib = TemplateLibrary(
+        [
+            SubcircuitTemplate(
+                id="cm.nmos.low_voltage_cascode",
+                netlist_path=tmp_path / "lvc.spice",
+                mirror_class="low_voltage_cascode",
+                polarity="nmos",
+                family="current_mirror",
+                ports={"supply": "VSS", "ref_in": "iin", "out": "iout", "bias": "VBIAS"},
+            )
+        ]
+    )
+    host = CircuitGraph.from_netlist(
+        NetlistView.from_string(
+            "* lvc host with its bias diode\n"
+            "XM1 n2 iref vss vss sg13_lv_nmos\n"
+            "XM2 n1 iref vss vss sg13_lv_nmos\n"
+            "XM3 iout vb n1 vss sg13_lv_nmos\n"
+            "XM4 iref vb n2 vss sg13_lv_nmos\n"
+            "XMB vb vb vss vss sg13_lv_nmos\n"
+            ".end\n"
+        ),
+        name="host",
+    )
+    (grp,) = group_matches(find_subcircuits(host, lib))
+    assert grp.reference_device == "XMB"  # recovered from the host, not a template device
+    (b,) = export_subcircuit_annotations([grp], library=lib)["blocks"]
+    assert set(b["device_slots"]) == set(b["devices"])
+    assert b["device_slots"]["XMB"] == "bias_ref"
+    template_devs = {"XM1", "XM2", "XM3", "XM4"}
+    assert {b["device_slots"][d] for d in template_devs} == template_devs
+
+
+def _lvc_member(devices, device_map) -> SubcircuitMatch:
+    return replace(
+        _match("cm.nmos.low_voltage_cascode", "low_voltage_cascode", "current_mirror", devices),
+        device_map=device_map,
+    )
+
+
+@pytest.mark.parametrize("recovered_first", [True, False], ids=["recovered-first", "mapped-first"])
+def test_a_device_recovered_in_one_member_but_mapped_in_another_keeps_its_real_slot(
+    recovered_first,
+):
+    # `bias_ref` is filled only after every member's device_map, so a member that merely recovered
+    # XMB (it fills no slot there) cannot mask a member that maps XMB to a real slot — whatever the
+    # member order.
+    recovered = _lvc_member(["XM1", "XM3", "XMB"], {"XM1": "XM1", "XM3": "XM3"})
+    mapped = _lvc_member(["XM2", "XMB"], {"XM1": "XMB", "XM2": "XM2"})
+    members = (recovered, mapped) if recovered_first else (mapped, recovered)
+    grp = replace(
+        _group("cm#1", "low_voltage_cascode", "current_mirror", ["XM1", "XM2", "XM3", "XMB"]),
+        members=members,
+    )
+    (b,) = export_subcircuit_annotations([grp])["blocks"]
+    assert b["device_slots"] == {"XM1": "XM1", "XM2": "XM2", "XM3": "XM3", "XMB": "XM1"}
+
+
+def test_a_subsumed_block_with_a_recovered_reference_covers_its_devices_too():
+    # A nested (subsumed) block's slots come from its one match, and follow the same rule.
+    devices = ["XM1", "XM2", "XM3", "XM4", "XMB"]
+    lvc = _lvc_member(devices, {f"XM{i}": f"XM{i}" for i in range(1, 5)})
+    parent = _group(
+        "cm#1",
+        "improved_high_swing_cascode",
+        "current_mirror",
+        devices,
+        subsumed=[lvc],
+    )
+    top, nested = export_subcircuit_annotations([parent])["blocks"]
+    assert nested["parent_id"] == top["block_id"]
+    assert set(nested["device_slots"]) == set(nested["devices"])
+    assert nested["device_slots"]["XMB"] == "bias_ref"
 
 
 def test_real_5t_ota_yields_mirrors_and_pair():

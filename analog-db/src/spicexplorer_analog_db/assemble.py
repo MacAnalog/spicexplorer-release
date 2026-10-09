@@ -84,7 +84,9 @@ def dut_subckt(circuit: Circuit, pdk: str) -> str:
     GENERATED lowered netlist body wrapped in a real ``.subckt <id> <ports>`` block."""
     lowered = circuit.dir / "pdk" / pdk / "netlist.spice"
     if not lowered.is_file():
-        raise AssembleError(f"{circuit.id}: pdk/{pdk}/netlist.spice missing (run `analog-db generate`)")
+        raise AssembleError(
+            f"{circuit.id}: pdk/{pdk}/netlist.spice missing (run `analog-db generate`)"
+        )
     body = [
         ln
         for ln in lowered.read_text().splitlines()
@@ -115,8 +117,14 @@ def _conditions(circuit: Circuit, analysis: dict[str, Any], pdk: str) -> dict[st
     ds = circuit.datasheet()
     defaults = ds.get("default_conditions", {})
     # the universal fallbacks every template may reference
-    fallback_map = {"VDD": "supply", "VCM": "vcm", "IBIAS": "ibias", "CL": "cload", "TEMP": "temp",
-                    "VOUT_NOM": "vout"}
+    fallback_map = {
+        "VDD": "supply",
+        "VCM": "vcm",
+        "IBIAS": "ibias",
+        "CL": "cload",
+        "TEMP": "temp",
+        "VOUT_NOM": "vout",
+    }
     for var, cond in fallback_map.items():
         if cond in defaults and "typical" in defaults[cond]:
             out[var] = str(defaults[cond]["typical"])
@@ -146,7 +154,9 @@ def assemble(circuit: Circuit, analysis_id: str, pdk: str, corner: str = "tt") -
     template_id = adoc.get("template", analysis_id)
     tpath = resolve_template(circuit.klass, template_id)
     if tpath is None:
-        raise AssembleError(f"{circuit.id}/{analysis_id}: template {template_id!r} resolves to no file")
+        raise AssembleError(
+            f"{circuit.id}/{analysis_id}: template {template_id!r} resolves to no file"
+        )
 
     ds = circuit.datasheet()
     temp = ds.get("default_conditions", {}).get("temp", {}).get("typical", 27)

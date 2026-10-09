@@ -9,7 +9,7 @@ C {blocks/cm_nmos_simple_1.sym} -440 0 0 0 {name=xcm_nmos_simple_1}
 C {blocks/cm_pmos_simple_1.sym} 0 0 0 0 {name=xcm_pmos_simple_1}
 C {blocks/dp_pmos_simple_1.sym} 440 0 0 0 {name=xdp_pmos_simple_1}
 C {devices/capa_np.sym} -220 340 0 0 {name=C0 value=x_c0}
-C {devices/isource_np.sym} -660 340 0 0 {name=IBS value="dc {x_ibias_val}"}
+C {devices/isource_np.sym} -660 340 0 0 {name=IBS value="dc \{x_ibias_val\}"}
 C {devices/res_np.sym} 0 340 0 0 {name=R0 value=x_rz}
 C {devices/sg13_lv_nmos_np.sym} 220 340 0 0 {name=M4 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm4_w l=x_dut_xm4_l m=x_dut_xm4_m}
 N -330 -20 -290 -20 {}

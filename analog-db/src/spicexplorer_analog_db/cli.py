@@ -4,13 +4,14 @@ analog-db verify      [--tier N ...] [--circuit ID] [--pdk PDK] [--json]
 analog-db generate    [--circuit ID] [--all]
 analog-db gen-params  (--circuit ID | --all) [--write]
 analog-db export-raw  [--circuit ID] [--pdk PDK] [--corner tt[,ss,…]] [--check] [--svg]
+analog-db verify-status --from REPORT.json [--merge] [--date YYYY-MM-DD] [--platform SHA] [--write]
 analog-db catalog     [--write]
 analog-db run         --circuit ID --pdk PDK [--corner tt] [--docker [SERVICE]] [--write]
 analog-db add-binding --circuit ID --pdk PDK [--from PDK]
 analog-db gmid-extract --pdk PDK [--device DEV] [--corner tt|tt,ss,ff|all] [--vgs a,s,b] [--length l1,l2,…]
 analog-db gmid-extract-spectre --pdk PDK [--corner tt|all] [--workers N] [--smoke|--dry-run]
 analog-db layout      list [--circuit ID] | show --circuit ID [--pdk PDK] [--layout SLUG]
-                      | run --circuit ID --step {generate|signoff|pex|cosize} [-- ARGS…]
+                      | run --circuit ID --step {generate|signoff|render|pex|cosize} [-- ARGS…]
 """
 
 from __future__ import annotations
@@ -21,7 +22,22 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import catalog, generate, model, paths, verify
+from . import catalog, generate, model, paths, pdks, verify
+
+
+def _pdk_scope(check: str, pdk: str) -> str:
+    """How one result row relates to the requested ``--pdk`` — the marker `--json` carries.
+
+    ``"requested"`` the check is scoped to that PDK; ``"other"`` it is scoped to a DIFFERENT one
+    (a failing row is never hidden, so those DO appear under ``--pdk``); ``"any"`` the check names
+    no PDK at all (circuit-wide, e.g. ``schema:circuit``, or DB-level), so it holds for every PDK.
+    Substring matching, deliberately the same predicate the listing filter uses.
+    """
+    if pdk in check:
+        return "requested"
+    if any(p in check for p in pdks.registry_ids() if p != pdk):
+        return "other"
+    return "any"
 
 
 def _cmd_verify(args: argparse.Namespace) -> int:
@@ -33,21 +49,43 @@ def _cmd_verify(args: argparse.Namespace) -> int:
     ids = [args.circuit] if args.circuit else None
     tiers = args.tier or None
     results = verify.run(tiers=tiers, circuit_ids=ids, sim=getattr(args, "sim", False))
+    # ``--pdk`` narrows the VIEW; it must never move the VERDICT. The check string is the only
+    # thing that carries a PDK, and circuit-WIDE checks (`schema:circuit`, `xref:class_exists`, …)
+    # name none — so the plain `args.pdk in r.check` filter used to drop a circuit-wide FAILURE
+    # and turn a red run green (same result set: no `--pdk` → exit 1; `--pdk sky130` → exit 0).
+    # Two independent guards, because either alone would be one edit away from the bug returning:
+    #   1. a failing row is never noise, so it survives the filter (`r.status == "fail"`);
+    #   2. the summary, the derived status and the exit code all read the UNFILTERED `results`.
+    shown = results
     if args.pdk:
-        results = [r for r in results if args.pdk in r.check or not r.circuit]
+        shown = [r for r in results if args.pdk in r.check or not r.circuit or r.status == "fail"]
 
     if args.json:
-        print(json.dumps([r.to_dict() for r in results], indent=2))
+        # Because a FAILING row always survives the filter, `--pdk X --json` emits rows scoped to
+        # OTHER PDKs. Say so ON THE ROW: a consumer building a per-PDK matrix would otherwise
+        # charge another PDK's failure to X. `pdk_scope` is present exactly when `--pdk` is.
+        rows = []
+        for r in shown:
+            d = r.to_dict()
+            if args.pdk:
+                d["pdk_scope"] = _pdk_scope(r.check, args.pdk)
+            rows.append(d)
+        print(json.dumps(rows, indent=2))
     else:
-        for r in results:
+        for r in shown:
             mark = {"pass": "PASS", "fail": "FAIL", "skip": "skip"}[r.status]
             who = r.circuit or "(db)"
             line = f"  [{mark}] T{r.tier} {who} :: {r.check}"
+            if args.pdk and _pdk_scope(r.check, args.pdk) == "other":
+                line += f"  (out of scope for --pdk {args.pdk})"
             if r.reason:
                 line += f"  — {r.reason}"
             print(line)
         s = verify.summarize(results)
-        print(f"\n{s['pass']} passed, {s['fail']} failed, {s['skip']} skipped")
+        scope = (
+            "  (every row — `--pdk` narrows the listing above, not the verdict)" if args.pdk else ""
+        )
+        print(f"\n{s['pass']} passed, {s['fail']} failed, {s['skip']} skipped{scope}")
         for cid in ids or model.list_circuit_ids():
             print(f"  status[{cid}] = {verify.derive_status(cid, results)}")
 
@@ -187,6 +225,13 @@ def _cmd_export_raw(args: argparse.Namespace) -> int:
     return 0
 
 
+def _shown(p: Path) -> str:
+    """``p`` for a log line: relative to the DB root when it sits inside it, else as given (an
+    ``--out`` outside the DB is a valid target)."""
+    root = paths.db_root()
+    return str(p.relative_to(root)) if p.is_relative_to(root) else str(p)
+
+
 def _cmd_export_raw_project(args: argparse.Namespace) -> int:
     from . import raw_project
 
@@ -200,12 +245,14 @@ def _cmd_export_raw_project(args: argparse.Namespace) -> int:
                 p = raw_project.write_demo(cid, args.pdk)
             else:
                 p = raw_project.write(cid, args.pdk, out_dir)
-            written.append(p)
-            print(f"  wrote {p.relative_to(paths.db_root())}")
         except Exception as exc:  # a circuit with no whitelisted metric / no binding → skip
             skipped.append((cid, f"{type(exc).__name__}: {exc}"))
             if args.circuit:  # explicit single-circuit request → surface the reason
                 print(f"  skip  {cid} — {exc}", file=sys.stderr)
+            continue
+        # outside the try: only a failed write is a skip, never the log line of a written file
+        written.append(p)
+        print(f"  wrote {_shown(p)}")
     print(f"\n{len(written)} project(s) written, {len(skipped)} skipped")
     return 0 if written or not args.circuit else 1
 
@@ -461,7 +508,9 @@ def _cmd_gmid_extract_spectre(args: argparse.Namespace) -> int:
         corners = [c.strip() for c in args.corner.split(",") if c.strip()]
     if args.flavor == "all":
         flavors: list[str | None] = list(base.registered_flavors)
-        print(f"  --flavor all → registered flavours for {args.pdk}: {', '.join(base.registered_flavors)}")
+        print(
+            f"  --flavor all → registered flavours for {args.pdk}: {', '.join(base.registered_flavors)}"
+        )
     elif args.flavor:
         flavors = [f.strip() for f in args.flavor.split(",") if f.strip()]
     else:
@@ -489,13 +538,59 @@ def _cmd_gmid_extract_spectre(args: argparse.Namespace) -> int:
                 for pol, lut in luts.items():
                     path = gmid_spectre.write_lut(cfg, lut, pol)
                     man = gmid_spectre.write_manifest(cfg, lut, pol, extracted_at=stamp)
-                    print(f"  wrote {path}  (VGS×VDS×VSB={lut['GM'].shape[1]}×"
-                          f"{lut['GM'].shape[2]}×{lut['GM'].shape[3]}, {lut['GM'].shape[0]} L)")
+                    print(
+                        f"  wrote {path}  (VGS×VDS×VSB={lut['GM'].shape[1]}×"
+                        f"{lut['GM'].shape[2]}×{lut['GM'].shape[3]}, {lut['GM'].shape[0]} L)"
+                    )
                     print(f"  wrote {man}")
             except (ValueError, KeyError, RuntimeError) as exc:
                 print(f"analog-db: {tag}: {exc}", file=sys.stderr)
                 failures.append(tag)
     return 1 if failures else 0
+
+
+def _cmd_verify_status(args: argparse.Namespace) -> int:
+    """``verify-status``: reduce a ``verify --json`` report to the per-circuit record that
+    ``catalog.json`` reads ``derived_status`` from (``verify_status`` module doc)."""
+    from datetime import date as _date
+
+    from . import verify_status as vs
+
+    try:
+        run_date = (
+            _date.fromisoformat(args.date).isoformat()
+            if args.date
+            else (datetime.now(timezone.utc).date().isoformat())
+        )
+    except ValueError:
+        print(f"analog-db: --date {args.date!r} is not YYYY-MM-DD", file=sys.stderr)
+        return 2
+    source = sys.stdin if args.report == "-" else None
+    try:
+        text = source.read() if source else Path(args.report).read_text()
+        records = vs.reduce_report(
+            json.loads(text), date=run_date, platform=args.platform or vs.platform_pin()
+        )
+    except (OSError, ValueError) as exc:  # ReportError and JSONDecodeError are ValueErrors
+        print(f"analog-db: {exc}", file=sys.stderr)
+        return 2
+    if args.merge:
+        try:
+            committed = vs.read_committed() or {"circuits": {}}
+        except ValueError as exc:
+            print(f"analog-db: cannot merge into verify_status.json: {exc}", file=sys.stderr)
+            return 2
+        records = {**committed.get("circuits", {}), **records}
+    text = vs.to_json(vs.document(records))
+    if args.write:
+        paths.verify_status_path().write_text(text)
+        print(
+            f"  wrote {paths.verify_status_path()} ({len(records)} circuits); "
+            "now run `analog-db catalog --write`"
+        )
+    else:
+        sys.stdout.write(text)
+    return 0
 
 
 def _cmd_catalog(args: argparse.Namespace) -> int:
@@ -550,8 +645,13 @@ def _cmd_layout(args: argparse.Namespace) -> int:
         return 0
 
     # run: delegate to the entry's script, passing extra args through
-    script = {"generate": "gen_layout.py", "signoff": "signoff.py",
-              "pex": "pex_sim.py", "cosize": "optimize_cosize.py"}[args.step]
+    script = {
+        "generate": "gen_layout.py",
+        "signoff": "signoff.py",
+        "render": "render.py",
+        "pex": "pex_sim.py",
+        "cosize": "optimize_cosize.py",
+    }[args.step]
     extra = [a for a in (args.extra or []) if a != "--"]
     cmd = [sys.executable, str(d / script), *extra]
     print(f"  $ {' '.join(cmd)}   (cwd={d})")
@@ -573,7 +673,13 @@ def main(argv: list[str] | None = None) -> int:
         help="tier(s) to run (default: all)",
     )
     v.add_argument("--circuit", help="limit to one circuit id")
-    v.add_argument("--pdk", help="limit checks mentioning this PDK")
+    v.add_argument(
+        "--pdk",
+        help="narrow the LISTING to checks mentioning this PDK (failures are always listed — "
+        "under --json each row then carries pdk_scope: requested|other|any so an out-of-scope "
+        "failure is not charged to this PDK; the summary, the derived status and the exit code "
+        "cover every row either way)",
+    )
     v.add_argument("--json", action="store_true", help="emit the matrix report as JSON")
     v.add_argument(
         "--sim",
@@ -639,11 +745,18 @@ def main(argv: list[str] | None = None) -> int:
         help="generate a raw-targeting project_setup.yaml (optimizer driven off the raw/ decks) "
         "into raw_optimize/generated/",
     )
-    erp.add_argument("--circuit", help="one circuit id (default: every circuit with scorable decks)")
-    erp.add_argument("--pdk", help="PDK binding to target (default: the circuit's first)")
+    erp.add_argument(
+        "--circuit", help="one circuit id (default: every circuit with scorable decks)"
+    )
+    erp.add_argument(
+        "--pdk",
+        help="PDK binding to target (default: the circuit's first); a PDK whose registry "
+        "sim_engine is not ngspice (a Spectre-routed kit) is refused",
+    )
     erp.add_argument("--out", help="output dir (default: <db>/raw_optimize/generated)")
     erp.add_argument(
-        "--demo", action="store_true",
+        "--demo",
+        action="store_true",
         help="write a Studio demo project_setup.yaml into circuits/<id>/ instead "
         "(ws_root = the raw deck dir; refuses circuits owned by the extends lane)",
     )
@@ -693,7 +806,9 @@ def main(argv: list[str] | None = None) -> int:
         "import-ferrosim", help="import the ferrosim corpus as kind: reference circuits"
     )
     fs.add_argument(
-        "--src", required=True, help="path to the ferrosim tests/ dir (has decks/, va_demo/, sc_sample/)"
+        "--src",
+        required=True,
+        help="path to the ferrosim tests/ dir (has decks/, va_demo/, sc_sample/)",
     )
     fs.add_argument(
         "--no-catalog", action="store_true", help="don't rebuild catalog.json after importing"
@@ -753,11 +868,17 @@ def main(argv: list[str] | None = None) -> int:
         help="how to run ngspice: host ngspice+$PDK_ROOT (native), the base image (docker), or "
         "auto = native when available (default: registry gmid.simulator.runner, else auto)",
     )
-    ge.add_argument("--workers", type=int,
-                    help="parallel ngspice jobs, one per L value "
-                    "(default: registry gmid.simulator.workers, else 1)")
-    ge.add_argument("--timeout", type=int,
-                    help="per-job timeout in s (default: registry gmid.simulator.timeout_s)")
+    ge.add_argument(
+        "--workers",
+        type=int,
+        help="parallel ngspice jobs, one per L value "
+        "(default: registry gmid.simulator.workers, else 1)",
+    )
+    ge.add_argument(
+        "--timeout",
+        type=int,
+        help="per-job timeout in s (default: registry gmid.simulator.timeout_s)",
+    )
     ge.set_defaults(func=_cmd_gmid_extract)
 
     gs = sub.add_parser(
@@ -782,17 +903,54 @@ def main(argv: list[str] | None = None) -> int:
     gs.add_argument("--length", help="comma-separated L values in µm (default: registry)")
     gs.add_argument("--width", type=float, help="finger width in µm (default: registry)")
     gs.add_argument("--temp", type=float, help="temperature in K (default: registry)")
-    gs.add_argument("--workers", type=int,
-                    help="parallel Spectre jobs (default: registry gmid.simulator.workers)")
-    gs.add_argument("--timeout", type=int,
-                    help="per-job timeout in s (default: registry gmid.simulator.timeout_s)")
-    gs.add_argument("--out-root", help="LUT output root (default: registry gmid.out_root — "
-                    "out-of-repo for licensed kits)")
+    gs.add_argument(
+        "--workers",
+        type=int,
+        help="parallel Spectre jobs (default: registry gmid.simulator.workers)",
+    )
+    gs.add_argument(
+        "--timeout",
+        type=int,
+        help="per-job timeout in s (default: registry gmid.simulator.timeout_s)",
+    )
+    gs.add_argument(
+        "--out-root",
+        help="LUT output root (default: registry gmid.out_root — out-of-repo for licensed kits)",
+    )
     gs.add_argument("--scratch", help="work dir for decks/raws (default: a fresh temp dir)")
-    gs.add_argument("--smoke", action="store_true",
-                    help="2 lengths × 1 VSB quick validation pass")
+    gs.add_argument("--smoke", action="store_true", help="2 lengths × 1 VSB quick validation pass")
     gs.add_argument("--dry-run", action="store_true", help="print one deck and exit")
     gs.set_defaults(func=_cmd_gmid_extract_spectre)
+
+    vs = sub.add_parser(
+        "verify-status",
+        help="reduce a `verify --json` report to verify_status.json, the per-circuit derived "
+        "rung record catalog.json publishes as derived_status",
+    )
+    vs.add_argument(
+        "--from",
+        dest="report",
+        required=True,
+        metavar="REPORT",
+        help="the `analog-db verify --json` output file ('-' reads stdin)",
+    )
+    vs.add_argument(
+        "--merge",
+        action="store_true",
+        help="keep the committed records of circuits the report does not cover",
+    )
+    vs.add_argument("--date", help="run date to record, YYYY-MM-DD (default: today, UTC)")
+    vs.add_argument(
+        "--platform",
+        help="platform commit to record (default: git HEAD of the checkout that "
+        "holds spicexplorer_core, or 'unknown')",
+    )
+    vs.add_argument(
+        "--write",
+        action="store_true",
+        help="write verify_status.json at the db root instead of stdout",
+    )
+    vs.set_defaults(func=_cmd_verify_status)
 
     c = sub.add_parser("catalog", help="build the class-aware catalog.json")
     c.add_argument("--write", action="store_true", help="write to the db root instead of stdout")
@@ -829,19 +987,22 @@ def main(argv: list[str] | None = None) -> int:
     lsw.add_argument("--layout", help="layout id/slug (default: the sole entry)")
     lrun = lay_sub.add_parser(
         "run",
-        help="run a layout script (generate|signoff|pex|cosize); inherits env — "
+        help="run a layout script (generate|signoff|render|pex|cosize); inherits env — "
         "set PDK_ROOT and (for pex/cosize) KPEX + KPEX_KLAYOUT_EXE first",
     )
     lrun.add_argument("--circuit", required=True)
     lrun.add_argument("--pdk", help="PDK id (default: the circuit's sole PDK)")
     lrun.add_argument("--layout", help="layout id/slug (default: the sole entry)")
     lrun.add_argument(
-        "--step", required=True,
-        choices=["generate", "signoff", "pex", "cosize"],
-        help="generate=gen_layout.py, signoff=signoff.py, pex=pex_sim.py, cosize=optimize_cosize.py",
+        "--step",
+        required=True,
+        choices=["generate", "signoff", "render", "pex", "cosize"],
+        help="generate=gen_layout.py, signoff=signoff.py, render=render.py, pex=pex_sim.py, "
+        "cosize=optimize_cosize.py",
     )
     lrun.add_argument(
-        "extra", nargs=argparse.REMAINDER,
+        "extra",
+        nargs=argparse.REMAINDER,
         help="args passed through to the script (e.g. --dut pam4 --budget 10)",
     )
     lay.set_defaults(func=_cmd_layout)

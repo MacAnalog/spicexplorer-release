@@ -49,8 +49,18 @@ def test_plan_d2_example_validates():
             "XM7": {"m": "x_dut_xm7_m"},
         },
         "groups": [
-            {"name": "input_pair", "kind": "matched_pair", "members": ["XM1", "XM2"], "tie": ["w", "l", "m"]},
-            {"name": "nmos_mirror_l", "kind": "mirror_length", "members": ["XM3", "XM4"], "tie": ["l"]},
+            {
+                "name": "input_pair",
+                "kind": "matched_pair",
+                "members": ["XM1", "XM2"],
+                "tie": ["w", "l", "m"],
+            },
+            {
+                "name": "nmos_mirror_l",
+                "kind": "mirror_length",
+                "members": ["XM3", "XM4"],
+                "tie": ["l"],
+            },
         ],
         "ratios": [{"param": "m", "ref": "XM7", "of": "XM6", "ratio": "17/3"}],
     }

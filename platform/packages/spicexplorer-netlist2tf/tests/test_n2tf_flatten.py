@@ -19,11 +19,15 @@ from pathlib import Path
 import pytest
 import sympy as sp
 from spicexplorer_netlist2tf import (
+    Circuit2TF,
     DeviceKind,
     Fidelity,
+    build_system,
     detect_ac_input,
     from_file,
     from_string,
+    poles_zeros,
+    psrr,
     small_signal_model,
     transfer_function,
 )
@@ -123,6 +127,89 @@ def test_unresolvable_definition_stays_opaque():
     ir = from_string(nl)
     assert ir.device("X1").kind is DeviceKind.SUBCKT
     assert ir.device("X1").model == "nowhere"
+
+
+# ----------------------------------------------------------------------
+# Net names are case-insensitive, as in SPICE (B-PF-5)
+# ----------------------------------------------------------------------
+def _nets(ir) -> list[str]:  # noqa: ANN001
+    return sorted({t.net for d in ir.devices for t in d.terminals})
+
+
+def test_a_subckt_body_net_in_another_case_joins_its_formal_port():
+    """``.subckt div a m b`` whose body spells ``A``/``M``/``B``: each body net became a floating
+    ``A_x1``/``M_x1``/``B_x1`` instead of the instance's actual net (amp_011's DUT lost VOUT,
+    VINN and VINP this way)."""
+    deck = (
+        "* case\n.subckt div a m b\nR1 A M 1k\nR2 M B 1k\n.ends\n"
+        "V1 in 0 AC 1\nX1 in out 0 div\n.end\n"
+    )
+    ir = from_string(deck)
+    assert _nets(ir) == ["0", "in", "out"]
+    assert transfer_function(deck, ("out", "0"), ("in", "0")).dc_gain.value == pytest.approx(0.5)
+
+
+def test_top_level_nets_that_differ_only_in_case_are_one_net():
+    """``IN``/``in`` and ``MID``/``mid`` were two nets each. One net keeps the first spelling in
+    device order, so a deck written in one case comes through unchanged."""
+    deck = "* case\nV1 IN 0 AC 1\nR1 in MID 1k\nR2 mid 0 1k\n.end\n"
+    ir = from_string(deck)
+    assert _nets(ir) == ["0", "IN", "MID"]
+    assert sorted(ir.nets) == ["0", "IN", "MID"]
+    assert transfer_function(deck, ("mid", "0"), ("in", "0")).dc_gain.value == pytest.approx(0.5)
+
+
+_UPPER = "* upper\nVDD VDD 0 1.8\nV1 IN 0 AC 1\nR1 IN OUT 1k\nR2 OUT 0 1k\nR3 VDD OUT 1meg\n.end\n"
+
+
+@pytest.mark.parametrize(
+    ("out", "inp"),
+    [
+        (("OUT", "0"), ("IN", "0")),  # as the deck spells them: worked before, must keep working
+        (("out", "0"), ("in", "0")),
+        (("Out", "0"), ("iN", "0")),
+    ],
+)
+def test_caller_net_names_match_in_any_case(out, inp):
+    res = transfer_function(_UPPER, out, inp)
+    r2_r3 = 1e3 * 1e6 / (1e3 + 1e6)  # R3 returns to VDD, an AC ground
+    assert res.dc_gain.value == pytest.approx(r2_r3 / (1e3 + r2_r3), rel=1e-12)
+    ref = transfer_function(_UPPER, ("out", "0"), ("in", "0"))
+    assert res.as_sympy_exact() == ref.as_sympy_exact()
+    pz = poles_zeros(build_system(small_signal_model(from_string(_UPPER))), out, inp)
+    assert pz.dc_gain == pytest.approx(res.dc_gain.value, rel=1e-12)
+
+
+def test_named_ports_supply_and_grounds_match_in_any_case():
+    named = transfer_function(_UPPER, "o", "i", ports={"o": ("OUT", "0"), "i": ("In", "0")})
+    assert (
+        named.as_sympy_exact()
+        == transfer_function(_UPPER, ("out", "0"), ("in", "0")).as_sympy_exact()
+    )
+    # psrr resolves the rail name the same way
+    assert (
+        psrr(_UPPER, ("out", "0"), ("in", "0"), supply="VDD").as_sympy_exact()
+        == psrr(_UPPER, ("out", "0"), ("in", "0"), supply="vdd").as_sympy_exact()
+    )
+    # build_system's net arguments too
+    ssir = small_signal_model(from_string(_UPPER))
+    assert build_system(ssir).row_of("IN") is not None
+    assert build_system(ssir, extra_grounds={"in"}).row_of("IN") is None
+
+
+def test_a_hand_built_ir_keeps_its_own_spelling():
+    """An IR built by hand (here: a lower-case deck's ``to_dict`` with every net upper-cased) keeps
+    its own spelling; a caller's name in either case is resolved against the nets it has."""
+    data = from_string(_UPPER.lower()).to_dict()
+    for n in data["nets"]:
+        n["name"] = n["name"].upper()
+    for d in data["devices"]:
+        for t in d["terminals"]:
+            t["net"] = t["net"].upper()
+    ir = Circuit2TF.from_dict(data)
+    ref = transfer_function(_UPPER, ("out", "0"), ("in", "0")).as_sympy_exact()
+    for out, inp in ((("OUT", "0"), ("IN", "0")), (("out", "0"), ("in", "0"))):
+        assert transfer_function(ir, out, inp).as_sympy_exact() == ref
 
 
 # ----------------------------------------------------------------------

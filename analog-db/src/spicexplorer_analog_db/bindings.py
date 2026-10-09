@@ -77,13 +77,13 @@ def _geom_kind(var: dict[str, Any]) -> str | None:
     it in the symbol (``MOSFET_.._W_..`` / ``_L_``). ``M``/cap/current/voltage/fingers are neither.
     """
     name = var["name"]
-    if var.get("unit") == "m":                       # in-repo OTA geometry (meters)
+    if var.get("unit") == "m":  # in-repo OTA geometry (meters)
         if re.search(r"_w(_|$)", name):
             return "w"
         if re.search(r"_l(_|$)", name):
             return "l"
-        return "w"                                   # a unit:m knob is geometry; default to W floor
-    if re.search(r"_W_", name):                      # AnalogGym role-encoded geometry
+        return "w"  # a unit:m knob is geometry; default to W floor
+    if re.search(r"_W_", name):  # AnalogGym role-encoded geometry
         return "w"
     if re.search(r"_L_", name):
         return "l"
@@ -107,13 +107,13 @@ def _convert_var(var: dict[str, Any], target_pdk: str, floor: dict[str, float]) 
     """One sizing variable converted to the target PDK (geometry re-noted + bin-clamped)."""
     kind = _geom_kind(var)
     if kind is None:
-        return dict(var)                             # PDK-independent — carry verbatim
+        return dict(var)  # PDK-independent — carry verbatim
     out = dict(var)
     for field in ("default", "min", "max"):
         if out.get(field) in (None, ""):
             continue
         um = _to_um(out[field])
-        if field != "max":                           # clamp default + lower bound up to the bin
+        if field != "max":  # clamp default + lower bound up to the bin
             um = max(um, floor[kind])
         out[field] = _emit_um(um, target_pdk)
     return out
@@ -127,7 +127,9 @@ def convert_sizing(
     return {
         "schema": "spicexplorer/sizing@1",
         "pdk": target_pdk,
-        "variables": [_convert_var(v, target_pdk, floor) for v in source_sizing.get("variables", [])],
+        "variables": [
+            _convert_var(v, target_pdk, floor) for v in source_sizing.get("variables", [])
+        ],
     }
 
 
@@ -137,7 +139,9 @@ def _device_models(registry: dict[str, Any]) -> dict[str, str]:
     for pol in ("nmos", "pmos"):
         spec = registry["devices"][pol]
         if isinstance(spec, dict):
-            out[pol] = next((spec[k] for k in _PREFERRED_DEVICE_KEYS if k in spec), next(iter(spec.values())))
+            out[pol] = next(
+                (spec[k] for k in _PREFERRED_DEVICE_KEYS if k in spec), next(iter(spec.values()))
+            )
         else:
             out[pol] = spec
     return out
@@ -231,7 +235,9 @@ def _add_pdk_to_manifest(circuit: Circuit, target_pdk: str) -> None:
     i = 0
     while i < len(lines):
         ln = lines[i]
-        flow = re.match(r"^(\s*pdks:\s*)\[([^\]]*)\](.*)$", ln)   # `pdks: [a, b]  # optional comment`
+        flow = re.match(
+            r"^(\s*pdks:\s*)\[([^\]]*)\](.*)$", ln
+        )  # `pdks: [a, b]  # optional comment`
         block = re.match(r"^(\s*)pdks:\s*$", ln)
         if flow and not done:
             items = [x.strip() for x in flow.group(2).split(",") if x.strip()]

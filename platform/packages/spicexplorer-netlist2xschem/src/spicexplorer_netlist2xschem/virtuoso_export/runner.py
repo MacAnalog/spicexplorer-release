@@ -12,7 +12,9 @@ to bind), and exact device-instance sets.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +22,11 @@ from .emit_il import EmitResult
 from .symbols import SymbolEmitResult
 
 __all__ = ["VerifyReport", "connect", "load_il", "verify_schematic", "verify_symbol"]
+
+#: Our fallback copy of the bridge's CDF read filter — see ``cdf_param_filters.yaml`` and
+#: ``doc/bridge_limits.md`` §8. The bridge ships the file in its source tree but not in its
+#: wheel, so an installed bridge has no such file and its reader raises ``FileNotFoundError``.
+FALLBACK_PARAM_FILTERS = Path(__file__).with_name("cdf_param_filters.yaml")
 
 
 def _bridge():
@@ -45,8 +52,43 @@ def connect(*, host: str = "127.0.0.1", port: int | None = None, timeout: int = 
     return vb.VirtuosoClient.from_env(timeout=timeout)
 
 
+_CV_OPEN = re.compile(r'dbOpenCellViewByType\(\s*"([^"]+)"\s+"([^"]+)"\s+"[^"]*"\s+"[^"]*"\s+"w"')
+_AT_LINE = re.compile(r"at line (\d+)")
+
+
+def _locate(path: Path, detail: str) -> str:
+    """Turn ``… at line 3463`` into the source line and the cellview block it sits in.
+
+    Virtuoso reports a ``load`` failure as a line number and nothing else — with a whole
+    hierarchy in one file that names nothing at all (#236). The file is right here, so read
+    the line out of it and name the cellview whose ``dbOpenCellViewByType(… "w")`` last
+    opened above it.
+    """
+    m = _AT_LINE.search(detail)
+    if m is None:
+        return ""
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:  # pragma: no cover - the file we just wrote
+        return ""
+    n = int(m.group(1))
+    if not 1 <= n <= len(lines):
+        return f" (line {n} is past the end of {path.name}: {len(lines)} lines)"
+    where = ""
+    for above in reversed(lines[:n]):
+        cv = _CV_OPEN.search(above)
+        if cv is not None:
+            where = f" in the build of {cv.group(1)}/{cv.group(2)}"
+            break
+    return f" — {path.name}:{n}{where}: {lines[n - 1].strip()}"
+
+
 def load_il(client: Any, path: str | Path, *, timeout: int = 120) -> None:
-    """Load the ``.il`` file; raise with the SKILL error text on failure."""
+    """Load the ``.il`` file; raise with the SKILL error text on failure.
+
+    The message names the file, and — when the daemon reported a line number — the line
+    itself and the cellview build it belongs to.
+    """
     result = client.load_il(path, timeout=timeout)
     errors = getattr(result, "errors", None)
     status = getattr(result, "status", None)
@@ -55,7 +97,7 @@ def load_il(client: Any, path: str | Path, *, timeout: int = 120) -> None:
         detail = (
             "; ".join(errors or []) or f"status={status} output={getattr(result, 'output', '')}"
         )
-        raise RuntimeError(f"xvport: load_il failed: {detail}")
+        raise RuntimeError(f"xvport: load_il failed: {detail}{_locate(Path(path), detail)}")
 
 
 @dataclass
@@ -90,6 +132,27 @@ class VerifyReport:
 _PIN_MASTERS = {"ipin", "opin", "iopin"}
 
 
+def _filters_path(bridge_yaml: Path, fallback: Path = FALLBACK_PARAM_FILTERS) -> Path | None:
+    """The CDF read filter to hand ``read_schematic``: the bridge's own when it is installed,
+    ours when it is not, ``None`` (= no filtering) when neither file exists.
+
+    Pure and path-only so it is testable with no bridge and no daemon.
+    """
+    if bridge_yaml.is_file():
+        return bridge_yaml
+    if fallback.is_file():
+        return fallback
+    return None
+
+
+def _bridge_reader() -> Any:
+    """``read_schematic`` bound to a filter file that actually exists (see ``_filters_path``)."""
+    from virtuoso_bridge.virtuoso.schematic import reader as bridge_reader
+
+    chosen = _filters_path(Path(bridge_reader.__file__).with_name("cdf_param_filters.yaml"))
+    return partial(bridge_reader.read_schematic, param_filters=chosen)
+
+
 def verify_schematic(
     client: Any, lib: str, cell: str, expected: EmitResult, *, reader: Any = None
 ) -> VerifyReport:
@@ -102,12 +165,13 @@ def verify_schematic(
       expectation (interface-pin instances are the ``basic`` lib and are skipped);
     * the device instance sets match exactly; every expected interface pin exists.
 
-    ``reader`` defaults to the bridge's ``read_schematic``; tests inject an offline fake.
+    ``reader`` defaults to the bridge's ``read_schematic`` — bound to a CDF filter file that
+    exists on this install (the bridge's own when packaged, ours otherwise: the bridge's wheel
+    omits it, and the reader's default path then raises ``FileNotFoundError`` after a correct
+    port, see ``doc/bridge_limits.md`` §8). Tests inject an offline fake.
     """
     if reader is None:
-        from virtuoso_bridge.virtuoso.schematic.reader import read_schematic
-
-        reader = read_schematic
+        reader = _bridge_reader()
     data = reader(client, lib, cell, include_positions=False)
     report = VerifyReport(ok=True)
 

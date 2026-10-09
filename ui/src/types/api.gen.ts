@@ -2308,7 +2308,7 @@ export interface components {
             /** Lib File */
             lib_file: string;
             /** Section */
-            section: string;
+            section?: string | null;
         };
         /** NetlistParam */
         NetlistParam: {

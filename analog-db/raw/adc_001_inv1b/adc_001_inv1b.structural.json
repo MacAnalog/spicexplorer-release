@@ -9,8 +9,8 @@
       "inverter": 1
     },
     "structural_roles": {
-      "XMN": "current_mirror",
-      "XMP": "current_mirror"
+      "XMN": "inverter",
+      "XMP": "inverter"
     }
   },
   "groups": [

@@ -15,6 +15,7 @@ Layers mirror test_pvt_corner.py:
   • Layer 3 (@requires_ngspice @requires_pdk @slow): one real optimization_step on
     the folded_cascode example (mode: multi, 2 enabled corners x 1 AC testbench).
 """
+
 import json
 import re
 from pathlib import Path
@@ -50,6 +51,7 @@ def _corner(name, enabled=True, libs=("cornerMOSlv.lib",), nodes=("VDD",), param
 
 # ── config parsing / validation (Layer 1) ───────────────────────────────────
 
+
 def test_fc_yaml_parses_multi_corner_config():
     p = Project_Setup.from_yaml(FC_YAML)
     assert p.pvt is not None
@@ -68,11 +70,18 @@ def test_mode_defaults_to_single_and_runs_active_corner():
 
 
 def test_score_aggregation_aliases_normalize():
-    for alias, canonical in [("add", "sum"), ("total", "sum"), ("average", "mean"),
-                             ("avg", "mean"), ("Worst_Case", "min"), ("worst", "min"),
-                             ("MIN", "min"), ("sum", "sum"), ("mean", "mean")]:
-        cfg = PVTConfig(active_corner="tt", corners=[_corner("tt")],
-                        score_aggregation=alias)
+    for alias, canonical in [
+        ("add", "sum"),
+        ("total", "sum"),
+        ("average", "mean"),
+        ("avg", "mean"),
+        ("Worst_Case", "min"),
+        ("worst", "min"),
+        ("MIN", "min"),
+        ("sum", "sum"),
+        ("mean", "mean"),
+    ]:
+        cfg = PVTConfig(active_corner="tt", corners=[_corner("tt")], score_aggregation=alias)
         assert cfg.score_aggregation == canonical, alias
     with pytest.raises(ValueError, match="score_aggregation"):
         normalize_score_aggregation("median")
@@ -135,20 +144,34 @@ def test_corner_rejects_both_singular_and_plural_supply():
     # Both `supply:` (sugar) and `supplies:` (canonical) on one corner is ambiguous —
     # the old normalizer silently dropped the singular. Now it raises (CFG-1), mirroring
     # the process/model_includes guard.
-    proj = {"pvt": {"active_corner": "tt", "corners": [{
-        "name": "tt",
-        "model_includes": [{"lib_file": "cornerMOSlv.lib", "section": "mos_tt"}],
-        "supply": {"node": "VDD", "value": 1.5},
-        "supplies": [{"node": "VDD", "value": 1.5}],
-    }]}}
+    proj = {
+        "pvt": {
+            "active_corner": "tt",
+            "corners": [
+                {
+                    "name": "tt",
+                    "model_includes": [{"lib_file": "cornerMOSlv.lib", "section": "mos_tt"}],
+                    "supply": {"node": "VDD", "value": 1.5},
+                    "supplies": [{"node": "VDD", "value": 1.5}],
+                }
+            ],
+        }
+    }
     with pytest.raises(ValueError, match="BOTH a singular 'supply' and a plural"):
         _normalize_pvt_block(proj)
     # only the singular sugar still widens cleanly to supplies: [...]
-    proj_ok = {"pvt": {"active_corner": "tt", "corners": [{
-        "name": "tt",
-        "model_includes": [{"lib_file": "cornerMOSlv.lib", "section": "mos_tt"}],
-        "supply": {"node": "VDD", "value": 1.5},
-    }]}}
+    proj_ok = {
+        "pvt": {
+            "active_corner": "tt",
+            "corners": [
+                {
+                    "name": "tt",
+                    "model_includes": [{"lib_file": "cornerMOSlv.lib", "section": "mos_tt"}],
+                    "supply": {"node": "VDD", "value": 1.5},
+                }
+            ],
+        }
+    }
     _normalize_pvt_block(proj_ok)
     assert proj_ok["pvt"]["corners"][0]["supplies"] == [{"node": "VDD", "value": 1.5}]
 
@@ -214,6 +237,7 @@ def test_aggregate_corner_scores_masking_and_errors():
 
 
 # ── apply_corner `.temp` card strip (Layer 1, no simulation) ─────────────────
+
 
 def _joined(wrapper) -> str:
     return "\n".join(ln for ln in wrapper.editor.netlist if isinstance(ln, str))
@@ -281,6 +305,7 @@ def test_failed_sim_degrades_to_no_raw_instead_of_raising(tmp_path):
 
 # ── multi-corner evaluate loop (Layer 2 — optimizer built, SPICE stubbed) ────
 
+
 class _FakeSimResult:
     """Minimal `SimResult` stand-in (the protocol is structural): every scalar reads
     the canned value. No `log_path` attribute — mirroring a stubbed sim that wrote no
@@ -320,13 +345,14 @@ def test_resolve_fit_summary_key_defaults_to_worst_corner(tmp_path):
     """A bare spec name resolves to the WORST corner (lowest mean per-spec
     score), not the first-enumerated (easy `tt`) corner."""
     from spicexplorer.core.domains import OptimizationLogEntry, OptimizationPoint
+
     p, opt = _make_fc_optimizer(tmp_path)
 
     def _entry(tt_score, ss_score):
         return OptimizationLogEntry(
             point=OptimizationPoint(params={}, score=np.float64(0.0)),
             fit_summary={
-                "tt_27C_1V8::dcgain":   {"curr_val": 50.0, "score": np.float64(tt_score)},
+                "tt_27C_1V8::dcgain": {"curr_val": 50.0, "score": np.float64(tt_score)},
                 "ss_125C_1V62::dcgain": {"curr_val": 20.0, "score": np.float64(ss_score)},
             },
         )
@@ -383,8 +409,7 @@ def test_multi_corner_evaluate_loops_and_aggregates(tmp_path, monkeypatch):
     assert meta["score_aggregation"] == "mean"
     assert set(meta["corner_scores"]) == set(corners)
     expected = {
-        c: opt.compute_fitness({s: np.float64(CANNED[c]) for s in spec_names})[0]
-        for c in corners
+        c: opt.compute_fitness({s: np.float64(CANNED[c]) for s in spec_names})[0] for c in corners
     }
     for c in corners:
         assert meta["corner_scores"][c] == pytest.approx(float(expected[c]))
@@ -478,8 +503,7 @@ def test_multi_corner_parallel_corner_fanout(tmp_path, monkeypatch):
     entry = opt.optimization_log[-1]
     meta = entry.point.metadata
     expected = {
-        c: opt.compute_fitness({s: np.float64(CANNED[c]) for s in spec_names})[0]
-        for c in corners
+        c: opt.compute_fitness({s: np.float64(CANNED[c]) for s in spec_names})[0] for c in corners
     }
     for c in corners:
         assert meta["corner_scores"][c] == pytest.approx(float(expected[c]))
@@ -501,7 +525,8 @@ def test_single_mode_fit_summary_stays_bare_keyed(tmp_path, monkeypatch):
     spec_names = [t.name for t in p.optimizer_config.target_specs.enabled_targets()]
 
     monkeypatch.setattr(
-        opt, "simulate_circuit",
+        opt,
+        "simulate_circuit",
         lambda parameterization, run_label=None: {tb: _FakeSimResult(1.0) for tb in tbs},
     )
 
@@ -518,7 +543,8 @@ def test_multi_corner_checkpoint_carries_namespaced_keys(tmp_path, monkeypatch):
     tbs = list(opt.spicelib_wrappers)
 
     monkeypatch.setattr(
-        opt, "simulate_circuit",
+        opt,
+        "simulate_circuit",
         lambda parameterization, run_label=None: {tb: _FakeSimResult(1.0) for tb in tbs},
     )
 
@@ -535,6 +561,7 @@ def test_multi_corner_checkpoint_carries_namespaced_keys(tmp_path, monkeypatch):
 
 
 # ── live multi-corner step (Layer 3 — real ngspice + IHP PDK) ────────────────
+
 
 @requires_ngspice
 @requires_pdk
@@ -558,8 +585,7 @@ def test_multi_corner_live_optimization_step(tmp_path):
     assert set(corner_scores) == set(corners)
     # score is the constraint-first aggregation of the per-corner totals (robust to
     # whichever corners pass/fail for this random point — not hardcoded np.mean).
-    assert score == pytest.approx(
-        float(aggregate_corner_scores(corner_scores, "mean")), rel=1e-9)
+    assert score == pytest.approx(float(aggregate_corner_scores(corner_scores, "mean")), rel=1e-9)
     # every (tb, corner) sim produced its own log, keyed "<tb>__<corner>"
     assert set(entry.log_file) == {f"tb_ac__{c}" for c in corners}
 
@@ -572,7 +598,8 @@ def test_multi_corner_live_optimization_step(tmp_path):
     assert all(np.isfinite(v) for v in dcgain.values()), dcgain
     vals = list(dcgain.values())
     assert vals[0] != pytest.approx(vals[1], rel=1e-6), (
-        f"identical dcgain across corners — corner application was a no-op? {dcgain}")
+        f"identical dcgain across corners — corner application was a no-op? {dcgain}"
+    )
     cs = list(corner_scores.values())
     assert cs[0] != pytest.approx(cs[1], rel=1e-9), corner_scores
 
@@ -585,7 +612,7 @@ def test_multi_corner_parallel_matches_sequential_live(tmp_path):
     default) must produce the SAME per-corner metrics and aggregate score as the
     sequential path for one fixed candidate on folded_cascode. ngspice is
     deterministic, so any drift would mean the fan-out mixed corners' RAWs."""
-    p, opt = _make_fc_optimizer(tmp_path)   # _make_fc_optimizer forces parallel_sim=False
+    p, opt = _make_fc_optimizer(tmp_path)  # _make_fc_optimizer forces parallel_sim=False
     corners = [c.name for c in p.pvt.corners_to_run()]
     spec_names = [t.name for t in p.optimizer_config.target_specs.enabled_targets()]
 

@@ -8,24 +8,24 @@ T {tg_pair_cmos_rail_bulk_11} -210 -200 0 0 0.4 0.4 {}
 C {devices/sg13_lv_nmos_np.sym} 170 0 0 0 {name=MB5 model=sg13_lv_nmos spiceprefix=X w=x_dut_xmb5_w l=x_dut_xmb5_l m=x_dut_xmb5_m}
 C {devices/sg13_lv_pmos_np.sym} -170 0 0 1 {name=MB6 model=sg13_lv_pmos spiceprefix=X w=x_dut_xmb6_w l=x_dut_xmb6_l m=x_dut_xmb6_m}
 N -250 0 -250 94 {}
-N -190 -90 -190 -30 {}
-N -190 30 -190 90 {}
+N -190 -60 -190 -30 {}
+N -190 30 -190 60 {}
 N 190 -60 190 -30 {}
 N 190 30 190 60 {}
 N 250 0 250 94 {}
+N -670 -140 670 -140 {}
 N -190 -60 190 -60 {}
 N -250 0 -190 0 {}
-N -150 0 -90 0 {}
-N 90 0 150 0 {}
+N -150 0 -120 0 {}
+N 60 0 150 0 {}
 N 190 0 250 0 {}
 N -190 60 190 60 {}
-C {devices/lab_wire.sym} 90 0 0 0 {name=l0 lab=V_D1}
-C {devices/lab_wire.sym} -90 0 0 1 {name=l1 lab=V_D1_NOT}
-C {devices/lab_wire.sym} -190 90 2 0 {name=l2 lab=botb1}
-C {devices/lab_wire.sym} -190 -90 0 1 {name=l3 lab=vinn}
-C {devices/lab_wire.sym} -250 94 2 0 {name=l4 lab=VDD}
-C {devices/lab_wire.sym} 250 94 2 0 {name=l5 lab=VSS}
-C {devices/ipin.sym} -525 0 0 0 {name=p0 lab=V_D1_NOT}
-C {devices/ipin.sym} -525 120 0 0 {name=p1 lab=V_D1}
-C {devices/opin.sym} 525 -30 0 0 {name=p2 lab=vinn}
-C {devices/opin.sym} 525 90 0 0 {name=p3 lab=botb1}
+N -670 140 670 140 {}
+C {devices/lab_wire.sym} -670 -140 0 0 {name=l0 lab=VDD}
+C {devices/lab_wire.sym} -670 140 0 0 {name=l1 lab=VSS}
+C {devices/lab_wire.sym} -250 94 2 0 {name=l2 lab=VDD}
+C {devices/lab_wire.sym} 250 94 2 0 {name=l3 lab=VSS}
+C {devices/ipin.sym} -120 0 0 0 {name=p0 lab=V_D1_NOT}
+C {devices/ipin.sym} 60 0 0 0 {name=p1 lab=V_D1}
+C {devices/opin.sym} 190 -60 0 0 {name=p2 lab=vinn}
+C {devices/opin.sym} 190 60 0 0 {name=p3 lab=botb1}

@@ -19,13 +19,13 @@ Timing semantics:
   span *includes* any wait in the backend's runner queue when more sims are
   submitted than the runner's concurrency allows.
 """
+
 from __future__ import annotations
 
 import logging
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from time import monotonic, perf_counter, sleep
-from typing import Dict, List, Tuple
 
 from spicexplorer_core.atomic_io import atomic_write_json
 from spicexplorer_core.spice_engine import SimHandle, Simulator
@@ -55,15 +55,15 @@ class TestbenchSimTiming:
 class SimTimeReport:
     """All timings from one benchmark pass, with per-testbench aggregation."""
 
-    timings: List[TestbenchSimTiming] = field(default_factory=list)
+    timings: list[TestbenchSimTiming] = field(default_factory=list)
 
-    def per_testbench(self) -> Dict[str, List[TestbenchSimTiming]]:
-        out: Dict[str, List[TestbenchSimTiming]] = {}
+    def per_testbench(self) -> dict[str, list[TestbenchSimTiming]]:
+        out: dict[str, list[TestbenchSimTiming]] = {}
         for t in self.timings:
             out.setdefault(t.testbench, []).append(t)
         return out
 
-    def mean_elapsed_s(self) -> Dict[str, float]:
+    def mean_elapsed_s(self) -> dict[str, float]:
         return {
             tb: sum(t.elapsed_s for t in runs) / len(runs)
             for tb, runs in self.per_testbench().items()
@@ -99,16 +99,14 @@ class SimTimeReport:
             runs = by_tb[tb]
             ok = "yes" if all(t.ok for t in runs) else "NO"
             share = (mean_s / total * 100.0) if total > 0 else 0.0
-            lines.append(
-                f"{tb:<{width}}  {mean_s:>11.3f} s  {share:>5.1f}%  {len(runs):>4}  {ok}"
-            )
+            lines.append(f"{tb:<{width}}  {mean_s:>11.3f} s  {share:>5.1f}%  {len(runs):>4}  {ok}")
         lines.append(f"{'TOTAL (sum of means)':<{width}}  {total:>11.3f} s")
         return "\n".join(lines)
 
 
 def wait_for_handles_timed(
-    handles: Dict[str, SimHandle], timeout_s: float | None = None
-) -> Tuple[List[str], Dict[str, float]]:
+    handles: dict[str, SimHandle], timeout_s: float | None = None
+) -> tuple[list[str], dict[str, float]]:
     """Poll ``handles`` until all are done or ``timeout_s`` elapses, recording WHEN
     each one finished.
 
@@ -120,7 +118,7 @@ def wait_for_handles_timed(
     ``None``/``<= 0`` waits forever.
     """
     deadline = (monotonic() + timeout_s) if timeout_s and timeout_s > 0 else None
-    done_at: Dict[str, float] = {}
+    done_at: dict[str, float] = {}
     while True:
         now = monotonic()
         for key, h in handles.items():
@@ -135,7 +133,7 @@ def wait_for_handles_timed(
 
 
 def benchmark_simulators(
-    simulators: Dict[str, Simulator],
+    simulators: dict[str, Simulator],
     runs: int = 1,
     parallel: bool = False,
     timeout_s: float | None = None,
@@ -169,14 +167,19 @@ def benchmark_simulators(
                 except Exception as exc:
                     ok = False
                     logger.warning(f"⏱️  benchmark run failed for testbench '{tb}': {exc}")
-                report.timings.append(TestbenchSimTiming(
-                    testbench=tb, elapsed_s=perf_counter() - t0, ok=ok,
-                    mode="sequential", label=label,
-                ))
+                report.timings.append(
+                    TestbenchSimTiming(
+                        testbench=tb,
+                        elapsed_s=perf_counter() - t0,
+                        ok=ok,
+                        mode="sequential",
+                        label=label,
+                    )
+                )
         else:
-            handles: Dict[str, SimHandle] = {}
-            submitted_at: Dict[str, float] = {}
-            failed_submit: List[str] = []
+            handles: dict[str, SimHandle] = {}
+            submitted_at: dict[str, float] = {}
+            failed_submit: list[str] = []
             for tb, sim in simulators.items():
                 try:
                     submitted_at[tb] = monotonic()
@@ -188,16 +191,41 @@ def benchmark_simulators(
             t_end = monotonic()
             for tb in simulators:
                 if tb in failed_submit:
-                    report.timings.append(TestbenchSimTiming(
-                        testbench=tb, elapsed_s=0.0, ok=False, mode="parallel", label=label))
+                    report.timings.append(
+                        TestbenchSimTiming(
+                            testbench=tb, elapsed_s=0.0, ok=False, mode="parallel", label=label
+                        )
+                    )
                 elif tb in timed_out:
-                    report.timings.append(TestbenchSimTiming(
-                        testbench=tb, elapsed_s=t_end - submitted_at[tb], ok=False,
-                        mode="parallel", label=label))
+                    report.timings.append(
+                        TestbenchSimTiming(
+                            testbench=tb,
+                            elapsed_s=t_end - submitted_at[tb],
+                            ok=False,
+                            mode="parallel",
+                            label=label,
+                        )
+                    )
                 else:
-                    report.timings.append(TestbenchSimTiming(
-                        testbench=tb, elapsed_s=done_at[tb] - submitted_at[tb], ok=True,
-                        mode="parallel", label=label))
+                    # Completion is not success. This branch recorded ok=True for every handle
+                    # that neither failed to submit nor timed out, so a diverged sim was billed as
+                    # a passing benchmark run while the sequential branch above called the same
+                    # result a failure (Codex review, item SIM-03). Same probe in both modes now.
+                    try:
+                        result = handles[tb].result()
+                        ok = getattr(result, "raw", True) is not None
+                    except Exception as exc:
+                        ok = False
+                        logger.warning(f"⏱️  benchmark run failed for testbench '{tb}': {exc}")
+                    report.timings.append(
+                        TestbenchSimTiming(
+                            testbench=tb,
+                            elapsed_s=done_at[tb] - submitted_at[tb],
+                            ok=ok,
+                            mode="parallel",
+                            label=label,
+                        )
+                    )
     return report
 
 

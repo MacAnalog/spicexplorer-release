@@ -225,8 +225,11 @@ def test_shadow_by_kind(contract: CircuitParams, tmp_path: Path):
     deck.write_text(_DECK)
     shadows = shadow_params(contract, ["kind:matched_pair"], netlist_param_defaults(deck))
     assert set(shadows) == {
-        "x_dut_xm2_w", "x_dut_xm2_l", "x_dut_xm2_m",  # input_pair
-        "x_dut_xm4_w", "x_dut_xm4_l",                 # load_pair (ties w, l only)
+        "x_dut_xm2_w",
+        "x_dut_xm2_l",
+        "x_dut_xm2_m",  # input_pair
+        "x_dut_xm4_w",
+        "x_dut_xm4_l",  # load_pair (ties w, l only)
     }
     assert shadows["x_dut_xm4_w"] == "1.5u"
 
@@ -261,7 +264,8 @@ def test_shadow_expression_default_errors(contract: CircuitParams):
     # a tie target whose deck default is itself an expression → loud, never propagated
     with pytest.raises(ParamsError, match="expression"):
         shadow_params(
-            contract, ["input_pair"],
+            contract,
+            ["input_pair"],
             {"x_dut_xm1_w": "{x_dut_xm3_w}", "x_dut_xm1_l": "5u", "x_dut_xm1_m": "1"},
         )
 
@@ -315,9 +319,7 @@ def test_from_yaml_ungroup_skips_user_listed_symbols(tmp_path: Path):
     # the user promotes the shadowed symbol to a knob of their own → no frozen duplicate
     _write_circuit(tmp_path)
     y = tmp_path / "project_setup.yaml"
-    body = _project_yaml(
-        "params_file: params.yaml\n      ungroup: [nmos_mirror_l]"
-    ).replace(
+    body = _project_yaml("params_file: params.yaml\n      ungroup: [nmos_mirror_l]").replace(
         "- {name: i_tail,       min_val: 1u,   max_val: 50u}",
         "- {name: x_dut_xm5_l,  min_val: 0.5u, max_val: 6u}",
     )

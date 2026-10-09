@@ -1,12 +1,25 @@
+import { fixupConfigRules } from "@eslint/compat";
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 import nextTypescript from "eslint-config-next/typescript";
 
-// eslint-config-next 16 ships native flat configs (arrays), so they are spread
-// directly — the old FlatCompat.extends("next/…") wrapper now double-wraps a flat
-// config and throws a circular-schema error.
+// eslint-config-next 16 ships flat configs (arrays of config objects), so they are
+// spread directly. The older FlatCompat.extends("next/…") call wraps a flat config
+// a second time and throws a circular-schema error.
+//
+// fixupConfigRules (@eslint/compat) is needed for ESLint 10 (MacAnalog/spicexplorer-ui#58).
+// eslint-config-next 16.3.x depends on eslint-plugin-react 7.37.5, whose rules call
+// context.getFilename(); ESLint 10 removed that method, so without the wrapper
+// `npm run lint` stops with "Error while loading rule 'react/display-name':
+// contextOrFilename.getFilename is not a function". The wrapper gives every rule in
+// these two configs a context object that again has the methods ESLint removed
+// (getFilename, getPhysicalFilename, getCwd, getSourceCode, getScope and others).
+// The enabled rules and their options are unchanged (85 rules, the same under ESLint
+// 9.39.4 and 10.11.0). Remove the wrapper once eslint-config-next depends on an
+// eslint-plugin-react release whose peer range includes ESLint 10:
+//   npm view eslint-config-next@latest dependencies.eslint-plugin-react
+//   npm view eslint-plugin-react@latest peerDependencies
 const eslintConfig = [
-  ...nextCoreWebVitals,
-  ...nextTypescript,
+  ...fixupConfigRules([...nextCoreWebVitals, ...nextTypescript]),
   { ignores: [".next/**", "node_modules/**", "next-env.d.ts", "src/types/api.gen.ts"] },
   {
     rules: {
@@ -14,13 +27,14 @@ const eslintConfig = [
     },
   },
   // eslint-config-next 16 turned on eslint-plugin-react-hooks v6/v7's React-Compiler
-  // rules. They are ENABLED globally (new code is enforced). The entries below
-  // grandfather the pre-existing hits that triage found to be intentional, not bugs
-  // — deriving-in-render / hoisting them would change verified runtime behaviour and
-  // there is no component-level test coverage to catch a regression. Pay these down
-  // incrementally; do NOT add new files here. (One genuine hit — inline component
-  // definitions that remounted every render, in ActivityBar/BottomPanel — was fixed,
-  // not suppressed.)
+  // rules. They are enabled for every file. The entries below switch a rule off only
+  // in the files that already broke it when the rules arrived, where a review found
+  // the code intentional, not a bug: moving the logic into render or out of the
+  // component would change runtime behaviour that works today, and no
+  // component-level test would catch a regression. Remove files from these lists as
+  // they are fixed; do not add new files. (One real defect, inline component
+  // definitions that remounted on every render in ActivityBar/BottomPanel, was fixed,
+  // not switched off.)
   {
     // `setState` inside an effect: syncing local state to an external/prop change —
     // an open-flag reset, a controlled-input default, SSR localStorage hydration, an

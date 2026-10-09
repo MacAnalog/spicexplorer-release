@@ -53,7 +53,7 @@
         "noise": {
           "measures": {
             "onoise_total": 3.611516e-05,
-            "vn_out_rms": 0.006009589
+            "vn_out_rms": 3.611516e-05
           },
           "status": "ok"
         },
@@ -131,7 +131,7 @@
       },
       "vn_out_rms": {
         "spec": "pass",
-        "value": 0.006009589
+        "value": 3.611516e-05
       },
       "zout_peak_db": {
         "spec": "pass",

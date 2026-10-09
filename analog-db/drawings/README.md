@@ -73,10 +73,12 @@ two are never visually conflated.
   by more than one family lives here, not inside one family folder — see
   [`shared/README.md`](shared/README.md).
 - `DRAWING_REVIEW.md` — the drawing-debug tracker for the CCIA landing pass.
-- `TODO_bio_afe_port.md` — the bio-afe landing checklist.
+- `TODO_bio_afe_port.md` — the bio-afe landing checklist; closed 2026-09-25 (its ARCHIVE banner
+  lists what stays open and when it reopens).
 - `xschemrc` — opens any family's schematics with this directory on the
   library path (so both `<family>/…` and `shared/…` symbol refs resolve).
 
-Follow-up (tracked, not yet built): a small `analog-db` check that every
+Follow-up, not built (closed 2026-09-25 in the `TODO_bio_afe_port.md` banner; it reopens when a
+target goes missing unnoticed): a small `analog-db` check that every
 `landing.yaml` target exists, carries `artifacts.schematic`, and that the
 entry's schematic copy still opens against this library.

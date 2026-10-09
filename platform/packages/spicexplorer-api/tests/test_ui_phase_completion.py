@@ -11,6 +11,7 @@ Covers the new backend surface added while closing out the planning-doc TODO:
 Pure dict/function/HTTP transforms — no ngspice / PDK / live sim needed. Skipped
 unless the `ui` extra (FastAPI) is installed.
 """
+
 import io
 import sys
 import zipfile
@@ -22,21 +23,26 @@ from _api_fixtures import REPO_ROOT
 sys.path.insert(0, str(REPO_ROOT))
 pytest.importorskip("fastapi", reason="ui extra not installed")
 
-CASCODE_YAML = REPO_ROOT / "examples" / "OTA" / "cascode" / "ihp-sg13g2" / "sizing" / "project_setup.yaml"
+CASCODE_YAML = (
+    REPO_ROOT / "examples" / "OTA" / "cascode" / "ihp-sg13g2" / "sizing" / "project_setup.yaml"
+)
 
 
 # ---------- §5c: .meas auto-discovery ----------
 
+
 def test_parse_meas_candidates_extracts_result_names():
     from spicexplorer_api.services.netlist_parser import parse_meas_candidates
 
-    nl = "\n".join([
-        ".param cl=50f",
-        ".meas ac ugf WHEN vdb(out)=0",
-        ".measure tran sr TRIG v(out) VAL=0.1 RISE=1",
-        ".meas ac ugf find foo",  # duplicate name — first wins
-        "* a comment .meas ac bogus",  # comment line, not matched
-    ])
+    nl = "\n".join(
+        [
+            ".param cl=50f",
+            ".meas ac ugf WHEN vdb(out)=0",
+            ".measure tran sr TRIG v(out) VAL=0.1 RISE=1",
+            ".meas ac ugf find foo",  # duplicate name — first wins
+            "* a comment .meas ac bogus",  # comment line, not matched
+        ]
+    )
     cands = parse_meas_candidates(nl)
     names = {c["name"]: c["sim_type"] for c in cands}
     assert names == {"ugf": "ac", "sr": "tran"}
@@ -62,6 +68,7 @@ def test_netlist_parse_route_returns_meas_candidates():
 
 
 # ---------- §5e: spec library ----------
+
 
 def test_spec_library_route_serves_templates():
     from fastapi.testclient import TestClient
@@ -89,6 +96,7 @@ def test_spec_library_file_exists_and_parses():
 
 
 # ---------- §16 #4: checkpoint listing n_iters ----------
+
 
 def test_checkpoint_list_populates_n_iters():
     from fastapi.testclient import TestClient
@@ -122,12 +130,17 @@ def test_count_iters_json_and_csv(tmp_path):
 
 # ---------- §10: run-report zip ----------
 
+
 def test_checkpoint_report_returns_zip_with_summary():
     from fastapi.testclient import TestClient
     from spicexplorer_api.main import app
 
     c = TestClient(app)
-    ids = [x["id"] for x in c.get("/api/checkpoint").json()["checkpoints"] if x.get("source") == "preset"]
+    ids = [
+        x["id"]
+        for x in c.get("/api/checkpoint").json()["checkpoints"]
+        if x.get("source") == "preset"
+    ]
     assert ids
     res = c.get(f"/api/checkpoint/{ids[0]}/report")
     assert res.status_code == 200
@@ -150,6 +163,7 @@ def test_checkpoint_report_404_unknown():
 
 # ---------- §2: Apply-from-editor anchors ws_root to the original dir ----------
 
+
 @pytest.mark.skipif(not CASCODE_YAML.exists(), reason="cascode example missing")
 def test_load_content_with_path_anchors_relative_ws_root():
     from fastapi.testclient import TestClient
@@ -157,7 +171,9 @@ def test_load_content_with_path_anchors_relative_ws_root():
 
     c = TestClient(app)
     content = CASCODE_YAML.read_text()  # uses `ws_root: ..`
-    res = c.post("/api/project/load", json={"yaml_content": content, "yaml_path": str(CASCODE_YAML)})
+    res = c.post(
+        "/api/project/load", json={"yaml_content": content, "yaml_path": str(CASCODE_YAML)}
+    )
     assert res.status_code == 200, res.text
     ws_root = res.json()["summary"]["ws_root"]
     # The relative `..` is resolved against the ORIGINAL yaml's dir, NOT the temp dir.
@@ -181,14 +197,23 @@ def test_load_content_without_path_uses_temp_dir():
 
 # ---------- §16 #7: score_service penalty (SC-4: error_type + log_scale aware) ----------
 
+
 def test_spec_penalties_zero_when_met_positive_when_violated():
     from spicexplorer.core.domains import TargetSpec
     from spicexplorer_api.services.score_service import _spec_penalties
 
     # MINIMIZE spec (target 200, tol 10, range 100). Met below target+tol; violated above it.
-    spec = TargetSpec(name="power", testbench="tb", target=200.0, tolerance=10.0, range=100.0,
-                      goal="minimize", sim_type="op", measurement={"meas": "power_uw", "probe": "i(i)"})
-    assert _spec_penalties(150.0, spec) == (0.0, 0.0, True)   # comfortably met
-    assert _spec_penalties(205.0, spec) == (0.0, 0.0, True)   # inside the tolerance band
-    lin, sig, passes = _spec_penalties(260.0, spec)           # violated
+    spec = TargetSpec(
+        name="power",
+        testbench="tb",
+        target=200.0,
+        tolerance=10.0,
+        range=100.0,
+        goal="minimize",
+        sim_type="op",
+        measurement={"meas": "power_uw", "probe": "i(i)"},
+    )
+    assert _spec_penalties(150.0, spec) == (0.0, 0.0, True)  # comfortably met
+    assert _spec_penalties(205.0, spec) == (0.0, 0.0, True)  # inside the tolerance band
+    lin, sig, passes = _spec_penalties(260.0, spec)  # violated
     assert lin > 0.0 and sig > 0.0 and passes is False

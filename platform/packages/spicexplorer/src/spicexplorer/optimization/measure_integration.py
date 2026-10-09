@@ -20,7 +20,7 @@ avoid recomputing the recipe grouping each evaluation.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple
+from typing import TYPE_CHECKING, Any
 
 from spicexplorer_core.measurements import registry as _registry
 
@@ -31,17 +31,17 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Per testbench: (spec name, recipe dict, engine-neutral analysis string).
-_Recipe = Tuple[str, Dict[str, Any], str]
+_Recipe = tuple[str, dict[str, Any], str]
 
 
-def build_recipes(target_specs: "ListTargetSpec") -> Dict[str, List[_Recipe]]:
+def build_recipes(target_specs: ListTargetSpec) -> dict[str, list[_Recipe]]:
     """Group enabled targets carrying a Tier-1 ``{meas: …}`` recipe into ``{tb: [recipe]}``.
 
     Only enabled specs with a Python-tier measurement are included, and each recipe's name
     and required args are validated here (before any sim) so a typo fails loudly at load —
     symmetric with the OCEAN builder validation.
     """
-    recipes: Dict[str, List[_Recipe]] = {}
+    recipes: dict[str, list[_Recipe]] = {}
     for target in target_specs.enabled_targets():
         if not target.has_python_measurement():
             continue
@@ -63,11 +63,11 @@ class MeasureMergeContext:
     contract as the OCEAN context so the optimizer can tear both down uniformly.
     """
 
-    def __init__(self, recipes: Dict[str, List[_Recipe]]) -> None:
+    def __init__(self, recipes: dict[str, list[_Recipe]]) -> None:
         self._recipes = recipes
 
     @classmethod
-    def build(cls, target_specs: "ListTargetSpec") -> "MeasureMergeContext | None":
+    def build(cls, target_specs: ListTargetSpec) -> MeasureMergeContext | None:
         recipes = build_recipes(target_specs)
         if not recipes:
             return None
@@ -82,7 +82,7 @@ class MeasureMergeContext:
     def testbenches(self) -> frozenset[str]:
         return frozenset(self._recipes)
 
-    def merge(self, results: "Dict[str, SimResult]", *, label: str | None = None) -> None:
+    def merge(self, results: dict[str, SimResult], *, label: str | None = None) -> None:
         """Evaluate each testbench's Tier-1 measurements and merge the scalars into its
         result under the spec names. A result lacking ``merge_scalars`` is skipped (the
         metric stays NaN → scorer penalty); a measurement that raises degrades to NaN so
@@ -100,7 +100,7 @@ class MeasureMergeContext:
                     [name for name, _r, _a in items],
                 )
                 continue
-            scalars: Dict[str, float] = {}
+            scalars: dict[str, float] = {}
             for name, recipe, analysis in items:
                 try:
                     scalars[name] = float(
@@ -119,7 +119,7 @@ class MeasureMergeContext:
     def close(self) -> None:  # symmetry with OceanMergeContext — nothing to release
         return None
 
-    def __enter__(self) -> "MeasureMergeContext":
+    def __enter__(self) -> MeasureMergeContext:
         return self
 
     def __exit__(self, *exc: Any) -> None:

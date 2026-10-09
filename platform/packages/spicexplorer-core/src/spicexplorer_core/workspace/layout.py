@@ -5,14 +5,21 @@ self-contained and portable (trash/fork/copy move the whole dir), so every
 path here is project-relative. Nothing in this module moves or deletes: scaffold
 is create-missing-only, which is what makes the v1→v2 migration additive.
 """
+
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 
 from spicexplorer_core.paths import project_root
 
 WORK_ROOT_ENV = "WORK_ROOT"
+SCRATCH_ENV = "SX_SCRATCH"
+
+_log = logging.getLogger(__name__)
+# Fallback roots already announced — work_root() runs on every request, say it once.
+_FALLBACK_NOTED: set[Path] = set()
 
 # --- v2 project-relative directories ------------------------------------------------
 # Storage classes: design state (spec/topology/design/testbenches/layout),
@@ -62,11 +69,48 @@ def work_root() -> Path:
     ``WORK_ROOT`` env (the Docker backend sets it to ``/work``, a host bind
     mount) else ``<repo>/work`` (gitignored). This is the canonical resolver —
     the API's ``app_config.work_root`` delegates here so every process agrees.
+
+    The ``<repo>/work`` default is only taken when this user can write there: a
+    shared install exports ``SPICEXPLORER_ROOT`` at a checkout its members may only
+    read, so the default falls back to ``$SX_SCRATCH/work`` (else
+    ``~/sx-scratch/work``) and says so once. An explicit ``WORK_ROOT`` is honoured
+    as given.
     """
     env = os.environ.get(WORK_ROOT_ENV)
-    root = (Path(env).expanduser() if env else (project_root() / "work")).resolve()
+    if env:
+        root = Path(env).expanduser().resolve()
+    else:
+        root = (project_root() / "work").resolve()
+        if not _writable(root):
+            default, root = root, _fallback_root()
+            if root not in _FALLBACK_NOTED:
+                _FALLBACK_NOTED.add(root)
+                _log.warning(
+                    "%s is unset and the default %s is not writable; using %s "
+                    "(set %s to choose the location)",
+                    WORK_ROOT_ENV,
+                    default,
+                    root,
+                    WORK_ROOT_ENV,
+                )
     root.mkdir(parents=True, exist_ok=True)
     return root
+
+
+def _writable(path: Path) -> bool:
+    """Whether ``path`` can be written — or, when absent, created — by this user."""
+    for p in (path, *path.parents):
+        if p.exists():
+            return p.is_dir() and os.access(p, os.W_OK | os.X_OK)
+    return False
+
+
+def _fallback_root() -> Path:
+    # Same per-user scratch convention as the spectre lane: $SX_SCRATCH else ~/sx-scratch.
+    scratch = os.environ.get(SCRATCH_ENV)
+    return (
+        Path(scratch) if scratch else Path.home() / "sx-scratch"
+    ).expanduser().resolve() / "work"
 
 
 def shared_root(root: Path | None = None) -> Path:

@@ -25,6 +25,7 @@ canonical_metrics:
   - ripple_gain      # RRL sense block: demodulated ramp rate per volt of input ripple (V/s/V)
   - area_um2
 templates:
-  - dc_op            # resolves from _shared/testbench-templates (single-ended shape)
+  # (no dc_op: no support member binds one, and the supply-only universal dc_op it fell through
+  #  to was retired 2026-09 — a member that needs an OP bench adds a class-scoped dc_op here)
   - dc_vcm_sense     # CM detector: differential drive -> sensed midpoint accuracy
   - tran_rrl_sense     # ripple-sensing demodulating integrator: square ripple at f_chop -> ripple_gain

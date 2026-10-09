@@ -94,3 +94,42 @@ def test_discover_log_none(tmp_path):
     raw = tmp_path / "tb.raw"
     synth_ac_raw(raw)
     assert discover_log(raw, "ngspice") is None
+
+
+# The line rules are core's `spice_engine.sim_log`, re-exported here beside `parse_log_text`.
+
+
+def test_parse_measures_and_fatal_lines_reexported():
+    from spicexplorer_core.spice_engine import sim_log
+    from spicexplorer_waveview import fatal_lines, parse_measures
+    from spicexplorer_waveview.logs import fatal_lines as fl2
+    from spicexplorer_waveview.logs import parse_measures as pm2
+
+    assert parse_measures is sim_log.parse_measures is pm2
+    assert fatal_lines is sim_log.fatal_lines is fl2
+    log = (
+        "Error: measure  bad  when(WHEN) : out of interval\n"
+        " meas tran bad when v(a)=5 failed!\n"
+        "good                =  1.500000e-09\n"
+        "Warning: singular matrix:  check nodes a and b\n"
+    )
+    assert parse_measures(log) == ({"good": 1.5e-9}, ["bad"])
+    assert fatal_lines(log) == []
+    s = parse_log_text(log)
+    assert s.counts == {"error": 1, "warning": 1, "note": 0, "info": 2}
+
+
+@pytest.mark.parametrize(
+    "line,level",
+    [
+        ("doAnalyses: iteration limit reached", "error"),
+        ("Transient solution failed", "error"),
+        ("doAnalyses: TRAN:  Timestep too small; time = 1e-9", "error"),
+        ("singular matrix: check nodes a and b", "error"),
+        ("Warning: singular matrix:  check nodes a and b", "warning"),
+        ("Warning: 'r1 a 0' is not a valid resistor instance line, ignored!", "error"),
+        ("Error on line 12 : xm1 ... Unknown model type xyz", "error"),
+    ],
+)
+def test_classify_fatal_forms(line, level):
+    assert classify_line(line) == level

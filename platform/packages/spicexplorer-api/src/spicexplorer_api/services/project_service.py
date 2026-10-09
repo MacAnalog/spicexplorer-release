@@ -14,13 +14,14 @@ The layout (one directory per project, example-structured so it runs unedited):
         scratch/            # ephemeral one-off sims (out of the source tree)
         runs/<run_name>/    # per-run isolation (checkpoints/, run.log, events.ndjson, …)
         spec/ topology/ design/ testbenches/ jobs/ analyses/ layout/ context/
-                            # layout v2 (meta doc/plan_project_filesystem.md §3.2) —
+                            # layout v2 (meta doc/archive/plan_project_filesystem.md §3.2) —
                             # scaffolded by spicexplorer_core.workspace
 
 The layout schema, manifest schema, and migrator live in the storage kernel
 (``spicexplorer_core.workspace``) so orchestration agents speak the same contract;
 this module keeps owning the API-side registry/lifecycle bookkeeping on top of it.
 """
+
 from __future__ import annotations
 
 import json
@@ -50,6 +51,7 @@ SCHEMA_VERSION = ws.SCHEMA_VERSION
 
 
 # ---------- ids / guards ----------
+
 
 def _slugify(name: str) -> str:
     s = re.sub(r"[^a-z0-9]+", "-", (name or "project").lower()).strip("-")
@@ -91,6 +93,7 @@ def project_exists(project_id: str) -> bool:
 
 # ---------- manifest ----------
 
+
 def read_manifest(project_id: str) -> dict[str, Any]:
     return ws.read_manifest(project_dir(project_id))
 
@@ -105,6 +108,7 @@ def write_manifest(project_id: str, data: dict[str, Any]) -> None:
     # chokepoint keeps the derived index content-fresh. Best-effort by contract
     # (the FS is canonical); lazy import avoids a module cycle.
     from spicexplorer_api.services import index_db
+
     index_db.notify_project_changed(project_id)
 
 
@@ -115,6 +119,7 @@ def touch_manifest(project_id: str) -> None:
 
 
 # ---------- THE single resolver ----------
+
 
 def resolve_yaml(project_id: str | None, yaml_path: str | None) -> Path:
     """Resolve the project YAML: ``project_id`` → its ``project.yaml``; else an explicit
@@ -131,6 +136,7 @@ def resolve_yaml(project_id: str | None, yaml_path: str | None) -> Path:
 
 
 # ---------- runs ----------
+
 
 def runs_dir(project_id: str | None) -> Path:
     base = (project_dir(project_id) / "runs") if project_id else runs_root()
@@ -153,6 +159,7 @@ def run_dir(project_id: str | None, run_name: str) -> Path:
 # route. The streaming optimizer keeps its bespoke path (SSE/threads) but writes
 # the SAME envelope via the kernel primitives. This is the inverse of
 # ``resolve_yaml`` — path bookkeeping stays out of the route handlers.
+
 
 def project_for_yaml(yaml_path: str | Path) -> tuple[str | None, Path | None]:
     """Reverse-resolve a project's ``project.yaml`` back to ``(project_id, dir)``.
@@ -182,24 +189,25 @@ def begin_run(
     """Mint a run dir (dir == run_id), content-address its inputs into the owning
     project's ``.objects/``, and commit an initial ``status: running`` envelope
     record. Returns ``(run_id, run_dir)``. Raises ``OSError`` if the run dir can't
-    be created — the caller decides whether that's fatal."""
-    run_id, rdir = ws.mint_run_dir(runs_dir(project_id), kind)
-    pdir = project_dir(project_id) if project_id else None
-    inputs = ws.snapshot_inputs(
-        ws.project_objects_dir(pdir), files=input_files, values=input_values)
-    ws.write_run_record(rdir, {
-        "run_id": run_id,
-        "project_id": project_id,
-        "label": label,
-        "status": "running",
-        "started": datetime.now().isoformat(timespec="seconds"),
-        **ws.envelope_fields(kind, retention=retention, inputs=inputs, coordinates=coordinates),
-        # Caller-specific record fields (e.g. simulate's keep_raw flag, which the
-        # waveview /runs listing surfaces as the "openable" badge) — merged last so
-        # a caller can also override the label-style presentation fields.
-        **(record_extras or {}),
-    })
-    return run_id, rdir
+    be created — the caller decides whether that's fatal.
+
+    The kernel's ``spicexplorer_core.workspace.begin_run`` does the work (the
+    optimizer CLI and orchestration are to share it); this adapter only
+    resolves the project scope. ``record_extras`` (e.g. simulate's keep_raw flag,
+    which the waveview /runs listing shows as the "openable" badge) merge last,
+    so a caller can also override the label-style presentation fields."""
+    return ws.begin_run(
+        runs_dir(project_id),
+        kind,
+        project_id=project_id,
+        project_dir=project_dir(project_id) if project_id else None,
+        label=label,
+        input_files=input_files,
+        input_values=input_values,
+        coordinates=coordinates,
+        retention=retention,
+        record_extras=record_extras,
+    )
 
 
 def finalize_run(
@@ -212,20 +220,23 @@ def finalize_run(
     error: str | None = None,
 ) -> None:
     """Move a run to a terminal status (record update + index write-through).
-    Best-effort — the sim/analysis result is already the user-facing return."""
+    Best-effort — the sim/analysis result is already the user-facing return.
+
+    The record update is the kernel's ``finalize_run``; the index write-through runs
+    in its ``on_change`` hook, which fires even when the record write failed."""
+    from spicexplorer_api.services import index_db
+
     try:
-        rec = ws.read_run_record(run_dir)
-        rec.update(
-            status=status, best_score=score, metrics=metrics or {},
-            ended=datetime.now().isoformat(timespec="seconds"),
+        ws.finalize_run(
+            run_dir,
+            status=status,
+            score=score,
+            metrics=metrics,
+            error=error,
+            on_change=lambda _rdir: index_db.notify_runs_changed(project_id),
         )
-        if error:
-            rec["error"] = error
-        ws.write_run_record(run_dir, rec)
     except OSError:
         pass
-    from spicexplorer_api.services import index_db
-    index_db.notify_runs_changed(project_id)
 
 
 def reconcile_stale_runs() -> int:
@@ -242,8 +253,7 @@ def reconcile_stale_runs() -> int:
     # live — always flip it, else a foreign-host run with a still-fresh heartbeat (or a
     # future-skewed mtime on the shared /work mount) would resurface as "running" on
     # restore, reopening BUG-B43.
-    for base, owner_aware in ((projects_root(), True), (runs_root(), True),
-                              (trash_root(), False)):
+    for base, owner_aware in ((projects_root(), True), (runs_root(), True), (trash_root(), False)):
         for rj in base.rglob("run.json"):
             try:
                 d = json.loads(rj.read_text())
@@ -280,6 +290,7 @@ def list_runs(project_id: str | None) -> list[dict[str, Any]]:
 
 # ---------- registry ----------
 
+
 def list_projects() -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for pd in sorted(projects_root().glob("*")):
@@ -292,20 +303,23 @@ def list_projects() -> list[dict[str, Any]]:
             bs = r.get("best_score")
             if isinstance(bs, (int, float)) and (best is None or bs > best):
                 best = bs
-        out.append({
-            "id": pd.name,
-            "name": man.get("name", pd.name),
-            "updated": man.get("updated") or man.get("created"),
-            "run_count": len(runs),
-            "best_score": best,
-            "source": (man.get("source") or {}).get("kind", "unknown"),
-        })
+        out.append(
+            {
+                "id": pd.name,
+                "name": man.get("name", pd.name),
+                "updated": man.get("updated") or man.get("created"),
+                "run_count": len(runs),
+                "best_score": best,
+                "source": (man.get("source") or {}).get("kind", "unknown"),
+            }
+        )
     # Newest-updated first.
     out.sort(key=lambda p: p.get("updated") or "", reverse=True)
     return out
 
 
 # ---------- YAML rewrite (ws_root: . / outdir: scratch) ----------
+
 
 def _rewrite_project_yaml(yaml_text: str, *, ws_root: str = ".", outdir: str = "scratch") -> str:
     """Bake the encapsulation contract into a project's YAML: ``ws_root`` becomes the
@@ -319,6 +333,7 @@ def _rewrite_project_yaml(yaml_text: str, *, ws_root: str = ".", outdir: str = "
 
 
 # ---------- examples (load demo as project) ----------
+
 
 def _example_meta(examples_root: Path, yp: Path) -> dict[str, Any]:
     """One example row: key (examples/-relative path) + display name/description.
@@ -561,7 +576,8 @@ def fork_project(project_id: str, name: str | None = None) -> str:
     src_dir = project_dir(project_id)
     # Copy everything except per-run state (runs/ + the .trash bin if nested).
     shutil.copytree(
-        src_dir, dst,
+        src_dir,
+        dst,
         ignore=shutil.ignore_patterns("runs", ".trash"),
         dirs_exist_ok=True,
     )
@@ -588,13 +604,16 @@ def soft_delete_project(project_id: str) -> str:
     # can show a human label without re-reading the buried manifest.
     man = read_manifest(project_id)
     meta = {
-        "trash_id": trash_id, "kind": "project", "project_id": project_id,
+        "trash_id": trash_id,
+        "kind": "project",
+        "project_id": project_id,
         "name": man.get("name", project_id),
         "deleted": datetime.now().isoformat(timespec="seconds"),
     }
     shutil.move(str(src), str(dst))
     (dst / ".trashmeta.json").write_text(json.dumps(meta, indent=2))
     from spicexplorer_api.services import index_db
+
     index_db.notify_project_deleted(project_id)
     return trash_id
 
@@ -609,7 +628,7 @@ def list_trash() -> list[dict[str, Any]]:
         try:
             out.append(json.loads(meta_p.read_text()))
         except Exception:
-            pass
+            logger.debug("unreadable trash metadata %s", meta_p, exc_info=True)
     return out
 
 
@@ -665,6 +684,7 @@ def restore_project(trash_id: str) -> str:
         shutil.move(str(src), str(dst))
         (dst / ".trashmeta.json").unlink(missing_ok=True)
         from spicexplorer_api.services import index_db
+
         index_db.notify_runs_changed(owner)
         return owner or ""
 
@@ -684,6 +704,7 @@ def restore_project(trash_id: str) -> str:
 
 
 # ---------- lifecycle: per-run rename / delete ----------
+
 
 def find_run_dir(project_id: str | None, run_id: str) -> Path | None:
     """Locate a run's directory by ``run_id``.
@@ -739,6 +760,7 @@ def rename_run(project_id: str | None, run_id: str, label: str) -> dict[str, Any
     d["label"] = label
     rj.write_text(json.dumps(d, indent=2))
     from spicexplorer_api.services import index_db
+
     index_db.notify_runs_changed(project_id)
     return d
 
@@ -757,12 +779,16 @@ def delete_run(project_id: str | None, run_id: str) -> str:
     dst = trash_root() / trash_id
     _assert_under_work_root(dst)
     meta = {
-        "trash_id": trash_id, "kind": "run", "project_id": project_id or "",
-        "run_id": run_id, "name": rd.name,
+        "trash_id": trash_id,
+        "kind": "run",
+        "project_id": project_id or "",
+        "run_id": run_id,
+        "name": rd.name,
         "deleted": datetime.now().isoformat(timespec="seconds"),
     }
     shutil.move(str(rd), str(dst))
     (dst / ".trashmeta.json").write_text(json.dumps(meta, indent=2))
     from spicexplorer_api.services import index_db
+
     index_db.notify_runs_changed(project_id)
     return trash_id

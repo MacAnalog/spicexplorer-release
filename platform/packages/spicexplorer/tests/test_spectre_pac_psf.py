@@ -136,13 +136,16 @@ def test_registry_recipes_read_pac_baseband(pac_raw_dir: Path) -> None:
     res = SpectreSimResult({}, raw_dir=str(pac_raw_dir))
     gain = measure(res, {"meas": "gain_cl", "analysis": "pac", "out": "out"}, default_analysis="ac")
     assert gain == pytest.approx(_GAIN, rel=1e-6)
-    gain_db = measure(res, {"meas": "dcgain", "analysis": "pac", "out": "out"}, default_analysis="ac")
+    gain_db = measure(
+        res, {"meas": "dcgain", "analysis": "pac", "out": "out"}, default_analysis="ac"
+    )
     assert gain_db == pytest.approx(40.0, abs=1e-6)
     # zin_mag: with pacmag=1 on a current source the flat 100 V wave reads as 100 Ω
     zin = measure(res, {"meas": "zin_mag", "analysis": "pac", "out": "out"}, default_analysis="ac")
     assert zin == pytest.approx(_GAIN, rel=1e-6)
     zin_spot = measure(
-        res, {"meas": "zin_mag", "analysis": "pac", "out": "out", "f": 1.0e3},
+        res,
+        {"meas": "zin_mag", "analysis": "pac", "out": "out", "f": 1.0e3},
         default_analysis="ac",
     )
     assert zin_spot == pytest.approx(_GAIN, rel=1e-6)

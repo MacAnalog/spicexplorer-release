@@ -1,4 +1,5 @@
 """Small numeric helpers shared across backend services."""
+
 from __future__ import annotations
 
 import math

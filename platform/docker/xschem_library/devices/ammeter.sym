@@ -21,7 +21,7 @@ v {xschem version=3.4.5 file_version=1.2
 }
 G {}
 K {type=ammeter
-format="@name @pinlist 0@savecurrent"
+format="@name @pinlist 0"
 template="name=Vmeas savecurrent=true"
 }
 V {}

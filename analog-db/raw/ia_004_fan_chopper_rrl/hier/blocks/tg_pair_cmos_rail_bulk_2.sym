@@ -1,6 +1,6 @@
 v {xschem version=3.4.6 file_version=1.2}
 G {type=subcircuit
-format="@name @pinlist @symname"
+format="@name @pinlist @symname @params"
 template="name=x1"}
 V {}
 S {}
@@ -9,6 +9,9 @@ L 4 -120 -60 120 -60 {}
 L 4 120 -60 120 60 {}
 L 4 120 60 -120 60 {}
 L 4 -120 60 -120 -60 {}
+L 4 -84 0 -34 0 {}
+L 4 34 0 84 0 {}
+L 4 -34 0 34 -25 {}
 B 5 -142.5 -22.5 -137.5 -17.5 {name=clk_chout dir=in}
 L 4 -120 -20 -140 -20 {}
 T {ctl_n} -108 -20 0 0 0.16 0.16 {layer=4}
@@ -17,10 +20,10 @@ L 4 -120 20 -140 20 {}
 T {ctl_p} -108 20 0 0 0.16 0.16 {layer=4}
 B 5 137.5 -22.5 142.5 -17.5 {name=main__g2_p dir=out}
 L 4 120 -20 140 -20 {}
-T {b} 108 -20 0 0 0.16 0.16 {layer=4}
+T {b} 103 -20 0 0 0.16 0.16 {layer=4}
 B 5 137.5 17.5 142.5 22.5 {name=out1_p dir=out}
 L 4 120 20 140 20 {}
-T {a} 108 20 0 0 0.16 0.16 {layer=4}
+T {a} 103 20 0 0 0.16 0.16 {layer=4}
 B 5 -2.5 -82.5 2.5 -77.5 {name=vdd dir=inout}
 L 4 0 -60 0 -80 {}
 T {vdd} 0 -60 0 0 0.16 0.16 {layer=4}

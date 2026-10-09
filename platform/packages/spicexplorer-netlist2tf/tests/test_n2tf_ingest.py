@@ -44,9 +44,9 @@ def ota5t() -> Circuit2TF:
 @pytest.mark.parametrize(
     "raw, expected",
     [
-        ("50f", sp.Float(50e-15)),
-        ("0.13u", sp.Float(0.13e-6)),
-        ("1.5", sp.Float(1.5)),
+        ("50f", sp.Rational(50, 10**15)),  # exact, never a Float (audit LEAF-F06)
+        ("0.13u", sp.Rational(13, 10**8)),
+        ("1.5", sp.Rational(3, 2)),
         ("0", sp.Integer(0)),
         ("1", sp.Integer(1)),
         (1, sp.Integer(1)),
@@ -55,6 +55,22 @@ def ota5t() -> Circuit2TF:
 )
 def test_sympify_numeric(raw, expected):
     assert sympify_value(raw) == expected
+
+
+@pytest.mark.parametrize(
+    "raw, expected",
+    [("inf", sp.oo), ("-inf", -sp.oo), ("+inf", sp.oo), ("-INF", -sp.oo), ("'-inf'", -sp.oo)],
+)
+def test_sympify_signed_infinity(raw, expected):
+    # '-inf' came back as -Symbol('inf') and '+inf' as Symbol('inf'): the DSL parser read the
+    # trailing f as femto, and the symbolic parse took 'inf' for a name (L-PF-5)
+    assert sympify_value(raw) == expected
+
+
+@pytest.mark.parametrize("raw", ["nan", "-nan", "1/0"])
+def test_sympify_refuses_a_token_that_is_not_a_value(raw):
+    with pytest.raises(ValueError, match="not a value"):
+        sympify_value(raw)
 
 
 def test_sympify_symbolic_lowercased():
@@ -187,6 +203,23 @@ def test_json_round_trip(cascode):
     assert rebuilt.to_dict() == cascode.to_dict()
 
 
+def test_from_dict_reads_a_hand_written_float_as_an_exact_rational():
+    """L-PF-4: a float typed into the JSON (a number, a string, or inside an expression) becomes
+    the exact rational that ingestion makes of the same deck literal, not a sympy ``Float``."""
+    deck = "* rc\nR1 in out 1k\nC1 out 0 1p\n.param k=2.7p\n.end"
+    data = from_string(deck).to_dict()
+    devs = {d["ref"].upper(): d for d in data["devices"]}
+    devs["R1"]["params"]["value"] = 1000.0
+    devs["C1"]["params"]["value"] = "1.5e-12*x"
+    data["params"]["k"] = "2.7e-12"
+    ir = Circuit2TF.from_dict(data)
+    r1, c1, k = ir.device("R1").params["value"], ir.device("C1").params["value"], ir.params["k"]
+    assert r1 == sp.Integer(1000)
+    assert c1 == sp.Rational(15, 10**13) * sp.Symbol("x")
+    assert k == sp.Rational(27, 10**13) == from_string(deck).params["k"]
+    assert not any(e.atoms(sp.Float) for e in (r1, c1, k))
+
+
 def test_ingestion_is_deterministic():
     dut = _FIX / "ota-improved.spice"
     a = from_file(dut, name="cascode").to_dict()
@@ -255,10 +288,13 @@ def test_x_wrapped_mos_gets_mos_pin_roles():
     ir = _wrapped_ir()
     xr1 = ir.device("XR1")
     assert [t.role for t in xr1.terminals] == [
-        PinRole.DRAIN, PinRole.GATE, PinRole.SOURCE, PinRole.BULK
+        PinRole.DRAIN,
+        PinRole.GATE,
+        PinRole.SOURCE,
+        PinRole.BULK,
     ]
     assert [t.net for t in xr1.terminals] == ["vdd", "vdd", "bias", "vdd"]
-    assert xr1.params["w"] == 2e-6
+    assert xr1.params["w"] == sp.Rational(2, 10**6)
 
 
 def test_non_mos_x_instance_stays_opaque():

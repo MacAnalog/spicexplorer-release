@@ -76,7 +76,7 @@ export function Lightbox({
             setZoomed((z) => !z);
           }}
           className={cn(
-            "rounded-md bg-white",
+            "rounded-md bg-panel",
             zoomed
               ? "mx-auto w-[200%] max-w-none cursor-zoom-out"
               : "max-h-full max-w-full cursor-zoom-in object-contain",

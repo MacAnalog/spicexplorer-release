@@ -31,7 +31,8 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, ClassVar, Protocol, Sequence
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, ClassVar, Protocol
 
 from spicexplorer_core.spice_engine import NetlistDialect
 
@@ -74,7 +75,7 @@ class NetlistEmitter(Protocol):
 
     def emit(
         self,
-        graph: "CircuitGraph",
+        graph: CircuitGraph,
         *,
         pdk: Pdk | None = None,
         title: str | None = None,
@@ -84,7 +85,7 @@ class NetlistEmitter(Protocol):
 
 
 def to_netlist(
-    graph: "CircuitGraph",
+    graph: CircuitGraph,
     *,
     pdk: Pdk | None = None,
     title: str | None = None,
@@ -122,7 +123,7 @@ class BaseNetlistEmitter:
     # -- template method -------------------------------------------------
     def emit(
         self,
-        graph: "CircuitGraph",
+        graph: CircuitGraph,
         *,
         pdk: Pdk | None = None,
         title: str | None = None,
@@ -148,7 +149,7 @@ class BaseNetlistEmitter:
         return "\n".join(lines) + "\n"
 
     # -- shared slots ------------------------------------------------------
-    def _nets(self, comp: ComponentNode, graph: "CircuitGraph") -> list[str]:
+    def _nets(self, comp: ComponentNode, graph: CircuitGraph) -> list[str]:
         conns = graph.connections(comp)
         try:
             return [conns[pin.value] for pin in comp._PIN_ORDER]
@@ -170,11 +171,13 @@ class BaseNetlistEmitter:
 
     def _params(self, comp: ComponentNode, pdk: Pdk | None) -> list[tuple[str, str | float]]:
         # Remaining k=v params (the value/model token lives in the value slot, never duplicated).
-        emit_params = _retarget_fingers(comp.params, pdk) if isinstance(comp, MosfetNode) else comp.params
+        emit_params = (
+            _retarget_fingers(comp.params, pdk) if isinstance(comp, MosfetNode) else comp.params
+        )
         return [(k, _fmt_param(v)) for k, v in sorted(emit_params.items()) if k != "Value"]
 
     # -- hierarchy ----------------------------------------------------------
-    def _definitions(self, graph: "CircuitGraph", pdk: Pdk | None) -> list[str]:
+    def _definitions(self, graph: CircuitGraph, pdk: Pdk | None) -> list[str]:
         """One flat definition block per unique subckt master under :attr:`CircuitGraph.subgraphs`.
 
         A graph built with ``recurse=True`` carries an expanded child graph per subckt instance.
@@ -193,7 +196,7 @@ class BaseNetlistEmitter:
 
     def _collect_definitions(
         self,
-        graph: "CircuitGraph",
+        graph: CircuitGraph,
         pdk: Pdk | None,
         seen: set[str],
         out: list[str],
@@ -253,7 +256,7 @@ class BaseNetlistEmitter:
 
     def _check_net_renaming(
         self,
-        graph: "CircuitGraph",
+        graph: CircuitGraph,
         components: Sequence[ComponentNode],
         ports: Sequence[str] | None,
     ) -> None:
@@ -279,7 +282,8 @@ class BaseNetlistEmitter:
         shorted = {out: names for out, names in merged.items() if len(names) > 1}
         if shorted:
             detail = "; ".join(
-                f"{{{', '.join(sorted(names))}}} -> {out!r}" for out, names in sorted(shorted.items())
+                f"{{{', '.join(sorted(names))}}} -> {out!r}"
+                for out, names in sorted(shorted.items())
             )
             raise ValueError(
                 f"{type(self).__name__}: net-name sanitization is not injective for this graph "
@@ -287,13 +291,13 @@ class BaseNetlistEmitter:
             )
 
     # -- dialect hooks -------------------------------------------------------
-    def _header(self, graph: "CircuitGraph", title: str | None) -> list[str]:
+    def _header(self, graph: CircuitGraph, title: str | None) -> list[str]:
         raise NotImplementedError
 
     def _footer(self) -> list[str]:
         raise NotImplementedError
 
-    def _device_line(self, comp: ComponentNode, graph: "CircuitGraph", pdk: Pdk | None) -> str:
+    def _device_line(self, comp: ComponentNode, graph: CircuitGraph, pdk: Pdk | None) -> str:
         raise NotImplementedError
 
     def _subckt_open(self, name: str, ports: list[str]) -> str:
@@ -308,13 +312,13 @@ class SpiceEmitter(BaseNetlistEmitter):
 
     dialect = NetlistDialect.SPICE
 
-    def _header(self, graph: "CircuitGraph", title: str | None) -> list[str]:
+    def _header(self, graph: CircuitGraph, title: str | None) -> list[str]:
         return [f"* {title or graph.name} (emitted by spicexplorer-circuitgraph)"]
 
     def _footer(self) -> list[str]:
         return [".end"]
 
-    def _device_line(self, comp: ComponentNode, graph: "CircuitGraph", pdk: Pdk | None) -> str:
+    def _device_line(self, comp: ComponentNode, graph: CircuitGraph, pdk: Pdk | None) -> str:
         nets = " ".join(self._nets(comp, graph))
         value = self._value(comp, pdk)
         # The value-slot is the only field allowed to contain spaces and MUST stay terminal
@@ -377,7 +381,8 @@ _SIN_PARAM_ORDER = ("sinedc", "ampl", "freq", "delay")
 
 
 class SpectreEmitter(BaseNetlistEmitter):
-    """Spectre output: paren node lists, primitive masters, ``multi=``, ``subckt … ends``.
+    """Spectre output: paren node lists, primitive masters, ``m=`` (never ``multi=``, which
+    Spectre ignores on model-card MOS), ``subckt … ends``.
 
     Identifier rules (live-trial landmines): a Spectre identifier can't start with a digit
     (``5t`` lexes as a number) and can't contain punctuation (``ota-5t`` lexes as a subtraction) —
@@ -389,7 +394,7 @@ class SpectreEmitter(BaseNetlistEmitter):
 
     dialect = NetlistDialect.SPECTRE
 
-    def _header(self, graph: "CircuitGraph", title: str | None) -> list[str]:
+    def _header(self, graph: CircuitGraph, title: str | None) -> list[str]:
         return [
             f"// {title or graph.name} (emitted by spicexplorer-circuitgraph)",
             "simulator lang=spectre",
@@ -398,7 +403,7 @@ class SpectreEmitter(BaseNetlistEmitter):
     def _footer(self) -> list[str]:
         return []
 
-    def _nets(self, comp: ComponentNode, graph: "CircuitGraph") -> list[str]:
+    def _nets(self, comp: ComponentNode, graph: CircuitGraph) -> list[str]:
         return [self.sanitize_net(n) for n in super()._nets(comp, graph)]
 
     def _params(self, comp: ComponentNode, pdk: Pdk | None) -> list[tuple[str, str | float]]:
@@ -496,7 +501,7 @@ class SpectreEmitter(BaseNetlistEmitter):
             return f"mag={token} pacmag={-v:.10g} pacphase=180"
         return f"mag={token} pacmag={token}"
 
-    def _device_line(self, comp: ComponentNode, graph: "CircuitGraph", pdk: Pdk | None) -> str:
+    def _device_line(self, comp: ComponentNode, graph: CircuitGraph, pdk: Pdk | None) -> str:
         ref = self.sanitize_ref(comp.name)
         nets = " ".join(self._nets(comp, graph))
         params = self._params(comp, pdk)
@@ -530,10 +535,12 @@ class SpectreEmitter(BaseNetlistEmitter):
                 DeviceType.CAP: ("capacitor", "c"),
                 DeviceType.IND: ("inductor", "l"),
             }[comp.device_type]
-            if not _value_is_numericish(value):
-                # A model-named passive (e.g. `rupolym`): the token IS the master.
+            if not _value_is_numericish(value) and _passive_token_is_a_model(comp):
+                # A model-named passive (e.g. `rupolym l=10u`): the token IS the master.
                 master, key_part = self.sanitize_ref(value), ""
             else:
+                # A number, a `{expr}`, or a bare parameter symbol (`R1 a b rload` → `r=rload`);
+                # rendering a symbol as the master would instance a phantom model called `rload`.
                 key_part = f" {key}={self._expr(value)}"
             body = "".join(f" {k}={v}" for k, v in params)
             return f"{ref} ({nets}) {master}{key_part}{body}".rstrip()
@@ -551,7 +558,12 @@ class SpectreEmitter(BaseNetlistEmitter):
                     is_zero = dc_tok is not None and float(dc_tok) == 0.0
                 except ValueError:
                     is_zero = False
-                if not is_zero or (probe_val and (probe_val.group("ac") or probe_val.group("pulse") or probe_val.group("sin"))):
+                if not is_zero or (
+                    probe_val
+                    and (
+                        probe_val.group("ac") or probe_val.group("pulse") or probe_val.group("sin")
+                    )
+                ):
                     raise ValueError(
                         f"{comp.name}: a VIPRB* loop-probe marker must be exactly a 0 V dc "
                         f"source (it becomes a Spectre iprobe), got {value!r}"
@@ -559,7 +571,11 @@ class SpectreEmitter(BaseNetlistEmitter):
                 return f"{ref} ({nets}) iprobe"
             m = _SOURCE_VALUE.match(value.strip())
             if not m or not (
-                m.group("dc") or m.group("ac") or m.group("pulse") or m.group("sin") or m.group("plain")
+                m.group("dc")
+                or m.group("ac")
+                or m.group("pulse")
+                or m.group("sin")
+                or m.group("plain")
             ):
                 raise ValueError(
                     f"{comp.name}: source value {value!r} has no Spectre mapping "
@@ -588,9 +604,7 @@ class SpectreEmitter(BaseNetlistEmitter):
                         f"(V1 V2 [TD [TR [TF [PW [PER]]]]]), got {len(args)}: {value!r}"
                     )
                 parts.append("type=pulse")
-                parts.extend(
-                    f"{k}={self._expr(a)}" for k, a in zip(_PULSE_PARAM_ORDER, args)
-                )
+                parts.extend(f"{k}={self._expr(a)}" for k, a in zip(_PULSE_PARAM_ORDER, args))
             if m.group("sin"):
                 # SPICE `sin(VO VA FREQ [TD])` → Spectre `type=sine sinedc=… ampl=… freq=…
                 # [delay=…]` (THETA damping has no clean Spectre twin — rejected, not dropped)
@@ -601,9 +615,7 @@ class SpectreEmitter(BaseNetlistEmitter):
                         f"(VO VA FREQ [TD]), got {len(args)}: {value!r}"
                     )
                 parts.append("type=sine")
-                parts.extend(
-                    f"{k}={self._expr(a)}" for k, a in zip(_SIN_PARAM_ORDER, args)
-                )
+                parts.extend(f"{k}={self._expr(a)}" for k, a in zip(_SIN_PARAM_ORDER, args))
             body = "".join(
                 f" {self._ac_small_signal(v)}" if k.lower() == "ac" else f" {k}={v}"
                 for k, v in params
@@ -624,6 +636,21 @@ def _net_char_code(char: str) -> str:
 def _value_is_numericish(value: str) -> bool:
     """True for value tokens (``1k``, ``2p``, ``{expr}``, ``1.4e-9``) vs model names (``rupolym``)."""
     return bool(re.match(r"^[+-]?(\d|\.\d|\{|\()", value.strip()))
+
+
+# Passive geometry keys: their presence is what makes a passive's value token a MODEL name.
+_PASSIVE_GEOMETRY = frozenset({"l", "w"})
+
+
+def _passive_token_is_a_model(comp: ComponentNode) -> bool:
+    """Whether a passive's non-numeric value token names a model (the master) rather than a value.
+
+    ngspice reads the token after a passive's nodes as its *value* unless the card carries
+    geometry — a model-named R/C must give ``l=`` (``R1 a b rupolym l=10u w=1u``) — and an
+    ``X``-prefixed passive is a PDK subcircuit whose token is always its master (the Spectre reader
+    keeps an unknown-master passive as one too). Everything else is a symbolic value:
+    ``R1 a b rload``, ``C1 a b CL m=1``, a Spectre ``resistor r=rload`` read back in."""
+    return comp.name[:1] in "Xx" or any(k.lower() in _PASSIVE_GEOMETRY for k in comp.params)
 
 
 _EMITTERS: dict[NetlistDialect, BaseNetlistEmitter] = {
@@ -682,7 +709,9 @@ def _value_slot(comp: ComponentNode, pdk: Pdk | None) -> str:
             if comp.polarity is MosPolarityType.UNKNOWN:
                 logger.warning(
                     "%s: unknown polarity — cannot retarget to %s; keeping %r",
-                    comp.name, pdk.name, comp.spice_model,
+                    comp.name,
+                    pdk.name,
+                    comp.spice_model,
                 )
             else:
                 # `model_flavor` (not `mos_flavor`) — the source device's voltage/threshold class
@@ -711,7 +740,10 @@ def _value_slot(comp: ComponentNode, pdk: Pdk | None) -> str:
                     )
                 logger.warning(
                     "%s: %s has no %s device; keeping source model %r (mixed-PDK netlist)",
-                    comp.name, pdk.name, comp.polarity.value, comp.spice_model,
+                    comp.name,
+                    pdk.name,
+                    comp.polarity.value,
+                    comp.spice_model,
                 )
         return comp.spice_model or ""
     if isinstance(comp, SubcktInstanceNode):

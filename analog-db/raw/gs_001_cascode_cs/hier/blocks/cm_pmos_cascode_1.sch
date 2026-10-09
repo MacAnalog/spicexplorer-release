@@ -4,49 +4,43 @@ K {}
 V {}
 S {}
 E {}
-T {cm_pmos_cascode_1} -550 -200 0 0 0.4 0.4 {}
-C {devices/sg13_lv_pmos_np.sym} 365 0 0 0 {name=MPB1 model=sg13_lv_pmos spiceprefix=X w=x_dut_xmpb1_w l=x_dut_xmpb1_l m=x_dut_xmpb1_m}
-C {devices/sg13_lv_pmos_np.sym} -510 0 0 1 {name=MPB2 model=sg13_lv_pmos spiceprefix=X w=x_dut_xmpb2_w l=x_dut_xmpb2_l m=x_dut_xmpb2_m}
-C {devices/sg13_lv_pmos_np.sym} 560 0 0 0 {name=MPCA model=sg13_lv_pmos spiceprefix=X w=x_dut_xmpca_w l=x_dut_xmpca_l m=x_dut_xmpca_m}
-C {devices/sg13_lv_pmos_np.sym} -315 0 0 1 {name=MPLD model=sg13_lv_pmos spiceprefix=X w=x_dut_xmpld_w l=x_dut_xmpld_l m=x_dut_xmpld_m}
-N -590 0 -590 94 {}
-N -530 -90 -530 -30 {}
-N -530 30 -530 70 {}
-N -490 0 -490 70 {}
-N -395 0 -395 94 {}
-N -335 -90 -335 -30 {}
-N -335 30 -335 90 {}
-N 345 0 345 70 {}
-N 385 -90 385 -30 {}
-N 385 30 385 70 {}
-N 445 0 445 94 {}
-N 540 -60 540 0 {}
-N 580 -90 580 -30 {}
-N 580 30 580 90 {}
-N 640 0 640 94 {}
-N -590 0 -530 0 {}
-N -395 0 -335 0 {}
-N -295 0 -235 0 {}
-N 285 0 345 0 {}
-N 385 0 445 0 {}
-N 510 0 540 0 {}
-N 580 0 640 0 {}
-N -530 70 -490 70 {}
-N 345 70 385 70 {}
-C {devices/lab_wire.sym} -490 60 2 0 {name=l0 lab=ibias}
-C {devices/lab_wire.sym} 540 -60 0 1 {name=l1 lab=ibias}
-C {devices/lab_wire.sym} -530 -90 0 1 {name=l2 lab=pbias1}
-C {devices/lab_wire.sym} -235 0 0 1 {name=l3 lab=pbias1}
-C {devices/lab_wire.sym} 285 0 0 0 {name=l4 lab=pbias1}
-C {devices/lab_wire.sym} -335 90 2 0 {name=l5 lab=pint}
-C {devices/lab_wire.sym} 580 -90 0 1 {name=l6 lab=pint}
-C {devices/lab_wire.sym} -335 -90 0 1 {name=l7 lab=vdd}
-C {devices/lab_wire.sym} 385 -90 0 1 {name=l8 lab=vdd}
-C {devices/lab_wire.sym} 580 90 2 0 {name=l9 lab=vout}
-C {devices/lab_wire.sym} 445 94 2 0 {name=l10 lab=vdd}
-C {devices/lab_wire.sym} -590 94 2 0 {name=l11 lab=vdd}
-C {devices/lab_wire.sym} 640 94 2 0 {name=l12 lab=vdd}
-C {devices/lab_wire.sym} -395 94 2 0 {name=l13 lab=vdd}
-C {devices/iopin.sym} -335 280 0 0 {name=p0 lab=vdd}
-C {devices/opin.sym} 925 0 0 0 {name=p1 lab=ibias}
-C {devices/opin.sym} 925 120 0 0 {name=p2 lab=vout}
+T {cm_pmos_cascode_1} -210 -200 0 0 0.4 0.4 {}
+C {devices/sg13_lv_pmos_np.sym} -170 0 0 1 {name=MPB1 model=sg13_lv_pmos spiceprefix=X w=x_dut_xmpb1_w l=x_dut_xmpb1_l m=x_dut_xmpb1_m}
+C {devices/sg13_lv_pmos_np.sym} -170 260 0 1 {name=MPB2 model=sg13_lv_pmos spiceprefix=X w=x_dut_xmpb2_w l=x_dut_xmpb2_l m=x_dut_xmpb2_m}
+C {devices/sg13_lv_pmos_np.sym} 170 260 0 0 {name=MPCA model=sg13_lv_pmos spiceprefix=X w=x_dut_xmpca_w l=x_dut_xmpca_l m=x_dut_xmpca_m}
+C {devices/sg13_lv_pmos_np.sym} 170 0 0 0 {name=MPLD model=sg13_lv_pmos spiceprefix=X w=x_dut_xmpld_w l=x_dut_xmpld_l m=x_dut_xmpld_m}
+N -250 0 -250 94 {}
+N -250 260 -250 354 {}
+N -190 -140 -190 -30 {}
+N -190 30 -190 230 {}
+N -190 290 -190 330 {}
+N -150 0 -150 70 {}
+N -150 260 -150 330 {}
+N 120 0 120 60 {}
+N 120 260 120 320 {}
+N 190 -140 190 -30 {}
+N 190 30 190 230 {}
+N 190 290 190 320 {}
+N 250 0 250 94 {}
+N 250 260 250 354 {}
+N -695 -140 695 -140 {}
+N -250 0 -190 0 {}
+N -150 0 -90 0 {}
+N 120 0 150 0 {}
+N 190 0 250 0 {}
+N -190 60 120 60 {}
+N -190 70 -150 70 {}
+N -250 260 -190 260 {}
+N 120 260 150 260 {}
+N 190 260 250 260 {}
+N -190 320 120 320 {}
+N -190 330 -150 330 {}
+C {devices/lab_wire.sym} -90 0 0 1 {name=l0 lab=pbias1}
+C {devices/lab_wire.sym} 190 90 2 0 {name=l1 lab=pint}
+C {devices/lab_wire.sym} -250 94 2 0 {name=l2 lab=vdd}
+C {devices/lab_wire.sym} -250 354 2 0 {name=l3 lab=vdd}
+C {devices/lab_wire.sym} 250 354 2 0 {name=l4 lab=vdd}
+C {devices/lab_wire.sym} 250 94 2 0 {name=l5 lab=vdd}
+C {devices/iopin.sym} -695 -140 0 0 {name=p0 lab=vdd}
+C {devices/opin.sym} 120 260 0 0 {name=p1 lab=ibias}
+C {devices/opin.sym} 190 320 0 0 {name=p2 lab=vout}

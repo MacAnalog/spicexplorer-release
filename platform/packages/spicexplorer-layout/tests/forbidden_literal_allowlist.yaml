@@ -1,0 +1,19 @@
+# Numeric literals in a scanned package's src/ that coincide with a value in FORBIDDEN_VALUES
+# (packages/spicexplorer-layout/tests/test_rail_route.py) but are NOT that process number.
+# Every row needs a `reason`; a row missing one fails `test_allowlist_entries_all_carry_a_reason`
+# and a value not on this list fails `test_no_module_of_these_packages_restates_a_process_number`.
+#
+# Fields: package (the FORBIDDEN_LITERAL_SRC_DIRS key), file (path relative to that package's
+# src/<pkg>/ dir), function (the enclosing def/async def name, or omit for a module-level
+# literal -- NOT a line number: an edit anywhere above the literal shifts every line number below
+# it, which would silently fail the guard on an unrelated, unedited line), value, reason.
+
+- package: spicexplorer_layout
+  file: rail.py
+  function: selftest
+  value: 0.11
+  reason: >
+    selftest()'s r_sheet default is an arbitrary resistance for an analytic 10x1 um bar
+    self-test (10 squares end to end, checked against a closed-form answer) -- not a
+    per-process number. It coincides with Metal1's sheet_ohm_sq in ihp-sg13g2.yaml only
+    because 0.11 is a plausible-looking sheet resistance to pick for a synthetic test.

@@ -90,9 +90,9 @@ def test_measure_ac_metrics_on_spectre_result(ac_raw_dir: Path) -> None:
     dcgain = measure(res, {"meas": "dcgain", "out": "vout"}, default_analysis="ac")
     ugf = measure(res, {"meas": "ugf", "out": "vout"}, default_analysis="ac")
     pm = measure(res, {"meas": "pm", "out": "vout"}, default_analysis="ac")
-    assert dcgain == pytest.approx(20.0 * math.log10(_A0), abs=0.1)   # 40 dB
-    assert ugf == pytest.approx(_A0 * _FP, rel=0.05)                  # ≈ A0·fp = 1e5 Hz
-    assert pm == pytest.approx(90.0, abs=2.0)                         # single pole → ~90°
+    assert dcgain == pytest.approx(20.0 * math.log10(_A0), abs=0.1)  # 40 dB
+    assert ugf == pytest.approx(_A0 * _FP, rel=0.05)  # ≈ A0·fp = 1e5 Hz
+    assert pm == pytest.approx(90.0, abs=2.0)  # single pole → ~90°
 
 
 def test_flat_scalar_still_wins_over_swept(ac_raw_dir: Path) -> None:
@@ -104,8 +104,8 @@ def test_flat_scalar_still_wins_over_swept(ac_raw_dir: Path) -> None:
 
 def test_missing_or_non_swept_returns_empty(tmp_path: Path) -> None:
     assert read_swept_psf(None, "ac") == {}
-    assert read_swept_psf(tmp_path, "op") == {}          # op-point is not a swept analysis
-    assert read_swept_psf(tmp_path, "ac") == {}          # no ac.ac present
+    assert read_swept_psf(tmp_path, "op") == {}  # op-point is not a swept analysis
+    assert read_swept_psf(tmp_path, "ac") == {}  # no ac.ac present
     res = SpectreSimResult({}, raw_dir=str(tmp_path))
     with pytest.raises(KeyError):
         res.wave("vout", "ac")

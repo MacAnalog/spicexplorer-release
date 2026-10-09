@@ -1,0 +1,73 @@
+* Synthetic block-diagram top level: 40 instances of 9 generic cells (issue #243 fixture).
+* Written by make_fixture.py from fixed rules; no design, no kit. Each cell body is a placeholder resistor.
+.subckt blk_a clk rst vin q vdd vss
+R1 q vss 1k
+.ends blk_a
+.subckt blk_b clk din en dout vdd vss
+R1 dout vss 1k
+.ends blk_b
+.subckt blk_c din rst bias dout vdd vss
+R1 dout vss 1k
+.ends blk_c
+.subckt blk_d in0 in1 ck dout vdd vss
+R1 dout vss 1k
+.ends blk_d
+.subckt blk_e in0 in1 rst dout vdd vss
+R1 dout vss 1k
+.ends blk_e
+.subckt blk_f in0 in1 clk dout vdd vss
+R1 dout vss 1k
+.ends blk_f
+.subckt blk_g ib bias vdd vss
+R1 bias vss 1k
+.ends blk_g
+.subckt blk_h clk en ck vdd vss
+R1 ck vss 1k
+.ends blk_h
+.subckt blk_i rst ib en vdd vss
+R1 ib vss 1k
+.ends blk_i
+.subckt blockdiag_top clk rst vin dout vdd vss
+XU00 clk rst vin a0 vdd vss blk_a
+XU01 clk rst vin a1 vdd vss blk_a
+XU02 clk rst vin a2 vdd vss blk_a
+XU03 clk rst vin a3 vdd vss blk_a
+XU04 clk rst vin a4 vdd vss blk_a
+XU05 clk rst vin a5 vdd vss blk_a
+XU06 clk rst vin a6 vdd vss blk_a
+XU07 clk rst vin a7 vdd vss blk_a
+XU08 clk a0 en d0 vdd vss blk_b
+XU09 clk a1 en d1 vdd vss blk_b
+XU10 clk a2 en d2 vdd vss blk_b
+XU11 clk a3 en d3 vdd vss blk_b
+XU12 clk a4 en d4 vdd vss blk_b
+XU13 clk a5 en d5 vdd vss blk_b
+XU14 clk a6 en d6 vdd vss blk_b
+XU15 clk a7 en d7 vdd vss blk_b
+XU16 d0 rst bias0 o0 vdd vss blk_c
+XU17 d1 rst bias0 o1 vdd vss blk_c
+XU18 d2 rst bias1 o2 vdd vss blk_c
+XU19 d3 rst bias1 o3 vdd vss blk_c
+XU20 d4 rst bias2 o4 vdd vss blk_c
+XU21 d5 rst bias2 o5 vdd vss blk_c
+XU22 d6 rst bias3 o6 vdd vss blk_c
+XU23 d7 rst bias3 o7 vdd vss blk_c
+XU24 ib bias0 vdd vss blk_g
+XU25 o0 o1 ck0 p0 vdd vss blk_d
+XU26 ib bias1 vdd vss blk_g
+XU27 o2 o3 ck1 p1 vdd vss blk_d
+XU28 ib bias2 vdd vss blk_g
+XU29 o4 o5 ck2 p2 vdd vss blk_d
+XU30 ib bias3 vdd vss blk_g
+XU31 o6 o7 ck3 p3 vdd vss blk_d
+XU32 clk en ck0 vdd vss blk_h
+XU33 clk en ck1 vdd vss blk_h
+XU34 clk en ck2 vdd vss blk_h
+XU35 clk en ck3 vdd vss blk_h
+XU36 p0 p1 rst s0 vdd vss blk_e
+XU37 p2 p3 rst s1 vdd vss blk_e
+XU38 s0 s1 clk dout vdd vss blk_f
+XU39 rst ib en vdd vss blk_i
+.ends blockdiag_top
+xtop clk rst vin dout vdd vss blockdiag_top
+.end

@@ -27,7 +27,9 @@ out/                dut_<d>.gds/.png, dut_<d>_{lvs,kpex,sim}.spice,
                     signoff/, pex/, pex_report.yaml
 ```
 
-Run (conda `ai_env`; kpex from the `pex` env is invoked directly):
+Run (conda `ai_env`; kpex from the `pex` env is invoked directly).
+`signoff.py`, and `optimize_layout.py` through it, import the platform's
+`spicexplorer_signoff` package, so it must be importable in that env:
 
 ```sh
 export PDK_ROOT=$HOME/local/pdks PDK=ihp-sg13g2

@@ -1,7 +1,7 @@
 """Golden-value tests — pin the tool's output to the published P0 notebook results.
 
 The values here are the exact numbers printed by the analog-db
-`notebooks/gmid_sizing_demo.ipynb`, which runs the canonical flows on the SAME committed sky130
+`notebooks/gmid_sizing_demo.py`, which runs the canonical flows on the SAME committed sky130
 NMOS LUT used as this package's fixture. If these drift, either the notebook or the tool changed —
 reconcile them deliberately (the notebook is the human-facing reference for the API). This is the
 plan_gmid_sizing.md P3 gate: golden values vs the P0 notebook.

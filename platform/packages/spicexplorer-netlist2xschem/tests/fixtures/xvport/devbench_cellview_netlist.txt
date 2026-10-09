@@ -1,0 +1,20 @@
+// SYNTHETIC companion to devbench_source_netlist.spice: the same four branches as a
+// Virtuoso createNetlist design section would carry them (spectre dialect, unit spellings
+// and `nf` as the real export writes them). A CORRECT same-kit port — every instance keeps
+// its name, model, w, l and m.
+//
+// Instance order is reversed relative to the source on purpose. WHICH isomorphism
+// `compare_graphs` returns on these interchangeable branches is not stable run to run, so
+// the deterministic statement of issue #216 is the test that supplies the crosswise mapping
+// itself; this order just makes the accident likely. Both readings are the same defect: a
+// gate that intermittently reports a sizing failure on a port where every device's name,
+// model, w, l and m agree exactly.
+simulator lang=spectre
+global 0
+// Library name: xvport_dev
+// Cell name: dev_leak
+// View name: schematic
+MPSTD15 (dp2 gp2 VDD VDD) pmos_lvt l=150.0n w=1.0u m=1 nf=1
+MPSTD10 (dp1 gp1 VDD VDD) pmos_lvt l=100.0n w=1.0u m=1 nf=1
+MNHVT15 (dn2 gn2 VSS VSS) nmos_lvt l=150.0n w=1.0u m=1 nf=1
+MNHVT10 (dn1 gn1 VSS VSS) nmos_lvt l=100.0n w=1.0u m=1 nf=1

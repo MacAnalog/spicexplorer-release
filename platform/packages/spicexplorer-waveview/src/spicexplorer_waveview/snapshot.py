@@ -45,9 +45,10 @@ global backend mutation — so it is safe inside library/server processes.
 from __future__ import annotations
 
 import json
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Iterable, Mapping
+from typing import Any
 
 import numpy as np
 
@@ -272,8 +273,7 @@ def _pick_signals(an: WaveAnalysis, template: PlotTemplate, kind: str) -> list[W
     live = [
         n
         for n in pool
-        if float(np.max(np.abs(np.asarray(an.signals[n].data)), initial=0.0))
-        > _DEGENERATE_FLOOR
+        if float(np.max(np.abs(np.asarray(an.signals[n].data)), initial=0.0)) > _DEGENERATE_FLOOR
     ]
     pool = live or pool
 
@@ -403,8 +403,13 @@ def _render_png(
     if annotations:
         text = "\n".join(f"{k} = {v:.6g}" for k, v in annotations.items())
         ax_anno.text(
-            0.02, 0.02, text, transform=ax_anno.transAxes, fontsize=8,
-            va="bottom", ha="left",
+            0.02,
+            0.02,
+            text,
+            transform=ax_anno.transAxes,
+            fontsize=8,
+            va="bottom",
+            ha="left",
             bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.75},
         )
     fig.savefig(out, dpi=dpi, format="png")
@@ -494,24 +499,31 @@ def _plotly_figure(
 
     two_panel = template.style == "bode" and bool(template.options.get("phase", True))
     if template.style == "bode" and two_panel:
-        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.07,
-                            subplot_titles=("magnitude", "phase"))
+        fig = make_subplots(
+            rows=2,
+            cols=1,
+            shared_xaxes=True,
+            vertical_spacing=0.07,
+            subplot_titles=("magnitude", "phase"),
+        )
         for sig in sigs:
             h = np.asarray(sig.data)
             mag = 20.0 * np.log10(np.maximum(np.abs(h), 1e-300))
             ph = np.degrees(np.unwrap(np.angle(h)))
             fig.add_trace(
                 go.Scatter(x=x, y=mag, mode="lines", name=sig.name, legendgroup=sig.name),
-                row=1, col=1,
+                row=1,
+                col=1,
             )
             fig.add_trace(
-                go.Scatter(x=x, y=ph, mode="lines", name=sig.name,
-                           legendgroup=sig.name, showlegend=False),
-                row=2, col=1,
+                go.Scatter(
+                    x=x, y=ph, mode="lines", name=sig.name, legendgroup=sig.name, showlegend=False
+                ),
+                row=2,
+                col=1,
             )
         fig.update_xaxes(type="log", row=1, col=1)
-        fig.update_xaxes(type="log", title_text=template.x_label or "frequency (Hz)",
-                         row=2, col=1)
+        fig.update_xaxes(type="log", title_text=template.x_label or "frequency (Hz)", row=2, col=1)
         fig.update_yaxes(title_text=template.y_label or "|H| (dB)", row=1, col=1)
         fig.update_yaxes(title_text="phase (°)", row=2, col=1)
         fig.update_layout(height=560)
@@ -644,26 +656,38 @@ def snapshot(
     name = label or Path(str(ds.source)).stem or "result"
     out = Path(out_dir)
     if analyses is None:
-        keep = None if include_sidebands else [
-            k for k in ds.analyses
-            if k.split(":", 1)[0].strip().lower() not in _DEFAULT_EXCLUDE_KINDS
-        ]
+        keep = (
+            None
+            if include_sidebands
+            else [
+                k
+                for k in ds.analyses
+                if k.split(":", 1)[0].strip().lower() not in _DEFAULT_EXCLUDE_KINDS
+            ]
+        )
     else:
         keep = list(analyses)
     skipped: list[tuple[str, str]] = []
     result: dict[str, Any] = {"traces": None, "pngs": [], "htmls": [], "skipped": skipped}
     if traces:
-        result["traces"] = save_traces(
-            ds, out / f"{name}.traces.npz", analyses=keep, label=label
-        )
+        result["traces"] = save_traces(ds, out / f"{name}.traces.npz", analyses=keep, label=label)
     if png:
         result["pngs"] = export_pngs(
-            ds, out, analyses=keep, templates=templates, annotations=annotations,
-            prefix=f"{name}_", on_skip=lambda a, r: skipped.append((a, r)),
+            ds,
+            out,
+            analyses=keep,
+            templates=templates,
+            annotations=annotations,
+            prefix=f"{name}_",
+            on_skip=lambda a, r: skipped.append((a, r)),
         )
     if html:
         result["htmls"] = export_htmls(
-            ds, out, analyses=keep, templates=templates, annotations=annotations,
+            ds,
+            out,
+            analyses=keep,
+            templates=templates,
+            annotations=annotations,
             prefix=f"{name}_",
             # the PNG pass already recorded the skips; don't double-report them
             on_skip=None if png else (lambda a, r: skipped.append((a, r))),

@@ -105,9 +105,13 @@ class Simulator(Protocol):
 
     def apply_corner(self, corner: Corner, /, *, model_lib_root: str | None = None) -> None: ...
 
-    def run(self, *, label: str | None = None) -> SimResult: ...  # blocking   (ngspice run_and_wait / Spectre run_simulation)
+    def run(
+        self, *, label: str | None = None
+    ) -> SimResult: ...  # blocking   (ngspice run_and_wait / Spectre run_simulation)
 
-    def submit(self, *, label: str | None = None) -> SimHandle: ...  # non-blocking (ngspice run_and_pass / Spectre submit)
+    def submit(
+        self, *, label: str | None = None
+    ) -> SimHandle: ...  # non-blocking (ngspice run_and_pass / Spectre submit)
 
 
 __all__ = ["SimResult", "SimHandle", "Simulator"]

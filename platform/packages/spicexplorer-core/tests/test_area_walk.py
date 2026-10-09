@@ -3,6 +3,7 @@
 device walk + coverage accounting on a self-contained inline deck, and — when the
 analog-db submodule is present — the two demo decks (amp_029, amp_008) where a
 hand-authored recipe previously undercounted the silicon."""
+
 from __future__ import annotations
 
 import pytest
@@ -20,8 +21,13 @@ def test_resolver_plain_eng_and_number():
 
 
 def test_resolver_follows_alias_and_ratio():
-    params = {"x_dut_xm1_w": "2u", "x_dut_xm2_w": "{x_dut_xm1_w}",
-              "x_dut_xm7_m": "4", "x_dut_xm19_m": "{x_dut_xm14_m*8}", "x_dut_xm14_m": "4"}
+    params = {
+        "x_dut_xm1_w": "2u",
+        "x_dut_xm2_w": "{x_dut_xm1_w}",
+        "x_dut_xm7_m": "4",
+        "x_dut_xm19_m": "{x_dut_xm14_m*8}",
+        "x_dut_xm14_m": "4",
+    }
     assert area.resolve_param_value("x_dut_xm2_w", params) == pytest.approx(2e-6)
     assert area.resolve_param_value("{x_dut_xm7_m*1}", params) == pytest.approx(4.0)
     assert area.resolve_param_value("x_dut_xm19_m", params) == pytest.approx(32.0)  # 4*8
@@ -38,6 +44,69 @@ def test_resolver_case_insensitive():
 def test_resolver_unresolvable_returns_none():
     assert area.resolve_param_value("{missing}", {}) is None
     assert area.resolve_param_value("{a}", {"a": "{b}", "b": "{a}"}) is None  # cyclic
+
+
+def test_resolver_reads_netlist_tokens_with_spice_semantics():
+    """A deck token is SPICE, not the YAML DSL (OPT-04): `M` is milli and every suffix is
+    case-insensitive. The DSL parser read `1M` as mega and could not read `2U` or `10K` at all."""
+    assert area.resolve_param_value("1M", {}) == pytest.approx(1e-3)
+    assert area.resolve_param_value("2U", {}) == pytest.approx(2e-6)
+    assert area.resolve_param_value("10K", {}) == pytest.approx(1e4)
+    assert area.resolve_param_value("1meg", {}) == pytest.approx(1e6)
+
+
+def test_resolver_eng_literals_inside_expressions_are_spice_too():
+    assert area.resolve_param_value("{2U*3}", {}) == pytest.approx(6e-6)
+    assert area.resolve_param_value("{1M*2}", {}) == pytest.approx(2e-3)
+    assert area.resolve_param_value("{w*1Meg}", {"w": "1u"}) == pytest.approx(1.0)
+
+
+@pytest.mark.parametrize(
+    "token,expected",
+    [
+        ("{.5u*2}", 1e-6),  # a literal with no leading digit
+        ("{2mil*1}", 50.8e-6),  # ngspice's thousandth of an inch, not milli
+        ("{1g*2}", 2e9),  # giga — lowercase, and `1G` is the same number
+        ("{1G*2}", 2e9),
+        ("{1T*2}", 2e12),  # tera, any case (the DSL parser refuses `1T`)
+        ("{3a*1}", 3e-18),  # atto
+        ("{1.5E-1u*2}", 3e-7),  # exponent AND scale factor on one literal
+        ("{1MEG/4}", 2.5e5),
+    ],
+)
+def test_resolver_eng_literals_inside_expressions_cover_the_whole_table(token, expected):
+    """OPT-04: every ngspice scale factor, spelled any way the bare-token parser accepts it, also
+    converts inside an expression — the pre-pass pattern is not a second, narrower table."""
+    assert area.resolve_param_value(token, {}) == pytest.approx(expected, rel=1e-12)
+
+
+def test_resolver_leaves_identifiers_that_end_in_a_suffix_alone():
+    # `x1u` is a parameter name, not `x` followed by the literal `1u`.
+    assert area.resolve_param_value("{x1u*2}", {"x1u": "3"}) == pytest.approx(6.0)
+    assert area.resolve_param_value("{w1*2u}", {"w1": "3"}) == pytest.approx(6e-6)
+
+
+@pytest.mark.parametrize(
+    "token,expected",
+    [
+        ("2e-6+1e-6", 3e-6),
+        ("{2e-6+1e-6}", 3e-6),
+        ("{3-1}", 2.0),
+    ],
+)
+def test_resolver_number_only_arithmetic_is_evaluated_not_refused(token, expected):
+    """`spice_number` RAISES on text made only of number characters that is not one number, and
+    unbraced arithmetic such as `2e-6+1e-6` is exactly that. The resolver must hand it on to the
+    expression evaluator — neither let the raise escape nor give up on the token."""
+    assert area.resolve_param_value(token, {}) == pytest.approx(expected)
+
+
+def test_resolver_malformed_number_is_unresolved_with_a_warning():
+    """A typo'd width (`1.2.3`) is neither a number nor an expression: `None` plus a note, never
+    an exception out of the walk and never a silently wrong value."""
+    resolver = area._ParamResolver({})
+    assert resolver.resolve("1.2.3") is None
+    assert any("1.2.3" in w for w in resolver.warnings)
 
 
 # ── the recursive walk on a self-contained inline deck (no analog-db needed) ─────
@@ -84,6 +153,36 @@ def test_walk_reports_passive_geometry_separately():
     assert rep["active_area"] == pytest.approx(5.0)  # unchanged; passive not in the transistor sum
     xr1 = next(o for o in rep["others"] if o["ref"] == "XR1")
     assert xr1["area"] == pytest.approx(1e-6 * 2e-6 * 1e12)  # reported, separate bucket
+
+
+def test_walk_reads_upper_case_and_milli_geometry():
+    # The OPT-04 probe deck: on the DSL parser M1/M3 went unresolved (`2U`) and M2's `l=1M`
+    # read as a million metres, so the partial "total" was 1e12 µm² from one device.
+    deck = """* upper-case suffixes
+.param w1=2U l1=1M
+M1 d g s b nmos_model w=w1 l=l1
+M2 d g s b nmos_model w=1u l=1M
+M3 d g s b nmos_model w=2U l=0.5u
+.end
+"""
+    rep = area.active_area_report(deck, scale=1e12)
+    assert rep["coverage"]["complete"] is True
+    assert rep["transistor_count"] == 3
+    # 2u*1m + 1u*1m + 2u*0.5u = 2000 + 1000 + 1 µm²
+    assert rep["active_area"] == pytest.approx(3001.0)
+
+
+def test_walk_with_a_malformed_width_is_incomplete_not_a_crash():
+    deck = """* one transistor carries a typo'd width
+M1 d g s b nmos_model w=2u l=1u
+M2 d g s b nmos_model w=1.2.3 l=1u
+.end
+"""
+    rep = area.active_area_report(deck, scale=1e12)
+    assert rep["coverage"]["complete"] is False
+    assert rep["coverage"]["transistors_unresolved"] == 1
+    assert rep["active_area"] == pytest.approx(2.0)  # M1 only — the caller must refuse it
+    assert any("M2" in w for w in rep["warnings"])
 
 
 # ── the two demo decks (gated on the analog-db submodule) ────────────────────────

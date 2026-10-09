@@ -73,14 +73,76 @@ const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 //
 //  • Explicit NEXT_PUBLIC_API_URL set → use it (already a direct backend origin).
 //  • Same-origin mode (empty BASE) → derive the backend origin from the current
-//    page host + the backend port, so it works wherever the browser runs
-//    (localhost, a LAN IP, an SSH-forwarded host). CORS allows any localhost:<port>.
+//    page host + the backend port.
+//
+// CORS IS THE LIMIT ON THIS LANE — it is loopback-only, not "wherever the browser
+// runs". The API mounts (platform packages/spicexplorer-api/src/spicexplorer_api/main.py):
+//
+//     allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?"
+//
+// i.e. ANY port, but only `http` and only the two loopback names. A page served from
+// a LAN address (`http://192.168.1.50:4000`, `http://somehost:4000`) or over `https`
+// gets NO `Access-Control-Allow-Origin` back, so the direct EventSource fails — as an
+// opaque `onerror`, since SSE surfaces no CORS detail.
+//
+// What that means on a LAN host in same-origin mode (empty NEXT_PUBLIC_API_URL), when the
+// backend is actually reachable at `<page-host>:8000` — uvicorn defaults to `127.0.0.1` and
+// the documented launchers pass no `--host`, in which case the images and both streams
+// simply fail to connect and CORS is never consulted:
+//  • Regular API calls WORK — they are same-origin `/api/*` and the Next.js rewrite in
+//    next.config.mjs proxies them server-side, where CORS does not apply.
+//  • Schematic/template `<img>` URLs WORK — image loads are not CORS-gated.
+//  • Only the two SSE streams (optimize progress, waveview log tail) fail.
+// Setting NEXT_PUBLIC_API_URL to a direct backend origin does NOT fix that and makes it
+// worse: CORS judges the *page* origin, so pointing the fetches at the backend directly
+// breaks the regular calls the proxy was carrying. The remedy is to reach the UI over a
+// forwarded port (ssh -L, VS Code Remote) so the browser's own origin is `localhost` —
+// or to widen the API's policy, which is a platform-side decision, not a UI one.
 const BACKEND_PORT = process.env.NEXT_PUBLIC_BACKEND_PORT ?? "8000";
+
+/** Mirror of the API's `allow_origin_regex` (see the note above). Kept here only so the
+ *  SSE lane can say *why* it is about to fail; the source of truth is the platform's
+ *  `main.py`, and this copy cannot detect drift there. */
+export function isCorsAllowedOrigin(origin: string): boolean {
+  return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+}
 
 function streamBase(): string {
   if (BASE) return BASE;
   if (typeof window === "undefined") return "";
   return `${window.location.protocol}//${window.location.hostname}:${BACKEND_PORT}`;
+}
+
+let corsWarned = false;
+
+/** Backend origin for the two SSE streams. Identical to `streamBase()` except that it
+ *  warns once when this page's origin cannot pass the API's CORS check, so the failure
+ *  reads as a policy limit instead of an unexplained dead stream. Deliberately NOT used
+ *  for the image URLs below — those are not CORS-gated, so this warning must not fire for
+ *  them. */
+function sseBase(): string {
+  const origin = streamBase();
+  if (
+    !corsWarned &&
+    typeof window !== "undefined" &&
+    origin &&
+    origin !== window.location.origin &&
+    !isCorsAllowedOrigin(window.location.origin)
+  ) {
+    corsWarned = true;
+    console.warn(
+      `[api] Live SSE streams cannot work from this page's origin. This page's ` +
+        `origin (${window.location.origin}) is not matched by the API's ` +
+        `allow_origin_regex "http://(localhost|127.0.0.1)(:\\d+)?" (loopback + http ` +
+        `only), and the SSE lane must connect directly to ${origin} because the ` +
+        `Next.js /api/* proxy buffers text/event-stream. If the backend at ${origin} ` +
+        `is reachable from this host, its CORS policy will block the stream; if it is ` +
+        `not (uvicorn defaults to 127.0.0.1), the connection simply fails. Fix: open ` +
+        `the UI over a forwarded port (ssh -L, VS Code Remote) so the browser sees ` +
+        `localhost.`,
+    );
+  }
+  return origin;
 }
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
@@ -184,7 +246,7 @@ export const api = {
   stopRun: (run_id: string) =>
     req<{ ok: boolean }>(`/api/optimize/stop/${run_id}`, { method: "POST" }),
 
-  streamUrl: (run_id: string) => `${streamBase()}/api/optimize/stream/${run_id}`,
+  streamUrl: (run_id: string) => `${sseBase()}/api/optimize/stream/${run_id}`,
 
   // Checkpoints
   // Pass projectId to scope per-run checkpoints to the active project (presets +
@@ -599,11 +661,11 @@ export const api = {
     return res.json();
   },
 
-  // SSE live tail of a simulator log — direct backend origin (see streamBase note):
+  // SSE live tail of a simulator log — direct backend origin (see the sseBase note):
   // the Next proxy buffers text/event-stream. Keyed by log *path* (whitelisted),
   // not dataset id.
   waveviewLogStreamUrl: (path: string, fromLine = 0) =>
-    `${streamBase()}/api/waveview/log/stream?path=${encodeURIComponent(path)}&from_line=${fromLine}`,
+    `${sseBase()}/api/waveview/log/stream?path=${encodeURIComponent(path)}&from_line=${fromLine}`,
 };
 
 /** Direct URL to a circuit's schematic SVG (for an `<img>`/`<object>` src), by mode.

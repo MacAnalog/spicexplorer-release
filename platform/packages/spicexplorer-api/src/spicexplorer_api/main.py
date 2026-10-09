@@ -1,6 +1,8 @@
 """SpiceXplorer UI — FastAPI backend."""
+
 import logging
 import os
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from spicexplorer_core import project_root
@@ -86,17 +88,27 @@ _OPENAPI_TAGS = [
     {"name": "netlist", "description": "Netlist param inspection + the wizard spec library."},
     {"name": "schematic", "description": "Project schematic SVG."},
     {"name": "xschem", "description": "Serve xschem .sch/.sym files for the in-browser viewer."},
-    {"name": "env", "description": "Simulator + PDK availability probe (live-vs-replay degradation)."},
-    {"name": "library", "description": "Reference Library: the analog-db catalog, datasheets, class registry + templates."},
-    {"name": "waveview", "description": "Universal result viewer: open ngspice .raw / Spectre PSF artifacts, waveforms, Tier-1 measurements, log viewer + SSE tail."},
+    {
+        "name": "env",
+        "description": "Simulator + PDK availability probe (live-vs-replay degradation).",
+    },
+    {
+        "name": "library",
+        "description": "Reference Library: the analog-db catalog, datasheets, class registry + templates.",
+    },
+    {
+        "name": "waveview",
+        "description": "Universal result viewer: open ngspice .raw / Spectre PSF artifacts, waveforms, Tier-1 measurements, log viewer + SSE tail.",
+    },
 ]
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Runs only in the uvicorn worker process, not the WatchFiles reloader parent,
     # so exactly one log file is created per server start.
     from spicexplorer_core.logging import setup_loggers
+
     setup_loggers(
         out_logname="SpiceXplorer",
         parent_folder=_REPO_ROOT,
@@ -106,22 +118,27 @@ async def lifespan(app: FastAPI):
     # honest on restart (report.md §6 reconciler).
     try:
         from spicexplorer_api.services import project_service
+
         fixed = project_service.reconcile_stale_runs()
         if fixed:
             logging.getLogger(__name__).info("reconciled %d stale 'running' run(s) -> error", fixed)
     except Exception:
-        pass
+        logging.getLogger(__name__).warning("stale-run reconcile failed at startup", exc_info=True)
     # Rebuild the derived WORK_ROOT index from the (canonical) filesystem AFTER the
     # reconciler, so out-of-band edits made while the API was down are re-absorbed
     # (plan_project_filesystem P2). Best-effort: a failed rebuild only costs the
     # indexed fast path — reads fall back to FS scans.
     try:
         from spicexplorer_api.services import index_db
+
         counts = index_db.rebuild()
         logging.getLogger(__name__).info(
-            "work index rebuilt: %(projects)d project(s), %(runs)d run(s)", counts)
+            "work index rebuilt: %(projects)d project(s), %(runs)d run(s)", counts
+        )
     except Exception:
-        logging.getLogger(__name__).warning("work index rebuild failed — FS fallback", exc_info=True)
+        logging.getLogger(__name__).warning(
+            "work index rebuild failed — FS fallback", exc_info=True
+        )
     yield
 
 

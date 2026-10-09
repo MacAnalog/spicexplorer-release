@@ -137,6 +137,16 @@ slow `L1b` tier (`test_L1b_pdk_transfer_simulates`, plus the `L1b-gf180` tier) t
 AnalogGym amps across the PDKs (full matrix + caveats in `_shared/PDK_SIM.md`).
 Tier 1 is the drift guard: it fails if a committed GENERATED file differs from a fresh regen.
 
+An edit to a circuit's files, or to a block a composite instantiates, also drops the circuit's
+`derived_status` from the next `catalog --write` (its record's fingerprint no longer matches).
+Record a new run to restore it:
+
+```bash
+.venv/bin/analog-db verify --tier 0 --tier 1 --tier 2 --json > $SX_SCRATCH/matrix.json
+.venv/bin/analog-db verify-status --from $SX_SCRATCH/matrix.json --write   # verify_status.json
+.venv/bin/analog-db catalog --write
+```
+
 ## 6. CI (GitHub Actions)
 
 Two workflows in `.github/workflows/` (both need the `PLATFORM_TOKEN` secret — a repo-scoped PAT

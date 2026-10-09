@@ -11,10 +11,13 @@ IHP PDK:
     overrides the supply `.param`) — asserted by inspecting `editor.netlist`, with NO
     simulation run.
 """
+
+import copy
 import re
 from pathlib import Path
 
 import pytest
+import yaml
 from _spicexplorer_fixtures import REPO_ROOT, requires_ngspice
 from spicexplorer.core.domains import (
     Corner,
@@ -29,6 +32,7 @@ CASCODE_YAML = REPO_ROOT / "examples/OTA/cascode/ihp-sg13g2/sizing/project_setup
 
 
 # ── parsing / desugaring ────────────────────────────────────────────────────
+
 
 def test_pvt_block_parses_and_expands():
     p = Project_Setup.from_yaml(FC_YAML)
@@ -96,7 +100,263 @@ def test_normalize_noop_without_pvt():
     assert "pvt" not in proj
 
 
+# OPT-F9: every malformed env shape is refused at desugar time with the corner's NAME in
+# the message — before, most of these passed through silently (a supply with no value, a
+# bare-string supply, an `inf` rail) or raised a raw AttributeError/TypeError far from YAML.
+@pytest.mark.parametrize(
+    "bad",
+    [
+        pytest.param({"supply": "1.8"}, id="supply-not-a-mapping"),
+        pytest.param({"supplies": ["not_a_dict"]}, id="supplies-entry-not-a-mapping"),
+        pytest.param({"supplies": {"node": "VDD", "value": 1.8}}, id="supplies-not-a-list"),
+        pytest.param({"supply": {"value": 1.8}}, id="supply-missing-node"),
+        pytest.param({"supply": {"node": "VDD"}}, id="supply-missing-value"),
+        pytest.param({"supply": {"node": "VDD", "value": "inf"}}, id="supply-inf"),
+        pytest.param({"supply": {"node": "VDD", "value": "1V2"}}, id="supply-infix-unit"),
+        pytest.param({"params": ["VB", 1.2]}, id="params-list"),
+        pytest.param({"params": "VB=1.2"}, id="params-string"),
+        pytest.param({"params": {"VB": float("nan")}}, id="param-nan"),
+        pytest.param({"temp": float("inf")}, id="temp-inf"),
+        pytest.param({"temp": float("nan")}, id="temp-nan"),
+        pytest.param({"temp": [27]}, id="temp-not-a-scalar"),
+        pytest.param({"temp": "hot"}, id="temp-not-a-number"),
+    ],
+)
+def test_normalize_malformed_env_raises_naming_the_corner(bad):
+    corner = {"name": "ss_hot", "temp": 27, **bad}
+    proj = {"pvt": {"active_corner": "ss_hot", "corners": [corner]}}
+    with pytest.raises(ValueError, match="ss_hot"):
+        _normalize_pvt_block(proj)
+
+
+@pytest.mark.parametrize(
+    "corners",
+    [
+        pytest.param(["tt", "ss_hot"], id="list-of-corner-names"),
+        pytest.param({"ss_hot": {"temp": 125}}, id="mapping-keyed-by-name"),
+        pytest.param("ss_hot", id="one-name-string"),
+        pytest.param([{"name": "tt", "temp": 27}, None], id="null-corner"),
+    ],
+)
+def test_normalize_refuses_corners_that_are_not_a_list_of_mappings(corners):
+    """L-PF-34: a corner that is not a mapping is a named ValueError, not an AttributeError."""
+    proj = {"pvt": {"active_corner": "tt", "corners": corners}}
+    with pytest.raises(ValueError, match=r"pvt\.corners"):
+        _normalize_pvt_block(proj)
+
+
+# DATA-F3: a model include without a `section` (gf180mcu's `design.ngspice`, pulled in
+# whole by `.include`) desugars to section=None instead of a KeyError — inline and via a
+# process bundle — and dacite maps it onto the optional ModelInclude.section.
+def test_normalize_sectionless_include_inline_and_bundled():
+    from dacite import from_dict
+    from spicexplorer.core.domains import DECITE_CONFIG
+
+    gf = [
+        {"lib_file": "design.ngspice"},
+        {"lib_file": "sm141064.ngspice", "section": "nfet_03v3_t"},
+    ]
+    proj = {
+        "pvt": {
+            "active_corner": "tt",
+            "process_bundles": {"gf_tt": [dict(i) for i in gf]},
+            "corners": [
+                {"name": "tt", "process": "gf_tt"},
+                {"name": "tt_inline", "model_includes": [dict(i) for i in gf]},
+            ],
+        }
+    }
+    _normalize_pvt_block(proj)
+    for c in proj["pvt"]["corners"]:
+        assert c["model_includes"] == [
+            {"lib_file": "design.ngspice", "section": None},
+            {"lib_file": "sm141064.ngspice", "section": "nfet_03v3_t"},
+        ]
+    cfg = from_dict(PVTConfig, proj["pvt"], config=DECITE_CONFIG)
+    assert [(m.lib_file, m.section) for m in cfg.get_active().model_includes] == [
+        ("design.ngspice", None),
+        ("sm141064.ngspice", "nfet_03v3_t"),
+    ]
+
+
+# OPT-F9: the refusal names the FIELD as well as the corner (which rail, which param, `temp`,
+# or which shape rule was broken) so the YAML line to fix is obvious from the message alone.
+@pytest.mark.parametrize(
+    "bad, fragment",
+    [
+        pytest.param(
+            {"supplies": {"node": "VDD", "value": 1.8}},
+            "'supplies' must be a list",
+            id="supplies-mapping",
+        ),
+        pytest.param({"supplies": {}}, "'supplies' must be a list", id="supplies-empty-mapping"),
+        pytest.param({"supplies": "VDD=1.8"}, "'supplies' must be a list", id="supplies-string"),
+        pytest.param(
+            {"supply": {"node": "", "value": 1.8}},
+            "both 'node' and 'value'",
+            id="supply-blank-node",
+        ),
+        pytest.param(
+            {"supply": {"node": None, "value": 1.8}},
+            "both 'node' and 'value'",
+            id="supply-null-node",
+        ),
+        pytest.param(
+            {"supplies": [{"node": "VDD", "value": 1.8}, "VSS"]},
+            "both 'node' and 'value'",
+            id="second-supply-not-a-mapping",
+        ),
+        pytest.param(
+            {"supply": {"node": "VDDH", "value": "inf"}},
+            "supply 'VDDH' value must be finite",
+            id="supply-inf-names-the-rail",
+        ),
+        pytest.param(
+            {"supply": {"node": "VDDH", "value": None}},
+            "supply 'VDDH' value None is not a number",
+            id="supply-blank-yaml-value",
+        ),
+        pytest.param(
+            {"supply": {"node": "VDDH", "value": "1V2"}},
+            "supply 'VDDH' value '1V2' is not a number",
+            id="supply-infix-unit-names-the-rail",
+        ),
+        pytest.param(
+            {"params": {"VB": float("nan")}}, "param 'VB' must be finite", id="param-nan-names-it"
+        ),
+        pytest.param(
+            {"params": {"VB": "abc"}},
+            "param 'VB' 'abc' is not a number",
+            id="param-garbage-names-it",
+        ),
+        pytest.param({"params": []}, "'params' must be a mapping", id="params-empty-list"),
+        pytest.param({"params": ["VB", 1.2]}, "'params' must be a mapping", id="params-list"),
+        pytest.param({"temp": float("-inf")}, "temp must be finite", id="temp-minus-inf"),
+        pytest.param({"temp": None}, "temp None is not a number", id="temp-blank-yaml-value"),
+        pytest.param({"temp": "hot"}, "temp 'hot' is not a number", id="temp-garbage"),
+        # bytes (a YAML `!!binary` value) is the one input parse_value fails with a TypeError
+        pytest.param({"temp": b"27"}, "temp b'27' is not a number", id="temp-bytes-typeerror"),
+    ],
+)
+def test_normalize_malformed_env_names_the_field(bad, fragment):
+    corner = {"name": "ff_cold", "temp": -40, **bad}
+    proj = {"pvt": {"active_corner": "ff_cold", "corners": [corner]}}
+    with pytest.raises(ValueError) as excinfo:
+        _normalize_pvt_block(proj)
+    msg = str(excinfo.value)
+    assert "PVT corner 'ff_cold'" in msg
+    assert fragment in msg
+
+
+def test_normalize_keeps_boundary_env_values_as_plain_floats():
+    """The stricter checks refuse only malformed shapes: a 0 V rail, a 0 °C / negative temp,
+    one-suffix engineering strings and ints still coerce, to PLAIN floats (a numpy scalar
+    would not survive `yaml.safe_dump` when the project is saved back)."""
+    proj = {
+        "pvt": {
+            "active_corner": "a",
+            "corners": [
+                {
+                    "name": "a",
+                    "temp": "-40",
+                    "supplies": [{"node": "VDD", "value": "900m"}, {"node": "VSS", "value": 0}],
+                    "params": {"IB": "10u", "VCM": 1, "RL": "5meg"},
+                },
+                {"name": "b", "temp": 0},
+            ],
+        }
+    }
+    _normalize_pvt_block(proj)
+    a, b = proj["pvt"]["corners"]
+    assert a["temp"] == -40.0
+    assert a["supplies"] == [
+        {"node": "VDD", "value": pytest.approx(0.9)},
+        {"node": "VSS", "value": 0.0},
+    ]
+    assert a["params"] == {"IB": pytest.approx(10e-6), "VCM": 1.0, "RL": 5e6}
+    assert b["temp"] == 0.0
+    values = [a["temp"], b["temp"], *(s["value"] for s in a["supplies"]), *a["params"].values()]
+    assert all(type(v) is float for v in values)
+    yaml.safe_dump(proj)  # must not raise on a numpy scalar
+
+
+def test_normalize_leaves_absent_or_blank_env_keys_alone():
+    """Absent keys and present-but-empty `supplies:` / `params:` keys (YAML null, `{}`) are
+    not malformed: the desugar step leaves them for the schema, as it did before OPT-F9."""
+    proj = {
+        "pvt": {
+            "active_corner": "bare",
+            "corners": [
+                {"name": "bare"},
+                {"name": "blank", "supplies": None, "params": None},
+                {"name": "empty", "supplies": [], "params": {}},
+            ],
+        }
+    }
+    _normalize_pvt_block(proj)
+    assert proj["pvt"]["corners"] == [
+        {"name": "bare"},
+        {"name": "blank", "supplies": None, "params": None},
+        {"name": "empty", "supplies": [], "params": {}},
+    ]
+
+
+def test_normalize_is_idempotent_on_its_own_output():
+    """A block that is already desugared (a project dict round-tripped through the API, say)
+    must come through a second pass unchanged: float env values, the widened `supplies` and a
+    sectionless include's `None` all stay as they are."""
+    proj = {
+        "pvt": {
+            "active_corner": "tt",
+            "process_bundles": {
+                "gf_tt": [
+                    {"lib_file": "design.ngspice"},
+                    {"lib_file": "sm141064.ngspice", "section": "nfet_03v3_t"},
+                ]
+            },
+            "corners": [
+                {
+                    "name": "tt",
+                    "process": "gf_tt",
+                    "temp": "27",
+                    "supply": {"node": "VDD", "value": "3.3"},
+                    "params": {"VB": "600m"},
+                },
+            ],
+        }
+    }
+    _normalize_pvt_block(proj)
+    once = copy.deepcopy(proj)
+    _normalize_pvt_block(proj)
+    assert proj == once
+    assert once["pvt"]["corners"][0]["model_includes"][0] == {
+        "lib_file": "design.ngspice",
+        "section": None,
+    }
+
+
+# DATA-F3: every spelling of "no section" (absent, YAML null, blank) desugars to None; a present
+# section is kept and stringified, as the pre-DATA-F3 `str(inc["section"])` did.
+@pytest.mark.parametrize(
+    "inc, section",
+    [
+        pytest.param({"lib_file": "m.lib"}, None, id="absent"),
+        pytest.param({"lib_file": "m.lib", "section": None}, None, id="yaml-null"),
+        pytest.param({"lib_file": "m.lib", "section": ""}, None, id="blank"),
+        pytest.param({"lib_file": "m.lib", "section": "tt"}, "tt", id="named"),
+        pytest.param({"lib_file": "m.lib", "section": 3}, "3", id="numeric-stringified"),
+    ],
+)
+def test_normalize_include_section_spellings(inc, section):
+    proj = {"pvt": {"active_corner": "c", "corners": [{"name": "c", "model_includes": [inc]}]}}
+    _normalize_pvt_block(proj)
+    assert proj["pvt"]["corners"][0]["model_includes"] == [
+        {"lib_file": "m.lib", "section": section}
+    ]
+
+
 # ── apply_corner netlist mutation (no simulation) ───────────────────────────
+
 
 def _make_wrapper(tmp_path):
     from spicexplorer_core.spice_engine.spicelib import NGSpice_Wrapper
@@ -185,6 +445,7 @@ def test_apply_corner_idempotent_when_switching(tmp_path):
 
 # ── apply_corner hardening ─────────────────────────────────────
 
+
 @pytest.mark.skipif(not FC_TB_NETLIST.exists(), reason="folded_cascode testbench netlist missing")
 def test_apply_corner_keeps_multiple_sections_of_one_lib(tmp_path):
     """Two model_includes sharing ONE lib_file (different sections) must BOTH survive — the
@@ -214,8 +475,10 @@ def test_apply_corner_multi_section_idempotent_on_reapply(tmp_path):
     w = _make_wrapper(tmp_path)
     corner = Corner(
         name="multi_section",
-        model_includes=[ModelInclude(lib_file="models.lib", section="nmos_tt"),
-                        ModelInclude(lib_file="models.lib", section="pmos_tt")],
+        model_includes=[
+            ModelInclude(lib_file="models.lib", section="nmos_tt"),
+            ModelInclude(lib_file="models.lib", section="pmos_tt"),
+        ],
         temp=27.0,
     )
     w.apply_corner(corner)
@@ -234,12 +497,14 @@ def test_apply_corner_warns_on_undeclared_supply(tmp_path, caplog):
     from spicexplorer.core.domains import Corner, SupplyOverride
 
     w = _make_wrapper(tmp_path)
-    corner = Corner(name="bad_supply",
-                    supplies=[SupplyOverride(node="NOT_A_PARAM_XYZ", value=1.2)], temp=27.0)
+    corner = Corner(
+        name="bad_supply", supplies=[SupplyOverride(node="NOT_A_PARAM_XYZ", value=1.2)], temp=27.0
+    )
     with caplog.at_level(logging.WARNING, logger="spicexplorer.spice_engine.spicelib"):
         w.apply_corner(corner)
-    assert any("NOT_A_PARAM_XYZ" in r.getMessage() for r in caplog.records), \
+    assert any("NOT_A_PARAM_XYZ" in r.getMessage() for r in caplog.records), (
         "undeclared supply node was applied silently (B12)"
+    )
 
 
 @pytest.mark.skipif(not FC_TB_NETLIST.exists(), reason="folded_cascode testbench netlist missing")
@@ -250,10 +515,11 @@ def test_apply_corner_no_warn_on_declared_supply(tmp_path, caplog):
     from spicexplorer.core.domains import Corner, SupplyOverride
 
     w = _make_wrapper(tmp_path)
-    corner = Corner(name="ok_supply",
-                    supplies=[SupplyOverride(node="VDD", value=1.5)], temp=27.0)
+    corner = Corner(name="ok_supply", supplies=[SupplyOverride(node="VDD", value=1.5)], temp=27.0)
     with caplog.at_level(logging.WARNING, logger="spicexplorer.spice_engine.spicelib"):
         w.apply_corner(corner)
-    assert not any("VDD" in r.getMessage() and "not a declared" in r.getMessage().lower()
-                   for r in caplog.records)
+    assert not any(
+        "VDD" in r.getMessage() and "not a declared" in r.getMessage().lower()
+        for r in caplog.records
+    )
     assert abs(float(w.editor.get_parameter("VDD")) - 1.5) < 1e-9

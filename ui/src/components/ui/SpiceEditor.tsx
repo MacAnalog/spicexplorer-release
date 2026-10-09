@@ -1,6 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
 import type { BeforeMount } from "@monaco-editor/react";
+import type { languages } from "monaco-editor";
 
 // Monaco must stay SSR-disabled (uses window) — same pattern as SetupTab's YAML editor.
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
@@ -15,7 +16,7 @@ const MonacoEditor = dynamic(() => import("@monaco-editor/react"), { ssr: false 
 
 const SPICE_LANG_ID = "spice";
 
-const spiceMonarch = {
+const spiceMonarch: languages.IMonarchLanguage = {
   ignoreCase: true,
   defaultToken: "",
   tokenizer: {
@@ -42,8 +43,7 @@ const spiceMonarch = {
 const beforeMount: BeforeMount = (monaco) => {
   if (monaco.languages.getLanguages().some((l) => l.id === SPICE_LANG_ID)) return;
   monaco.languages.register({ id: SPICE_LANG_ID });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- monarch grammar is untyped JSON
-  monaco.languages.setMonarchTokensProvider(SPICE_LANG_ID, spiceMonarch as any);
+  monaco.languages.setMonarchTokensProvider(SPICE_LANG_ID, spiceMonarch);
   monaco.languages.setLanguageConfiguration(SPICE_LANG_ID, {
     comments: { lineComment: "*" },
     brackets: [["(", ")"], ["{", "}"]],

@@ -12,7 +12,7 @@
 #     address GROUPS by name, not raw device symbols — availability stays atomic, the default
 #     search stays low-dimensional (plan D-5).
 #
-#   • `ungroup:` (commented out here; the DEMO — notebooks/ungroup_resizing.ipynb — injects it
+#   • `ungroup:` (commented out here; the DEMO — notebooks/ungroup_resizing.py — injects it
 #     in-memory) dissolves a shipped tie by appending FROZEN shadow dut_params: one explicit
 #     `.param <member_symbol> = <current deck default>` per dissolved non-first member. Untying
 #     = shadowing (the frozen param overrides the deck's tie line), so the tied and untied

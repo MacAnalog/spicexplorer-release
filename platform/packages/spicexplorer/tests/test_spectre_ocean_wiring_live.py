@@ -61,7 +61,9 @@ def test_live_full_loop_native_scs_injection_moves_the_metric(tmp_path: Path) ->
     example = project_root() / "examples/OTA/5t-ota/ihp-sg13g2/spice/ota-5t_tb-ac.spice"
     deck = render_spectre_deck(
         deck_spec_from_ngspice(
-            example, pdk="generic-n65", source_pdk="ihp-sg13g2",
+            example,
+            pdk="generic-n65",
+            source_pdk="ihp-sg13g2",
             analyses=(dc_oppoint_analysis(), ac_analysis(1e3, 1e8, 101)),
             parameters={"vcm": 0.6},
         )
@@ -133,9 +135,9 @@ project:
     # every OCEAN metric evaluated on every candidate (no NaN escape)
     assert all(np.isfinite(v) for v in gm1 + vtail + gain), (gm1, vtail, gain)
     # physically sane (5T-OTA op point + unity-buffer AC; loose — this is a swept design)
-    assert all(g > 0 for g in gm1), gm1                    # transconductance is positive
-    assert all(0.0 < v < 1.3 for v in vtail), vtail        # a bias-node voltage under 1.2 V rail
-    assert all(-15.0 < g < 6.0 for g in gain), gain        # unity-buffer, wide band
+    assert all(g > 0 for g in gm1), gm1  # transconductance is positive
+    assert all(0.0 < v < 1.3 for v in vtail), vtail  # a bias-node voltage under 1.2 V rail
+    assert all(-15.0 < g < 6.0 for g in gain), gain  # unity-buffer, wide band
     # THE injection proof: sweeping the input width MOVED the metrics across candidates — a
     # fixed/verbatim deck would give identical results. Distinct gm1 ⇒ params reached Spectre.
     assert len({round(v, 12) for v in gm1}) > 1, f"gm1 constant across candidates: {gm1}"

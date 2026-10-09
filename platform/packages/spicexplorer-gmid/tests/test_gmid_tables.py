@@ -3,7 +3,8 @@
 import numpy as np
 import pytest
 from _gmid_fixtures import IHP_NCH, NCH
-from spicexplorer_gmid import OutOfGridError
+from pygmid import Lookup
+from spicexplorer_gmid import DeviceTable, OutOfGridError
 
 
 def test_axes_and_headers():
@@ -70,6 +71,7 @@ def test_look_up_passthrough():
 
 # --- off-grid guard on look_up() and sweep() (cross_repo_audit: only at() guarded) --------------
 
+
 def test_look_up_off_grid_bias_raises():
     """VDS=5 V is outside the [0..1.8] V grid. Before the fix pygmid extrapolated and look_up
     returned finite garbage; now the bias axis is gated up front like at()."""
@@ -87,7 +89,207 @@ def test_look_up_off_grid_L_raises():
 
 def test_look_up_on_grid_value_unchanged():
     """On-grid lookups must return exactly what they did before the guard was added."""
-    assert NCH.look_up("ID_W", GM_ID=15, VDS=0.9, L=0.5, VSB=0.0) == pytest.approx(2.98e-6, rel=0.05)
+    assert NCH.look_up("ID_W", GM_ID=15, VDS=0.9, L=0.5, VSB=0.0) == pytest.approx(
+        2.98e-6, rel=0.05
+    )
+
+
+# --- a GM_ID-keyed look_up() is gated on the gm/ID band, like at() and sweep() -------------------
+
+
+@pytest.mark.parametrize(("table_name", "L", "vds"), [("sky130", 0.5, 0.9), ("ihp", 0.13, 0.4)])
+def test_look_up_keyed_above_the_gm_id_band_raises_not_garbage(table_name, L, vds):
+    """GM_ID=80 is far above either slice's weak-inversion peak.
+
+    pygmid prints "Output is NaN" there and then returns its pchip extrapolation anyway — measured
+    ``NCH.look_up("ID_W", GM_ID=80, L=0.5, VDS=0.9, VSB=0)`` = 0.006909 A/µm (IHP at L=0.13,
+    VDS=0.4: 0.00944), finite, so the NaN check passed it while the README called ``DeviceTable``
+    a fail-loud wrapper whose NaN lookups raise.
+    """
+    table = NCH if table_name == "sky130" else IHP_NCH
+    hi = table.gm_id_band(L, vds)[1]
+    with pytest.raises(OutOfGridError) as exc:
+        table.look_up("ID_W", GM_ID=80, L=L, VDS=vds, VSB=0.0)
+    msg = str(exc.value)
+    assert "unreachable" in msg and f"{hi:.6g}" in msg  # names the band, like at()
+
+
+@pytest.mark.parametrize(
+    "coords",
+    [
+        pytest.param(dict(GM_ID=80, L=0.5), id="pygmid-default-VDS-VSB"),
+        pytest.param(dict(gm_id=80, l=0.5, vds=0.9, vsb=0.0), id="lower-case-keys"),
+    ],
+)
+def test_look_up_gates_the_slice_pygmid_actually_reads(coords):
+    """pygmid keys case-insensitively and fills an absent axis itself (shortest L, VDS at half
+    the grid, VSB=0), so the gate has to see both spellings of the same request."""
+    with pytest.raises(OutOfGridError) as exc:
+        NCH.look_up("ID_W", **coords)
+    assert "unreachable" in str(exc.value)
+
+
+def test_look_up_with_default_axes_reads_what_pygmid_reads():
+    """In band, filling pygmid's defaults in explicitly changes nothing about the answer."""
+    raw = float(np.asarray(NCH.lut.look_up("ID_W", GM_ID=15, L=0.5)).reshape(-1)[0])
+    assert NCH.look_up("ID_W", GM_ID=15, L=0.5) == pytest.approx(raw, rel=1e-12)
+
+
+def _raw(table: DeviceTable, out: str, **coords: object) -> float:
+    """pygmid's own answer, no wrapper: the reference every parity test compares against."""
+    return float(np.asarray(table.lut.look_up(out, **coords), dtype=float).reshape(-1)[0])
+
+
+@pytest.mark.parametrize("table", [NCH, IHP_NCH], ids=["sky130", "ihp"])
+def test_look_up_with_every_axis_omitted_reads_pygmids_default_slice(table):
+    """No L / VDS / VSB at all: the default L too (the shortest one) is the slice pygmid reads."""
+    assert table.look_up("ID_W", GM_ID=15) == pytest.approx(
+        _raw(table, "ID_W", GM_ID=15), rel=1e-12
+    )
+
+
+def test_look_up_without_L_is_gated_on_the_shortest_L_band():
+    """GM_ID=25 is above the default slice's peak (L=0.15: ~24.4 1/V) but below L=1.0's (~27.4).
+
+    With L omitted pygmid reads the shortest L, so that band — not some other L's — decides.
+    """
+    L_min, vds_default = float(NCH.L_grid.min()), float(NCH.VDS_grid.max()) / 2.0
+    hi_default = NCH.gm_id_band(L_min, vds_default)[1]
+    assert hi_default < 25.0 < NCH.gm_id_band(1.0, vds_default)[1]  # the premise
+    with pytest.raises(OutOfGridError) as exc:
+        NCH.look_up("ID_W", GM_ID=25)
+    assert "unreachable" in str(exc.value) and f"{hi_default:.6g}" in str(exc.value)
+    assert NCH.look_up("ID_W", GM_ID=25, L=1.0) > 0  # the same request on a slice that has it
+
+
+def test_look_up_forwards_the_slice_it_gated_to_pygmid():
+    """The defaults the gate fills in are handed to pygmid, not left to pygmid's own.
+
+    A ``Lookup`` can carry its own defaults (``Lookup(path, VDS=…)``) and ``DeviceTable`` wraps any
+    ``Lookup``; if the filled-in axes were only used for the band check, pygmid would then read a
+    different slice from the one that was gated.
+    """
+    own_default = DeviceTable(Lookup(str(NCH.source), VDS=0.4), source=NCH.source)
+    gated = dict(L=0.5, VDS=float(NCH.VDS_grid.max()) / 2.0, VSB=0.0)
+    got = own_default.look_up("ID_W", GM_ID=15, L=0.5)
+    assert got == pytest.approx(_raw(NCH, "ID_W", GM_ID=15, **gated), rel=1e-12)
+    assert got != pytest.approx(_raw(own_default, "ID_W", GM_ID=15, L=0.5), rel=1e-3)
+
+
+def test_look_up_gates_every_slice_of_an_array_axis():
+    """An array-valued axis is gated slice by slice: GM_ID=25 is in band at L=1.0 (first) but not
+    at L=0.15 (second), and the second is named — not left to a bare ``ValueError`` downstream."""
+    with pytest.raises(OutOfGridError) as exc:
+        NCH.look_up("ID_W", GM_ID=25, L=[1.0, 0.15], VDS=0.9, VSB=0.0)
+    assert "unreachable" in str(exc.value) and "L=0.15" in str(exc.value)
+
+
+@pytest.mark.parametrize(
+    ("key", "value", "axis"),
+    [("vgs", 99.0, "VGS"), ("vds", 99.0, "VDS"), ("l", 99.0, "L"), ("vsb", -1.0, "VSB")],
+)
+def test_look_up_refuses_a_lower_case_off_grid_axis_on_a_gm_id_key(key, value, axis):
+    """pygmid upper-cases every keyword, so ``vgs=99`` is VGS=99 to it — bounds-checked like the
+    upper-case spelling (unchecked, ``vgs=99`` reached pygmid and died in an ``IndexError``)."""
+    coords: dict[str, object] = dict(gm_id=15, l=0.5, vds=0.9, vsb=0.0)
+    coords[key] = value
+    with pytest.raises(OutOfGridError, match=f"{axis}={value:g} is outside the characterized grid"):
+        NCH.look_up("ID_W", **coords)
+
+
+def test_a_gm_id_that_pygmid_does_not_key_on_is_not_gated():
+    """pygmid keys on the FIRST keyword only; a VGS-keyed lookup ignores a trailing ``GM_ID``, so
+    the gate does too — an out-of-band value there is not an error, the answer is pygmid's."""
+    coords = dict(VGS=0.8, L=0.5, VDS=0.9, VSB=0.0)
+    assert NCH.look_up("GM", **coords, GM_ID=80) == _raw(NCH, "GM", **coords)
+
+
+@pytest.mark.parametrize(
+    ("table", "L", "vds"), [(NCH, 0.5, 0.9), (IHP_NCH, 0.13, 0.4)], ids=["sky130", "ihp"]
+)
+def test_an_in_band_ratio_look_up_is_unchanged_by_the_gate(table, L, vds):
+    """Backwards compatibility: the analog-db campaign scripts' call shape, ``look_up("GM_GDS",
+    GM_ID=12, …)``, returns exactly pygmid's value — the gate only ever raises, it never edits."""
+    coords = dict(GM_ID=12, L=L, VDS=vds, VSB=0.0)
+    assert table.look_up("GM_GDS", **coords) == _raw(table, "GM_GDS", **coords)
+    assert table.look_up("ID_W", **coords) == _raw(table, "ID_W", **coords)
+
+
+# --- gm_id_for_jd's 5 % round trip is 5 % of the REQUESTED jd ------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("readback", "accepted"),
+    [(1.049, True), (1.052, False), (0.951, True), (0.949, False), (float("nan"), False)],
+)
+def test_gm_id_for_jd_round_trip_tolerance_is_five_percent_of_the_target(
+    monkeypatch, readback, accepted
+):
+    """``math.isclose(rel_tol=0.05)`` scales by the LARGER of the two values, so a read-back 5.2 %
+    high passed (0.052 <= 0.05 x 1.052) against the README's "5 % tol" — up to 5.26 % admitted.
+
+    The read-back is controlled (pygmid's raw lookup is replaced on a private copy of the table), so
+    the test checks the tolerance itself rather than whatever the fixture happens to round-trip to.
+    """
+    table = DeviceTable(NCH.lut, source=NCH.source)
+    jd = 1e-7
+
+    def raw(out, coords):
+        return np.asarray([20.0 if out == "GM_ID" else readback * jd])
+
+    monkeypatch.setattr(table, "_look_up_raw", raw)
+    if accepted:
+        assert table.gm_id_for_jd(jd, 0.5, 0.9) == 20.0
+    else:
+        with pytest.raises(OutOfGridError, match="does not invert consistently"):
+            table.gm_id_for_jd(jd, 0.5, 0.9)
+
+
+# jd = 20·2⁻²⁶ A/µm (≈2.98e-7, a realistic density) makes the 5 % boundary exact in binary floating
+# point: 0.05·jd rounds to exactly 2⁻²⁶, and 21·2⁻²⁶ / 19·2⁻²⁶ are read-backs exactly 2⁻²⁶ away.
+_JD_EXACT = 20 * 2.0**-26
+_JD_EXACT_5PCT = (21 * 2.0**-26, 19 * 2.0**-26)
+
+
+def test_the_exact_boundary_premise():
+    assert all(abs(b - _JD_EXACT) == 0.05 * abs(_JD_EXACT) for b in _JD_EXACT_5PCT)
+
+
+@pytest.mark.parametrize("readback", _JD_EXACT_5PCT, ids=["+5%", "-5%"])
+def test_gm_id_for_jd_accepts_a_read_back_exactly_five_percent_off(monkeypatch, readback):
+    """ "Within 5 %" includes 5 % itself — the gate is ``<=``, not ``<``."""
+    table = DeviceTable(NCH.lut, source=NCH.source)
+    monkeypatch.setattr(
+        table,
+        "_look_up_raw",
+        lambda out, coords: np.asarray([20.0 if out == "GM_ID" else readback]),
+    )
+    assert table.gm_id_for_jd(_JD_EXACT, 0.5, 0.9) == 20.0
+
+
+@pytest.mark.parametrize("gm_id", [0.0, -3.0])
+def test_gm_id_for_jd_rejects_a_non_positive_gm_id_even_when_it_round_trips(monkeypatch, gm_id):
+    """A gm/ID that is not positive is not an inversion, however well it reads back."""
+    table = DeviceTable(NCH.lut, source=NCH.source)
+    jd = 1e-7
+    monkeypatch.setattr(
+        table, "_look_up_raw", lambda out, coords: np.asarray([gm_id if out == "GM_ID" else jd])
+    )
+    with pytest.raises(OutOfGridError, match="does not invert consistently"):
+        table.gm_id_for_jd(jd, 0.5, 0.9)
+
+
+@pytest.mark.parametrize("jd", [0.0, -1e-7, 1e-15, 1.0])
+def test_gm_id_for_jd_reports_an_off_range_density_in_jd_terms(jd):
+    """On the real table (no patching): a zero, negative, far-too-small or far-too-large density is
+    refused by the round trip, in the caller's terms — the JD asked for — and NOT by look_up's
+    gm/ID-band gate, which the read-back deliberately bypasses (it would name an invalid gm/ID the
+    caller never asked for, e.g. 5.5e10 1/V for jd=1)."""
+    with pytest.raises(OutOfGridError) as exc:
+        NCH.gm_id_for_jd(jd, 0.5, 0.9)
+    msg = str(exc.value)
+    assert f"jd={jd:g} A/µm does not invert consistently" in msg
+    assert "unreachable" not in msg
 
 
 def test_sweep_off_grid_bias_raises():
@@ -157,8 +359,8 @@ def test_sweep_reachable_band_edges_are_inclusive(vds):
 def test_at_accepts_both_band_edges_on_every_slice_of_the_grid(table_name):
     """Whatever ``gm_id_band()`` certifies, ``at()`` must deliver — on all 144/96 usable slices.
 
-    The contract README.md:79 states ("``at()`` and ``sweep()`` both gate every requested gm/ID
-    against ``[lo, hi]``") is a CLOSED interval, so a band whose own endpoints ``at()`` refuses is
+    The rule README.md:87 states ("``at()``, ``sweep()`` and a ``GM_ID=``-keyed ``look_up()`` all gate
+    every requested gm/ID against ``[lo, hi]``") is a CLOSED interval, so a band whose own endpoints ``at()`` refuses is
     the oracle contradicting itself. Measured before the fix: 62 of 147 sky130 slices rejected
     ``at(hi)`` on the solved-VGS float artifact. Walking the full (L, VDS, VSB) product is what
     makes this insensitive to which slice anyone happens to sample.
@@ -342,7 +544,7 @@ def test_look_up_at_vds0_raises_out_of_grid_not_a_bare_value_error(table_name):
     with pytest.raises(OutOfGridError) as exc:
         table.look_up("ID_W", GM_ID=15.0, L=L, VDS=0.0, VSB=0.0)
     msg = str(exc.value)
-    assert "VDS=0 is the offending axis" in msg     # names the axis, not just "not finite"
+    assert "VDS=0 is the offending axis" in msg  # names the axis, not just "not finite"
     assert "carries no current" in msg
 
 

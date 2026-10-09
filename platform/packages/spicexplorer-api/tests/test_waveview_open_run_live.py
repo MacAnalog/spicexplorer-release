@@ -34,7 +34,10 @@ def test_open_run_live_end_to_end(tmp_path, monkeypatch) -> None:
     threading.Thread(target=loop.run_forever, daemon=True).start()
     try:
         run_id = optimizer_runner.start_run(
-            project_path=str(default_yaml_path()), budget=1, keep_raw=True, loop=loop,
+            project_path=str(default_yaml_path()),
+            budget=1,
+            keep_raw=True,
+            loop=loop,
         )
         deadline = time.time() + 240
         while time.time() < deadline:
@@ -56,7 +59,9 @@ def test_open_run_live_end_to_end(tmp_path, monkeypatch) -> None:
 
     arts = client.get(f"/api/waveview/runs/{run_id}/artifacts").json()["artifacts"]
     kinds = {a["type"] for a in arts}
-    assert "ngspice_raw" in kinds, f"keep_raw run retained no raw files: {sorted(a['name'] for a in arts)}"
+    assert "ngspice_raw" in kinds, (
+        f"keep_raw run retained no raw files: {sorted(a['name'] for a in arts)}"
+    )
     assert any(a["name"] == "run.log" for a in arts)
 
     r = client.post("/api/waveview/open_run", json={"run_id": run_id})

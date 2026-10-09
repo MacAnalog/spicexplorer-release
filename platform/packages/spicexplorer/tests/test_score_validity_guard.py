@@ -29,6 +29,7 @@ The underlying ``inf``-overload in the registry is recorded in ``doc/TODO.md`` �
 Exercises the scorer through a tiny concrete harness (no SPICE / optimizer build), matching
 ``test_missing_metric_penalty``.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -71,17 +72,34 @@ class _FitnessHarness(_SSO):
 
 def _power_spec(*, log_scale: bool):
     """The shipped ppa-campaign shape: MINIMIZE power with a reward, optionally in decades."""
-    return TargetSpec(name="power", testbench="dc_op", target=1e-3, goal="minimize",
-                      sim_type="dc", log_scale=log_scale, range=1e-3, tolerance=5e-5,
-                      reward_type=Reward_Types.RELATIVE_ABSOLUTE, weight=1.0)
+    return TargetSpec(
+        name="power",
+        testbench="dc_op",
+        target=1e-3,
+        goal="minimize",
+        sim_type="dc",
+        log_scale=log_scale,
+        range=1e-3,
+        tolerance=5e-5,
+        reward_type=Reward_Types.RELATIVE_ABSOLUTE,
+        weight=1.0,
+    )
 
 
 def _cmrr_spec():
     """The shipped EXCEED shape, verbatim from
     ``examples/analog-db/campaigns/pdk_rescue/configs_sky130/amp_002_alfio_raffc.yaml:142``."""
-    return TargetSpec(name="cmrr_db", testbench="cmrr_vcm", target=40.0, goal="exceed",
-                      sim_type="ac", range=20.0, tolerance=1.0, weight=10.0,
-                      reward_type=Reward_Types.NO_REWARD)
+    return TargetSpec(
+        name="cmrr_db",
+        testbench="cmrr_vcm",
+        target=40.0,
+        goal="exceed",
+        sim_type="ac",
+        range=20.0,
+        tolerance=1.0,
+        weight=10.0,
+        reward_type=Reward_Types.NO_REWARD,
+    )
 
 
 def _dcgain_spec():
@@ -92,9 +110,17 @@ def _dcgain_spec():
     This is the shape that re-opened the ``+MAX_REWARD`` clip when the gate was made
     goal-aware: 54 of the corpus's 1249 specs are EXCEED + linear + relative-absolute, and
     all 54 are ``dcgain``."""
-    return TargetSpec(name="dcgain", testbench="ac_open_loop", target=60.0, goal="exceed",
-                      sim_type="ac", range=20.0, tolerance=1.0, weight=1.0,
-                      reward_type=Reward_Types.RELATIVE_ABSOLUTE)
+    return TargetSpec(
+        name="dcgain",
+        testbench="ac_open_loop",
+        target=60.0,
+        goal="exceed",
+        sim_type="ac",
+        range=20.0,
+        tolerance=1.0,
+        weight=1.0,
+        reward_type=Reward_Types.RELATIVE_ABSOLUTE,
+    )
 
 
 # ------------------------------------------------------------------ the shared transform
@@ -104,7 +130,7 @@ def test_log_space_band_floors_a_non_positive_value():
 
     lc_neg, lt, half = log_space_band(-5.0, 40.0, 0.4)
     assert np.isfinite(lc_neg) and lc_neg == pytest.approx(floor_decades)  # was nan
-    assert lt == pytest.approx(np.log10(40.0)) and half > 0.0              # bounds unchanged
+    assert lt == pytest.approx(np.log10(40.0)) and half > 0.0  # bounds unchanged
 
     lc_zero, _, _ = log_space_band(0.0, 40.0, 0.4)
     assert np.isfinite(lc_zero) and lc_zero == pytest.approx(floor_decades)  # was -inf
@@ -131,14 +157,14 @@ def test_log_space_band_does_not_saturate_sub_floor_positive_readings():
     """
     lc_13, _, _ = log_space_band(1e-13, 40.0, 0.4)
     lc_18, _, _ = log_space_band(1e-18, 40.0, 0.4)
-    assert lc_13 == pytest.approx(-13.0)          # BEFORE: -12.0
-    assert lc_18 == pytest.approx(-18.0)          # BEFORE: -12.0
-    assert lc_18 < lc_13                          # BEFORE: equal — no gradient
+    assert lc_13 == pytest.approx(-13.0)  # BEFORE: -12.0
+    assert lc_18 == pytest.approx(-18.0)  # BEFORE: -12.0
+    assert lc_18 < lc_13  # BEFORE: equal — no gradient
 
 
 def test_is_scoreable_metric_predicate():
     assert is_scoreable_metric(1e-3) and is_scoreable_metric(1e-3, log_scale=True)
-    assert is_scoreable_metric(-5.0)                      # fine for a LINEAR spec
+    assert is_scoreable_metric(-5.0)  # fine for a LINEAR spec
     assert not is_scoreable_metric(-5.0, log_scale=True)  # no decade exists
     assert not is_scoreable_metric(0.0, log_scale=True)
     for bad in (np.inf, -np.inf, np.nan):
@@ -195,9 +221,7 @@ def test_an_infinite_metric_never_scores_as_a_reward():
             assert score == -MAX_PENALTY, f"log_scale={log_scale} value={value}"
 
     for value in (np.inf, -np.inf):  # …and on the shipped EXCEED shape
-        score, _ = _FitnessHarness([_cmrr_spec()]).compute_fitness(
-            {"cmrr_db": np.float64(value)}
-        )
+        score, _ = _FitnessHarness([_cmrr_spec()]).compute_fitness({"cmrr_db": np.float64(value)})
         assert score == -MAX_PENALTY, f"cmrr_db={value}"
 
 
@@ -216,24 +240,32 @@ def test_a_goal_aligned_infinity_on_a_shipped_dcgain_spec_is_still_MAX_PENALTY()
     """
     harness = _FitnessHarness([_dcgain_spec()])
     diverged, summary = harness.compute_fitness({"dcgain": np.float64(np.inf)})
-    assert diverged == -MAX_PENALTY          # BEFORE: +1000000.0
+    assert diverged == -MAX_PENALTY  # BEFORE: +1000000.0
     assert diverged != MAX_REWARD
-    assert summary["dcgain"]["curr_val"] == np.inf   # the reading stays visible
+    assert summary["dcgain"]["curr_val"] == np.inf  # the reading stays visible
 
     # …and it must not become a global best: a healthy 80 dB DUT strictly out-scores it,
     # and the healthy score itself is untouched by the gate.
     healthy, _ = harness.compute_fitness({"dcgain": np.float64(80.0)})
     assert healthy == pytest.approx(1.05)
-    assert healthy > diverged                # BEFORE: 1.05 < 1000000.0 — the diverged point WON
+    assert healthy > diverged  # BEFORE: 1.05 < 1000000.0 — the diverged point WON
     assert max(healthy, diverged) == healthy
 
     # The mirror hole on a LINEAR MINIMIZE + reward spec (no shipped spec has this shape, but
     # the kernel is the same one): a distortion-free `-inf` must not clip to +MAX_REWARD.
-    thd = TargetSpec(name="thd_db", testbench="linearity", target=-60.0, goal="minimize",
-                     sim_type="tran", range=20.0, tolerance=1.0, weight=1.0,
-                     reward_type=Reward_Types.RELATIVE_ABSOLUTE)
+    thd = TargetSpec(
+        name="thd_db",
+        testbench="linearity",
+        target=-60.0,
+        goal="minimize",
+        sim_type="tran",
+        range=20.0,
+        tolerance=1.0,
+        weight=1.0,
+        reward_type=Reward_Types.RELATIVE_ABSOLUTE,
+    )
     clean, _ = _FitnessHarness([thd]).compute_fitness({"thd_db": np.float64(-np.inf)})
-    assert clean == -MAX_PENALTY             # BEFORE: +1000000.0
+    assert clean == -MAX_PENALTY  # BEFORE: +1000000.0
 
 
 def test_degenerate_metric_is_no_better_than_a_healthy_one():
@@ -241,8 +273,8 @@ def test_degenerate_metric_is_no_better_than_a_healthy_one():
     harness = _FitnessHarness([_power_spec(log_scale=True)])
     healthy, _ = harness.compute_fitness({"power": np.float64(5e-4)})  # comfortably in band
     degenerate, _ = harness.compute_fitness({"power": np.float64(0.0)})
-    assert healthy > 0.0            # a real design still earns its reward (unchanged)
-    assert degenerate < healthy     # BEFORE: 1e6 > 1.07 — the degenerate point WON
+    assert healthy > 0.0  # a real design still earns its reward (unchanged)
+    assert degenerate < healthy  # BEFORE: 1e6 > 1.07 — the degenerate point WON
 
 
 def test_healthy_log_scale_scoring_is_unchanged():

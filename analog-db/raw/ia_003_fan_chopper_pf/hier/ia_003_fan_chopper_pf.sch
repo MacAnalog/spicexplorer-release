@@ -44,10 +44,10 @@ C {devices/capa_np.sym} -330 340 0 0 {name=CPF1 value='x_dut_cpf1_value'}
 C {devices/capa_np.sym} -110 340 0 0 {name=CPF2 value='x_dut_cpf2_value'}
 C {devices/res_np.sym} 110 340 0 0 {name=RB1 value='x_dut_rb1_value'}
 C {devices/res_np.sym} 330 340 0 0 {name=RB2 value='x_dut_rb2_value'}
-C {devices/vsource_np.sym} -6865 340 0 0 {name=VB1 value="dc {vb1}"}
-C {devices/vsource_np.sym} -6865 120 0 0 {name=VB2 value="dc {vb2}"}
-C {devices/vsource_np.sym} -6865 -100 0 0 {name=VB3 value="dc {vb3}"}
-C {devices/vsource_np.sym} -6865 -320 0 0 {name=VB4 value="dc {vb4}"}
+C {devices/vsource_np.sym} -6865 340 0 0 {name=VB1 value="dc \{vb1\}" savecurrent=false}
+C {devices/vsource_np.sym} -6865 120 0 0 {name=VB2 value="dc \{vb2\}" savecurrent=false}
+C {devices/vsource_np.sym} -6865 -100 0 0 {name=VB3 value="dc \{vb3\}" savecurrent=false}
+C {devices/vsource_np.sym} -6865 -320 0 0 {name=VB4 value="dc \{vb4\}" savecurrent=false}
 C {devices/sg13_lv_pmos_np.sym} -660 -340 0 0 {name=M1 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm1_w l=x_dut_xm1_l m=x_dut_xm1_m}
 C {devices/sg13_lv_pmos_np.sym} -440 -340 0 0 {name=M10 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm10_w l=x_dut_xm10_l m=x_dut_xm10_m}
 C {devices/sg13_lv_pmos_np.sym} -220 -340 0 0 {name=M11 model=sg13_lv_pmos spiceprefix=X w=x_dut_xm11_w l=x_dut_xm11_l m=x_dut_xm11_m}

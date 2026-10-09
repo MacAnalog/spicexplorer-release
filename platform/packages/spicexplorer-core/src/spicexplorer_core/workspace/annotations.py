@@ -15,6 +15,7 @@ set (add / agree / conflict / stale, flagging human-protected conflicts);
 that are EXPLICITLY ``reviewed_by: agent``) and PRESERVES everything else — a human
 override *or* a hand-authored entry with no ``reviewed_by`` (default-protected).
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -52,8 +53,11 @@ def read_curated(project_dir: Path, cell: str) -> dict[str, dict[str, Any]]:
 
 
 def write_curated(
-    project_dir: Path, cell: str, annotations: dict[str, dict[str, Any]],
-    *, now: datetime | None = None,
+    project_dir: Path,
+    cell: str,
+    annotations: dict[str, dict[str, Any]],
+    *,
+    now: datetime | None = None,
 ) -> None:
     """Atomically write the cell's curated annotations (with a version + timestamp)."""
     p = _cell_file(project_dir, cell)
@@ -67,7 +71,8 @@ def write_curated(
 
 
 def merge_proposal(
-    curated: dict[str, dict[str, Any]], raw: dict[str, Any],
+    curated: dict[str, dict[str, Any]],
+    raw: dict[str, Any],
 ) -> dict[str, list[dict[str, Any]]]:
     """Classify a fresh RAW labeling against the curated set WITHOUT changing anything.
     Buckets: ``add`` (new), ``agree`` (same role), ``conflict`` (different role —
@@ -85,12 +90,17 @@ def merge_proposal(
             prop["agree"].append({"id": ident, "role": crole})
         else:
             reviewed = cur.get("reviewed_by") if isinstance(cur, dict) else None
-            prop["conflict"].append({
-                "id": ident, "curated": crole, "raw": rrole,
-                # protected = anything NOT explicitly agent-owned (human or hand-authored),
-                # matching merge_curated's default-protected rule.
-                "reviewed_by": reviewed, "protected": reviewed != REVIEW_AGENT,
-            })
+            prop["conflict"].append(
+                {
+                    "id": ident,
+                    "curated": crole,
+                    "raw": rrole,
+                    # protected = anything NOT explicitly agent-owned (human or hand-authored),
+                    # matching merge_curated's default-protected rule.
+                    "reviewed_by": reviewed,
+                    "protected": reviewed != REVIEW_AGENT,
+                }
+            )
     for ident, cur in curated.items():
         if ident not in raw:
             prop["stale"].append({"id": ident, "role": _role(cur)})
@@ -98,8 +108,10 @@ def merge_proposal(
 
 
 def merge_curated(
-    curated: dict[str, dict[str, Any]], raw: dict[str, Any],
-    *, now: datetime | None = None,
+    curated: dict[str, dict[str, Any]],
+    raw: dict[str, Any],
+    *,
+    now: datetime | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Apply a raw regeneration to the curated set SAFELY: add new labels, update
     still-agent-owned labels, and PRESERVE every human-reviewed override (recording what
@@ -123,10 +135,10 @@ def merge_curated(
         # silently overwritten. This is the honest reading of "preserve every human
         # override": default-protected, opt-in-updatable.
         if cur.get("reviewed_by") != REVIEW_AGENT:
-            if cur.get("role") != rrole:          # preserve the curated call; record the raw proposal
+            if cur.get("role") != rrole:  # preserve the curated call; record the raw proposal
                 cur["overrides"] = rrole
             continue
-        if cur.get("role") != rrole:              # explicitly agent-owned → safe to update
+        if cur.get("role") != rrole:  # explicitly agent-owned → safe to update
             cur["role"] = rrole
             cur["updated"] = stamp
             if prov:

@@ -13,6 +13,8 @@ raw/**/scratch/
 # (Authored Spectre reference bindings live at circuits/*/spectre/** and stay tracked.)
 raw/**/*.scs
 .DS_Store
+# marimo session snapshots (notebook outputs; `marimo edit` and `marimo export session` write them)
+__marimo__/
 
 
 sandbox/*
@@ -58,6 +60,11 @@ drawings/*/ported-netlists/notebooks/nb_opt/
 # the DRC/LVS/PEX/optimizer WORKING dirs rebuild deterministically from source.
 circuits/*/pdk/*/layout-*/out/*.gds
 circuits/*/pdk/*/layout-*/out/pex/*/
+# ...and the PREPARED extractor block beside them. `pex_sim.py` writes the spliced-in subckt next
+# to the scorecard it produced (a what-if needs it there to be readable), but it is a few hundred
+# kB of extractor output — a rawfile, not an artefact. Its provenance is the committed
+# out/pex/rc_netlist.sha256, which names and hashes the extraction it came from.
+circuits/*/pdk/*/layout-*/out/pex/extracted_subckt.spice
 circuits/*/pdk/*/layout-*/out/signoff/
 # optimizer per-trial working dirs (GDS/pex) are ignored; the small run records
 # directly under the dir (best_<dut>.json, trials_<dut>.jsonl) stay tracked.

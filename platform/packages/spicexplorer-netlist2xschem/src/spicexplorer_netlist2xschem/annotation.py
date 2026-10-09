@@ -41,7 +41,13 @@ ignored by the box overlay: ``template_sch`` (the block's hand-drawn symmetric l
 stamping), ``device_slots`` (host ref → template device-slot), and ``port_names`` (boundary host net →
 the template's functional port name — ``out`` / ``ref_in`` / ``supply`` / …, a fanned-out mirror's extra
 outputs numbered ``out_2``, ``out_3``, …, used to label a generated block symbol's pins). A producer that
-omits them, or a consumer that ignores them, is unaffected.
+omits them, or a consumer that ignores them, is unaffected. circuitgraph also emits ``rules_ref`` and
+``roles`` per block; this consumer reads neither, so :meth:`BlockAnnotationSet.to_dict` does not
+write them back (a load → save round trip drops them by design).
+
+Compatibility (the package README's "The `@1` contract" section): unknown keys are ignored, a new
+field keeps ``@1``, and a change a ``@1`` reader cannot interpret is ``@2``. The loader refuses a
+non-``@1`` ``schema`` and a mapping without ``blocks`` (:func:`_check_contract`).
 """
 
 from __future__ import annotations
@@ -50,8 +56,12 @@ import json
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .wiring import Box, PlacedDevice, device_extent
+
+if TYPE_CHECKING:
+    from .ingest import N2XCircuit
 
 __all__ = [
     "ANNOTATION_SCHEMA",
@@ -61,19 +71,55 @@ __all__ = [
 ]
 
 ANNOTATION_SCHEMA = "spicexplorer/xschem-block-annotations@1"
+_SCHEMA_NAME, _, _SCHEMA_MAJOR = ANNOTATION_SCHEMA.rpartition("@")
+
+
+def _check_contract(data: Mapping[str, object]) -> None:
+    """Refuse a mapping this consumer would otherwise misread (plan_block_annotation P8).
+
+    Two independent checks, because each one alone lets a real failure through:
+
+    * ``schema``, when present, must name this contract at major ``1`` (``@1`` or an additive
+      ``@1.<n>``). A ``@2`` payload is by definition one a ``@1`` reader cannot read correctly.
+      A payload with no ``schema`` key is still accepted (hand-authored sets, older producers).
+    * the mapping must carry ``blocks``. analog-db's ``<id>.structural.json`` carries this
+      schema string on a document that keeps its detections under ``groups``; it used to load as
+      zero blocks, an empty overlay that looked the same as "the detector found nothing".
+    """
+    if "schema" in data:
+        schema = str(data["schema"])
+        name, _, version = schema.rpartition("@")
+        if name != _SCHEMA_NAME or version.split(".")[0] != _SCHEMA_MAJOR:
+            raise ValueError(
+                f"unsupported annotation schema {schema!r}: this consumer reads "
+                f"{ANNOTATION_SCHEMA!r} (major {_SCHEMA_MAJOR}, additive fields only) — "
+                "a new major is a change a @1 reader cannot interpret"
+            )
+    if "blocks" not in data:
+        keys = ", ".join(repr(k) for k in sorted(map(str, data))) or "none"
+        raise ValueError(
+            f"not a {ANNOTATION_SCHEMA} payload: no 'blocks' key (keys present: {keys}). "
+            "A structural-analysis document (detections under 'groups') is not the contract — "
+            "export it with circuitgraph's export_subcircuit_annotations()"
+        )
+
 
 # --- box geometry -----------------------------------------------------------------------------
 _PAD = 40  # padding from the device-extent union to a top-level block's box edge
-_PAD_STEP = 22  # each nesting level draws this much tighter, so a child box sits *inside* its parent
+_PAD_STEP = (
+    22  # each nesting level draws this much tighter, so a child box sits *inside* its parent
+)
 _PAD_MIN = 8  # floor on the padding however deep the nesting goes
 _LABEL_DY = 18  # the block label sits this far above the box's top edge
-_LABEL_SIZE = 0.3  # label text size (the schematic title uses 0.4; block labels read a touch smaller)
+_LABEL_SIZE = (
+    0.3  # label text size (the schematic title uses 0.4; block labels read a touch smaller)
+)
 _LABEL_LINE = 24  # min vertical gap between two labels before one is bumped up (anti-collision)
 _LABEL_BUCKET = 60  # x-tolerance within which two labels are considered to share a column
 
 # --- colour --------------------------------------------------------------------------------------
 # xschem graphic *layers* used to colour the boxes — a curated, visually-distinct cycle tuned against
-# the headless render (see notebooks/annotation_demo.ipynb). Deliberately avoids the layers that read
+# the headless render (see notebooks/annotation_demo.py). Deliberately avoids the layers that read
 # as the schematic itself: green (4/11, device bodies), red (5/7, pins), cyan (1/6/17, wires & net
 # labels) and white/grey (2/3/9/14/16/19, text/background). What remains is yellow, magenta, blue,
 # orange, salmon, olive, pink, coral — distinct from each other and from everything already drawn.
@@ -186,9 +232,18 @@ class BlockAnnotationSet:
     # --- construction ----------------------------------------------------------------------------
     @classmethod
     def from_dict(cls, data: Mapping[str, object] | Sequence[object]) -> BlockAnnotationSet:
-        """Build from the parsed JSON: ``{"schema":…, "blocks":[…]}`` or a bare list of block dicts."""
-        entries = data.get("blocks", ()) if isinstance(data, Mapping) else data
-        return cls(tuple(BlockAnnotation.from_dict(e) for e in entries))  # type: ignore[arg-type]
+        """Build from the parsed JSON: ``{"schema":…, "blocks":[…]}`` or a bare list of block dicts.
+
+        A mapping is checked against the contract before any block is read (see
+        :func:`_check_contract`): a ``schema`` other than major ``@1`` and a mapping with no
+        ``blocks`` key both raise ``ValueError``. Unknown keys are ignored (the additive policy).
+        """
+        if isinstance(data, Mapping):
+            _check_contract(data)
+            entries = data["blocks"]
+        else:
+            entries = data
+        return cls(tuple(BlockAnnotation.from_dict(e) for e in entries))  # type: ignore[arg-type,union-attr]
 
     @classmethod
     def from_json(cls, text: str) -> BlockAnnotationSet:
@@ -196,9 +251,61 @@ class BlockAnnotationSet:
         return cls.from_dict(json.loads(text))
 
     @classmethod
-    def load(cls, path: str | Path) -> BlockAnnotationSet:
-        """Build from a JSON *file*."""
-        return cls.from_json(Path(path).read_text())
+    def load(cls, path: str | Path, *, circuit: N2XCircuit | None = None) -> BlockAnnotationSet:
+        """Build from a JSON *file*.
+
+        Pass ``circuit`` to validate every block's ``devices`` against it (see :meth:`validate`) —
+        by default the set is trusted as-is (fails open, matching the pre-existing behaviour), so a
+        caller that has the circuit at load time should opt in rather than discover a silently
+        collapsed hierarchy downstream."""
+        result = cls.from_json(Path(path).read_text())
+        if circuit is not None:
+            result.validate(circuit)
+        return result
+
+    def validate(self, circuit: N2XCircuit) -> None:
+        """Raise ``ValueError`` if any block names a device ref absent from ``circuit``.
+
+        A block member is the join key against the placed schematic; an unresolvable one is silently
+        dropped everywhere else in this module (:func:`annotation_lines` boxes the placed remainder,
+        :func:`~.hierarchy.build_hierarchical_sch` extracts fewer members — possibly emptying the
+        block entirely). That is the right default for the diagnostic overlay, but it means a
+        renamed/removed device (a netlist recertification, say) can silently empty a block while a
+        downstream topology gate (component/net counts) still passes on the collapsed drawing. This
+        is the fail-closed check a caller can opt into at load time instead."""
+        have = {d.ref for d in circuit.devices}
+        problems = [
+            f"{b.block_id}: unresolved device(s) {sorted(set(b.devices) - have)}"
+            for b in self.blocks
+            if set(b.devices) - have
+        ]
+        if problems:
+            raise ValueError(
+                "BlockAnnotationSet has block(s) naming a device not present in the circuit "
+                "(a rename/removal upstream?): " + "; ".join(problems)
+            )
+
+    def coverage(self, circuit: N2XCircuit, *, loose: Sequence[str] = ()) -> dict[str, object]:
+        """Both directions of the block/device join, as a REPORT (never raises).
+
+        :meth:`validate` is the fail-closed half: an annotated device the circuit does not have.
+        This is the other half, which nothing else checks — a device in **no** block at all. Such
+        a device is silently missing from every child sheet while the parent still netlists and a
+        topology gate (component and net counts on the flattened result) still passes.
+
+        ``loose`` declares the cell-level devices that deliberately belong to no block (a
+        reference source, a loop-break marker, an output capacitor). Declaring them BY NAME is the
+        point: a new device that belongs in a block is then a finding rather than a default.
+        """
+        have = {d.ref.upper() for d in circuit.devices}
+        want = {r.upper() for b in self.blocks for r in b.devices}
+        return {
+            "blocks_declared": len(self.blocks),
+            "devices_in_deck": len(have),
+            "devices_annotated": len(want),
+            "unknown_devices": sorted(want - have),
+            "unannotated_devices": sorted(have - want - {d.upper() for d in loose}),
+        }
 
     # --- serialisation ---------------------------------------------------------------------------
     def to_dict(self) -> dict[str, object]:
@@ -251,7 +358,9 @@ class BlockAnnotationSet:
         for i, b in enumerate(blocks):  # nesting: child merges into parent
             if b.parent_id is not None and b.parent_id in by_id:
                 union(i, by_id[b.parent_id])
-        first_seen: dict[str, int] = {}  # shared device: two blocks naming one ref are the same block
+        first_seen: dict[
+            str, int
+        ] = {}  # shared device: two blocks naming one ref are the same block
         for i, b in enumerate(blocks):
             for ref in b.devices:
                 if ref in first_seen:

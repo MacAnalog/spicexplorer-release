@@ -47,7 +47,7 @@
         "noise": {
           "measures": {
             "onoise_total": 5.566279e-05,
-            "vn_out_rms": 0.00746075
+            "vn_out_rms": 5.566279e-05
           },
           "status": "ok"
         },
@@ -122,7 +122,7 @@
       },
       "vn_out_rms": {
         "spec": "pass",
-        "value": 0.00746075
+        "value": 5.566279e-05
       },
       "zout_peak_db": {
         "spec": "pass",
@@ -133,24 +133,24 @@
   "parameters": {
     "sizing": {
       "c_comp": "2p",
-      "x_dut_xm5_l": "0.5u",
-      "x_dut_xm1_l": "1u",
-      "x_dut_xmp_l": "0.5u",
-      "x_dut_xm7_l": "2u",
-      "x_dut_xm3_l": "0.5u",
-      "x_dut_xm9_l": "0.6u",
-      "x_dut_xmp_m": "250",
       "r_bleed": "100k",
       "r_z": "3k",
       "vb1_val": "1.0",
       "vb2_val": "0.025",
       "vref_val": 1.8,
-      "x_dut_xm5_w": "10u",
+      "x_dut_xm1_l": "1u",
       "x_dut_xm1_w": "20u",
-      "x_dut_xmp_w": "10u",
-      "x_dut_xm7_w": "20u",
+      "x_dut_xm3_l": "0.5u",
       "x_dut_xm3_w": "30u",
-      "x_dut_xm9_w": "30u"
+      "x_dut_xm5_l": "0.5u",
+      "x_dut_xm5_w": "10u",
+      "x_dut_xm7_l": "2u",
+      "x_dut_xm7_w": "20u",
+      "x_dut_xm9_l": "0.6u",
+      "x_dut_xm9_w": "30u",
+      "x_dut_xmp_l": "0.5u",
+      "x_dut_xmp_m": "250",
+      "x_dut_xmp_w": "10u"
     }
   },
   "pdk": "gf180mcu",

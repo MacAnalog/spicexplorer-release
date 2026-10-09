@@ -1,10 +1,10 @@
 # spicexplorer-analog-db
 
-A versioned, tool-agnostic database of analog circuits. **65 verifiable circuits** across
-**fifteen classes** (31 OTAs/amplifiers incl. a behavioral macromodel and a composed CMFB
-closure, 5 instrumentation amplifiers, 9 LDOs, 3 dedicated CMFB networks — behavioral +
-real 5T — 3 switches, 3 temperature sensors, 2 comparators, 2 support blocks, plus
-ADC / gain-stage / buffer / diff-pair / sampler / trim / voltage-reference cells) are each
+A versioned, tool-agnostic database of analog circuits. **72 verifiable circuits** across
+**16 classes** (34 OTAs/amplifiers incl. a behavioral macromodel and composed CMFB
+closures, 6 instrumentation amplifiers, 10 LDOs, 4 CMFB networks — behavioral, 5T and
+switched-cap — 3 switches, 3 temperature sensors, 2 comparators, 2 support blocks, plus one cell
+each of ADC, buffer, diff-pair, driver, gain-stage, sampler, trim and voltage-reference) are each
 lowered to up to **three open PDKs**
 (`ihp-sg13g2`, `sky130`, `gf180mcu`) as ready-to-run SPICE decks, with a tiered `verify` harness.
 Every verifiable circuit pairs one PDK-neutral topology (lowered per-PDK via `circuitgraph`) with
@@ -17,14 +17,14 @@ Verifiable circuits carry **accession ids** — `<class-code>_<nnn>_<slug>` (`am
 renumbered or reused (meta-repo `doc/plan_scoreboard.md` D-1). Pre-accession names live on as
 `provenance.aliases`. Reference circuits keep corpus-scoped ids (`ferrosim_*`).
 
-Alongside them are **22 `kind: reference` circuits** (plan D-9) — **upstream-pointer entries**
-for third-party circuits this DB indexes but does not redistribute (the not-yet-promotable
-remainder of the `ferrosim_*` and `sfe_*` AnalogGym Sensing Front End imports; the promotable
-members carry accession ids now, with their upstream recorded as in-entry `references`
-pointers and the exact blocker documented in each remaining entry's README). They live in the
-**same `circuits/` registry** and appear in `catalog.json`, but **no upstream or foundry-bound
-decks ship here**: the harness runs a reference-only Tier-0 (schema + provenance + pointer)
-and skips T1–T4. See [`corpora/ferrosim/`](corpora/ferrosim/) and
+Alongside them are **13 `kind: reference` circuits** (plan D-9; 12 `ferrosim_*` + 1 `sfe_*`) —
+**upstream-pointer entries** for third-party circuits this DB indexes but does not redistribute
+(the not-yet-promotable remainder of the `ferrosim_*` and `sfe_*` AnalogGym Sensing Front End
+imports; the promotable members carry accession ids now, with their upstream recorded as in-entry
+`references` pointers and the exact blocker documented in each remaining entry's README). They
+live in the **same `circuits/` registry** and appear in `catalog.json`, but **no upstream or
+foundry-bound decks ship here**: the harness runs a reference-only Tier-0 (schema + provenance +
+pointer) and skips T1–T4. See [`corpora/ferrosim/`](corpora/ferrosim/) and
 [`corpora/analoggym-sensing-fe/`](corpora/analoggym-sensing-fe/) for corpus provenance.
 
 `kind` is **not** how a cell is retired. A verifiable circuit that should stop appearing in the
@@ -36,14 +36,14 @@ de-published `amp_029_two_stage_miller_comp`).
 
 Works **standalone** as a benchmark and as the `examples/analog-db/` submodule of
 [`spicexplorer-platform`](https://github.com/MacAnalog/spicexplorer-platform). Built per the platform
-plan `doc/plan_examples_db.md` (in the meta-repo).
+plan `doc/archive/plan_examples_db.md` (in the meta-repo).
 
 ## Layout
 ```
 spicexplorer-analog-db/
-├─ circuits/<id>/                   # one self-contained circuit  (×65)
+├─ circuits/<id>/                   # one self-contained circuit  (×72)
 │  ├─ circuit.yaml                  #   topology + metadata
-│  ├─ composition.yaml              #   COMPOSITES only (×2): instance DAG the flat netlist
+│  ├─ composition.yaml              #   COMPOSITES only (×5): instance DAG the flat netlist
 │  │                                #   + per-PDK sizing are composed from (plan P4)
 │  ├─ datasheet.yaml                #   machine-readable spec
 │  ├─ abstract/
@@ -65,7 +65,7 @@ spicexplorer-analog-db/
 │     ├─ baselines.yaml             #     the named baseline design point per PDK
 │     └─ <pdk>/<design_id>.json     #     one entry per design point: sizing + per-corner
 │                                   #     metrics/spec verdicts + PPA rollup
-├─ circuits/<id>/                   # a kind: reference circuit (D-9)  (×22: ferrosim_* + sfe_*)
+├─ circuits/<id>/                   # a kind: reference circuit (D-9)  (×13: ferrosim_* + sfe_*)
 │  ├─ circuit.yaml                  #   kind: reference; class; provenance; references[] upstream pointers
 │  └─ README.md                     #   what it is + upstream source (no decks are redistributed)
 ├─ corpora/<name>/                  # corpus-level provenance for reference imports (NOT a deck copy)
@@ -80,6 +80,8 @@ spicexplorer-analog-db/
 │     ├─ <testbench>.spice          #   self-contained: testbench + params + DUT
 │     └─ _dut.spice                 #   standalone DUT for your own testbench
 ├─ catalog.json                     # (gen) class-aware index — the agent entry point
+├─ verify_status.json               # (rec) each circuit's derived verify rung, from one recorded
+│                                   #   `verify --json` run (see Derived status below)
 ├─ scoreboard.json                  # (gen) global PPA scoreboard: class × pdk × circuit × design
 │                                   #   point, Pareto-marked (see Scoreboard below)
 ├─ drawings/                        # hand-drawn design families: staging + landing.yaml manifests +
@@ -91,10 +93,11 @@ spicexplorer-analog-db/
 ├─ templates/                       # circuitgraph MATCHER template library (structural signatures, not designs)
 ├─ _shared/                         # schema, per-class metrics + templates, PDK registries, notes
 ├─ src/spicexplorer_analog_db/      # the harness + `analog-db` CLI
-└─ notebooks/                       # executed Jupyter tours (DB, gm/ID LUT, sizing)
+└─ notebooks/                       # marimo tours (DB, gm/ID LUT, sizing); no stored outputs
 ```
 `(gen)` artifacts are produced by `analog-db generate` and byte-identical drift-guarded — edit only
-the authored files. **To create a new circuit** use `analog-db new-circuit` (the CLI front-end) or
+the authored files. `(rec)` is a record of one verify run, written by `analog-db verify-status`
+and schema-checked at Tier 0, not drift-guarded. **To create a new circuit** use `analog-db new-circuit` (the CLI front-end) or
 `authoring.scaffold_circuit()` (the Python API it wraps) — both allocate the next accession id and
 write the full authored stub tree. A few more details the tree omits:
 - Each circuit gets **three schematic views** of its DUT topology, all generated by
@@ -126,8 +129,8 @@ write the full authored stub tree. A few more details the tree omits:
   [`_shared/PARAMS.md`](_shared/PARAMS.md); worked example in [`_shared/PDK_SIM.md`](_shared/PDK_SIM.md).
 - `_shared/` holds the JSON-Schema agent contract, per-class metric vocab + testbench templates, PDK
   registries, and CACE/xschem/migration notes — see [`_shared/README.md`](_shared/README.md).
-- `notebooks/` are executed and PDK-free except marked gated cells — see
-  [`notebooks/README.md`](notebooks/README.md).
+- `notebooks/` are marimo notebooks, PDK-free except marked gated cells; they store no outputs, so
+  a run recomputes them — see [`notebooks/README.md`](notebooks/README.md).
 
 ## Run a circuit
 A fresh clone is runnable with no post-processing — every GENERATED artifact is committed.
@@ -151,6 +154,7 @@ analog-db generate         [--circuit ID] [--all]                              #
 analog-db gen-params       (--circuit ID | --all) [--write]                     # generate/refresh abstract/params.yaml (atomic inventory + proposed tying; see _shared/PARAMS.md)
 analog-db export-raw       [--circuit ID] [--pdk PDK] [--corner tt[,ss,ff]] [--check] [--svg]   # materialize raw/ decks (+ plain/annotated/hier .sch + structural.json; --svg renders images)
 analog-db export-raw-project [--circuit ID] [--pdk PDK] [--out DIR] [--demo]   # emit a raw-targeting project_setup.yaml (optimizer driven off the raw/ decks) into raw_optimize/generated/; --demo writes a Studio demo projection to circuits/<id>/project_setup.yaml instead
+analog-db verify-status    --from REPORT.json [--merge] [--date D] [--platform SHA] [--write]   # record each circuit's derived rung from a `verify --json` report (verify_status.json)
 analog-db catalog          [--write]                                           # rebuild catalog.json (no --write → stdout)
 analog-db scoreboard       [--write]                                           # rebuild the global scoreboard.json (no --write → stdout)
 analog-db scoreboard set-baseline --circuit ID --pdk PDK --design HASH          # name a recorded design point the baseline
@@ -183,7 +187,8 @@ just the decks, bare-filename netlists, a small optimizer budget (NGOpt·15), an
 `assets.xschem` block listing every committed `.sch`/`.sym` under the circuit dir (the
 platform's `from-example` flow copies those into the new project's `xschem/` tree). It
 **refuses** a circuit that has `optimizer/projection.yaml` — that circuit's
-`project_setup.yaml` is owned by `analog-db generate` (the extends lane). Which demos the
+`project_setup.yaml` is owned by `analog-db generate` (the extends lane). Both lanes also refuse a
+PDK whose registry `sim_engine` marker is not `ngspice` (a Spectre-routed kit → the `spicexplorer_spectre` lane). Which demos the
 Studio actually lists (and their order) is curated platform-side in `examples/demos.yaml`.
 
 ## Scoreboard
@@ -240,6 +245,70 @@ design and checks the measured metrics against the datasheet `spec` band, emitti
 not a gate; a circuit reaches `validated` only when every spec-bounded row passes). See
 [`TESTING.md`](TESTING.md).
 
+## Derived status: record a verify run, then commit it
+
+`catalog.json` gives each circuit two statuses. **`status`** is the authored value from
+`circuit.yaml`; the platform API and the Studio read it unchanged. **`derived_status`** is the
+highest rung the circuit cleared in the last recorded verify run, and **`derived_from`** names
+that run (date, platform commit, tiers).
+
+| rung | needs these tiers to have run and cleared |
+|---|---|
+| `generated` | T0, T1 and T2 |
+| `simulated` | T0 to T3 (T3 needs `--sim`) |
+| `validated` | T0 to T4, with every spec-bounded `conform:<metric>@<pdk>` row passing |
+| `reference` | T0, for a `kind: reference` circuit |
+| `draft` | a tier up to T2 failed or did not run; a circuit that declares no analysis has no T2 row |
+
+The catalog build runs no tier (Tier 0 compares it byte for byte with the committed file), so it
+reads the rung from the committed `verify_status.json`. To record a run:
+
+1. **Run the tiers** and keep the matrix report outside the repo:
+   ```
+   analog-db verify --tier 0 --tier 1 --tier 2 --json > $SX_SCRATCH/matrix.json
+   ```
+2. **Reduce it** to one record per circuit: the rung, the tiers that ran, the date, the platform
+   commit, and a fingerprint of the files under `circuits/<id>/` (for a composite, also of the
+   blocks its `composition.yaml` instantiates):
+   ```
+   analog-db verify-status --from $SX_SCRATCH/matrix.json --write
+   ```
+3. **Rebuild the catalog**, then commit `verify_status.json` and `catalog.json` together:
+   ```
+   analog-db catalog --write
+   ```
+
+- **`--merge`** keeps the records of circuits a narrower run did not cover, for example after
+  `analog-db verify --sim --circuit amp_001_5t --json`.
+- **`--date` and `--platform`** override the recorded date (default: today, UTC) and commit
+  (default: `git rev-parse` in the checkout that holds `spicexplorer_core`).
+- **Refused reports** (exit 2): a `--pdk` run, which lists only part of the rows; a run with a
+  failed DB-level row, except the stale `catalog:determinism` and the record's own
+  `verify_status:record`, which steps 2 and 3 replace.
+
+**A recorded rung is published only while it still holds.** Otherwise the catalog leaves
+`derived_status` out and `derived_from.invalidated` says why:
+
+| the record | the catalog |
+|---|---|
+| its fingerprint no longer matches: an edit under `circuits/<id>/`, or, for a composite, under a block its `composition.yaml` instantiates (a T1 drift or its regeneration included) | drops the rung |
+| its tiers cannot back its rung (`generated` from a T0-only run) | drops the rung |
+| says `validated`, but a `conform:*` row of that run did not pass | drops the rung |
+| a T0 `scoreboard:*` row fails (an entry fails its schema, a baseline names a missing entry) | keeps the rung: `scoreboard/` is outside the fingerprint on purpose (see below) |
+| an untracked file sits under `circuits/<id>/` or a composed block's directory (the fingerprint reads the directory, not git) | drops the rung until the file is deleted or committed; T0 `catalog:determinism` fails meanwhile |
+
+The fingerprint leaves out `pdk/<pdk>/layout-*/`, `*.md`, `*.png`, `*.svg`, `*.pdf` and
+machine-local by-products, which no tier reads, and `scoreboard/`. T0's `scoreboard:*` integrity
+rows read `scoreboard/`, but `analog-db run --write` appends to it, so it is left out on purpose:
+a new design point does not drop the rung, and neither does a failing `scoreboard:*` row. A
+composite's fingerprint includes its blocks one level deep, because a block that is itself a
+composite is read through its own committed flat netlist.
+
+The fingerprint does not read `_shared/` or the platform packages. A tier failure that starts there
+(a PDK device map, a class testbench template, a platform upgrade) leaves the rung published until
+a new run is recorded. When it leaves generated files stale, T1 fails on that tree, and the
+regeneration that clears T1 changes the circuit's files and drops the rung.
+
 ## Development & testing
 Depends on the platform packages (`spicexplorer-core`, `-circuitgraph`, `-netlist2tf`), not PyPI —
 develop by **borrowing the platform venv**:
@@ -249,9 +318,10 @@ uv pip install jsonschema && uv pip install --no-deps -e examples/analog-db   # 
 .venv/bin/python -m pytest examples/analog-db/tests -m "not slow" -q          # NOT `uv run` (it re-syncs)
 ```
 > The `pytest -m "not slow"` path above needs only `jsonschema`. **Executing the notebooks**
-> (`notebooks/execute_all.py`, the CI notebook-smoke step) additionally needs `nbformat` and
-> `nbclient` — `uv pip install nbformat nbclient` (the meta-repo's `make sync-db` installs all
-> three: `jsonschema nbformat nbclient`).
+> (`notebooks/execute_all.py`, the CI notebook-smoke step) additionally needs `marimo`, which the
+> platform venv's dev dependency group installs. An `.ipynb` in `notebooks/` (none remain) would
+> also need `nbformat` and `nbclient` — `uv pip install nbformat nbclient` (the meta-repo's
+> `make sync-db` installs all three: `jsonschema nbformat nbclient`).
 `db_root()` resolves package-relative, so the harness finds `circuits/` / `_shared/` whether run
 standalone or from the submodule mount. Full setup and every test tier (fast / verify / slow-sim /
 in-container) are in [`TESTING.md`](TESTING.md).

@@ -131,6 +131,21 @@ def knob_symbol(value: Any) -> str | None:
 # the symbol closure so it never looks like a free ``.param``.
 _SUBCKT_MASTER_FIELD = "Value"
 
+# Device types circuitgraph may assign to an ``X``-card that instantiates a PDK device
+# SUBCKT: a 3-node poly resistor (``XR1 a b sub rhigh w= l=``) still types as RES and a
+# 2-node MIM (``XCC a b cap_cmim w= l=``) as CAP, but their ``Value`` is the master name,
+# exactly as for a plain SUBCKT — not a tunable knob. A primitive ``R1 a b 'r_top'`` keeps
+# its ``Value`` (a real free knob), which is why the ``X`` prefix is the discriminator.
+_XCARD_MASTER_TYPES = frozenset({"SUBCKT", "RES", "CAP", "IND"})
+
+
+def carries_subckt_master(comp: dict[str, Any]) -> bool:
+    """True when ``comp``'s ``Value`` param is a subckt MASTER NAME, not a knob."""
+    return str(comp.get("id", ""))[:1].upper() == "X" and (
+        comp.get("device_type") in _XCARD_MASTER_TYPES
+    )
+
+
 # Identifiers inside a braced engineering expression. A unit-suffixed literal
 # like ``1f`` / ``2e-12`` is not a leading-letter token, so it is not matched.
 _EXPR_SYMBOL_RE = re.compile(r"\b[A-Za-z_]\w*\b")
@@ -176,7 +191,7 @@ def atomic_inventory(graph: dict[str, Any]) -> dict[str, dict[str, Any]]:
         if comp.get("device_type") == "MOS":
             inv[cid] = {f: atomic_symbol(cid, f) for f in sorted(params)}
         else:
-            is_subckt = comp.get("device_type") == "SUBCKT"
+            is_subckt = carries_subckt_master(comp)
             row: dict[str, Any] = {}
             for f in sorted(params):
                 if is_subckt and f == _SUBCKT_MASTER_FIELD:
@@ -493,7 +508,7 @@ def netlist_symbols(graph: dict[str, Any]) -> set[str]:
     engineering strings excluded) — must be covered by the inventory (Tier-1 symbol closure)."""
     out: set[str] = set()
     for comp in graph.get("components", []):
-        is_subckt = comp.get("device_type") == "SUBCKT"
+        is_subckt = carries_subckt_master(comp)
         for f, val in (comp.get("params") or {}).items():
             if is_subckt and f == _SUBCKT_MASTER_FIELD:
                 continue  # subckt master/model name is a device ref, not a symbol
@@ -504,14 +519,14 @@ def netlist_symbols(graph: dict[str, Any]) -> set[str]:
 # --------------------------------------------------------------------------- untied symmetry
 
 
-def detected_tie_candidates(graph: dict[str, Any]) -> list[tuple[str, frozenset[str], frozenset[str]]]:
+def detected_tie_candidates(
+    graph: dict[str, Any],
+) -> list[tuple[str, frozenset[str], frozenset[str]]]:
     """``(label, members, tie-fields)`` for every structurally detected symmetry — the
     candidates a ``groups:`` review either ties or (deliberately) leaves atomic."""
     out: list[tuple[str, frozenset[str], frozenset[str]]] = []
     for p in detect_matched_pairs(graph):
-        out.append(
-            (f"matched_pair {p.a}+{p.b}", frozenset({p.a, p.b}), frozenset({"w", "l", "m"}))
-        )
+        out.append((f"matched_pair {p.a}+{p.b}", frozenset({p.a, p.b}), frozenset({"w", "l", "m"})))
     for m in detect_mirrors(graph):
         out.append(
             (
@@ -523,17 +538,38 @@ def detected_tie_candidates(graph: dict[str, Any]) -> list[tuple[str, frozenset[
     return out
 
 
+# ``ng`` (gate fingers) is the per-finger analogue of the multiplier ``m``: a device card that
+# splits a transistor by fingers matches its paired device through ``ng``, so a tie of either
+# satisfies m.
+_TIE_ANALOGUES: dict[str, tuple[str, ...]] = {"m": ("m", "ng")}
+
+
 def untied_symmetries(graph: dict[str, Any], doc: dict[str, Any]) -> list[str]:
     """Detected-but-untied symmetry candidates: a WARNING upstream,
     never a failure — these are proposals a reviewer may have deliberately declined (e.g. a tail
-    mirror shipped as independent knobs)."""
+    mirror shipped as independent knobs).
+
+    A candidate demands only the fields EVERY member declares in ``devices:`` (an ``{l, w}`` pair
+    has no ``m`` to tie), a tie of ``ng`` satisfies a demanded ``m``, and the tie fields of every
+    group holding all the members count together (``[w]`` in one group + ``[l]`` in another ties
+    both). The warning names only the fields still untied."""
     groups = doc.get("groups") or []
+    devices = doc.get("devices") or {}
     out: list[str] = []
     for label, members, fields in detected_tie_candidates(graph):
-        covered = any(
-            members <= set(g.get("members") or []) and fields <= set(g.get("tie") or [])
-            for g in groups
-        )
-        if not covered:
-            out.append(f"{label} (tie {','.join(sorted(fields))})")
+        declared = set(fields) | {"ng"}
+        for m in members:  # a member absent from devices: (stale inventory) keeps the full demand
+            if isinstance(devices.get(m), dict):
+                declared &= set(devices[m])
+        tied: set[str] = set()
+        for g in groups:
+            if members <= set(g.get("members") or []):
+                tied |= set(g.get("tie") or [])
+        missing = []
+        for f in sorted(fields):
+            alts = {a for a in _TIE_ANALOGUES.get(f, (f,)) if a in declared}
+            if alts and not alts & tied:
+                missing.append(f)
+        if missing:
+            out.append(f"{label} (tie {','.join(missing)})")
     return out

@@ -107,7 +107,9 @@ def test_parent_names_every_block_pin():
     named = {c.lab for c in parent.components if c.lab}
     for sym_file, sym_text in res.symbols.items():
         for p in parse_symbol(sym_text).pins:
-            assert p.name in named, f"block pin net {p.name!r} of {sym_file} is unnamed on the parent"
+            assert p.name in named, (
+                f"block pin net {p.name!r} of {sym_file} is unnamed on the parent"
+            )
 
 
 def test_block_symbol_pins_display_template_role_but_connect_by_net():
@@ -139,7 +141,9 @@ def test_diff_pair_block_exposes_its_input_pins():
     res = build_hierarchical_sch(circuit, aset)
     dp = next(t for f, t in res.symbols.items() if f.startswith("dp_"))
     pin_nets = {p.name for p in parse_symbol(dp).pins}
-    assert {"vinp", "vinn"} <= pin_nets, f"diff-pair inputs missing from its symbol pins: {pin_nets}"
+    assert {"vinp", "vinn"} <= pin_nets, (
+        f"diff-pair inputs missing from its symbol pins: {pin_nets}"
+    )
     assert "T {in_p}" in dp and "T {in_n}" in dp  # drawn with their functional role names
 
 
@@ -210,7 +214,9 @@ def _flatten(text: str) -> str:
                 dt = dl.split()
                 new = [f"{dt[0]}__{inst}"]
                 for tok in dt[1:]:
-                    if "=" in tok or tok.lower().startswith(("sg13", "nmos", "pmos", "nfet", "pfet")):
+                    if "=" in tok or tok.lower().startswith(
+                        ("sg13", "nmos", "pmos", "nfet", "pfet")
+                    ):
                         new.append(tok)
                     else:
                         new.append(nm.get(tok, f"{t[-1]}_{inst}_{tok}"))
@@ -244,9 +250,23 @@ def test_hierarchy_round_trips_via_xschem(tmp_path):
     env = os.environ.copy()
     env["XSCHEM_LIBRARY_PATH"] = lib_path
     subprocess.run(
-        ["xschem", "--rcfile", str(rc), "-x", "-q", "-n", "-s", "-o", str(tmp_path),
-         str(tmp_path / "ota5t.sch")],
-        env=env, capture_output=True, text=True, timeout=120, cwd=str(tmp_path),
+        [
+            "xschem",
+            "--rcfile",
+            str(rc),
+            "-x",
+            "-q",
+            "-n",
+            "-s",
+            "-o",
+            str(tmp_path),
+            str(tmp_path / "ota5t.sch"),
+        ],
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=120,
+        cwd=str(tmp_path),
     )
     netlist = tmp_path / "ota5t.spice"
     assert netlist.is_file(), "xschem produced no netlist for the hierarchy"

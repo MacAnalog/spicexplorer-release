@@ -1,6 +1,6 @@
 v {xschem version=3.4.6 file_version=1.2}
 G {type=subcircuit
-format="@name @pinlist @symname"
+format="@name @pinlist @symname @params"
 template="name=x1"}
 V {}
 S {}
@@ -14,10 +14,10 @@ L 4 -140 0 -160 0 {}
 T {bias} -128 0 0 0 0.16 0.16 {layer=4}
 B 5 157.5 -22.5 162.5 -17.5 {name=gate_p dir=out}
 L 4 140 -20 160 -20 {}
-T {ref_in} 128 -20 0 0 0.16 0.16 {layer=4}
+T {ref_in} 98 -20 0 0 0.16 0.16 {layer=4}
 B 5 157.5 17.5 162.5 22.5 {name=vout dir=out}
 L 4 140 20 160 20 {}
-T {out} 128 20 0 0 0.16 0.16 {layer=4}
+T {out} 113 20 0 0 0.16 0.16 {layer=4}
 B 5 -2.5 -82.5 2.5 -77.5 {name=vdd dir=inout}
 L 4 0 -60 0 -80 {}
 T {supply} 0 -60 0 0 0.16 0.16 {layer=4}

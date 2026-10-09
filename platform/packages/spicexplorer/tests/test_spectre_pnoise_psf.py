@@ -108,7 +108,9 @@ def test_measure_pnoise_recipes_on_spectre_result(pnoise_raw_dir: Path) -> None:
     assert onoise == pytest.approx(_W_OUT * band, rel=1e-6)
     assert inoise == pytest.approx(_W_IN * band, rel=1e-6)
     assert inoise < onoise
-    spot = measure(res, {"meas": "pnoise_spot", "out": "out", "f": 1.0e6}, default_analysis="pnoise")
+    spot = measure(
+        res, {"meas": "pnoise_spot", "out": "out", "f": 1.0e6}, default_analysis="pnoise"
+    )
     assert spot == pytest.approx(_W_OUT, rel=1e-9)
     l_f = measure(
         res,

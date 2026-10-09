@@ -56,10 +56,11 @@ import shlex
 import subprocess
 import tempfile
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 
@@ -70,16 +71,33 @@ from .gmid import _axis_spec, _grid, lut_filename
 # stored LUT param ← signed sum of Spectre op-point params; `odd` entries flip sign for the
 # p-device (its biases are swept negative, so odd quantities come back negative).
 _OP_PARAMS = [
-    "ids", "vth", "igd", "igs", "igcd", "igcs", "gm", "gmbs", "gds",
-    "cgg", "cgs", "csg", "cgd", "cdg", "cgb", "cdd", "css", "cjd", "cjs",
+    "ids",
+    "vth",
+    "igd",
+    "igs",
+    "igcd",
+    "igcs",
+    "gm",
+    "gmbs",
+    "gds",
+    "cgg",
+    "cgs",
+    "csg",
+    "cgd",
+    "cdg",
+    "cgb",
+    "cdd",
+    "css",
+    "cjd",
+    "cjs",
 ]
 _REDUCE: dict[str, list[tuple[str, float, bool]]] = {  # out ← [(op_param, coeff, odd)]
-    "ID":  [("ids", 1.0, True)],
-    "VT":  [("vth", 1.0, True)],
+    "ID": [("ids", 1.0, True)],
+    "VT": [("vth", 1.0, True)],
     # TOTAL gate currents: fold the bsim4 channel components in (igd/igs alone are ~100× low)
     "IGD": [("igd", 1.0, True), ("igcd", 1.0, True)],
     "IGS": [("igs", 1.0, True), ("igcs", 1.0, True)],
-    "GM":  [("gm", 1.0, False)],
+    "GM": [("gm", 1.0, False)],
     "GMB": [("gmbs", 1.0, False)],
     "GDS": [("gds", 1.0, False)],
     "CGG": [("cgg", 1.0, False)],
@@ -100,24 +118,25 @@ class SpectreGmidConfig:
     pdk: str
     nmos: str
     pmos: str
-    lib_file: str                              # neutral operator wrapper (corners.lib_file)
-    flavor: str = "core"                       # Vt flavour key into devices.{nmos,pmos} (lvt/svt/hvt)
+    lib_file: str  # neutral operator wrapper (corners.lib_file)
+    flavor: str = "core"  # Vt flavour key into devices.{nmos,pmos} (lvt/svt/hvt)
     corner: str = "tt"
     width_um: float = 5.0
     nfing: int = 1
     temp_k: float = 300.15
     vgs: tuple[float, float, float] = (0.0, 0.025, 1.5)
     vds: tuple[float, float, float] = (0.0, 0.025, 1.8)
-    vsb: tuple[float, float, float] = (0.0, 0.1, 1.0)   # magnitudes (deck mirrors signs)
+    vsb: tuple[float, float, float] = (0.0, 0.1, 1.0)  # magnitudes (deck mirrors signs)
     length_um: list[float] = field(default_factory=lambda: [0.06, 0.13, 0.25, 0.5, 1.0, 2.0])
     info: str = ""
     out_root: Path = field(default_factory=lambda: Path.home() / ".spicexplorer" / "gmid")
-    workers: int = 8                           # gmid.simulator.workers — parallel Spectre jobs
-    timeout_s: int = 1200                      # gmid.simulator.timeout_s — per-job wall clock
+    workers: int = 8  # gmid.simulator.workers — parallel Spectre jobs
+    timeout_s: int = 1200  # gmid.simulator.timeout_s — per-job wall clock
 
     @classmethod
-    def from_registry(cls, pdk: str, corner: str = "tt", flavor: str | None = None,
-                      **overrides: Any) -> SpectreGmidConfig:
+    def from_registry(
+        cls, pdk: str, corner: str = "tt", flavor: str | None = None, **overrides: Any
+    ) -> SpectreGmidConfig:
         """Build a config from the PDK registry's ``gmid`` block (+ optional overrides).
 
         ``flavor`` selects the Vt class: it keys into ``devices.{nmos,pmos}`` — the device
@@ -134,7 +153,9 @@ class SpectreGmidConfig:
                 f"{pdk}: gmid engine is not 'spectre' — use `analog-db gmid-extract` (ngspice)"
             )
         if corner not in reg["corners"]["sections"]:
-            raise ValueError(f"corner {corner!r} not in registry sections {reg['corners']['sections']}")
+            raise ValueError(
+                f"corner {corner!r} not in registry sections {reg['corners']['sections']}"
+            )
         flavors = [str(x) for x in g.get("flavors", [])]
         flavor = flavor or g.get("flavor") or (flavors[0] if flavors else "core")
         nmos_map, pmos_map = reg["devices"]["nmos"], reg["devices"]["pmos"]
@@ -150,7 +171,9 @@ class SpectreGmidConfig:
             nmos=str(nmos_map[flavor]),
             pmos=str(pmos_map[flavor]),
             lib_file=str(reg["corners"]["lib_file"]),
-            flavor=flavor,
+            # never None: the `or` chain above ends in a str. pyright keeps the parameter's
+            # declared `str | None` because the middle term is an untyped registry value.
+            flavor=flavor,  # pyright: ignore[reportArgumentType]
             corner=corner,
             width_um=float(g.get("width_um", 5.0)),
             nfing=int(g.get("nfing", 1)),
@@ -191,6 +214,7 @@ def axes(cfg: SpectreGmidConfig) -> dict[str, np.ndarray]:
 
 # ── environment (operator-supplied, never committed) ────────────────────────────────────────
 
+
 def model_root(cfg: SpectreGmidConfig) -> Path:
     """The neutral wrapper directory: ``$SPICEXPLORER_<PDK>_MODEL_ROOT`` (dashes → underscores)."""
     var = f"SPICEXPLORER_{cfg.pdk.replace('-', '_').upper()}_MODEL_ROOT"
@@ -211,8 +235,11 @@ def _load_env_file(path: Path) -> dict[str, str]:
 
 def spectre_invocation() -> tuple[str, str | None]:
     """(spectre binary, cadence cshrc) from the env / the bridge's local.env file."""
-    env_file = Path(os.environ.get("SPICEXPLORER_VB_ENV_FILE",
-                                   str(Path.home() / ".virtuoso-bridge" / "local.env")))
+    env_file = Path(
+        os.environ.get(
+            "SPICEXPLORER_VB_ENV_FILE", str(Path.home() / ".virtuoso-bridge" / "local.env")
+        )
+    )
     env = _load_env_file(env_file)
     spectre_bin = os.environ.get("VB_SPECTRE_BIN") or env.get("VB_SPECTRE_BIN") or "spectre"
     cshrc = os.environ.get("VB_CADENCE_CSHRC") or env.get("VB_CADENCE_CSHRC") or None
@@ -220,6 +247,7 @@ def spectre_invocation() -> tuple[str, str | None]:
 
 
 # ── deck / run / parse ──────────────────────────────────────────────────────────────────────
+
 
 def build_deck(cfg: SpectreGmidConfig, l_um: float, vsb: float) -> str:
     """One characterization deck: both polarities, ``sweep VDS { dc VGS }`` at fixed (L, VSB)."""
@@ -257,27 +285,62 @@ def run_deck(deck_path: Path, *, spectre_bin: str, cshrc: str | None, timeout: i
     """
     raw = deck_path.with_suffix(".raw")
     log = deck_path.with_suffix(".log")
-    argv = [spectre_bin, "-64", str(deck_path), "+escchars", "+log", str(log),
-            "-format", "psfascii", "-raw", str(raw), "-maxw", "5", "-maxn", "5"]
-    cmd = (["csh", "-fc", f"source {shlex.quote(cshrc)}; exec "
-            + " ".join(shlex.quote(a) for a in argv)] if cshrc else argv)
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
-                          cwd=str(deck_path.parent))
+    argv = [
+        spectre_bin,
+        "-64",
+        str(deck_path),
+        "+escchars",
+        "+log",
+        str(log),
+        "-format",
+        "psfascii",
+        "-raw",
+        str(raw),
+        "-maxw",
+        "5",
+        "-maxn",
+        "5",
+    ]
+    cmd = (
+        [
+            "csh",
+            "-fc",
+            f"source {shlex.quote(cshrc)}; exec " + " ".join(shlex.quote(a) for a in argv),
+        ]
+        if cshrc
+        else argv
+    )
+    proc = subprocess.run(
+        cmd, capture_output=True, text=True, timeout=timeout, cwd=str(deck_path.parent)
+    )
     if proc.returncode != 0 or not raw.is_dir():
         raise RuntimeError(f"spectre failed (rc={proc.returncode}) for {deck_path.name}; see {log}")
     return raw
 
 
+_VDS_SLICE = re.compile(r"sweepvds-(\d+)_sweepvgs\.dc")
+
+
+def _vds_slice_index(p: Path) -> int:
+    """The VDS index Spectre writes into a slice name (``sweepvds-<N>_sweepvgs.dc``); a name
+    without one is refused, since the slices must sort numerically, not lexically."""
+    m = _VDS_SLICE.fullmatch(p.name)
+    if m is None:
+        raise RuntimeError(
+            f"{p.parent}: unexpected PSF slice name {p.name!r} (want sweepvds-<N>_sweepvgs.dc)"
+        )
+    return int(m.group(1))
+
+
 def parse_job(raw: Path, n_vgs: int, n_vds: int) -> dict[str, np.ndarray]:
     """Read the ``sweepvds-*_sweepvgs.dc`` PSFs → ``{'XMN:ids': (n_vgs, n_vds), …}``.
 
-    Fail-loud: missing slices, short vectors, or non-finite values abort the LUT (a silently
-    dropped row would reshape into a consistent-but-WRONG grid).
+    Fail-loud: a misnamed or missing slice, a short vector, or a non-finite value aborts the LUT
+    (a silently dropped row would reshape into a consistent-but-WRONG grid).
     """
     from psf_utils import PSF
 
-    files = sorted(raw.glob("sweepvds-*_sweepvgs.dc"),
-                   key=lambda p: int(re.search(r"-(\d+)_", p.name).group(1)))  # numeric, not lexical
+    files = sorted(raw.glob("sweepvds-*_sweepvgs.dc"), key=_vds_slice_index)
     if len(files) != n_vds:
         raise RuntimeError(f"{raw}: expected {n_vds} vds slices, found {len(files)}")
     out = {f"XM{p}:{q}": np.zeros((n_vgs, n_vds)) for p in ("N", "P") for q in _OP_PARAMS}
@@ -295,16 +358,22 @@ def parse_job(raw: Path, n_vgs: int, n_vds: int) -> dict[str, np.ndarray]:
     return out
 
 
-def assemble(cfg: SpectreGmidConfig, jobs: dict[tuple[int, int], dict[str, np.ndarray]],
-             pol: str) -> dict[str, Any]:
+def assemble(
+    cfg: SpectreGmidConfig, jobs: dict[tuple[int, int], dict[str, np.ndarray]], pol: str
+) -> dict[str, Any]:
     """Fold per-(L,VSB) job dicts into one pygmid LUT dict for one polarity."""
     ax = axes(cfg)
     inst = "XMN" if pol == "n" else "XMP"
     dims = (len(ax["L"]), len(ax["VGS"]), len(ax["VDS"]), len(ax["VSB"]))
     lut: dict[str, Any] = {
-        "INFO": cfg.info, "CORNER": cfg.corner.upper(), "TEMP": float(cfg.temp_k),
-        "NFING": int(cfg.nfing), "W": float(cfg.width_um),
-        "L": ax["L"].copy(), "VGS": ax["VGS"].copy(), "VDS": ax["VDS"].copy(),
+        "INFO": cfg.info,
+        "CORNER": cfg.corner.upper(),
+        "TEMP": float(cfg.temp_k),
+        "NFING": int(cfg.nfing),
+        "W": float(cfg.width_um),
+        "L": ax["L"].copy(),
+        "VGS": ax["VGS"].copy(),
+        "VDS": ax["VDS"].copy(),
         "VSB": ax["VSB"].copy(),
     }
     for out, terms in _REDUCE.items():
@@ -318,9 +387,13 @@ def assemble(cfg: SpectreGmidConfig, jobs: dict[tuple[int, int], dict[str, np.nd
     return lut
 
 
-def extract(cfg: SpectreGmidConfig, *, scratch: Path | None = None,
-            progress: Callable[[str], None] = print,
-            lengths: list[float] | None = None) -> dict[str, dict[str, Any]]:
+def extract(
+    cfg: SpectreGmidConfig,
+    *,
+    scratch: Path | None = None,
+    progress: Callable[[str], None] = print,
+    lengths: list[float] | None = None,
+) -> dict[str, dict[str, Any]]:
     """Run the full fan-out and return ``{'n': lut, 'p': lut}``.
 
     Parallelism = ``cfg.workers`` concurrent Spectre jobs (the ``gmid.simulator.workers`` YAML
@@ -333,9 +406,11 @@ def extract(cfg: SpectreGmidConfig, *, scratch: Path | None = None,
     work = Path(scratch) if scratch else Path(tempfile.mkdtemp(prefix="gmid_spectre_"))
     work.mkdir(parents=True, exist_ok=True)
     n_jobs = len(ax["L"]) * len(ax["VSB"])
-    progress(f"{cfg.pdk}@{cfg.corner}: {len(ax['L'])} L × {len(ax['VSB'])} VSB = {n_jobs} spectre "
-             f"jobs × {len(ax['VGS'])}×{len(ax['VDS'])} bias points × 2 devices "
-             f"({cfg.workers} workers); scratch={work}")
+    progress(
+        f"{cfg.pdk}@{cfg.corner}: {len(ax['L'])} L × {len(ax['VSB'])} VSB = {n_jobs} spectre "
+        f"jobs × {len(ax['VGS'])}×{len(ax['VDS'])} bias points × 2 devices "
+        f"({cfg.workers} workers); scratch={work}"
+    )
 
     def one(i: int, j: int) -> tuple[int, int, dict[str, np.ndarray]]:
         deck = work / f"job_L{i}_B{j}.scs"
@@ -346,8 +421,7 @@ def extract(cfg: SpectreGmidConfig, *, scratch: Path | None = None,
     t0 = time.time()
     jobs: dict[tuple[int, int], dict[str, np.ndarray]] = {}
     with ThreadPoolExecutor(max_workers=cfg.workers) as ex:
-        futs = [ex.submit(one, i, j)
-                for i in range(len(ax["L"])) for j in range(len(ax["VSB"]))]
+        futs = [ex.submit(one, i, j) for i in range(len(ax["L"])) for j in range(len(ax["VSB"]))]
         for n, fut in enumerate(as_completed(futs), 1):
             i, j, data = fut.result()
             jobs[i, j] = data
@@ -358,13 +432,16 @@ def extract(cfg: SpectreGmidConfig, *, scratch: Path | None = None,
 
 # ── output (out-of-repo by default; committed _shared/gmid layout) ──────────────────────────
 
+
 def device_for(cfg: SpectreGmidConfig, pol: str) -> str:
     return cfg.nmos if pol == "n" else cfg.pmos
 
 
 def lut_path(cfg: SpectreGmidConfig, pol: str) -> Path:
-    return cfg.out_root / cfg.pdk / lut_filename(
-        device_for(cfg, pol), cfg.corner, cfg.temp_k - 273.15, cfg.width_um
+    return (
+        cfg.out_root
+        / cfg.pdk
+        / lut_filename(device_for(cfg, pol), cfg.corner, cfg.temp_k - 273.15, cfg.width_um)
     )
 
 
@@ -376,8 +453,9 @@ def write_lut(cfg: SpectreGmidConfig, lut: dict[str, Any], pol: str) -> Path:
     return out
 
 
-def build_manifest(cfg: SpectreGmidConfig, lut: dict[str, Any], pol: str,
-                   *, extracted_at: str | None = None) -> dict[str, Any]:
+def build_manifest(
+    cfg: SpectreGmidConfig, lut: dict[str, Any], pol: str, *, extracted_at: str | None = None
+) -> dict[str, Any]:
     """The self-describing sidecar (same ``spicexplorer/gmid-lut@1`` schema as the open lane)."""
     scalars, axes_keys = {"INFO", "CORNER", "TEMP", "NFING", "W"}, {"L", "VGS", "VDS", "VSB"}
     return {
@@ -394,8 +472,11 @@ def build_manifest(cfg: SpectreGmidConfig, lut: dict[str, Any], pol: str,
             "variant_override": None,
             "info": cfg.info,
         },
-        "conditions": {"temp_k": float(lut["TEMP"]), "width_um": float(lut["W"]),
-                       "nfing": int(lut["NFING"])},
+        "conditions": {
+            "temp_k": float(lut["TEMP"]),
+            "width_um": float(lut["W"]),
+            "nfing": int(lut["NFING"]),
+        },
         "dimensions": {
             "L_um": _axis_spec(lut["L"]),
             "VGS_V": _axis_spec(lut["VGS"]),
@@ -404,21 +485,27 @@ def build_manifest(cfg: SpectreGmidConfig, lut: dict[str, Any], pol: str,
         },
         "params": [k for k in lut if k not in scalars and k not in axes_keys],
         "notes": "IGD/IGS are TOTAL gate currents (bsim4 igd+igcd / igs+igcs — the channel "
-                 "component can dominate ~100× at advanced nodes); noise (STH/SFL) not characterized — "
-                 "keys omitted so lookups fail loud",
+        "component can dominate ~100× at advanced nodes); noise (STH/SFL) not characterized — "
+        "keys omitted so lookups fail loud",
         "lut_file": lut_path(cfg, pol).name,
-        "provenance": {"tool": "analog-db gmid-extract-spectre", "engine": "spectre",
-                       "extracted_at": extracted_at},
+        "provenance": {
+            "tool": "analog-db gmid-extract-spectre",
+            "engine": "spectre",
+            "extracted_at": extracted_at,
+        },
     }
 
 
-def write_manifest(cfg: SpectreGmidConfig, lut: dict[str, Any], pol: str,
-                   *, extracted_at: str | None = None) -> Path:
+def write_manifest(
+    cfg: SpectreGmidConfig, lut: dict[str, Any], pol: str, *, extracted_at: str | None = None
+) -> Path:
     out = lut_path(cfg, pol).with_name(
-        lut_filename(device_for(cfg, pol), cfg.corner, cfg.temp_k - 273.15, cfg.width_um,
-                     ext="manifest.json")
+        lut_filename(
+            device_for(cfg, pol), cfg.corner, cfg.temp_k - 273.15, cfg.width_um, ext="manifest.json"
+        )
     )
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(build_manifest(cfg, lut, pol, extracted_at=extracted_at),
-                              indent=2) + "\n")
+    out.write_text(
+        json.dumps(build_manifest(cfg, lut, pol, extracted_at=extracted_at), indent=2) + "\n"
+    )
     return out

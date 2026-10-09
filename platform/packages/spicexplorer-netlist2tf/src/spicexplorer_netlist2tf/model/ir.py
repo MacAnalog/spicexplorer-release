@@ -5,7 +5,7 @@ onto and the MNA builder (P3) consumes directly. It sits *below* device physics 
 "this is an OTA") and *above* SPICE syntax (it does not know ``+`` continuations or ``0.18u``).
 
 This IR is **netlist2tf-private**: it is deliberately NOT circuitgraph's ``CircuitGraph`` (the peer
-wall — ``doc/plan_netlist2tf.md`` §1). Duplicated *typing* across the two leaf tools is allowed;
+wall — ``doc/archive/plan_netlist2tf.md`` §1). Duplicated *typing* across the two leaf tools is allowed;
 *parsing* lives once in ``spicexplorer-core``.
 
 Design properties (plan §4):
@@ -14,7 +14,8 @@ Design properties (plan §4):
   ``PortPair`` are frozen value types. The same netlist yields the same IR, so the eventual TF is
   reproducible.
 * **Everything sympified at ingestion.** Param strings become sympy ``Expr`` once (numeric values →
-  ``Float``/``Rational``; symbolic references → ``Symbol``); :attr:`Circuit2TF.symbolic` records the
+  exact ``Integer``/``Rational``, never ``Float``, since LEAF-F06; a literal beyond the double
+  range → ``oo``; symbolic references → ``Symbol``); :attr:`Circuit2TF.symbolic` records the
   keep-symbolic-vs-numericize decision per symbol name.
 * **DC-source short / AC-grounding is an IR fact, but overridable per analysis.** A net's
   :class:`NetRole` is decided once at ingestion (``SUPPLY_DC`` and ``GROUND`` are both AC grounds);
@@ -27,8 +28,10 @@ Design properties (plan §4):
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import cast
 
 import sympy as sp
 
@@ -74,12 +77,14 @@ class DeviceKind(str, Enum):
     VSOURCE = "vsource"
     ISOURCE = "isource"
     DIODE = "diode"
+    VCCS = "vccs"  # a linear ``G`` card: n+ n- nc+ nc- value
     SUBCKT = "subckt"  # an unresolved/opaque X… instance (no registered model)
     UNKNOWN = "unknown"
 
 
 class PinRole(str, Enum):
-    """Terminal role within a device. MOSFET → D/G/S/B; two-terminal → P/N; BJT → C/B/E."""
+    """Terminal role within a device. MOSFET → D/G/S/B; two-terminal → P/N; BJT → C/B/E; a
+    controlled source → P/N for its output and CP/CN for its controlling pair."""
 
     DRAIN = "d"
     GATE = "g"
@@ -90,6 +95,8 @@ class PinRole(str, Enum):
     EMITTER = "e"
     PLUS = "p"
     MINUS = "n"
+    CONTROL_PLUS = "cp"
+    CONTROL_MINUS = "cn"
     PORT = "port"  # generic positional subckt port (role unresolved)
 
 
@@ -143,7 +150,9 @@ class PortPair:
 class Device:
     """A typed device: a ref, a family, ordered role-tagged terminals, and sympified params.
 
-    ``params`` values are sympy ``Expr`` (numeric → ``Float``/``Rational``; symbolic → ``Symbol``).
+    ``params`` values are sympy ``Expr`` (numeric → exact ``Integer``/``Rational``; symbolic →
+    ``Symbol``). A ``Float`` remains only where it has no finite double value (``"1e400"`` read
+    by :meth:`Circuit2TF.from_dict`) or where a caller built the IR by hand.
     ``op`` (operating point) is populated only when a sim/PDK has been consulted (off the core path).
     ``match_group`` tags matched devices (a diff pair / a mirror) for the post-R1 DM/CM + EQUALITY
     machinery; it is ``None`` in R1.
@@ -245,29 +254,32 @@ class Circuit2TF:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Circuit2TF":
+    def from_dict(cls, data: dict) -> Circuit2TF:
         """Rebuild an IR from :meth:`to_dict` output (the JSON front-end)."""
-        nets = {
-            n["name"]: Net(n["name"], NetRole(n["role"])) for n in data.get("nets", [])
-        }
+
+        def exact(v: object) -> sp.Expr:
+            # A float typed into the JSON (a number, or a string such as "1.5e-12*x") becomes the
+            # exact rational ingestion makes of the same literal, sp.Rational(repr(float)), never
+            # a sympy Float; to_dict output is already exact, so the round-trip is unchanged.
+            e = sp.sympify(v)
+            floats = [f for f in e.atoms(sp.Float) if math.isfinite(float(f))]
+            return cast(sp.Expr, e.xreplace({f: sp.Rational(repr(float(f))) for f in floats}))
+
+        nets = {n["name"]: Net(n["name"], NetRole(n["role"])) for n in data.get("nets", [])}
         devices = tuple(
             Device(
                 ref=d["ref"],
                 kind=DeviceKind(d["kind"]),
-                terminals=tuple(
-                    Terminal(PinRole(t["role"]), t["net"]) for t in d["terminals"]
-                ),
+                terminals=tuple(Terminal(PinRole(t["role"]), t["net"]) for t in d["terminals"]),
                 model=d.get("model"),
-                # plain sympify (no rational=True): the serialized string is already the canonical
-                # form, so a Float stays a Float (rationalizing it would break the round-trip).
-                params={k: sp.sympify(v) for k, v in d.get("params", {}).items()},
+                params={k: exact(v) for k, v in d.get("params", {}).items()},
                 op=d.get("op"),
                 match_group=d.get("match_group"),
             )
             for d in data.get("devices", [])
         )
         ports = {k: PortPair(v[0], v[1]) for k, v in data.get("ports", {}).items()}
-        params = {k: sp.sympify(v) for k, v in data.get("params", {}).items()}
+        params = {k: exact(v) for k, v in data.get("params", {}).items()}
         ir = cls(
             name=data.get("name", "circuit"),
             nets=nets,

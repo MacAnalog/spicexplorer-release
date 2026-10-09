@@ -7,10 +7,10 @@ import logging
 
 import pytest
 from spicexplorer_circuitgraph import (
+    GENERIC_N65,
     GF180MCU,
     IHP_SG13G2,
     SKYWATER_SKY130,
-    GENERIC_N65,
     CircuitGraph,
     PdkDevice,
     model_flavor,

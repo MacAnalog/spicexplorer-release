@@ -3,32 +3,34 @@
 Handles both engines' log dialects — ngspice run logs (spicelib's ``<netlist>.log``,
 ``Error:``/``Warning:``/``Note:`` prefixes) and Spectre output (``spectre.out`` /
 bridge logs, ``ERROR (…)``/``WARNING (…)``/``Notice (…)`` markers) — plus a generic
-fallback, so the viewer's log panel can colour any simulator log it is handed.
+fallback, so the viewer's log panel can colour any simulator log it is handed. The
+per-line rules (:func:`classify_line`, :func:`parse_measures`, :func:`fatal_lines`) are
+core's ``spice_engine.sim_log``; this module adds the structured summary and log discovery.
 """
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-__all__ = ["LogLine", "LogSummary", "parse_sim_log", "parse_log_text", "discover_log", "classify_line"]
+# The line rules live in core (`spice_engine.sim_log`) so `run_deck` can read its own log back
+# without importing the viewer; re-exported here unchanged. `parse_measures` (ngspice
+# `print`/`.meas` scalars + failed-measure names) and `fatal_lines` (every error-level line
+# except a failed `.meas`) sit beside `parse_log_text` for the same reason the analog-db tier
+# and the design lanes used to carry their own copies: a log is the only witness of a run
+# ngspice exited 0 from.
+from spicexplorer_core.spice_engine.sim_log import classify_line, fatal_lines, parse_measures
 
-# Ordered: first match wins. Case-sensitive where the engines are (Spectre shouts).
-_LEVEL_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
-    # hard failures
-    ("error", re.compile(r"^\s*(?:\*\*\s*)?(?:Fatal|FATAL)\b")),
-    ("error", re.compile(r"(?:^|\W)(?:Error|ERROR)\s*[:(]")),
-    ("error", re.compile(r"^\s*%?ERROR\b")),
-    ("error", re.compile(r"analysis\s+(?:\S+\s+)?(?:failed|aborted)", re.IGNORECASE)),
-    ("error", re.compile(r"doAnalyses:.*(?:failed|error)", re.IGNORECASE)),
-    ("error", re.compile(r"no\s+convergence|non-?convergen", re.IGNORECASE)),
-    # warnings
-    ("warning", re.compile(r"(?:^|\W)(?:Warning|WARNING)\s*[:(]")),
-    ("warning", re.compile(r"^\s*%?WARNING\b")),
-    # informational notes
-    ("note", re.compile(r"(?:^|\W)(?:Note|Notice|NOTE)\s*[:(]")),
-)
+__all__ = [
+    "LogLine",
+    "LogSummary",
+    "parse_sim_log",
+    "parse_log_text",
+    "discover_log",
+    "classify_line",
+    "parse_measures",
+    "fatal_lines",
+]
 
 
 @dataclass
@@ -57,13 +59,6 @@ class LogSummary:
         order = {"info": 0, "note": 1, "warning": 2, "error": 3}
         floor = order.get(min_level, 0)
         return [ln for ln in self.lines if order.get(ln.level, 0) >= floor]
-
-
-def classify_line(text: str) -> str:
-    for level, pattern in _LEVEL_PATTERNS:
-        if pattern.search(text):
-            return level
-    return "info"
 
 
 def parse_log_text(text: str, path: str | None = None) -> LogSummary:

@@ -6,6 +6,7 @@ Two capabilities on top of the P3 ``dir == run_id`` layout:
   * ``GET /api/waveview/runs/{run_id}/artifacts/file`` — fetch ANY run artifact by
     identity ``(run_id, rel)``, traversal-safe, replacing an absolute-path whitelist.
 """
+
 from __future__ import annotations
 
 import json
@@ -41,7 +42,7 @@ def _mk_run(base, dir_name, run_id, **extra):
 def test_find_run_dir_fast_path_is_direct(work):
     base = ps.runs_dir(None)
     rid = "20260715-101010_optimize_abcd1234"
-    rd = _mk_run(base, rid, rid)          # dir name == run_id (P3)
+    rd = _mk_run(base, rid, rid)  # dir name == run_id (P3)
     assert ps.find_run_dir(None, rid) == rd
 
 
@@ -61,8 +62,8 @@ def test_resolve_run_file_valid_nested_and_escape(tmp_path):
     (tmp_path / "secret").write_text("nope")
     assert ps.resolve_run_file(rd, "run.json") == (rd / "run.json").resolve()
     assert ps.resolve_run_file(rd, "sim/out.raw") == (rd / "sim" / "out.raw").resolve()
-    assert ps.resolve_run_file(rd, "../secret") is None    # escape rejected
-    assert ps.resolve_run_file(rd, "sim") is None          # a dir, not a file
+    assert ps.resolve_run_file(rd, "../secret") is None  # escape rejected
+    assert ps.resolve_run_file(rd, "sim") is None  # a dir, not a file
     assert ps.resolve_run_file(rd, "missing.txt") is None
 
 
@@ -72,14 +73,19 @@ def test_download_any_artifact_by_id(client, work):
     rid = "20260715-101010_optimize_abcd1234"
     _mk_run(base, rid, rid)
 
-    r = client.get(f"/api/waveview/runs/{rid}/artifacts/file",
-                   params={"rel": "config_snapshot.yaml"})
+    r = client.get(
+        f"/api/waveview/runs/{rid}/artifacts/file", params={"rel": "config_snapshot.yaml"}
+    )
     assert r.status_code == 200
     assert "ws_root: /abs/reproducible" in r.text
 
     # run.json is reachable by identity too (not just openable waveforms)
-    assert client.get(f"/api/waveview/runs/{rid}/artifacts/file",
-                      params={"rel": "run.json"}).json()["run_id"] == rid
+    assert (
+        client.get(f"/api/waveview/runs/{rid}/artifacts/file", params={"rel": "run.json"}).json()[
+            "run_id"
+        ]
+        == rid
+    )
 
 
 def test_download_rejects_escape_and_missing(client, work):
@@ -87,9 +93,21 @@ def test_download_rejects_escape_and_missing(client, work):
     rid = "20260715-101010_optimize_abcd1234"
     _mk_run(base, rid, rid)
 
-    assert client.get(f"/api/waveview/runs/{rid}/artifacts/file",
-                      params={"rel": "../../etc/passwd"}).status_code == 404
-    assert client.get(f"/api/waveview/runs/{rid}/artifacts/file",
-                      params={"rel": "nope.txt"}).status_code == 404
-    assert client.get("/api/waveview/runs/ghost/artifacts/file",
-                      params={"rel": "run.json"}).status_code == 404
+    assert (
+        client.get(
+            f"/api/waveview/runs/{rid}/artifacts/file", params={"rel": "../../etc/passwd"}
+        ).status_code
+        == 404
+    )
+    assert (
+        client.get(
+            f"/api/waveview/runs/{rid}/artifacts/file", params={"rel": "nope.txt"}
+        ).status_code
+        == 404
+    )
+    assert (
+        client.get(
+            "/api/waveview/runs/ghost/artifacts/file", params={"rel": "run.json"}
+        ).status_code
+        == 404
+    )

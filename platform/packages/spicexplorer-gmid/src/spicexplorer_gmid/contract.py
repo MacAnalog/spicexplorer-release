@@ -38,7 +38,9 @@ class AxisSpec(BaseModel):
     min: float = Field(description="minimum value")
     max: float = Field(description="maximum value")
     step: float | None = Field(default=None, description="uniform step (None if non-uniform)")
-    values: list[float] | None = Field(default=None, description="explicit values (non-uniform grid)")
+    values: list[float] | None = Field(
+        default=None, description="explicit values (non-uniform grid)"
+    )
     stored: str | None = Field(
         default=None,
         description="storage convention, e.g. 'magnitude' for VSB (LUT stores |VSB|)",
@@ -61,7 +63,9 @@ class LUTModelRecord(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     corner_lines: list[str] = Field(description=".lib/.include lines that resolved the model card")
-    variant_override: str | None = Field(default=None, description="device-variant override (LV/HV) if any")
+    variant_override: str | None = Field(
+        default=None, description="device-variant override (LV/HV) if any"
+    )
     info: str = Field(description="human-readable description from the LUT INFO header")
 
 

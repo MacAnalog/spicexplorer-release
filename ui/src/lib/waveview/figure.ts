@@ -158,7 +158,7 @@ function marksFor(
   xLog: boolean,
 ): Pick<Plotly.Layout, "shapes" | "annotations"> {
   const shapes: Partial<Plotly.Shape>[] = [];
-  const annotations: Partial<Plotly.Annotations>[] = [];
+  const annotations: Partial<Plotly.Annotation>[] = [];
   if (analysis === "ac" || analysis === "stb" || analysis === "pac") {
     // 0 dB reference on the magnitude axis (only visible when the data crosses it).
     shapes.push({
@@ -213,7 +213,7 @@ function marksFor(
       font: { size: 10, family: MONO, color: INK.legend },
     });
   }
-  return { shapes: shapes as Plotly.Shape[], annotations: annotations as Plotly.Annotations[] };
+  return { shapes: shapes as Plotly.Shape[], annotations: annotations as Plotly.Annotation[] };
 }
 
 /** Per-analysis layout — the handoff's `_layoutFor` with autoranged axes. */
@@ -570,7 +570,7 @@ export function buildHistogramFigure(
       line: { color: ACCENT.ok, width: 1.5 },
     },
   ];
-  const annotations: Partial<Plotly.Annotations>[] = [
+  const annotations: Partial<Plotly.Annotation>[] = [
     {
       xref: "x",
       x: mean,
@@ -624,7 +624,7 @@ export function buildHistogramFigure(
       xaxis: axis(`${label} · ${unit}`),
       yaxis: axis("count"),
       shapes: shapes as Plotly.Shape[],
-      annotations: annotations as Plotly.Annotations[],
+      annotations: annotations as Plotly.Annotation[],
     }),
   };
 }

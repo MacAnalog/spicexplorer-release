@@ -7,6 +7,9 @@ Pure functions over committed artifacts; no simulation:
     bare ``w=sym``) resolved against the ``sizing.yaml`` defaults. Honestly a *gate*-area proxy
     (no spacing/routing/wells); passive totals (ΣC, ΣR) are recorded alongside so a real passive
     area can be estimated later — in many of these circuits the mim caps/dividers dominate silicon.
+    Which cards are MOS is decided by each card's MASTER NAME (:func:`model_kinds`), never by its
+    instance letter: in these PDKs every device is an ``X``-card, drawn poly resistors and MIM caps
+    included, and they carry ``w``/``l`` exactly like a transistor does.
   - :func:`metric_values` — one corner's recorded measures mapped to the datasheet's canonical
     metrics, each with a ``pass``/``fail``/``none`` verdict against its ``spec``.
   - :func:`ppa_rollup` — the class-declared PPA vector (``ppa:`` block in
@@ -24,13 +27,25 @@ import ast
 import re
 from typing import Any
 
+from spicexplorer_circuitgraph import get_pdk
+from spicexplorer_circuitgraph.model.nodes import DeviceType
+
 from .bindings import _SCALE_UM_PDKS
 from .model import Circuit, load_class
+from .pdks import load_pdk, load_registry
 from .raw_project import _eng
 
 _ENG = {
-    "t": 1e12, "g": 1e9, "meg": 1e6, "k": 1e3, "m": 1e-3, "u": 1e-6,
-    "n": 1e-9, "p": 1e-12, "f": 1e-15, "a": 1e-18,
+    "t": 1e12,
+    "g": 1e9,
+    "meg": 1e6,
+    "k": 1e3,
+    "m": 1e-3,
+    "u": 1e-6,
+    "n": 1e-9,
+    "p": 1e-12,
+    "f": 1e-15,
+    "a": 1e-18,
 }
 _NUM = re.compile(r"^([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)(meg|[tgkmunpfa])?$", re.I)
 _IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
@@ -80,8 +95,19 @@ def _eval_expr(expr: str, symbols: dict[str, float], context: str) -> float:
         for sub_node in ast.walk(node):
             if not isinstance(
                 sub_node,
-                (ast.Expression, ast.BinOp, ast.UnaryOp, ast.Constant,
-                 ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.USub, ast.UAdd),
+                (
+                    ast.Expression,
+                    ast.BinOp,
+                    ast.UnaryOp,
+                    ast.Constant,
+                    ast.Add,
+                    ast.Sub,
+                    ast.Mult,
+                    ast.Div,
+                    ast.Pow,
+                    ast.USub,
+                    ast.UAdd,
+                ),
             ):
                 raise PpaError(f"{context}: unsupported expression {expr!r}")
         return float(eval(compile(node, "<ppa>", "eval"), {"__builtins__": {}}))
@@ -188,10 +214,64 @@ def resolve_deck_geometry(deck_text: str) -> dict[str, dict[str, float]]:
     return out
 
 
+def card_master(line: str) -> str:
+    """The MASTER NAME of a subckt (``X``) card: the last token before its first ``key=value``.
+
+    ``XR1_1 lp_brk n_r1_1 vss rhigh l={r_fb_l/8} w=r_w`` -> ``rhigh``.
+    """
+    master = ""
+    for tok in line.split()[1:]:
+        if "=" in tok:
+            break
+        master = tok
+    return master.lower()
+
+
+def model_kinds(circuit: Circuit, pdk: str) -> dict[str, dict[str, Any]]:
+    """``{model name: {"kind": mos|res|cap|ind, **constants}}`` for the lowered netlist's cards.
+
+    In every PDK the corpus targets, the devices are ``.subckt`` wrappers, so a MOS
+    (``XM1 d g s b sg13_lv_pmos w= l=``), a poly resistor (``XR1 a b sub rhigh w= l=``) and a MIM
+    (``XC1 a b cap_cmim w= l=``) are ALL ``X``-cards carrying ``w``/``l``. The instance letter is
+    therefore a naming convention, not evidence, and the MASTER NAME is the only honest
+    discriminator. Booking a drawn passive's plate area as gate area is not a rounding error:
+    on ``ldo_010_capless_lowiq`` (24 MOS + 24 passive ``X``-cards) it read 16937 um2 against a
+    true 91.8 um2 of gate — a Pareto area axis wrong by 184x.
+
+    MOS names come from the resolved lowering PDK (the circuit's ``devices.map.yaml`` override or
+    the circuitgraph built-in) — the same table ``to_netlist`` retargets through, so it is complete
+    by construction. Passive names come from the ``_shared/pdk/<pdk>.yaml`` registry: ``devices.res``
+    / ``devices.cap`` name the models, and ``passives.models`` carries the measured tt constants
+    (``sheet_res`` in ohm/square, ``area_cap`` in F/um2) that turn drawn geometry into the
+    SigmaR / SigmaC inventory.
+    """
+    kinds: dict[str, dict[str, Any]] = {}
+    for source in (load_pdk(circuit, pdk), get_pdk(pdk)):
+        for dev in getattr(source, "devices", ()) or ():
+            if dev.device_type == DeviceType.MOS:
+                kinds.setdefault(dev.model.lower(), {"kind": "mos"})
+    reg_devices = load_registry(pdk).get("devices") or {}
+    for pol in ("nmos", "pmos"):
+        entry = reg_devices.get(pol) or {}
+        for name in entry.values() if isinstance(entry, dict) else entry:
+            kinds.setdefault(str(name).lower(), {"kind": "mos"})
+    for kind in ("res", "cap", "ind"):
+        entry = reg_devices.get(kind) or []
+        for name in entry.values() if isinstance(entry, dict) else entry:
+            kinds.setdefault(str(name).lower(), {"kind": kind})
+    passives = (load_registry(pdk).get("passives") or {}).get("models") or {}
+    for name, spec in passives.items():
+        row = dict(spec or {})
+        row.setdefault("kind", "res" if "sheet_res" in row else "cap")
+        kinds[str(name).lower()] = row
+    return kinds
+
+
 def area_report(circuit: Circuit, pdk: str) -> dict[str, Any]:
     """Active gate area + passive inventory from the lowered netlist."""
     symbols = sizing_symbols(circuit, pdk)
-    um = 1.0 if pdk in _SCALE_UM_PDKS else 1e6  # geometry value → µm
+    kinds = model_kinds(circuit, pdk)
+    um = 1.0 if pdk in _SCALE_UM_PDKS else 1e6  # geometry value -> um
     area_um2 = 0.0
     mos = 0
     c_total = 0.0
@@ -204,12 +284,35 @@ def area_report(circuit: Circuit, pdk: str) -> dict[str, Any]:
             continue
         ctx = f"{circuit.id}@{pdk}: {line.split()[0]}"
         geom = dict(_GEOM.findall(line))
+        kind_spec: dict[str, Any] = {"kind": "mos"}
         if "w" in geom and "l" in geom:
+            if line[0].upper() == "X":
+                master = card_master(line)
+                found = kinds.get(master)
+                if found is None:
+                    raise PpaError(
+                        f"{ctx}: subckt master {master!r} is not a device this PDK declares — "
+                        f"add it to pdk/{pdk}/devices.map.yaml (MOS) or to the _shared/pdk/{pdk}"
+                        ".yaml registry (devices.res/devices.cap + passives.models). Refusing to "
+                        "assume a drawn w/l is a transistor gate."
+                    )
+                kind_spec = found
             w = _eval_expr(geom["w"], symbols, ctx) * um
             length = _eval_expr(geom["l"], symbols, ctx) * um
             m = _eval_expr(geom["m"], symbols, ctx) if "m" in geom else 1.0
-            area_um2 += w * length * m
-            mos += 1
+            kind = str(kind_spec.get("kind", "mos"))
+            if kind == "mos":
+                area_um2 += w * length * m
+                mos += 1
+            elif kind == "cap":
+                # MIM plate: C = area_cap [F/um2] * W*L [um2] * m parallel plates
+                c_total += float(kind_spec.get("area_cap") or 0.0) * w * length * m
+                c_count += 1
+            elif kind == "res":
+                # sheet_res is ohm/square, so the geometry ratio carries no unit conversion
+                if w:
+                    r_total += float(kind_spec.get("sheet_res") or 0.0) * (length / w) / m
+                r_count += 1
             continue
         kind = line[0].upper()
         if kind in ("C", "R"):
@@ -317,12 +420,7 @@ def ppa_rollup(
     if pvals:
         worst = max(pvals)  # power: higher is worse
         if power.get("times_vdd"):
-            vdd = (
-                circuit.datasheet()
-                .get("default_conditions", {})
-                .get("supply", {})
-                .get("typical")
-            )
+            vdd = circuit.datasheet().get("default_conditions", {}).get("supply", {}).get("typical")
             for k, v in (analysis_params or {}).items():
                 if str(k).upper() == "VDD":
                     try:

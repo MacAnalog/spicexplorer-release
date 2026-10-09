@@ -4,6 +4,9 @@ Centralizing sympy here means (a) the backend is swappable (an optional symengin
 slotted in later for the determinant/`cancel` bottleneck) and (b) determinism is defined at a single
 canonicalization point: every rational result leaves through :func:`canonical_tf`, so the
 byte-identical-output guarantee (plan §7) holds regardless of how the determinant was computed.
+The one exception is the simplified TF of a POLE_SEPARATION step (``dominant_pole()``): it keeps
+its two first-order denominator factors as built, because :func:`canonical_tf` would multiply them
+back into one polynomial.
 
 For R1 the backend is pure sympy. ``s`` is the one Laplace variable everyone shares.
 """
@@ -13,6 +16,7 @@ from __future__ import annotations
 from typing import cast
 
 import sympy as sp
+from sympy.polys.matrices import DomainMatrix
 
 __all__ = ["S", "canonical_tf", "as_num_den", "determinant", "cramer_numerator"]
 
@@ -37,9 +41,18 @@ def as_num_den(expr: sp.Expr) -> tuple[sp.Expr, sp.Expr]:
 
 
 def determinant(matrix: sp.Matrix) -> sp.Expr:
-    """Symbolic determinant. Berkowitz is division-free → robust over a symbolic matrix."""
+    """Exact determinant. Berkowitz is division-free → robust over a symbolic matrix.
+
+    A matrix whose only symbol is ``s`` (every device value numericized, ``subs=``) goes through
+    sympy's polynomial-domain matrices instead: the same exact rational function, computed over
+    ``ZZ(s)``/``QQ(s)`` without expression swell — 0.06 s on a 26-unknown analog-db bench where
+    Berkowitz over generic expressions ran past 300 s (issue #310).
+    """
     if matrix.shape == (0, 0):
         return sp.Integer(1)
+    if matrix.free_symbols <= {S} and not matrix.has(sp.Float):
+        dm = DomainMatrix.from_Matrix(matrix)
+        return cast("sp.Expr", dm.domain.to_sympy(dm.det()))
     return cast("sp.Expr", matrix.det(method="berkowitz"))
 
 

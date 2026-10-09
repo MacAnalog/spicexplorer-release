@@ -160,6 +160,7 @@ def test_tiny_optimize_runs_through_composed_deck_plus_ocean(tmp_path):
     proj.parallel_sim = False
 
     import sys as _sys
+
     bridge_mods_before = {m for m in _sys.modules if "virtuoso_bridge" in m}
 
     opt.parameterize()
@@ -212,7 +213,9 @@ def test_close_and_context_manager_release_the_ocean_session(tmp_path):
     assert opt2._ocean_ctx._session is None  # __exit__ closed it
 
 
-_YAML_MULTI = _YAML.rstrip() + """
+_YAML_MULTI = (
+    _YAML.rstrip()
+    + """
   pvt:
     mode: multi
     active_corner: tt
@@ -229,6 +232,7 @@ _YAML_MULTI = _YAML.rstrip() + """
         supply: {node: VDD, value: 1.08}
         temp: 85
 """
+)
 
 
 def test_multi_corner_parallel_merges_ocean_per_corner(tmp_path):

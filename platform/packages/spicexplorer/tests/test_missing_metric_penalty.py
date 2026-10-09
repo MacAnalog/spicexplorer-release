@@ -11,6 +11,7 @@ failure contract).
 
 Exercises compute_fitness directly through a tiny concrete harness (no SPICE / optimizer build).
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -22,6 +23,7 @@ from spicexplorer.optimization.base import Spice_Constraint_Satisfaction as _SCS
 
 class _SpecList:
     """Stand-in for ListTargetSpec — compute_fitness only calls enabled_targets()."""
+
     def __init__(self, specs):
         self._specs = specs
 
@@ -49,40 +51,62 @@ class _FitnessHarness(_SCS):
 
 
 def _sigmoid_spec():
-    return TargetSpec(name="gain", testbench="ac", target=40.0, goal="exceed", sim_type="ac",
-                      error_type=Error_Types.RELATIVE_SIGMOID, weight=1.0)
+    return TargetSpec(
+        name="gain",
+        testbench="ac",
+        target=40.0,
+        goal="exceed",
+        sim_type="ac",
+        error_type=Error_Types.RELATIVE_SIGMOID,
+        weight=1.0,
+    )
 
 
 def _abs_spec():
-    return TargetSpec(name="gain", testbench="ac", target=40.0, goal="exceed", sim_type="ac",
-                      error_type=Error_Types.RELATIVE_ABSOLUTE, weight=1.0)
+    return TargetSpec(
+        name="gain",
+        testbench="ac",
+        target=40.0,
+        goal="exceed",
+        sim_type="ac",
+        error_type=Error_Types.RELATIVE_ABSOLUTE,
+        weight=1.0,
+    )
 
 
 def test_missing_metric_penalty_unified_across_error_types():
     """A missing metric scores -MAX_PENALTY for BOTH error types (was -weight for sigmoid)."""
-    sig_score, _ = _FitnessHarness([_sigmoid_spec()]).compute_fitness({})   # metric absent
+    sig_score, _ = _FitnessHarness([_sigmoid_spec()]).compute_fitness({})  # metric absent
     abs_score, _ = _FitnessHarness([_abs_spec()]).compute_fitness({})
-    assert sig_score == -MAX_PENALTY   # BEFORE: -weight = -1.0
-    assert abs_score == -MAX_PENALTY   # unchanged
-    assert sig_score == abs_score      # unified
+    assert sig_score == -MAX_PENALTY  # BEFORE: -weight = -1.0
+    assert abs_score == -MAX_PENALTY  # unchanged
+    assert sig_score == abs_score  # unified
 
 
 def test_failure_strictly_dominates_worst_converged_sigmoid():
     """A crashed sigmoid spec (-MAX_PENALTY) must be strictly worse than the WORST converged sigmoid
     violation, whose penalty is bounded by weight (~-1) — before the fix they tied at -weight."""
     h = _FitnessHarness([_sigmoid_spec()])
-    missing, _ = h.compute_fitness({})                       # crashed
+    missing, _ = h.compute_fitness({})  # crashed
     worst_converged, _ = h.compute_fitness({"gain": np.float64(-1e6)})  # far out of band, but ran
     assert missing == -MAX_PENALTY
-    assert -1.0 <= worst_converged < 0.0                     # sigmoid penalty bounded by weight
-    assert missing < worst_converged                          # strict dominance
+    assert -1.0 <= worst_converged < 0.0  # sigmoid penalty bounded by weight
+    assert missing < worst_converged  # strict dominance
 
 
 def test_crashed_sim_no_longer_outscores_a_converged_violation():
     """The cross-spec bug: a design whose sim crashed on the sigmoid spec once OUTSCORED a
     fully-converged design that violated another spec. Failure must now dominate."""
-    leak = TargetSpec(name="leak", testbench="dc", target=100.0, goal="minimize", sim_type="dc",
-                      error_type=Error_Types.RELATIVE_ABSOLUTE, range=1.0, weight=1.0)
+    leak = TargetSpec(
+        name="leak",
+        testbench="dc",
+        target=100.0,
+        goal="minimize",
+        sim_type="dc",
+        error_type=Error_Types.RELATIVE_ABSOLUTE,
+        range=1.0,
+        weight=1.0,
+    )
     h = _FitnessHarness([_sigmoid_spec(), leak])
 
     # Design A: the gain sim CRASHED (metric missing); leakage is fine.

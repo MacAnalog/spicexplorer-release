@@ -1,0 +1,3 @@
+# xschemrc — the drawn testbenches. Same library path as the parent (the DUT symbol
+# `ldo_ihp_capless.sym` and the `blocks/*.sym` children live one level up).
+source [file normalize [file dirname [info script]]/../xschemrc]

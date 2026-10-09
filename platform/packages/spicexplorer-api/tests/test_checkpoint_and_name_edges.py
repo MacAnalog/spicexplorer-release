@@ -13,6 +13,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("WORK_ROOT", str(tmp_path / "work"))
     from fastapi.testclient import TestClient
     from spicexplorer_api.main import app
+
     return TestClient(app)
 
 
@@ -24,15 +25,17 @@ def test_csv_checkpoint_reads_dot_columns_and_nans(tmp_path):
     from spicexplorer_api.services.checkpoint_reader import read_csv_checkpoint
 
     csv = tmp_path / "ck.csv"
-    csv.write_text(textwrap.dedent("""\
+    csv.write_text(
+        textwrap.dedent("""\
         point.score,fit_summary.gain.curr_val,point.params.w_m1
         -10.0,55.0,5e-06
         ,60.0,6e-06
         -5.0,nan,7e-06
-    """))
+    """)
+    )
     out = read_csv_checkpoint(csv)
-    assert out["scores"] == [-10.0, None, -5.0]            # empty cell → None, not 0/NaN
-    assert out["best_scores"] == [-10.0, -10.0, -5.0]      # None row keeps the running best
+    assert out["scores"] == [-10.0, None, -5.0]  # empty cell → None, not 0/NaN
+    assert out["best_scores"] == [-10.0, -10.0, -5.0]  # None row keeps the running best
     assert out["per_metric"]["gain"] == [55.0, 60.0, None]  # NaN cell → None
     assert out["params"]["w_m1"] == [5e-06, 6e-06, 7e-06]
     assert out["iterations"] == [0, 1, 2] and out["n_iters"] == 3
@@ -46,11 +49,13 @@ def test_csv_checkpoint_reads_corner_namespaced_columns(tmp_path):
     from spicexplorer_api.services.checkpoint_reader import read_csv_checkpoint
 
     csv = tmp_path / "mc.csv"
-    csv.write_text(textwrap.dedent("""\
+    csv.write_text(
+        textwrap.dedent("""\
         point.score,fit_summary.tt_27C::gain.curr_val,fit_summary.ss_125C::gain.curr_val
         -10.0,55.0,48.0
         -5.0,60.0,51.0
-    """))
+    """)
+    )
     out = read_csv_checkpoint(csv)
     assert out["per_metric"]["tt_27C::gain"] == [55.0, 60.0]
     assert out["per_metric"]["ss_125C::gain"] == [48.0, 51.0]
@@ -71,7 +76,9 @@ def test_envelope_and_scatter_resolve_specs_from_namespaced_keys():
 
     env = {row["metric"]: row for row in compute_envelope(data, specs)}
     assert env["tt_27C::gain"]["target"] == 50.0 and env["tt_27C::gain"]["passes"] is True
-    assert env["ss_125C::gain"]["target"] == 50.0 and env["ss_125C::gain"]["passes"] is True  # best-ever 52
+    assert (
+        env["ss_125C::gain"]["target"] == 50.0 and env["ss_125C::gain"]["passes"] is True
+    )  # best-ever 52
 
     pts = compute_scatter(data, "tt_27C::gain", "ss_125C::gain", specs)
     assert [p["feasible"] for p in pts] == [False, True]  # point 0 fails at the ss corner
@@ -86,24 +93,41 @@ def test_json_checkpoint_pads_sparse_metric_keys(tmp_path):
     from spicexplorer_api.services.checkpoint_reader import read_json_checkpoint
 
     def entry(score, fit_summary):
-        return {"point": {"params": {"w": 1e-6}, "score": score, "metadata": {}},
-                "fit_summary": fit_summary, "log_file": None}
+        return {
+            "point": {"params": {"w": 1e-6}, "score": score, "metadata": {}},
+            "fit_summary": fit_summary,
+            "log_file": None,
+        }
 
     ckpt = tmp_path / "mixed.json"
-    ckpt.write_text(json.dumps({
-        "schema_version": "1.0.0",
-        "timestamp": "2026-07-03_00-00-00",
-        "optimization_log": [
-            entry(-10.0, {"gain": {"curr_val": 55.0, "score": -10.0}}),               # bare (old)
-            entry(-5.0, {"tt::gain": {"curr_val": 60.0, "score": -5.0},               # namespaced (new)
-                          "ss::gain": {"curr_val": 50.0, "score": -6.0}}),
-            entry(-4.0, {"tt::gain": {"curr_val": 61.0, "score": -4.0},
-                          "ss::gain": {"curr_val": 52.0, "score": -5.0}}),
-        ],
-    }))
+    ckpt.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0.0",
+                "timestamp": "2026-07-03_00-00-00",
+                "optimization_log": [
+                    entry(-10.0, {"gain": {"curr_val": 55.0, "score": -10.0}}),  # bare (old)
+                    entry(
+                        -5.0,
+                        {
+                            "tt::gain": {"curr_val": 60.0, "score": -5.0},  # namespaced (new)
+                            "ss::gain": {"curr_val": 50.0, "score": -6.0},
+                        },
+                    ),
+                    entry(
+                        -4.0,
+                        {
+                            "tt::gain": {"curr_val": 61.0, "score": -4.0},
+                            "ss::gain": {"curr_val": 52.0, "score": -5.0},
+                        },
+                    ),
+                ],
+            }
+        )
+    )
     out = read_json_checkpoint(ckpt)
-    assert out["per_metric"]["gain"] == [55.0, None, None]        # old key: padded at the tail
-    assert out["per_metric"]["tt::gain"] == [None, 60.0, 61.0]    # new key: padded at the head
+    assert out["per_metric"]["gain"] == [55.0, None, None]  # old key: padded at the tail
+    assert out["per_metric"]["tt::gain"] == [None, 60.0, 61.0]  # new key: padded at the head
     assert out["per_metric"]["ss::gain"] == [None, 50.0, 52.0]
     assert out["n_iters"] == 3
 
@@ -113,7 +137,7 @@ def test_slugify_neutralizes_path_separators():
     from spicexplorer_api.services.project_service import _slugify, new_project_id
 
     assert "/" not in _slugify("../../etc/passwd") and ".." not in _slugify("../../etc/passwd")
-    assert _slugify("") == "project"                        # empty name falls back
+    assert _slugify("") == "project"  # empty name falls back
     pid = new_project_id("../evil\x00name")
     assert "/" not in pid and "\x00" not in pid
 
@@ -126,5 +150,5 @@ def test_create_project_with_traversal_name_stays_under_work_root(client, tmp_pa
     matches = list(work.rglob("manifest.json"))
     assert matches, "project landed nowhere?"
     for m in matches:
-        assert work.resolve() in m.resolve().parents        # nothing escaped WORK_ROOT
+        assert work.resolve() in m.resolve().parents  # nothing escaped WORK_ROOT
     assert ".." not in pid and "/" not in pid

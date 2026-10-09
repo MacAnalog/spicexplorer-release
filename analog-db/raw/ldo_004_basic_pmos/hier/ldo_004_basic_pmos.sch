@@ -6,11 +6,11 @@ S {}
 E {}
 T {ldo_004_basic_pmos} -590 -520 0 0 0.4 0.4 {}
 C {blocks/cm_pmos_simple_1.sym} 0 0 0 0 {name=xcm_pmos_simple_1}
-C {devices/isource_np.sym} -550 320 0 0 {name=ITAIL value="dc {i_tail}"}
+C {devices/isource_np.sym} -550 320 0 0 {name=ITAIL value="dc \{i_tail\}"}
 C {devices/res_np.sym} -330 320 0 0 {name=R1 value='r_top'}
 C {devices/res_np.sym} -110 320 0 0 {name=R2 value='r_bot'}
-C {devices/vsource_np.sym} -550 100 0 0 {name=VLP value="dc 0"}
-C {devices/vsource_np.sym} -550 -120 0 0 {name=VREF value="dc {vref_val}"}
+C {devices/vsource_np.sym} -550 100 0 0 {name=VLP value="dc 0" savecurrent=false}
+C {devices/vsource_np.sym} -550 -120 0 0 {name=VREF value="dc \{vref_val\}" savecurrent=false}
 C {devices/sg13_lv_nmos_np.sym} 110 320 0 0 {name=M1 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm1_w l=x_dut_xm1_l}
 C {devices/sg13_lv_nmos_np.sym} 330 320 0 0 {name=M2 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm2_w l=x_dut_xm2_l}
 C {devices/sg13_lv_pmos_np.sym} 0 -320 0 0 {name=MP model=sg13_lv_pmos spiceprefix=X w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m}

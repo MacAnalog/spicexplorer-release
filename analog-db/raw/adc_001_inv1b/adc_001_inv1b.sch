@@ -13,17 +13,15 @@ N 20 30 20 230 {}
 N 20 290 20 400 {}
 N 80 0 80 94 {}
 N 80 260 80 354 {}
-N -110 -140 210 -140 {}
-N -80 0 -20 0 {}
+N -110 -140 475 -140 {}
+N -50 0 -20 0 {}
 N 20 0 80 0 {}
 N -50 260 -20 260 {}
 N 20 260 80 260 {}
-N -110 400 210 400 {}
-C {devices/lab_wire.sym} -110 -140 0 0 {name=l0 lab=vdd}
-C {devices/lab_wire.sym} -110 400 0 0 {name=l1 lab=vss}
-C {devices/lab_wire.sym} -80 0 0 0 {name=l2 lab=vin}
-C {devices/lab_wire.sym} 20 90 2 0 {name=l3 lab=vout}
-C {devices/lab_wire.sym} 80 94 2 0 {name=l4 lab=vdd}
-C {devices/lab_wire.sym} 80 354 2 0 {name=l5 lab=vss}
-C {devices/ipin.sym} -250 0 0 0 {name=p0 lab=vin}
-C {devices/opin.sym} 350 30 0 0 {name=p1 lab=vout}
+N -110 400 475 400 {}
+C {devices/lab_wire.sym} 80 94 2 0 {name=l0 lab=vdd}
+C {devices/lab_wire.sym} 80 354 2 0 {name=l1 lab=vss}
+C {devices/ipin.sym} -50 0 0 0 {name=p0 lab=vin}
+C {devices/iopin.sym} -110 -140 0 0 {name=p1 lab=vdd}
+C {devices/iopin.sym} -110 400 0 0 {name=p2 lab=vss}
+C {devices/opin.sym} 20 60 0 0 {name=p3 lab=vout}

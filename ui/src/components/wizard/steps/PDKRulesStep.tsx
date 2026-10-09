@@ -43,7 +43,7 @@ export function PDKRulesStep() {
         </div>
 
         {rows.length === 0 ? (
-          <div className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-4 text-center text-xs text-zinc-500">
+          <div className="rounded-md border border-dashed border-zinc-300 bg-bg p-4 text-center text-xs text-muted">
             No constraints yet. Add rows like <span className="font-mono">min_nfet_w = 0.18u</span>.
           </div>
         ) : (
@@ -54,7 +54,7 @@ export function PDKRulesStep() {
                 <TextInput value={r.value} placeholder="value (e.g. 0.18u)" onChange={(e) => updateRow(i, { value: e.target.value })} />
                 <button
                   type="button"
-                  className="rounded-md border border-zinc-200 px-2 text-zinc-400 hover:bg-red-50 hover:text-red-600"
+                  className="rounded-md border border-border px-2 text-faint hover:bg-danger-soft hover:text-danger"
                   onClick={() => removeRow(i)}
                   aria-label="Remove constraint"
                 >

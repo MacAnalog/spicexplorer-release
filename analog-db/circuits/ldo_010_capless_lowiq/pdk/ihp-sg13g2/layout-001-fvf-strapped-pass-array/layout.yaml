@@ -1,0 +1,238 @@
+schema: spicexplorer/layout@1
+# ============================================================================
+# Physical design of the capless low-Iq LDO — the SECOND layout entry in the
+# corpus, and the first one whose source repo signed the cell off before the
+# port (drv_001 was drawn here). Same versioned convention:
+#
+#     circuits/<circuit>/pdk/<pdk>/layout-<NNN>-<slug>/
+#
+# <NNN> is a monotonic layout revision, <slug> names the physical approach.
+#
+# The analog-db harness stores this subtree verbatim: verify tiers T0-T2 do not
+# walk it, so nothing here is schema-checked or byte-drift-guarded. It is driven
+# by `analog-db layout {list,show,run}` through the entry points below.
+# ============================================================================
+
+layout_id: layout-001-fvf-strapped-pass-array
+circuit: ldo_010_capless_lowiq
+pdk: ihp-sg13g2
+revision: 1
+title: >-
+  Flipped-voltage-follower output stage with a 76-finger strapped PMOS pass
+  array — parametric gdsfactory floorplan on IHP SG13G2, drawn against the
+  certified netlist rather than a device table of its own.
+status: signed-off        # generated | drc-clean | lvs-clean | signed-off
+
+# The DRAWN cell keeps the source repo's name. It is the GDS top cell, the LVS
+# cell and the name kpex writes into its `.subckt`, and every signed-off
+# artefact (REVIEW.yaml, SIGNOFF.md, the extracted netlists) refers to it.
+# Renaming it would invalidate that evidence for nothing; the bench-side rename
+# to the accession id happens once, inside `pex_sim.py`.
+cell: ldo_ihp_capless
+
+provenance:
+  source_repo: an agent-first design repo (not public)
+  source_path: layout/            # gen_ldo.py, netlist_ref.py, router.py, signoff.py,
+                                  # postlayout.py, rail_solve.py, test_builder.py
+  source_commit: 40cad45          # feat/001-reference
+  ported: 2026-09-05
+  note: >-
+    Ported with its evidence, not re-derived. The generator, the obstacle-map
+    router, its regression case and the sign-off driver are vendored; the
+    netlist reference now reads THIS entry's own certified netlist one directory
+    up, and the post-layout runner drives analog-db's own benches instead of the
+    source repo's `ldo` package. Everything else is the platform's
+    (`spicexplorer_signoff` DRC / LVS / kpex / current density,
+    `spicexplorer_layout` render, `spicexplorer_signoff.annotate` figures).
+
+# --- toolchain -------------------------------------------------------------
+# TWO interpreters, and the split is not cosmetic: the generator needs
+# gdsfactory + ihp-gdsfactory, the sign-off chain needs the KLayout module and
+# the platform's signoff package. `gen_layout.py` re-execs itself under
+# $LDO_GF_PYTHON, so a caller only has to satisfy the second one.
+requires:
+  python:
+    drawing:  [gdsfactory>=9, "ihp-gdsfactory", "klayout>=0.30"]          # $LDO_GF_PYTHON
+    signoff:  [spicexplorer-signoff, spicexplorer-layout, "klayout>=0.30", docopt, numpy, scipy]
+  binaries:
+    ngspice: ">=45"                 # the post-layout benches
+    kpex: ">=0.3.12"                # klayout-pex 2.5D extraction
+    kpex_klayout_exe: "KLayout built with Ruby>=2.6 (kpex drives its own LVS deck)"
+  env:
+    PDK_ROOT: dir containing ihp-sg13g2
+    PDK: ihp-sg13g2
+    LDO_GF_PYTHON: interpreter with gdsfactory + ihp-gdsfactory
+                   (default ~/miniconda3/envs/ai_env/bin/python)
+    SX_SCRATCH: working root for every regenerable artefact (default ~/sx-scratch);
+                this entry builds into $SX_SCRATCH/ldo-adb/layout
+    KPEX / KPEX_KLAYOUT_EXE: only for a re-extraction
+
+# --- generator -------------------------------------------------------------
+generator:
+  module: gen_layout.py
+  entry: "build_full(LayoutParams, sizing=None) -> (Component, Builder)"
+  params_class: LayoutParams        # frozen dataclass; every knob is a field, BOUNDS beside it
+  cli: "python gen_layout.py [-o out.gds] [--params '<json>'] [--lvs f] [--power f]"
+  duts:
+    ldo_ihp_capless: {cell: ldo_ihp_capless, catalogued: true,
+                      role: "the whole regulator — one drawn cell, no sub-DUTs"}
+  emits:
+    - "<cell>.gds"                  # the drawn cell (regenerable; not committed)
+    - "<cell>_lvs.spice"            # LVS reference, DERIVED from ../netlist.spice + the dummies
+    - "power_path.json"             # per-segment current budgets, from the drawn geometry
+  device_identity: >-
+    netlist_ref.py parses ../netlist.spice and ../sizing.yaml — there is no second device table in
+    the generator (source review-002 M7). The certified netlist carries the DRAWN device set
+    (XMP as one shared-diffusion device with `ng` fingers, every common-centroid member as two
+    half-width cards, the resistors as segment chains), so the drawing and the compare cannot
+    disagree about a device. The one thing the reference ADDS is the layout's dummies, and each is
+    asserted to have all four terminals on a single rail.
+
+# --- signoff chain ---------------------------------------------------------
+signoff:
+  driver: signoff.py                # guards -> build -> render -> current density -> DRC -> LVS [-> PEX]
+  guards:
+    tool: pytest-free python
+    runner: test_builder.py         # the Metal1 stub collision only the obstacle map prevents
+    blocking: true                  # source review-002 M8: a guard no case exercises rots
+  current_density:
+    tool: spicexplorer_signoff.current_density
+    budgets: power_path.json        # emitted by the GENERATOR from its own drawn geometry
+    note: >-
+      Electromigration is neither a rule-deck check nor a connectivity check. Without this stage a
+      cell passes DRC, LVS, PEX and every bench at 12-28x over the metal limit — which the first
+      drawing of this cell did.
+  drc:
+    tool: klayout
+    deck: "$PDK_ROOT/ihp-sg13g2/libs.tech/klayout/tech/drc/sg13g2_maximal"
+    flags: [--no_density]           # density/fill is met by fill at chip assembly; --density shows it
+  lvs:
+    tool: klayout
+    reference: "<work>/ldo_ihp_capless_lvs.spice"   # from netlist_ref.py, not from the GDS
+    flags: [--combine_devices]
+  pex:
+    tool: kpex
+    mode: RC                        # + mesh stitching — the row of record
+    also: CC                        # the ideal-metal comparison row
+    mim_workaround: >-
+      kpex cannot extract IHP `cap_cmim`, so the MIM device layers are stripped before extraction
+      and the three schematic capacitors are re-attached by label name in pex_sim.py. The cost is
+      stated, not hidden: MIM bottom-plate (Metal5) coupling to the neighbourhood IS extracted,
+      top-plate coupling is not.
+    rhigh_workaround: >-
+      kpex's bundled LVS deck extracts the poly resistor as a 3-terminal device where the
+      standalone IHP deck makes it 2-terminal, so the PEX schematic adds the substrate node.
+  post_sim:
+    tool: ngspice
+    min_version: 45
+    runner: pex_sim.py              # assemble() -> splice_subckt -> run_text -> ppa.metric_values
+    benches: the entry's own 13 analyses, at the sizing of record — no second measurement path
+
+# --- the knob space --------------------------------------------------------
+# The ELECTRICAL knobs are ../sizing.yaml; the generator reads that file and
+# never retypes a size. These are the FLOORPLAN knobs (LayoutParams fields, um
+# unless noted), each with the range signoff.py's `bounds` stage walks.
+knob_map:
+  electrical: "../sizing.yaml (33 variables) — read through netlist_ref.load_sizing()"
+  floorplan:
+    dev_gap:        {default: 3.2,  min: 3.0,  max: 6.0,  note: "device pitch inside a group"}
+    grp_gap:        {default: 2.0,  min: 0.0,  max: 8.0,  note: "gap between matched groups"}
+    track_pitch:    {default: 0.7,  min: 0.65, max: 1.2,  note: "Metal1 channel track pitch"}
+    ch_margin:      {default: 0.9,  min: 0.8,  max: 2.0}
+    rail_w:         {default: 0.8,  min: 0.5,  max: 1.4,  note: "vdd/vss Metal1 rail width"}
+    rail_gap:       {default: 1.6,  min: 1.4,  max: 2.5}
+    ring_w:         {default: 0.6,  min: 0.5,  max: 1.5,  note: "guard-ring metal width"}
+    ring_gap:       {default: 1.4,  min: 0.6,  max: 3.0}
+    isl_gap:        {default: 2.0,  min: 1.3,  max: 6.0,  note: "well-island separation"}
+    n_dummy:        {default: 1,    min: 1,    max: 2,    note: "dummies per row end (count)"}
+    pwr_w:          {default: 4.0,  min: 1.64, max: 8.0,  note: "TopMetal1 power strap width"}
+    pwr_stitch:     {default: 12,   min: 8,    max: 24,   note: "TopVia1 cuts per landing pad (count)"}
+    pwr_riser_vias: {default: 48,   min: 28,   max: 72,   note: "cuts per Via2/3/4 level (count)"}
+    pwr_band_w:     {default: 6.0,  min: 5.1,  max: 12.0}
+    col_vias:       {default: 2,    min: 1,    max: 4,    note: "Via1 cuts per Metal2 column (count)"}
+    mim_gap:        {default: 3.0,  min: 2.5,  max: 8.0}
+    res_pitch:      {default: 2.0,  min: 1.9,  max: 3.0,  note: "resistor segment pitch"}
+    blk_gap:        {default: 6.0,  min: 4.0,  max: 15.0}
+    gpad:           {default: 0.5,  min: 0.34, max: 0.6}
+    vss_ret_w:      {default: 3.0,  min: 0.8,  max: 6.0,  note: "vss return conductor width"}
+  bounds_are_a_claim: >-
+    `signoff.py --stages bounds` builds, DRCs and LVSes BOTH ends of every range above (source
+    review-003 F2: "5 of 10 tested in-range values give a cell that is not the certified
+    circuit" — the ranges had been written as a search space and never walked).
+
+# --- the signed-off point --------------------------------------------------
+signed_off_point:
+  layout_params: defaults           # LayoutParams() as declared above; nothing overridden
+  sizing: ../sizing.yaml defaults   # the certified point, design_id 4520e22ad0
+  corner: tt
+  temperature_c: 27
+  geometry:
+    area_um2: 44266
+    bbox_um: [-73.50, -135.50, 137.64, 74.15]
+  drc: {violations: 0, engine: "KLayout 0.30.5 sg13g2_maximal, --no_density"}
+  lvs: {matched: true, unmatched: {}}
+  current_density: {checked: 30, violations: 0, worst_over: 0.836}
+
+  # TWO post-layout rows, and which is which is the whole point.
+  post_layout_rows:
+    row_of_record:
+      file: out/scorecard_post_rc.json
+      extraction: "kpex 2.5D, mode RC, mesh stitched"
+      netlist_digest: out/pex/rc_netlist.sha256
+      benches: 13/13 ok
+      spec_violations: 0
+      headline: {v_dropout_mv: 134.6635, i_q_ua: 33.76923, psrr_1k_db: 70.06213,
+                 v_undershoot_mv: 129.533, pm_loop_deg: 69.32791, v_out_v: 1.199498}
+    comparison_row:
+      file: out/scorecard_post.json
+      extraction: "kpex 2.5D, mode CC — capacitance only, i.e. IDEAL METAL"
+      subckt: out/asbuilt/core_pex.sp     # the prepared block, 425 lines, sha f89e0105...
+      benches: 13/13 ok
+      spec_violations: 0
+      headline: {v_dropout_mv: 104.671, i_q_ua: 33.80539, psrr_1k_db: 70.09323,
+                 v_undershoot_mv: 127.560, pm_loop_deg: 69.30095, v_out_v: 1.199499}
+      why_it_is_kept: >-
+        It is the same layout with every wire resistance set to zero, so the RC-minus-CC
+        difference IS the drawn metal: the whole +29.99 mV of dropout is series resistance,
+        3.00 Ohm pooled across vdd and vout at the 10 mA point. Read it against the record row,
+        never instead of it.
+
+  # The pre-layout column the record row is compared against is this entry's own scoreboard
+  # design point (circuits/ldo_010_capless_lowiq/scoreboard/ihp-sg13g2/4520e22ad0.json), which
+  # `analog-db run` reproduces. pex_sim.py re-measures it as a control in the same invocation.
+  pre_vs_post_um:
+    v_dropout_mv:     {pre: 104.671,  cc: 104.671,  rc: 134.6635, bound: "<= 200"}
+    i_q_ua:           {pre: 33.80539, cc: 33.80539, rc: 33.76923, bound: "<= 50"}
+    psrr_1k_db:       {pre: 70.00703, cc: 70.09323, rc: 70.06213, bound: ">= 40"}
+    v_undershoot_mv:  {pre: 115.057,  cc: 127.560,  rc: 129.533,  bound: "<= 150"}
+    pm_loop_deg:      {pre: 72.5064,  cc: 69.30095, rc: 69.32791, bound: ">= 60"}
+    ugf_loop_khz:     {pre: 801.50,   cc: 777.27,   rc: 775.51,   bound: "-"}
+    ms_peak_db:       {pre: 7.813,    cc: 10.316,   rc: 8.588,    bound: "-"}
+
+# --- independent review ----------------------------------------------------
+review:
+  layout_review: LAYOUT_REVIEW.md
+  rounds:
+    - {round: 4, kind: layout review, verdict: "PASS with majors", findings: 27,
+       source: "layout/ldo_ihp_capless/REVIEW.{md,yaml,png} @ 40cad45"}
+    - {round: sign-off, kind: sign-off, verdict: "SIGNED — 8/8 spec lines at tt/27",
+       source: "layout/ldo_ihp_capless/SIGNOFF.md @ 40cad45",
+       note: "designer != verifier; every number re-measured from raw artefacts. The source repo
+              numbers this pass inconsistently (SIGNOFF.md's title says 5, REPORT.md's round
+              table says 6), so it is named rather than numbered here."}
+  open_at_port:
+    - "pooled dropout budget MISS: 29.99 mV consumed against the brief's 23.83 mV quarter-margin
+       pool (1.26x). Each individual net's budget is met; the shared TopMetal1 strap and the
+       Via2-TopVia1 stack are what do not divide by 39. S4 still passes with 65.3 mV of margin."
+    - "F3 / F16 — every row is tt/27 and nominal; the post-layout corner sweep and the mismatch
+       Monte Carlo are the last measurements this cell needs."
+    - "F13 — pin labelling is not one-per-declared-edge (two vdd labels; vref labelled 71 um
+       inside the cell)."
+    - "F15 — the MIM plate swap (top plate to the quiet net) is agreed and deferred."
+    - "F18 — the DRC waiver list is itemised but --density is still not run."
+    - "F26 half — pex_gate() refuses an open mesh but never reads mesh.n_stub_nets, the second
+       condition F26's fix note asked for. 19 stub nets on this cell, none carrying a scored
+       metric, so nothing measured here is affected."
+  scope: >-
+    Not ported: the source repo's documentation findings (F14, F20-F24), which are about that
+    repo's own README / REPORT / iteration snapshots and have no counterpart here.

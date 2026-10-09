@@ -9,14 +9,15 @@ review stays the narrative; this is what lets a reader *localize* a finding in o
 Schema (**YAML is the canonical, human-readable form** — ``REVIEW.yaml``; JSON is accepted
 for tooling; ``schema: layout-review/1``):
 
-    cell, gds, gds_sha256, generator {path, params, sha256}, verdict, reproduced {...},
+    cell, gds, gds_sha256, generator {path, params, sha256}, verdict (PASS|PASS with notes|
+    PASS with majors|FAIL), reproduced {...},
     units: "um", axis {x|y: value} (optional symmetry axis), frame {x0,y0,x1,y1} (optional
     viewport), findings: [Finding], not_checked: [str], reviewer: str
 
     Finding: id ("F1"), severity (blocker|major|minor|note), category (reproduce|drc|lvs|
-      pex|budget|coupling|matching|symmetry|routing|well|leakage|knob|objective|other),
-      title, where: [Anchor], evidence, effect {metric, delta, unit, model}, fix {knob, to,
-      note}, expected, verdict (open|fixed|worse — for re-reviews)
+      pex|budget|coupling|matching|symmetry|routing|well|leakage|current_density|knob|
+      objective|other), title, where: [Anchor], evidence, effect {metric, delta, unit, model},
+      fix {knob, to, note}, expected, verdict (open|fixed|worse|new|deferred — for re-reviews)
 
     Anchor: kind = box   {x0,y0,x1,y1, layer?}        rectangle
                    point {x,y}                        crosshair
@@ -25,6 +26,8 @@ for tooling; ``schema: layout-review/1``):
                    device{name, x0,y0,x1,y1?}          a device instance (box optional)
                    net   {name}                        a net by name only (legend-only, no geometry)
                    rule  {name, locations:[[x,y],...]} DRC rule hits
+    Every anchor coordinate is a number (µm); :func:`validate` refuses anything else, since a
+    string or null there only shows up later as a ``TypeError`` inside :func:`annotate`.
 
 Public API: :func:`load_review`, :func:`dump_review`, :func:`annotate` (GDS + review → PNG),
 :func:`validate` (schema check with a readable error list). The renderer uses KLayout's own
@@ -53,11 +56,17 @@ CATEGORIES = (
     "routing",
     "well",
     "leakage",
+    "current_density",  # J over a strap/via/resistor limit (signoff.current_density)
     "knob",
     "objective",
     "other",
 )
 ANCHOR_KINDS = ("box", "point", "pair", "line", "device", "net", "rule")
+# The lane's verdicts are PASS | PASS with majors | FAIL and a re-review marks open|fixed|worse;
+# "PASS with notes", "new" and "deferred" are in reviews of record written before the values
+# were checked, so they stay valid — the check refuses typos, not reviews already written.
+VERDICTS = ("PASS", "PASS with notes", "PASS with majors", "FAIL")
+FINDING_VERDICTS = ("open", "fixed", "worse", "new", "deferred")
 COLORS = {
     "blocker": (220, 30, 30),
     "major": (255, 140, 0),
@@ -105,6 +114,17 @@ class Review:
         return d
 
 
+def _num(v: Any) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool)  # YAML `true` is not a µm
+
+
+def _xy_list(v: Any) -> bool:
+    """A list of ``[x, y]`` number pairs (``line.points``, ``rule.locations``)."""
+    return isinstance(v, (list, tuple)) and all(
+        isinstance(p, (list, tuple)) and len(p) == 2 and all(_num(c) for c in p) for p in v
+    )
+
+
 def validate(d: dict[str, Any]) -> list[str]:
     """Readable schema errors (empty list = valid)."""
     errs: list[str] = []
@@ -113,6 +133,8 @@ def validate(d: dict[str, Any]) -> list[str]:
     for k in ("cell", "gds", "verdict", "findings"):
         if k not in d:
             errs.append(f"missing top-level key {k!r}")
+    if "verdict" in d and d["verdict"] not in VERDICTS:
+        errs.append(f"verdict must be one of {VERDICTS}")
     seen: set[str] = set()
     for i, f in enumerate(d.get("findings", [])):
         tag = f"findings[{i}]"
@@ -126,6 +148,8 @@ def validate(d: dict[str, Any]) -> list[str]:
             errs.append(f"{tag}: category must be one of {CATEGORIES}")
         if not f.get("title"):
             errs.append(f"{tag}: title required")
+        if "verdict" in f and f["verdict"] not in FINDING_VERDICTS:
+            errs.append(f"{tag}: verdict must be one of {FINDING_VERDICTS}")
         for j, a in enumerate(f.get("where", [])):
             kind = a.get("kind")
             need = {
@@ -143,6 +167,26 @@ def validate(d: dict[str, Any]) -> list[str]:
             for k in need[kind]:
                 if k not in a:
                     errs.append(f"{tag}.where[{j}] ({kind}): missing {k!r}")
+            # values, not only keys: a device's box is optional, so check whatever is present
+            nums = {"box": need["box"], "device": need["box"], "point": need["point"]}
+            for k in nums.get(kind, ()):
+                if k in a and not _num(a[k]):
+                    errs.append(f"{tag}.where[{j}] ({kind}): {k!r} must be a number, got {a[k]!r}")
+            if kind == "pair":
+                for k in ("a", "b"):
+                    p = a.get(k)
+                    if k in a and not (
+                        isinstance(p, dict) and _num(p.get("x")) and _num(p.get("y"))
+                    ):
+                        errs.append(
+                            f"{tag}.where[{j}] (pair): {k!r} must be {{x, y}} numbers, got {p!r}"
+                        )
+            if kind in ("line", "rule"):
+                k = "points" if kind == "line" else "locations"
+                if k in a and not _xy_list(a[k]):
+                    errs.append(
+                        f"{tag}.where[{j}] ({kind}): {k!r} must be a list of [x, y] numbers"
+                    )
     return errs
 
 

@@ -196,9 +196,7 @@ def _describe_signature(sig: tuple[object, ...]) -> str:
     return "/".join(rendered) if rendered else str(sig[1] if len(sig) > 1 else sig)
 
 
-def _io_port_name(
-    label: tuple, ports_a: list[IOPort] | None, ports_b: list[IOPort] | None
-) -> str:
+def _io_port_name(label: tuple, ports_a: list[IOPort] | None, ports_b: list[IOPort] | None) -> str:
     """Render an I/O-port census label ``(i,)`` / ``(i, j)`` as a readable port name."""
     index = label[0]
     for ports in (ports_a, ports_b):
@@ -228,10 +226,14 @@ def _census_diff(a: Counter, b: Counter, label_fn) -> str:
     only_b = b - a
     fragments: list[str] = []
     if only_a:
-        items = ", ".join(f"{label_fn(k)}×{n}" for k, n in sorted(only_a.items(), key=lambda x: str(x[0])))
+        items = ", ".join(
+            f"{label_fn(k)}×{n}" for k, n in sorted(only_a.items(), key=lambda x: str(x[0]))
+        )
         fragments.append(f"only in the first: {items}")
     if only_b:
-        items = ", ".join(f"{label_fn(k)}×{n}" for k, n in sorted(only_b.items(), key=lambda x: str(x[0])))
+        items = ", ".join(
+            f"{label_fn(k)}×{n}" for k, n in sorted(only_b.items(), key=lambda x: str(x[0]))
+        )
         fragments.append(f"only in the second: {items}")
     return "; ".join(fragments)
 
@@ -297,6 +299,7 @@ def compare_graphs(
     Returns a :class:`GraphComparison` (truthy when equivalent) carrying a reason and, on a match,
     one valid component/net name correspondence from ``a`` to ``b``.
     """
+
     # Every exit carries both skip censuses — see GraphComparison.rests_on_skipped.
     def verdict(
         equivalent: bool,
@@ -359,9 +362,7 @@ def compare_graphs(
             "incomplete picture of its netlist",
         )
     if a.net_count != b.net_count:
-        return verdict(
-            False, f"net count differs: {a.net_count} vs {b.net_count}"
-        )
+        return verdict(False, f"net count differs: {a.net_count} vs {b.net_count}")
     if a.component_count != b.component_count:
         return verdict(
             False, f"component count differs: {a.component_count} vs {b.component_count}"
@@ -387,7 +388,9 @@ def compare_graphs(
         port_a = Counter(io_a[n.name.lower()] for n in a.get_nets() if n.name.lower() in io_a)
         port_b = Counter(io_b[n.name.lower()] for n in b.get_nets() if n.name.lower() in io_b)
         if port_a != port_b:
-            diff = _census_diff(port_a, port_b, lambda lbl: _io_port_name(lbl, io_ports, io_ports_b))
+            diff = _census_diff(
+                port_a, port_b, lambda lbl: _io_port_name(lbl, io_ports, io_ports_b)
+            )
             return verdict(False, f"anchored I/O ports differ ({diff})")
 
     ga = _signature_graph(a, opts, io_a)
@@ -454,7 +457,11 @@ def _coerce_graph(
     elif isinstance(obj, Path):
         view = NetlistView.from_file(obj)
     elif isinstance(obj, str):
-        view = NetlistView.from_string(obj, dialect="auto") if "\n" in obj else NetlistView.from_file(obj)
+        view = (
+            NetlistView.from_string(obj, dialect="auto")
+            if "\n" in obj
+            else NetlistView.from_file(obj)
+        )
     else:
         raise TypeError(f"cannot build a CircuitGraph from a {type(obj).__name__}")
     return CircuitGraph.from_netlist(view, name=name, pdk=pdk, on_unknown=on_unknown)

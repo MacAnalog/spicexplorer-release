@@ -1,0 +1,28 @@
+v {xschem version=3.4.6 file_version=1.2}
+G {type=subcircuit
+format="@name @pinlist @symname"
+template="name=x1"}
+V {}
+S {}
+E {}
+L 4 -80 -60 80 -60 {}
+L 4 80 -60 80 60 {}
+L 4 80 60 -80 60 {}
+L 4 -80 60 -80 -60 {}
+B 5 -102.5 -2.5 -97.5 2.5 {name=pbias dir=in}
+L 4 -80 0 -100 0 {}
+T {bias_p} -68 0 0 0 0.16 0.16 {layer=4}
+B 5 97.5 -22.5 102.5 -17.5 {name=ea_o1 dir=inout}
+L 4 80 -20 100 -20 {}
+T {in} 68 -20 0 0 0.16 0.16 {layer=4}
+B 5 97.5 17.5 102.5 22.5 {name=ea_out dir=out}
+L 4 80 20 100 20 {}
+T {out} 68 20 0 0 0.16 0.16 {layer=4}
+B 5 -2.5 -82.5 2.5 -77.5 {name=vdd dir=inout}
+L 4 0 -60 0 -80 {}
+T {supply} 0 -60 0 0 0.16 0.16 {layer=4}
+B 5 -2.5 77.5 2.5 82.5 {name=vss dir=inout}
+L 4 0 60 0 80 {}
+T {gnd} 0 60 0 0 0.16 0.16 {layer=4}
+T {ea_stage2} -72 -52 0 0 0.3 0.3 {layer=4}
+T {@name} -72 36 0 0 0.2 0.2 {layer=4}

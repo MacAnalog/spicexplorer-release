@@ -153,14 +153,18 @@ class RoleDetection(Serializer):
         lines = ["Role-Oriented Circuit Description:"]
         for comp in graph.get_components(sort=True):
             ctype = _nodes.component_type_str(comp)
-            header = f"- {comp.name} ({comp.spice_model})" if include_spice_model else f"- {comp.name}"
+            header = (
+                f"- {comp.name} ({comp.spice_model})" if include_spice_model else f"- {comp.name}"
+            )
             pol = _nodes.polarity_str(comp)
             if pol is not None:  # MOS only
                 header += f" | polarity={pol}"
                 if comp.structural_role:
                     header += f" | structural_role={comp.structural_role.value}"
                 if comp.subcircuit_electrical_role:
-                    header += f" | subcircuit_electrical_role={comp.subcircuit_electrical_role.value}"
+                    header += (
+                        f" | subcircuit_electrical_role={comp.subcircuit_electrical_role.value}"
+                    )
             lines.append(header)
             for pin, net_name in sorted(graph.connections(comp, include_body=include_body).items()):
                 lines.append(f"    {pin} → {net_name}")
@@ -199,9 +203,7 @@ class TopologyViews(Serializer):
             conns = graph.connections(comp, include_body=include_body)
             pins = ", ".join(f"{pin}={net}" for pin, net in sorted(conns.items()))
             model = f" ({comp.spice_model})" if include_spice_model else ""
-            lines.append(
-                f"- {_nodes.component_type_str(comp)} {comp.name}{model}: {pins}"
-            )
+            lines.append(f"- {_nodes.component_type_str(comp)} {comp.name}{model}: {pins}")
         return lines
 
     @staticmethod

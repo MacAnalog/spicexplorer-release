@@ -65,7 +65,7 @@
         "noise": {
           "measures": {
             "onoise_total": 0.0001632808,
-            "vn_out_rms": 0.01277814
+            "vn_out_rms": 0.0001632808
           },
           "status": "ok"
         },
@@ -98,7 +98,7 @@
       "provenance": {
         "generator": "analog-db run",
         "ngspice": "45",
-        "run_at": "2026-08-25T15:12:04+00:00"
+        "run_at": "2026-09-04T23:23:11+00:00"
       }
     }
   },
@@ -163,7 +163,7 @@
       },
       "vn_out_rms": {
         "spec": "pass",
-        "value": 0.01277814
+        "value": 0.0001632808
       },
       "zout_peak_db": {
         "spec": "pass",

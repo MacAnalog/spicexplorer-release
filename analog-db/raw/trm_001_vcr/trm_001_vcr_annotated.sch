@@ -6,23 +6,21 @@ S {}
 E {}
 T {trm_001_vcr} -40 -200 0 0 0.4 0.4 {}
 C {devices/res_np.sym} 0 0 0 0 {name=R0 value=x_dut_r0_value}
-C {devices/sg13_lv_nmos_np.sym} 190 0 0 0 {name=M0 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm0_w l=x_dut_xm0_l m=x_dut_xm0_m}
+C {devices/sg13_lv_nmos_np.sym} 225 0 0 0 {name=M0 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm0_w l=x_dut_xm0_l m=x_dut_xm0_m}
+N -60 -60 -60 60 {}
 N 0 -140 0 -30 {}
-N 0 30 0 90 {}
-N 170 -60 170 0 {}
-N 210 -90 210 -30 {}
-N 210 30 210 90 {}
-N 270 0 270 94 {}
-N -60 -140 400 -140 {}
-N 140 0 170 0 {}
-N 210 0 270 0 {}
-N -60 140 400 140 {}
-C {devices/lab_wire.sym} -60 -140 0 0 {name=l0 lab=vdd}
-C {devices/lab_wire.sym} -60 140 0 0 {name=l1 lab=vss}
-C {devices/lab_wire.sym} 170 -60 0 1 {name=l2 lab=vcode}
-C {devices/lab_wire.sym} 0 90 2 0 {name=l3 lab=vout}
-C {devices/lab_wire.sym} 210 -90 0 1 {name=l4 lab=vout}
-C {devices/lab_wire.sym} 270 94 2 0 {name=l5 lab=vss}
-C {devices/lab_wire.sym} 210 90 2 0 {name=l6 lab=vss}
-C {devices/ipin.sym} -200 0 0 0 {name=p0 lab=vcode}
-C {devices/opin.sym} 540 -30 0 0 {name=p1 lab=vout}
+N 0 30 0 60 {}
+N 245 -60 245 -30 {}
+N 245 30 245 140 {}
+N 305 0 305 94 {}
+N -60 -140 700 -140 {}
+N -60 -60 245 -60 {}
+N 115 0 205 0 {}
+N 245 0 305 0 {}
+N -60 60 0 60 {}
+N -60 140 700 140 {}
+C {devices/lab_wire.sym} 305 94 2 0 {name=l0 lab=vss}
+C {devices/ipin.sym} 115 0 0 0 {name=p0 lab=vcode}
+C {devices/iopin.sym} -60 -140 0 0 {name=p1 lab=vdd}
+C {devices/iopin.sym} -60 140 0 0 {name=p2 lab=vss}
+C {devices/opin.sym} 245 -60 0 0 {name=p3 lab=vout}

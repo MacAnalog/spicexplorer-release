@@ -29,6 +29,7 @@ SUBCOMMANDS = [
     "new-circuit",
     "add-binding",
     "gmid-extract",
+    "verify-status",
     "catalog",
     "scoreboard",
 ]

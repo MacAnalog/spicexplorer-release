@@ -1,4 +1,5 @@
 """The Circuit Optimization Module"""
+
 # Module imports
 from .orchestrator import (
     SPICE_OPTIMIZER_CLASSES,
@@ -7,37 +8,38 @@ from .orchestrator import (
 )
 from .sim_benchmark import SimTimeReport, TestbenchSimTiming, benchmark_simulators
 from .stochastic.nevergrad import (
-    Nevergrad_Spice_Bode_Optimizer,
     Nevergrad_Spice_Constraint_Satisfaction,
     Nevergrad_Spice_Single_Objective,
 )
+from .summary import summarize_checkpoint
 
 # ------------------ Module Exports ------------------
 
 __all__ = [
     # --------------------------------
     # One endpoint for all optimizer types
-    'SPICE_OPTIMIZER_CLASSES',
-    'Optimizer_Type_Enum',
-    'Circuit_Optimizer_Orchestrator_with_SPICE',
+    "SPICE_OPTIMIZER_CLASSES",
+    "Optimizer_Type_Enum",
+    "Circuit_Optimizer_Orchestrator_with_SPICE",
     # --------------------------------
     # Per-testbench sim-time benchmarking
-    'SimTimeReport',
-    'TestbenchSimTiming',
-    'benchmark_simulators',
+    "SimTimeReport",
+    "TestbenchSimTiming",
+    "benchmark_simulators",
     # --------------------------------
-
+    # Path-free summary of a run's checkpoint JSON (the MCP optimization_summary reads it)
+    "summarize_checkpoint",
+    # --------------------------------
     # ** For backward compatability **
     # --------------------------------
     # => Evolutionary-based Optimizers
-    'Nevergrad_Spice_Bode_Optimizer',
-    'Nevergrad_Spice_Constraint_Satisfaction',
-    'Nevergrad_Spice_Single_Objective',
+    "Nevergrad_Spice_Constraint_Satisfaction",
+    "Nevergrad_Spice_Single_Objective",
     # => BO-based Optimizers
-    'Ax_Spice_Constraint_Satisfaction',
-    'Ax_Spice_Single_Objective'
+    "Ax_Spice_Constraint_Satisfaction",
+    "Ax_Spice_Single_Objective",
     # --------------------------------
-    ]
+]
 
 
 def __getattr__(name: str):

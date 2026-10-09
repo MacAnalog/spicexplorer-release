@@ -99,7 +99,9 @@ def test_run_write_round_trip(scratch_db: Path, circuit: str) -> None:
 
     fresh = _baseline_entry(scratch_db, circuit)  # default sizing -> upserts the baseline entry
     committed = _baseline_entry(_REPO, circuit)
-    assert fresh["design_id"] == committed["design_id"], "default sizing no longer hashes to the baseline design point"
+    assert fresh["design_id"] == committed["design_id"], (
+        "default sizing no longer hashes to the baseline design point"
+    )
 
     fresh_tt = fresh["corners"]["tt"]["analyses"]
     committed_tt = committed["corners"]["tt"]["analyses"]
@@ -111,6 +113,5 @@ def test_run_write_round_trip(scratch_db: Path, circuit: str) -> None:
             if not isinstance(ref, (int, float)) or not isinstance(value, (int, float)):
                 continue
             assert math.isclose(value, ref, rel_tol=REL_TOL, abs_tol=ABS_TOL), (
-                f"{circuit}/{name}/{measure}: fresh {value} vs committed {ref} "
-                f"(rel_tol={REL_TOL})"
+                f"{circuit}/{name}/{measure}: fresh {value} vs committed {ref} (rel_tol={REL_TOL})"
             )

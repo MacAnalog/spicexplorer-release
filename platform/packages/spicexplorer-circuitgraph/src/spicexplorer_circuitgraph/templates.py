@@ -145,7 +145,7 @@ class TemplateLibrary:
 
     # --- construction --------------------------------------------------------------------------
     @classmethod
-    def from_manifest(cls, manifest_path: str | Path) -> "TemplateLibrary":
+    def from_manifest(cls, manifest_path: str | Path) -> TemplateLibrary:
         """Load a template library from a ``subcircuit-template-library`` YAML manifest.
 
         Netlist paths in the manifest are resolved relative to the manifest's own directory.
@@ -201,11 +201,12 @@ class TemplateLibrary:
         return cls(templates, family=family)
 
     @classmethod
-    def merge(cls, *libraries: "TemplateLibrary", family: str = "") -> "TemplateLibrary":
+    def merge(cls, *libraries: TemplateLibrary, family: str = "") -> TemplateLibrary:
         """Concatenate several libraries into one (preserving order; ids must stay unique).
 
-        Used to assemble the full shipped catalogue (current mirrors + miscellaneous) into a single
-        library so :func:`~spicexplorer_circuitgraph.match.find_subcircuits` can resolve cross-family
+        Used to assemble the full shipped catalogue (current mirrors + miscellaneous +
+        pseudo-resistors + transmission gates) into a single library so
+        :func:`~spicexplorer_circuitgraph.match.find_subcircuits` can resolve cross-family
         dependencies (e.g. a differential pair anchored to a current-mirror output) in one pass. The
         duplicate-id guard in :meth:`__init__` still applies across the combined set.
         """

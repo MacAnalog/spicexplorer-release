@@ -1,6 +1,6 @@
 v {xschem version=3.4.6 file_version=1.2}
 G {type=subcircuit
-format="@name @pinlist @symname"
+format="@name @pinlist @symname @params"
 template="name=x1"}
 V {}
 S {}
@@ -17,13 +17,13 @@ L 4 -90 20 -110 20 {}
 T {in_p} -78 20 0 0 0.16 0.16 {layer=4}
 B 5 107.5 -42.5 112.5 -37.5 {name=cmfb__mirr dir=out}
 L 4 90 -40 110 -40 {}
-T {out_n} 78 -40 0 0 0.16 0.16 {layer=4}
+T {out_n} 53 -40 0 0 0.16 0.16 {layer=4}
 B 5 107.5 -2.5 112.5 2.5 {name=cmfb__ptail dir=out}
 L 4 90 0 110 0 {}
-T {CM_tail} 78 0 0 0 0.16 0.16 {layer=4}
+T {CM_tail} 43 0 0 0 0.16 0.16 {layer=4}
 B 5 107.5 37.5 112.5 42.5 {name=vb4o dir=out}
 L 4 90 40 110 40 {}
-T {out_p} 78 40 0 0 0.16 0.16 {layer=4}
+T {out_p} 53 40 0 0 0.16 0.16 {layer=4}
 B 5 -2.5 -102.5 2.5 -97.5 {name=vdd dir=inout}
 L 4 0 -80 0 -100 {}
 T {supply} 0 -80 0 0 0.16 0.16 {layer=4}

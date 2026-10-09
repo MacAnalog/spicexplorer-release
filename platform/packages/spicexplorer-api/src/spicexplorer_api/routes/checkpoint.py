@@ -1,6 +1,8 @@
 """Checkpoint listing and loading routes."""
+
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +23,7 @@ from spicexplorer_api.services.checkpoint_reader import (
     read_checkpoint,
 )
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 _YAML_SUFFIXES = {".yaml", ".yml"}
@@ -33,10 +36,10 @@ class CheckpointMeta(BaseModel):
     id: str
     label: str
     path: str
-    type: str          # "csv" | "json"
+    type: str  # "csv" | "json"
     score_fn: str
     n_iters: int | None  # always present (cheap trial count), null on a read error
-    source: str          # "preset" | "autosave"
+    source: str  # "preset" | "autosave"
 
 
 class ListCheckpointsResponse(BaseModel):
@@ -113,6 +116,7 @@ def _validated_yaml_path(yaml_path: str) -> Path | None:
     except (ValueError, OSError):
         return None  # e.g. embedded NUL byte → ValueError; don't 500
     import tempfile
+
     allowed: list[tuple[Path, str | None]] = [
         ((REPO_ROOT / "examples").resolve(), None),
         (work_root().resolve(), None),
@@ -120,7 +124,7 @@ def _validated_yaml_path(yaml_path: str) -> Path | None:
     try:
         allowed.append((Path(tempfile.gettempdir()).resolve(), _UPLOAD_PREFIX))
     except Exception:
-        pass
+        logger.debug("temp dir not resolvable; uploads root skipped", exc_info=True)
     for root, name_prefix in allowed:
         try:
             rp.relative_to(root)
@@ -157,6 +161,7 @@ def _count_iters(path: Path) -> int | None:
     try:
         if path.suffix == ".json":
             import json
+
             with open(path) as f:
                 data = json.load(f)
             return len(data.get("optimization_log", []))
@@ -186,6 +191,7 @@ def _target_specs_from_yaml(yaml_path: str) -> list[dict[str, Any]] | None:
     if vp is None:
         return None
     from spicexplorer.core.domains import Project_Setup
+
     try:
         project = Project_Setup.from_yaml(vp)
     except Exception:
@@ -195,8 +201,12 @@ def _target_specs_from_yaml(yaml_path: str) -> list[dict[str, Any]] | None:
     # tolerance is always > 0 after TargetSpec.__post_init__ (B17), so emit it directly rather than
     # a None that would later crash `target - tol` arithmetic (BUG-B35).
     return [
-        {"name": s.name, "target": float(s.target), "goal": s.goal.value,
-         "tolerance": float(s.tolerance)}
+        {
+            "name": s.name,
+            "target": float(s.target),
+            "goal": s.goal.value,
+            "tolerance": float(s.tolerance),
+        }
         for s in project.optimizer_config.target_specs.enabled_targets()
     ]
 
@@ -244,11 +254,12 @@ def _autosave_roots_for(project_id: str | None = None, all_projects: bool = Fals
     candidates: list[Path] = []
     if project_id and not all_projects:
         from spicexplorer_api.services import project_service
+
         try:
             pruns = project_service.project_dir(project_id) / "runs"
             candidates.extend(ck for ck in pruns.rglob("checkpoints") if ck.is_dir())
         except Exception:
-            pass
+            logger.debug("no checkpoint dirs for project %r", project_id, exc_info=True)
     else:
         candidates = [auto_save_root(), REPO_ROOT / "auto_save", Path.cwd() / "auto_save"]
         candidates.extend(ck for ck in runs_root().rglob("checkpoints") if ck.is_dir())
@@ -272,15 +283,17 @@ def _list_autosave_checkpoints(project_id: str | None = None) -> list[dict[str, 
             if p.stem in seen_ids:  # same checkpoint reachable via two roots
                 continue
             seen_ids.add(p.stem)
-            results.append({
-                "id": p.stem,
-                "label": p.stem,
-                "path": str(p),
-                "type": "json",
-                "score_fn": _infer_score_fn(p),
-                "n_iters": _count_iters(p),
-                "source": "autosave",
-            })
+            results.append(
+                {
+                    "id": p.stem,
+                    "label": p.stem,
+                    "path": str(p),
+                    "type": "json",
+                    "score_fn": _infer_score_fn(p),
+                    "n_iters": _count_iters(p),
+                    "source": "autosave",
+                }
+            )
     return results
 
 
@@ -289,7 +302,7 @@ def _example_family(parts: tuple[str, ...]) -> str | None:
     if "examples" in parts:
         i = parts.index("examples")
         if i + 2 < len(parts):
-            return "/".join(parts[i + 1:i + 3])
+            return "/".join(parts[i + 1 : i + 3])
     return None
 
 
@@ -301,6 +314,7 @@ def _project_family(project_id: str) -> str | None:
     (bounded, cycle-guarded) until we reach the example ancestor — otherwise a forked project
     would lose its parent's example presets (the common duplicate-and-tweak case)."""
     from spicexplorer_api.services import project_service
+
     seen: set[str] = set()
     pid: str | None = project_id
     for _ in range(16):  # bound the walk; cheap manifests, but never loop forever
@@ -333,15 +347,17 @@ def list_checkpoints(project_id: str = Query(default="")):
             continue
         if project_id and _example_family(path.parts) != proj_family:
             continue
-        items.append({
-            "id": key,
-            "label": key.replace("_", " ").title(),
-            "path": str(path),
-            "type": "csv" if path.suffix == ".csv" else "json",
-            "score_fn": _infer_score_fn(path),
-            "n_iters": _count_iters(path),
-            "source": "preset",
-        })
+        items.append(
+            {
+                "id": key,
+                "label": key.replace("_", " ").title(),
+                "path": str(path),
+                "type": "csv" if path.suffix == ".csv" else "json",
+                "score_fn": _infer_score_fn(path),
+                "n_iters": _count_iters(path),
+                "source": "preset",
+            }
+        )
     items += _list_autosave_checkpoints(project_id=project_id or None)
     return {"checkpoints": items}
 

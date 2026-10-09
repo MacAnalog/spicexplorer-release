@@ -10,9 +10,9 @@ C {blocks/dp_nmos_simple_1.sym} 220 0 0 0 {name=xdp_nmos_simple_1}
 C {devices/capa_np.sym} -330 340 0 0 {name=CC value='c_comp'}
 C {devices/res_np.sym} -110 340 0 0 {name=RZ value='r_z'}
 C {devices/res_np.sym} 110 340 0 0 {name=R_BLEED value='r_bleed'}
-C {devices/vsource_np.sym} -550 340 0 0 {name=VB value="dc {vb_val}"}
-C {devices/vsource_np.sym} -550 120 0 0 {name=VLP value="dc 0"}
-C {devices/vsource_np.sym} -550 -100 0 0 {name=VREF value="dc {vref_val}"}
+C {devices/vsource_np.sym} -550 340 0 0 {name=VB value="dc \{vb_val\}" savecurrent=false}
+C {devices/vsource_np.sym} -550 120 0 0 {name=VLP value="dc 0" savecurrent=false}
+C {devices/vsource_np.sym} -550 -100 0 0 {name=VREF value="dc \{vref_val\}" savecurrent=false}
 C {devices/sg13_lv_nmos_np.sym} 330 340 0 0 {name=M5 model=sg13_hv_nmos spiceprefix=X w=x_dut_xm5_w l=x_dut_xm5_l}
 C {devices/sg13_lv_pmos_np.sym} 0 -340 0 0 {name=MP model=sg13_hv_pmos spiceprefix=X w=x_dut_xmp_w l=x_dut_xmp_l m=x_dut_xmp_m}
 N -110 -20 -70 -20 {}

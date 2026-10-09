@@ -19,9 +19,7 @@ from spicexplorer_core.measurements import registry
 from spicexplorer_core.measurements import waveforms as wf
 from spicexplorer_core.spice_engine import NGSpice_Wrapper
 
-needs_ngspice = pytest.mark.skipif(
-    shutil.which("ngspice") is None, reason="ngspice not on PATH"
-)
+needs_ngspice = pytest.mark.skipif(shutil.which("ngspice") is None, reason="ngspice not on PATH")
 
 # Behavioral 2-pole op-amp: A0=1000 (60 dB), pole1 = 1/(2π·1k·159.155n) = 1 kHz, pole2 =
 # 1/(2π·1k·159.155p) = 1 MHz. Each RC is isolated by a unity VCVS so the poles don't load
@@ -75,8 +73,12 @@ def test_ac_metrics_match_analytic_and_closed_form(two_pole_result) -> None:
 def test_registry_over_real_ngspice_result(two_pole_result) -> None:
     """The declarative recipe path (the same one the optimizer uses) over a real result."""
     res = two_pole_result
-    assert registry.measure(res, {"meas": "dcgain", "out": "v(out)"}, default_analysis="ac") == pytest.approx(60.0, abs=0.1)
-    assert registry.measure(res, {"meas": "f3db", "out": "v(out)"}, default_analysis="ac") == pytest.approx(1e3, rel=0.03)
+    assert registry.measure(
+        res, {"meas": "dcgain", "out": "v(out)"}, default_analysis="ac"
+    ) == pytest.approx(60.0, abs=0.1)
+    assert registry.measure(
+        res, {"meas": "f3db", "out": "v(out)"}, default_analysis="ac"
+    ) == pytest.approx(1e3, rel=0.03)
     pm = registry.measure(res, {"meas": "pm", "out": "v(out)"}, default_analysis="ac")
     assert 48.0 < pm < 56.0
 

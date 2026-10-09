@@ -29,7 +29,8 @@ def test_resolve_common_aliases(ds):
 def test_engine_alias_layer():
     noise = WaveAnalysis(analysis="noise", native_name="noise.noise", sweep="freq")
     d = WaveDataset(
-        source="mem", engine="spectre",
+        source="mem",
+        engine="spectre",
         analyses={"noise": noise},
         aliases={"noise_spectrum": "noise", "noise_spectral": "noise"},
     )

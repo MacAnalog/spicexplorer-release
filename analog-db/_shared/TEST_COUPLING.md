@@ -1,8 +1,8 @@
-> **[TODO]** — Test repoint worklist. Parent plan: `doc/plan_examples_db.md` §3c. Unit-fixture moves (circuitgraph, netlist2tf, core) are **DONE** — verified by `tests/fixtures/` presence. Integration repoints (api, optimizer) and runtime repoints (Phase 8) remain open.
+> **[TODO]** — Test repoint worklist. Parent plan: `doc/archive/plan_examples_db.md` §3c. Unit-fixture moves (circuitgraph, netlist2tf, core) are **DONE** — verified by `tests/fixtures/` presence. Integration repoints (api, optimizer) and runtime repoints (Phase 8) remain open.
 
 # Platform coupling to `examples/OTA/…` — the repoint worklist
 
-> Plan `doc/plan_examples_db.md` §3c. The migration (Phase 3) and the submodule extraction
+> Plan `doc/archive/plan_examples_db.md` §3c. The migration (Phase 3) and the submodule extraction
 > (Phase 4) change every example path, and the platform suite hard-codes `examples/OTA/…`
 > across **five packages**. This is the enumerated worklist so the repoint happens in lock-step.
 > Generated at Phase 0 from a tree-wide grep; line numbers are point-in-time.
@@ -32,8 +32,8 @@
 ### `spicexplorer` (optimizer) — through the indirection (integration; keep DB-backed)
 - `tests/conftest.py` (cascode `project_setup.yaml` + netlists)
 - `tests/test_pvt_corner.py` (cascode + folded), `tests/test_smoke_optimization.py`
-  (5t-ota + cascode + folded), `tests/test_audit_fixes.py`, `tests/test_audit_r3_newcas.py`,
-  `tests/test_newcas_demo_runner.py`
+  (5t-ota + cascode + folded), `tests/test_audit_fixes.py`, `tests/test_audit_r3_newcas.py`
+  (`tests/test_newcas_demo_runner.py` was deleted with the runner, 2026-09-25)
 
 ### `spicexplorer-circuitgraph` — **move to `tests/fixtures/`** (unit) ✅ DONE
 - `tests/test_graph_build.py`, `test_roundtrip.py`, `test_emit.py`, `test_review_fixes.py`,
@@ -58,7 +58,8 @@ DB extracts + the API serves the catalog (Phase 8), via the same `db_root()` sea
   (relocated copy at `_shared/spec-library.yaml`; original kept until this repoints).
 - `spicexplorer-api/src/.../routes/checkpoint.py`, `routes/projects.py`,
   `services/project_service.py` — example-relative project paths.
-- `spicexplorer/src/spicexplorer/demo/newcas_demo_runner.py:25` — `examples/OTA/cascode` path.
+- ~~`spicexplorer/src/spicexplorer/demo/newcas_demo_runner.py:25`~~ — retired with the reinforcement-learning
+  (RL) optimizer (platform RET-RL, 2026-09-25); nothing left to repoint.
 
 ## Note
 

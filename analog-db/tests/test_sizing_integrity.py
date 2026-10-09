@@ -21,7 +21,17 @@ from spicexplorer_analog_db import model
 
 pytestmark = pytest.mark.corpus  # one parametrized case per (circuit x pdk) sizing binding
 
-_SUFFIX = {"a": 1e-18, "f": 1e-15, "p": 1e-12, "n": 1e-9, "u": 1e-6, "m": 1e-3, "k": 1e3, "meg": 1e6, "g": 1e9}
+_SUFFIX = {
+    "a": 1e-18,
+    "f": 1e-15,
+    "p": 1e-12,
+    "n": 1e-9,
+    "u": 1e-6,
+    "m": 1e-3,
+    "k": 1e3,
+    "meg": 1e6,
+    "g": 1e9,
+}
 
 
 def _si(value) -> float | None:
@@ -68,7 +78,9 @@ def test_committed_default_is_inside_its_own_bounds(cid, pdk, path):
         if None in (lo, hi, default):
             continue
         if not lo <= default <= hi:
-            offenders.append(f"{var['name']}={var.get('default')} outside [{var.get('min')}, {var.get('max')}]")
+            offenders.append(
+                f"{var['name']}={var.get('default')} outside [{var.get('min')}, {var.get('max')}]"
+            )
     assert offenders == [], f"{cid}@{pdk}: " + "; ".join(offenders)
 
 
@@ -106,17 +118,21 @@ def test_baseline_is_the_entry_measured_at_the_committed_sizing(cid, pdk, path):
     base = scoreboard.baselines(circuit).get(pdk)
     if base is None:
         pytest.skip(f"{cid}@{pdk}: no baseline named")
-    committed = {v["name"]: v.get("default")
-                 for v in (yaml.safe_load(path.read_text()).get("variables") or [])}
+    committed = {
+        v["name"]: v.get("default")
+        for v in (yaml.safe_load(path.read_text()).get("variables") or [])
+    }
 
     def matches(entry) -> bool:
         sizing = (entry.get("parameters") or {}).get("sizing") or {}
         shared = [k for k in sizing if k in committed]
         return bool(shared) and all(
             _si_or_str(sizing[k]) == pytest.approx(_si_or_str(committed[k]), rel=1e-4)
-            if isinstance(_si_or_str(sizing[k]), float) and isinstance(_si_or_str(committed[k]), float)
+            if isinstance(_si_or_str(sizing[k]), float)
+            and isinstance(_si_or_str(committed[k]), float)
             else _si_or_str(sizing[k]) == _si_or_str(committed[k])
-            for k in shared)
+            for k in shared
+        )
 
     entries = scoreboard.load_entries(circuit, pdk)
     named = next((e for e in entries if e.get("design_id") == base), None)
@@ -126,5 +142,8 @@ def test_baseline_is_the_entry_measured_at_the_committed_sizing(cid, pdk, path):
     better = [e["design_id"] for e in entries if matches(e)]
     assert not better, (
         f"{cid}@{pdk}: baseline {base} was NOT measured at the committed sizing, but "
-        f"{better} was — the table would quote a design point the repo does not ship")
-    pytest.skip(f"{cid}@{pdk}: no entry matches the committed sizing (needs a re-run, not a re-point)")
+        f"{better} was — the table would quote a design point the repo does not ship"
+    )
+    pytest.skip(
+        f"{cid}@{pdk}: no entry matches the committed sizing (needs a re-run, not a re-point)"
+    )

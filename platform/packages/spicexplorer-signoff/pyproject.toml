@@ -5,8 +5,9 @@ description = "SpiceXplorer physical signoff — engine-agnostic DRC / LVS / PEX
 requires-python = ">=3.10"
 dependencies = [
     "spicexplorer-core",   # env/eng/paths seams shared across the suite; never a peer tool
-    "klayout>=0.30",       # the PDK's run_drc.py / run_lvs.py `import klayout.db` — they run under
+    "klayout>=0.30.12",       # the PDK's run_drc.py / run_lvs.py `import klayout.db` — they run under
                            # THIS interpreter (override with SIGNOFF_PYTHON); also the .lyrdb parser's fallback
+    "docopt>=0.6.2",          # the IHP run_lvs.py reads its command-line options with docopt
 ]
 
 # NOTE: a leaf tool — depends on spicexplorer-core only. The heavy tools (a `klayout`
@@ -16,6 +17,12 @@ dependencies = [
 # tool (`spicexplorer_layout`, the optimizer `spicexplorer`); composition (build → drc →
 # lvs → pex → measure per optimizer trial) is done by handing `flow.run_flow` a build
 # callable, so this package never imports the generator side.
+
+[project.optional-dependencies]
+# Layout annotation (`spicexplorer_signoff.annotate`): labels.yaml -> labelled render,
+# findings overlay, crops. Imports are lazy, so the module (and the rest of the package)
+# still imports fine without this extra installed.
+annotate = ["matplotlib", "pillow", "pyyaml"]
 
 [project.scripts]
 spicexplorer-signoff = "spicexplorer_signoff.cli:main"

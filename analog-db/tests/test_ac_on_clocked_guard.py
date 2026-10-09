@@ -35,9 +35,24 @@ def _synthetic_clocked(analyses: list[str]) -> model.Circuit:
 
 
 def test_frozen_smallsignal_classification():
-    for a in ("ac_closed_loop", "ac_zin_diff", "ac_open_loop", "cmrr_vcm", "psrr_vdd", "stb", "noise"):
+    for a in (
+        "ac_closed_loop",
+        "ac_zin_diff",
+        "ac_open_loop",
+        "cmrr_vcm",
+        "psrr_vdd",
+        "stb",
+        "noise",
+    ):
         assert model.is_frozen_smallsignal_analysis(a), f"{a} should be frozen-SS"
-    for a in ("pac_gain", "pac_zin", "pnoise_chopped", "tran_chopper_ripple", "dc_op", "tran_zin_chopped"):
+    for a in (
+        "pac_gain",
+        "pac_zin",
+        "pnoise_chopped",
+        "tran_chopper_ripple",
+        "dc_op",
+        "tran_zin_chopped",
+    ):
         assert not model.is_frozen_smallsignal_analysis(a), f"{a} should NOT be frozen-SS"
 
 

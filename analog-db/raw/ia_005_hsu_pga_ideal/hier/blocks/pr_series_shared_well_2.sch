@@ -17,15 +17,11 @@ N 190 30 190 70 {}
 N 250 0 250 94 {}
 N -190 -60 190 -60 {}
 N -250 0 -190 0 {}
-N -150 0 -90 0 {}
-N 90 0 150 0 {}
 N 190 0 250 0 {}
 N -190 70 -150 70 {}
 N 150 70 190 70 {}
 C {devices/lab_wire.sym} -190 -90 0 1 {name=l0 lab=pr_mid_n}
-C {devices/lab_wire.sym} -90 0 0 1 {name=l1 lab=sum_n}
-C {devices/lab_wire.sym} 90 0 0 0 {name=l2 lab=voutn}
-C {devices/lab_wire.sym} 250 94 2 0 {name=l3 lab=pr_mid_n}
-C {devices/lab_wire.sym} -250 94 2 0 {name=l4 lab=pr_mid_n}
-C {devices/opin.sym} 520 0 0 0 {name=p0 lab=sum_n}
-C {devices/opin.sym} 520 120 0 0 {name=p1 lab=voutn}
+C {devices/lab_wire.sym} 250 94 2 0 {name=l1 lab=pr_mid_n}
+C {devices/lab_wire.sym} -250 94 2 0 {name=l2 lab=pr_mid_n}
+C {devices/opin.sym} -150 70 0 0 {name=p0 lab=sum_n}
+C {devices/opin.sym} 190 60 0 0 {name=p1 lab=voutn}

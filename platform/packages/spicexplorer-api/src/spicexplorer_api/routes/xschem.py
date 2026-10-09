@@ -345,8 +345,10 @@ def from_netlist(req: XschemFromNetlistRequest = Body(...)) -> XschemSchematicRe
 
     try:
         _run_id, rdir = project_service.begin_run(
-            "xschem", project_id=None,
-            input_files=input_files, input_values=input_values,
+            "xschem",
+            project_id=None,
+            input_files=input_files,
+            input_values=input_values,
             coordinates={"pdk": req.pdk, "into": req.into, "name": req.name},
             retention="full",  # a generated schematic is the deliverable, never GC'd
         )

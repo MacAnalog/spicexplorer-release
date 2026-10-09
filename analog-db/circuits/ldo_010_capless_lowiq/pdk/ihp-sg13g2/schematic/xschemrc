@@ -1,0 +1,11 @@
+# xschemrc — ldo_010_capless_lowiq, hierarchical schematic of record.
+# Sources the IHP PDK xschemrc (sg13g2_pr symbols: cap_cmim, rhigh, sg13_lv_*) and adds THIS
+# directory, so `ldo_ihp_capless.sym` and the `blocks/*.sym` children resolve by their committed
+# relative names. Portable: PDK_ROOT/PDK fall back to the workspace defaults when unset.
+if { ![info exists env(PDK_ROOT)] } { set ::env(PDK_ROOT) $env(HOME)/local/pdks }
+if { ![info exists env(PDK)] } { set ::env(PDK) ihp-sg13g2 }
+if {![info exists PDK]} {
+    source $env(PDK_ROOT)/$env(PDK)/libs.tech/xschem/xschemrc
+}
+append XSCHEM_LIBRARY_PATH :[file normalize [file dirname [info script]]]
+set netlist_dir [file dirname [info script]]/netlist

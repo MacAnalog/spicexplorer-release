@@ -36,3 +36,10 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/spicexplorer_netlist2xschem"]
+# Package DATA that must ship in the wheel, named explicitly: `virtuoso_export/
+# cdf_param_filters.yaml` is xvport's fallback CDF read filter, used when the installed
+# virtuoso-bridge lacks its own copy (the bridge declares package-data for its maestro yaml
+# only, so every bridge wheel is missing it and `--verify` died on the FileNotFoundError —
+# platform#240, doc/bridge_limits.md §8). Leaving it to the backend's defaults is exactly
+# the mistake being worked around here.
+artifacts = ["src/spicexplorer_netlist2xschem/virtuoso_export/cdf_param_filters.yaml"]

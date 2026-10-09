@@ -39,5 +39,5 @@ Explicitly NOT used
     the `_applyLimitsToBase` limit mechanism) are clean-room ported only. No verbatim line is
     copied into this MIT leaf absent a written, line-scoped relicense from the owner.
 
-See the meta-repo `doc/plan_netlist2tf.md` §3 (Prior-art study) and the License analysis table
+See the meta-repo `doc/archive/plan_netlist2tf.md` §3 (Prior-art study) and the License analysis table
 for the full reuse-vs-reimplement decisions.

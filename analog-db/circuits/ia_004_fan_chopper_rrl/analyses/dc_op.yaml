@@ -3,8 +3,9 @@
 #
 # 2026-07-21 — template switched dc_op_chopper_diff -> dc_op_chopper_rrl for the same reason
 # as ac_closed_loop: the _diff base leaves clk_phi_1/clk_phi_2 undriven, so the RRL was
-# inert and i_supply/vos described the CCIA alone. Recorded scoreboard (ee77a983e2) is
-# STALE for this bench too.
+# inert and i_supply/vos described the CCIA alone. The design point recorded then (ee77a983e2)
+# hashes a knob set this netlist no longer has and was retired 2026-09; the named baseline is
+# 03a2fe3857 (scoreboard/baselines.yaml).
 schema: spicexplorer/analysis@1
 id: dc_op
 template: dc_op_chopper_rrl

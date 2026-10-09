@@ -45,8 +45,9 @@ artifacts:
   abstract_netlist: abstract/netlist.spice
   graph: abstract/topology.cgraph.json
   datasheet: datasheet.yaml
-  schematic: pdk/gf180mcu/schematic/error_amp.sch   # editable xschem drawing, sized to the
-                                                    # landed sizing.yaml (scoreboard ff05bbd572)
+  schematic: pdk/gf180mcu/schematic/error_amp.sch   # editable xschem drawing at design point
+                                                    # 0d97ec7f42 (the 2026-07-21 sizing), not at
+                                                    # sizing.yaml's defaults (baseline 08cfc9b9ba)
 pdks: [gf180mcu, ihp-sg13g2, sky130]
 analyses: [dc_op, ac_open_loop, ac_closed_loop, psrr_vdd, cmrr_vcm, noise, tran_step, linearity, thd, iip3, stb]
 optimize:

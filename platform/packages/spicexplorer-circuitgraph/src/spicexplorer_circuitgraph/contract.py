@@ -129,7 +129,7 @@ class CircuitGraphDoc(BaseModel):
     components: list[ComponentModel] = Field(default_factory=list)
 
     @classmethod
-    def from_graph(cls, graph: CircuitGraph) -> "CircuitGraphDoc":
+    def from_graph(cls, graph: CircuitGraph) -> CircuitGraphDoc:
         """Serialize a live :class:`CircuitGraph` into the contract (deterministic ordering)."""
         nets = [
             NetModel(name=n.name, is_supply=n.is_supply, supply_type=n.supply_type)

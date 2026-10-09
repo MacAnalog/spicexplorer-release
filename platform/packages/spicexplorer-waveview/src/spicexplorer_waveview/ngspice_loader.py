@@ -10,6 +10,7 @@ data it merely doesn't recognise.
 
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 
@@ -19,6 +20,8 @@ from spicelib import RawRead
 from .dataset import WaveAnalysis, WaveDataset, WaveSignal
 
 __all__ = ["load_ngspice_raw", "PLOT_TITLE_TO_ANALYSIS"]
+
+logger = logging.getLogger(__name__)
 
 # ngspice plot title → engine-neutral analysis key. The exact reverse of core's
 # `_ANALYSIS_TO_PLOT_TYPE` (spice_engine/spicelib.py) so a recipe evaluated through
@@ -101,8 +104,8 @@ def load_ngspice_raw(path: str | Path) -> WaveDataset:
         if callable(read_all) and trace_names:
             try:
                 read_all(trace_names)
-            except Exception:  # noqa: BLE001 — fall back to per-trace reads below
-                pass
+            except Exception as exc:  # noqa: BLE001 — fall back to per-trace reads below
+                logger.debug("%r: bulk trace read failed, reading per trace: %s", title, exc)
 
         for trace_name in trace_names:
             try:
@@ -117,8 +120,8 @@ def load_ngspice_raw(path: str | Path) -> WaveDataset:
             try:
                 trace = plot.get_trace(trace_name)
                 units = _WHATTYPE_UNITS.get(str(getattr(trace, "whattype", "")).lower())
-            except Exception:  # noqa: BLE001 — units are cosmetic
-                pass
+            except Exception as exc:  # noqa: BLE001 — units are cosmetic
+                logger.debug("%r: no units for trace %r: %s", title, trace_name, exc)
             an.signals[str(trace_name)] = WaveSignal(name=str(trace_name), data=data, units=units)
 
         # Read the sweep AFTER the traces: on spicelib's lazy binary path `plot.axis`

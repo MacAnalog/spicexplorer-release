@@ -33,12 +33,20 @@ def main(argv: list[str] | None = None) -> int:
     an.add_argument("png")
     an.add_argument("--crops", default=None, help="also write one zoomed PNG per finding here")
     an.add_argument("--pdk", default="ihp-sg13g2")
-    vr = sub.add_parser("validate-review", help="validate a REVIEW.yaml/.json against layout-review/1")
+    vr = sub.add_parser(
+        "validate-review", help="validate a REVIEW.yaml/.json against layout-review/1"
+    )
     vr.add_argument("review")
-    sn = sub.add_parser("snapshot", help="record one layout iteration (gen.py + gds + png + verdicts)")
+    sn = sub.add_parser(
+        "snapshot", help="record one layout iteration (gen.py + gds + png + verdicts)"
+    )
     sn.add_argument("iter_dir")
-    sn.add_argument("--note", required=True, help="ONE-LINE headline: problem -> fix -> effect (<=140 chars)")
-    sn.add_argument("--detail", default="", help="long form (numbers, reasoning); kept in the YAML only")
+    sn.add_argument(
+        "--note", required=True, help="ONE-LINE headline: problem -> fix -> effect (<=140 chars)"
+    )
+    sn.add_argument(
+        "--detail", default="", help="long form (numbers, reasoning); kept in the YAML only"
+    )
     sn.add_argument("--gen", required=True, help="generator source to copy")
     sn.add_argument("--gds", default=None)
     sn.add_argument("--params", default=None, help="knob values JSON (file or inline)")
@@ -49,7 +57,9 @@ def main(argv: list[str] | None = None) -> int:
     sn.add_argument("--area", type=float, default=None)
     sn.add_argument("--no-gds", action="store_true", help="record the GDS sha only, do not copy it")
     sn.add_argument("--pdk", default="ihp-sg13g2")
-    nt = sub.add_parser("set-note", help="tighten an iteration's headline after the fact (old note -> detail)")
+    nt = sub.add_parser(
+        "set-note", help="tighten an iteration's headline after the fact (old note -> detail)"
+    )
     nt.add_argument("iter_dir")
     nt.add_argument("it")
     nt.add_argument("note")
@@ -94,9 +104,21 @@ def main(argv: list[str] | None = None) -> int:
             return json.loads(pth.read_text() if pth.is_file() else x)
 
         if a.cmd == "snapshot":
-            e = it.snapshot(a.iter_dir, note=a.note, gen_path=a.gen, gds=a.gds, params=_j(a.params),
-                            drc=_j(a.drc), lvs=_j(a.lvs), pex=_j(a.pex), scorecard=_j(a.scorecard),
-                            area_um2=a.area, keep_gds=not a.no_gds, pdk=a.pdk, detail=a.detail)
+            e = it.snapshot(
+                a.iter_dir,
+                note=a.note,
+                gen_path=a.gen,
+                gds=a.gds,
+                params=_j(a.params),
+                drc=_j(a.drc),
+                lvs=_j(a.lvs),
+                pex=_j(a.pex),
+                scorecard=_j(a.scorecard),
+                area_um2=a.area,
+                keep_gds=not a.no_gds,
+                pdk=a.pdk,
+                detail=a.detail,
+            )
             print(json.dumps(e.to_dict()))
         elif a.cmd == "set-note":
             it.set_note(a.iter_dir, a.it, a.note, detail=a.detail)

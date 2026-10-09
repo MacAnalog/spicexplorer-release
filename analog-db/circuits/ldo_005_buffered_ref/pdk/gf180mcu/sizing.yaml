@@ -5,8 +5,9 @@
 # so this LDO starts from two independently verified amplifiers rather than from scratch:
 #   x_ra_* -> amp_033_ti_ldo_ref_selfbias  (scoreboard 84d3d3403b, 12/12 specs pass:
 #             74.1 dB / 7.29 MHz / pm 73.9 deg / vos -3.80 mV / psrr 54.1 dB / 118 uA)
-#   x_ea_* -> amp_032_ti_ldo_error_selfbias (scoreboard ff05bbd572, 10/12: 54.3 dB / 10.2 MHz /
-#             pm 65.8 deg / psrr 31.6 dB / 127 uA; vos ~93 mV and icmr are its known structural misses)
+#   x_ea_* -> amp_032_ti_ldo_error_selfbias (design point 0d97ec7f42, 12/12 specs pass at tt:
+#             61.8 dB / 7.07 MHz / pm 82.7 deg / vos -16.2 mV / psrr 38.9 dB / 179 uA);
+#             x_dut_xmea_3_w, x_dut_xmea_6_w and c_ea_comp were retuned in-system since (below; #51)
 #
 # IMPORTANT — a block that meets its own specs standalone is NOT automatically correct in system:
 #   * The amplifier benches load each amp with CL = 10 pF. Here the reference amp drives the
@@ -14,9 +15,10 @@
 #     capacitance, which for a wide power PMOS is far larger than 10 pF. Expect the error amp's
 #     compensation (r_ea_z/c_ea_comp) to need re-tuning against that real load — this is the classic
 #     reason a "verified" error amp destabilises an LDO.
-#   * amp_032's ~93 mV systematic offset lands DIRECTLY on vout (the error amp compares vout against
-#     the filtered reference with no divider), so vout will sit ~93 mV off target before any
-#     regulation error is counted. That is a known, documented consequence, not a sizing bug.
+#   * amp_032's systematic offset (vos -16.2 mV at 0d97ec7f42, tt, on its own bench) lands
+#     DIRECTLY on vout (the error amp compares vout against the filtered reference with no
+#     divider), so vout sits that far off target before any regulation error is counted. That is
+#     a known, documented consequence, not a sizing bug.
 #
 # COMPENSATED 2026-07-21, guided by the loop-gain pole/zero structure rather than blind search.
 # Measured on the loop (ac_loopgain, Middlebrook injection): dominant pole ~15 Hz (the output node,

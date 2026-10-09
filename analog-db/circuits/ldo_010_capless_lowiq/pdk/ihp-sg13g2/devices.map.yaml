@@ -1,0 +1,12 @@
+# Generic device kind -> ihp-sg13g2 device name (1.5 V thin-oxide family, the challenge's target).
+#
+# MOS only. The passives are PDK device SUBCKTs (`rhigh` 3-terminal, `cap_cmim` 2-terminal) and
+# circuitgraph passes an X-card subckt instance through `to_netlist` VERBATIM — it retargets MOS
+# models, not subckt names — so naming them generically in abstract/netlist.spice would lower to
+# the literal token, not to the PDK device. They are therefore written with their PDK names in the
+# abstract netlist (the same convention drv_001_pam4_sige_dac uses for its `npn13G2` HBTs), and
+# this map carries no res/cap row. The circuit binds one PDK, so nothing is lost.
+pdk: ihp-sg13g2
+devices:
+  nmos: {model: sg13_lv_nmos}
+  pmos: {model: sg13_lv_pmos}

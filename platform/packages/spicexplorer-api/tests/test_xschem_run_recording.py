@@ -4,6 +4,7 @@ Generation keeps its existing behavior/response (the legacy work_root()/xschem/g
 write + /xschem/file serving is untouched); ADDITIVELY it now mints a run with input
 provenance and copies its outputs into the run's own artifacts/.
 """
+
 from __future__ import annotations
 
 import json
@@ -41,8 +42,9 @@ def _runs(work):
 
 
 def test_successful_generation_records_an_xschem_run(client, work):
-    resp = client.post("/api/xschem/from-netlist",
-                       json={"netlist_text": NETLIST, "name": "tiny", "render": "none"})
+    resp = client.post(
+        "/api/xschem/from-netlist", json={"netlist_text": NETLIST, "name": "tiny", "render": "none"}
+    )
     assert resp.status_code == 200, resp.text
 
     runs = _runs(work)
@@ -60,8 +62,12 @@ def test_successful_generation_records_an_xschem_run(client, work):
 
 def test_client_errors_do_not_mint_a_run(client, work):
     assert client.post("/api/xschem/from-netlist", json={}).status_code == 400
-    assert client.post("/api/xschem/from-netlist",
-                       json={"netlist_text": NETLIST, "netlist_path": "/x.spice"}).status_code == 400
+    assert (
+        client.post(
+            "/api/xschem/from-netlist", json={"netlist_text": NETLIST, "netlist_path": "/x.spice"}
+        ).status_code
+        == 400
+    )
     assert _runs(work) == []
 
 
@@ -73,8 +79,9 @@ def test_generation_failure_records_an_error_run(work, monkeypatch):
 
     monkeypatch.setattr("spicexplorer_api.routes.xschem.build_sch", _boom)
     client = TestClient(app, raise_server_exceptions=False)
-    resp = client.post("/api/xschem/from-netlist",
-                       json={"netlist_text": NETLIST, "name": "tiny", "render": "none"})
+    resp = client.post(
+        "/api/xschem/from-netlist", json={"netlist_text": NETLIST, "name": "tiny", "render": "none"}
+    )
     assert resp.status_code == 500  # RuntimeError propagates unchanged
 
     runs = _runs(work)

@@ -47,6 +47,10 @@ __all__ = [
 # ``spicexplorer_netlist2xschem.ANNOTATION_SCHEMA`` (the two packages share the string, not an import).
 ANNOTATION_SCHEMA = "spicexplorer/xschem-block-annotations@1"
 
+# The ``device_slots`` value for a block device that fills no template slot: the bias-generating
+# diode the matcher recovers from the host for an externally-biased cascode (see `_device_slots`).
+_RECOVERED_REFERENCE_SLOT = "bias_ref"
+
 
 def _human_label(
     family: str, polarity: str, mirror_class: str, *, n_outputs: int | None = None
@@ -104,11 +108,22 @@ def _device_slots(matches: tuple[SubcircuitMatch, ...]) -> dict[str, str]:
     one a stamping renderer needs and the only one that stays well-defined for a multi-output mirror:
     its N copies all fill the template's single output slot, so a template → host dict would collide,
     but every host device maps to exactly one slot. Used by ``netlist2xschem`` to lay each host device
-    at its template's symmetric coordinate. Deterministic (sorted)."""
+    at its template's symmetric coordinate. Deterministic (sorted).
+
+    A matched device that fills no template slot — the on-rail diode the matcher recovers from the
+    host as an externally-biased cascode's bias reference (``match._bias_reference``) — gets the
+    synthetic slot ``"bias_ref"`` (:data:`_RECOVERED_REFERENCE_SLOT`), so the slots always cover
+    the block's ``devices``. No template drawing has that slot, so a stamping renderer lays it out
+    as a leftover device."""
     slots: dict[str, str] = {}
     for m in matches:
         for tpl_dev, host_dev in m.device_map.items():
             slots.setdefault(host_dev, tpl_dev)
+    # Second pass, after every device_map: a device recovered in one member but mapped in another
+    # keeps its real slot.
+    for m in matches:
+        for host_dev in m.devices:
+            slots.setdefault(host_dev, _RECOVERED_REFERENCE_SLOT)
     return {h: slots[h] for h in sorted(slots)}
 
 
@@ -218,9 +233,7 @@ def _template_indexes(
     never imports this package) resolves them against *its* root — the JSON contract stays the only
     coupling. Resolved only for the template ids actually present; absent schematics/rules (or a
     packaged install without the examples tree) simply yield no entry, and consumers degrade."""
-    needed = {g.template_id for g in groups} | {
-        s.template_id for g in groups for s in g.subsumed
-    }
+    needed = {g.template_id for g in groups} | {s.template_id for g in groups for s in g.subsumed}
     if not needed:
         return {}, {}
     try:
@@ -232,7 +245,8 @@ def _template_indexes(
         from spicexplorer_core import project_root
 
         root = project_root()
-    except Exception:  # pragma: no cover - root marker absent
+    except Exception as exc:  # pragma: no cover - root marker absent
+        logger.debug("no project root for schematic/rules resolution: %s", exc)
         root = None
     sch_index: dict[str, str] = {}
     rules_index: dict[str, list[str]] = {}
@@ -266,11 +280,13 @@ def export_subcircuit_annotations(
 
     Each block additionally carries (additive, schema still ``@1``) a ``template_sch`` — the path to the
     block's hand-drawn symmetric layout, relative to the workspace root — and ``device_slots`` mapping
-    every host device to the template device-slot it fills. Together they let the renderer *stamp* the
-    template's symmetric geometry onto the host devices (differential branches drawn symmetrically)
-    instead of placing the block algorithmically. ``library`` overrides the template catalogue used to
-    resolve those paths (defaults to the full shipped catalogue); the fields are simply omitted when no
-    template schematic is available, so a consumer that ignores them is unaffected.
+    every host device to the template device-slot it fills (``"bias_ref"`` for a recovered bias
+    reference, which fills none — see :func:`_device_slots`). Together they let the renderer
+    *stamp* the template's symmetric geometry onto the host devices (differential branches drawn
+    symmetrically) instead of placing the block algorithmically. ``library`` overrides the template
+    catalogue used to resolve those paths (defaults to the full shipped catalogue); the fields are
+    omitted when no template schematic is available, so a consumer that ignores them is
+    unaffected.
 
     A ``port_names`` map (boundary host net → the template's **functional port name**: ``supply`` /
     ``ref_in`` / ``out`` / ``in_p`` / …) is also carried, with a fanned-out mirror's extra outputs
@@ -317,5 +333,7 @@ def write_subcircuit_annotations(
 ) -> Path:
     """Write :func:`export_subcircuit_annotations` to ``path`` as pretty JSON; return the path."""
     out = Path(path)
-    out.write_text(json.dumps(export_subcircuit_annotations(source, library=library), indent=2) + "\n")
+    out.write_text(
+        json.dumps(export_subcircuit_annotations(source, library=library), indent=2) + "\n"
+    )
     return out

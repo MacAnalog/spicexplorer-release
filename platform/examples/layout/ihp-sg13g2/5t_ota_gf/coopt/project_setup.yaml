@@ -12,7 +12,7 @@
 # costs, priced in the same um2.
 #
 # The knobs-only sibling is ../opt/project_setup.yaml. Guide notebook:
-# packages/spicexplorer/notebooks/layout_schematic_cooptimization.ipynb
+# packages/spicexplorer/notebooks/layout_schematic_cooptimization.py
 #
 # Run:  uv run spicexplorer-optimize project_setup.yaml --budget 12   (from this directory)
 project:

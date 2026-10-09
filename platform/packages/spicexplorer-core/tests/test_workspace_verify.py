@@ -1,4 +1,5 @@
 """The verification plan: spec × test × corner joining table (workspace.verify)."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -30,7 +31,9 @@ def test_parse_target_ops_and_eng_values():
 
 
 def test_load_plan_builds_matrix_and_coordinates(tmp_path: Path):
-    _plan(tmp_path, """
+    _plan(
+        tmp_path,
+        """
     specs:
       psrr_db:
         target: ">= 60"
@@ -44,7 +47,8 @@ def test_load_plan_builds_matrix_and_coordinates(tmp_path: Path):
         corners: [tt]
         aggregate: max
         target: "<= 1m"
-    """)
+    """,
+    )
     plan = load_verify_plan(tmp_path)
     assert plan is not None
     assert set(plan.specs) == {"psrr_db", "power_w"}
@@ -56,19 +60,22 @@ def test_load_plan_builds_matrix_and_coordinates(tmp_path: Path):
 
 
 def test_aggregate_and_pass_semantics(tmp_path: Path):
-    _plan(tmp_path, """
+    _plan(
+        tmp_path,
+        """
     specs:
       gain_db:
         measurement: dcgain
         corners: [tt, ss, ff]
         aggregate: min
         target: ">= 40"
-    """)
+    """,
+    )
     spec = load_verify_plan(tmp_path).specs["gain_db"]
-    assert spec.aggregate_value([44.0, 41.0, 40.5]) == 40.5   # worst-case (min)
-    assert spec.passes([44.0, 41.0, 40.5]) is True            # 40.5 >= 40
-    assert spec.passes([44.0, 39.0, 40.5]) is False           # worst 39 < 40
-    assert spec.passes([]) is None                            # nothing measured
+    assert spec.aggregate_value([44.0, 41.0, 40.5]) == 40.5  # worst-case (min)
+    assert spec.passes([44.0, 41.0, 40.5]) is True  # 40.5 >= 40
+    assert spec.passes([44.0, 39.0, 40.5]) is False  # worst 39 < 40
+    assert spec.passes([]) is None  # nothing measured
 
 
 def test_targets_yaml_is_canonical_over_inline(tmp_path: Path):
@@ -82,7 +89,7 @@ def test_targets_yaml_is_canonical_over_inline(tmp_path: Path):
         corners: [tt]
         target: ">= 30"
     """,
-        targets_yaml="specs:\n  gain_db: \">= 45\"\n",
+        targets_yaml='specs:\n  gain_db: ">= 45"\n',
     )
     spec = load_verify_plan(tmp_path).specs["gain_db"]
     assert spec.target is not None and spec.target.value == 45.0
@@ -90,7 +97,7 @@ def test_targets_yaml_is_canonical_over_inline(tmp_path: Path):
 
 
 def test_missing_plan_is_none_and_malformed_raises(tmp_path: Path):
-    assert load_verify_plan(tmp_path) is None                 # no verify/plan.yaml
-    _plan(tmp_path, "specs:\n  bad: {corners: [tt]}\n")       # no measurement
+    assert load_verify_plan(tmp_path) is None  # no verify/plan.yaml
+    _plan(tmp_path, "specs:\n  bad: {corners: [tt]}\n")  # no measurement
     with pytest.raises(ValueError):
         load_verify_plan(tmp_path)

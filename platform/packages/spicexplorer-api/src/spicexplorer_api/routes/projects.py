@@ -4,9 +4,10 @@ A project IS a directory under WORK_ROOT/projects (the registry is the filesyste
 no DB). "New project" scaffolds an example-structured dir; "load example" copies a
 demo into a fresh registered project. All FS bookkeeping lives in project_service.
 """
+
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
@@ -25,12 +26,12 @@ router = APIRouter()
 class CreateProjectRequest(BaseModel):
     name: str
     # The wizard's generated YAML (optional). When omitted, the default example seeds it.
-    yaml_content: Optional[str] = None
+    yaml_content: str | None = None
 
 
 class FromExampleRequest(BaseModel):
     example_key: str
-    name: Optional[str] = None
+    name: str | None = None
 
 
 class RenameRequest(BaseModel):
@@ -38,7 +39,7 @@ class RenameRequest(BaseModel):
 
 
 class ForkRequest(BaseModel):
-    name: Optional[str] = None
+    name: str | None = None
 
 
 class RenameRunRequest(BaseModel):
@@ -48,13 +49,14 @@ class RenameRunRequest(BaseModel):
 # --- Response models (see src/types/README.md) -------------------------------
 class IdResponse(BaseModel):
     """`{id: str}` — shared by create / from-example / fork / restore."""
+
     id: str
 
 
 class ProjectMeta(BaseModel):
     id: str
     name: str
-    updated: str | None      # always present (updated|created), can be null
+    updated: str | None  # always present (updated|created), can be null
     run_count: int
     best_score: float | None  # always present, null until a run has a numeric score
     source: str
@@ -91,6 +93,7 @@ class ProjectRun(BaseModel):
     partial/older run.json (or a minimal test fixture) must validate rather than 500
     under response_model. The canonical writer always sets all keys, so production
     responses are unchanged (defaults only fill genuinely-absent keys)."""
+
     run_id: str
     project_id: str | None = None
     label: str | None = None
@@ -123,7 +126,7 @@ class DeleteProjectResponse(BaseModel):
 
 class TrashItem(BaseModel):
     trash_id: str
-    kind: str            # "project" | "run"
+    kind: str  # "project" | "run"
     project_id: str
     run_id: str | None = None  # present only for kind=="run" (else emitted as null)
     name: str
@@ -198,7 +201,9 @@ def get_project(project_id: str):
 @router.get("/projects/{project_id}/runs", response_model=ProjectRunsResponse)
 def project_runs(
     project_id: str,
-    kind: str = Query("", description="Filter to one run kind (optimize/simulate/xschem/…); blank = all"),
+    kind: str = Query(
+        "", description="Filter to one run kind (optimize/simulate/xschem/…); blank = all"
+    ),
 ):
     if not project_service.project_exists(project_id):
         raise HTTPException(404, f"project '{project_id}' not found")
@@ -213,9 +218,9 @@ def project_runs(
 
 class DecisionRequest(BaseModel):
     summary: str
-    kind: Optional[str] = None
-    by: Optional[str] = None          # "agent" | "human" | an agent id
-    refs: Optional[dict[str, Any]] = None
+    kind: str | None = None
+    by: str | None = None  # "agent" | "human" | an agent id
+    refs: dict[str, Any] | None = None
 
 
 @router.get("/projects/{project_id}/state")
@@ -237,7 +242,10 @@ def project_context(project_id: str):
     if not project_service.project_exists(project_id):
         raise HTTPException(404, f"project '{project_id}' not found")
     pdir = project_service.project_dir(project_id)
-    return {"markdown": ws.render_project_md(pdir, write=False), "decisions": ws.read_decisions(pdir)}
+    return {
+        "markdown": ws.render_project_md(pdir, write=False),
+        "decisions": ws.read_decisions(pdir),
+    }
 
 
 @router.post("/projects/{project_id}/decisions")

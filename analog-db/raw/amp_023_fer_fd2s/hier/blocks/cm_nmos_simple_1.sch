@@ -4,59 +4,54 @@ K {}
 V {}
 S {}
 E {}
-T {cm_nmos_simple_1} -210 -200 0 0 0.4 0.4 {}
-C {devices/sg13_lv_nmos_np.sym} 810 0 0 0 {name=MB1 model=sg13_lv_nmos spiceprefix=X w=x_dut_xmb1_w l=x_dut_xmb1_l m=x_dut_xmb1_m}
-C {devices/sg13_lv_nmos_np.sym} 565 0 0 0 {name=MB2 model=sg13_lv_nmos spiceprefix=X w=x_dut_xmb2_w l=x_dut_xmb2_l m=x_dut_xmb2_m}
-C {devices/sg13_lv_nmos_np.sym} 320 0 0 0 {name=MBD model=sg13_lv_nmos spiceprefix=X w=x_dut_xmbd_w l=x_dut_xmbd_l m=x_dut_xmbd_m}
-C {devices/sg13_lv_nmos_np.sym} 75 0 0 1 {name=MEAT model=sg13_lv_nmos spiceprefix=X w=x_dut_xmeat_w l=x_dut_xmeat_l m=x_dut_xmeat_m}
-C {devices/sg13_lv_nmos_np.sym} -170 0 0 1 {name=MT model=sg13_lv_nmos spiceprefix=X w=x_dut_xmt_w l=x_dut_xmt_l m=x_dut_xmt_m}
-N -250 0 -250 94 {}
-N -190 -90 -190 -30 {}
-N -190 30 -190 90 {}
-N -5 0 -5 94 {}
-N 55 -90 55 -30 {}
-N 55 30 55 60 {}
-N 300 -70 300 0 {}
-N 340 -90 340 -30 {}
-N 340 30 340 60 {}
-N 400 0 400 94 {}
-N 545 -60 545 0 {}
-N 585 -90 585 -30 {}
-N 585 30 585 60 {}
-N 645 0 645 94 {}
-N 790 -60 790 0 {}
-N 830 -90 830 -30 {}
-N 830 30 830 60 {}
-N 890 0 890 94 {}
-N 300 -70 340 -70 {}
-N -250 0 -190 0 {}
-N -150 0 -120 0 {}
-N -5 0 55 0 {}
-N 95 0 155 0 {}
-N 340 0 400 0 {}
-N 515 0 545 0 {}
-N 585 0 645 0 {}
-N 760 0 790 0 {}
-N 830 0 890 0 {}
-N -190 60 830 60 {}
-C {devices/lab_wire.sym} 55 -90 0 1 {name=l0 lab=eatail}
-C {devices/lab_wire.sym} -150 0 0 0 {name=l1 lab=ibias}
-C {devices/lab_wire.sym} 155 0 0 1 {name=l2 lab=ibias}
-C {devices/lab_wire.sym} 340 -90 0 1 {name=l3 lab=ibias}
-C {devices/lab_wire.sym} 545 -60 0 1 {name=l4 lab=ibias}
-C {devices/lab_wire.sym} 790 -60 0 1 {name=l5 lab=ibias}
-C {devices/lab_wire.sym} -190 -90 0 1 {name=l6 lab=tail}
-C {devices/lab_wire.sym} 830 -90 0 1 {name=l7 lab=vbp}
-C {devices/lab_wire.sym} 585 -90 0 1 {name=l8 lab=vcp}
-C {devices/lab_wire.sym} -190 90 2 0 {name=l9 lab=vss}
-C {devices/lab_wire.sym} 890 94 2 0 {name=l10 lab=vss}
-C {devices/lab_wire.sym} 645 94 2 0 {name=l11 lab=vss}
-C {devices/lab_wire.sym} 400 94 2 0 {name=l12 lab=vss}
-C {devices/lab_wire.sym} -5 94 2 0 {name=l13 lab=vss}
-C {devices/lab_wire.sym} -250 94 2 0 {name=l14 lab=vss}
-C {devices/iopin.sym} -190 280 0 0 {name=p0 lab=vss}
-C {devices/opin.sym} 1165 -30 0 0 {name=p1 lab=tail}
-C {devices/opin.sym} 1165 90 0 0 {name=p2 lab=eatail}
-C {devices/opin.sym} 1165 210 0 0 {name=p3 lab=ibias}
-C {devices/opin.sym} 1165 330 0 0 {name=p4 lab=vcp}
-C {devices/opin.sym} 1165 450 0 0 {name=p5 lab=vbp}
+T {cm_nmos_simple_1} -720 -200 0 0 0.4 0.4 {}
+C {devices/sg13_lv_nmos_np.sym} -680 0 0 1 {name=MB1 model=sg13_lv_nmos spiceprefix=X w=x_dut_xmb1_w l=x_dut_xmb1_l m=x_dut_xmb1_m}
+C {devices/sg13_lv_nmos_np.sym} -340 0 0 1 {name=MB2 model=sg13_lv_nmos spiceprefix=X w=x_dut_xmb2_w l=x_dut_xmb2_l m=x_dut_xmb2_m}
+C {devices/sg13_lv_nmos_np.sym} 0 0 0 0 {name=MBD model=sg13_lv_nmos spiceprefix=X w=x_dut_xmbd_w l=x_dut_xmbd_l m=x_dut_xmbd_m}
+C {devices/sg13_lv_nmos_np.sym} 340 0 0 0 {name=MEAT model=sg13_lv_nmos spiceprefix=X w=x_dut_xmeat_w l=x_dut_xmeat_l m=x_dut_xmeat_m}
+C {devices/sg13_lv_nmos_np.sym} 680 0 0 0 {name=MT model=sg13_lv_nmos spiceprefix=X w=x_dut_xmt_w l=x_dut_xmt_l m=x_dut_xmt_m}
+N -760 0 -760 94 {}
+N -700 -60 -700 -30 {}
+N -700 30 -700 140 {}
+N -630 0 -630 60 {}
+N -420 0 -420 94 {}
+N -360 -60 -360 -30 {}
+N -360 30 -360 140 {}
+N -290 0 -290 60 {}
+N -20 -70 -20 0 {}
+N 20 -90 20 -60 {}
+N 20 -60 20 -30 {}
+N 20 30 20 140 {}
+N 80 0 80 94 {}
+N 290 -60 290 0 {}
+N 360 -60 360 -30 {}
+N 360 30 360 140 {}
+N 420 0 420 94 {}
+N 700 -60 700 -30 {}
+N 700 30 700 140 {}
+N 760 0 760 94 {}
+N -20 -70 20 -70 {}
+N -20 -60 290 -60 {}
+N -760 0 -700 0 {}
+N -660 0 -630 0 {}
+N -420 0 -360 0 {}
+N -350 0 -20 0 {}
+N 20 0 80 0 {}
+N 290 0 320 0 {}
+N 360 0 420 0 {}
+N 630 0 660 0 {}
+N 700 0 760 0 {}
+N -630 60 -290 60 {}
+N -1180 140 1155 140 {}
+C {devices/lab_wire.sym} 20 -90 0 1 {name=l0 lab=ibias}
+C {devices/lab_wire.sym} -760 94 2 0 {name=l1 lab=vss}
+C {devices/lab_wire.sym} -420 94 2 0 {name=l2 lab=vss}
+C {devices/lab_wire.sym} 80 94 2 0 {name=l3 lab=vss}
+C {devices/lab_wire.sym} 420 94 2 0 {name=l4 lab=vss}
+C {devices/lab_wire.sym} 760 94 2 0 {name=l5 lab=vss}
+C {devices/iopin.sym} -1180 140 0 0 {name=p0 lab=vss}
+C {devices/opin.sym} -700 -60 0 0 {name=p1 lab=vbp}
+C {devices/opin.sym} -360 -60 0 0 {name=p2 lab=vcp}
+C {devices/opin.sym} 630 0 0 0 {name=p3 lab=ibias}
+C {devices/opin.sym} 360 -60 0 0 {name=p4 lab=eatail}
+C {devices/opin.sym} 700 -60 0 0 {name=p5 lab=tail}

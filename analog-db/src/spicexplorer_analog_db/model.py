@@ -194,9 +194,7 @@ class Circuit:
         d = self.dir / "pdk" / pdk
         if not d.is_dir():
             return []
-        return sorted(
-            p.name for p in d.iterdir() if p.is_dir() and p.name.startswith("layout-")
-        )
+        return sorted(p.name for p in d.iterdir() if p.is_dir() and p.name.startswith("layout-"))
 
     def layout_dir(self, pdk: str, slug: str | None = None) -> Path:
         """Directory of one layout entry. ``slug`` accepts the full id
@@ -211,13 +209,10 @@ class Circuit:
             name = avail[0]
         else:
             match = [
-                n for n in avail
-                if n == slug or n == f"layout-{slug}" or n.endswith(f"-{slug}")
+                n for n in avail if n == slug or n == f"layout-{slug}" or n.endswith(f"-{slug}")
             ]
             if len(match) != 1:
-                raise FileNotFoundError(
-                    f"{self.id}/{pdk}: layout {slug!r} not found in {avail}"
-                )
+                raise FileNotFoundError(f"{self.id}/{pdk}: layout {slug!r} not found in {avail}")
             name = match[0]
         return self.dir / "pdk" / pdk / name
 

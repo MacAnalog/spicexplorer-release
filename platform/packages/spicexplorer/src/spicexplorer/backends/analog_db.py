@@ -34,9 +34,10 @@ import logging
 import math
 import os
 import tempfile
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 import numpy as np
 import yaml
@@ -174,7 +175,9 @@ def _circuit_dir(circuit: str, root: str | os.PathLike[str] | None) -> Path:
     return analog_db_root(root) / "circuits" / circuit
 
 
-def load_sizing(circuit: str, pdk: str, *, root: str | os.PathLike[str] | None = None) -> dict[str, str]:
+def load_sizing(
+    circuit: str, pdk: str, *, root: str | os.PathLike[str] | None = None
+) -> dict[str, str]:
     """``{var: default}`` design-var defaults from ``pdk/<pdk>/sizing.yaml`` (eng-strings kept verbatim)."""
     data = _load_yaml(_circuit_dir(circuit, root) / "pdk" / pdk / "sizing.yaml")
     return {
@@ -231,10 +234,11 @@ def resolve_corner(
     Reads the circuit's ``pdk/<pdk>/corners.yaml`` (a generic label → neutral
     ``[{lib_file, section}]`` list) + the PDK supply, and builds a core :class:`Corner`. The
     ``lib_file``/``section`` stay **generic + neutral** (e.g. ``tt`` on
-    ``models.scs``); the operator's ``model_lib_root`` wrapper does the kit-section
+    ``models.scs``); the user's ``model_lib_root`` wrapper does the kit-section
     indirection at run time, and ``apply_corner`` prepends ``model_lib_root``
-    to the ``lib_file``. Raises :class:`AnalogDbUnavailable` for a missing binding and
-    ``KeyError`` for an unknown corner label.
+    to the ``lib_file``. An entry without ``section`` (gf180mcu's ``design.ngspice``) is a
+    library included whole: ``section=None``. Raises :class:`AnalogDbUnavailable` for a
+    missing binding and ``KeyError`` for an unknown corner label.
     """
     data = _load_yaml(_circuit_dir(circuit, root) / "pdk" / pdk / "corners.yaml")
     corners = data.get("corners") or {}
@@ -243,7 +247,10 @@ def resolve_corner(
             f"corner {label!r} not in the {pdk} binding for {circuit}; have {sorted(corners)}"
         )
     includes = [
-        ModelInclude(lib_file=str(inc["lib_file"]), section=str(inc["section"]))
+        ModelInclude(
+            lib_file=str(inc["lib_file"]),
+            section=str(inc["section"]) if inc.get("section") else None,
+        )
         for inc in corners[label]
     ]
     return Corner(
@@ -351,7 +358,11 @@ def _maybe_float(value: Any) -> float | None:
 
 
 def effective_supply(
-    circuit: str, pdk: str, testbench: str = "ac_open_loop", *, root: str | os.PathLike[str] | None = None
+    circuit: str,
+    pdk: str,
+    testbench: str = "ac_open_loop",
+    *,
+    root: str | os.PathLike[str] | None = None,
 ) -> dict[str, float | None]:
     """**The supply source-of-truth pin** — ``{"pdk_rail", "deck_vdd", "open_lane", "closed_lane"}``.
 
@@ -443,9 +454,23 @@ def circuit_pdks(circuit: str, *, root: str | os.PathLike[str] | None = None) ->
 
 
 def circuit_analyses(circuit: str, *, root: str | os.PathLike[str] | None = None) -> list[str]:
-    """Sorted analysis ids a circuit defines (``circuits/<id>/analyses/<id>.yaml``)."""
-    base = _circuit_dir(circuit, root) / "analyses"
-    return sorted(p.stem for p in base.glob("*.yaml")) if base.is_dir() else []
+    """The analysis ids a circuit runs, in ``circuit.yaml analyses:`` (declared) order.
+
+    Mirrors the analog-db runner/export gating (``export._exportable_analyses``, which decides
+    which ``raw/`` decks exist): an id is listed only if ``circuit.yaml`` declares it, its
+    ``analyses/<id>.yaml`` exists, and that descriptor is not ``enabled: false``. An
+    undeclared descriptor on disk (a WIP bench) or a disabled one has no raw deck, so listing
+    it would make :func:`raw_deck_path` look for a file that was never rendered.
+    """
+    cdir = _circuit_dir(circuit, root)
+    if not (cdir / "circuit.yaml").is_file():
+        return []
+    keep: list[str] = []
+    for aid in _load_yaml(cdir / "circuit.yaml").get("analyses") or []:
+        path = cdir / "analyses" / f"{aid}.yaml"
+        if path.is_file() and _load_yaml(path).get("enabled", True):
+            keep.append(str(aid))
+    return keep
 
 
 def probe_engine(
@@ -466,7 +491,9 @@ def probe_engine(
     """
 
     def cap(engine: str | None, ok: bool, reason: str) -> EngineCapability:
-        return EngineCapability(circuit=circuit, pdk=pdk, engine=engine, available=ok, reason=reason)
+        return EngineCapability(
+            circuit=circuit, pdk=pdk, engine=engine, available=ok, reason=reason
+        )
 
     try:
         registry = _pdk_registry(pdk, root)
@@ -506,7 +533,9 @@ def probe_engine(
             vb_env_file and Path(vb_env_file).expanduser().is_file()
         )
         if not bridge_env_ok:
-            reasons.append("no Cadence/virtuoso-bridge env (set SPICEXPLORER_VB_ENV_FILE or a Cadence env var)")
+            reasons.append(
+                "no Cadence/virtuoso-bridge env (set SPICEXPLORER_VB_ENV_FILE or a Cadence env var)"
+            )
         wrapper = (registry.get("corners") or {}).get("lib_file")
         mlr = model_lib_root or os.environ.get("SPICEXPLORER_SPECTRE_MODEL_ROOT")
         mlr_path = Path(mlr).expanduser() if mlr else None
@@ -677,12 +706,14 @@ class CircuitRun:
 
         try:
             with OceanMetricsSession.from_vb_env(env_file=self.vb_env_file) as sess:
-                return sess.measure(
-                    raw_dir, measurements, label=f"{self.circuit}_{self.testbench}"
-                )
+                return sess.measure(raw_dir, measurements, label=f"{self.circuit}_{self.testbench}")
         except OceanMetricsError as exc:  # session couldn't spawn / timed out → Tier-1 fallback
-            _LOG.warning("OCEAN calculator unavailable for %s/%s (%s); Tier-1 fallback",
-                         self.circuit, self.testbench, exc)
+            _LOG.warning(
+                "OCEAN calculator unavailable for %s/%s (%s); Tier-1 fallback",
+                self.circuit,
+                self.testbench,
+                exc,
+            )
             return {}
 
     def default_out(self) -> str:
@@ -748,9 +779,7 @@ class CircuitRun:
             elif meas0 in ("iip3", "iip3_dbv", "im3_dbc"):
                 from spicexplorer_core.measurements import two_tone_indices
 
-                _f0, n1, n2 = two_tone_indices(
-                    float(recipe.pop("f1")), float(recipe.pop("f2"))
-                )
+                _f0, n1, n2 = two_tone_indices(float(recipe.pop("f1")), float(recipe.pop("f2")))
                 recipe["meas"] = {
                     "iip3": "iip3_pss",
                     "iip3_dbv": "iip3_pss_dbv",
@@ -837,16 +866,19 @@ class CircuitRun:
         recipe therefore costs exactly that one metric, not every other metric on the bench.
 
         ⚠️ **Scope of that degradation — measured, corpus-wide, not a tidy-up.** At analog-db
-        ``ed4d7c48``, **224** datasheet metrics across **44 of 81** circuits name a ``meas`` the
-        Tier-1 registry does not define (**74** distinct names; **173** of them on SINGLE-ended
-        circuits, so this is NOT an FD-only problem; 16 of the 17 FD circuits are affected).
-        Each reports ``value=nan, satisfied=False`` — a confident *wrong verdict*, not
-        "unmeasured": measured live, ``buf_001_super_follower/ihp-sg13g2/dc_op`` reports
-        ``v_offset`` NaN/False against its ``[-0.9, -0.2]`` band while the run's own raw already
-        carries ``result.scalar('v_offset', 'op') = -0.4052969699537445``, comfortably inside it.
-        Whether to fall back to that in-deck scalar, and whether ``MetricEval`` should gain a
-        third "not measured" state, are **owner decisions** — see ``doc/TODO.md`` §21, which
-        ``tests/test_analog_db_meas_registry_gap.py`` re-derives and keeps honest."""
+        ``def1e3dc``, **342** datasheet metrics across **68 of 85** circuits name a ``meas`` the
+        Tier-1 registry does not define (**89** distinct names; **264** of them on SINGLE-ended
+        circuits, so this is NOT an FD-only problem; 16 of the 19 FD circuits are affected).
+        Each reports ``value=nan, satisfied=False``, and that is the rule: **owner
+        ruling 2026-09-25 — an unmeasurable metric is FULLY FAILED.** ``MetricEval`` keeps two
+        states (no "not measured"), and there is no fall-back to an in-deck scalar, so a
+        conformance report can never read "could not measure" as "met" (asserted by
+        ``tests/test_nan_metric_ruling.py``). The cost of the ruling, measured live:
+        ``buf_001_super_follower/ihp-sg13g2/dc_op`` reports ``v_offset`` NaN/False against its
+        ``[-0.9, -0.2]`` band while the run's own raw carries ``result.scalar('v_offset', 'op') =
+        -0.4052969699537445``, inside it. See ``doc/TODO.md`` §21 (closed by the ruling), whose
+        figures ``tests/test_analog_db_meas_registry_gap.py`` recomputes (at any other analog-db
+        commit the count may shrink, never grow)."""
         want = set(only) if only is not None else None
         calc_values = self._spectre_calc_values() if self.engine == _SPECTRE else {}
         evals: dict[str, MetricEval] = {}
@@ -863,8 +895,13 @@ class CircuitRun:
             except Exception as exc:  # one bad recipe must not sink the whole bench
                 _LOG.warning(
                     "metric %r (meas=%r) on %s/%s/%s could not be measured (%s: %s); recording NaN",
-                    m.name, m.recipe.get("meas"), self.circuit, self.pdk, self.testbench,
-                    type(exc).__name__, exc,
+                    m.name,
+                    m.recipe.get("meas"),
+                    self.circuit,
+                    self.pdk,
+                    self.testbench,
+                    type(exc).__name__,
+                    exc,
                 )
                 value = float("nan")
             evals[m.name] = MetricEval(m.name, value, m.satisfied(value), m.spec_min, m.spec_max)
@@ -881,7 +918,9 @@ def _apply_sizing_overrides(wrapper: Any, overrides: Mapping[str, Any]) -> None:
     """
     ed = getattr(wrapper, "editor", None)
     if ed is None:
-        raise RuntimeError("the ngspice wrapper exposes no netlist editor; cannot apply sizing_overrides")
+        raise RuntimeError(
+            "the ngspice wrapper exposes no netlist editor; cannot apply sizing_overrides"
+        )
     try:
         declared = {str(n).upper() for n in ed.get_all_parameter_names()}
     except Exception:
@@ -891,7 +930,8 @@ def _apply_sizing_overrides(wrapper: Any, overrides: Mapping[str, Any]) -> None:
             _LOG.warning(
                 "sizing_overrides: %r is not a declared .param in this deck — skipped "
                 "(keeping the committed value). Declared knobs: %s",
-                key, sorted(declared),
+                key,
+                sorted(declared),
             )
             continue
         ed.set_parameter(str(key), str(value))
@@ -926,7 +966,11 @@ def build_ngspice_run(
     from spicexplorer_core.spice_engine import NGSpice_Wrapper
 
     deck = raw_deck_path(circuit, pdk, testbench, root=root)
-    out = Path(output_dir).expanduser() if output_dir else Path(tempfile.mkdtemp(prefix="adb_ngspice_"))
+    out = (
+        Path(output_dir).expanduser()
+        if output_dir
+        else Path(tempfile.mkdtemp(prefix="adb_ngspice_"))
+    )
     wrapper = NGSpice_Wrapper(
         netlist_filename=deck,
         output_folder=out,
@@ -1064,8 +1108,9 @@ def _spectre_analyses(
             "(it would report a ~0 dB return ratio and no margins). Bind a `diffstbprobe` "
             "across the pair before running this bench on the closed lane."
         )
-    context = _spectre_context(testbench, params, supply=supply, differential=differential,
-                               template=template)
+    context = _spectre_context(
+        testbench, params, supply=supply, differential=differential, template=template
+    )
     try:
         from .spectre_templates import bench_analyses
 
@@ -1103,7 +1148,11 @@ def _spectre_analyses(
         return (
             dc_oppoint_analysis(),
             noise_analysis(
-                "vout", iprobe="VINP", start=_num("FSTART"), stop=_num("FSTOP"), dec=int(params["PPD"])
+                "vout",
+                iprobe="VINP",
+                start=_num("FSTART"),
+                stop=_num("FSTOP"),
+                dec=int(params["PPD"]),
             ),
         )
     if testbench == "tran_step":
@@ -1170,8 +1219,9 @@ def bench_ocean_measurements(
     params = analysis_doc.get("params", {})
     supply = pdk_supply(pdk, root=root) if pdk else None
     diff = differential_output(circuit, root=root)
-    context = _spectre_context(testbench, params, supply=supply, differential=diff,
-                               template=analysis_doc.get("template"))
+    context = _spectre_context(
+        testbench, params, supply=supply, differential=diff, template=analysis_doc.get("template")
+    )
     from .ocean_metrics import OceanMeasurement
     from .spectre_templates import bench_measurements
 
@@ -1192,9 +1242,11 @@ def bench_ocean_measurements(
         p, n = diff
         repl = f'(v("{p}")-v("{n}"))'
         measurements = [
-            m if 'v("vout")' not in m.expr
-            else OceanMeasurement(name=m.name, result=m.result,
-                                  expr=m.expr.replace('v("vout")', repl))
+            m
+            if 'v("vout")' not in m.expr
+            else OceanMeasurement(
+                name=m.name, result=m.result, expr=m.expr.replace('v("vout")', repl)
+            )
             for m in measurements
         ]
     return measurements
@@ -1239,7 +1291,10 @@ def build_spectre_run(
         pdk=pdk,
         source_pdk=pdk,
         analyses=_spectre_analyses(
-            testbench, params, supply=supply, root=root,
+            testbench,
+            params,
+            supply=supply,
+            root=root,
             circuit_class=circuit_class(circuit, root=root),
             differential=differential_output(circuit, root=root),
             template=analysis_doc.get("template"),
@@ -1297,8 +1352,14 @@ def run_circuit(
 
     if cap.engine == _NGSPICE:
         result = build_ngspice_run(
-            circuit, pdk, testbench, corner=corner, root=root, output_dir=output_dir,
-            sizing_overrides=sizing_overrides, label=label,
+            circuit,
+            pdk,
+            testbench,
+            corner=corner,
+            root=root,
+            output_dir=output_dir,
+            sizing_overrides=sizing_overrides,
+            label=label,
         )
     elif cap.engine == _SPECTRE:
         if deck_dir is None or work_dir is None:
@@ -1311,9 +1372,17 @@ def run_circuit(
                 "the Spectre lane needs model_lib_root (or $SPICEXPLORER_SPECTRE_MODEL_ROOT) — the operator's neutral corner wrapper dir"
             )
         result = build_spectre_run(
-            circuit, pdk, testbench, corner=corner, model_lib_root=mlr, deck_dir=deck_dir,
-            work_dir=work_dir, root=root, vb_env_file=vb_env_file,
-            sizing_overrides=sizing_overrides, label=label,
+            circuit,
+            pdk,
+            testbench,
+            corner=corner,
+            model_lib_root=mlr,
+            deck_dir=deck_dir,
+            work_dir=work_dir,
+            root=root,
+            vb_env_file=vb_env_file,
+            sizing_overrides=sizing_overrides,
+            label=label,
         )
     else:  # pragma: no cover - probe only reports available for a known engine
         raise EngineUnavailable(f"{circuit}/{pdk}: unroutable engine {cap.engine!r}")
@@ -1331,7 +1400,15 @@ def run_circuit(
     except AnalogDbUnavailable:
         params = {}
     return CircuitRun(
-        circuit=circuit, pdk=pdk, engine=cap.engine, testbench=testbench, corner=corner,
-        result=result, metrics=metrics, params=params, root=root, vb_env_file=vb_env_file,
+        circuit=circuit,
+        pdk=pdk,
+        engine=cap.engine,
+        testbench=testbench,
+        corner=corner,
+        result=result,
+        metrics=metrics,
+        params=params,
+        root=root,
+        vb_env_file=vb_env_file,
         differential=diff,
     )

@@ -18,7 +18,7 @@ back so the optimizer can read the result vectors.
 | `amp_004_folded_cascode.yaml` | folded-cascode OTA | `ac_open_loop`, `dc_op` | 7 widths | dcgain, ugf, pm, i(i_supply) |
 | `ldo_007_pmos.yaml` | PMOS LDO | `dc_op`, `loop_stability`, `load_regulation`, `line_regulation` | 4 (widths + tail bias) | v(vout_dc), i(i_supply), zout_peak_db, load_reg, line_reg |
 | `amp_022_ungroup_demo.yaml` | two-stage Miller | `ac_open_loop`, `dc_op` | 5 knobs, **group-addressed** | dcgain, ugf, pm, i(i_supply) |
-| `ungroup_demo.py` | — | — | — | the live `ungroup:` demo engine (see below); notebook `notebooks/ungroup_resizing.ipynb` |
+| `ungroup_demo.py` | — | — | — | the live `ungroup:` demo engine (see below); notebook `notebooks/ungroup_resizing.py` |
 | `run.py` | — | — | — | a bare step loop that prints score + metrics per loop |
 
 ## How it wires up
@@ -75,9 +75,10 @@ projection may set **`params_file:`** (the circuit's `abstract/params.yaml`) and
 ### Worked example — amp_022, freeing `stage2_load_width`
 
 [`amp_022_ungroup_demo.yaml`](amp_022_ungroup_demo.yaml) is the LIVE worked case (the notebook
-[`../notebooks/ungroup_resizing.ipynb`](../notebooks/ungroup_resizing.ipynb) is the guided, executed
-counterpart; [`ungroup_demo.py`](ungroup_demo.py) is the reusable engine). It drives amp_022's
-committed `ihp-sg13g2` decks with 5 group-addressed knobs, then dissolves ONE tie:
+[`../notebooks/ungroup_resizing.py`](../notebooks/ungroup_resizing.py) is the guided counterpart, a
+marimo notebook that re-runs both optimizations; [`ungroup_demo.py`](ungroup_demo.py) is the
+reusable engine). It drives amp_022's committed `ihp-sg13g2` decks with 5 group-addressed knobs,
+then dissolves ONE tie:
 **`stage2_load_width`** (`kind: shared_geometry`) — the legacy `x_nload_w` opinion welding the
 2nd-stage common-source device width `XM2.w` to the stage-1 mirror-load width `XM3.w` (one knob,
 three devices: `XM3`, its mirror partner `XM4`, and `XM2`). Its own `params.yaml` description says
@@ -131,3 +132,8 @@ metrics (`_SPEC_REGISTRY`) whose goal/target is known. `dut_params` come from `s
 geometry/bias knobs are searched over a band around each committed default, while integer counts,
 passives and the reference are frozen so the operating point (and any regulation target) stays
 well-defined. Run them exactly like the hand-tuned ones: `python ../run.py generated/<id>.yaml`.
+
+The generator writes ngspice projects only. A PDK whose registry marker
+(`_shared/pdk/<pdk>.yaml` `sim_engine`) is not `ngspice` is **refused** before anything is
+written: a `--pdk` whose registry says `sim_engine: spectre` names the `spicexplorer_spectre` lane instead,
+because its `raw/` decks `.lib` a Spectre model wrapper that ngspice cannot load.

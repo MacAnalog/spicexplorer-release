@@ -34,4 +34,4 @@ optimize:
   budget: 2000
   knobs_from: pdk/{pdk}/sizing.yaml
   targets_from: datasheet.yaml
-status: draft                             # DERIVED upward by the verify harness (plan §6)
+status: draft                             # AUTHORED; the derived rung is catalog.json derived_status

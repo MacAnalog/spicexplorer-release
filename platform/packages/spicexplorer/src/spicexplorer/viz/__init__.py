@@ -1,4 +1,5 @@
 """The Visualization Module"""
+
 # Module imports
 from .plotting import Optimization_Log_Visualizer
 
@@ -6,6 +7,6 @@ from .plotting import Optimization_Log_Visualizer
 
 __all__ = [
     # --------------------------------
-    'Optimization_Log_Visualizer',
+    "Optimization_Log_Visualizer",
     # --------------------------------
-    ]
+]

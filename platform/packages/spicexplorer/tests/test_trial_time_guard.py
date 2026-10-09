@@ -21,9 +21,10 @@ Organised around what makes a telemetry feature worthless:
 
 No SPICE, no PDK.
 """
+
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import numpy as np
 import pytest
@@ -40,25 +41,27 @@ from spicexplorer.optimization.trial_timing import (
     TrialTimeMonitor,
 )
 
-CASCODE_YAML = REPO_ROOT / "examples" / "OTA" / "cascode" / "ihp-sg13g2" / "sizing" / "project_setup.yaml"
+CASCODE_YAML = (
+    REPO_ROOT / "examples" / "OTA" / "cascode" / "ihp-sg13g2" / "sizing" / "project_setup.yaml"
+)
 
 
 def _monitor(**kw) -> TrialTimeMonitor:
     """A monitor with SMALL windows so a test reads as a handful of durations, not fifty."""
     kw.setdefault("window", 4)
     kw.setdefault("baseline_trials", 4)
-    kw.setdefault("report_every", 0)          # silence the cadence unless a test asks for it
+    kw.setdefault("report_every", 0)  # silence the cadence unless a test asks for it
     return TrialTimeMonitor(**kw)
 
 
-def _feed(monitor: TrialTimeMonitor, durations) -> List[Any]:
+def _feed(monitor: TrialTimeMonitor, durations) -> list[Any]:
     return [monitor.record(d) for d in durations]
 
 
 # =========================================================== 1. the statistics
 def test_rolling_median_over_a_partial_window():
     m = _monitor()
-    assert m.rolling_median_s is None                      # nothing recorded yet
+    assert m.rolling_median_s is None  # nothing recorded yet
     assert [v.rolling_median_s for v in _feed(m, [10.0, 20.0, 60.0])] == [10.0, 15.0, 20.0]
 
 
@@ -133,10 +136,19 @@ def test_the_absolute_warning_latches_and_re_arms_on_recovery():
 def test_the_relative_warning_measures_growth_against_the_runs_own_baseline():
     """The E-049 signature: the absolute number is unremarkable, the GROWTH is the finding."""
     m = _monitor(warn_factor=3.0, baseline_trials=4, window=2)
-    verdicts = _feed(m, [10.0, 10.0, 10.0, 10.0,   # baseline = 10 s
-                         20.0, 20.0,               # rolling 20 s -> 2.0x, under the factor
-                         40.0,                     # rolling median of [20, 40] = 30 -> 3.0x, NOT >
-                         40.0])                    # rolling 40 s -> 4.0x, over it
+    verdicts = _feed(
+        m,
+        [
+            10.0,
+            10.0,
+            10.0,
+            10.0,  # baseline = 10 s
+            20.0,
+            20.0,  # rolling 20 s -> 2.0x, under the factor
+            40.0,  # rolling median of [20, 40] = 30 -> 3.0x, NOT >
+            40.0,
+        ],
+    )  # rolling 40 s -> 4.0x, over it
     assert [v.warning is not None for v in verdicts] == [False] * 7 + [True]
     assert "4.0x" in verdicts[-1].warning
 
@@ -158,7 +170,7 @@ def test_both_warnings_can_be_configured_together():
 def test_the_stop_fires_once_on_the_crossing():
     m = _monitor(stop_s=100.0, window=1)
     stops = [v.stop for v in _feed(m, [50.0, 150.0, 200.0])]
-    assert stops == [False, True, False]           # the loop breaks on the True; sticky after
+    assert stops == [False, True, False]  # the loop breaks on the True; sticky after
     assert m.stopped is True
 
 
@@ -181,7 +193,14 @@ def test_a_monitor_with_no_thresholds_never_warns_and_never_stops():
 def test_the_cadence_line_appears_only_on_its_tick_and_can_be_silenced():
     m = _monitor(report_every=3)
     assert [v.report is not None for v in _feed(m, [1.0] * 7)] == [
-        False, False, True, False, False, True, False]
+        False,
+        False,
+        True,
+        False,
+        False,
+        True,
+        False,
+    ]
     assert all(v.report is None for v in _feed(_monitor(report_every=0), [1.0] * 10))
 
 
@@ -194,9 +213,17 @@ def test_the_cadence_line_states_the_rolling_median_and_the_growth():
 # =========================================================== 5. config plumbing
 def _config(**kw) -> OptimizerConfig:
     from types import SimpleNamespace
-    base = dict(name="NGOpt", type="nevergrad", budget=10, optimizer_kwargs=None,
-                target_specs=SimpleNamespace(targets=[]), lin_variable_bounds=None,
-                log_variable_bounds=None, loss_function_config=None, random_seed=None)
+
+    base: dict[str, Any] = dict(
+        name="NGOpt",
+        type="nevergrad",
+        budget=10,
+        optimizer_kwargs=None,
+        target_specs=SimpleNamespace(targets=[]),
+        lin_variable_bounds=None,
+        log_variable_bounds=None,
+        random_seed=None,
+    )
     base.update(kw)
     return OptimizerConfig(**base)
 
@@ -209,8 +236,9 @@ def test_the_guards_default_to_off():
     assert cfg.trial_time_report_every == DEFAULT_TRIAL_TIME_REPORT_EVERY
 
 
-@pytest.mark.parametrize("key", ("trial_time_warn_s", "trial_time_warn_factor",
-                                 "trial_time_stop_s"))
+@pytest.mark.parametrize(
+    "key", ("trial_time_warn_s", "trial_time_warn_factor", "trial_time_stop_s")
+)
 @pytest.mark.parametrize("bad", (0, -1.0, float("nan"), float("inf")))
 def test_a_degenerate_threshold_is_rejected_at_load(key, bad):
     """A closed, validated vocabulary like every other knob here: a typo must fail at load, not
@@ -230,8 +258,9 @@ def test_a_negative_report_cadence_is_rejected_but_zero_silences():
 #: tests above are pure. A module-level `pytestmark` would skip those too, and a suite that
 #: silently skips is worse than one that fails, so the mark is bound to a name and applied
 #: per test.
-requires_cascode = pytest.mark.skipif(not CASCODE_YAML.exists(),
-                                      reason="cascode example project missing")
+requires_cascode = pytest.mark.skipif(
+    not CASCODE_YAML.exists(), reason="cascode example project missing"
+)
 
 
 class _FakeClock:
@@ -262,7 +291,7 @@ class _TimedOpt(Base_Optimizer):
     def parameterize(self) -> Any:
         return {}
 
-    def evaluate(self, parameterization) -> Tuple[np.floating, Dict[str, Any]]:
+    def evaluate(self, parameterization) -> tuple[np.floating, dict[str, Any]]:
         return np.float64(0.0), {}
 
     def compute_fitness(self, performance_array):
@@ -272,13 +301,14 @@ class _TimedOpt(Base_Optimizer):
         self.clock.spend_one_trial()
         score = np.float64(float(self.clock.trials))
         self.optimization_log.log.append(
-            OptimizationLogEntry(point=OptimizationPoint(params={}, score=score), fit_summary={}))
+            OptimizationLogEntry(point=OptimizationPoint(params={}, score=score), fit_summary={})
+        )
         return {}, score, {}
 
     def plot_solution(self, parameterization, **kwargs):
         return None
 
-    def save_checkpoint(self, name=None):        # no file IO in these tests
+    def save_checkpoint(self, name=None):  # no file IO in these tests
         return None
 
 
@@ -298,8 +328,7 @@ def _run(tmp_path, monkeypatch, durations, budget, **cfg) -> _TimedOpt:
 
 @requires_cascode
 def test_the_loop_measures_each_trial(tmp_path, monkeypatch):
-    opt = _run(tmp_path, monkeypatch, [3.0, 3.0, 9.0, 9.0], budget=4,
-               trial_time_report_every=0)
+    opt = _run(tmp_path, monkeypatch, [3.0, 3.0, 9.0, 9.0], budget=4, trial_time_report_every=0)
     monitor = opt.trial_time_monitor
     assert monitor is not None and monitor.n == 4
     assert monitor.total_s == pytest.approx(24.0)
@@ -311,24 +340,34 @@ def test_the_default_run_is_unchanged_and_silent(tmp_path, monkeypatch, caplog):
     """The feature is opt-in: with nothing configured a run must still complete its whole budget,
     log no WARNING, and record no stop reason."""
     with caplog.at_level("WARNING", logger="spicexplorer.optimization.base"):
-        opt = _run(tmp_path, monkeypatch, [1.0, 1.0, 1.0, 5000.0, 5000.0, 5000.0], budget=6,
-                   trial_time_report_every=0)
-    assert opt.clock.trials == 6                      # full budget, nothing cut short
+        opt = _run(
+            tmp_path,
+            monkeypatch,
+            [1.0, 1.0, 1.0, 5000.0, 5000.0, 5000.0],
+            budget=6,
+            trial_time_report_every=0,
+        )
+    assert opt.clock.trials == 6  # full budget, nothing cut short
     assert opt.stop_reason is None
     assert opt.trial_time_monitor is not None and not opt.trial_time_monitor.stopped
     # Only this loop's own records — loading the example project warns about its own config.
-    assert [r.message for r in caplog.records
-            if r.name == "spicexplorer.optimization.base"] == []
+    assert [r.message for r in caplog.records if r.name == "spicexplorer.optimization.base"] == []
 
 
 @requires_cascode
 def test_the_loop_warns_when_the_threshold_is_crossed_and_not_before(tmp_path, monkeypatch, caplog):
     with caplog.at_level("WARNING", logger="spicexplorer.optimization.base"):
-        opt = _run(tmp_path, monkeypatch, [1.0] * 5 + [400.0] * 5, budget=10,
-                   trial_time_warn_s=100.0, trial_time_report_every=0)
+        opt = _run(
+            tmp_path,
+            monkeypatch,
+            [1.0] * 5 + [400.0] * 5,
+            budget=10,
+            trial_time_warn_s=100.0,
+            trial_time_report_every=0,
+        )
     warnings = [r.message for r in caplog.records if "per-trial wall time" in r.message]
-    assert len(warnings) == 1, warnings                # latched: one WARNING, not one per trial
-    assert opt.clock.trials == 10                      # warn-only: the budget still runs out
+    assert len(warnings) == 1, warnings  # latched: one WARNING, not one per trial
+    assert opt.clock.trials == 10  # warn-only: the budget still runs out
 
 
 @requires_cascode
@@ -345,8 +384,14 @@ def test_the_guard_stops_the_run_gracefully(tmp_path, monkeypatch, caplog):
     """A guard stop is a STOP, not a crash: `optimize()` returns normally, the reason is on the
     instance, and the best-so-far is still reportable — which a hand-killed run cannot give you."""
     with caplog.at_level("WARNING", logger="spicexplorer.optimization.base"):
-        opt = _run(tmp_path, monkeypatch, [1.0] * 4 + [500.0] * 40, budget=200,
-                   trial_time_stop_s=100.0, trial_time_report_every=0)
+        opt = _run(
+            tmp_path,
+            monkeypatch,
+            [1.0] * 4 + [500.0] * 40,
+            budget=200,
+            trial_time_stop_s=100.0,
+            trial_time_report_every=0,
+        )
     assert opt.clock.trials < 200, "the guard never fired"
     assert opt.stop_reason is not None and "per-trial time guard" in opt.stop_reason
     assert any("per-trial time guard" in r.message for r in caplog.records)
@@ -355,7 +400,8 @@ def test_the_guard_stops_the_run_gracefully(tmp_path, monkeypatch, caplog):
 
 @requires_cascode
 def test_no_stop_threshold_means_no_stop_however_slow_it_gets(tmp_path, monkeypatch):
-    opt = _run(tmp_path, monkeypatch, [1e6] * 5, budget=5,
-               trial_time_warn_s=1.0, trial_time_report_every=0)
+    opt = _run(
+        tmp_path, monkeypatch, [1e6] * 5, budget=5, trial_time_warn_s=1.0, trial_time_report_every=0
+    )
     assert opt.clock.trials == 5
     assert opt.stop_reason is None

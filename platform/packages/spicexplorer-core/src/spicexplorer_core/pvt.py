@@ -13,8 +13,9 @@ a TYPE_CHECKING import to dodge a cycle). Re-exported from
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from spicexplorer_core.eng import parse_value
 
@@ -53,12 +54,24 @@ PVT_MODES = ("single", "multi")
 SCORE_AGGREGATION_STRATEGIES = ("sum", "mean", "min", "worst_spec")
 
 _SCORE_AGGREGATION_ALIASES = {
-    "sum": "sum", "add": "sum", "total": "sum",
-    "mean": "mean", "avg": "mean", "average": "mean",
-    "min": "min", "worst": "min", "worst_case": "min", "worst-case": "min", "worstcase": "min",
-    "worst_spec": "worst_spec", "worst-spec": "worst_spec", "worstspec": "worst_spec",
-    "per_spec_min": "worst_spec", "per-spec-min": "worst_spec",
-    "worst_case_per_spec": "worst_spec", "worst-case-per-spec": "worst_spec",
+    "sum": "sum",
+    "add": "sum",
+    "total": "sum",
+    "mean": "mean",
+    "avg": "mean",
+    "average": "mean",
+    "min": "min",
+    "worst": "min",
+    "worst_case": "min",
+    "worst-case": "min",
+    "worstcase": "min",
+    "worst_spec": "worst_spec",
+    "worst-spec": "worst_spec",
+    "worstspec": "worst_spec",
+    "per_spec_min": "worst_spec",
+    "per-spec-min": "worst_spec",
+    "worst_case_per_spec": "worst_spec",
+    "worst-case-per-spec": "worst_spec",
 }
 
 
@@ -87,27 +100,66 @@ def _normalize_pvt_block(proj: dict) -> None:
       • a singular `supply: {node, value}` is widened to `supplies: [...]` so the schema
         extends to multi-rail designs without breaking.
       • numeric env fields (`temp`, supply `value`, `params` values) are coerced via
-        `parse_value`, so engineering strings ("1V2" style "1.2", "900m") and ints work.
+        `parse_value`, so plain numbers, ints and engineering strings with ONE trailing
+        suffix ("1.2", "900m", "5meg") work; an infix-unit spelling such as "1V2" is
+        NOT understood (write 1.2).
+      • a model include without a `section` keeps `section: None` — a library pulled in
+        whole (the spice engine emits `.include <lib_file>` for it).
 
     No-op if `proj` has no `pvt` key. Raises ValueError on a dangling `process`
     bundle reference, on a corner carrying BOTH `process` and inline `model_includes`,
     or on a corner carrying BOTH a singular `supply` and a plural `supplies` — each
-    ambiguity is refused rather than silently resolved.
+    ambiguity is refused rather than silently resolved. `corners` that is not a list
+    of corner mappings (a list of corner names, a mapping keyed by name) is refused
+    too. Malformed env values are refused the same way, naming the corner: a supply
+    that is not a `{node, value}` mapping (or `supplies` that is not a list of them),
+    `params` that is not a mapping, and a `temp`/supply/param value that is not a
+    finite number.
     """
     pvt = proj.get("pvt")
     if not isinstance(pvt, dict):
         return
 
-    bundles: Dict[str, list] = pvt.pop("process_bundles", None) or {}
+    bundles: dict[str, list] = pvt.pop("process_bundles", None) or {}
 
     def _coerce_includes(raw_list) -> list:
         out = []
         for inc in raw_list or []:
-            out.append({"lib_file": str(inc["lib_file"]), "section": str(inc["section"])})
+            section = inc.get("section")
+            out.append(
+                {
+                    "lib_file": str(inc["lib_file"]),
+                    "section": None if section in (None, "") else str(section),
+                }
+            )
         return out
 
+    def _env_number(corner_name: str, what: str, raw: Any) -> float:
+        # parse_value lets `inf`/NaN through and turns malformed input into a bare ValueError or
+        # AttributeError; either would appear far from the YAML (ngspice failing on
+        # `.options temp=inf`, a trace with no corner in it), so refuse both here, named.
+        try:
+            value = float(parse_value(raw))
+        except (ValueError, TypeError, AttributeError) as exc:
+            raise ValueError(
+                f"PVT corner '{corner_name}': {what} {raw!r} is not a number ({exc})."
+            ) from exc
+        if not math.isfinite(value):
+            raise ValueError(f"PVT corner '{corner_name}': {what} must be finite, got {raw!r}.")
+        return value
+
     corners = pvt.get("corners") or []
-    for corner in corners:
+    if not isinstance(corners, list):
+        raise ValueError(
+            f"pvt.corners must be a list of corner mappings ({{name, temp, supply, ...}}), "
+            f"got {type(corners).__name__} {corners!r}."
+        )
+    for i, corner in enumerate(corners):
+        if not isinstance(corner, dict):
+            raise ValueError(
+                f"pvt.corners[{i}] must be a corner mapping ({{name, temp, supply, ...}}), "
+                f"got {type(corner).__name__} {corner!r}."
+            )
         # process bundle reference  →  concrete model_includes
         bundle_ref = corner.pop("process", None)
         if bundle_ref is not None and "model_includes" in corner:
@@ -141,14 +193,32 @@ def _normalize_pvt_block(proj: dict) -> None:
         if single_supply is not None:
             corner["supplies"] = [single_supply]
 
-        # numeric coercion (env)
+        # numeric coercion (env) — shape-checked here, so a malformed rail is a corner-named
+        # error at load time rather than a dacite trace or a silently-skipped coercion
+        name = corner.get("name", "?")
         if "temp" in corner:
-            corner["temp"] = float(parse_value(corner["temp"]))
-        for s in corner.get("supplies", []) or []:
-            if "value" in s:
-                s["value"] = float(parse_value(s["value"]))
-        if corner.get("params"):
-            corner["params"] = {k: float(parse_value(v)) for k, v in corner["params"].items()}
+            corner["temp"] = _env_number(name, "temp", corner["temp"])
+        supplies = corner.get("supplies")
+        if supplies is not None and not isinstance(supplies, list):
+            raise ValueError(
+                f"PVT corner '{name}': 'supplies' must be a list of {{node, value}} "
+                f"mappings, got {type(supplies).__name__} {supplies!r}."
+            )
+        for s in supplies or []:
+            if not isinstance(s, dict) or s.get("node") in (None, "") or "value" not in s:
+                raise ValueError(
+                    f"PVT corner '{name}': a supply must be a mapping with both 'node' and "
+                    f"'value' (e.g. {{node: VDD, value: 1.8}}), got {s!r}."
+                )
+            s["value"] = _env_number(name, f"supply '{s['node']}' value", s["value"])
+        params = corner.get("params")
+        if params is not None and not isinstance(params, dict):
+            raise ValueError(
+                f"PVT corner '{name}': 'params' must be a mapping of .param name -> value, "
+                f"got {type(params).__name__} {params!r}."
+            )
+        if params:
+            corner["params"] = {k: _env_number(name, f"param '{k}'", v) for k, v in params.items()}
 
 
 # ---------- PVT Corner System ----------
@@ -163,15 +233,19 @@ class ModelInclude:
 
     The spice engine emits this as `.lib <lib_file> <section>` (ngspice); core never
     enumerates valid files or sections. PDK-specific tokens (e.g. `cornerMOSlv.lib`,
-    `mos_tt`) live only in the YAML, never in core.
+    `mos_tt`) appear only in the YAML, never in core. A `section` of None is a library
+    pulled in whole — gf180mcu's `design.ngspice` has no sections — and is emitted as
+    `.include <lib_file>` (Spectre: `include "<lib_file>"` with no `section=`).
     """
+
     lib_file: str
-    section: str
+    section: str | None = None
 
 
 @dataclass
 class SupplyOverride:
     """A supply-rail override: the `.param` name to set and its value (volts)."""
+
     node: str
     value: float
 
@@ -184,15 +258,16 @@ class Corner:
     `process: <bundle>` reference is resolved into this list at load time (see
     `_normalize_pvt_block`), so core only ever sees concrete includes.
     """
+
     name: str
-    model_includes: List[ModelInclude] = field(default_factory=list)
+    model_includes: list[ModelInclude] = field(default_factory=list)
     temp: float = 27.0
-    supplies: List[SupplyOverride] = field(default_factory=list)
-    params: Dict[str, float] = field(default_factory=dict)
+    supplies: list[SupplyOverride] = field(default_factory=list)
+    params: dict[str, float] = field(default_factory=dict)
     # Extra simulator `.options` cards (e.g. {"seed": 7} → `.options seed=7` for a
     # Monte Carlo sample's RNG). Engine-neutral names; each backend's apply_corner
     # decides the concrete emission.
-    options: Dict[str, Any] = field(default_factory=dict)
+    options: dict[str, Any] = field(default_factory=dict)
     enabled: bool = True
 
 
@@ -213,9 +288,10 @@ class PVTConfig:
     **Cost.** In ``multi`` mode a trial simulates every enabled corner, so the
     per-trial simulation cost is multiplied by ``len(corners_to_run())``.
     """
+
     active_corner: str
-    corners: List[Corner] = field(default_factory=list)
-    model_lib_root: Optional[str] = None
+    corners: list[Corner] = field(default_factory=list)
+    model_lib_root: str | None = None
     mode: str = "single"
     score_aggregation: str = "mean"
 
@@ -228,15 +304,12 @@ class PVTConfig:
         dupes = sorted({n for n in names if names.count(n) > 1})
         if dupes:
             raise ValueError(
-                f"Duplicate PVT corner name(s) {dupes}. "
-                "Each PVT corner must have a unique name."
+                f"Duplicate PVT corner name(s) {dupes}. Each PVT corner must have a unique name."
             )
 
         self.mode = str(self.mode).strip().lower()
         if self.mode not in PVT_MODES:
-            raise ValueError(
-                f"Unknown pvt.mode '{self.mode}'. Use one of {list(PVT_MODES)}."
-            )
+            raise ValueError(f"Unknown pvt.mode '{self.mode}'. Use one of {list(PVT_MODES)}.")
         # Normalize the aggregation alias eagerly so every consumer (optimizer,
         # API summary, wizard round-trip) only ever sees a canonical name.
         self.score_aggregation = normalize_score_aggregation(self.score_aggregation)
@@ -301,7 +374,7 @@ class PVTConfig:
                 "or the per-corner run-folder labels. Rename the corner(s) (e.g. 'tt_27C_1V5')."
             )
 
-        def _footprint(c: "Corner"):
+        def _footprint(c: Corner):
             return (
                 sorted({inc.lib_file.rsplit("/", 1)[-1] for inc in c.model_includes}),
                 sorted({s.node for s in c.supplies}),
@@ -322,19 +395,18 @@ class PVTConfig:
                     "enabled corner the same set of libs/supply nodes/param keys."
                 )
 
-    def get(self, name: str) -> Optional["Corner"]:
+    def get(self, name: str) -> Corner | None:
         for c in self.corners:
             if c.name == name:
                 return c
         return None
 
-    def get_active(self) -> "Corner":
+    def get_active(self) -> Corner:
         corner = self.get(self.active_corner)
         if corner is None:
             available = [c.name for c in self.corners]
             raise ValueError(
-                f"active_corner '{self.active_corner}' not found among defined "
-                f"corners {available}."
+                f"active_corner '{self.active_corner}' not found among defined corners {available}."
             )
         if not corner.enabled:
             # The author explicitly disabled this corner yet left it active — warn rather than
@@ -345,13 +417,13 @@ class PVTConfig:
             )
         return corner
 
-    def enabled_corners(self) -> List["Corner"]:
+    def enabled_corners(self) -> list[Corner]:
         return [c for c in self.corners if c.enabled]
 
     def is_multi(self) -> bool:
         return self.mode == "multi"
 
-    def corners_to_run(self) -> List["Corner"]:
+    def corners_to_run(self) -> list[Corner]:
         """The corners one evaluation must simulate: every enabled corner in multi
         mode, else just the active corner (single-corner behavior)."""
         if self.is_multi():
@@ -375,6 +447,7 @@ class PVTConfig:
 # fan-out then runs/labels each sample like any corner (`run_<n>_<tb>__mc<i>`),
 # so checkpoints, artifact naming, and the viewer need nothing new.
 
+
 def _lib_sections(lib_path: str) -> set:
     """The section names a SPICE library file defines (`.lib <name>` single-token lines).
 
@@ -395,7 +468,7 @@ def _lib_sections(lib_path: str) -> set:
     return sections
 
 
-def _resolve_lib_file(lib_file: str, search_roots: List[str]) -> Optional[str]:
+def _resolve_lib_file(lib_file: str, search_roots: list[str]) -> str | None:
     """Find a corner's ``lib_file`` on disk: as-given, else by basename under the roots."""
     import os
 
@@ -412,13 +485,13 @@ def _resolve_lib_file(lib_file: str, search_roots: List[str]) -> Optional[str]:
 
 
 def monte_carlo_corners(
-    base: "Corner",
+    base: Corner,
     samples: int,
     *,
     seed0: int = 1,
     mismatch_suffix: str = "_mismatch",
-    lib_search_roots: Optional[List[str]] = None,
-) -> List["Corner"]:
+    lib_search_roots: list[str] | None = None,
+) -> list[Corner]:
     """Clone ``base`` into ``mc1..mcN`` statistical sample corners.
 
     Every model include whose library defines a ``<section><mismatch_suffix>``
@@ -434,7 +507,7 @@ def monte_carlo_corners(
         raise ValueError(f"monte_carlo needs at least 2 samples (got {samples})")
     roots = lib_search_roots if lib_search_roots is not None else [os.environ.get("PDK_ROOT", "")]
 
-    swapped_includes: List[ModelInclude] = []
+    swapped_includes: list[ModelInclude] = []
     swapped_any = False
     for inc in base.model_includes:
         target = f"{inc.section}{mismatch_suffix}"

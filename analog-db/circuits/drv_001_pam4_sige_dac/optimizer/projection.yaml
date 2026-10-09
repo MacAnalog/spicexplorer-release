@@ -26,12 +26,12 @@ project:
       vce_max: 2.0               # VBIC valid V_CE 0.4..2.0 V
       max_vcc: 4.0
   testbenches:
-    - {name: tb_gain_lsb, netlist: testbenches/tb_gain_lsb.spice, enable: true}
-    - {name: tb_gain_msb, netlist: testbenches/tb_gain_msb.spice, enable: true}
-    - {name: tb_s11,      netlist: testbenches/tb_s11.spice,      enable: true}
-    - {name: tb_s22,      netlist: testbenches/tb_s22.spice,      enable: true}
-    - {name: tb_bias,     netlist: testbenches/tb_bias.spice,     enable: true}
-    - {name: tb_swing,    netlist: testbenches/tb_swing.spice,    enable: true}
+    - {name: tb_gain_lsb, netlist: testbenches/tb_gain_lsb.spice, params: [], enable: true}
+    - {name: tb_gain_msb, netlist: testbenches/tb_gain_msb.spice, params: [], enable: true}
+    - {name: tb_s11,      netlist: testbenches/tb_s11.spice,      params: [], enable: true}
+    - {name: tb_s22,      netlist: testbenches/tb_s22.spice,      params: [], enable: true}
+    - {name: tb_bias,     netlist: testbenches/tb_bias.spice,     params: [], enable: true}
+    - {name: tb_swing,    netlist: testbenches/tb_swing.spice,    params: [], enable: true}
   optimizer_config:
     type: nevergrad
     random_seed: 48

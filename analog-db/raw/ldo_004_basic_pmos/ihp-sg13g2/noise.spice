@@ -12,7 +12,15 @@
 ** ltspice/Noise_6p38..42.asc (`.noise v(vout)` + integrated output noise). ngspice's `.noise`
 ** needs an independent source as its "input"; the supply Vdd serves (the DUT's reference is
 ** internal to the 3-port subckt), so only the OUTPUT-referred noise is meaningful here:
-** vn_out_rms = sqrt(onoise_total) over FSTART..FSTOP.
+** vn_out_rms = onoise_total over FSTART..FSTOP.
+**
+** UNIT: ngspice's `.noise` integrated totals (`onoise_total`/`inoise_total`) are ALREADY the
+** integrated RMS quantities (V rms at the output), NOT the mean-square V^2/Hz integral -- ngspice
+** takes the square root itself when it accumulates the band. Measured on a 1k resistor with
+** `noise v(out) V1 dec 10 1 1meg` at 27 C: onoise_total = 4.071369e-06, against the analytic
+** sqrt(4kTR*df) = sqrt(4*1.38e-23*300*1e3*1e6) = 4.07e-06 V rms. So NEVER apply a second sqrt
+** here: it used to read `sqrt(onoise_total)` and reported 2.018e-03 for that same resistor --
+** wrong by ~500x, and worse the smaller the true noise.
 ** Bindings: DUT PORT_LINE VDD ILOAD COUT FSTART FSTOP PPD PDK_INCLUDE.
 .lib cornerMOSlv.lib mos_tt
 .lib cornerRES.lib res_typ
@@ -30,7 +38,7 @@ XDUT vdd vout vss ldo_004_basic_pmos
 .control
   set filetype=ascii
   noise v(vout) Vdd dec 10 10 10meg
-  let vn_out_rms = sqrt(onoise_total)
+  let vn_out_rms = onoise_total
   print onoise_total vn_out_rms
   write
   quit

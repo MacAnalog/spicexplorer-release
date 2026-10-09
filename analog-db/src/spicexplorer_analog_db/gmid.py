@@ -19,8 +19,10 @@ pygmid has no ngspice backend (its sweeper is Spectre-only); it is used here pur
 from __future__ import annotations
 
 import json
+import logging
 import pickle
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -32,6 +34,8 @@ from .bindings import (
     _SCALE_UM_PDKS,  # PDKs whose geometry is bare-µm (`.option scale=1u`); else 'u'
 )
 
+logger = logging.getLogger(__name__)
+
 # ── model families ──────────────────────────────────────────────────────────────────────────
 # How each family names the operating-point quantities + how its noise PSD is obtained. The
 # capacitance reductions (intrinsic + overlap/junction, with the sign convention) follow the
@@ -39,12 +43,20 @@ from .bindings import (
 # PSD is the squared onoise components; 'op' = PSP exposes sid/sfl directly at the operating point.
 _FAMILY = {
     "bsim4": {
-        "id": "id", "gmb": "gmbs", "noise": "ac", "finger": "nf",
-        "overlap": ("cgdo", "cgso"), "junction": ("capbd", "capbs"),
+        "id": "id",
+        "gmb": "gmbs",
+        "noise": "ac",
+        "finger": "nf",
+        "overlap": ("cgdo", "cgso"),
+        "junction": ("capbd", "capbs"),
     },
     "psp": {
-        "id": "ids", "gmb": "gmb", "noise": "op", "finger": "ng",
-        "overlap": ("cgdol", "cgsol"), "junction": ("cjd", "cjs"),
+        "id": "ids",
+        "gmb": "gmb",
+        "noise": "op",
+        "finger": "ng",
+        "overlap": ("cgdol", "cgsol"),
+        "junction": ("cjd", "cjs"),
     },
 }
 # device op-point params saved on every device (besides id/gmb/noise, which are family-specific)
@@ -56,28 +68,31 @@ class GmidConfig:
     """One gm/ID characterization run (a single device + corner over an L×VGS×VDS×VSB grid)."""
 
     pdk: str
-    device: str                       # the exact PDK model, e.g. nfet_03v3 / sky130_fd_pr__pfet_01v8
-    family: str                       # 'bsim4' | 'psp'
-    probe: str                        # the inner op-probe instance, e.g. "m.xm1.m{device}" / "n.xm1.n{device}"
+    device: str  # the exact PDK model, e.g. nfet_03v3 / sky130_fd_pr__pfet_01v8
+    family: str  # 'bsim4' | 'psp'
+    probe: str  # the inner op-probe instance, e.g. "m.xm1.m{device}" / "n.xm1.n{device}"
     corner: str = "tt"
-    polarity: str = "n"               # 'n' | 'p' (pmos sweeps negative biases)
+    polarity: str = "n"  # 'n' | 'p' (pmos sweeps negative biases)
     width_um: float = 5.0
     nfing: int = 1
     temp_k: float = 300.0
-    vgs: tuple[float, float, float] = (0.0, 0.025, 1.8)   # (start, step, stop)
+    vgs: tuple[float, float, float] = (0.0, 0.025, 1.8)  # (start, step, stop)
     vds: tuple[float, float, float] = (0.0, 0.025, 1.8)
     vsb: tuple[float, float, float] = (0.0, -0.2, -0.4)
     length_um: list[float] = field(default_factory=lambda: [0.15, 0.3, 0.5, 1.0, 2.0])
     info: str = ""
-    corner_override: dict[str, Any] = field(default_factory=dict)  # variant corner-lib/section override
+    corner_override: dict[str, Any] = field(
+        default_factory=dict
+    )  # variant corner-lib/section override
 
     @property
     def probe_inst(self) -> str:
         return self.probe.format(device=self.device)
 
     @classmethod
-    def from_registry(cls, pdk: str, device: str | None = None, corner: str = "tt",
-                      **overrides: Any) -> GmidConfig:
+    def from_registry(
+        cls, pdk: str, device: str | None = None, corner: str = "tt", **overrides: Any
+    ) -> GmidConfig:
         """Build a config from the PDK registry's ``gmid`` defaults (with optional overrides)."""
         reg = pdks.load_registry(pdk)
         g = reg.get("gmid")
@@ -95,9 +110,15 @@ class GmidConfig:
                 break
         sw = g.get("sweep", {})
         cfg = cls(
-            pdk=pdk, device=device, family=g["family"], probe=g["probe"], corner=corner,
-            polarity=polarity, width_um=float(g.get("width_um", 5.0)),
-            nfing=int(g.get("nfing", 1)), temp_k=float(g.get("temp_k", 300.0)),
+            pdk=pdk,
+            device=device,
+            family=g["family"],
+            probe=g["probe"],
+            corner=corner,
+            polarity=polarity,
+            width_um=float(g.get("width_um", 5.0)),
+            nfing=int(g.get("nfing", 1)),
+            temp_k=float(g.get("temp_k", 300.0)),
             vgs=tuple(sw.get("vgs", (0.0, 0.025, 1.8))),
             vds=tuple(sw.get("vds", (0.0, 0.025, 1.8))),
             vsb=tuple(sw.get("vsb", (0.0, -0.2, -0.4))),
@@ -132,7 +153,7 @@ def axes(cfg: GmidConfig) -> dict[str, np.ndarray]:
         "L": np.array(cfg.length_um, dtype=float),
         "VGS": _grid(*cfg.vgs),
         "VDS": _grid(*cfg.vds),
-        "VSB": np.abs(_grid(*cfg.vsb)),   # stored positive (the deck sweeps vb negative)
+        "VSB": np.abs(_grid(*cfg.vsb)),  # stored positive (the deck sweeps vb negative)
     }
 
 
@@ -142,7 +163,9 @@ def _fmt_um(value: float, pdk: str) -> str:
     return txt if pdk in _SCALE_UM_PDKS else f"{txt}u"
 
 
-def _corner_lines(registry: dict[str, Any], corner: str, override: dict[str, Any] | None = None) -> str:
+def _corner_lines(
+    registry: dict[str, Any], corner: str, override: dict[str, Any] | None = None
+) -> str:
     """The ``.lib``/``.include`` lines selecting ``corner`` (mirrors the binding's corners.yaml).
 
     ``override`` (a device-variant's ``gmid.variants[*].corners``) is shallow-merged over the PDK's
@@ -154,7 +177,9 @@ def _corner_lines(registry: dict[str, Any], corner: str, override: dict[str, Any
     lines: list[str] = []
     if "per_corner" in c:
         if corner not in c["per_corner"]:
-            raise ValueError(f"corner {corner!r} not available for this device (have {sorted(c['per_corner'])})")
+            raise ValueError(
+                f"corner {corner!r} not available for this device (have {sorted(c['per_corner'])})"
+            )
         lines += [f".include {inc}" for inc in c.get("includes", [])]
         lines += [f".lib {lib} {s}" for s in c.get("pre_sections", [])]
         lines += [f".lib {lib} {s}" for s in c["per_corner"][corner]]
@@ -186,17 +211,19 @@ def build_deck(cfg: GmidConfig, registry: dict[str, Any]) -> tuple[str, str]:
     w = _fmt_um(cfg.width_um, cfg.pdk)
     l0 = _fmt_um(cfg.length_um[0], cfg.pdk)
     l_values = " ".join(_fmt_um(v, cfg.pdk) for v in cfg.length_um)
+
     # bias grids: pmos sweeps the negatives of the n-grids (start/stop scaled by sgn)
     # cfg.vsb is the BULK-voltage sweep for an nmos (e.g. (0, -0.2, -0.4) → VSB 0/0.2/0.4); a pmos
     # mirrors all three biases to the opposite sign. The stored VSB axis is |vb| (see axes()).
     def z(v: float) -> float:
         return 0.0 if v == 0 else v  # normalize -0.0 → 0.0 (pmos sgn flip) for clean deck literals
+
     vg0, vgs_step, vg1 = (z(sgn * cfg.vgs[0]), sgn * cfg.vgs[1], sgn * cfg.vgs[2])
     vd0, vds_step, vd1 = (z(sgn * cfg.vds[0]), sgn * cfg.vds[1], sgn * cfg.vds[2])
     vb0, vsb_step, vb1 = (z(sgn * cfg.vsb[0]), sgn * cfg.vsb[1], sgn * cfg.vsb[2])
 
     # XM1 port order: sky130/gf180 = (d g 0 b); ihp PSP = (0 g d b) — keep each PDK's verified order.
-    port_line = ("0 g d b" if cfg.family == "psp" else "d g 0 b")
+    port_line = "0 g d b" if cfg.family == "psp" else "d g 0 b"
     save_lines = "\n".join(f".save @{inst}[{p}]" for p in _probe_params(cfg))
     save_lines += "\n" + "\n".join(f".save @v{n}[dc]" for n in ("g", "d", "b"))
     save_lines += "\n.save g d b n"
@@ -263,7 +290,11 @@ def _clean_col(name: str) -> str:
     if m:
         return m.group(1)
     if name.startswith("onoise"):
-        return "n_1f" if "1overf" in name else ("n_id" if name.endswith(".id") else "n_" + name.rsplit(".", 1)[-1])
+        return (
+            "n_1f"
+            if "1overf" in name
+            else ("n_id" if name.endswith(".id") else "n_" + name.rsplit(".", 1)[-1])
+        )
     return name
 
 
@@ -321,15 +352,24 @@ def parse_lut(text: str, cfg: GmidConfig) -> dict[str, Any]:
         return np.reshape(col(name), dims)  # foreach order = (L, VGS, VDS, VSB)
 
     fam = _FAMILY[cfg.family]
-    ov_d, ov_s = (arr(o) for o in fam["overlap"])      # gate-drain / gate-source overlap
-    jn_d, jn_s = (arr(j) for j in fam["junction"])     # drain / source junction
-    sign = 1.0 if cfg.family == "psp" else -1.0        # BSIM intrinsic cgd/cgs are negative
+    ov_d, ov_s = (arr(o) for o in fam["overlap"])  # gate-drain / gate-source overlap
+    jn_d, jn_s = (arr(j) for j in fam["junction"])  # drain / source junction
+    sign = 1.0 if cfg.family == "psp" else -1.0  # BSIM intrinsic cgd/cgs are negative
     lut: dict[str, Any] = {
-        "INFO": cfg.info, "CORNER": cfg.corner.upper(), "TEMP": float(cfg.temp_k),
-        "NFING": int(cfg.nfing), "W": float(cfg.width_um),
-        "L": L, "VGS": VGS, "VDS": VDS, "VSB": VSB,
-        "ID": arr(fam["id"]), "VT": arr("vth"), "GM": arr("gm"),
-        "GMB": arr(fam["gmb"]), "GDS": arr("gds"),
+        "INFO": cfg.info,
+        "CORNER": cfg.corner.upper(),
+        "TEMP": float(cfg.temp_k),
+        "NFING": int(cfg.nfing),
+        "W": float(cfg.width_um),
+        "L": L,
+        "VGS": VGS,
+        "VDS": VDS,
+        "VSB": VSB,
+        "ID": arr(fam["id"]),
+        "VT": arr("vth"),
+        "GM": arr("gm"),
+        "GMB": arr(fam["gmb"]),
+        "GDS": arr("gds"),
         "CGG": arr("cgg") + ov_d + ov_s,
         "CGB": -arr("cgb"),
         "CGD": sign * arr("cgd") + ov_d,
@@ -355,7 +395,7 @@ def parse_lut(text: str, cfg: GmidConfig) -> dict[str, Any]:
 
 _DEFAULT_OUT_ROOT = "~/.spicexplorer/gmid"
 _NOMINAL_TEMP_C = 27.0  # 27 °C tables carry NO temp suffix (back-compat); others get `__<T>C`
-_NOMINAL_WF_UM = 5.0    # 5 µm finger carries NO wf suffix (the default LUT); others get `__wf<W>u`
+_NOMINAL_WF_UM = 5.0  # 5 µm finger carries NO wf suffix (the default LUT); others get `__wf<W>u`
 
 
 def store_root(pdk: str) -> Path:
@@ -368,6 +408,9 @@ def store_root(pdk: str) -> Path:
     try:
         g = pdks.load_registry(pdk).get("gmid", {}) or {}
     except Exception:
+        logger.debug(
+            "no readable PDK registry for %r; using the default LUT store", pdk, exc_info=True
+        )
         g = {}
     root = Path(str(g.get("out_root", _DEFAULT_OUT_ROOT))).expanduser()
     return root / pdk
@@ -402,8 +445,12 @@ def _wf_suffix(wf_um: float | None) -> str:
 
 
 def lut_filename(
-    device: str, corner: str = "tt", temp_c: float | None = None,
-    wf_um: float | None = None, *, ext: str = "pkl",
+    device: str,
+    corner: str = "tt",
+    temp_c: float | None = None,
+    wf_um: float | None = None,
+    *,
+    ext: str = "pkl",
 ) -> str:
     """``<device>__<corner>[__<T>C][__wf<W>u].<ext>`` — optional segments appear only off-nominal."""
     return f"{device}__{corner}{_temp_suffix(temp_c)}{_wf_suffix(wf_um)}.{ext}"
@@ -430,14 +477,24 @@ def parse_stem(stem: str) -> tuple[str, str, float, float]:
     return device, corner, temp_c, wf_um
 
 
-def lut_path_for(pdk: str, device: str, corner: str = "tt", temp_c: float | None = None,
-                 wf_um: float | None = None) -> Path:
+def lut_path_for(
+    pdk: str,
+    device: str,
+    corner: str = "tt",
+    temp_c: float | None = None,
+    wf_um: float | None = None,
+) -> Path:
     """The **canonical write** path for a (pdk, device, corner[, temp, finger-W]) — in the store."""
     return store_root(pdk) / lut_filename(device, corner, temp_c, wf_um)
 
 
-def find_lut_path(pdk: str, device: str, corner: str = "tt", temp_c: float | None = None,
-                  wf_um: float | None = None) -> Path:
+def find_lut_path(
+    pdk: str,
+    device: str,
+    corner: str = "tt",
+    temp_c: float | None = None,
+    wf_um: float | None = None,
+) -> Path:
     """The first EXISTING LUT across the search dirs; the canonical path (for a clear error) if none."""
     name = lut_filename(device, corner, temp_c, wf_um)
     for d in _search_dirs(pdk):
@@ -522,19 +579,35 @@ def build_manifest(
             "VSB_V": {**_axis_spec(lut["VSB"]), "stored": "magnitude"},
         },
         "params": params,
-        "lut_file": f"{cfg.device}__{cfg.corner}.pkl",
-        "provenance": {"tool": "analog-db gmid-extract", "ngspice": ngspice, "extracted_at": extracted_at},
+        "lut_file": lut_path(
+            cfg
+        ).name,  # the tagged name (__<T>C, __wf<W>u), as write_lut uses (#76)
+        "provenance": {
+            "tool": "analog-db gmid-extract",
+            "ngspice": ngspice,
+            "extracted_at": extracted_at,
+        },
     }
 
 
-def manifest_path_for(pdk: str, device: str, corner: str = "tt", temp_c: float | None = None,
-                      wf_um: float | None = None) -> Path:
+def manifest_path_for(
+    pdk: str,
+    device: str,
+    corner: str = "tt",
+    temp_c: float | None = None,
+    wf_um: float | None = None,
+) -> Path:
     """Canonical **write** path for a manifest sidecar (out-of-repo store)."""
     return store_root(pdk) / lut_filename(device, corner, temp_c, wf_um, ext="manifest.json")
 
 
-def find_manifest_path(pdk: str, device: str, corner: str = "tt", temp_c: float | None = None,
-                       wf_um: float | None = None) -> Path:
+def find_manifest_path(
+    pdk: str,
+    device: str,
+    corner: str = "tt",
+    temp_c: float | None = None,
+    wf_um: float | None = None,
+) -> Path:
     """First EXISTING manifest across the search dirs; the canonical path (clear error) if none."""
     name = lut_filename(device, corner, temp_c, wf_um, ext="manifest.json")
     for d in _search_dirs(pdk):
@@ -574,7 +647,8 @@ def manifest(pdk: str, device: str | None = None, corner: str = "tt") -> dict[st
         raise FileNotFoundError(
             f"no manifest '{p.name}' under {store_root(pdk)}/ — regenerate it with "
             f"`analog-db gmid-extract --pdk {pdk} --device {device}"
-            + (f" --corner {corner}" if corner != "tt" else "") + "`"
+            + (f" --corner {corner}" if corner != "tt" else "")
+            + "`"
         )
     return json.loads(p.read_text())
 
@@ -623,7 +697,9 @@ def list_luts(pdk: str | None = None) -> list[dict[str, Any]]:
     return rows
 
 
-def native_deck_runner(pdk: str, pdk_root: str | None = None, timeout: int = 3600):
+def native_deck_runner(
+    pdk: str, pdk_root: str | None = None, timeout: int = 3600
+) -> Callable[[str, str], str]:
     """A ``(deck, txt) -> txt-contents`` runner on THIS host — no container.
 
     Reuses the Phase-7 native-sim machinery (:mod:`.runner`): a per-PDK ``.spiceinit``
@@ -651,7 +727,10 @@ def native_deck_runner(pdk: str, pdk_root: str | None = None, timeout: int = 360
             Path(td, "cell.spice").write_text(_runner._prepare_native_deck(deck, pdk_dir, spec))
             subprocess.run(
                 ["ngspice", "-b", "cell.spice"],
-                cwd=td, capture_output=True, text=True, timeout=timeout,
+                cwd=td,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
             )
             out = Path(td, txt)
             return out.read_text() if out.is_file() else ""
@@ -667,8 +746,9 @@ def native_ngspice_version() -> str | None:
 
     if _shutil.which("ngspice") is None:
         return None
-    out = subprocess.run(["ngspice", "--version"], capture_output=True, text=True,
-                         timeout=60).stdout
+    out = subprocess.run(
+        ["ngspice", "--version"], capture_output=True, text=True, timeout=60
+    ).stdout
     m = _re.search(r"ngspice(?:-| )(\d+)", out)
     return m.group(1) if m else None
 
@@ -699,7 +779,9 @@ def extract_parallel(cfg: GmidConfig, run: Any, workers: int = 1) -> dict[str, A
             parts = [s[key] for s in slices]
             shapes = {p.shape[1:] for p in parts}
             if len(shapes) != 1:  # a job with non-converged rows would mis-shape silently
-                raise ValueError(f"{cfg.pdk}/{cfg.device}: inconsistent {key} slice shapes {shapes}")
+                raise ValueError(
+                    f"{cfg.pdk}/{cfg.device}: inconsistent {key} slice shapes {shapes}"
+                )
             merged[key] = np.concatenate(parts, axis=0)
     return merged
 
@@ -709,7 +791,9 @@ def simulator_settings(pdk: str) -> dict[str, Any]:
     return dict(pdks.load_registry(pdk).get("gmid", {}).get("simulator", {}) or {})
 
 
-def base_image_deck_runner(image: str = "spicexplorer-spice-base:local"):
+def base_image_deck_runner(
+    image: str = "spicexplorer-spice-base:local",
+) -> Callable[[str, str], str]:
     """A ``(deck, txt) -> txt-contents`` runner: pipe the deck into a fresh ``docker run`` of the EDA
     base image, run ngspice, and ``cat`` the ``wrdata`` file back (the LUT data is in that file, not
     on stdout). The base image carries all three PDKs on the sourcepath."""
@@ -717,7 +801,13 @@ def base_image_deck_runner(image: str = "spicexplorer-spice-base:local"):
 
     def _run(deck: str, txt: str) -> str:
         cmd = [
-            "docker", "run", "--rm", "-i", image, "bash", "-lc",
+            "docker",
+            "run",
+            "--rm",
+            "-i",
+            image,
+            "bash",
+            "-lc",
             f"d=$(mktemp -d) && cat > $d/cell.spice && cd $d && ngspice -b cell.spice >/dev/null 2>&1; "
             f"cat $d/{txt} 2>/dev/null",
         ]
@@ -734,7 +824,9 @@ def base_image_ngspice_version(image: str = "spicexplorer-spice-base:local") -> 
     try:
         out = subprocess.run(
             ["docker", "run", "--rm", image, "ngspice", "--version"],
-            capture_output=True, text=True, timeout=120,
+            capture_output=True,
+            text=True,
+            timeout=120,
         ).stdout
     except (OSError, subprocess.SubprocessError):
         return None
@@ -762,14 +854,16 @@ def load_lut(path: Path | str):
     """
     try:
         from pygmid import Lookup
+
         return Lookup(str(path))
     except ImportError:
         with Path(path).open("rb") as fh:
             return pickle.load(fh)
 
 
-def available_finger_widths(pdk: str, device: str, corner: str = "tt",
-                            temp_c: float | None = None) -> list[float]:
+def available_finger_widths(
+    pdk: str, device: str, corner: str = "tt", temp_c: float | None = None
+) -> list[float]:
     """Sorted finger widths [µm] a (pdk, device, corner[, temp]) is characterized at, across the store.
 
     The finger-width companion LUTs (``__wf<W>u`` tagged; 5 µm untagged) are what the interpolating
@@ -801,16 +895,14 @@ def lut(pdk: str, device: str | None = None, corner: str = "tt", *, wf_um: float
         # Spectre-lane PDKs (which carry devices.nmos.* instead of gmid.device) also resolve.
         device = reg.get("gmid", {}).get("device")
         if device is None:
-            nmos = (reg.get("devices", {}).get("nmos") or {})
+            nmos = reg.get("devices", {}).get("nmos") or {}
             device = nmos.get("core") or nmos.get("lvt") or nmos.get("lv") or nmos.get("svt")
         if device is None:
             raise ValueError(f"{pdk}: no `gmid.device` default in the registry — pass device=")
     path = find_lut_path(pdk, device, corner, wf_um=wf_um)
     if not path.is_file():
         searched = _search_dirs(pdk)
-        have = sorted(
-            {q.name for d in searched if d.is_dir() for q in d.glob("*.pkl")}
-        )
+        have = sorted({q.name for d in searched if d.is_dir() for q in d.glob("*.pkl")})
         spectre = (pdks.load_registry(pdk).get("gmid", {}) or {}).get("engine") == "spectre"
         base = "gmid-extract-spectre" if spectre else "gmid-extract"
         cmd = f"analog-db {base} --pdk {pdk}" + (f" --device {device}" if not spectre else "")
@@ -823,8 +915,9 @@ def lut(pdk: str, device: str | None = None, corner: str = "tt", *, wf_um: float
     return load_lut(path)
 
 
-def finger_width_set(pdk: str, device: str | None = None, corner: str = "tt",
-                     temp_c: float | None = None):
+def finger_width_set(
+    pdk: str, device: str | None = None, corner: str = "tt", temp_c: float | None = None
+):
     """A ``spicexplorer_gmid.FingerWidthSet`` over every characterised finger width of a device.
 
     Discovers the finger-width companion LUTs in the store (``__wf<W>u`` tagged + the untagged 5 µm

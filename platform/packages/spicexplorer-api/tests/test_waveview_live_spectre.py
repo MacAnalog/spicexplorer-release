@@ -42,9 +42,12 @@ def test_waveview_api_live_spectre_parity(tmp_path, monkeypatch) -> None:
     env_file = os.environ.get("SPICEXPLORER_VB_ENV_FILE")
     try:
         run = run_circuit(
-            _CIRCUIT, _PDK, testbench=_TB,
+            _CIRCUIT,
+            _PDK,
+            testbench=_TB,
             model_lib_root=_MODEL_ROOT,
-            deck_dir=tmp_path / "decks", work_dir=tmp_path / "raw",
+            deck_dir=tmp_path / "decks",
+            work_dir=tmp_path / "raw",
             vb_env_file=Path(env_file).expanduser() if env_file else None,
         )
     except (AnalogDbUnavailable, EngineUnavailable) as exc:

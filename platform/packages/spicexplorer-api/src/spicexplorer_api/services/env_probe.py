@@ -5,6 +5,7 @@ surface). This module adds only the API-specific bit the kernel must not know
 about: the optional ``app_config.pdk_root`` override, injected as ``extra_roots``.
 Re-exports the same names the routes import so call sites are unchanged.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

@@ -161,9 +161,7 @@ def render_measure_block(
     current_result: str | None = None
     for m in measurements:
         if m.result != current_result:
-            lines.append(
-                f'setq(__sxq_sel and(__sxq_open errset(selectResults("{m.result}"))))'
-            )
+            lines.append(f'setq(__sxq_sel and(__sxq_open errset(selectResults("{m.result}"))))')
             current_result = m.result
         lines += [
             "setq(__sxq_val nil)",
@@ -257,15 +255,15 @@ class OceanMetricsSession:
         self.last_eval_seconds: float | None = None
 
     @classmethod
-    def from_vb_env(
-        cls, env_file: Path | str | None = None, **kwargs: Any
-    ) -> "OceanMetricsSession":
+    def from_vb_env(cls, env_file: Path | str | None = None, **kwargs: Any) -> OceanMetricsSession:
         """Resolve the cshrc from ``VB_CADENCE_CSHRC`` — the process env first, then a
         bridge-style env file (default ``~/.virtuoso-bridge/local.env``)."""
         cshrc = os.environ.get("VB_CADENCE_CSHRC", "").strip() or None
         if cshrc is None:
-            candidate = Path(env_file).expanduser() if env_file is not None else (
-                Path.home() / ".virtuoso-bridge" / "local.env"
+            candidate = (
+                Path(env_file).expanduser()
+                if env_file is not None
+                else (Path.home() / ".virtuoso-bridge" / "local.env")
             )
             cshrc = _read_vb_env_value(candidate, "VB_CADENCE_CSHRC")
         if not cshrc:
@@ -325,7 +323,7 @@ class OceanMetricsSession:
         if self._tmp is not None:
             self._tmp.cleanup()
 
-    def __enter__(self) -> "OceanMetricsSession":
+    def __enter__(self) -> OceanMetricsSession:
         return self
 
     def __exit__(self, *exc: Any) -> None:
@@ -356,7 +354,7 @@ class OceanMetricsSession:
 
     def measure_batch(
         self,
-        raw_dirs: "list[Path | str] | tuple[Path | str, ...]",
+        raw_dirs: list[Path | str] | tuple[Path | str, ...],
         measurements: list[OceanMeasurement] | tuple[OceanMeasurement, ...],
         *,
         label: str | None = None,

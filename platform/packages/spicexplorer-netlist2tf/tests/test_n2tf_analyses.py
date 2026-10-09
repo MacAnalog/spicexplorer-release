@@ -38,7 +38,8 @@ def test_open_loop_gain_cs():
 # ------------------------------------------------------------------------
 def test_output_impedance_common_source():
     res = output_impedance(
-        "* cs\nM1 out in 0 0 nmos\nRL out 0 RL\n.end", ("out", "0"),
+        "* cs\nM1 out in 0 0 nmos\nRL out 0 RL\n.end",
+        ("out", "0"),
         zero_input=("in", "0"),  # open-loop: ground the gate (source-zeroing)
     )
     assert res.analysis == "output_impedance"
@@ -49,8 +50,10 @@ def test_output_impedance_common_source():
 
 def test_output_impedance_numeric():
     res = output_impedance(
-        "* cs\nM1 out in 0 0 nmos\nRL out 0 RL\n.end", ("out", "0"),
-        zero_input=("in", "0"), operating_point={"ro_m1": 1e5, "rl": 1e5, "gm_m1": 1e-3},
+        "* cs\nM1 out in 0 0 nmos\nRL out 0 RL\n.end",
+        ("out", "0"),
+        zero_input=("in", "0"),
+        operating_point={"ro_m1": 1e5, "rl": 1e5, "gm_m1": 1e-3},
     )
     # 100k ∥ 100k = 50k
     assert res.dc_gain.value == pytest.approx(5e4)
@@ -69,7 +72,9 @@ def test_input_impedance_resistive():
 def test_input_impedance_capacitive_gate_full_fidelity():
     # At FULL fidelity the gate has Cgs+Cgd → finite (capacitive) Z_in, so the solve is well-posed.
     res = input_impedance(
-        "* cs\nM1 out in 0 0 nmos\nRL out 0 RL\n.end", ("in", "0"), level=Fidelity.FULL,
+        "* cs\nM1 out in 0 0 nmos\nRL out 0 RL\n.end",
+        ("in", "0"),
+        level=Fidelity.FULL,
     )
     # Z_in is capacitive (∝ 1/(s·C)) → it has s, it is not a constant.
     assert res.as_sympy_exact().has(sp.Symbol("s"))
@@ -113,7 +118,10 @@ _DIFFPAIR = (
 
 def test_cmrr_long_tailed_pair_numeric():
     res = cmrr(
-        _DIFFPAIR, ("outp", "0"), ("inp", "inn"), level=Fidelity.IDEAL,
+        _DIFFPAIR,
+        ("outp", "0"),
+        ("inp", "inn"),
+        level=Fidelity.IDEAL,
         subs={"gm_m1": 1e-3, "gm_m2": 1e-3, "rd": 1e4, "rt": 5e4},
     )
     assert res.analysis == "cmrr"
@@ -128,8 +136,13 @@ def test_cmrr_infinite_is_a_clean_error():
     # A *differential* output of a perfectly matched pair (equal gm) has A_cm ≡ 0 (the ideal-match
     # limit) ⇒ CMRR is infinite ⇒ a clean, explicit error rather than a division by zero.
     with pytest.raises(ValueError, match="A_cm is identically 0"):
-        cmrr(_DIFFPAIR, ("outp", "outn"), ("inp", "inn"), level=Fidelity.IDEAL,
-             subs={"gm_m1": 1e-3, "gm_m2": 1e-3, "rd": 1e4, "rt": 5e4})
+        cmrr(
+            _DIFFPAIR,
+            ("outp", "outn"),
+            ("inp", "inn"),
+            level=Fidelity.IDEAL,
+            subs={"gm_m1": 1e-3, "gm_m2": 1e-3, "rd": 1e4, "rt": 5e4},
+        )
 
 
 # ------------------------------------------------------------------------
@@ -161,14 +174,7 @@ def test_psrr_common_source_supply_referred_load():
 # Homogeneous (all sources off) feedback network: Rf out→gate, Rin gate→0, RD out→0.
 #   T = gm·D1/D0 = gm·rin·rd/(rin + rd + rf)   (Blackman, IDEAL fidelity).
 # (``rfb``, not ``rf`` — ``rf`` sympifies to sympy's RisingFactorial, not a free symbol.)
-_FB = (
-    "* shunt-feedback cs\n"
-    "M1 out ing 0 0 nmos\n"
-    "Rf ing out rfb\n"
-    "Rin ing 0 rin\n"
-    "RD out 0 rd\n"
-    ".end"
-)
+_FB = "* shunt-feedback cs\nM1 out ing 0 0 nmos\nRf ing out rfb\nRin ing 0 rin\nRD out 0 rd\n.end"
 
 
 def test_loop_gain_shunt_feedback():

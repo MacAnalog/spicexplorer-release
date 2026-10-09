@@ -51,15 +51,25 @@ def _base_image_available() -> bool:
         return False
     # probe with a real `docker run` — `docker image inspect <tag>` can false-negative under
     # the containerd image store even when the image runs fine
-    return subprocess.run(["docker", "run", "--rm", _BASE_IMAGE, "true"],
-                          capture_output=True, text=True, timeout=120).returncode == 0
+    return (
+        subprocess.run(
+            ["docker", "run", "--rm", _BASE_IMAGE, "true"],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        ).returncode
+        == 0
+    )
 
 
 def _api_container_runs() -> bool:
     if not _have("docker"):
         return False
-    return bool(subprocess.run(["docker", "compose", "ps", "-q", "api"],
-                               capture_output=True, text=True).stdout.strip())
+    return bool(
+        subprocess.run(
+            ["docker", "compose", "ps", "-q", "api"], capture_output=True, text=True
+        ).stdout.strip()
+    )
 
 
 def _base_image_has_gf180() -> bool:
@@ -67,10 +77,22 @@ def _base_image_has_gf180() -> bool:
     gf180 rebuild). Lets the gf180 sim tier skip cleanly on an older image without it."""
     if not _base_image_available():
         return False
-    return subprocess.run(
-        ["docker", "run", "--rm", _BASE_IMAGE, "bash", "-lc",
-         "test -f /opt/pdk/gf180mcu/libs.tech/ngspice/sm141064.ngspice"],
-        capture_output=True, text=True).returncode == 0
+    return (
+        subprocess.run(
+            [
+                "docker",
+                "run",
+                "--rm",
+                _BASE_IMAGE,
+                "bash",
+                "-lc",
+                "test -f /opt/pdk/gf180mcu/libs.tech/ngspice/sm141064.ngspice",
+            ],
+            capture_output=True,
+            text=True,
+        ).returncode
+        == 0
+    )
 
 
 needs_base = pytest.mark.skipif(
@@ -127,6 +149,7 @@ def _analoggym_ids() -> list[str]:
 
 # ───────────────────── L0: syntax (the critical first gate) ─────────────────────
 
+
 @needs_base
 @pytest.mark.parametrize("cid", _analoggym_ids() or ["amp_003_fan_smc"])
 def test_L0_analoggym_netlist_parses(cid):
@@ -136,8 +159,14 @@ def test_L0_analoggym_netlist_parses(cid):
 
 
 @needs_base
-@pytest.mark.parametrize("cid,pdk", [("amp_001_5t", "ihp-sg13g2"), ("amp_001_5t", "sky130"),
-                                     ("amp_018_telescopic_cascode", "ihp-sg13g2")])
+@pytest.mark.parametrize(
+    "cid,pdk",
+    [
+        ("amp_001_5t", "ihp-sg13g2"),
+        ("amp_001_5t", "sky130"),
+        ("amp_018_telescopic_cascode", "ihp-sg13g2"),
+    ],
+)
 def test_L0_in_repo_ota_parses(cid, pdk):
     c = model.load_circuit(cid)
     errs = runmod.parse_errors(c, "ac_open_loop", pdk, "tt", _runner())
@@ -145,6 +174,7 @@ def test_L0_in_repo_ota_parses(cid, pdk):
 
 
 # ───────────────────── L1: feature sim ─────────────────────
+
 
 @needs_base
 def test_L1_analoggym_simulates_on_sky130():
@@ -179,7 +209,9 @@ def test_L1b_pdk_transfer_simulates(cid, pdk):
     """One abstract topology, two PDKs: the open-loop AC simulates with a finite, positive gain on
     each. (PM is not asserted — an unoptimized cross-PDK transfer is a recorded floor, not a
     spec-passing design, so a low/negative PM at default sizing is a valid baseline.)"""
-    ac = runmod.run_circuit(model.load_circuit(cid), pdk, "tt", _runner())["analyses"]["ac_open_loop"]
+    ac = runmod.run_circuit(model.load_circuit(cid), pdk, "tt", _runner())["analyses"][
+        "ac_open_loop"
+    ]
     assert ac["status"] == "ok", f"{cid}@{pdk}: {ac.get('error', '')[:300]}"
     m = ac["measures"]
     assert 0 < m["dcgain"] < 200 and m["ugf"] > 0, (cid, pdk, m)
@@ -190,7 +222,7 @@ def test_L1b_pdk_transfer_simulates(cid, pdk):
 
 @needs_base
 @needs_gf180
-@pytest.mark.parametrize("cid", [*( _analoggym_ids() or ["amp_003_fan_smc"]), "amp_001_5t"])
+@pytest.mark.parametrize("cid", [*(_analoggym_ids() or ["amp_003_fan_smc"]), "amp_001_5t"])
 def test_L0_gf180_netlist_parses(cid):
     """Every (sim-able) circuit's gf180 deck PARSES + resolves the gf180 libs (no model/lib error)."""
     errs = runmod.parse_errors(model.load_circuit(cid), "ac_open_loop", "gf180mcu", "tt", _runner())
@@ -204,7 +236,9 @@ def test_L1_gf180_simulates(cid):
     """Representative circuits simulate on gf180mcu with a finite, positive open-loop gain. (Not all
     transfers bias at default sizing on the 3.3V rail — degenerates are recorded floors, not tested;
     folded/telescopic need re-sizing as on sky130. See `_shared/PDK_SIM.md`.)"""
-    ac = runmod.run_circuit(model.load_circuit(cid), "gf180mcu", "tt", _runner())["analyses"]["ac_open_loop"]
+    ac = runmod.run_circuit(model.load_circuit(cid), "gf180mcu", "tt", _runner())["analyses"][
+        "ac_open_loop"
+    ]
     assert ac["status"] == "ok", f"{cid}@gf180mcu: {ac.get('error', '')[:300]}"
     m = ac["measures"]
     assert 0 < m["dcgain"] < 200 and m["ugf"] > 0, (cid, m)
@@ -212,8 +246,11 @@ def test_L1_gf180_simulates(cid):
 
 # ───────────────────── L1c: symbolic cross-check (the in-repo OTAs; D-5) ─────────────────────
 
+
 @needs_base
-@pytest.mark.parametrize("cid", ["amp_001_5t", "amp_018_telescopic_cascode", "amp_004_folded_cascode"])
+@pytest.mark.parametrize(
+    "cid", ["amp_001_5t", "amp_018_telescopic_cascode", "amp_004_folded_cascode"]
+)
 def test_L1c_symbolic_crosscheck_agrees(cid):
     from spicexplorer_analog_db.symbolic import crosscheck
 
@@ -221,7 +258,7 @@ def test_L1c_symbolic_crosscheck_agrees(cid):
     r = _runner()
     res = runmod.run_circuit(c, "ihp-sg13g2", "tt", r)
     bad = {a: r2 for a, r2 in res["analyses"].items() if r2["status"] not in ("ok", "disabled")}
-    assert not bad, f"{cid} sim errors: { {a: r2.get('error','')[:160] for a, r2 in bad.items()} }"
+    assert not bad, f"{cid} sim errors: { {a: r2.get('error', '')[:160] for a, r2 in bad.items()} }"
     # rel_tol=10%: this is a STRUCTURAL check (does the symbolic TF match the topology + measured
     # bias?), not a precision gate. The IHP PSP OSDI is numerically build-dependent (compiled-for-arch
     # vs the vendored x86-64 prebuilt), which shifts gm/gds a few % — most on the sensitive cascode.
@@ -290,7 +327,8 @@ def _all_committed_decks() -> list:
         skipped = {str(p) for p in decks if _deck_is_skipped(p, rules)}
         if skipped:
             reasons = {
-                r["reason"] for r in rules
+                r["reason"]
+                for r in rules
                 if any(_deck_is_skipped(p, [r]) for p in decks if str(p) in skipped)
             }
             print(f"\n[ci_skip] excluding {len(skipped)} deck(s): {'; '.join(sorted(reasons))}")
@@ -300,8 +338,9 @@ def _all_committed_decks() -> list:
 
 @needs_base
 @pytest.mark.parametrize(
-    "deck", _all_committed_decks(),
-    ids=lambda p: "/".join(p.parts[-3:])[:-6],   # <circuit>/<pdk>/<testbench>
+    "deck",
+    _all_committed_decks(),
+    ids=lambda p: "/".join(p.parts[-3:])[:-6],  # <circuit>/<pdk>/<testbench>
 )
 def test_T3_every_raw_deck_runs_and_extracts_or_floors(deck):
     """Tier 3 over the WHOLE raw/ tree: ngspice must RUN every committed deck (hard), and the
@@ -310,12 +349,16 @@ def test_T3_every_raw_deck_runs_and_extracts_or_floors(deck):
     output = _runner()(deck.read_text())
     load_errs = [ln.strip() for ln in output.splitlines() if _LOAD_ERR.search(ln)]
     rel = "/".join(deck.parts[-4:])
-    assert not load_errs, f"{rel}: deck did not run (load/lib/model error):\n" + "\n".join(load_errs[:8])
+    assert not load_errs, f"{rel}: deck did not run (load/lib/model error):\n" + "\n".join(
+        load_errs[:8]
+    )
     measures, failed = runmod.parse_measures(output)
     finite = {k: v for k, v in measures.items() if math.isfinite(v)}
     if not finite:
-        pytest.skip(f"{rel}: ran but baseline sizing extracts no finite metrics "
-                    f"(recorded floor; failed meas={failed or 'none'})")
+        pytest.skip(
+            f"{rel}: ran but baseline sizing extracts no finite metrics "
+            f"(recorded floor; failed meas={failed or 'none'})"
+        )
 
 
 def _committed_raw_sim_cells() -> list[tuple[str, str, str]]:
@@ -334,8 +377,11 @@ def _committed_raw_sim_cells() -> list[tuple[str, str, str]]:
 
 
 @needs_base
-@pytest.mark.parametrize("cid,pdk,tb", _committed_raw_sim_cells(),
-                         ids=lambda t: f"{t[0]}@{t[1]}/{t[2]}" if isinstance(t, tuple) else str(t))
+@pytest.mark.parametrize(
+    "cid,pdk,tb",
+    _committed_raw_sim_cells(),
+    ids=lambda t: f"{t[0]}@{t[1]}/{t[2]}" if isinstance(t, tuple) else str(t),
+)
 def test_L1_committed_raw_deck_simulates(cid, pdk, tb):
     """The COMMITTED ``raw/<circuit>/<pdk>/<tb>.spice`` (the on-disk artifact, NOT a fresh
     assemble) runs through ngspice on the base image and yields finite measures. ``run_text`` raises
@@ -379,23 +425,25 @@ def test_L1_gmid_extract_is_physical_and_pygmid_loads():
     assert {"GM", "ID", "CGG", "VGS", "VDS", "VSB", "L"} <= set(lut)
     assert lut["GM"].shape == (2, len(lut["VGS"]), len(lut["VDS"]), len(lut["VSB"]))
     # the L sweep must actually take effect — distinct slices with less current at longer L
-    assert not np.allclose(lut["ID"][0], lut["ID"][1]), "L slices identical — alterparam not applied"
+    assert not np.allclose(lut["ID"][0], lut["ID"][1]), (
+        "L slices identical — alterparam not applied"
+    )
     mid = lut["GM"].shape[1] // 2
     assert lut["ID"][1, mid, 2, 0] < lut["ID"][0, mid, 2, 0]
 
     gm, idd = lut["GM"], lut["ID"]
-    mid = gm.shape[2] // 2                                   # a mid-range VDS
+    mid = gm.shape[2] // 2  # a mid-range VDS
     with np.errstate(divide="ignore", invalid="ignore"):
         ratio = np.where(idd[0, :, mid, 0] > 0, gm[0, :, mid, 0] / idd[0, :, mid, 0], np.nan)
-    assert 15 < np.nanmax(ratio) < 45, ratio                 # physical weak-inversion gm/ID peak
+    assert 15 < np.nanmax(ratio) < 45, ratio  # physical weak-inversion gm/ID peak
 
     d = tempfile.mkdtemp()
     p = os.path.join(d, "nch.pkl")
     with open(p, "wb") as fh:
         pickle.dump(lut, fh)
-    nch = Lookup(p)                                          # the pygmid contract: loads our .pkl
+    nch = Lookup(p)  # the pygmid contract: loads our .pkl
     vgs = float(nch.look_upVGS(GM_ID=10, VDS=0.9, VSB=0, L=0.15))
-    assert 0.4 < vgs < 1.2, vgs                              # gm/ID=10 sits around mid-VGS
+    assert 0.4 < vgs < 1.2, vgs  # gm/ID=10 sits around mid-VGS
 
 
 @needs_base
@@ -409,20 +457,32 @@ def test_L1_gmid_vsb_axis_and_pmos_extract():
     from spicexplorer_analog_db import gmid
 
     run = gmid.base_image_deck_runner(_BASE_IMAGE)
-    nch = gmid.extract(gmid.GmidConfig.from_registry(
-        "sky130", vgs=(0, 0.3, 1.8), vds=(0, 0.6, 1.8), vsb=(0, -0.6, -0.6), length_um=[0.5]
-    ), run)
+    nch = gmid.extract(
+        gmid.GmidConfig.from_registry(
+            "sky130", vgs=(0, 0.3, 1.8), vds=(0, 0.6, 1.8), vsb=(0, -0.6, -0.6), length_um=[0.5]
+        ),
+        run,
+    )
     assert not np.allclose(nch["ID"][:, :, :, 0], nch["ID"][:, :, :, 1]), "VSB slices identical"
     mid = nch["ID"].shape[1] // 2
-    assert nch["ID"][0, mid, 2, 1] < nch["ID"][0, mid, 2, 0]   # body effect: less ID at |VSB|>0
+    assert nch["ID"][0, mid, 2, 1] < nch["ID"][0, mid, 2, 0]  # body effect: less ID at |VSB|>0
 
-    pch = gmid.extract(gmid.GmidConfig.from_registry(
-        "sky130", device="sky130_fd_pr__pfet_01v8",
-        vgs=(0, 0.3, 1.8), vds=(0, 0.6, 1.8), vsb=(0, -0.6, -0.6), length_um=[0.5]
-    ), run)
+    pch = gmid.extract(
+        gmid.GmidConfig.from_registry(
+            "sky130",
+            device="sky130_fd_pr__pfet_01v8",
+            vgs=(0, 0.3, 1.8),
+            vds=(0, 0.6, 1.8),
+            vsb=(0, -0.6, -0.6),
+            length_um=[0.5],
+        ),
+        run,
+    )
     gm, idd = pch["GM"], pch["ID"]
     with np.errstate(divide="ignore", invalid="ignore"):
-        eff = np.where(np.abs(idd[0, :, 2, 0]) > 0, np.abs(gm[0, :, 2, 0] / idd[0, :, 2, 0]), np.nan)
+        eff = np.where(
+            np.abs(idd[0, :, 2, 0]) > 0, np.abs(gm[0, :, 2, 0] / idd[0, :, 2, 0]), np.nan
+        )
     assert 15 < np.nanmax(eff) < 45, "pmos gm/ID peak not physical"
 
 
@@ -449,19 +509,26 @@ def test_L1_gmid_hv_variant_swaps_corner_lib():
     from spicexplorer_analog_db import gmid
 
     cfg = gmid.GmidConfig.from_registry(
-        "ihp-sg13g2", device="sg13_hv_nmos",
-        vgs=(0, 0.5, 3.0), vds=(0, 1.0, 3.0), vsb=(0, -0.4, -0.4), length_um=[0.45, 1.0],
+        "ihp-sg13g2",
+        device="sg13_hv_nmos",
+        vgs=(0, 0.5, 3.0),
+        vds=(0, 1.0, 3.0),
+        vsb=(0, -0.4, -0.4),
+        length_um=[0.45, 1.0],
     )
-    assert cfg.corner_override == {"lib_file": "cornerMOShv.lib"}     # the variant override took effect
+    assert cfg.corner_override == {
+        "lib_file": "cornerMOShv.lib"
+    }  # the variant override took effect
     lut = gmid.extract(cfg, gmid.base_image_deck_runner(_BASE_IMAGE))
     gm, idd = lut["GM"], lut["ID"]
     mid = gm.shape[2] // 2
     with np.errstate(divide="ignore", invalid="ignore"):
         ratio = np.where(idd[0, :, mid, 0] > 0, gm[0, :, mid, 0] / idd[0, :, mid, 0], np.nan)
-    assert 15 < np.nanmax(ratio) < 45, ratio                         # physical HV-device gm/ID peak
+    assert 15 < np.nanmax(ratio) < 45, ratio  # physical HV-device gm/ID peak
 
 
 # ───────────────────── L2: spicelib wrapper (integration) ─────────────────────
+
 
 @needs_api
 def test_L2_spicelib_wrapper_path_in_container():
@@ -480,12 +547,16 @@ def test_L2_spicelib_wrapper_path_in_container():
     )
     proc = subprocess.run(
         ["docker", "compose", "exec", "-T", "-w", "/app", "api", "python", "-c", driver],
-        input=netlist, capture_output=True, text=True, timeout=300,
+        input=netlist,
+        capture_output=True,
+        text=True,
+        timeout=300,
     )
     assert "OK" in proc.stdout, f"wrapper path failed:\n{proc.stdout}\n{proc.stderr[-1500:]}"
 
 
 # ───────────────────── L3: project_setup run (top integration) ─────────────────────
+
 
 @needs_api
 def test_L3_project_setup_runs_one_optimizer_step():
@@ -500,6 +571,10 @@ def test_L3_project_setup_runs_one_optimizer_step():
     )
     proc = subprocess.run(
         ["docker", "compose", "exec", "-T", "-w", "/app", "api", "python", "-c", driver],
-        capture_output=True, text=True, timeout=600,
+        capture_output=True,
+        text=True,
+        timeout=600,
     )
-    assert "STEP_OK" in proc.stdout, f"project_setup run failed:\n{proc.stdout[-500:]}\n{proc.stderr[-1500:]}"
+    assert "STEP_OK" in proc.stdout, (
+        f"project_setup run failed:\n{proc.stdout[-500:]}\n{proc.stderr[-1500:]}"
+    )

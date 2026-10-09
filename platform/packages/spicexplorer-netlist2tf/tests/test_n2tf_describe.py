@@ -36,7 +36,9 @@ def test_rc_description_symbolic():
     assert res.dc_gain.expr == "1"
     assert len(res.poles) == 1 and len(res.zeros) == 0
     # pole at s = -1/(R*C)
-    assert sp.simplify(sp.sympify(res.poles[0].expr) - (-1 / (sp.Symbol("r") * sp.Symbol("c")))) == 0
+    assert (
+        sp.simplify(sp.sympify(res.poles[0].expr) - (-1 / (sp.Symbol("r") * sp.Symbol("c")))) == 0
+    )
     assert res.conv_type == "se"
 
 

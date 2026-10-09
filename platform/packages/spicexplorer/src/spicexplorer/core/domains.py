@@ -1,8 +1,16 @@
+import copy
+import dataclasses
+import difflib
+import functools
 import logging
+import os
+import types
+import typing
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Union
 
 import numpy as np
 import yaml
@@ -29,6 +37,7 @@ logger = logging.getLogger("spicexplorer.designer_tools.domains")
 
 # ------------------ Enums ------------------
 
+
 class SimType(str, Enum):
     DC = "dc"
     AC = "ac"
@@ -42,30 +51,33 @@ class SimType(str, Enum):
     # coercion as `SimType.LAYOUT` (`get_analysis()` → "layout").
     LAYOUT = "layout"
 
+
 class SpiceSimulatorType(Enum):
     SPECTRE = "spectre"
-    HSPICE  = "hspice"
+    HSPICE = "hspice"
     NGSPICE = "ngspice"
     # The layout-flow backend (`sim_engine: layout`): a testbench's `netlist:` is a
     # `layout-flow/1` YAML spec, not a SPICE deck. See `spicexplorer.backends.layout`.
-    LAYOUT  = "layout"
+    LAYOUT = "layout"
+
 
 class OptimizationGoalType(str, Enum):
-    EXACT    = "exact"
-    EXCEED   = "exceed"
+    EXACT = "exact"
+    EXCEED = "exceed"
     MINIMIZE = "minimize"
+
 
 class OptimizerType(str, Enum):
     NEVERGRAD = "nevergrad"
     BAYESIAN_AX = "bayesian_ax"
-    RL = "reinforcement_learning"
+
 
 class Error_Types(str, Enum):
     ABSOLUTE = "absolute"
-    SQUARED  = "squared"
+    SQUARED = "squared"
     EXPONENTIAL = "exponential"
     RELATIVE_ABSOLUTE = "relative-absolute"
-    RELATIVE_SQUARED  = "relative-squared"
+    RELATIVE_SQUARED = "relative-squared"
     RELATIVE_EXPONENTIAL = "relative-exponential"
     RELATIVE_SIGMOID = "relative-sigmoid"
     # Bounded [0,1] bell-shaped penalty. Same codomain as relative-sigmoid, but its slope
@@ -84,6 +96,7 @@ class Error_Types(str, Enum):
     def is_relative(self) -> bool:
         return "relative" in self.value
 
+
 class Reward_Types(str, Enum):
     NO_REWARD = "none"
     RELATIVE_ABSOLUTE = "relative-absolute"
@@ -96,25 +109,11 @@ class Reward_Types(str, Enum):
     def is_relative(self) -> bool:
         return "relative" in self.value
 
-class NoiseType(str, Enum):
-    GAUSSIAN = "gaussian"
-    OU = "ou"  # Ornstein-Uhlenbeck
-
-class AgentType(str, Enum):
-    "RL Agent Types Supported by SpiceExplorer"
-    # Standard SB3 Agents
-    PPO = "ppo"
-    SAC = "sac"
-    DDPG = "ddpg"
-    TD3 = "td3"
-    # Placeholder for user-defined
-    CUSTOM_DDPG = "custom-ddpg"
-    CUSTOM_SAC = "custom-sac"
 
 # ------------------ Constants ------------------
 
 
-SIMTYPE_TO_NGSPICE_PLOTTYPE : Dict[SimType, Ngspice_Plot_Type] = {
+SIMTYPE_TO_NGSPICE_PLOTTYPE: dict[SimType, Ngspice_Plot_Type] = {
     SimType.AC: Ngspice_Plot_Type.AC,
     SimType.DC: Ngspice_Plot_Type.DC,
     SimType.TRAN: Ngspice_Plot_Type.TRAN,
@@ -124,8 +123,6 @@ SIMTYPE_TO_NGSPICE_PLOTTYPE : Dict[SimType, Ngspice_Plot_Type] = {
 }
 
 # ------------------ Helpers ------------------
-
-
 
 
 def safe_from_dict(cls, data: dict, logger: logging.Logger, config: Config = Config(cast=[Enum])):
@@ -141,16 +138,20 @@ def safe_from_dict(cls, data: dict, logger: logging.Logger, config: Config = Con
         logger.critical(f"❌ Unexpected field while parsing {cls.__name__}: {e}")
         raise
 
-def list_target_spec_hook(data: list) -> 'ListTargetSpec':
+
+def list_target_spec_hook(data: list) -> "ListTargetSpec":
     return ListTargetSpec([TargetSpec(**item) for item in data])
 
+
 # ---------- Core Dataclasses ----------
+
 
 @dataclass
 class TechSpec:
     """Process technology (PDK) specification with constraints on device parameters."""
+
     name: str
-    constraints: Dict[str, np.float64 | float | str] = field(default_factory=dict)
+    constraints: dict[str, np.float64 | float | str] = field(default_factory=dict)
 
     def __post_init__(self):
         for key, val in self.constraints.items():
@@ -158,23 +159,21 @@ class TechSpec:
                 self.constraints[key] = parse_value(val)
                 logger.debug(f"Parsed constraint '{key}': '{val}' to {self.constraints[key]}")
 
+
 # ---------- PVT Corner System ----------
 # These dataclasses make process/voltage/temperature corners first-class so they
 # actually drive the SPICE simulation. They are deliberately PDK-AGNOSTIC: core
 # never interprets `lib_file`/`section` strings — the spice engine emits them verbatim.
 
 
-
-
-
 @dataclass
 class Param:
     name: str
-    min_val: Optional[Union[float, np.float64, str]]
-    max_val: Optional[Union[float, np.float64, str]]
-    val: Optional[Union[float, np.float64, str]]
-    init: Optional[Union[float, np.float64, str]]
-    description: Optional[str]
+    min_val: float | np.float64 | str | None
+    max_val: float | np.float64 | str | None
+    val: float | np.float64 | str | None
+    init: float | np.float64 | str | None
+    description: str | None
     log_scale: bool = False
     is_integer: bool = False
     # Default False so an omitted `freeze` key means "optimize this param" — this
@@ -185,9 +184,14 @@ class Param:
     freeze: bool = False
 
     def needs_resolution(self) -> bool:
-        return isinstance(self.min_val, str) or isinstance(self.max_val, str) or (self.init is not None and isinstance(self.init, str)) or (self.val is not None and isinstance(self.val, str))
+        return (
+            isinstance(self.min_val, str)
+            or isinstance(self.max_val, str)
+            or (self.init is not None and isinstance(self.init, str))
+            or (self.val is not None and isinstance(self.val, str))
+        )
 
-    def resolve_min_max(self, constraints: Dict[str, np.float64]) -> None:
+    def resolve_min_max(self, constraints: dict[str, np.float64]) -> None:
         if self.min_val is None or self.max_val is None:
             raise ValueError(f"Param {self.name} missing min or max value for resolution")
         self.min_val = resolve_reference(self.min_val, constraints)
@@ -195,9 +199,11 @@ class Param:
         if self.init is not None:
             self.init = resolve_reference(self.init, constraints)
         if self.min_val >= self.max_val:
-            raise ValueError(f"Param {self.name} has min_val >= max_val ({self.min_val} >= {self.max_val})")
+            raise ValueError(
+                f"Param {self.name} has min_val >= max_val ({self.min_val} >= {self.max_val})"
+            )
 
-    def ressolve_val(self, constraints: Dict[str, np.float64]) -> None:
+    def ressolve_val(self, constraints: dict[str, np.float64]) -> None:
         if self.val is not None:
             self.val = resolve_reference(self.val, constraints)
 
@@ -231,33 +237,34 @@ class Param:
 @dataclass
 class TestbenchParams:
     name: str
-    params: List[Param]
+    params: list[Param]
     netlist: str
     enable: bool = True
-    description: Optional[str] = None
+    description: str | None = None
+
 
 @dataclass
 class TargetSpec:
-    name:       str
-    testbench:  str
-    target:     float | np.float64
-    goal:       Union[OptimizationGoalType, str]
-    sim_type:   Union[str, SimType, Ngspice_Plot_Type]
+    name: str
+    testbench: str
+    target: float | np.float64
+    goal: OptimizationGoalType | str
+    sim_type: str | SimType | Ngspice_Plot_Type
     # Optional fields with defaults
-    log_scale:  bool = False
-    enable:     bool = True
-    range:      Union[np.float64, float, str | None] = None
-    error_type: Union[Error_Types, str] = Error_Types.RELATIVE_ABSOLUTE
+    log_scale: bool = False
+    enable: bool = True
+    range: np.float64 | float | (str | None) = None
+    error_type: Error_Types | str = Error_Types.RELATIVE_ABSOLUTE
     # Shape parameters for error types that take one (relative-gaussian: {sigma};
     # relative-adaptive: {strategy, ema_beta, warmup}).
     # Empty/None for every other error type, so behaviour is unchanged where it is not set.
     # Kept as a dict rather than a named field so a new shaped error type does not need another
     # column on this dataclass; unknown keys are rejected at load by resolve_error_params.
-    error_params: Optional[Dict[str, Any]] = None
-    reward_type: Union[Reward_Types, str] = Reward_Types.NO_REWARD
-    weight:     Optional[float | np.float64] = 1.0
-    tolerance:  Optional[float | np.float64] = None  # if not given use 5% of target
-    description: Optional[str] = None
+    error_params: dict[str, Any] | None = None
+    reward_type: Reward_Types | str = Reward_Types.NO_REWARD
+    weight: float | np.float64 | None = 1.0
+    tolerance: float | np.float64 | None = None  # if not given use 5% of target
+    description: str | None = None
     # Optional declarative measurement recipe. Three authoring styles, all validated at
     # load and merged back under this spec's `name` so `scalar(name, analysis)` returns the
     # value (scorer unchanged):
@@ -269,14 +276,14 @@ class TargetSpec:
     #  * Tier-2, builder OCEAN — {builder, ...args} (e.g. builder: device_op_param,
     #    instance: XM1, param: gm). Spectre/OCEAN backend only; built by
     #    optimization/ocean_integration.py.
-    measurement: Optional[Dict[str, Any]] = None
+    measurement: dict[str, Any] | None = None
 
     # Mutable running state for a STATEFUL error type (relative-adaptive's per-metric scale). Not a
     # DSL key: `init=False` keeps it out of the dacite/`TargetSpec(**item)` construction path, and
     # `compare=False` keeps two specs comparing equal regardless of how far into a run they are.
     # Scoped per TargetSpec instance — hence per Project_Setup, hence per optimizer run — so
     # parallel runs in one process cannot share (or race on) a scale. None for every stateless type.
-    error_state: Optional[Any] = field(default=None, init=False, repr=False, compare=False)
+    error_state: Any | None = field(default=None, init=False, repr=False, compare=False)
 
     def __post_init__(self):
         # Prepare human-friendly lists for error messages
@@ -309,26 +316,34 @@ class TargetSpec:
             pass
         elif isinstance(self.sim_type, str):
             try:
-                self.sim_type = SIMTYPE_TO_NGSPICE_PLOTTYPE[SimType(self.sim_type.lower())] # FIXME: hacked for NGspice simulators
+                self.sim_type = SIMTYPE_TO_NGSPICE_PLOTTYPE[
+                    SimType(self.sim_type.lower())
+                ]  # FIXME: hacked for NGspice simulators
             except ValueError:
                 logger.critical(
                     f"Invalid sim_type '{self.sim_type}' for target '{self.name}'. "
                     f"Must be one of {valid_sim_types}."
                     f"Mapping: {SIMTYPE_TO_NGSPICE_PLOTTYPE}"
                 )
-                raise ValueError(f"Invalid sim_type '{self.sim_type}'. Must be one of {valid_sim_types}.")
+                raise ValueError(
+                    f"Invalid sim_type '{self.sim_type}'. Must be one of {valid_sim_types}."
+                )
         elif isinstance(self.sim_type, SimType):
-            self.sim_type = SIMTYPE_TO_NGSPICE_PLOTTYPE[self.sim_type] # FIXME: hacked for NGspice simulators
-            logger.critical(
-                f"Must be in the mapping: {SIMTYPE_TO_NGSPICE_PLOTTYPE}"
+            self.sim_type = SIMTYPE_TO_NGSPICE_PLOTTYPE[
+                self.sim_type
+            ]  # FIXME: hacked for NGspice simulators
+            logger.critical(f"Must be in the mapping: {SIMTYPE_TO_NGSPICE_PLOTTYPE}")
+            raise ValueError(
+                f"Invalid sim_type '{self.sim_type}'. Must be one of {valid_sim_types}."
             )
-            raise ValueError(f"Invalid sim_type '{self.sim_type}'. Must be one of {valid_sim_types}.")
         elif not isinstance(self.sim_type, Ngspice_Plot_Type):
             logger.critical(
                 f"Invalid sim_type type '{type(self.sim_type)}' for target '{self.name}'. "
                 f"Must be one of {valid_sim_types}."
             )
-            raise ValueError(f"Invalid sim_type '{self.sim_type}'. Must be one of {valid_sim_types}.")
+            raise ValueError(
+                f"Invalid sim_type '{self.sim_type}'. Must be one of {valid_sim_types}."
+            )
 
         # --- Validate / convert error_type ---
         if isinstance(self.error_type, str):
@@ -340,7 +355,9 @@ class TargetSpec:
                     f"Invalid error_type '{self.error_type}' for target '{self.name}'. "
                     f"Must be one of {valid_errors}."
                 )
-                raise ValueError(f"Invalid error_type '{self.error_type}'. Must be one of {valid_errors}.")
+                raise ValueError(
+                    f"Invalid error_type '{self.error_type}'. Must be one of {valid_errors}."
+                )
 
         # --- Validate error_params, and build any stateful normalizer, at LOAD ---
         # Imported here rather than at module scope: core.utils imports this module, so a
@@ -350,6 +367,7 @@ class TargetSpec:
             AdaptiveNormalizer,
             resolve_error_params,
         )
+
         _adaptive_params = None
         # A stateful error type is resolved even with NO `error_params:` — it still needs its
         # normalizer built from the defaults. Stateless types keep the old "only if authored" path.
@@ -361,7 +379,9 @@ class TargetSpec:
                 raise
             # A stateful normalizer is built at the END of __post_init__, not here: its `seed` is
             # derived from `target`/`range`, and neither is coerced yet at this point.
-            _adaptive_params = resolved if self.error_type == Error_Types.RELATIVE_ADAPTIVE else None
+            _adaptive_params = (
+                resolved if self.error_type == Error_Types.RELATIVE_ADAPTIVE else None
+            )
             # Fail at LOAD on a bad shape parameter rather than thousands of evaluations into a
             # run. Both of these are strictly-positive widths/rates: gaussian's `sigma` and
             # sigmoid's `alpha`. Coerced to float here too, so a YAML string ("0.5") works.
@@ -372,10 +392,16 @@ class TargetSpec:
                 try:
                     val = float(val)
                 except (TypeError, ValueError):
-                    raise ValueError(f"error_params.{key} for target '{self.name}' must be a number. Got: {val!r}.")
+                    raise ValueError(
+                        f"error_params.{key} for target '{self.name}' must be a number. Got: {val!r}."
+                    )
                 if not np.isfinite(val) or val <= 0:
-                    logger.critical(f"error_params.{key} for target '{self.name}' must be finite and > 0. Got: {val}.")
-                    raise ValueError(f"error_params.{key} for target '{self.name}' must be finite and > 0. Got: {val}.")
+                    logger.critical(
+                        f"error_params.{key} for target '{self.name}' must be finite and > 0. Got: {val}."
+                    )
+                    raise ValueError(
+                        f"error_params.{key} for target '{self.name}' must be finite and > 0. Got: {val}."
+                    )
                 self.error_params = {**(self.error_params or {}), key: val}
 
         # --- Coerce target (BUG-B7) ---
@@ -447,10 +473,12 @@ class TargetSpec:
             if not np.isfinite(self.tolerance) or self.tolerance < 0:
                 logger.critical(
                     f"tolerance for target '{self.name}' must be finite and >= 0 "
-                    f"(0 = an exact band). Got: {self.tolerance}.")
+                    f"(0 = an exact band). Got: {self.tolerance}."
+                )
                 raise ValueError(
                     f"tolerance for target '{self.name}' must be finite and >= 0 "
-                    f"(0 = an exact band). Got: {self.tolerance}.")
+                    f"(0 = an exact band). Got: {self.tolerance}."
+                )
 
         # --- Build the stateful normalizer (relative-adaptive), now that target/range are final ---
         # Deliberately last: the `seed` basis resolves against the COERCED target and range, and a
@@ -487,7 +515,7 @@ class TargetSpec:
             f"tolerance={self.tolerance}, goal={self.goal}, sim_type={self.sim_type}, enable={self.enable}"
         )
 
-    def _resolve_adaptive_seed(self, basis) -> Optional[float]:
+    def _resolve_adaptive_seed(self, basis) -> float | None:
         """Turn the `seed` BASIS into the numeric synthetic "past sample" that primes the scale.
 
         The normalizer's samples are raw error MAGNITUDES, so the seed must be one too — which is
@@ -518,27 +546,32 @@ class TargetSpec:
 
             raise ValueError(
                 f"error_params.seed for target {self.name!r} must be one of "
-                f"{list(ADAPTIVE_SEED_BASES)} or a positive number. Got: {basis!r}.")
+                f"{list(ADAPTIVE_SEED_BASES)} or a positive number. Got: {basis!r}."
+            )
         from spicexplorer.core.utils import log_space_range_coeff
 
-        magnitude = np.float64(abs(float(self.target))) if key == "target" else np.float64(self.range)
+        magnitude = (
+            np.float64(abs(float(self.target))) if key == "target" else np.float64(self.range)
+        )
         if not np.isfinite(magnitude) or magnitude <= 0:
             logger.warning(
                 f"Target {self.name!r}: cannot seed the adaptive scale from {key!r} "
-                f"(value {magnitude}); starting unseeded.")
+                f"(value {magnitude}); starting unseeded."
+            )
             return None
         if self.log_scale:
             target = np.float64(abs(float(self.target)))
             if not np.isfinite(target) or target <= 0:
                 logger.warning(
                     f"Target {self.name!r}: log_scale spec with non-positive target; "
-                    "cannot express an adaptive seed in decades, starting unseeded.")
+                    "cannot express an adaptive seed in decades, starting unseeded."
+                )
                 return None
             return float(log_space_range_coeff(target, magnitude))
         return float(magnitude)
 
     @staticmethod
-    def _measurement_tier(m: Dict[str, Any]) -> str:
+    def _measurement_tier(m: dict[str, Any]) -> str:
         """Which measurement tier a (shape-valid) recipe selects: `derived` (param-derived,
         `{derived: …}` — computed from the candidate sizing, no sim), `python` (Tier-1,
         engine-neutral `{meas: …}`), or `ocean` (Tier-2, `{result, expr}` / `{builder, …}`)."""
@@ -548,7 +581,7 @@ class TargetSpec:
         return "python" if "meas" in keys else "ocean"
 
     @staticmethod
-    def _validate_measurement(spec_name: str, m: Any) -> Dict[str, Any]:
+    def _validate_measurement(spec_name: str, m: Any) -> dict[str, Any]:
         """Validate a target's measurement recipe shape; return a normalized dict.
 
         Three authoring styles, all validated at load (before any simulation runs):
@@ -597,7 +630,7 @@ class TargetSpec:
             )
         return dict(m)
 
-    def measurement_tier(self) -> Optional[str]:
+    def measurement_tier(self) -> str | None:
         """`python` (Tier-1), `ocean` (Tier-2), or None if this spec carries no recipe."""
         if self.measurement is None:
             return None
@@ -685,10 +718,14 @@ class TargetSpec:
             try:
                 return SIMTYPE_TO_NGSPICE_PLOTTYPE[SimType(self.sim_type.lower())]
             except ValueError:
-                logger.critical(f"Cannot map sim_type '{self.sim_type}' to Ngspice_Plot_Type for target '{self.name}'")
+                logger.critical(
+                    f"Cannot map sim_type '{self.sim_type}' to Ngspice_Plot_Type for target '{self.name}'"
+                )
                 raise ValueError(f"Cannot map sim_type '{self.sim_type}' to Ngspice_Plot_Type")
         else:
-            logger.critical(f"Cannot map sim_type '{self.sim_type}' to Ngspice_Plot_Type for target '{self.name}'")
+            logger.critical(
+                f"Cannot map sim_type '{self.sim_type}' to Ngspice_Plot_Type for target '{self.name}'"
+            )
             raise ValueError(f"Cannot map sim_type '{self.sim_type}' to Ngspice_Plot_Type")
 
     def __str__(self) -> str:
@@ -698,9 +735,10 @@ class TargetSpec:
             f"error_type={self.error_type.value}, weight={self.weight}, enable={self.enable}, description={self.description})"
         )
 
+
 @dataclass
 class ListTargetSpec:
-    targets: List[TargetSpec] = field(default_factory=list)
+    targets: list[TargetSpec] = field(default_factory=list)
 
     def __post_init__(self):
         # Reject duplicate spec names (mirrors the dut_param and PVT-corner uniqueness checks). The
@@ -715,26 +753,18 @@ class ListTargetSpec:
         logger.info(f"Adding target '{target.name}' to ListTargetSpec")
         self.targets.append(target)
 
-    def get_target_by_name(self, name: str) -> Optional[TargetSpec]:
+    def get_target_by_name(self, name: str) -> TargetSpec | None:
         for t in self.targets:
             if t.name == name:
                 return t
         return None
 
-    def list_target_names(self) -> List[str]:
+    def list_target_names(self) -> list[str]:
         return [t.name for t in self.targets]
 
-    def enabled_targets(self) -> List[TargetSpec]:
+    def enabled_targets(self) -> list[TargetSpec]:
         return [t for t in self.targets if t.enable]
 
-@dataclass
-class LossFunctionConfig:
-    max_loss: Union[np.float64, str]
-    loss_norm_method: Optional[str]
-    loss_type: Optional[str]
-    rescale_mag: Optional[bool] = False
-    include_phase_loss : Optional[bool] = False
-    include_mag_loss : Optional[bool] = False
 
 @dataclass
 class VariableBoundConfig:
@@ -744,85 +774,21 @@ class VariableBoundConfig:
     def get_range(self) -> float:
         return self.max - self.min
 
-    def get_min_max(self) -> Tuple[float, float]:
+    def get_min_max(self) -> tuple[float, float]:
         return (self.min, self.max)
 
-# ------------------ RL Configuration Objects ------------------
-
-@dataclass
-class NoiseConfig:
-    type: str = NoiseType.GAUSSIAN.value
-    sigma_initial: float = 0.2
-    sigma_min: float = 0.01
-    sigma_decay: float = 0.995
-
-@dataclass
-class ReplayBufferConfig:
-    buffer_size: int = 100000
-    batch_size: int = 64
-
-@dataclass
-class RLTrainingConfig:
-    """Contains training loop settings and environment wrapper settings."""
-    gamma: float = 0.99
-    tau: float = 0.005
-    update_every: int = 1
-    initial_random_steps: int = 1000
-    policy_update_freq: int = 2
-    # Moved from EnvHyperparameters
-    max_episode_steps: int = 1000
-    normalize_observations: bool = True
-    normalize_actions: bool = True
-
-@dataclass
-class NetworkConfig:
-    """Generic config for Actor or Critic networks."""
-    lr: float = 0.001
-    hidden_units: Tuple[int, ...] = (256, 128)
-    weight_decay: float = 0.0
-    grad_clip: float = 1.0
-
-# --- Specific Agent Configs ---
-
-@dataclass
-class SACAlphaConfig:
-    learn_alpha: bool = True
-    alpha_init: float = 0.2
-    lr_alpha: float = 0.0003
-
-@dataclass
-class AgentConfig:
-    """Base interface for agent settings."""
-    pass
-
-@dataclass
-class DDPGConfig(AgentConfig):
-    actor: NetworkConfig = field(default_factory=NetworkConfig)
-    critic: NetworkConfig = field(default_factory=NetworkConfig)
-    noise: NoiseConfig = field(default_factory=NoiseConfig)
-    memory: ReplayBufferConfig = field(default_factory=ReplayBufferConfig)
-    training: RLTrainingConfig = field(default_factory=RLTrainingConfig)
-
-@dataclass
-class SACConfig(AgentConfig):
-    actor: NetworkConfig = field(default_factory=NetworkConfig)
-    critic: NetworkConfig = field(default_factory=NetworkConfig)
-    alpha: SACAlphaConfig = field(default_factory=SACAlphaConfig)
-    memory: ReplayBufferConfig = field(default_factory=ReplayBufferConfig)
-    training: RLTrainingConfig = field(default_factory=RLTrainingConfig)
 
 @dataclass
 class OptimizerConfig:
-    name: str # Optimization algorithm name
-    type: str # Optimizer family type
+    name: str  # Optimization algorithm name
+    type: str  # Optimizer family type
     budget: int
-    optimizer_kwargs: Optional[Dict[str, Any]]
+    optimizer_kwargs: dict[str, Any] | None
 
     target_specs: ListTargetSpec
-    lin_variable_bounds: Optional[VariableBoundConfig]
-    log_variable_bounds: Optional[VariableBoundConfig]
-    loss_function_config: Optional[LossFunctionConfig]
-    random_seed: Optional[int]
+    lin_variable_bounds: VariableBoundConfig | None
+    log_variable_bounds: VariableBoundConfig | None
+    random_seed: int | None
 
     # How the per-SPEC scores collapse into the one scalar the search engine sees. Distinct from
     # `pvt.score_aggregation`, which reduces the CORNER axis — a multi-corner run applies this per
@@ -831,7 +797,7 @@ class OptimizerConfig:
     # Strategies + their math: `core.utils.aggregate_spec_scores`.
     spec_aggregation: str = "feasibility_reward"
     #: Shape parameters for the chosen strategy (currently only chebyshev's `rho`).
-    aggregation_params: Optional[Dict[str, Any]] = None
+    aggregation_params: dict[str, Any] | None = None
     #: OPT-IN tie-breaker for the spec axis. `None` (default) is today's behaviour to the bit.
     #: The reward-less strategies (`weighted_sum`, `chebyshev`) score every FEASIBLE design
     #: identically 0, so the "best" design such a run reports is search-order noise; `objective`
@@ -839,12 +805,12 @@ class OptimizerConfig:
     #: design that is better on the DECLARED objectives wins the tie. A no-op under
     #: `feasibility_reward`, whose feasible branch already IS that term. See
     #: `core.utils.aggregate_spec_scores`.
-    tie_breaker: Optional[str] = None
+    tie_breaker: str | None = None
     #: Weight on that term. Cosmetic, not semantic — the base score is 0 wherever the term
     #: applies, so every positive weight gives the SAME ordering; it only sets the log's scale.
     #: `None` resolves at load to `core.utils.DEFAULT_TIE_BREAKER_WEIGHT` (that module cannot be
     #: imported at module scope here — it imports this one).
-    tie_breaker_weight: Optional[float] = None
+    tie_breaker_weight: float | None = None
     #: OPT-IN margin-aware reward. `0.0`/`None` (default) is today's behaviour to the bit; a
     #: positive weight adds `w · clip(worst normalized spec margin, 0, margin_reward_clip)` to a
     #: FEASIBLE trial's score. WORST, not mean, because that is the quantity measured to predict
@@ -852,10 +818,10 @@ class OptimizerConfig:
     #: corners, pass rate 23 %->67 % monotone in the worst tt margin, p = 0.001). Unlike
     #: `tie_breaker` it is NOT a no-op under `feasibility_reward`. See
     #: `core.utils.aggregate_spec_scores` / `normalized_spec_margin`.
-    margin_reward_weight: Optional[float] = None
+    margin_reward_weight: float | None = None
     #: Ceiling on the rewarded margin, in units of the spec's own `range` (default 1.0 = one full
     #: range of headroom). Bounds the term so a single roomy spec cannot approach `MAX_REWARD`.
-    margin_reward_clip: Optional[float] = None
+    margin_reward_clip: float | None = None
     #: What a spec the run could not MEASURE (missing / NaN / non-finite / non-positive under
     #: `log_scale`) does to the trial. `penalty` (default) is today's behaviour exactly: the spec
     #: scores `-MAX_PENALTY`, which already makes the trial infeasible, but nothing downstream can
@@ -863,22 +829,22 @@ class OptimizerConfig:
     #: `fail` additionally RECORDS it — the affected spec keys land in the trial's
     #: `metadata['unmeasured_specs']` with an explicit `metadata['feasible']` — so a partly-crashed
     #: simulation is machine-identifiable rather than re-derived. See `core.utils`.
-    unmeasured_policy: Optional[str] = None
+    unmeasured_policy: str | None = None
     #: Per-trial wall-time guard rails (ledger E-049: an Ax/BoTorch run's per-trial cost grew
     #: 27 s -> 117 s -> 200-292 s as the GP refit wall arrived, with no signal in the log; the runs
     #: had to be killed by hand). All `None` = OFF, which is exactly today's behaviour. Semantics
     #: and the rolling-median definitions: `optimization.trial_timing`.
     #: Absolute: WARN once the rolling median per-trial wall time exceeds this many seconds.
-    trial_time_warn_s: Optional[float] = None
+    trial_time_warn_s: float | None = None
     #: Relative: WARN once the rolling median exceeds this multiple of the run's OWN early-trial
     #: baseline. The honest one for E-049, whose signature is growth rather than an absolute cost.
-    trial_time_warn_factor: Optional[float] = None
+    trial_time_warn_factor: float | None = None
     #: Hard stop: end the run GRACEFULLY (final checkpoint taken, reason recorded) once the
     #: rolling median exceeds this. Not a single trial's time — one slow trial is a hiccup.
-    trial_time_stop_s: Optional[float] = None
+    trial_time_stop_s: float | None = None
     #: How often the rolling per-trial cost is reported at INFO. `None` -> the module default;
     #: 0 silences it.
-    trial_time_report_every: Optional[int] = None
+    trial_time_report_every: int | None = None
     #: Seed the search with the dut_params' `init` values: when True the Nevergrad backend
     #: `suggest()`s the `init` point so it is evaluated EARLY (a hint, not a queue — usually the
     #: first candidate serially, but with parallel workers/TwoPointsDE it may land a few trials in) (a searched param without `init` keeps
@@ -982,8 +948,10 @@ class OptimizerConfig:
             )
         else:
             self.trial_time_report_every = int(self.trial_time_report_every)
-        if any(getattr(self, k) is not None
-               for k in ("trial_time_warn_s", "trial_time_warn_factor", "trial_time_stop_s")):
+        if any(
+            getattr(self, k) is not None
+            for k in ("trial_time_warn_s", "trial_time_warn_factor", "trial_time_stop_s")
+        ):
             logger.info(
                 f"per-trial time guards: warn_s={self.trial_time_warn_s} "
                 f"warn_factor={self.trial_time_warn_factor} stop_s={self.trial_time_stop_s}"
@@ -1015,25 +983,15 @@ class OptimizerConfig:
                 f"\tLinear bounds: min={self.lin_variable_bounds.min}, max={self.lin_variable_bounds.max}"
             )
         if self.log_variable_bounds is None:
-            logger.warning("No log_variable_bounds provided; using default [0.0, 1.0].")
             self.log_variable_bounds = VariableBoundConfig(min=1, max=100.0)
+            # Values read from the object: the old literal said [0.0, 1.0] while setting [1, 100].
+            logger.warning(
+                f"No log_variable_bounds provided; using default "
+                f"[{self.log_variable_bounds.min}, {self.log_variable_bounds.max}]."
+            )
         else:
             logger.debug(
                 f"\tLog bounds: min={self.log_variable_bounds.min}, max={self.log_variable_bounds.max}"
-            )
-
-        # -------------------------
-        # Loss function config
-        # -------------------------
-        if self.loss_function_config is None:
-            logger.warning("No loss_function_config provided; using default values.")
-        else:
-            logger.debug(
-                f"\tLoss function: max_loss={self.loss_function_config.max_loss}, "
-                f"norm_method={self.loss_function_config.loss_norm_method}, "
-                f"type={self.loss_function_config.loss_type}, rescale_mag={self.loss_function_config.rescale_mag}, "
-                f"include_phase_loss={self.loss_function_config.include_phase_loss}, "
-                f"include_mag_loss={self.loss_function_config.include_mag_loss}"
             )
 
         # -------------------------
@@ -1053,35 +1011,37 @@ class OptimizerConfig:
             raise ValueError("Log variable bounds are not set")
         return np.float64(self.log_variable_bounds.get_range())
 
-    def get_lin_min_max(self) -> Tuple[float, float]:
+    def get_lin_min_max(self) -> tuple[float, float]:
         if self.lin_variable_bounds is None:
             raise ValueError("Linear variable bounds are not set")
         return self.lin_variable_bounds.get_min_max()
 
-    def get_log_min_max(self) -> Tuple[float, float]:
+    def get_log_min_max(self) -> tuple[float, float]:
         if self.log_variable_bounds is None:
-            raise ValueError("Linear variable bounds are not set")
+            raise ValueError("Log variable bounds are not set")
         return self.log_variable_bounds.get_min_max()
 
+
 # ---------- Interface Dataclass ----------
+
 
 @dataclass
 class Project_Setup:
     # General Info
     name: str
     description: str
-    simulator:  str
-    ws_root :   Path | str
-    netlist:    Path | str
-    outdir :    Path | str
+    simulator: str
+    ws_root: Path | str
+    netlist: Path | str
+    outdir: Path | str
 
     # Custom Data types
     tech_spec: TechSpec
-    dut_params: List[Param]
-    testbenches: List[TestbenchParams]
+    dut_params: list[Param]
+    testbenches: list[TestbenchParams]
     optimizer_config: OptimizerConfig
 
-    save_sim:  bool = False
+    save_sim: bool = False
     parallel_sim: bool = True
     # Optional pointer to the design's xschem schematic, relative to `ws_root`.
     # Consumed by the UI's Schematic viewer to pre-select the main `.sch`.
@@ -1098,7 +1058,7 @@ class Project_Setup:
     # to every enabled testbench's netlist once, before the optimization loop — so the
     # chosen corner's `.lib`/temp/supply actually drive the simulation. `None` preserves
     # the legacy behavior (the corner is whatever the testbench `.spice` hardcodes).
-    pvt: Optional[PVTConfig] = None
+    pvt: PVTConfig | None = None
 
     # DUT-parameterization projection.
     # `params_file` points at the circuit's `abstract/params.yaml` (spicexplorer/params@1 —
@@ -1113,7 +1073,7 @@ class Project_Setup:
     # (NevergradMixin injects frozen vals) — zero optimizer-core changes, both engine lanes.
     # Both keys absent → exactly the legacy behavior. See backends/params.py.
     params_file: Path | str | None = None
-    ungroup: Optional[List[str]] = None
+    ungroup: list[str] | None = None
 
     def __post_init__(self):
         # correct path types
@@ -1158,8 +1118,15 @@ class Project_Setup:
     # ------------------ Class Methods ------------------
 
     @classmethod
-    def from_yaml(cls, yaml_path: Union[str, Path]) -> "Project_Setup":
-        """Load a Project object from a YAML file with variable resolution."""
+    def from_yaml(cls, yaml_path: str | Path, *, strict: bool | None = None) -> "Project_Setup":
+        """Load a Project object from a YAML file with variable resolution.
+
+        A key in the `project:` block that no dataclass declares (a typo, a misplaced or a
+        legacy key) is reported rather than dropped silently (BUG-35): one WARNING per key by
+        default; with ``strict`` the load raises ValueError listing every such key instead.
+        ``strict=None`` (the default) reads the ``SX_STRICT_PROJECT_KEYS`` env var
+        (``1``/``true``/``yes``/``on``), so a CLI run can opt in without code changes.
+        """
 
         try:
             with open(yaml_path, "r") as f:
@@ -1174,17 +1141,24 @@ class Project_Setup:
             # A leading "~" is expanded. The examples ship `ws_root: ..`, which works on
             # any fresh clone without per-user path editing because the netlists are
             # committed inside the repo alongside the YAML.
-            proj = data['project']
+            proj = data["project"]
             yaml_dir = Path(yaml_path).resolve().parent
-            ws = Path(str(proj.get('ws_root') or '.')).expanduser()
+            ws = Path(str(proj.get("ws_root") or ".")).expanduser()
             if not ws.is_absolute():
                 ws = yaml_dir / ws
-            proj['ws_root'] = str(ws.resolve())
+            proj["ws_root"] = str(ws.resolve())
             logger.debug(f"Resolved ws_root → {proj['ws_root']}")
 
             # Desugar the optional `pvt:` block (expand process bundles, widen
             # singular `supply`, coerce numerics) before dacite maps it to PVTConfig.
             _normalize_pvt_block(proj)
+
+            # A retired key is refused outright, before the unknown-key walk would only warn.
+            _refuse_retired_project_keys(proj, yaml_path)
+
+            # dacite drops a key no dataclass declares with no warning: report each one first.
+            # After `_normalize_pvt_block`, so `pvt:` shorthand keys are consumed, not "unknown".
+            _report_unknown_project_keys(proj, yaml_path, strict)
 
             project = safe_from_dict(cls, proj, logger, config=DECITE_CONFIG)
 
@@ -1255,7 +1229,9 @@ class Project_Setup:
         for p in self.dut_params:
             resolved = resolve_knob(contract, p.name)
             if resolved != p.name:
-                logger.info(f"🔗 dut_param '{p.name}' → atomic symbol '{resolved}' (group first member)")
+                logger.info(
+                    f"🔗 dut_param '{p.name}' → atomic symbol '{resolved}' (group first member)"
+                )
                 p.name = resolved
         # Re-check uniqueness post-resolution: `<group>.<field>` and its first member's
         # atomic symbol are the SAME knob (the __post_init__ check ran on the raw names).
@@ -1301,7 +1277,9 @@ class Project_Setup:
                 # "missing min or max" because a string `val`/`init` makes needs_resolution() true.
                 param.ressolve_val(self.tech_spec.constraints)
                 if param.min_val is not None and param.max_val is not None:
-                    param.resolve_min_max(self.tech_spec.constraints)  # resolves init + checks min<max
+                    param.resolve_min_max(
+                        self.tech_spec.constraints
+                    )  # resolves init + checks min<max
                 elif isinstance(param.init, str):
                     param.init = resolve_reference(param.init, self.tech_spec.constraints)
                 continue
@@ -1311,7 +1289,9 @@ class Project_Setup:
             # silently inverted the search range (BUG-B8). `resolve_min_max` also resolves init.
             logger.debug(f"Resolving ranges for param '{param.name}'")
             param.resolve_min_max(self.tech_spec.constraints)
-            logger.debug(f"Resolved param '{param.name}': min={param.min_val}, max={param.max_val}, default={param.init}")
+            logger.debug(
+                f"Resolved param '{param.name}': min={param.min_val}, max={param.max_val}, default={param.init}"
+            )
             # Resolve the operating-point `val` too (eng-string / constraint ref), so the Schematic
             # inspector nominal and the project summary don't fall back to the range midpoint
             # (SCH-2 / BUG-A4). Mirrors the testbench-param loop below.
@@ -1321,20 +1301,21 @@ class Project_Setup:
         for tb in self.testbenches:
             for param in tb.params:
                 param.ressolve_val(self.tech_spec.constraints)
-                logger.debug(f"Resolved value for tb '{tb.name}' param '{param.name}' is {param.val}")
+                logger.debug(
+                    f"Resolved value for tb '{tb.name}' param '{param.name}' is {param.val}"
+                )
         logger.info("")
 
-
-    def get_constraint_by_name(self, name: str) -> Optional[np.float64]:
+    def get_constraint_by_name(self, name: str) -> np.float64 | None:
         value = self.tech_spec.constraints.get(name)
         logger.debug(f"Constraint '{name}': {value}")
         return value
 
-    def list_constraints(self) -> Dict[str, np.float64]:
+    def list_constraints(self) -> dict[str, np.float64]:
         logger.debug(f"Listing all constraints: {self.tech_spec.constraints}")
         return self.tech_spec.constraints
 
-    def get_param_by_name(self, name: str) -> Optional[Param]:
+    def get_param_by_name(self, name: str) -> Param | None:
         for p in self.dut_params:
             if p.name == name:
                 # logger.debug(f"Found DUT param: {p}")
@@ -1342,18 +1323,20 @@ class Project_Setup:
         logger.warning(f"DUT param '{name}' not found")
         return None
 
-    def list_params(self) -> List[str]:
+    def list_params(self) -> list[str]:
         param_names = [p.name for p in self.dut_params]
         logger.debug(f"DUT param names: {param_names}")
         return param_names
 
-    def get_log_scaled_params(self) -> List[Param]:
+    def get_log_scaled_params(self) -> list[Param]:
         log_params = [p for p in self.dut_params if p.log_scale]
         logger.debug(f"Log-scaled params: {[p.name for p in log_params]}")
         return log_params
 
-    def filter_params_by_range(self, min_value: float, max_value: float) -> List[Param]:
-        filtered = [p for p in self.dut_params if p.init is not None and min_value <= p.init <= max_value]
+    def filter_params_by_range(self, min_value: float, max_value: float) -> list[Param]:
+        filtered = [
+            p for p in self.dut_params if p.init is not None and min_value <= p.init <= max_value
+        ]
         logger.debug(f"Params in range {min_value}-{max_value}: {[p.name for p in filtered]}")
         return filtered
 
@@ -1364,8 +1347,8 @@ class Project_Setup:
         logger.info(f"🧠 Simulator: {self.simulator}")
         logger.info(f"📜 DUT Netlist: {self.netlist}")
         logger.info(f"🧪 Testbenches: {len(self.testbenches)} count")
-        for i,tb in enumerate(self.testbenches):
-            logger.info(f"\t({i+1}) {tb.name} @ {tb.netlist}")
+        for i, tb in enumerate(self.testbenches):
+            logger.info(f"\t({i + 1}) {tb.name} @ {tb.netlist}")
             if tb.description:
                 logger.info(f"\t- Description: {tb.description}")
         if self.pvt is not None:
@@ -1381,56 +1364,187 @@ class Project_Setup:
         logger.info(f"🔧 Tech Spec: {len(self.tech_spec.constraints)} constraints")
         for k, v in self.tech_spec.constraints.items():
             logger.info(f"\t• {k}: {v:.2e}")
-        logger.info(f"🎛 DUT Params: {len(self.dut_params)} params -> {[p.name for p in self.dut_params]}")
+        logger.info(
+            f"🎛 DUT Params: {len(self.dut_params)} params -> {[p.name for p in self.dut_params]}"
+        )
 
-        logger.info(f"🔍 target specs ({len(self.optimizer_config.target_specs.targets)}): {[(p.name, p.target, p.goal.value) for p in self.optimizer_config.target_specs.targets]}")
+        logger.info(
+            f"🔍 target specs ({len(self.optimizer_config.target_specs.targets)}): {[(p.name, p.target, p.goal.value) for p in self.optimizer_config.target_specs.targets]}"
+        )
         logger.info("===========================================")
 
+
 # ------------------ Dacite Config ------------------
-DECITE_CONFIG = Config(
-    type_hooks={
-        ListTargetSpec: list_target_spec_hook
-    }
-)
+DECITE_CONFIG = Config(type_hooks={ListTargetSpec: list_target_spec_hook})
+
+# ------------------ Unknown-key detection (BUG-35) ------------------
+# DECITE_CONFIG is deliberately non-strict, so dacite DROPS a key no dataclass declares: a typo
+# (`budgett`), a misplaced key (`parallel_sim` under optimizer_config) or a legacy one
+# (`freeze_to`) used to load with no effect and no warning. `from_yaml` walks the `project:`
+# block against the dataclass fields first and reports each such key; strict mode refuses it.
+
+#: Env switch for strict mode when `Project_Setup.from_yaml(strict=None)` (the default).
+STRICT_PROJECT_KEYS_ENV = "SX_STRICT_PROJECT_KEYS"
+
+
+@functools.lru_cache(maxsize=None)
+def _init_fields(cls: type) -> tuple[tuple[str, ...], dict[str, Any]]:
+    """A dataclass's YAML-settable field names (init fields only — `TargetSpec.error_state` is
+    runtime state, not a key) and its resolved type hints."""
+    names = tuple(f.name for f in dataclasses.fields(cls) if f.init)
+    return names, typing.get_type_hints(cls)
+
+
+def _nested_schema(tp: Any) -> tuple[type | None, bool]:
+    """The dataclass a field's value maps onto, and whether the value is a LIST of them —
+    `(None, False)` for a leaf or a free-form `Dict` (constraints, optimizer_kwargs,
+    error_params, measurement, corner params/options are opaque by design, not walked)."""
+    args = typing.get_args(tp) if typing.get_origin(tp) in (Union, types.UnionType) else (tp,)
+    for arg in args:
+        if arg is ListTargetSpec:
+            return TargetSpec, True  # DECITE_CONFIG's hook: a plain list of TargetSpec mappings
+        if typing.get_origin(arg) is list:
+            (item,) = typing.get_args(arg)
+            if dataclasses.is_dataclass(item):
+                return typing.cast(type, item), True
+        elif isinstance(arg, type) and dataclasses.is_dataclass(arg):
+            return arg, False
+    return None, False
+
+
+def _iter_unknown_keys(
+    data: Any, cls: type, where: str = ""
+) -> Iterator[tuple[str, tuple[str, ...]]]:
+    """Yield ``(dotted path, the valid keys at that level)`` for every key of the mapping ``data``
+    that the dataclass ``cls`` does not declare, descending into dataclass-typed fields. A list
+    item is labelled by its ``name`` when it has one (``dut_params[x_dut_IB].freeze_to``)."""
+    if not isinstance(data, dict):
+        return
+    names, hints = _init_fields(cls)
+    for key, value in data.items():
+        path = f"{where}.{key}" if where else str(key)
+        if key not in names:
+            yield path, names
+            continue
+        schema, is_list = _nested_schema(hints[key])
+        if schema is None:
+            continue
+        if not is_list:
+            yield from _iter_unknown_keys(value, schema, path)
+        elif isinstance(value, list):
+            for i, item in enumerate(value):
+                label = item.get("name") if isinstance(item, dict) else None
+                label = label if isinstance(label, str) and label else i
+                yield from _iter_unknown_keys(item, schema, f"{path}[{label}]")
+
+
+def find_unknown_project_keys(project: dict[str, Any]) -> list[str]:
+    """Dotted paths of every key in a raw `project:` mapping that no Project_Setup dataclass
+    declares — every key `Project_Setup.from_yaml` would otherwise drop. The `pvt:` shorthand
+    (`process_bundles`, `process:`, singular `supply:`) is expanded on a COPY first, so it is not
+    reported and the caller's mapping is left untouched."""
+    proj = copy.deepcopy(dict(project))
+    _normalize_pvt_block(proj)
+    return [path for path, _ in _iter_unknown_keys(proj, Project_Setup)]
+
+
+def _report_unknown_project_keys(proj: dict[str, Any], source: Any, strict: bool | None) -> None:
+    """`from_yaml`'s check on the (already expanded) `project:` block: one WARNING per unknown
+    key, with the closest valid key as a hint; in strict mode one ValueError listing them all."""
+    unknown = list(_iter_unknown_keys(proj, Project_Setup))
+    if not unknown:
+        return
+    if strict is None:
+        strict = os.environ.get(STRICT_PROJECT_KEYS_ENV, "").strip().lower() in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        )
+    if strict:
+        raise ValueError(
+            f"{len(unknown)} unknown key(s) in project YAML {source}: {[p for p, _ in unknown]}. "
+            f"Strict mode (strict=True / {STRICT_PROJECT_KEYS_ENV}) refuses them — fix or remove each."
+        )
+    for path, valid in unknown:
+        close = difflib.get_close_matches(path.rsplit(".", 1)[-1], valid, n=1)
+        hint = f" — did you mean '{close[0]}'?" if close else ""
+        logger.warning(f"Unknown key '{path}' in project YAML {source} is ignored{hint}")
+
+
+# ------------------ Retired keys ------------------
+# Keys the project YAML once carried for a backend that no longer exists, with the reason a stale
+# YAML should see instead of an "ignored unknown key" warning (the `_RETIRED_ENGINES` treatment
+# `optimizer_config.type` gets in `optimization/orchestrator.py`). Refused in every strictness
+# mode: the block configured something that cannot run, so loading it would mislead.
+_RETIRED_PROJECT_KEYS: dict[tuple[str, ...], str] = {
+    ("optimizer_config", "loss_function_config"): (
+        "it configured the loss of the Bode transfer-function optimizer, which was retired "
+        "2026-09-26 (spicexplorer-platform#304, #307); no optimizer reads it"
+    ),
+}
+
+
+def _refuse_retired_project_keys(proj: dict[str, Any], source: Any) -> None:
+    """Raise ValueError if the raw `project:` mapping still names a key in `_RETIRED_PROJECT_KEYS`."""
+    for path, reason in _RETIRED_PROJECT_KEYS.items():
+        node: Any = proj
+        for part in path[:-1]:
+            node = node.get(part) if isinstance(node, dict) else None
+        if isinstance(node, dict) and path[-1] in node:
+            dotted = ".".join(path)
+            raise ValueError(
+                f"{dotted} is no longer supported: {reason}. "
+                f"Remove the {path[-1]!r} block from project YAML {source}."
+            )
+
 
 # ------------------ Optimizer Objects ------------------
 @dataclass
 class OptimizationPoint:
     """Represents the simplest point in the optimization trace."""
-    params: Dict[str, float | np.float64]
+
+    params: dict[str, float | np.float64]
     score: float | np.float64
-    metadata: Optional[Dict[str, Any]] = field(default_factory=dict) # to add any other information
+    metadata: dict[str, Any] | None = field(default_factory=dict)  # to add any other information
+
 
 @dataclass
 class OptimizationLogEntry:
     """Represents a single entry in the optimization log."""
-    point: 'OptimizationPoint'
-    fit_summary: Optional[Dict[str, Dict[str, float | np.floating]]] = field(default_factory=dict)   # Depends on your optimizer output (could refine type)
-    log_file: Optional[Dict[str, str | Path]] = None                                  # Any log/debug info
+
+    point: "OptimizationPoint"
+    fit_summary: dict[str, dict[str, float | np.floating]] | None = field(
+        default_factory=dict
+    )  # Depends on your optimizer output (could refine type)
+    log_file: dict[str, str | Path] | None = None  # Any log/debug info
 
     def get_score(self) -> float | np.floating:
         return self.point.score
 
-    def get_params(self) -> Dict[str, float | np.floating]:
+    def get_params(self) -> dict[str, float | np.floating]:
         return self.point.params
 
-    def get_metadata(self) -> Dict[str, Any] | None:
+    def get_metadata(self) -> dict[str, Any] | None:
         return self.point.metadata
 
     def get_param_val(self, param_name: str) -> float | np.floating | None:
         if param_name not in self.point.params.keys():
-            logger.debug(f"{param_name} was not found in the OptimizationLogEntry object - should be one of {self.point.params.keys()}")
+            logger.debug(
+                f"{param_name} was not found in the OptimizationLogEntry object - should be one of {self.point.params.keys()}"
+            )
             return None
         return self.point.params[param_name]
 
-    def get_fit_summary(self) -> Dict[str, Any]:
+    def get_fit_summary(self) -> dict[str, Any]:
         if self.fit_summary is None:
             logger.error("tried accessing the fit_summary but this was never created")
             raise ValueError("tried accessing the fit_summary but this was never created")
         return self.fit_summary
 
-    def get_performance_params(self) -> Dict[str, float]:
-        if self.fit_summary is None: raise ValueError("fit_summary field is missing!")
+    def get_performance_params(self) -> dict[str, float]:
+        if self.fit_summary is None:
+            raise ValueError("fit_summary field is missing!")
 
         output = {}
         for key, val in self.fit_summary.items():
@@ -1439,15 +1553,16 @@ class OptimizationLogEntry:
         return output
 
 
-
-
 class OptimizationLog:
     """Acts like a list of OptimizationLogEntry objects."""
-    def __init__(self, initial_logs: Optional[List[OptimizationLogEntry]] = None):
+
+    def __init__(self, initial_logs: list[OptimizationLogEntry] | None = None):
         # Copy (and never share the default) so two default-constructed logs do
         # not alias the same list — the classic mutable-default trap that leaked
         # trials across runs/sanity-checks in one backend process.
-        self.log: List[OptimizationLogEntry] = list(initial_logs) if initial_logs is not None else []
+        self.log: list[OptimizationLogEntry] = (
+            list(initial_logs) if initial_logs is not None else []
+        )
 
     def __iter__(self) -> Iterator[OptimizationLogEntry]:
         """Allow iteration over log entries."""
@@ -1473,7 +1588,7 @@ class OptimizationLog:
         """Append a new entry to the log."""
         self.log.append(entry)
 
-    def extend(self, entries: List[OptimizationLogEntry]) -> None:
+    def extend(self, entries: list[OptimizationLogEntry]) -> None:
         """Extend log with multiple entries."""
         self.log.extend(entries)
 
@@ -1484,13 +1599,13 @@ class OptimizationLog:
     def get_score(self, index: int) -> float | np.floating:
         return self.log[index].get_score()
 
-    def get_params(self, index: int) -> Dict[str, float | np.floating]:
+    def get_params(self, index: int) -> dict[str, float | np.floating]:
         return self.log[index].get_params()
 
-    def get_all_loss(self) -> List[np.floating]:
+    def get_all_loss(self) -> list[np.floating]:
         return np.array([entry.get_score() for entry in self.log])
 
-    def get_metadata(self, index: int) -> Dict[str, Any]:
+    def get_metadata(self, index: int) -> dict[str, Any]:
         return self.log[index].get_metadata()
 
     def has_param(self, param_name: str) -> bool:
@@ -1502,20 +1617,21 @@ class OptimizationLog:
             return False
         return True
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         if len(self.log) == 0:
             logger.debug("no log file in the object")
             return True
         return False
 
-    def list_available_params(self) -> List[str]:
-        if self.is_empty(): return []
+    def list_available_params(self) -> list[str]:
+        if self.is_empty():
+            return []
         return list(self.log[0].get_params().keys())
 
-    def list_available_metrics(self) -> List[str]:
-        if self.is_empty(): return []
+    def list_available_metrics(self) -> list[str]:
+        if self.is_empty():
+            return []
         return list(self.log[0].get_fit_summary().keys())
-
 
     def update_entry(self, index: int, new_entry: OptimizationLogEntry) -> None:
         """Update an existing log entry at the specified index."""
@@ -1524,7 +1640,9 @@ class OptimizationLog:
             raise IndexError("Index out of range")
         self.log[index] = new_entry
 
-    def update_entry_fit_summary(self, index: int, fit_summary: Dict[str, Dict[str, float | np.floating]]) -> None:
+    def update_entry_fit_summary(
+        self, index: int, fit_summary: dict[str, dict[str, float | np.floating]]
+    ) -> None:
         """Update the fit_summary of an existing log entry at the specified index."""
         if index < 0 or index >= len(self.log):
             logger.error(f"Index {index} out of range for OptimizationLog of size {len(self.log)}")
@@ -1541,6 +1659,3 @@ class OptimizationLog:
             logger.error(f"Index {index} out of range for OptimizationLog of size {len(self.log)}")
             raise IndexError("Index out of range")
         self.log[index].point.score = score
-
-
-

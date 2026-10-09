@@ -6,6 +6,7 @@ across the safety gates. The multi-corner test replicates the strip+add sequence
 `_prepare_ngspice_netlist` runs, proving slim sections don't accumulate when one editor is
 re-used across PVT corners.
 """
+
 from __future__ import annotations
 
 import os
@@ -29,6 +30,7 @@ def _abs_slim(root, subdir="sky130A") -> str:
     absolute path (a bare basename fails to resolve — proven in-container).
     """
     return str(Path(root) / subdir / "libs.tech" / "ngspice" / "corners" / SLIM)
+
 
 _SLIM_FIXTURE = """\
 * SLIM sky130 corner library — GENERATED (test fixture).
@@ -170,7 +172,9 @@ def _apply_prepare_swap(lines):
         return list(lines)
     full_re = re.compile(plan.full_lib_strip, re.IGNORECASE)
     slim_re = re.compile(plan.slim_lib_strip, re.IGNORECASE)
-    kept = [ln for ln in lines if not (isinstance(ln, str) and (full_re.match(ln) or slim_re.match(ln)))]
+    kept = [
+        ln for ln in lines if not (isinstance(ln, str) and (full_re.match(ln) or slim_re.match(ln)))
+    ]
     kept += [f".lib {plan.slim_lib} {s}" for s in plan.sections]
     return kept
 
@@ -185,7 +189,9 @@ def test_multicorner_no_accumulation(pdk_with_slim):
         lines.append(f".lib sky130.lib.spice {corner}")
         lines = _apply_prepare_swap(lines)
         slim_libs = [ln for ln in lines if slim_strip.match(ln)]
-        assert slim_libs == [f".lib {_abs_slim(pdk_with_slim)} {corner}"], f"corner {corner}: {slim_libs}"
+        assert slim_libs == [f".lib {_abs_slim(pdk_with_slim)} {corner}"], (
+            f"corner {corner}: {slim_libs}"
+        )
 
 
 def test_repeated_run_idempotent(pdk_with_slim):
@@ -209,7 +215,10 @@ def test_no_noise_no_sparse():
 
 
 def test_existing_solver_option_skips(monkeypatch):
-    assert noise_needs_sparse([".option klu"], ["noise v(vout) Vinp dec 101 1k 100MEG"], "noise") is False
+    assert (
+        noise_needs_sparse([".option klu"], ["noise v(vout) Vinp dec 101 1k 100MEG"], "noise")
+        is False
+    )
 
 
 def test_noise_guard_disabled(monkeypatch):

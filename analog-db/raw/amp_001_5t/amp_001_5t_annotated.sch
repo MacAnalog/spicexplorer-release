@@ -27,10 +27,10 @@ N 20 290 20 320 {}
 N 80 0 80 94 {}
 N 80 260 80 354 {}
 N 320 450 320 520 {}
-N 360 430 360 490 {}
+N 360 450 360 490 {}
 N 360 550 360 660 {}
 N 420 520 420 614 {}
-N -550 -140 550 -140 {}
+N -815 -140 815 -140 {}
 N -420 0 -360 0 {}
 N -320 0 -260 0 {}
 N -50 0 -20 0 {}
@@ -38,37 +38,32 @@ N 20 0 80 0 {}
 N -360 60 -50 60 {}
 N -360 70 -320 70 {}
 N -420 260 -360 260 {}
-N -320 260 -260 260 {}
-N -80 260 -20 260 {}
+N -320 260 -290 260 {}
+N -110 260 -20 260 {}
 N 20 260 80 260 {}
 N -360 320 20 320 {}
 N 320 450 360 450 {}
 N -250 520 -190 520 {}
-N -150 520 -90 520 {}
+N -180 520 320 520 {}
 N 360 520 420 520 {}
-N -550 660 550 660 {}
-C {devices/lab_wire.sym} -550 -140 0 0 {name=l0 lab=vdd}
-C {devices/lab_wire.sym} -550 660 0 0 {name=l1 lab=vss}
-C {devices/lab_wire.sym} -90 520 0 1 {name=l2 lab=ibias}
-C {devices/lab_wire.sym} 360 430 0 1 {name=l3 lab=ibias}
-C {devices/lab_wire.sym} -260 0 0 1 {name=l4 lab=outm}
-C {devices/lab_wire.sym} -360 350 2 0 {name=l5 lab=tail}
-C {devices/lab_wire.sym} -80 260 0 0 {name=l6 lab=vinn}
-C {devices/lab_wire.sym} -260 260 0 1 {name=l7 lab=vinp}
-C {devices/lab_wire.sym} 20 90 2 0 {name=l8 lab=vout}
-C {devices/lab_wire.sym} -420 94 2 0 {name=l9 lab=vdd}
-C {devices/lab_wire.sym} 80 94 2 0 {name=l10 lab=vdd}
-C {devices/lab_wire.sym} -420 354 2 0 {name=l11 lab=vss}
-C {devices/lab_wire.sym} 80 354 2 0 {name=l12 lab=vss}
-C {devices/lab_wire.sym} -250 614 2 0 {name=l13 lab=vss}
-C {devices/lab_wire.sym} 420 614 2 0 {name=l14 lab=vss}
-C {devices/ipin.sym} -690 260 0 0 {name=p0 lab=vinp}
-C {devices/ipin.sym} -690 380 0 0 {name=p1 lab=vinn}
-C {devices/opin.sym} 690 30 0 0 {name=p2 lab=vout}
-C {devices/opin.sym} 690 490 0 0 {name=p3 lab=ibias}
-B 8 -528 -78 188 78 {fill=0}
-T {PMOS Simple Current Mirror} -528 -96 0 0 0.3 0.3 {layer=8}
-B 10 -358 442 528 598 {fill=0}
-T {NMOS Simple Current Mirror} -358 424 0 0 0.3 0.3 {layer=10}
-B 12 -528 182 188 338 {fill=0}
-T {NMOS Differential Pair} -528 164 0 0 0.3 0.3 {layer=12}
+N -815 660 815 660 {}
+C {devices/lab_wire.sym} -260 0 0 1 {name=l0 lab=outm}
+C {devices/lab_wire.sym} -360 350 2 0 {name=l1 lab=tail}
+C {devices/lab_wire.sym} -420 94 2 0 {name=l2 lab=vdd}
+C {devices/lab_wire.sym} 80 94 2 0 {name=l3 lab=vdd}
+C {devices/lab_wire.sym} -420 354 2 0 {name=l4 lab=vss}
+C {devices/lab_wire.sym} 80 354 2 0 {name=l5 lab=vss}
+C {devices/lab_wire.sym} -250 614 2 0 {name=l6 lab=vss}
+C {devices/lab_wire.sym} 420 614 2 0 {name=l7 lab=vss}
+C {devices/ipin.sym} -290 260 0 0 {name=p0 lab=vinp}
+C {devices/ipin.sym} -110 260 0 0 {name=p1 lab=vinn}
+C {devices/iopin.sym} -815 -140 0 0 {name=p2 lab=vdd}
+C {devices/iopin.sym} -815 660 0 0 {name=p3 lab=vss}
+C {devices/opin.sym} 20 60 0 0 {name=p4 lab=vout}
+C {devices/opin.sym} 360 450 0 0 {name=p5 lab=ibias}
+B 8 -796 -78 456 78 {fill=0}
+T {PMOS Simple Current Mirror} -796 -96 0 0 0.3 0.3 {layer=8}
+B 10 -626 442 796 598 {fill=0}
+T {NMOS Simple Current Mirror} -626 424 0 0 0.3 0.3 {layer=10}
+B 12 -796 182 456 338 {fill=0}
+T {NMOS Differential Pair} -796 164 0 0 0.3 0.3 {layer=12}

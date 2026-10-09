@@ -1,8 +1,8 @@
-> **[REFERENCE / ARCHIVE-CANDIDATE]** — Migration audit. Parent plan: `doc/plan_examples_db.md` §3b/§3c. Most entries are closed (Phase 0 complete); open remnants: Phase-8 API/route repoint (`spec_library.yaml`, `routes/checkpoint.py`, `netlist.py`) and `coding_style.xml` (Phase 3). When those close this doc becomes an archive.
+> **[REFERENCE / ARCHIVE-CANDIDATE]** — Migration audit. Parent plan: `doc/archive/plan_examples_db.md` §3b/§3c. Most entries are closed (Phase 0 complete); open remnants: Phase-8 API/route repoint (`spec_library.yaml`, `routes/checkpoint.py`, `netlist.py`) and `coding_style.xml` (Phase 3). When those close this doc becomes an archive.
 
 # Loss-less migration audit — `examples/OTA/*` → `circuits/`
 
-> Plan `doc/plan_examples_db.md` §3b (follow-up #4). **Rule:** nothing is deleted until it is
+> Plan `doc/archive/plan_examples_db.md` §3b (follow-up #4). **Rule:** nothing is deleted until it is
 > re-homed **and** consumers (notebooks/UI/tests) repoint. This audit enumerates every file
 > under `examples/OTA/*` (+ the relocatable `examples/` root assets) and asserts a destination.
 > Generated against the inventory at Phase 0 (98 files: cascode 54, 5t-ota 23, folded_cascode 21).

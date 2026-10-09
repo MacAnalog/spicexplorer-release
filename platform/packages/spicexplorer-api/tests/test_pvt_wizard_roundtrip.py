@@ -3,6 +3,7 @@
 Skipped unless the `ui` extra is installed (the backend imports FastAPI/pydantic).
 No ngspice / PDK needed — pure dict transforms + a library re-parse.
 """
+
 import os
 import sys
 import tempfile
@@ -32,7 +33,10 @@ def test_pvt_block_roundtrips_through_the_wizard():
     assert names == ["tt_27C_1V8", "ss_125C_1V62", "ff_m40C_1V98"]
     tt = form["pvt"]["corners"][0]
     assert tt["supply_node"] == "VDD"
-    assert [(m["lib_file"], m["section"]) for m in tt["includes"]][0] == ("cornerMOSlv.lib", "mos_tt")
+    assert [(m["lib_file"], m["section"]) for m in tt["includes"]][0] == (
+        "cornerMOSlv.lib",
+        "mos_tt",
+    )
     assert form["pvt"]["corners"][2]["enabled"] is False  # ff is disabled
 
     # the multi-corner (Phase 2) knobs survive YAML → form…
@@ -43,7 +47,9 @@ def test_pvt_block_roundtrips_through_the_wizard():
     out_yaml = generate_yaml(form)
     assert "pvt:" in out_yaml and "active_corner" in out_yaml
 
-    with tempfile.NamedTemporaryFile("w", suffix=".yaml", dir=str(FC_YAML.parent), delete=False) as f:
+    with tempfile.NamedTemporaryFile(
+        "w", suffix=".yaml", dir=str(FC_YAML.parent), delete=False
+    ) as f:
         f.write(out_yaml)
         tmp = f.name
     try:
@@ -57,7 +63,10 @@ def test_pvt_block_roundtrips_through_the_wizard():
         active = project.pvt.get_active()
         assert active.temp == 27.0
         assert active.supplies[0].value == 1.8
-        assert [(m.lib_file, m.section) for m in active.model_includes][0] == ("cornerMOSlv.lib", "mos_tt")
+        assert [(m.lib_file, m.section) for m in active.model_includes][0] == (
+            "cornerMOSlv.lib",
+            "mos_tt",
+        )
     finally:
         os.unlink(tmp)
 
@@ -70,7 +79,9 @@ def test_non_default_aggregation_roundtrips_through_the_wizard():
     assert form["pvt"]["score_aggregation"] == "worst_case"
 
     out_yaml = generate_yaml(form)
-    with tempfile.NamedTemporaryFile("w", suffix=".yaml", dir=str(FC_YAML.parent), delete=False) as f:
+    with tempfile.NamedTemporaryFile(
+        "w", suffix=".yaml", dir=str(FC_YAML.parent), delete=False
+    ) as f:
         f.write(out_yaml)
         tmp = f.name
     try:
@@ -91,9 +102,12 @@ def test_project_without_pvt_yields_empty_wizard_pvt():
     (raw.get("project") or {}).pop("pvt", None)
     form = project_dict_to_form(raw)
     assert form["pvt"] == {
-        "active_corner": "", "corners": [], "model_lib_root": "",
+        "active_corner": "",
+        "corners": [],
+        "model_lib_root": "",
         # Phase-2 knobs are always present in the form, defaulted for no-PVT projects.
-        "mode": "single", "score_aggregation": "mean",
+        "mode": "single",
+        "score_aggregation": "mean",
     }
     # …and generating from it emits no `pvt:` block.
     assert "\npvt:" not in generate_yaml(form)
@@ -110,7 +124,10 @@ def test_pvt_model_lib_root_survives_wizard_roundtrip():
         "model_lib_root": root,
         "corners": [
             {
-                "name": "tt", "temp": "27", "supply_node": "VDD", "supply_value": "1.5",
+                "name": "tt",
+                "temp": "27",
+                "supply_node": "VDD",
+                "supply_value": "1.5",
                 "enabled": True,
                 "includes": [{"lib_file": "cornerMOSlv.lib", "section": "mos_tt"}],
             }
@@ -118,7 +135,7 @@ def test_pvt_model_lib_root_survives_wizard_roundtrip():
     }
     block = _build_pvt_block({"pvt": form_pvt})
     assert block is not None and block["model_lib_root"] == root  # emitted, not dropped
-    assert _pvt_block_to_form(block)["model_lib_root"] == root      # carried back to the form
+    assert _pvt_block_to_form(block)["model_lib_root"] == root  # carried back to the form
 
 
 def test_pvt_multi_rail_supplies_survive_wizard_roundtrip():
@@ -129,8 +146,10 @@ def test_pvt_multi_rail_supplies_survive_wizard_roundtrip():
         "active_corner": "tt",
         "corners": [
             {
-                "name": "tt", "temp": "27",
-                "supply_node": "VDD", "supply_value": "1.8",
+                "name": "tt",
+                "temp": "27",
+                "supply_node": "VDD",
+                "supply_value": "1.8",
                 "extra_supplies": [{"node": "VDDH", "value": "3.3"}],
                 "enabled": True,
                 "includes": [{"lib_file": "cornerMOSlv.lib", "section": "mos_tt"}],
@@ -147,3 +166,37 @@ def test_pvt_multi_rail_supplies_survive_wizard_roundtrip():
     assert len(back["extra_supplies"]) == 1
     assert back["extra_supplies"][0]["node"] == "VDDH"
     assert float(back["extra_supplies"][0]["value"]) == 3.3
+
+
+def test_project_load_summarises_a_sectionless_include(tmp_path, monkeypatch):
+    """DATA-F3: a corner include with no section (gf180mcu's `design.ngspice`) loads and
+    summarises as `section: null`, not a 500 from a response model that still wants a str."""
+    import tempfile
+
+    from fastapi.testclient import TestClient
+    from spicexplorer_api.main import app
+
+    raw = yaml.safe_load(FC_YAML.read_text())
+    for bundle in raw["project"]["pvt"]["process_bundles"].values():
+        bundle.insert(0, {"lib_file": "design.ngspice"})
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))  # the route's spx_uploaded_* copy
+
+    res = TestClient(app).post(
+        "/api/project/load",
+        json={"yaml_content": yaml.safe_dump(raw, sort_keys=False), "yaml_path": str(FC_YAML)},
+    )
+    assert res.status_code == 200, res.text
+    includes = res.json()["summary"]["pvt"]["corners"][0]["model_includes"]
+    assert includes[0] == {"lib_file": "design.ngspice", "section": None}
+    assert includes[1] == {"lib_file": "cornerMOSlv.lib", "section": "mos_tt"}
+
+
+def test_openapi_model_include_section_is_optional_and_nullable():
+    """DATA-F3 in the published OpenAPI schema the UI's generated types come from: a summarised
+    model include MAY omit `section`, and a present one may be null (a sectionless include)."""
+    from spicexplorer_api.main import app
+
+    schema = app.openapi()["components"]["schemas"]["ModelInclude"]
+    assert schema["required"] == ["lib_file"]
+    assert {"type": "null"} in schema["properties"]["section"]["anyOf"]
+    assert {"type": "string"} in schema["properties"]["section"]["anyOf"]

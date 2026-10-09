@@ -48,7 +48,9 @@ def test_ngspice_sanity_check(tmp_path):
         output_folder=tmp_path / "spice_out",
     )
     ok = wrapper.run_sanity_check()
-    assert ok, "run_sanity_check() returned False — check ngspice installation and model library paths"
+    assert ok, (
+        "run_sanity_check() returned False — check ngspice installation and model library paths"
+    )
 
 
 @requires_ngspice

@@ -14,7 +14,6 @@ extrapolated, matching the rest of the tool's fail-loud contract.
 
 from __future__ import annotations
 
-import math
 from collections.abc import Mapping
 from os import PathLike
 
@@ -23,9 +22,9 @@ from .errors import OutOfGridError
 from .tables import DeviceTable
 
 #: Round-trip tolerance on a JD→gm/ID inversion, mirroring :meth:`DeviceTable.gm_id_for_jd`'s own
-#: ``rel_tol=0.05``. The blended answer has to honour the same contract as the per-table ones it is
-#: blended from — otherwise a ``SizedDevice`` sized from the REQUESTED jd disagrees with its own
-#: operating point by more than the package's own promise.
+#: 5 %, relative to the REQUESTED jd. The blended answer has to meet the same 5 % bound as the
+#: per-table ones it is blended from; otherwise a ``SizedDevice`` sized from the REQUESTED jd
+#: disagrees with its own operating point by more than that 5 %.
 _JD_ROUND_TRIP_RTOL = 0.05
 
 
@@ -69,7 +68,9 @@ class FingerWidthSet:
                 return lo, hi, w
         return ws[-1], ws[-1], 0.0  # single-point set, wf == that point
 
-    def at(self, gm_id: float, L: float, vds: float, vsb: float = 0.0, *, wf: float) -> OperatingPoint:
+    def at(
+        self, gm_id: float, L: float, vds: float, vsb: float = 0.0, *, wf: float
+    ) -> OperatingPoint:
         """The :class:`OperatingPoint` at (gm/ID, L, VDS, VSB) **and finger width ``wf``**.
 
         Each field is linearly interpolated between the two bracketing finger-width tables (an exact
@@ -91,7 +92,10 @@ class FingerWidthSet:
         op_lo = self._t[lo].at(gm_id, L, vds, vsb)
         op_hi = self._t[hi].at(gm_id, L, vds, vsb)
         return OperatingPoint(
-            gm_id=gm_id, L=L, vds=vds, vsb=vsb,
+            gm_id=gm_id,
+            L=L,
+            vds=vds,
+            vsb=vsb,
             vgs=_lerp(op_lo.vgs, op_hi.vgs, w),
             jd=_lerp(op_lo.jd, op_hi.jd, w),
             av0=_lerp(op_lo.av0, op_hi.av0, w),
@@ -100,7 +104,9 @@ class FingerWidthSet:
             cdd_w=_lerp(op_lo.cdd_w, op_hi.cdd_w, w),
         )
 
-    def gm_id_for_jd(self, jd: float, L: float, vds: float, vsb: float = 0.0, *, wf: float) -> float:
+    def gm_id_for_jd(
+        self, jd: float, L: float, vds: float, vsb: float = 0.0, *, wf: float
+    ) -> float:
         """The gm/ID giving current density ``jd`` [A/µm] at (L, VDS, VSB) **and finger width ``wf``**.
 
         The finger-width counterpart of :meth:`DeviceTable.gm_id_for_jd` — the weak-inversion entry
@@ -129,7 +135,8 @@ class FingerWidthSet:
             w,
         )
         jd_back = self.at(gm_id, L, vds, vsb, wf=wf).jd
-        if not math.isclose(jd_back, jd, rel_tol=_JD_ROUND_TRIP_RTOL):
+        # Relative to the target (math.isclose scales by the larger value: up to 5.26 % admitted).
+        if not abs(jd_back - jd) <= _JD_ROUND_TRIP_RTOL * abs(jd):
             raise OutOfGridError(
                 f"the finger-width blend at wf={wf:g} µm does not invert consistently: jd={jd:g} "
                 f"A/µm inverts to gm/ID={gm_id:g} 1/V between the {lo:g} µm and {hi:g} µm tables "

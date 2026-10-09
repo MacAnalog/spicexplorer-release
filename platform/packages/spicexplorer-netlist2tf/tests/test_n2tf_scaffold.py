@@ -3,7 +3,7 @@
 Invariants the whole tool depends on:
 1. the package imports cleanly;
 2. importing it does NOT drag in torch, lcapy, SLiCAP, or the circuitgraph peer (the leaf must
-   stay light and behind the peer wall — doc/plan_netlist2tf.md §1);
+   stay light and behind the peer wall — doc/archive/plan_netlist2tf.md §1);
 3. it reaches core's NetlistView seam and nothing heavier.
 """
 

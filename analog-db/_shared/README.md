@@ -1,7 +1,7 @@
 # `_shared/` — analog-DB infrastructure
 
 Cross-circuit infrastructure for the SpiceXplorer analog circuit database (plan
-`doc/plan_examples_db.md`). The per-circuit data lives in `../circuits/<id>/`; the typed,
+`doc/archive/plan_examples_db.md`). The per-circuit data lives in `../circuits/<id>/`; the typed,
 class-aware index is `../catalog.json`. The verify harness + `analog-db` CLI live in the
 `spicexplorer-analog-db` package.
 

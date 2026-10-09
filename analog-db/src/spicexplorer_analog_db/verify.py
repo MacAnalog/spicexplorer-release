@@ -9,13 +9,18 @@ T4 conformance — measured vs datasheet spec + symbolic cross-check (IMPLEMENTE
                  ``--sim``, parallel to T3, PDK-gated — reuses the T3 measures).
 
 The matrix report is ``list[CheckResult]``: each row is one (circuit, tier, check) → status.
-``circuit.status`` is DERIVED from the highest tier a circuit clears.
+A circuit's DERIVED status is the highest rung it clears (``derive_status``):
+``generated`` = T0-T2, ``simulated`` = + T3, ``validated`` = + T4. The ``status`` in
+``circuit.yaml`` is AUTHORED and never rewritten by a run. ``analog-db verify-status`` records the
+derived rung of one ``--json`` run in ``verify_status.json``, which ``catalog.json`` publishes as
+``derived_status`` (the ``verify_status`` module).
 """
 
 from __future__ import annotations
 
 import concurrent.futures
 import json
+import logging
 import math
 import os
 import re
@@ -24,15 +29,17 @@ from typing import Literal
 
 import yaml
 
-from . import catalog, export, generate, model, paths, pdks, schema, yamlio
+from . import catalog, export, generate, model, paths, pdks, schema, verify_status, yamlio
 from .extends import ExtendsError, resolve_extends
+
+logger = logging.getLogger(__name__)
 
 Status = Literal["pass", "fail", "skip"]
 TIERS = (0, 1, 2, 3, 4)
 _TIER_LANDS = {3: "Phase 7 (PDK-gated)", 4: "Phase 7 (PDK-gated)"}
 
-# status precedence for the DERIVED circuit status
-_TIER_STATUS = {0: "generated", 1: "generated", 2: "generated", 3: "simulated", 4: "validated"}
+# the DERIVED status ladder: each rung needs every tier up to it to clear
+_RUNGS = (("generated", (0, 1, 2)), ("simulated", (3,)), ("validated", (4,)))
 
 
 @dataclass(frozen=True)
@@ -136,8 +143,31 @@ def _tier0_db_level() -> list[CheckResult]:
                 "committed scoreboard.json is stale; run `analog-db scoreboard --write`",
             )
         )
+    results.append(_tier0_verify_status())
     results.extend(_tier0_raw_catalog())
     return results
+
+
+def _tier0_verify_status() -> CheckResult:
+    """The committed verify record (``verify_status.json``) is schema-valid and names only
+    circuits the DB has. Its rungs are not re-derived here; the catalog checks each one."""
+    try:
+        doc = verify_status.read_committed()
+    except ValueError as exc:
+        return _fail("", 0, "verify_status:record", f"verify_status.json is not JSON: {exc}")
+    if doc is None:
+        return _skip(
+            "",
+            0,
+            "verify_status:record",
+            "no committed verify_status.json (run `analog-db verify-status --write`)",
+        )
+    errs = verify_status.problems(doc)
+    return (
+        _ok("", 0, "verify_status:record")
+        if not errs
+        else _fail("", 0, "verify_status:record", "; ".join(errs))
+    )
 
 
 def _tier0_raw_catalog() -> list[CheckResult]:
@@ -205,7 +235,9 @@ def _tier0_reference_circuit(c: model.Circuit) -> list[CheckResult]:
     r.append(
         _ok(c.id, 0, "ref:provenance")
         if not missing
-        else _fail(c.id, 0, "ref:provenance", f"provenance missing {missing} (source + license required)")
+        else _fail(
+            c.id, 0, "ref:provenance", f"provenance missing {missing} (source + license required)"
+        )
     )
 
     # every declared reference binding is either an upstream POINTER (URL — nothing on disk to
@@ -252,14 +284,21 @@ def _tier0_reference_decks_parse(c: model.Circuit) -> list[CheckResult]:
         spice_engine = None
     if spice_engine is None or not hasattr(spice_engine, "NetlistDialect"):
         return [
-            _skip(c.id, 0, "ref:parse", "dialect-aware NetlistView unavailable (pre-dialect spicexplorer-core)")
+            _skip(
+                c.id,
+                0,
+                "ref:parse",
+                "dialect-aware NetlistView unavailable (pre-dialect spicexplorer-core)",
+            )
         ]
     netlist_view = spice_engine.NetlistView
 
     r: list[CheckResult] = []
     core_logger = logging.getLogger("spicexplorer_core")
     prev_level = core_logger.level
-    core_logger.setLevel(logging.ERROR)  # reader warnings (black-box masters, …) are not verify output
+    core_logger.setLevel(
+        logging.ERROR
+    )  # reader warnings (black-box masters, …) are not verify output
     try:
         for entry in c.references:
             if not entry.get("dir"):
@@ -415,7 +454,22 @@ def _tier0_circuit(c: model.Circuit) -> list[CheckResult]:
         templates = set(model.class_templates(c.klass))
         canon = set(model.load_class(c.klass).get("canonical_metrics", []))
 
-        bad = [a for a in c.analyses if a not in templates]
+        # An analysis id need not BE a class template: a circuit may declare several
+        # bindings of one template at different operating points (``psrr`` at 1 kHz and
+        # ``psrr_1m`` at 1 MHz; ``ac_loopgain{,_lo,_hi}`` at three loads). Such an id is
+        # legitimate when its own ``analyses/<id>.yaml`` names a class template in
+        # ``template:`` — the same resolution the per-analysis ``xref:template:<id>`` row
+        # below already performs.
+        files = c.analysis_files()
+
+        def _resolves_to_class_template(a: str) -> bool:
+            if a in templates:
+                return True
+            if a not in files:
+                return False
+            return (c.analysis(a) or {}).get("template") in templates
+
+        bad = [a for a in c.analyses if not _resolves_to_class_template(a)]
         r.append(
             _ok(c.id, 0, "xref:analyses_in_class")
             if not bad
@@ -425,9 +479,7 @@ def _tier0_circuit(c: model.Circuit) -> list[CheckResult]:
         # A clocked (chopper / switched-cap) circuit must NOT declare a frozen-OP small-signal
         # analysis (.ac / .noise) — it freezes the switches, so the figure is physically wrong.
         # Author-time fail-fast (the PDK-free gate); assemble() also refuses it at run time.
-        bad_ss = [
-            a for a in c.analyses if c.is_clocked and model.is_frozen_smallsignal_analysis(a)
-        ]
+        bad_ss = [a for a in c.analyses if c.is_clocked and model.is_frozen_smallsignal_analysis(a)]
         r.append(
             _ok(c.id, 0, "xref:no_frozen_ss_on_clocked")
             if not bad_ss
@@ -517,7 +569,9 @@ def _tier0_circuit(c: model.Circuit) -> list[CheckResult]:
             if errs:
                 bad_e.append(f"{e.get('pdk')}/{e.get('design_id')}: {errs[0]}")
             elif e.get("circuit") != c.id:
-                bad_e.append(f"{e.get('pdk')}/{e.get('design_id')}: circuit field {e.get('circuit')!r}")
+                bad_e.append(
+                    f"{e.get('pdk')}/{e.get('design_id')}: circuit field {e.get('circuit')!r}"
+                )
         r.append(
             _ok(c.id, 0, "scoreboard:entries")
             if not bad_e
@@ -564,9 +618,7 @@ def run_tier0(circuit_ids: list[str] | None = None) -> list[CheckResult]:
 # --------------------------------------------------------------------------- Tier 1
 
 
-def _params_group_incoherence(
-    group: dict, comps: dict[str, dict]
-) -> str | None:
+def _params_group_incoherence(group: dict, comps: dict[str, dict]) -> str | None:
     """Why this group's members are NOT electrically coherent with its claimed ``kind`` (plan
     D-6), or ``None`` when they are.
 
@@ -606,7 +658,9 @@ def _params_group_incoherence(
             return "members do not share one GATE net"
         if len({_net(r, "SOURCE") for r in rows}) > 1:
             return "members do not share one SOURCE net"
-        if not any(_net(r, "GATE") is not None and _net(r, "GATE") == _net(r, "DRAIN") for r in rows):
+        if not any(
+            _net(r, "GATE") is not None and _net(r, "GATE") == _net(r, "DRAIN") for r in rows
+        ):
             return "no diode-connected member (gate==drain) to anchor the mirror"
     return None
 
@@ -628,10 +682,16 @@ def _tier1_params_checks(c: model.Circuit) -> list[CheckResult]:
     except Exception as exc:  # noqa: BLE001 — unparseable YAML is the finding
         return [_fail(c.id, 1, "params:load", f"unparseable abstract/params.yaml: {exc}")]
     if not isinstance(doc, dict) or not isinstance(doc.get("devices"), dict):
-        return [_fail(c.id, 1, "params:load", "no devices: mapping (schema shape is the Tier-0 gate)")]
+        return [
+            _fail(c.id, 1, "params:load", "no devices: mapping (schema shape is the Tier-0 gate)")
+        ]
     cg = c.dir / "abstract" / "topology.cgraph.json"
     if not cg.is_file():
-        return [_fail(c.id, 1, "params:graph", "topology.cgraph.json missing (run `analog-db generate`)")]
+        return [
+            _fail(
+                c.id, 1, "params:graph", "topology.cgraph.json missing (run `analog-db generate`)"
+            )
+        ]
     graph = par.load_graph(cg)
     comps = {cm["id"]: cm for cm in graph.get("components", [])}
     devices: dict = doc["devices"]
@@ -775,7 +835,9 @@ def _tier1_circuit(c: model.Circuit) -> list[CheckResult]:
         r.append(
             _ok(c.id, 1, "gen:compose")
             if abstract.read_text() == fresh_nl
-            else _fail(c.id, 1, "gen:compose", "stale abstract/netlist.spice; run `analog-db generate`")
+            else _fail(
+                c.id, 1, "gen:compose", "stale abstract/netlist.spice; run `analog-db generate`"
+            )
         )
         for pdk in c.pdks:
             sz = c.dir / "pdk" / pdk / "sizing.yaml"
@@ -785,9 +847,7 @@ def _tier1_circuit(c: model.Circuit) -> list[CheckResult]:
             r.append(
                 _ok(c.id, 1, f"gen:compose_sizing:{pdk}")
                 if sz.read_text() == compose.compose_sizing(c, pdk, fresh_nl)
-                else _fail(
-                    c.id, 1, f"gen:compose_sizing:{pdk}", "stale; run `analog-db generate`"
-                )
+                else _fail(c.id, 1, f"gen:compose_sizing:{pdk}", "stale; run `analog-db generate`")
             )
     abstract_graph = CircuitGraph.from_netlist(NetlistView.from_file(str(abstract)), name=c.id)
     n_dev, n_net = abstract_graph.component_count, abstract_graph.net_count
@@ -888,6 +948,9 @@ def _tier1_circuit(c: model.Circuit) -> list[CheckResult]:
             c.datasheet().get("metrics", {}) if (c.dir / "datasheet.yaml").is_file() else {}
         )
     except Exception:
+        logger.debug(
+            "%s: datasheet unreadable; treating as no symbolic metrics", c.id, exc_info=True
+        )
         ds_metrics = {}
     uses_symbolic = any("symbolic" in spec for spec in ds_metrics.values())
     try:
@@ -942,7 +1005,9 @@ def run_tier1(circuit_ids: list[str] | None = None) -> list[CheckResult]:
     for cid in ids:
         c = model.load_circuit(cid)
         if c.is_reference_only:
-            out.append(_skip(cid, 1, "gen:reference", "kind: reference — not lowered/generated here"))
+            out.append(
+                _skip(cid, 1, "gen:reference", "kind: reference — not lowered/generated here")
+            )
             continue
         out.extend(_tier1_circuit(c))
     return out
@@ -1005,7 +1070,9 @@ def run_tier2(circuit_ids: list[str] | None = None) -> list[CheckResult]:
     for cid in ids:
         c = model.load_circuit(cid)
         if c.is_reference_only:
-            out.append(_skip(cid, 2, "asm:reference", "kind: reference — not assembled/lowered here"))
+            out.append(
+                _skip(cid, 2, "asm:reference", "kind: reference — not assembled/lowered here")
+            )
             continue
         out.extend(_tier2_circuit(c))
     return out
@@ -1079,6 +1146,11 @@ def _sim_cell(c: model.Circuit, aid: str, pdk: str, spice) -> CellResult:
     if load_errs:
         return ("fail", "deck did not run (load/lib/syntax): " + "; ".join(load_errs[:2]), {})
     measures, failed = parse_measures(output)
+    # Lane parity with `runner.run_text`: a `.meas` ngspice reported as failed is NaN, not the
+    # `-999` sentinel it also prints. Without this Tier-3/4 would keep -999 as a real measure
+    # (`isfinite(-999)` is True) and score it against the datasheet, while the scoreboard lane
+    # recorded NaN for the same deck.
+    measures.update({name: float("nan") for name in failed})
     finite = {k: v for k, v in measures.items() if math.isfinite(v)}
     if finite:
         return ("pass", "", measures)
@@ -1166,7 +1238,9 @@ def run_tier3(
             if not runmod.native_pdk_available(pdk):
                 for aid in analyses:
                     out.append(
-                        _skip(cid, 3, f"sim:{aid}@{pdk}", f"PDK {pdk} not installed under $PDK_ROOT")
+                        _skip(
+                            cid, 3, f"sim:{aid}@{pdk}", f"PDK {pdk} not installed under $PDK_ROOT"
+                        )
                     )
                 continue
             for aid in analyses:
@@ -1195,7 +1269,9 @@ def _numeric_bound(x) -> float | None:
 def _has_spec_bound(spec: dict | None) -> bool:
     if not spec:
         return False
-    return _numeric_bound(spec.get("min")) is not None or _numeric_bound(spec.get("max")) is not None
+    return (
+        _numeric_bound(spec.get("min")) is not None or _numeric_bound(spec.get("max")) is not None
+    )
 
 
 def _spec_str(spec: dict) -> str:
@@ -1240,9 +1316,7 @@ def run_tier4(
                 _skip(cid, 4, "conform:reference", "kind: reference — no datasheet spec oracle")
             )
             continue
-        metrics = (
-            c.datasheet().get("metrics", {}) if (c.dir / "datasheet.yaml").is_file() else {}
-        )
+        metrics = c.datasheet().get("metrics", {}) if (c.dir / "datasheet.yaml").is_file() else {}
         bounded = {n: s for n, s in metrics.items() if _has_spec_bound((s or {}).get("spec"))}
         if not bounded:
             out.append(_skip(cid, 4, "conform", "no spec-bounded datasheet metric to check"))
@@ -1256,7 +1330,10 @@ def run_tier4(
             ablock: dict[str, dict] = {}
             for (aid, ppdk), (st, _r, meas) in cell.items():
                 if ppdk == pdk:
-                    ablock[aid] = {"status": "ok" if st == "pass" else "sim_error", "measures": meas}
+                    ablock[aid] = {
+                        "status": "ok" if st == "pass" else "sim_error",
+                        "measures": meas,
+                    }
             values = ppa.metric_values(c, ablock)  # {metric: {value, spec verdict}}
             for name, mspec in bounded.items():
                 spec = mspec.get("spec") or {}
@@ -1281,7 +1358,8 @@ def run_tier4(
                             cid,
                             4,
                             check,
-                            f"{name}={val:.4g} outside spec {_spec_str(spec)} "
+                            f"{name}={'n/a' if val is None else format(val, '.4g')} "
+                            f"outside spec {_spec_str(spec)} "
                             "(untuned baseline — recorded, not a verify gate)",
                         )
                     )
@@ -1320,7 +1398,11 @@ def run(
 
 
 def derive_status(circuit_id: str, results: list[CheckResult]) -> str:
-    """Highest tier a circuit fully clears → its derived status.
+    """Highest rung a circuit fully clears → its derived status.
+
+    ``generated`` needs T0, T1 and T2 each to have run and cleared (rows present, no fail, not
+    all skip); ``simulated`` adds T3 and ``validated`` T4. A partial run stops at the rung its
+    tiers back: T0 alone is ``draft``.
 
     A kind: reference circuit is terminal at ``reference`` once its T0 subset is clean —
     it is never lowered or simulated here, so the tier ladder does not apply."""
@@ -1331,20 +1413,22 @@ def derive_status(circuit_id: str, results: list[CheckResult]) -> str:
     except KeyError:
         pass
     status = "draft"
-    for t in (0, 1, 2, 3, 4):
-        rows = [r for r in results if r.circuit == circuit_id and r.tier == t]
-        if not rows or any(r.status == "fail" for r in rows):
-            break
-        if all(r.status == "skip" for r in rows):
-            break
-        if t == 4:
-            # ``validated`` is a strong claim: every spec-bounded conformance row must PASS. An
-            # out-of-spec metric is a skip (§ T4), so a mix of pass+skip (an untuned baseline that
-            # happens to meet some specs) must NOT graduate to validated — it stops at simulated.
-            conform = [r for r in rows if r.check.startswith("conform:") and "@" in r.check]
-            if not conform or any(r.status != "pass" for r in conform):
-                break
-        status = _TIER_STATUS[t]
+    for rung, tiers in _RUNGS:
+        for t in tiers:
+            rows = [r for r in results if r.circuit == circuit_id and r.tier == t]
+            if not rows or any(r.status == "fail" for r in rows):
+                return status
+            if all(r.status == "skip" for r in rows):
+                return status
+            if t == 4:
+                # ``validated`` is a strong claim: every spec-bounded conformance row must PASS.
+                # An out-of-spec metric is a skip (§ T4), so a mix of pass+skip (an untuned
+                # baseline that happens to meet some specs) must NOT graduate to validated — it
+                # stops at simulated.
+                conform = [r for r in rows if r.check.startswith("conform:") and "@" in r.check]
+                if not conform or any(r.status != "pass" for r in conform):
+                    return status
+        status = rung
     return status
 
 

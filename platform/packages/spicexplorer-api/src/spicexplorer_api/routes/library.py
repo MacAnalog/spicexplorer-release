@@ -289,7 +289,9 @@ def library_create_circuit(req: CreateCircuitRequest):
 
 class SeedProjectRequest(BaseModel):
     name: str | None = Field(None, description="Project name (default: the circuit's display name)")
-    pdk: str | None = Field(None, description="PDK to seed sizing from (default: the circuit's first)")
+    pdk: str | None = Field(
+        None, description="PDK to seed sizing from (default: the circuit's first)"
+    )
 
 
 class SeedProjectResponse(BaseModel):
@@ -332,7 +334,9 @@ class PdksResponse(BaseModel):
     pdks: list[LibraryPdk] = Field(default_factory=list)
 
 
-@router.get("/library/pdks", response_model=PdksResponse, summary="PDK registry (pdk → routed engine)")
+@router.get(
+    "/library/pdks", response_model=PdksResponse, summary="PDK registry (pdk → routed engine)"
+)
 def library_pdks():
     """The honest pdk→simulator matrix: every PDK the DB binds, each with the engine its
     committed registry routes to (open PDKs → ngspice; a Spectre-routed kit → spectre)."""

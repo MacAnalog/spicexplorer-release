@@ -62,7 +62,7 @@ export function MetricConvergenceChart({
   }
 
   const shapes: Partial<Plotly.Shape>[] = [];
-  const annotations: Partial<Plotly.Annotations>[] = [];
+  const annotations: Partial<Plotly.Annotation>[] = [];
   if (target !== null && target !== undefined) {
     shapes.push({
       type: "line",

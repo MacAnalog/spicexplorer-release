@@ -3,27 +3,43 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import TextIO
+
+
+def _log_path(out_logname: str, parent_folder: Path | None) -> Path:
+    """``<parent_folder>/logs/<out_logname>_<timestamp>.log``, created on demand.
+
+    ``parent_folder`` defaults to ``work_root()`` — never the caller's CWD, where a
+    CLI run (even a failing one) used to leave a stray ``./logs/`` behind.
+    """
+    if parent_folder is None:
+        from spicexplorer_core.workspace.layout import work_root
+
+        parent_folder = work_root()
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    log_path = Path(parent_folder) / "logs" / f"{out_logname}_{timestamp}.log"
+    os.makedirs(log_path.parent, exist_ok=True)
+    return log_path
 
 
 def setup_loggers(
     out_logname: str = "SpiceXplorer",
-    parent_folder: Path = Path("."),
+    parent_folder: Path | None = None,
     console_level: int = logging.INFO,
 ) -> logging.Logger:
     """Configure the ``spicexplorer`` logger hierarchy.
 
     Args:
         out_logname:    Base name for the timestamped log file.
-        parent_folder:  Directory that will contain the ``logs/`` sub-folder.
+        parent_folder:  Directory that will contain the ``logs/`` sub-folder
+                        (default: ``work_root()``).
         console_level:  Minimum level printed to the console
                         (``logging.DEBUG``, ``logging.INFO``, ``logging.WARNING``,
                         ``logging.ERROR``, or ``logging.CRITICAL``).
                         The log *file* always captures everything at DEBUG level.
     """
     # --- Create timestamped log filename ---
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_path = Path(f"{parent_folder}/logs/{out_logname}_{timestamp}.log")
-    os.makedirs(log_path.parent, exist_ok=True)
+    log_path = _log_path(out_logname, parent_folder)
 
     # --- The wrapper logger ---
     logger = logging.getLogger("spicexplorer")
@@ -31,8 +47,7 @@ def setup_loggers(
     logger.propagate = False
 
     formatter = logging.Formatter(
-        fmt="%(asctime)s - %(name)s: [%(levelname)s] %(message)s",
-        datefmt="%H:%M:%S"
+        fmt="%(asctime)s - %(name)s: [%(levelname)s] %(message)s", datefmt="%H:%M:%S"
     )
 
     # Always clear old handlers to avoid duplicates on re-init
@@ -61,6 +76,7 @@ def setup_loggers(
 
     return logger
 
+
 def setup_spicelib_logging(file_handler: logging.FileHandler) -> logging.Logger:
     # Get the top-level spicelib logger
     logger = logging.getLogger("spicelib")
@@ -73,6 +89,7 @@ def setup_spicelib_logging(file_handler: logging.FileHandler) -> logging.Logger:
     console_handler.setFormatter(console_formatter)
 
     # Clear old handlers to avoid duplicates
+    previous = list(logger.handlers)
     if logger.hasHandlers():
         logger.handlers.clear()
 
@@ -80,13 +97,14 @@ def setup_spicelib_logging(file_handler: logging.FileHandler) -> logging.Logger:
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
 
-    # Ensure all children inherit this setup
-    for name, temp_logger in logging.Logger.manager.loggerDict.items():
-        if name.startswith("spicelib"):
+    # Children reach these handlers by propagation. Attaching them to each child as
+    # well wrote every record twice, and a re-init left the old handlers behind.
+    for name, temp_logger in list(logging.Logger.manager.loggerDict.items()):
+        if name.startswith("spicelib."):
             logging.getLogger(name).setLevel(logging.INFO)
             if isinstance(temp_logger, logging.Logger):
-                temp_logger.addHandler(console_handler)
-                temp_logger.addHandler(file_handler)
+                for h in previous:
+                    temp_logger.removeHandler(h)
 
     return logger
 
@@ -97,23 +115,29 @@ class JupyterLogFilter:
     - Suppresses noise keywords.
     - INTELLIGENTLY suppresses the trailing newline from print() calls associated with noise.
     """
-    def __init__(self, original_stream, file_logger):
+
+    def __init__(self, original_stream: TextIO, file_logger: logging.Logger) -> None:
         self._original_stream = original_stream
         self._file_logger = file_logger
-        self._suppress_next_newline = False # State flag
+        self._suppress_next_newline = False  # State flag
 
     def __getattr__(self, name):
         return getattr(self._original_stream, name)
 
-    def write(self, buf):
+    def write(self, buf: str) -> None:
         # 1. Check for specific noise keywords
-        is_noise = any(keyword in buf for keyword in [
-            "RunTask",
-            "Simulation Successful",
-            "Simulation Callback",
-            "spicexplorer.optimization",
-            "Sun Feb", "Mon Feb", "Tue Feb" # Date headers
-        ])
+        is_noise = any(
+            keyword in buf
+            for keyword in [
+                "RunTask",
+                "Simulation Successful",
+                "Simulation Callback",
+                "spicexplorer.optimization",
+                "Sun Feb",
+                "Mon Feb",
+                "Tue Feb",  # Date headers
+            ]
+        )
 
         # 2. Log EVERYTHING to the file (strip cleanly)
         if buf.strip():
@@ -126,32 +150,35 @@ class JupyterLogFilter:
             return
 
         # If it's just a newline and we are in 'suppress' mode, kill it
-        if buf == '\n' and self._suppress_next_newline:
-            self._suppress_next_newline = False # Reset flag
+        if buf == "\n" and self._suppress_next_newline:
+            self._suppress_next_newline = False  # Reset flag
             return
 
         # If we got here, it's valid content (or a newline for valid content)
-        self._suppress_next_newline = False # Reset flag just in case
+        self._suppress_next_newline = False  # Reset flag just in case
         self._original_stream.write(buf)
 
-    def flush(self):
+    def flush(self) -> None:
         self._original_stream.flush()
 
+
 # --- 2. Setup Function ---
-def setup_loggers_with_spicelib_suppression(out_logname="SpiceXplorer", parent_folder:Path=Path(".")) -> logging.Logger:
+def setup_loggers_with_spicelib_suppression(
+    out_logname: str = "SpiceXplorer", parent_folder: Path | None = None
+) -> logging.Logger:
 
     # Reset logging if we are re-running the cell to avoid nesting wrappers
-    if hasattr(sys.stdout, '_original_stream'):
+    if hasattr(sys.stdout, "_original_stream"):
         sys.stdout = sys.stdout._original_stream
 
     original_stdout = sys.stdout
 
-    # --- File Setup ---
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_path = Path(f"{parent_folder}/logs/{out_logname}_{timestamp}.log")
-    os.makedirs(log_path.parent, exist_ok=True)
+    # --- File Setup (``parent_folder`` defaults to work_root(), not the CWD) ---
+    log_path = _log_path(out_logname, parent_folder)
 
-    formatter = logging.Formatter("%(asctime)s - %(name)s: [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s: [%(levelname)s] %(message)s", datefmt="%H:%M:%S"
+    )
 
     # --- Handlers ---
     file_handler = logging.FileHandler(log_path, mode="a")

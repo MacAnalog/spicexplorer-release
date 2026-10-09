@@ -64,9 +64,82 @@ correctly: working design 0.550 V, railed variant 1.417 V.
 
 New bindings `VOUT_NOM` / `VREG_TOL` / `REG_SLOPE_MAX`; `VOUT_NOM` resolves from the datasheet's
 `default_conditions.vout`, the other two have defaults in `assemble.py`, so no per-circuit edits
-were needed. The legacy `VOUT_THRESH` binding is unused — a threshold alone is what was wrong.
+were needed. The legacy `VOUT_THRESH` binding is **gone** (2026-09-10) — a threshold alone is what
+was wrong. It outlived the rewrite by two months as a *dead required* parameter: the template
+quoted the superseded `${VOUT_THRESH}` lines verbatim in its comment header, and `assemble()`
+scans the RENDERED deck, comments included — so every LDO had to keep binding a value nothing
+read. Quote a superseded placeholder as prose, never as `${...}`.
 The bench now returns **NaN** when the sweep never reaches regulation, rather than fabricating a
 number from a circuit that never worked.
+
+## Case 3 — the LDO noise bench square-rooted an already-RMS total (2026-09-04)
+
+`_shared/classes/ldo/testbench-templates/noise.spice` computed `let vn_out_rms = sqrt(onoise_total)`.
+ngspice's `.noise` integrated totals (`onoise_total` / `inoise_total`) are **already** the integrated
+RMS quantities — ngspice takes the square root itself when it accumulates the band. The template
+therefore reported the square root of an RMS voltage: dimensionally wrong, and wrong by a factor
+`1/sqrt(x)` that **grows as the true noise falls**, so the quieter the LDO the more the number was
+inflated.
+
+Settled on a bare 1 kΩ resistor at 27 °C (`noise v(out) V1 dec 10 1 1meg`, ngspice-45), where the
+answer is analytic:
+
+| quantity | value |
+|---|---|
+| `onoise_total` | `4.071369e-06` |
+| analytic `sqrt(4kTR·df)` | `4.07e-06` V rms |
+| `4kTR·df` (mean square) | `1.66e-11` V² |
+| `sqrt(onoise_total)` (what shipped) | `2.017763e-03` |
+
+`onoise_total` matches the RMS, not the mean square. This is why the pattern is worth stating: the
+bug is invisible to a level test — 12 mV "integrated output noise" is not obviously absurd until you
+notice it is `sqrt` of 150 µV, and the recorded `onoise_total` sat in every scoreboard entry
+alongside it, already correct, the whole time.
+
+**Unit rule for this database:** never post-process an ngspice integrated noise total. `onoise_total`
+IS the V rms figure; `inoise_total` IS the input-referred figure in the input source's own unit.
+`tests/test_noise_units.py` now guards both the rendered decks and the committed `raw/` bytes.
+
+### A corrected unit is not yet a specification
+
+Fixing the unit forced a second question the bug had been hiding. The eight LDO datasheets carried
+`max: 0.02` / `0.03` V — limits that only ever made sense beside the sqrt-inflated readings, so
+**no LDO datasheet had ever held a physical noise limit.**
+
+The first pass squared them (`0.02 -> 4.0e-4`) so that every recorded verdict stayed identical
+while the unit moved; squaring value and limit together is order-preserving, so `pass`/`fail` is
+provably unchanged. That is the right way to *migrate* a limit, but the wrong thing to *ship*:
+`0.02^2` carrying `unit: V` means nothing physically, and the margins it left reached 55x — a
+design 20x noisier than the baseline still passed.
+
+The limits are now `2x` the worst regenerated per-PDK value (two significant figures), which put
+ten optimizer-candidate entries into `fail` that the placeholder had been scoring against a limit
+4x too loose. Note `ldo_001`'s physical limit (5.7e-4) is **looser** than its squared placeholder
+(4.0e-4): that cell really is the noisiest of the eight, so the placeholder had been tighter than
+physics, not laxer — which is exactly the kind of thing an arithmetic-only migration cannot tell
+you.
+
+> **Rule.** A unit fix and a limit fix are two changes. Do the unit fix in a verdict-preserving way
+> so the diff is auditable, then re-derive the limit from measurement in a separate commit — and
+> state the resulting verdict churn, because that churn is the evidence the limit now means
+> something.
+
+### Correction to commit `d8144a05`
+
+That commit's message says it regenerated "scoreboard.json (`vn_out_rms` only)". That is **wrong**,
+and the record is corrected here rather than by rewriting history:
+
+- The `scoreboard.json` diff also carries `+"v_dropout": null` and the aggregate `"fail": 5 -> 6`
+  for `ldo_005_buffered_ref@ihp-sg13g2` / `b77bb89a30`.
+- It is a **newly recorded** verdict, not a changed one. `ppa.metric_values` emits
+  `{value: null, spec: fail}` for a metric whose analysis ran clean but produced no measure; that
+  entry predates the dropout-binding fix in `c63d4351`, so it never measured `v_dropout` and the
+  metric had been silently **absent** rather than failing.
+- The commit's "0 verdict changes" claim holds only for *changed* verdicts. One was **added**, and
+  it propagates into `_spec_counts` (`scoreboard.py`).
+
+Absence scoring more leniently than failure is the same family of defect as cases 1 and 2: the
+scorecard looked clean because the metric was missing, not because it passed.
 
 ## Cross-lane consistency
 

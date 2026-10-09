@@ -9,8 +9,8 @@ C {blocks/cm_pmos_simple_1.sym} -710 0 0 0 {name=xcm_pmos_simple_1}
 C {blocks/cm_nmos_simple_1.sym} -270 0 0 0 {name=xcm_nmos_simple_1}
 C {blocks/dp_pmos_simple_1.sym} 170 0 0 0 {name=xdp_pmos_simple_1}
 C {blocks/cm_pmos_low_voltage_cascode_1.sym} 660 0 0 0 {name=xcm_pmos_low_voltage_cascode_1}
-C {devices/vsource_np.sym} -930 340 0 0 {name=V1 value=x_dut_vb1}
-C {devices/vsource_np.sym} -930 120 0 0 {name=V2 value=x_dut_vb2}
+C {devices/vsource_np.sym} -930 340 0 0 {name=V1 value=x_dut_vb1 savecurrent=false}
+C {devices/vsource_np.sym} -930 120 0 0 {name=V2 value=x_dut_vb2 savecurrent=false}
 C {devices/sg13_lv_nmos_np.sym} -110 340 0 0 {name=M5 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm5_w l=x_dut_xm5_l ng=x_dut_xm5_ng m=x_dut_xm5_m}
 C {devices/sg13_lv_nmos_np.sym} 110 340 0 0 {name=M6 model=sg13_lv_nmos spiceprefix=X w=x_dut_xm6_w l=x_dut_xm6_l ng=x_dut_xm6_ng m=x_dut_xm6_m}
 N -600 -40 -560 -40 {}

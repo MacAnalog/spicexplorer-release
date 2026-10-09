@@ -1,8 +1,9 @@
 """Project loading and YAML validation routes."""
+
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import yaml
 from fastapi import APIRouter, HTTPException, Query
@@ -16,9 +17,9 @@ router = APIRouter()
 
 
 class LoadRequest(BaseModel):
-    yaml_path: Optional[str] = None
-    yaml_content: Optional[str] = None  # apply edited/uploaded YAML that isn't on disk
-    project_id: Optional[str] = None  # load a registered project (report.md P3)
+    yaml_path: str | None = None
+    yaml_content: str | None = None  # apply edited/uploaded YAML that isn't on disk
+    project_id: str | None = None  # load a registered project (report.md P3)
 
 
 class ValidateRequest(BaseModel):
@@ -26,13 +27,13 @@ class ValidateRequest(BaseModel):
 
 
 class GenerateRequest(BaseModel):
-    form: Dict[str, Any]
-    save_path: Optional[str] = None  # absolute or workspace-relative path; if set, write to disk
+    form: dict[str, Any]
+    save_path: str | None = None  # absolute or workspace-relative path; if set, write to disk
 
 
 class ParseToFormRequest(BaseModel):
-    yaml_path: Optional[str] = None
-    yaml_content: Optional[str] = None
+    yaml_path: str | None = None
+    yaml_content: str | None = None
 
 
 # --- Response models ---------------------------------------------------------
@@ -42,6 +43,7 @@ class ParseToFormRequest(BaseModel):
 # convention, e.g. EnvResponse.ngspice_path). The `ProjectSummary` tree below is the
 # `_summarise()` shape and is imported by routes/projects.py (get_project reuses it),
 # so it is defined ONCE here to avoid a duplicate OpenAPI schema name.
+
 
 class DutParam(BaseModel):
     name: str
@@ -89,7 +91,7 @@ class SupplyOverride(BaseModel):
 
 class ModelInclude(BaseModel):
     lib_file: str
-    section: str
+    section: str | None = None  # None: a sectionless `.include <file>` (gf180mcu)
 
 
 class PVTCornerDef(BaseModel):
@@ -160,6 +162,7 @@ class GenerateProjectResponse(BaseModel):
 # Every leaf is a string/bool (None-coerced to "" by the producer), except a corner's
 # per-`.param` overrides which pass through verbatim (`dict[str, Any]`). Distinct from
 # the ProjectSummary tree above: here budget/seed/target/etc. are STRINGS, not numbers.
+
 
 class ConstraintRow(BaseModel):
     key: str
@@ -290,48 +293,62 @@ class ParseProjectResponse(BaseModel):
 def _summarise(project: Project_Setup) -> dict[str, Any]:
     specs = []
     for s in project.optimizer_config.target_specs.targets:
-        specs.append({
-            "name": s.name,
-            "testbench": s.testbench,
-            "goal": s.goal.value,
-            "target": float(s.target),
-            "tolerance": float(s.tolerance) if s.tolerance else None,
-            "range": float(s.range) if s.range else None,
-            "weight": float(s.weight) if s.weight is not None else 1.0,
-            "error_type": s.error_type.value if hasattr(s.error_type, "value") else str(s.error_type),
-            "reward_type": s.reward_type.value if hasattr(s.reward_type, "value") else str(s.reward_type),
-            "enable": s.enable,
-            "description": s.description,
-        })
+        specs.append(
+            {
+                "name": s.name,
+                "testbench": s.testbench,
+                "goal": s.goal.value,
+                "target": float(s.target),
+                "tolerance": float(s.tolerance) if s.tolerance else None,
+                "range": float(s.range) if s.range else None,
+                "weight": float(s.weight) if s.weight is not None else 1.0,
+                "error_type": s.error_type.value
+                if hasattr(s.error_type, "value")
+                else str(s.error_type),
+                "reward_type": s.reward_type.value
+                if hasattr(s.reward_type, "value")
+                else str(s.reward_type),
+                "enable": s.enable,
+                "description": s.description,
+            }
+        )
 
     dut_params = []
     for p in project.dut_params:
-        dut_params.append({
-            "name": p.name,
-            "min_val": float(p.min_val) if p.min_val is not None else None,
-            "max_val": float(p.max_val) if p.max_val is not None else None,
-            # Resolved operating-point value (if the YAML set val/init), so the
-            # Schematic inspector seeds its slider from the same nominal the
-            # sensitivity backend uses. Non-numeric (unresolved) -> None.
-            "val": float(p.val) if isinstance(p.val, (int, float)) else None,
-            "init": float(p.init) if isinstance(p.init, (int, float)) else None,
-            "is_integer": p.is_integer,
-            "log_scale": p.log_scale,
-            "freeze": p.freeze,
-        })
+        dut_params.append(
+            {
+                "name": p.name,
+                "min_val": float(p.min_val) if p.min_val is not None else None,
+                "max_val": float(p.max_val) if p.max_val is not None else None,
+                # Resolved operating-point value (if the YAML set val/init), so the
+                # Schematic inspector seeds its slider from the same nominal the
+                # sensitivity backend uses. Non-numeric (unresolved) -> None.
+                "val": float(p.val) if isinstance(p.val, (int, float)) else None,
+                "init": float(p.init) if isinstance(p.init, (int, float)) else None,
+                "is_integer": p.is_integer,
+                "log_scale": p.log_scale,
+                "freeze": p.freeze,
+            }
+        )
 
     testbenches = []
     for tb in project.testbenches:
-        testbenches.append({
-            "name": tb.name,
-            "netlist": str(tb.netlist),
-            "enable": tb.enable,
-            "description": tb.description,
-            "params": [
-                {"name": p.name, "val": str(p.val) if p.val is not None else None, "description": p.description}
-                for p in tb.params
-            ],
-        })
+        testbenches.append(
+            {
+                "name": tb.name,
+                "netlist": str(tb.netlist),
+                "enable": tb.enable,
+                "description": tb.description,
+                "params": [
+                    {
+                        "name": p.name,
+                        "val": str(p.val) if p.val is not None else None,
+                        "description": p.description,
+                    }
+                    for p in tb.params
+                ],
+            }
+        )
 
     # PVT corner system (Phase 1) — the simulator-driving config. `None` when the
     # project has no `pvt:` block (legacy / netlist-hardcoded corner).
@@ -392,6 +409,7 @@ def _write_content_to_temp(yaml_content: str, base_yaml_path: str | None) -> str
     against the temp dir and break live runs.
     """
     import tempfile
+
     text = yaml_content
     if base_yaml_path:
         try:
@@ -420,6 +438,7 @@ def load_project(body: LoadRequest):
     # Load a registered project by id (report.md P3) → resolve to its project.yaml.
     if body.project_id:
         from spicexplorer_api.services import project_service
+
         try:
             yp = project_service.resolve_yaml(body.project_id, None)
         except FileNotFoundError as e:
@@ -438,6 +457,7 @@ def load_project(body: LoadRequest):
     # matter for live SPICE — so a project with relative paths still summarises.
     if body.yaml_content:
         import os
+
         # Persist the uploaded/edited YAML to a real path and RETURN that path, so
         # every path-keyed endpoint (optimize/score/sanity/sensitivity) resolves to
         # THIS project. Previously this returned yaml_path="", which made a live run
@@ -500,6 +520,7 @@ def validate_yaml(body: ValidateRequest):
     # Write to a temp file and try full parse
     import os
     import tempfile
+
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as tmp:
         tmp.write(body.yaml_content)
         tmp_path = tmp.name
@@ -520,7 +541,7 @@ def generate_project(body: GenerateRequest):
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"YAML generation failed: {e}")
 
-    saved_path: Optional[str] = None
+    saved_path: str | None = None
     if body.save_path:
         path = Path(body.save_path).expanduser()
         # A relative path would be resolved against the backend's CWD (/app in the
@@ -545,6 +566,7 @@ def generate_project(body: GenerateRequest):
     errors: list[str] = []
     import os
     import tempfile
+
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as tmp:
         tmp.write(yaml_text)
         tmp_path = tmp.name

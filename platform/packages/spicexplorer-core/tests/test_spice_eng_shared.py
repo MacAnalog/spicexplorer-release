@@ -9,6 +9,9 @@ case-SENSITIVE) while circuitgraph read it as milli, which is what a netlist mea
 Both now read `spicexplorer_core.spice_eng`. This test drives BOTH consumers over the same tokens,
 so re-introducing a private table in either one fails here. Core's own active-area walk
 (`measurements.area`) reads deck tokens too and is driven over the same table (OPT-04).
+
+Core declares neither consumer as a dependency (they depend on core, not the reverse), so the
+consumer tests skip when that package is not installed; the core-only tests always run.
 """
 
 from __future__ import annotations
@@ -61,6 +64,7 @@ def test_core_table(token, expected):
 
 @pytest.mark.parametrize("token,expected", SUFFIX_CASES)
 def test_netlist2tf_agrees_with_the_table(token, expected):
+    pytest.importorskip("spicexplorer_netlist2tf")
     from spicexplorer_netlist2tf.ingest import sympify_value
 
     assert float(sympify_value(token)) == pytest.approx(expected, rel=1e-12)
@@ -68,6 +72,7 @@ def test_netlist2tf_agrees_with_the_table(token, expected):
 
 @pytest.mark.parametrize("token,expected", SUFFIX_CASES)
 def test_circuitgraph_agrees_with_the_table(token, expected):
+    pytest.importorskip("spicexplorer_circuitgraph")
     from spicexplorer_circuitgraph.emit import SpectreEmitter
 
     rendered = SpectreEmitter._expr(token)
@@ -84,6 +89,8 @@ def test_area_walk_agrees_with_the_table(token, expected):
 
 def test_the_two_consumers_agree_token_for_token():
     """The disagreement itself, pinned: same token, same number, in both tools."""
+    pytest.importorskip("spicexplorer_circuitgraph")
+    pytest.importorskip("spicexplorer_netlist2tf")
     from spicexplorer_circuitgraph.emit import SpectreEmitter
     from spicexplorer_netlist2tf.ingest import sympify_value
 

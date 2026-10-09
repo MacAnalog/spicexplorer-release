@@ -9,13 +9,21 @@ no file, so importing the module here reproduces the retired-directory case.
 
 The two runners keep the ``(passed, text)`` pair their callers unpack. A GDS that does not exist
 fails both, with or without KLayout and a PDK on the host, so the check below needs neither.
+It does need the ``spicexplorer_signoff`` package, which analog-db declares only as its optional
+``layout`` extra, so the module skips when that package is not installed.
 """
 
 from __future__ import annotations
 
 import importlib.util
 
+import pytest
+
 from spicexplorer_analog_db import paths
+
+pytest.importorskip(
+    "spicexplorer_signoff", reason="the optional `layout` extra (spicexplorer-signoff) is absent"
+)
 
 LAYOUT = paths.db_root() / "drawings" / "pam4-driver-2-bit-dac-HBT" / "ported-netlists" / "layout"
 

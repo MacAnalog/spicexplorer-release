@@ -68,10 +68,14 @@ jobs:
           python-version: "3.11"
       - name: install
         if: steps.deps.outputs.ok == 'true'
+        # signoff: analog-db's optional `layout` extra (the PAM-4 HBT drawing's DRC/LVS
+        # lane). Installed here so tests/test_hbt_layout_signoff.py runs instead of skipping;
+        # it imports on a bare runner (the klayout/kpex executables are found at run time).
         run: |
           pip install -e platform/packages/spicexplorer-core \
                       -e platform/packages/spicexplorer-circuitgraph \
-                      -e platform/packages/spicexplorer-netlist2xschem
+                      -e platform/packages/spicexplorer-netlist2xschem \
+                      -e platform/packages/spicexplorer-signoff
           pip install -e analog-db pytest
       - name: wire the corpus path (circuitgraph template root)
         if: steps.deps.outputs.ok == 'true'

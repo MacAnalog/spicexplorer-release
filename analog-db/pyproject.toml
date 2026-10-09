@@ -15,6 +15,9 @@ dependencies = [
 # netlist2tf is only needed for the symbolic cross-check tier; keep it out of the core dep set
 # so a shallow/Tier-0 consumer stays light.
 symbolic = ["spicexplorer-netlist2tf"]
+# The PAM-4 HBT drawing's layout lane (drawings/pam4-driver-2-bit-dac-HBT/ported-netlists/layout/
+# signoff.py) runs DRC/LVS through the platform's signoff package; nothing under src/ imports it.
+layout = ["spicexplorer-signoff"]
 # gm/ID LUT extraction + access: numpy builds the LUT arrays; pygmid is the LUT reader
 # (its sweeper is Spectre-only, so extraction uses our ngspice decks). See _shared/GMID.md.
 gmid = ["numpy>=1.24", "pygmid>=1.2"]

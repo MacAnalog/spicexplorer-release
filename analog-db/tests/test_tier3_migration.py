@@ -152,13 +152,13 @@ def _ruff_would_check(ruff: str, target: Path) -> list[str]:
 def test_newcas_appendix_is_outside_every_lint_sweep():
     """The verbatim check above failed once because a repo-wide ``ruff --fix`` (663cccf2,
     2026-07-23) rewrote ``draw.py``/``draw.ipynb`` (a trailing newline, whitespace, a dropped
-    import). The appendix is excluded from ruff like the third-party ``reference/`` corpora, so no
+    import; the notebook is now the jupytext ``draw_notebook.py``). The appendix is excluded from ruff like the third-party ``reference/`` corpora, so no
     sweep can touch it again. Runs on a standalone DB checkout too (no platform legacy needed)."""
     ruff = _ruff_bin()
     if ruff is None:
         pytest.skip("ruff not installed in this venv")
     appendix = model.load_circuit("amp_018_telescopic_cascode").dir / "artifacts/newcas2026"
-    assert (appendix / "draw.py").is_file() and (appendix / "draw.ipynb").is_file()
+    assert (appendix / "draw.py").is_file() and (appendix / "draw_notebook.py").is_file()
     assert _ruff_would_check(ruff, appendix) == [], (
         "ruff would lint (and --fix) the verbatim appendix"
     )

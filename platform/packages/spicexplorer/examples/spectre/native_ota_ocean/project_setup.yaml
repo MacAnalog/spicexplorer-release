@@ -43,7 +43,7 @@ project:
     corners:
       - name: tt_27C_1V20
         enabled: true
-        model_includes: [{lib_file: /path/to/your-kit/models.scs, section: tt_lvt}]
+        model_includes: [{lib_file: /path/to/your/pdk/models.scs, section: tt_lvt}]
         supply: {node: vdd, value: 1.2}
         temp: 27
 

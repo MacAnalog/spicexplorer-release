@@ -359,14 +359,14 @@ def test_composed_mode_materializes_staged_params_per_run(tmp_path: Path) -> Non
             temp=125.0,
             supplies=[SupplyOverride(node="VDD", value=1.35)],
         ),
-        model_lib_root="/opt/kit",
+        model_lib_root="/opt/pdk",
     )
     sim.run(label="tb__ss")
 
     netlist, params = bridge.calls[-1]
     assert netlist.parent == tmp_path  # materialized under deck_dir, not the spec
     text = netlist.read_text()
-    assert 'include "/opt/kit/models.scs" section=ss_lvt' in text  # corner selection
+    assert 'include "/opt/pdk/models.scs" section=ss_lvt' in text  # corner selection
     assert "w1=2e-06" in text  # design param injected over the default
     assert "vdd=1.35" in text  # corner supply wins (lowercase namespace)
     assert "tempOptions options temp=125" in text

@@ -25,8 +25,10 @@ never self-certifies.
 | [`layout-reviewer`](agents/layout-reviewer.md) | Independent, report-only review: rebuilds the GDS from the committed generator and re-runs DRC/LVS/PEX itself, then reviews per-net parasitics against the brief's budgets | the generator + the brief | `REVIEW.md`, `REVIEW.yaml` (the `layout-review/1` DSL), `REVIEW.png` |
 | [`layout-schematic-codesign`](agents/layout-schematic-codesign.md) | Runs the layout-in-the-loop co-design loop: expresses sizing + layout knobs as one `sim_engine: layout` project, runs `spicexplorer-optimize` (build → DRC → LVS → PEX → benches, every trial), and either accepts the winner or repairs the generator and goes again | the generator + the block's specs | the search projects, per-round records and figures |
 
-Worked example, end to end: [`agentic-design-example/`](../agentic-design-example/)
-— the PAM-4 driver DAC in IHP SG13G2, with every co-design round on the record.
+Worked examples, end to end: [`agentic-design-example/`](../agentic-design-example/)
+— the PAM-4 driver DAC in IHP SG13G2, with every co-design round on the record,
+and `dn-003-afe-lpf-250hz-ihp130`, a 250 Hz low-pass filter analog front end in
+IHP SG13G2 taken through sign-off and the layout lane.
 
 ## Skills — gm/ID sizing
 

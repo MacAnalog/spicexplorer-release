@@ -1,0 +1,321 @@
+{
+ "source": "02_layout_in_the_loop.ipynb at d5c63b38 (analog-db), last Jupyter run",
+ "cells": [
+  {
+   "execution_count": 1,
+   "cell": 2,
+   "outputs": [
+    {
+     "kind": "stdout",
+     "text": "electrical knobs : {'nx': 3, 're_ohm': 2.5, 'rc_ohm': 50.0, 'rb_ohm': 50.0, 'cdeg_ff': 20.0, 're_w': 5.0, 'rc_w': 1.4, 'rb_w': 0.5}\nfloorplan knobs  : {'gap_x': 7.0, 'row_gap': 1.6, 'cell_gap': 6.0, 'w_m1': 0.4, 'w_e': 2.0, 'w_out': 2.0, 'w_cap_arm': 1.0, 're_gap': 1.2, 'tail_gap': 0.8, 'tail_h': 1.0, 'in_off': 1.5, 'in_bus_w': 0.6, 'in_bus_gap': 0.8, 'input_feed': 'edge', 'in_shield': False, 'in_bus_m4': False, 'in_bus_layer': 'Metal3', 'drop_layer': 'Metal1', 'rb_gap': 1.2, 'rb_pitch': 2.4, 'vcmb_gap': 1.2, 'vcmb_w': 0.8, 'sub_off': 1.4, 'sub_w': 0.8, 'out_off': 2.0, 'out_w': 2.0, 'out_gap': 1.8, 'out_layer': 'TopMetal1', 'rc_sep': 8.0, 'rc_gap': 2.0, 'vcc_w': 5.0, 'ring_margin': 3.0, 'ring_w': 1.0, 'stack_w': 2.0}\n"
+    }
+   ]
+  },
+  {
+   "execution_count": 2,
+   "cell": 4,
+   "outputs": [
+    {
+     "kind": "stdout",
+     "text": "npn13G2 PyCell placed successfully and GDS written.\n[lsb] wrote drawings/pam4-driver-2-bit-dac-HBT/ported-netlists/notebooks/nb_opt/baseline/dut_lsb.gds: 11 devices, bbox 44.8 x 60.1 um, area 2693 um2\nnpn13G2 PyCell placed successfully and GDS written.\n[msb] wrote drawings/pam4-driver-2-bit-dac-HBT/ported-netlists/notebooks/nb_opt/baseline/dut_msb.gds: 18 devices, bbox 78.6 x 60.1 um, area 4725 um2\nnpn13G2 PyCell placed successfully and GDS written.\n[pam4] wrote drawings/pam4-driver-2-bit-dac-HBT/ported-netlists/notebooks/nb_opt/baseline/dut_pam4.gds: 27 devices, bbox 117.2 x 62.9 um, area 7374 um2\n"
+    },
+    {
+     "kind": "markdown",
+     "text": "**dut_lsb**"
+    },
+    {
+     "kind": "image",
+     "name": "dut_lsb_baseline",
+     "md5": "fdf068926522a6c71621198e5f9307e2",
+     "file": "report_figs/layout_dut_lsb_baseline.png"
+    },
+    {
+     "kind": "markdown",
+     "text": "**dut_msb**"
+    },
+    {
+     "kind": "image",
+     "name": "dut_msb_baseline",
+     "md5": "f96e0094dfc457810f10c8ffde5fe26e",
+     "file": "report_figs/layout_dut_msb_baseline.png"
+    },
+    {
+     "kind": "markdown",
+     "text": "**dut_pam4**"
+    },
+    {
+     "kind": "image",
+     "name": "dut_pam4_baseline",
+     "md5": "3f87ec7cc77830efa98cb7221629e68d",
+     "file": "report_figs/layout_dut_pam4_baseline.png"
+    }
+   ]
+  },
+  {
+   "execution_count": 3,
+   "cell": 6,
+   "outputs": [
+    {
+     "kind": "table",
+     "header": [
+      "DUT",
+      "DRC (--no_density)",
+      "LVS"
+     ],
+     "rows": [
+      [
+       "lsb",
+       "PASS",
+       "PASS"
+      ],
+      [
+       "msb",
+       "PASS",
+       "PASS"
+      ],
+      [
+       "pam4",
+       "PASS",
+       "PASS"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "execution_count": 4,
+   "cell": 8,
+   "outputs": [
+    {
+     "kind": "table",
+     "header": [
+      "DUT:path",
+      "S21 pre",
+      "S21 post",
+      "BW pre",
+      "BW post",
+      "S11 pre",
+      "S11 post",
+      "P (mW)"
+     ],
+     "rows": [
+      [
+       "lsb:in",
+       "2.944",
+       "2.944",
+       "100.0",
+       "96.92",
+       "-16.47",
+       "-15.22",
+       "63.64"
+      ],
+      [
+       "msb:in",
+       "8.917",
+       "8.917",
+       "69.36",
+       "58.72",
+       "-10.98",
+       "-9.55",
+       "127.29"
+      ],
+      [
+       "pam4:lsb",
+       "2.948",
+       "2.948",
+       "92.58",
+       "67.57",
+       "-16.47",
+       "-13.87",
+       "190.96"
+      ],
+      [
+       "pam4:msb",
+       "8.919",
+       "8.919",
+       "66.75",
+       "51.55",
+       "-10.98",
+       "-8.98",
+       "190.96"
+      ]
+     ]
+    },
+    {
+     "kind": "markdown",
+     "text": "**Nominal sizing FAILS post-layout:** msb S11 = -9.55 dB, pam4 worst S11 = -8.98 dB (spec <= -10 dB); the MSB path also loses ~16 GHz of bandwidth to parasitics."
+    }
+   ]
+  },
+  {
+   "execution_count": 5,
+   "cell": 10,
+   "outputs": [
+    {
+     "kind": "stdout",
+     "text": "evaluate() ready — one candidate = gen + DRC/LVS + kpex + 5x ngspice\n"
+    }
+   ]
+  },
+  {
+   "execution_count": 6,
+   "cell": 11,
+   "outputs": [
+    {
+     "kind": "stdout",
+     "text": "[00] invalid_re    nx=3 tail=16.0 rc=50.0 rb=50.0 re=2.5 | g=- bw=- s11=- s22=- sw=- score=50.0  <-- best\nnpn13G2 PyCell placed successfully and GDS written.\n[pam4] wrote drawings/pam4-driver-2-bit-dac-HBT/ported-netlists/notebooks/nb_opt/t001/dut_pam4.gds: 27 devices, bbox 99.6 x 75.8 um, area 7552 um2\n[01] ok            nx=3 tail=15.0 rc=50.0 rb=48.0 re=3.2 | g=8.25 bw=58.8 s11=-10.03 s22=-10.14 sw=2.21 score=0.2  <-- best\nnpn13G2 PyCell placed successfully and GDS written.\n[pam4] wrote drawings/pam4-driver-2-bit-dac-HBT/ported-netlists/notebooks/nb_opt/t002/dut_pam4.gds: 27 devices, bbox 109.8 x 78.9 um, area 8668 um2\n[02] signoff_fail  nx=4 tail=10.88 rc=75.04 rb=48.93 re=3.22 | g=- bw=- s11=- s22=- sw=- score=40.0\nnpn13G2 PyCell placed successfully and GDS written.\n[pam4] wrote drawings/pam4-driver-2-bit-dac-HBT/ported-netlists/notebooks/nb_opt/t003/dut_pam4.gds: 27 devices, bbox 102.3 x 83.5 um, area 8540 um2\n[03] ok            nx=3 tail=16.26 rc=79.21 rb=48.06 re=3.35 | g=10.14 bw=55.4 s11=-9.92 s22=-7.58 sw=2.808 score=7.9362\nnpn13G2 PyCell placed successfully and GDS written.\n[pam4] wrote drawings/pam4-driver-2-bit-dac-HBT/ported-netlists/notebooks/nb_opt/t004/dut_pam4.gds: 27 devices, bbox 102.2 x 80.8 um, area 8259 um2\n[04] ok            nx=3 tail=14.81 rc=68.24 rb=49.85 re=3.19 | g=9.65 bw=56.5 s11=-9.95 s22=-8.69 sw=2.509 score=4.2988\n[05] invalid_ic    nx=2 tail=14.73 rc=51.59 rb=47.93 re=3.25 | g=- bw=- s11=- s22=- sw=- score=50.0\nnpn13G2 PyCell placed successfully and GDS written.\n[pam4] wrote drawings/pam4-driver-2-bit-dac-HBT/ported-netlists/notebooks/nb_opt/t006/dut_pam4.gds: 27 devices, bbox 99.1 x 75.5 um, area 7481 um2\n[06] ok            nx=3 tail=13.76 rc=46.53 rb=48.09 re=2.9 | g=7.9 bw=60.2 s11=-10.03 s22=-11.02 sw=1.962 score=1.7482\nnpn13G2 PyCell placed successfully and GDS written.\n[pam4] wrote drawings/pam4-driver-2-bit-dac-HBT/ported-netlists/notebooks/nb_opt/t007/dut_pam4.gds: 27 devices, bbox 111.3 x 75.5 um, area 8401 um2\n[07] signoff_fail  nx=4 tail=15.17 rc=48.56 rb=42.35 re=3.26 | g=- bw=- s11=- s22=- sw=- score=40.0\n\nbest: {\n \"tag\": \"t001\",\n \"nx\": 3,\n \"tail_ma\": 15.0,\n \"rc_ohm\": 50.0,\n \"rb_ohm\": 48.0,\n \"cdeg_ff\": 16.0,\n \"vcasc\": 3.35,\n \"re_ohm\": 3.2,\n \"re_w\": 4.5,\n \"gap_x\": 6.0,\n \"row_gap\": 1.6,\n \"out_gap\": 8.0,\n \"rc_sep\": 4.0,\n \"status\": \"ok\",\n \"lsb_gain\": 2.27,\n \"msb_gain\": 8.25,\n \"weight\": 5.98,\n \"bw\": 58.8,\n \"s11\": -10.03,\n \"s22\": -10.14,\n \"swing\": 2.21,\n \"power\": 179.1,\n \"area_um2\": 7551.672,\n \"score\": 0.2,\n \"secs\": 21.9\n}\n"
+    }
+   ]
+  },
+  {
+   "execution_count": 7,
+   "cell": 13,
+   "outputs": [
+    {
+     "kind": "stdout",
+     "text": "npn13G2 PyCell placed successfully and GDS written.\n[pam4] wrote drawings/pam4-driver-2-bit-dac-HBT/ported-netlists/notebooks/nb_opt/pam4_best/dut_pam4.gds: 27 devices, bbox 99.6 x 75.8 um, area 7552 um2\npam4 [best]: DRC PASS | LVS PASS\n"
+    },
+    {
+     "kind": "image",
+     "name": "dut_pam4_best",
+     "md5": "83631c506389a1108dac36da78877d52",
+     "file": "report_figs/pam4_layout_final.png"
+    },
+    {
+     "kind": "table",
+     "header": [
+      "metric (post-layout, pam4)",
+      "value",
+      "spec",
+      "pass"
+     ],
+     "rows": [
+      [
+       "LSB LF gain (dB)",
+       "2.27",
+       ">= 2.2",
+       "PASS"
+      ],
+      [
+       "MSB LF gain (dB)",
+       "8.25",
+       ">= 8.2",
+       "PASS"
+      ],
+      [
+       "DAC weight (dB)",
+       "5.98",
+       ">= 5.0",
+       "PASS"
+      ],
+      [
+       "f3dB worst path (GHz)",
+       "58.8",
+       ">= 50",
+       "PASS"
+      ],
+      [
+       "S11 worst <= 32G (dB)",
+       "-10.03",
+       "<= -10",
+       "PASS"
+      ],
+      [
+       "S22 worst <= 50G (dB)",
+       "-10.14",
+       "<= -10",
+       "PASS"
+      ],
+      [
+       "max diff swing (Vpp)",
+       "2.21",
+       ">= 2.1",
+       "PASS"
+      ],
+      [
+       "power (mW)",
+       "179.1",
+       "<= 192",
+       "PASS"
+      ]
+     ]
+    },
+    {
+     "kind": "markdown",
+     "text": "**ALL 8 SPECS PASS** with nx=3, tail=15.0 mA, rc=50.0 ohm, rb=48.0 ohm, re=3.2 ohm, cdeg=16.0 fF, vcasc=3.35 V"
+    }
+   ]
+  },
+  {
+   "execution_count": 8,
+   "cell": 15,
+   "outputs": [
+    {
+     "kind": "table",
+     "header": [
+      "metric",
+      "schematic nominal",
+      "schematic re-tuned",
+      "post-layout (winner)"
+     ],
+     "rows": [
+      [
+       "pam4:lsb S21 LF (dB)",
+       "3.09",
+       "2.42",
+       "2.27"
+      ],
+      [
+       "pam4:lsb S11 (dB)",
+       "-16.53",
+       "-16.84",
+       "-"
+      ],
+      [
+       "pam4:msb S21 LF (dB)",
+       "9.06",
+       "8.4",
+       "8.25"
+      ],
+      [
+       "pam4:msb S11 (dB)",
+       "-10.96",
+       "-11.38",
+       "-10.03"
+      ],
+      [
+       "pam4 S22 worst <= 50G (dB)",
+       "-",
+       "-15.7",
+       "-10.14"
+      ],
+      [
+       "pam4 f3dB worst path (GHz)",
+       "-",
+       "-",
+       "58.8"
+      ],
+      [
+       "pam4 max swing (Vpp)",
+       "-",
+       "-",
+       "2.21"
+      ],
+      [
+       "pam4 power (mW)",
+       "-",
+       "179.1",
+       "179.1"
+      ],
+      [
+       "V_CE cascode (V, validity 0.4-2.0)",
+       "-",
+       "1.033",
+       "-"
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

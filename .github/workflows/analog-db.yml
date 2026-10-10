@@ -2,10 +2,10 @@
 # not here; the next port overwrites this file.
 #
 # Per-unit CI: one workflow file per release unit, so each unit gets its own
-# README status badge. The fast test tier needs the platform packages
-# (spicexplorer-core, -circuitgraph, -netlist2xschem), which port as their own
-# release unit later — until a `platform/` tree exists in this monorepo, the
-# test job self-skips with a notice instead of failing.
+# README status badge. The fast test tier needs the platform packages (the
+# siblings listed in the install step), which port as their own release unit —
+# until a `platform/` tree exists in this monorepo, the test job self-skips with
+# a notice instead of failing.
 name: analog-db
 
 on:
@@ -68,15 +68,21 @@ jobs:
           python-version: "3.11"
       - name: install
         if: steps.deps.outputs.ok == 'true'
-        # signoff: analog-db's optional `layout` extra (the PAM-4 HBT drawing's DRC/LVS
-        # lane). Installed here so tests/test_hbt_layout_signoff.py runs instead of skipping;
-        # it imports on a bare runner (the klayout/kpex executables are found at run time).
+        # Every analog-db extra (symbolic = netlist2tf, layout = signoff, gmid = pygmid) and
+        # the optimizer package: tests that import one of them skip without it, so installing
+        # them keeps those tests running. Siblings first so pip takes them from the monorepo,
+        # never PyPI. signoff imports on a bare runner (klayout/kpex are found at run time).
+        # ruff (the fleet pin): the NEWCAS lint-sweep test runs it and skips without it.
         run: |
           pip install -e platform/packages/spicexplorer-core \
                       -e platform/packages/spicexplorer-circuitgraph \
                       -e platform/packages/spicexplorer-netlist2xschem \
-                      -e platform/packages/spicexplorer-signoff
-          pip install -e analog-db pytest
+                      -e platform/packages/spicexplorer-netlist2tf \
+                      -e platform/packages/spicexplorer-waveview \
+                      -e platform/packages/spicexplorer-layout \
+                      -e platform/packages/spicexplorer-signoff \
+                      -e platform/packages/spicexplorer
+          pip install -e "analog-db[symbolic,layout,gmid]" pytest ruff==0.16.6
       - name: wire the corpus path (circuitgraph template root)
         if: steps.deps.outputs.ok == 'true'
         # circuitgraph resolves subcircuit templates via

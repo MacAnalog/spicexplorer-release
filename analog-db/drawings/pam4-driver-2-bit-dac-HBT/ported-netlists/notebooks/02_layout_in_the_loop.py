@@ -23,7 +23,7 @@ def _(mo):
     | `klayout` on `PATH` (or `$SIGNOFF_KLAYOUT`), the PDK's KLayout decks under `$PDK_ROOT`, and the platform's `spicexplorer_signoff` package importable in this environment | `../layout/signoff.py` (DRC, LVS) |
     | ngspice and the IHP SG13G2 open PDK under `$PDK_ROOT` | `../testbenches/driver_lib.py` |
 
-    `NB_BUDGET` sets the number of optimizer trials (default 8). The saved outputs of the last Jupyter run, 8 trials, are in `02_layout_in_the_loop.recorded-outputs.html` beside this file.
+    `NB_BUDGET` sets the number of optimizer trials (default 8). The saved outputs of the last Jupyter run, 8 trials, are recorded in `02_layout_in_the_loop_recorded_outputs.py` beside this file; run it to print the tables and text (`--figures DIR` copies out the layout renders).
     """)
     return
 

@@ -77,6 +77,17 @@ jobs:
           # starlette.testclient at collection, which hard-errors without it.
           pip install -e "platform/packages/${{ matrix.package }}" pytest pyyaml httpx
 
+      # The api's /library routes import spicexplorer_analog_db lazily; its route tests skip
+      # when the package is absent, so install the monorepo's analog-db for this entry.
+      - name: analog-db for the api library routes (so those tests run, not skip)
+        if: steps.ported.outputs.ok == 'true' && matrix.package == 'spicexplorer-api'
+        run: |
+          if [ -d analog-db ]; then
+            pip install -e analog-db
+          else
+            echo "::notice::analog-db unit not in the monorepo — the api library-route tests will skip."
+          fi
+
       # spicexplorer-layout's EM tests importorskip klayout.db at MODULE level and
       # scikit-rf inside the vector-fit test, so WITHOUT these the whole EM suite
       # vanishes and the job goes green having verified none of it. Both are

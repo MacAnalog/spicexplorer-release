@@ -27,7 +27,8 @@ NB_BUDGET=14 python 02_layout_in_the_loop.py    # on the layout lane only
 - **A script run prints text only.** The tables that `md_table()` shows through
   `display(Markdown(...))` and the `display(Image(...))` figures print as
   `<IPython.core.display.Markdown object>` and `<IPython.core.display.Image object>`; `marimo edit`
-  and `marimo export html <notebook>.py -o <file>.html` render them.
+  and `marimo export html <notebook>.py -o <file>.html` render them (keep the exported HTML out of
+  git).
 - **Notebook 02** runs the real signoff/PEX/simulate chain per optimizer trial (~30–90 s each;
   `NB_BUDGET` sets the trial count, default 8). Trial workspaces land in `nb_opt/` beside the
   notebook (only the best trial is kept).
@@ -42,12 +43,14 @@ NB_BUDGET=14 python 02_layout_in_the_loop.py    # on the layout lane only
 
 ## Recorded outputs
 
-The saved outputs of the last Jupyter run of two notebooks are kept beside them as static HTML,
-each output under the code cell that produced it (home paths read `/home/<user>/`):
+The saved outputs of the last Jupyter run of two notebooks are kept beside them as Python scripts
+(the repository stores no `.html` or `.ipynb`). Run one to print the recorded text and tables in
+cell order; the recorded figures are the PNGs in `report_figs/`, checked against their recorded
+hashes on every run (home paths read `/home/<user>/`):
 
 | Record | Why it is kept |
 |---|---|
-| [`02_layout_in_the_loop.recorded-outputs.html`](02_layout_in_the_loop.recorded-outputs.html) | 8 optimizer trials on the layout lane; the optimizer (nevergrad TwoPointsDE) is stochastic, so a re-run gives a different trial table |
-| [`03_signoff.recorded-outputs.html`](03_signoff.recorded-outputs.html) | §0 and §0b read files that are in no repository; this is their only record |
+| [`02_layout_in_the_loop_recorded_outputs.py`](02_layout_in_the_loop_recorded_outputs.py) (data: [`02_layout_in_the_loop.recorded-outputs.json`](02_layout_in_the_loop.recorded-outputs.json); `--figures DIR` copies the four layout renders out) | 8 optimizer trials on the layout lane; the optimizer (nevergrad TwoPointsDE) is stochastic, so a re-run gives a different trial table |
+| [`03_signoff_recorded_outputs.py`](03_signoff_recorded_outputs.py) (data inline; `--show` displays the five figures) | §0 and §0b read files that are in no repository; this is their only record |
 
 Notebook 01 has no record: it reproduces its saved tables on ngspice and the open PDK.

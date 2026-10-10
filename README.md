@@ -31,7 +31,7 @@ packages, the UI, and the database.
 | [`analog-db/`](analog-db/) | Analog circuit database — the topology/circuit registry (netlists, datasheets, class libraries, testbench templates) and its tiered verification harness | released |
 | [`platform/`](platform/) | The Python workspace — kernel, leaf tools, optimizer and REST API (all ten packages below) | released |
 | [`ui/`](ui/) | SpiceXplorer "Studio" — the Next.js front-end (HTTP/SSE) over the platform api | released |
-| [`agentic-design-example/`](agentic-design-example/) | A worked agent-driven design, as a submodule — the PAM-4 2-bit current-steering DAC driver taken from spec to layout in IHP SG13G2, with every schematic/layout co-design round recorded | released |
+| [`agentic-design-example/`](agentic-design-example/) | Two worked agent-driven designs, each a submodule: the PAM-4 2-bit current-steering DAC driver taken from spec to layout in IHP SG13G2, with every schematic/layout co-design round recorded; and `dn-003-afe-lpf-250hz-ihp130`, a 250 Hz 4th-order fully differential super-source-follower low-pass filter (analog front end) in IHP SG13G2, re-sized to cut its input-referred noise by more than 20 % and taken through sign-off and the layout lane | released |
 | [`.claude/`](.claude/) | The agent kit: the four layout-lane agent definitions (brief → design → review → co-design) and the two gm/ID sizing skills, block- and PDK-agnostic | released |
 
 ### Platform packages
@@ -66,14 +66,14 @@ a `.release-provenance.json` in each records the snapshot it was cut from.
 
 ## Quickstart
 
-`agentic-design-example/` is a git submodule, so clone with it:
+The two designs under `agentic-design-example/` are git submodules, so clone with them:
 
 ```bash
 git clone --recurse-submodules https://github.com/MacAnalog/spicexplorer-release.git
 # already cloned? git submodule update --init --recursive
 ```
 
-Nothing in `platform/`, `ui/` or `analog-db/` needs it — skip the submodule and
+Nothing in `platform/`, `ui/` or `analog-db/` needs them — skip the submodules and
 everything below still works.
 
 Two ways to bring the app (API + Studio UI) up. **Full walkthroughs:**

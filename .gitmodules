@@ -1,3 +1,6 @@
 [submodule "agentic-design-example/agentic-design-pam4-driver-ihp130"]
 	path = agentic-design-example/agentic-design-pam4-driver-ihp130
 	url = https://github.com/MacAnalog/agentic-design-pam4-driver-ihp130.git
+[submodule "agentic-design-example/dn-003-afe-lpf-250hz-ihp130"]
+	path = agentic-design-example/dn-003-afe-lpf-250hz-ihp130
+	url = https://github.com/MacAnalog/dn-003-afe-lpf-250hz-ihp130.git

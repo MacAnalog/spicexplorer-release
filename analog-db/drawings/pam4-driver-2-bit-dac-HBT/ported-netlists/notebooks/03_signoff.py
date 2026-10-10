@@ -14,7 +14,7 @@ def _():
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    **Two cells read files that are in no repository.** §0 reads the EIC-designer project at `~/code/EIC-designer/projects/lumped-broadband-driver/` and prints a note when it is absent. §0b reads `../layout/out/pex/pam4/dut_pam4_nomim__pam4drv_pam4_lay/pam4drv_pam4_lay_k25d_pex_netlist.spice`, a kpex output that `../layout/pex_sim.py` writes on the layout lane (notebook 02) and that is not committed; without it §0b raises FileNotFoundError. `python 03_signoff.py` stops there, while `marimo edit` and `marimo export html` run the other cells, none of which reads a name §0b defines. The saved outputs of the last Jupyter run, §0 and §0b included, are in `03_signoff.recorded-outputs.html` beside this file.
+    **Two cells read files that are in no repository.** §0 reads the EIC-designer project at `~/code/EIC-designer/projects/lumped-broadband-driver/` and prints a note when it is absent. §0b reads `../layout/out/pex/pam4/dut_pam4_nomim__pam4drv_pam4_lay/pam4drv_pam4_lay_k25d_pex_netlist.spice`, a kpex output that `../layout/pex_sim.py` writes on the layout lane (notebook 02) and that is not committed; without it §0b raises FileNotFoundError. `python 03_signoff.py` stops there, while `marimo edit` and `marimo export html` run the other cells, none of which reads a name §0b defines. The saved outputs of the last Jupyter run, §0 and §0b included, are recorded in `03_signoff_recorded_outputs.py` beside this file; run it to print the tables and text (the figures are the PNGs in `report_figs/`).
     """)
     return
 
@@ -126,7 +126,7 @@ def _(Path):
         print("\n".join(drc.splitlines()[:6]))
     else:
         print("(EIC-designer project not present on this machine — evidence "
-              "recorded in 03_signoff.recorded-outputs.html: 616-byte GDS, one "
+              "recorded in 03_signoff_recorded_outputs.py: 616-byte GDS, one "
               "cell with 5 shapes + 5 labels; DRC status error, 0 rules run)")
     return
 

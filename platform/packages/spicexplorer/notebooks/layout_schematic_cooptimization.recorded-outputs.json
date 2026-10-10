@@ -1,0 +1,352 @@
+{
+ "source": "packages/spicexplorer/notebooks/layout_schematic_cooptimization.ipynb at d85614c (last Jupyter run on the live_layout lane)",
+ "scatter": {
+  "ugf_spec_MHz": 32.0,
+  "baseline": {
+   "ugf_MHz": 29.4468,
+   "area_um2": 205.946
+  }
+ },
+ "cells": [
+  {
+   "exec_count": 1,
+   "cell": 2,
+   "outputs": [
+    {
+     "stream": "stdout",
+     "text": "live_layout: AVAILABLE\nreplay available: True\n"
+    },
+    {
+     "table": {
+      "columns": ["capability","value"],
+      "index": ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"],
+      "rows": [
+       ["gds_python","/home/<user>/miniconda3/envs/ai_env/bin/python"],
+       ["pdk","ihp-sg13g2"],
+       ["pdk_ok","True"],
+       ["drc_deck_ok","True"],
+       ["lvs_deck_ok","True"],
+       ["klayout","/home/<user>/local/bin/klayout"],
+       ["kpex","/home/<user>/miniconda3/envs/pex/bin/kpex"],
+       ["kpex_klayout","/home/<user>/local/klayout-py311/klayout-bat..."],
+       ["ngspice","/home/<user>/local/bin/ngspice"],
+       ["magic","/home/<user>/local/bin/magic"],
+       ["netgen","/home/<user>/local/bin/netgen"],
+       ["drc_ok","True"],
+       ["lvs_ok","True"],
+       ["pex_ok","True"],
+       ["ngspice_ok","True"]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "exec_count": 2,
+   "cell": 5,
+   "outputs": [
+    {
+     "stream": "stdout",
+     "text": "cell=ota_5t_gf  gds_python=/home/<user>/miniconda3/envs/ai_env/bin/python\nsizing_params (dut_param -> sizing key): {'in_w': 'in_w', 'pld_w': 'pld_w', 'tail_w': 'tail_w'}\n"
+    },
+    {
+     "table": {
+      "columns": ["knob","default","lo","hi","searched"],
+      "index": ["0","1","2","3","4","5","6","7","8"],
+      "rows": [
+       ["gap_x","1.46","0.80","1.8","yes"],
+       ["ch_y","0.92","0.90","2.2","yes"],
+       ["edge_x","1.57","0.80","2.0","yes"],
+       ["w_m1","0.25","0.20","0.5","fixed"],
+       ["w_m2","0.29","0.20","0.5","fixed"],
+       ["tab_w","0.39","0.30","0.5","fixed"],
+       ["ib_off","1.10","0.55","1.4","yes"],
+       ["vdd_off","1.35","0.50","1.6","yes"],
+       ["vss_off","1.44","0.60","1.8","yes"]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "exec_count": 3,
+   "cell": 6,
+   "outputs": [
+    {
+     "stream": "stdout",
+     "text": "baseline sizing (um): {'in_w': 0.5, 'in_l': 5.0, 'pld_w': 1.5, 'pld_l': 5.0, 'tail_w': 2.0, 'tail_l': 5.0, 'ref_w': 2.0, 'ref_l': 5.0}\n\nspicexplorer_layout.load_generator(GEN).bounds  ==  the BOUNDS above\nspicexplorer_layout.params_schema(gen)          ==  the table above, plus dataclass types\n"
+    }
+   ]
+  },
+  {
+   "exec_count": 4,
+   "cell": 8,
+   "outputs": [
+    {
+     "stream": "stdout",
+     "text": "ota_5t_gf.gds: 205.9 um2, sha 2052f25fcb2d\n"
+    },
+    {
+     "dropped_render": "baseline layout render (render_png of ota_5t_gf.gds at the LayoutParams defaults and baseline sizing, 900x900 px, shown at 430 px)"
+    }
+   ]
+  },
+  {
+   "exec_count": 5,
+   "cell": 10,
+   "outputs": [
+    {
+     "stream": "stderr",
+     "text": "⚠️ No DUT parameters found!\n"
+    },
+    {
+     "stream": "stdout",
+     "text": "pre-layout   dcgain =  29.77 dB   ugf =  30.146 MHz   pm =  61.5 deg\n"
+    }
+   ]
+  },
+  {
+   "exec_count": 6,
+   "cell": 12,
+   "outputs": [
+    {
+     "stream": "stderr",
+     "text": "⚠️ No DUT parameters found!\n"
+    },
+    {
+     "stream": "stdout",
+     "text": "status=ok  area=205.9 um2  DRC=1  LVS=1  PEX=1  (36.8 s)\n"
+    },
+    {
+     "table": {
+      "columns": ["stage","secs","verdict"],
+      "index": ["0","1","2","3","4"],
+      "rows": [
+       ["build","3.2","ok"],
+       ["drc","21.7","ok"],
+       ["lvs","7.4","ok"],
+       ["pex","4.1","ok"],
+       ["postlayout","0.2","ok"]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "exec_count": 7,
+   "cell": 14,
+   "outputs": [
+    {
+     "table": {
+      "columns": ["net","c_total_fF","c_to_ac_gnd_fF"],
+      "index": ["0","1","2","3","4","5","6","7"],
+      "rows": [
+       ["VSUBS","14.9199","NaN"],
+       ["ibias","5.0141","4.5167"],
+       ["$7","4.7861","3.9829"],
+       ["vdd","2.4241","1.9918"],
+       ["vinp","1.2350","0.9637"],
+       ["vinn","1.2328","0.9669"],
+       ["vout","0.9753","0.5775"],
+       ["$17","0.7514","0.5737"]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "exec_count": 8,
+   "cell": 15,
+   "outputs": [
+    {
+     "stream": "stdout",
+     "text": "core area: 205.9 um2\n\n"
+    },
+    {
+     "table": {
+      "columns": ["metric","pre-layout","post-layout","delta"],
+      "index": ["0","1","2"],
+      "rows": [
+       ["UGF [MHz]","30.146","29.447","-0.699"],
+       ["PM [deg]","61.479","61.926","0.447"],
+       ["DC gain [dB]","29.769","29.779","0.009"]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "exec_count": 9,
+   "cell": 18,
+   "outputs": [
+    {
+     "stream": "stderr",
+     "text": "No loss_function_config provided; using default values.\n"
+    },
+    {
+     "stream": "stdout",
+     "text": "OTA5T-GF-COOPT: sim_engine=layout  optimizer=OnePlusOne  budget=16  seed_from_init=True\n"
+    },
+    {
+     "table": {
+      "columns": ["param","kind","min","init","max"],
+      "index": ["0","1","2","3","4","5","6","7","8"],
+      "rows": [
+       ["in_w","sizing","0.45","0.62","0.85"],
+       ["pld_w","sizing","1.40","2.00","2.40"],
+       ["tail_w","sizing","1.60","2.00","2.60"],
+       ["gap_x","layout knob","1.00","1.46","1.80"],
+       ["ch_y","layout knob","0.90","0.92","1.60"],
+       ["edge_x","layout knob","1.30","1.57","2.00"],
+       ["ib_off","layout knob","0.80","1.10","1.40"],
+       ["vdd_off","layout knob","0.90","1.35","1.60"],
+       ["vss_off","layout knob","1.00","1.44","1.80"]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "exec_count": 10,
+   "cell": 19,
+   "outputs": [
+    {
+     "table": {
+      "columns": ["spec","goal","target","sim_type","weight","recipe"],
+      "index": ["0","1","2","3","4","5","6","7"],
+      "rows": [
+       ["area_um2","minimize","205.9","layout","10","— flow scalar —"],
+       ["ugf","exceed","32000000.0","ac","8","ugf"],
+       ["dcgain","exceed","30.0","ac","8","dcgain"],
+       ["pm","exceed","55.0","ac","5","pm"],
+       ["drc_pass","exact","1.0","layout","100","— flow scalar —"],
+       ["lvs_match","exact","1.0","layout","100","— flow scalar —"],
+       ["pex_ok","exact","1.0","layout","100","— flow scalar —"],
+       ["postlayout_ok","exact","1.0","layout","100","— flow scalar —"]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "exec_count": 11,
+   "cell": 21,
+   "outputs": [
+    {
+     "stream": "stderr",
+     "text": "No loss_function_config provided; using default values.\n\nOptimizing:   0%|          | 0/16 [00:00<?, ?trial/s]⚠️ No DUT parameters found!\n\nOptimizing:   0%|          | 0/16 [00:36<?, ?trial/s, best=-1.1082, score=-1.1082]\nOptimizing:   6%|▋         | 1/16 [00:36<09:13, 36.89s/trial, best=-1.1082, score=-1.1082]⚠️ No DUT parameters found!\n\nOptimizing:   6%|▋         | 1/16 [01:11<09:13, 36.89s/trial, best=-1.1082, score=-10.0964]\nOptimizing:  12%|█▎        | 2/16 [01:11<08:20, 35.78s/trial, best=-1.1082, score=-10.0964]⚠️ No DUT parameters found!\n\nOptimizing:  12%|█▎        | 2/16 [01:46<08:20, 35.78s/trial, best=-1.1082, score=-2.8023] \nOptimizing:  19%|█▉        | 3/16 [01:46<07:40, 35.39s/trial, best=-1.1082, score=-2.8023]⚠️ No DUT parameters found!\n\nOptimizing:  19%|█▉        | 3/16 [02:21<07:40, 35.39s/trial, best=-1.1082, score=-3.0500]\nOptimizing:  25%|██▌       | 4/16 [02:21<06:59, 34.94s/trial, best=-1.1082, score=-3.0500]⚠️ No DUT parameters found!\n\nOptimizing:  25%|██▌       | 4/16 [02:56<06:59, 34.94s/trial, best=-1.1082, score=-1.5684]\nOptimizing:  31%|███▏      | 5/16 [02:56<06:25, 35.04s/trial, best=-1.1082, score=-1.5684]⚠️ No DUT parameters found!\n\nOptimizing:  31%|███▏      | 5/16 [03:31<06:25, 35.04s/trial, best=-1.1082, score=-3.7295]\nOptimizing:  38%|███▊      | 6/16 [03:31<05:49, 34.94s/trial, best=-1.1082, score=-3.7295]⚠️ No DUT parameters found!\n\nOptimizing:  38%|███▊      | 6/16 [04:05<05:49, 34.94s/trial, best=-0.2370, score=-0.2370]\nOptimizing:  44%|████▍     | 7/16 [04:05<05:14, 34.91s/trial, best=-0.2370, score=-0.2370]⚠️ No DUT parameters found!\n\nOptimizing:  44%|████▍     | 7/16 [04:40<05:14, 34.91s/trial, best=-0.2370, score=-2.0694]\nOptimizing:  50%|█████     | 8/16 [04:40<04:38, 34.86s/trial, best=-0.2370, score=-2.0694]⚠️ No DUT parameters found!\n\nOptimizing:  50%|█████     | 8/16 [05:15<04:38, 34.86s/trial, best=-0.2370, score=-2.2582]\nOptimizing:  56%|█████▋    | 9/16 [05:15<04:04, 34.93s/trial, best=-0.2370, score=-2.2582]⚠️ No DUT parameters found!\n\nOptimizing:  56%|█████▋    | 9/16 [05:50<04:04, 34.93s/trial, best=-0.2370, score=-1.7225]\nOptimizing:  62%|██████▎   | 10/16 [05:50<03:29, 34.96s/trial, best=-0.2370, score=-1.7225]⚠️ No DUT parameters found!\n\nOptimizing:  62%|██████▎   | 10/16 [06:25<03:29, 34.96s/trial, best=-0.2370, score=-1.2648]\nOptimizing:  69%|██████▉   | 11/16 [06:25<02:54, 34.90s/trial, best=-0.2370, score=-1.2648]⚠️ No DUT parameters found!\n\nOptimizing:  69%|██████▉   | 11/16 [07:01<02:54, 34.90s/trial, best=-0.2370, score=-1.2244]\nOptimizing:  75%|███████▌  | 12/16 [07:01<02:21, 35.31s/trial, best=-0.2370, score=-1.2244]⚠️ No DUT parameters found!\n\nOptimizing:  75%|███████▌  | 12/16 [07:35<02:21, 35.31s/trial, best=-0.2370, score=-1.8872]\nOptimizing:  81%|████████▏ | 13/16 [07:35<01:44, 34.94s/trial, best=-0.2370, score=-1.8872]⚠️ No DUT parameters found!\n\nOptimizing:  81%|████████▏ | 13/16 [08:10<01:44, 34.94s/trial, best=-0.2370, score=-2.8791]\nOptimizing:  88%|████████▊ | 14/16 [08:10<01:09, 34.92s/trial, best=-0.2370, score=-2.8791]⚠️ No DUT parameters found!\n\nOptimizing:  88%|████████▊ | 14/16 [08:45<01:09, 34.92s/trial, best=-0.2370, score=-0.9722]\nOptimizing:  94%|█████████▍| 15/16 [08:45<00:34, 34.80s/trial, best=-0.2370, score=-0.9722]⚠️ No DUT parameters found!\n\nOptimizing:  94%|█████████▍| 15/16 [09:19<00:34, 34.80s/trial, best=-0.2370, score=-0.5624]\nOptimizing: 100%|██████████| 16/16 [09:19<00:00, 34.60s/trial, best=-0.2370, score=-0.5624]\nOptimizing: 100%|██████████| 16/16 [09:19<00:00, 34.96s/trial, best=-0.2370, score=-0.5624]"
+    },
+    {
+     "stream": "stdout",
+     "text": "16 trials in 9.3 min (35 s/trial); 4 checkpoints on disk\n"
+    },
+    {
+     "stream": "stderr",
+     "text": "\n"
+    }
+   ]
+  },
+  {
+   "exec_count": 12,
+   "cell": 23,
+   "outputs": [
+    {
+     "table": {
+      "columns": ["trial","in_w","pld_w","tail_w","gap_x","ch_y","edge_x","ib_off","vdd_off","vss_off","area_um2","ugf_MHz","pm","dcgain","score","feasible"],
+      "index": ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15"],
+      "rows": [
+       ["0","0.65","1.66","2.07","1.47","1.16","1.48","0.86","1.42","1.33","214.204","34.506","61.119","29.108","-2.258","False"],
+       ["1","0.54","1.76","1.99","1.61","1.08","1.32","0.88","1.31","1.12","202.594","30.278","61.674","30.366","-1.722","False"],
+       ["2","0.73","2.07","2.02","1.34","1.03","1.50","1.11","1.18","1.45","218.548","35.888","60.923","30.188","-1.265","True"],
+       ["3","0.63","1.97","2.06","1.57","0.92","1.57","1.05","1.47","1.32","218.144","33.100","61.318","30.339","-1.224","True"],
+       ["4","0.65","1.74","2.28","1.42","0.96","1.60","0.88","1.27","1.24","210.632","34.902","61.243","29.116","-1.887","False"],
+       ["5","0.57","2.06","2.03","1.69","1.05","1.55","1.02","1.36","1.38","222.356","30.767","61.695","30.796","-2.879","False"],
+       ["6","0.57","1.90","2.16","1.61","0.91","1.48","0.98","1.26","1.30","210.219","31.460","61.623","30.367","-0.972","False"],
+       ["7","0.59","1.91","2.01","1.58","0.90","1.54","0.98","1.30","1.27","208.962","31.744","61.468","30.446","-0.562","False"],
+       ["8","0.62","2.00","2.00","1.46","0.92","1.57","1.10","1.35","1.44","216.982","32.518","61.371","30.514","-1.108","True"],
+       ["9","0.83","1.67","2.32","1.72","1.33","1.66","1.25","1.31","1.41","242.410","40.359","61.125","25.972","-10.096","False"],
+       ["10","0.63","2.12","2.09","1.79","1.00","1.60","1.23","1.56","1.39","233.923","32.846","61.451","30.610","-2.802","True"],
+       ["11","0.70","1.83","2.53","1.02","0.97","1.43","1.19","1.11","1.45","215.037","36.961","61.217","28.665","-3.050","False"],
+       ["12","0.65","1.82","1.61","1.69","0.91","1.78","1.12","1.30","1.46","221.584","32.445","60.907","30.515","-1.568","True"],
+       ["13","0.55","1.76","1.72","1.41","1.06","1.71","1.07","1.58","1.37","221.589","29.839","61.508","30.633","-3.729","False"],
+       ["14","0.61","1.88","2.05","1.55","0.92","1.45","0.97","1.30","1.31","208.270","32.609","61.357","30.230","-0.237","True"],
+       ["15","0.54","1.77","1.87","1.56","0.92","1.53","1.02","1.23","1.13","202.613","29.931","61.632","30.525","-2.069","False"]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "exec_count": 13,
+   "cell": 24,
+   "outputs": [
+    {
+     "figure": "trials_scatter"
+    },
+    {
+     "stream": "stdout",
+     "text": "best = trial 14:  area 208.3 um2   ugf 32.61 MHz   pm 61.4 deg   dcgain 30.23 dB\n6/16 trials feasible; 0 never reached the AC bench (a DRC/LVS/PEX gate fired -> NaN -> MAX_PENALTY) and so have no point on the plot: trials []\n"
+    }
+   ]
+  },
+  {
+   "exec_count": 14,
+   "cell": 26,
+   "outputs": [
+    {
+     "dropped_render": "side-by-side layout renders: \"baseline — 205.9 µm², 29.45 MHz\" | \"co-optimized — 208.3 µm², 32.61 MHz\" (render_png of trial 14's GDS)"
+    }
+   ]
+  },
+  {
+   "exec_count": 15,
+   "cell": 27,
+   "outputs": [
+    {
+     "table": {
+      "columns": ["param","kind","baseline","best","delta","delta_%"],
+      "index": ["0","1","2","3","4","5","6","7","8"],
+      "rows": [
+       ["in_w","sizing","0.50","0.61","0.11","22.0"],
+       ["pld_w","sizing","1.50","1.88","0.38","25.3"],
+       ["tail_w","sizing","2.00","2.05","0.05","2.5"],
+       ["gap_x","layout knob","1.46","1.55","0.09","6.2"],
+       ["ch_y","layout knob","0.92","0.92","0.00","0.0"],
+       ["edge_x","layout knob","1.57","1.45","-0.12","-7.6"],
+       ["ib_off","layout knob","1.10","0.97","-0.13","-11.8"],
+       ["vdd_off","layout knob","1.35","1.30","-0.05","-3.7"],
+       ["vss_off","layout knob","1.44","1.31","-0.13","-9.0"]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "exec_count": 16,
+   "cell": 28,
+   "outputs": [
+    {
+     "table": {
+      "columns": ["area [µm²]","UGF [MHz]","PM [deg]","DC gain [dB]"],
+      "index": ["baseline (layout of record)","co-optimized best","spec"],
+      "rows": [
+       ["205.95","29.45","61.93","29.78"],
+       ["208.27","32.61","61.36","30.23"],
+       ["NaN","32.00","55.00","30.00"]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "exec_count": 17,
+   "cell": 32,
+   "outputs": [
+    {
+     "stream": "stdout",
+     "text": "wrote examples/layout/ihp-sg13g2/5t_ota_gf/coopt/coopt_replay.json\n"
+    }
+   ]
+  }
+ ]
+}

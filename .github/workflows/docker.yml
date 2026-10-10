@@ -70,6 +70,26 @@ jobs:
           sudo docker image prune -af || true
           df -h /
 
+      # Docker Hub's token service and pull limits fail now and then (504 from
+      # auth.docker.io, 429 on the manifest HEAD) at the build's `load metadata`
+      # step, which reads as a broken Dockerfile when it is not. Pull the Hub base
+      # image first, with backoff and a fallback to Google's public Hub mirror;
+      # the build then uses the local copy. The tag is read from Dockerfile.spice-base so
+      # the two cannot drift.
+      - name: pre-pull the Docker Hub base image (retry + mirror fallback)
+        if: steps.ported.outputs.ok == 'true'
+        run: |
+          img="ubuntu:$(sed -n 's/^ARG UBUNTU_TAG=//p' Dockerfile.spice-base)"
+          for i in 1 2 3 4 5; do
+            docker pull "$img" && exit 0
+            docker pull "mirror.gcr.io/library/$img" \
+              && docker tag "mirror.gcr.io/library/$img" "$img" && exit 0
+            echo "::warning::pull of $img failed (attempt $i/5)"
+            sleep $((30 * i))
+          done
+          echo "::error::could not pull $img from Docker Hub or its mirror"
+          exit 1
+
       - name: build the EDA base (ngspice + IHP/sky130/gf180 PDKs)
         if: steps.ported.outputs.ok == 'true'
         env:
@@ -207,6 +227,26 @@ jobs:
                       /usr/local/share/boost "$AGENT_TOOLSDIRECTORY" || true
           sudo docker image prune -af || true
           df -h /
+
+      # Docker Hub's token service and pull limits fail now and then (504 from
+      # auth.docker.io, 429 on the manifest HEAD) at the build's `load metadata`
+      # step, which reads as a broken Dockerfile when it is not. Pull the Hub base
+      # image first, with backoff and a fallback to Google's public Hub mirror;
+      # the build then uses the local copy. The tag is read from Dockerfile.em so
+      # the two cannot drift.
+      - name: pre-pull the Docker Hub base image (retry + mirror fallback)
+        if: steps.ported.outputs.ok == 'true'
+        run: |
+          img="$(awk '/^FROM /{print $2; exit}' Dockerfile.em)"
+          for i in 1 2 3 4 5; do
+            docker pull "$img" && exit 0
+            docker pull "mirror.gcr.io/library/$img" \
+              && docker tag "mirror.gcr.io/library/$img" "$img" && exit 0
+            echo "::warning::pull of $img failed (attempt $i/5)"
+            sleep $((30 * i))
+          done
+          echo "::error::could not pull $img from Docker Hub or its mirror"
+          exit 1
 
       - name: build the EM toolchain image
         if: steps.ported.outputs.ok == 'true'

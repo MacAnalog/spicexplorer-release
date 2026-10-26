@@ -142,11 +142,11 @@ SpiceXplorer is free for **noncommercial use**, and **commercial use is not perm
 - **Allowed:** the license's permitted purposes, including:
   - personal study, hobby projects and other personal use with no anticipated commercial application;
   - research for public knowledge, done personally or at an educational institution or public research organisation;
-  - teaching;
+  - teaching at an educational institution;
   - use by a charity, educational institution, public research organisation or government body, whatever its source of funding;
   - noncommercial open-source projects built on it.
   You may copy, modify and redistribute it for these purposes if every copy carries the license (or its URL) and the `Required Notice` line.
-- **Not allowed:** commercial use, including use by or for a business, internal use such as R&D or evaluation included. For a commercial license, contact the copyright holder through the [MacAnalog](https://github.com/MacAnalog) organisation.
+- **Not allowed:** commercial use, including use by a business or for its commercial purposes, internal use such as R&D or evaluation included. For a commercial license, contact the copyright holder through the [MacAnalog](https://github.com/MacAnalog) organisation.
 - **Not an OSI license:** because of the noncommercial term this is a *source-available* license, not an OSI-approved open-source license. SpiceXplorer, and changes and works based on it, stay under these terms and cannot be sublicensed, so a distribution that includes SpiceXplorer cannot grant commercial rights to it. Your own separate code can carry any license.
 - **Third-party material keeps its own license.** That covers, for example, circuits and corpora in the database (see `analog-db/NOTICE`, `analog-db/corpora/*/LICENSE.*` and `PROVENANCE.md`) and the open-PDK files in the EDA base image (`platform/docker/pdk/`).
 

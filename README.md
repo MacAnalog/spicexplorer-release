@@ -134,6 +134,22 @@ each `make` target is a one-line wrapper you can run by hand.
 - Per-component detail: [`platform/README.md`](platform/README.md), [`ui/README.md`](ui/README.md), [`analog-db/README.md`](analog-db/README.md).
 - [`.claude/README.md`](.claude/README.md) — the agent kit: what each layout-lane agent and gm/ID skill does, and how to use them outside Claude Code.
 
+## License
+
+SpiceXplorer is free for **noncommercial use**, and **commercial use is not permitted**. Every component, and the repository as a whole, is released under the
+[PolyForm Noncommercial License 1.0.0](LICENSE) (copyright Danial Noori Zadeh). The [LICENSE](LICENSE) text governs, and this section is only a summary.
+
+- **Allowed:** the license's permitted purposes, including:
+  - personal study, hobby projects and other personal use with no anticipated commercial application;
+  - research for public knowledge, done personally or at an educational institution or public research organisation;
+  - teaching;
+  - use by a charity, educational institution, public research organisation or government body, whatever its source of funding;
+  - noncommercial open-source projects built on it.
+  You may copy, modify and redistribute it for these purposes if every copy carries the license (or its URL) and the `Required Notice` line.
+- **Not allowed:** commercial use, including use by or for a business, internal use such as R&D or evaluation included. For a commercial license, contact the copyright holder through the [MacAnalog](https://github.com/MacAnalog) organisation.
+- **Not an OSI license:** because of the noncommercial term this is a *source-available* license, not an OSI-approved open-source license. SpiceXplorer, and changes and works based on it, stay under these terms and cannot be sublicensed, so a distribution that includes SpiceXplorer cannot grant commercial rights to it. Your own separate code can carry any license.
+- **Third-party material keeps its own license.** That covers, for example, circuits and corpora in the database (see `analog-db/NOTICE`, `analog-db/corpora/*/LICENSE.*` and `PROVENANCE.md`) and the open-PDK files in the EDA base image (`platform/docker/pdk/`).
+
 ## Recommended tooling
 
 - [uv](https://docs.astral.sh/uv/) for Python package management.
